@@ -2,7 +2,7 @@ import { isServiceKey, parseEnv } from '../env';
 
 const b64 = (o: object) => btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 const jwt = (role: string) => `${b64({ alg: 'HS256' })}.${b64({ iss: 'supabase', role })}.${'s'.repeat(43)}`;
-const url = 'http://127.0.0.1:54321';
+const url = 'http://127.0.0.1:55421';
 
 describe('env validation', () => {
   it('accepts a URL and an anon or publishable key', () => {
