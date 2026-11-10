@@ -164,7 +164,7 @@ Notes on the iOS build:
 
 **Seed data:**
 - Users: `dale`, `mika`, `aya`, `jun` and `lola` at `@pickld.test`, plus `mod@pickld.test` (username `pickld.mod`, moderator role).
-- Sign-in is by email link; read the emails in the local mail UI at http://127.0.0.1:54324.
+- Sign-in is by email link; read the emails in the local mail UI at http://127.0.0.1:55424.
 - Dale has blocked Lola. The seed includes full and partial jars, a private moment and a backfilled moment.
 - `supabase/README.md` explains the pgTAP helpers (`tests.world()`, `tests.act_as()`, `make_jar`, `make_moment`).
 

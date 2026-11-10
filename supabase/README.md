@@ -10,8 +10,8 @@ Needs Docker. The CLI is a root dev dependency, so run it through pnpm.
 | `pnpm db:types:check` | Fail if the committed types are stale (part of `scripts/ci.sh`). |
 | `pnpm db:test` | Run the pgTAP suite in `tests/` (`supabase test db`). |
 
-Local URLs: API `http://127.0.0.1:54321`, database `postgresql://postgres:postgres@127.0.0.1:54322/postgres`,
-Studio `http://127.0.0.1:54323`, mail (Mailpit) `http://127.0.0.1:54324`.
+Local URLs: API `http://127.0.0.1:55421`, database `postgresql://postgres:postgres@127.0.0.1:55422/postgres`,
+Studio `http://127.0.0.1:55423`, mail (Mailpit) `http://127.0.0.1:55424`.
 
 `0001_init.sql` stays as delivered; every fix is an additive migration (`0002_…`, `0003_…`), and no column is
 dropped or renamed (docs/decisions.md C-5).
