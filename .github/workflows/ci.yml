@@ -38,6 +38,8 @@ jobs:
         run: pnpm db:types:check
       - name: Database tests (pgTAP)
         run: pnpm db:test
+      - name: Edge Function tests (against local Supabase)
+        run: pnpm fn:test
       - name: Secret scan (source and exported bundle)
         run: |
           pnpm --filter @pickld/mobile scan:secrets

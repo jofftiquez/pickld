@@ -9,6 +9,7 @@ Needs Docker. The CLI is a root dev dependency, so run it through pnpm.
 | `pnpm db:types` | Regenerate `apps/mobile/src/lib/database.types.ts`. Commit it with every migration. |
 | `pnpm db:types:check` | Fail if the committed types are stale (part of `scripts/ci.sh`). |
 | `pnpm db:test` | Run the pgTAP suite in `tests/` (`supabase test db`). |
+| `pnpm fn:test` | Run the Edge Function tests in `functions/tests/` against the running local stack (Deno). |
 
 Local URLs: API `http://127.0.0.1:55421`, database `postgresql://postgres:postgres@127.0.0.1:55422/postgres`,
 Studio `http://127.0.0.1:55423`, mail (Mailpit) `http://127.0.0.1:55424`.
@@ -32,3 +33,18 @@ request would: `tests.world()` creates the standard cast (owner, reader, outside
 `tests.act_as('reader')`, `tests.act_as_anon()`, `tests.act_as_service()`, `tests.reset_role()`,
 `tests.make_jar(...)` and `tests.make_moment(...)`. Every RLS change ships with tests that try it as owner, reader,
 outsider and blocked user, plus a control case that a too-strict rule would fail.
+
+## Edge Functions
+
+One folder per function (`functions/<name>/index.ts` serves, `handler.ts` holds the logic), shared code in
+`functions/_shared/`. Every function validates input with Zod and answers `{ data } | { error }`; crashes are
+reported to Sentry only when `SENTRY_DSN` is set. Functions act as the caller (RLS applies) and never use a
+service key.
+
+`supabase start` serves them at `http://127.0.0.1:55421/functions/v1/<name>`. Their secrets (the photo bucket's
+`S3_*` and `PHOTO_TOKEN_SECRET`) go in `functions/.env` (git-ignored; see `functions/.env.example`). Locally
+`S3_*` are the Storage S3 values from `supabase status`. Run Deno commands from outside `functions/`, or use
+`pnpm fn:test`: Deno's temporary files there make the local runtime restart.
+
+Tests sign in throwaway users with a random password through the local Auth API (keys read from
+`supabase status` at runtime) and delete them afterwards.
