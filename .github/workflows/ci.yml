@@ -27,4 +27,9 @@ jobs:
         run: pnpm lint
       - name: Unit tests
         run: pnpm test
-      # The Supabase reset and pgTAP steps are added in M1-05 / M1-06.
+      - name: Start local Supabase
+        run: pnpm db:start
+      - name: Apply migrations and seed
+        run: pnpm db:reset
+      - name: Generated database types are current
+        run: pnpm db:types:check
