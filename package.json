@@ -3,9 +3,9 @@
   "private": true,
   "packageManager": "pnpm@12.0.0",
   "scripts": {
-    "typecheck": "pnpm -r --if-present typecheck",
-    "lint": "pnpm -r --if-present lint",
-    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck && deno task --cwd workers/photos check",
+    "lint": "pnpm -r --if-present lint && deno task --cwd workers/photos lint",
+    "test": "pnpm -r --if-present test && deno task --cwd workers/photos test",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:types": "scripts/db-types.sh",

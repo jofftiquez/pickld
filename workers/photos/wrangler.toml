@@ -1,0 +1,18 @@
+# Photo Worker (D-12). Deploys once the Cloudflare account exists (M1-01, M1-28):
+#   wrangler secret put PHOTO_TOKEN_SECRET --env staging   (same value as the Supabase secret)
+#   wrangler deploy --env staging
+# Buckets are never public; this Worker is the only reader.
+name = "pickld-photos"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+[env.staging]
+name = "pickld-photos-staging"
+routes = [{ pattern = "photos-staging.pickld.me", custom_domain = true }]
+r2_buckets = [{ binding = "PHOTOS", bucket_name = "pickld-photos-staging" }]
+
+[env.production]
+name = "pickld-photos"
+routes = [{ pattern = "photos.pickld.me", custom_domain = true }]
+r2_buckets = [{ binding = "PHOTOS", bucket_name = "pickld-photos-production" }]
