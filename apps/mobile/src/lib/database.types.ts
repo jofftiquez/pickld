@@ -1073,6 +1073,7 @@ export type Database = {
       };
     };
     Functions: {
+      can_appeal: { Args: { item: string; uid?: string }; Returns: boolean };
       can_view_jar: {
         Args: {
           j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;
@@ -1080,6 +1081,21 @@ export type Database = {
         };
         Returns: boolean;
       };
+      can_view_moment: {
+        Args: {
+          m: Omit<
+            Database['public']['Tables']['moments']['Row'],
+            Database['public']['Tables']['moments']['ComputedFields']
+          >;
+          viewer: string;
+        };
+        Returns: boolean;
+      };
+      can_view_target: {
+        Args: { t: Database['public']['Enums']['target_type']; tid: string; viewer: string };
+        Returns: boolean;
+      };
+      delete_comment: { Args: { comment_id: string }; Returns: undefined };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
