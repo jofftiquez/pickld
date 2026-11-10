@@ -1,4 +1,8 @@
 {
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel"
+  },
   "today": {
     "title": "Today"
   },
