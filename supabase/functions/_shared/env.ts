@@ -27,3 +27,13 @@ export function s3ConfigFromEnv(): S3Config {
     secretAccessKey: required('S3_SECRET_ACCESS_KEY'),
   };
 }
+
+/** Origin of the photo Worker (workers/photos). */
+export function photoBaseUrl(): string {
+  return required('PHOTO_BASE_URL');
+}
+
+/** Shared with the photo Worker; signs photo tokens. */
+export function photoTokenSecret(): string {
+  return required('PHOTO_TOKEN_SECRET');
+}

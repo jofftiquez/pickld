@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "check": "deno check _shared/ upload-url/ tests/",
+    "check": "deno check _shared/ upload-url/ photo-urls/ tests/",
     "lint": "deno lint",
     "test": "deno test --allow-env --allow-net --allow-run=pnpm tests/"
   },
