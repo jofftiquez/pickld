@@ -1,0 +1,4 @@
+node_modules
+pnpm-lock.yaml
+design
+supabase/migrations/0001_init.sql
