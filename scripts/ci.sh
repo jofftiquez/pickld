@@ -12,4 +12,7 @@ pnpm exec supabase status > /dev/null 2>&1 || pnpm db:start
 pnpm db:reset
 pnpm db:types:check
 pnpm db:test
+# NFR-SEC-02: no service key in the app source or the exported bundle.
+pnpm --filter @pickld/mobile scan:secrets
+pnpm --filter @pickld/mobile scan:bundle
 echo "ci: all steps passed"
