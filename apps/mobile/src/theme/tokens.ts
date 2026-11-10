@@ -62,6 +62,7 @@ export const type = {
 export const radius = {
   thumb: 10,
   thumbLg: 14,
+  input: 16, // text fields (EditProfile)
   tile: 22,
   card: 24,
   tabBar: 26,

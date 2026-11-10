@@ -5,5 +5,8 @@
   "brand": {
     "tagline": "Eight moments. One real day.",
     "loading": "Pickld is loading"
+  },
+  "forms": {
+    "characterCount": "{{count}} of {{max}} characters"
   }
 }
