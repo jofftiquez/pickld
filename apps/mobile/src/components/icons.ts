@@ -1,0 +1,65 @@
+// Stroke icons from the Hi-fi A design (24 × 24 grid, round caps and joins). Data only; rendered by <Icon>.
+export type IconShape =
+  | { kind: 'path'; d: string }
+  | { kind: 'circle'; cx: number; cy: number; r: number }
+  | { kind: 'rect'; x: number; y: number; width: number; height: number; rx: number };
+
+const p = (d: string): IconShape => ({ kind: 'path', d });
+const c = (cx: number, cy: number, r: number): IconShape => ({ kind: 'circle', cx, cy, r });
+const r = (x: number, y: number, width: number, height: number, rx: number): IconShape => ({
+  kind: 'rect',
+  x,
+  y,
+  width,
+  height,
+  rx,
+});
+
+export const icons = {
+  back: [p('m15 18-6-6 6-6')],
+  chevronRight: [p('m9 18 6-6-6-6')],
+  chevronDown: [p('m6 9 6 6 6-6')],
+  close: [p('M6 6l12 12M18 6 6 18')],
+  check: [p('M5 12.5l4.5 4.5L19 7')],
+  plus: [p('M12 5v14M5 12h14')],
+  more: [c(5, 12, 1.2), c(12, 12, 1.2), c(19, 12, 1.2)],
+  share: [p('M12 3v12M7 8l5-5 5 5M5 14v6h14v-6')],
+  lock: [r(5, 11, 14, 10, 2), p('M8 11V7a4 4 0 0 1 8 0v4')],
+  warning: [p('M12 3 2 20h20z'), p('M12 10v4M12 17v.5')],
+  retry: [p('M3 12a9 9 0 1 0 3-6.7L3 8'), p('M3 3v5h5')],
+  clock: [p('M12 6v6l4 2'), c(12, 12, 9)],
+  wifiOff: [p('M2 8.8a15 15 0 0 1 20 0'), p('M5 12.5a10 10 0 0 1 14 0'), p('M8.5 16a5 5 0 0 1 7 0'), p('M3 3l18 18')],
+  settings: [
+    c(12, 12, 3),
+    p(
+      'M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+    ),
+  ],
+  // Tab bar
+  today: [p('M4.5 4.5 19 3l1.5 12.5-12 1.5-3 4z')],
+  capture: [p('M4 8h3l2-3h6l2 3h3v11H4z'), c(12, 13, 3.5)],
+  jars: [
+    p('M8.5 2.5h7v3h-7z'),
+    p('M7.5 5.5h9a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-10a3 3 0 0 1 3-3z'),
+    p('M4.5 13.5h15'),
+  ],
+  myDays: [r(3.5, 5, 17, 15, 3), p('M3.5 10h17M8 3v4M16 3v4')],
+  // Moment slots
+  whereami: [p('M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z'), c(12, 10, 2.3)],
+  mebusywith: [
+    p(
+      'M8 12V6.5a1.5 1.5 0 0 1 3 0V11m0-5.5V4.5a1.5 1.5 0 0 1 3 0V11m0-4a1.5 1.5 0 0 1 3 0v6.5a7 7 0 0 1-7 7h-.5A6 6 0 0 1 5 17.6l-1.6-2.8a1.5 1.5 0 0 1 2.5-1.6L8 15',
+    ),
+  ],
+  whoamiwith: [c(9, 8, 3), c(17, 9, 2.5), p('M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15.2A4.5 4.5 0 0 1 21 19')],
+  ootd: [p('M10 6a2 2 0 1 1 2 2v1.5m0 0L3 16.5h18z')],
+  selfie: [c(12, 9, 5), p('M5 21c1-3.5 4-5 7-5s6 1.5 7 5')],
+  morning: [p('M7 17a5 5 0 0 1 10 0'), p('M2 17h20M12 6v3M4.5 9.5l2 2M19.5 9.5l-2 2')],
+  afternoon: [
+    c(12, 12, 4),
+    p('M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4'),
+  ],
+  evening: [p('M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z')],
+} satisfies Record<string, IconShape[]>;
+
+export type IconName = keyof typeof icons;
