@@ -50,7 +50,7 @@ select is((select count(*) from public.moments where jar_id in (select id from t
 
 select tests.act_as_anon();
 select is((select count(*) from public.jars where id in (select id from t_jars)), 0::bigint, 'anon cannot see unpublished jars');
-select is((select count(*) from public.moments where jar_id in (select id from t_jars)), 0::bigint, 'anon cannot see their moments');
+select throws_ok($$select count(*) from public.moments$$, '42501', null, 'anon has no access to the moments table (since 0004)');
 
 -- Writes by others are refused too: updates touch zero rows, inserts into the jar fail.
 select tests.act_as('reader');
