@@ -56,6 +56,7 @@ export const type = {
   bodySmall: { size: 13, weight: '500' },
   label: { size: 12, weight: '600' },
   caption: { size: 11, weight: '700' },
+  button: { size: 16, weight: '800' }, // primary and danger button labels (Welcome, Publish, Delete)
 } as const;
 
 export const radius = {
