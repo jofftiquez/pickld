@@ -1059,13 +1059,41 @@ export type Database = {
         };
         Returns: boolean;
       };
+      is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
+      is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_moderator: { Args: Record<PropertyKey, never>; Returns: boolean };
       jar_ends_at: {
         Args: {
           j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;
         };
         Returns: string;
+      };
+      my_profile: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          author_count: number;
+          avatar_path: string | null;
+          bio: string | null;
+          birthday: string;
+          cover_path: string | null;
+          created_at: string;
+          default_visibility: Database['public']['Enums']['jar_visibility'];
+          display_name: string;
+          home_tz: string;
+          id: string;
+          jar_count: number;
+          lid_color: string;
+          reader_count: number;
+          status: Database['public']['Enums']['profile_status'];
+          username: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'profiles';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
     };
     Enums: {
