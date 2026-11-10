@@ -141,3 +141,9 @@ insert into public.comments (id, jar_id, user_id, parent_id, body, is_hidden, cr
   ('c0000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-000000000102', 'a0000000-0000-4000-8000-000000000002', null, 'that sinigang 😭', false, now() - interval '20 hours'),
   ('c0000000-0000-4000-8000-000000000002', 'b0000000-0000-4000-8000-000000000102', 'a0000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001', 'come over next time!', false, now() - interval '19 hours'),
   ('c0000000-0000-4000-8000-000000000003', 'b0000000-0000-4000-8000-000000000201', 'a0000000-0000-4000-8000-000000000001', null, 'Intramuros looks so good today', false, now() - interval '30 minutes');
+
+-- ---------------------------------------------------------------- photo bucket (local stand-in for R2)
+-- Private: photos are read only through the photo Worker with a token (D-12); uploads use presigned
+-- URLs from fn:upload-url. `cd workers/photos && deno task seed` fills it with design/images.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('photos', 'photos', false, 5242880, array['image/jpeg']);

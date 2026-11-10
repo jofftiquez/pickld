@@ -1,0 +1,20 @@
+{
+  "tasks": {
+    "dev": "deno run --env-file=.env --allow-env --allow-net --allow-run=pnpm src/dev.ts",
+    "seed": "deno run --env-file=.env --allow-env --allow-net --allow-run=pnpm --allow-read=../../design/images scripts/seed-local.ts",
+    "test": "deno test test/",
+    "check": "deno check src/ scripts/ test/",
+    "lint": "deno lint src/ scripts/ test/"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "singleQuote": true
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  }
+}
