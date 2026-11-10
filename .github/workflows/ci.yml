@@ -35,3 +35,7 @@ jobs:
         run: pnpm db:types:check
       - name: Database tests (pgTAP)
         run: pnpm db:test
+      - name: Secret scan (source and exported bundle)
+        run: |
+          pnpm --filter @pickld/mobile scan:secrets
+          pnpm --filter @pickld/mobile scan:bundle

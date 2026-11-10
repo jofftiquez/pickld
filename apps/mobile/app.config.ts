@@ -36,6 +36,8 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-font',
     'expo-localization',
+    'expo-secure-store',
+    'expo-sqlite',
     [
       'expo-splash-screen',
       {
