@@ -1,0 +1,57 @@
+# CSAM scanning: how a match is detected and how fn:moderate gates on it
+
+Task M1-26 (#26) · FR-SAF-04 (and FR-SAF-03, NFR-SEC-02) · researched 2026-11-10 · **Needs product owner approval (see "Decision needed").**
+
+## Summary
+
+Cloudflare's CSAM Scanning Tool gives `fn:moderate` **no programmatic signal**. It can't be the gate FR-SAF-04 asks for, which has to block the photo, suspend the account and start the legal flow automatically. Keep it on as a free backstop, and use a hash-matching API as the gate. The recommendation is **Microsoft PhotoDNA Cloud Service**: free for vetted organizations, with a monthly transaction limit. It is a new vendor, so it needs the product owner's approval before anyone applies.
+
+## What Cloudflare's tool does
+
+Sources: [Cloudflare docs, CSAM Scanning Tool](https://developers.cloudflare.com/cache/reference/csam-scanning/) (updated 2026-05-01), [changelog 2025-02-04](https://developers.cloudflare.com/changelog/2025-02-04-easier-onboarding-for-csam-scanning-tool), [blog: an update to our CSAM scanning tool](https://blog.cloudflare.com/a-simpler-path-to-a-safer-internet-an-update-to-our-csam-scanning-tool), [API: csam_scanner settings](https://developers.cloudflare.com/api/resources/csam_scanner).
+
+| Question          | Answer                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What gets scanned | Images that are served through a zone and **enter the Cloudflare cache**. Each one is fuzzy-hashed and compared with known-CSAM hash lists from NCMEC and others. A Cloudflare community answer (Oct 2026) confirms it: "no caching means no CSAM scanning". Responses marked `private` or `no-store`, uncached Worker responses and `r2.dev` URLs are not scanned. |
+| Detection signal  | (1) **One email per day** listing the matched file paths from the past 24 hours. (2) "If possible", Cloudflare blocks the URL, and later requests get HTTP **451**. If the block fails, the email says so.                                                                                                                                                          |
+| API or webhook    | **None for detections.** The API only reads and changes the zone setting (`/zones/{id}/settings/csam_scanner_third_party`: enabled, notification email). Blocks are reviewed by hand in the dashboard (Security Center → Blocked Content).                                                                                                                          |
+| Latency           | **Not documented.** Hashing happens when the image enters the cache. Cloudflare doesn't say when the block takes effect, and the email can arrive up to 24 hours later.                                                                                                                                                                                             |
+| Cost              | Free on every plan, under the CSAM Service-Specific Terms.                                                                                                                                                                                                                                                                                                          |
+| Test path         | Cloudflare offers no test hash, so the setup can't be checked end to end before launch.                                                                                                                                                                                                                                                                             |
+
+### Consequence for our design
+
+- The architecture assumed that "a match blocks the photo immediately" (docs/architecture.md, Moderation §1) and planned that "fn:moderate fetches the thumbnail through the CDN and treats a block as a match" (docs/analysis.md, risks). That plan doesn't work:
+  - A first fetch is a cache miss. It returns the image (200) while the hash is computed, so `fn:moderate` gets no verdict inside the 10-second budget of FR-SAF-03.
+  - A 451 appears only on later requests, at a time Cloudflare doesn't document. Polling for one would hold every photo in Checking for an unknown time.
+- As built in M1-14, the photo Worker streams objects from the bucket binding with `cache-control: private` and never fills the cache. **Today Cloudflare would scan none of our photos.** For the backstop to work, the Worker must put each object into the edge cache under a cache key without the token, e.g. `https://photos.pickld.me/<object key>` (keys are never reused, so caching per key is safe). Browsers keep getting `private` headers. Whether a Cache API `put` from a Worker counts as "entering the cache" for scanning is **not documented**; check with Cloudflare when the account exists (M1-01). If it doesn't count, the alternative is a proxied R2 custom domain that only the Worker can reach.
+
+## How fn:moderate gates (proposed for M2, the fn:moderate tasks)
+
+1. A moment is created with status `checking` (already enforced in Postgres). Nobody but the owner sees it, and `fn:photo-urls` gives others no token for it (M1-16).
+2. **CSAM gate:** `fn:moderate` reads the full photo from the bucket and sends it to the hash-matching API, one synchronous REST call per photo.
+   - **Match:** set the moment to `removed`, keep the object as evidence (not deleted; see "Evidence"), suspend the owner (`profiles.status = 'suspended'`), insert a `csam_incidents` row, alert the founders' trusted group, and **never** create a `moderation_items` row (FR-SAF-04).
+   - **No match:** continue to the OpenAI omni-moderation check as planned.
+3. **Fail closed:** if the hash API times out or errors, the moment stays `checking` and the job retries with backoff (1s, 5s, 30s, 2m, 10m). If it still fails, alert and keep the moment hidden. Nothing goes live without a CSAM verdict (AGENTS.md rule 4).
+4. **Backstop:** keep Cloudflare's tool on for the photos zone. Whoever reads the daily email handles any hit as a manual incident: find the moment by object key (keys contain the owner's id), then take the same actions as step 2 through the moderation console's legal flow.
+5. **Pending edits** (`pending_photo_path`) go through the same gate before the swap.
+
+### Evidence and reporting
+
+- A matched object must be preserved for possible law-enforcement requests (Cloudflare's guidance mentions one year) and be readable only by the legal group. **Current gap:** owners can delete their removed moments, which would lose the evidence (follow-up, M3-23). The `csam_incidents` row must keep the object key and must not be deleted when the moment is deleted.
+- Reporting (NCMEC CyberTipline; Philippines Anti-OSAEC law) stays a human flow owned by the founders (docs/analysis.md). PhotoDNA has a reporting API to NCMEC; whether to use it is a legal question.
+
+## Vendor recommendation (needs product owner approval)
+
+| Option                                                      | What it gives                                                                         | Cost                                                                                                                                                                                                                                                                  | Fit                                                                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Microsoft PhotoDNA Cloud Service** (recommended)          | Synchronous REST hash match against known CSAM                                        | Free for qualified organizations, after vetting by a third party and Microsoft's Digital Crimes Unit; "limited transactions per month". High volume is billed as Azure Content Moderator transactions ([terms](https://www.microsoft.com/en-us/photodna/termsofuse)). | Gives the required signal at no cost at launch volume. Needs a company application, and approval is case by case. |
+| Thorn Safer, or Hive's Combined CSAM API (built with Thorn) | Hash match plus a classifier for unknown CSAM, with a test hash set                   | Paid, enterprise contract                                                                                                                                                                                                                                             | Strongest, but a paid service. Not adopted.                                                                       |
+| Google Content Safety API                                   | Classifier that scores how likely unknown images are to be abuse, for review priority | Free for approved partners                                                                                                                                                                                                                                            | Not a gate (it gives a priority score, not a match). Could be added later.                                        |
+| Cloudflare tool only                                        | Daily email, a 451 block at an unknown time                                           | Free                                                                                                                                                                                                                                                                  | Doesn't meet FR-SAF-04's automatic block and suspension. Acceptable only as a backstop.                           |
+
+### Decision needed (product owner)
+
+1. Approve applying for **PhotoDNA Cloud Service** for the Pickld company. The application needs company details, the monthly volume (launch estimate: photos per day × 30) and agreement to the terms. Until approval, `fn:moderate` uses a stub provider locally, and staging must not accept real users.
+2. Confirm that Cloudflare's tool is a backstop only, and name who reads the daily detection email.
+3. If PhotoDNA is refused or its free limit is too low, choose between a paid vendor (Thorn Safer or Hive) and launching without a pre-publication CSAM gate. The second option doesn't meet FR-SAF-04, so this document recommends against it.
