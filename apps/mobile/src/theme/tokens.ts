@@ -12,10 +12,13 @@ export const colors = {
   muted: '#565e50', // secondary text
   background: '#f4f5f0', // app background
   surface: '#ffffff', // cards, sheets, tab bar
-  subtle: '#f0f2ec', // secondary buttons, chips, segmented controls
+  subtle: '#f0f2ec', // secondary buttons, chips, segmented controls on white sheets
+  segmentTrack: '#e9ece4', // segmented control track on the app background (Profile, Readers)
   border: '#dfe2d8', // inputs
   dashed: '#c9cfc0', // empty slots
   divider: '#eef0ea',
+  toggleOff: '#d5d9cf', // switch track when off (Settings)
+  chevron: '#8b9184', // row chevrons (Settings); icon only, 3.3:1 on white meets the 3:1 non-text minimum
   danger: '#b42318',
   dangerTint: '#fdeceb',
   likeText: '#a01d14',
@@ -53,6 +56,7 @@ export const type = {
   sectionTitle: { size: 20, weight: '800', letterSpacing: -0.4 },
   cardTitle: { size: 17, weight: '700' },
   body: { size: 15, weight: '500' },
+  bodyMedium: { size: 14, weight: '500' }, // chips (700), list row values
   bodySmall: { size: 13, weight: '500' },
   label: { size: 12, weight: '600' },
   caption: { size: 11, weight: '700' },
@@ -101,6 +105,13 @@ export const sizes = {
   buttonPrimary: 54,
   buttonSecondary: 50,
   pillButton: 36,
+  textField: 50,
+  textArea: 74,
+  segment: 36,
+  chip: 42,
+  toggleWidth: 48,
+  toggleHeight: 28,
+  toggleThumb: 24,
   roundButton: 44,
   tabBar: 68,
   momentTile: 116, // Today grid tile height (2 columns)
