@@ -48,7 +48,7 @@
     "android": "expo run:android",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "jest && node --test scripts/"
+    "test": "jest && node --test scripts/*.test.mjs"
   },
   "private": true
 }

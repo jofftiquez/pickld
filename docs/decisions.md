@@ -37,3 +37,10 @@ jofftiquez (product owner) approved Phase 1 and accepted every recommended defau
 | C-4 | Moments start as `checking` (AGENTS rule 4) vs. schema default `uploading`. | The row is inserted after the upload with status `checking`. `uploading` is kept for the server-side Replace flow, and nothing is renamed. |
 | C-5 | `0001_init.sql` security defects (analysis §2.3, S-1 to S-15). | 0001 stays as delivered, and fixes land as additive migrations (0002+) with pgTAP tests. No column is dropped or renamed. |
 | C-6 | Sticker catalog and Everyone jars must render on the anonymous web page, but RLS requires a signed-in user and rule 2 forbids a service key in web pages. | Narrow `security definer` RPCs callable with the anon key return Everyone, live, non-private data only. |
+
+## Nov 10, 2026 — During Phase 4
+
+| # | Decision |
+| --- | --- |
+| D-19 | **GitHub Actions is blocked by the account's billing** ("recent account payments have failed or your spending limit needs to be increased"). The `ci` workflow is merged and starts working once billing is fixed. Until then, every PR runs `scripts/ci.sh` (the same steps) in the orb before merging, and the PR says so. Owner action: fix billing at github.com/settings/billing. |
+| D-20 | **Squash-merge without required checks** while D-19 lasts. Branch protection requiring `ci` is turned on once Actions runs. |
