@@ -4,13 +4,16 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
+    "@sentry/react-native": "~8.28.0",
     "@supabase/supabase-js": "^2.119.0",
     "@tanstack/query-async-storage-persister": "^5.107.1",
     "@tanstack/react-query": "^5.107.1",
     "@tanstack/react-query-persist-client": "^5.107.1",
     "expo": "~58.0.23",
+    "expo-application": "~58.1.2",
     "expo-constants": "~58.0.15",
     "expo-device": "~58.0.5",
+    "expo-file-system": "~58.0.13",
     "expo-font": "~58.0.11",
     "expo-image": "~58.0.18",
     "expo-linking": "~58.0.16",
@@ -24,6 +27,7 @@
     "expo-web-browser": "~58.0.7",
     "i18next": "^27.0.1",
     "nativewind": "^4.2.7",
+    "posthog-react-native": "^4.85.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-i18next": "^18.0.1",
@@ -60,7 +64,7 @@
     "lint": "eslint .",
     "test": "jest && node --test scripts/*.test.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs app src app.config.ts .env.example",
-    "scan:bundle": "expo export --platform ios --platform android --output-dir dist/secret-scan && node scripts/scan-secrets.mjs dist/secret-scan"
+    "scan:bundle": "expo export --platform ios --platform android --no-bytecode --output-dir dist/secret-scan && node scripts/scan-secrets.mjs dist/secret-scan"
   },
   "private": true
 }
