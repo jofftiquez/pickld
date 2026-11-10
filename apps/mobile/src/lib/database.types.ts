@@ -262,6 +262,7 @@ export type Database = {
         Row: {
           comment_count: number;
           created_at: string;
+          ends_at: string;
           id: string;
           is_full: boolean | null;
           like_count: number;
@@ -272,12 +273,14 @@ export type Database = {
           updated_at: string;
           user_id: string;
           visibility: Database['public']['Enums']['jar_visibility'];
+          visible_count: number;
           jar_ends_at: string | null;
         };
         ComputedFields: 'jar_ends_at';
         Insert: {
           comment_count?: number;
           created_at?: string;
+          ends_at: string;
           id?: string;
           is_full?: never;
           like_count?: number;
@@ -288,10 +291,12 @@ export type Database = {
           updated_at?: string;
           user_id: string;
           visibility?: Database['public']['Enums']['jar_visibility'];
+          visible_count?: number;
         };
         Update: {
           comment_count?: number;
           created_at?: string;
+          ends_at?: string;
           id?: string;
           is_full?: never;
           like_count?: number;
@@ -302,6 +307,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
           visibility?: Database['public']['Enums']['jar_visibility'];
+          visible_count?: number;
         };
         Relationships: [
           {
@@ -1063,6 +1069,7 @@ export type Database = {
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_moderator: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_valid_tz: { Args: { name: string }; Returns: boolean };
       jar_ends_at: {
         Args: {
           j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;
