@@ -62,8 +62,11 @@ select lives_ok($$insert into public.jars (user_id, local_date, tz) values (auth
 -- Future dates are judged in the jar's own zone, not the server's.
 select throws_ok($$insert into public.jars (user_id, local_date, tz) values (auth.uid(), (now() at time zone 'Pacific/Kiritimati')::date + 1, 'Pacific/Kiritimati')$$,
                  '22023', 'jar date is in the future for its time zone', 'tomorrow in the jar''s zone is refused');
+-- As the reader, who has no jar yet: the owner's Manila jar above often has the same local date.
+select tests.act_as('reader');
 select lives_ok($$insert into public.jars (user_id, local_date, tz) values (auth.uid(), (now() at time zone 'Pacific/Kiritimati')::date, 'Pacific/Kiritimati')$$,
                 'today in UTC+14 is accepted even when it is already tomorrow in UTC');
+select tests.act_as('owner');
 select throws_ok($$insert into public.jars (user_id, local_date, tz) values (auth.uid(), (now() at time zone 'Pacific/Pago_Pago')::date + 1, 'Pacific/Pago_Pago')$$,
                  '22023', null, 'tomorrow in UTC-11 is refused even when it is already that date in UTC');
 
