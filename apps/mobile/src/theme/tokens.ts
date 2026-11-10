@@ -18,6 +18,7 @@ export const colors = {
   dashed: '#c9cfc0', // empty slots
   divider: '#eef0ea',
   toggleOff: '#d5d9cf', // switch track when off (Settings)
+  handle: '#d5d9cf', // bottom sheet grab handle
   chevron: '#8b9184', // row chevrons (Settings); icon only, 3.3:1 on white meets the 3:1 non-text minimum
   danger: '#b42318',
   dangerTint: '#fdeceb',
@@ -69,6 +70,7 @@ export const radius = {
   input: 16, // text fields (EditProfile)
   tile: 22,
   card: 24,
+  dialog: 28, // centered confirm dialogs (Block)
   tabBar: 26,
   sheet: 30,
   pill: 999,
@@ -90,6 +92,13 @@ export const shadow = {
     shadowRadius: 28,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
+  },
+  dialog: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.3,
+    shadowRadius: 30,
+    shadowOffset: { width: 0, height: 20 },
+    elevation: 16,
   },
   brandGlow: {
     shadowColor: '#7fad33',
@@ -113,6 +122,15 @@ export const sizes = {
   toggleHeight: 28,
   toggleThumb: 24,
   roundButton: 44,
+  cardPadding: 14, // Settings cards
+  avatarSm: 32, // story header, moment options
+  avatarMd: 52, // Settings profile row
+  avatarLg: 64, // Block dialog
+  avatarXl: 88, // profile header
+  avatarRing: 3, // white ring on profile headers
+  handleWidth: 40,
+  handleHeight: 5,
+  dialogButton: 48, // Cancel under a dialog's main action
   tabBar: 68,
   momentTile: 116, // Today grid tile height (2 columns)
   jarCardGraphic: 52,
