@@ -1107,6 +1107,16 @@ export type Database = {
         };
         Returns: string;
       };
+      moment_photo_paths: {
+        Args: { ids: string[] };
+        Returns: {
+          moment_id: string;
+          pending_photo_path: string;
+          pending_thumb_path: string;
+          photo_path: string;
+          thumb_path: string;
+        }[];
+      };
       my_pending_moments: {
         Args: Record<PropertyKey, never>;
         Returns: {
