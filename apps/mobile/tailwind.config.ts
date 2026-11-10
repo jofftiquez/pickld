@@ -3,7 +3,7 @@ import type { Config } from 'tailwindcss';
 // @ts-expect-error untyped preset
 import nativewindPreset from 'nativewind/preset';
 
-import { fontFamilies } from './src/theme/fonts';
+import { fontFamilies } from './src/theme/fontFamilies';
 import { colors, lidColors, radius, space, type } from './src/theme/tokens';
 
 // Every color, radius, spacing step and text size comes from tokens.ts.
@@ -20,7 +20,10 @@ const config: Config = {
     borderRadius: { none: '0px', ...Object.fromEntries(Object.entries(radius).map(([k, v]) => [k, `${v}px`])) },
     spacing: { 0: '0px', ...Object.fromEntries(Object.entries(space).map(([k, v]) => [k, `${v}px`])) },
     fontSize: fontSize as NonNullable<Config['theme']>['fontSize'],
-    fontFamily: Object.fromEntries(Object.entries(fontFamilies).map(([k, v]) => [k, [v]])),
+    // font-jakarta-400 … font-jakarta-800; plain font-bold etc. stay font-weight utilities.
+    fontFamily: Object.fromEntries(
+      Object.values(fontFamilies).map((v) => [`jakarta-${v.match(/_(\d{3})/)?.[1]}`, [v]]),
+    ),
     extend: {},
   },
   plugins: [],
