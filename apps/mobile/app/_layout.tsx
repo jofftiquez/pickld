@@ -11,6 +11,7 @@ import { SplashOverlay } from '@/components/SplashOverlay';
 import { startAuth } from '@/lib/authBootstrap';
 import { createQueryClient, persistOptions } from '@/lib/queryClient';
 import { getSupabase } from '@/lib/supabase';
+import { startTelemetry } from '@/lib/telemetry';
 import { fontFiles } from '@/theme/fonts';
 
 void SplashScreen.preventAutoHideAsync();
@@ -21,6 +22,7 @@ export default function RootLayout() {
   const hideSplash = useCallback(() => setSplashVisible(false), []);
   const [queryClient] = useState(createQueryClient);
 
+  useEffect(() => startTelemetry(), []);
   useEffect(() => startAuth(getSupabase), []);
 
   useEffect(() => {

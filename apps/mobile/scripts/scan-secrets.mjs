@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const JWT = /eyJ[A-Za-z0-9_-]{8,}\.(eyJ[A-Za-z0-9_-]{8,})\.[A-Za-z0-9_-]{8,}/g;
 const RULES = [
-  { name: 'Supabase secret key', pattern: /sb_secret_[A-Za-z0-9][A-Za-z0-9_-]{15,}/g },
+  { name: 'Supabase secret key', pattern: /(?<![A-Za-z0-9_])sb_secret_[A-Za-z0-9][A-Za-z0-9_-]{15,}/g },
   { name: 'public env var named like a secret', pattern: /EXPO_PUBLIC_[A-Z0-9_]*(?:SERVICE|SECRET)[A-Z0-9_]*/g },
   { name: 'service role env var', pattern: /SUPABASE_SERVICE_ROLE(?:_KEY)?/g },
 ];
