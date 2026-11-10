@@ -14,6 +14,9 @@ describe('tailwind theme', () => {
     const f = config.theme?.fontSize as Record<string, [string, { fontWeight: string }]>;
     expect(r.card).toBe(`${radius.card}px`);
     expect(s.lg).toBe(`${space.lg}px`);
+    expect((config.theme?.fontFamily as Record<string, string[]>)['jakarta-800']).toEqual([
+      'PlusJakartaSans_800ExtraBold',
+    ]);
     expect(f.screenTitle).toEqual([`${type.screenTitle.size}px`, { fontWeight: type.screenTitle.weight }]);
   });
 });
