@@ -1,0 +1,5 @@
+packages:
+  - apps/*
+nodeLinker: hoisted
+allowBuilds:
+  '@parcel/watcher': false
