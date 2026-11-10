@@ -11,4 +11,5 @@ pnpm test
 pnpm exec supabase status > /dev/null 2>&1 || pnpm db:start
 pnpm db:reset
 pnpm db:types:check
+pnpm db:test
 echo "ci: all steps passed"

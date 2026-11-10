@@ -33,3 +33,5 @@ jobs:
         run: pnpm db:reset
       - name: Generated database types are current
         run: pnpm db:types:check
+      - name: Database tests (pgTAP)
+        run: pnpm db:test
