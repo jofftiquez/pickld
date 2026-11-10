@@ -443,6 +443,11 @@ export type Database = {
           is_private: boolean;
           jar_id: string;
           like_count: number;
+          pending_caption: string | null;
+          pending_edits: Json | null;
+          pending_photo_path: string | null;
+          pending_since: string | null;
+          pending_thumb_path: string | null;
           photo_path: string | null;
           slot: Database['public']['Enums']['slot'];
           status: Database['public']['Enums']['moment_status'];
@@ -460,6 +465,11 @@ export type Database = {
           is_private?: boolean;
           jar_id: string;
           like_count?: number;
+          pending_caption?: string | null;
+          pending_edits?: Json | null;
+          pending_photo_path?: string | null;
+          pending_since?: string | null;
+          pending_thumb_path?: string | null;
           photo_path?: string | null;
           slot: Database['public']['Enums']['slot'];
           status?: Database['public']['Enums']['moment_status'];
@@ -476,6 +486,11 @@ export type Database = {
           is_private?: boolean;
           jar_id?: string;
           like_count?: number;
+          pending_caption?: string | null;
+          pending_edits?: Json | null;
+          pending_photo_path?: string | null;
+          pending_since?: string | null;
+          pending_thumb_path?: string | null;
           photo_path?: string | null;
           slot?: Database['public']['Enums']['slot'];
           status?: Database['public']['Enums']['moment_status'];
@@ -1075,6 +1090,17 @@ export type Database = {
           j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;
         };
         Returns: string;
+      };
+      my_pending_moments: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          moment_id: string;
+          pending_caption: string;
+          pending_edits: Json;
+          pending_photo_path: string;
+          pending_since: string;
+          pending_thumb_path: string;
+        }[];
       };
       my_profile: {
         Args: Record<PropertyKey, never>;
