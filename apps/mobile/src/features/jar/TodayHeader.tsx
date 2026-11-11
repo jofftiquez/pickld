@@ -21,8 +21,10 @@ export type TodayHeaderProps = {
 /** Date, greeting and the "Today" title, with the My days shortcut and avatar (Main). */
 export function TodayHeader({ date, greeting, displayName, avatarUrl, onOpenMyDays }: TodayHeaderProps) {
   const { t } = useTranslation();
-  const greetingText = displayName
-    ? t(`today.greeting.${greeting}`, { name: displayName })
+  // Main greets by first name ("Good afternoon, Dale"), which keeps the line short.
+  const firstName = displayName?.trim().split(/\s+/)[0];
+  const greetingText = firstName
+    ? t(`today.greeting.${greeting}`, { name: firstName })
     : t(`today.greetingNoName.${greeting}`);
   return (
     <View style={styles.row}>

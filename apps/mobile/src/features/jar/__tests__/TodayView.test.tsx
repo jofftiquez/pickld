@@ -68,7 +68,7 @@ describe('TodayView', () => {
     expect(screen.getByText('Eight moments fill it up. Start with whatever’s in front of you right now.')).toBeTruthy();
     expect(screen.queryByText(/of 8 moments/)).toBeNull();
     expect(screen.queryByTestId('today-publish')).toBeNull();
-    expect(screen.getByText('Tue, Nov 10 · Good morning, Dale Cruz')).toBeTruthy();
+    expect(screen.getByText('Tue, Nov 10 · Good morning, Dale')).toBeTruthy();
     expect(screen.getByTestId('screen-title')).toHaveTextContent('Today');
   });
 
