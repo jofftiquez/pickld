@@ -1,0 +1,53 @@
+# M3-01: Today → Publish → Publish review (design: Publish; FR-PUB-01, FR-PUB-03) → screenshot →
+# Everyone → Publish jar → back on Today with Publish off (the jar is published).
+# Run on the iOS Simulator with a dev build, signed in as seed user dale after `pnpm db:reset`: his jar
+# today is unpublished with 4 moments (one private), and his default visibility is Readers.
+#   maestro test --test-output-dir docs/milestones/M3 apps/mobile/.maestro/publish-review.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: today-publish
+      enabled: true
+    timeout: 15000
+- tapOn:
+    id: today-publish
+- extendedWaitUntil:
+    visible:
+      id: publish-review
+    timeout: 10000
+- assertVisible:
+    id: publish-subtitle
+    text: '.*4 of 8 moments'
+- assertVisible:
+    text: '1 private moment won’t be shared\. You can still add the 4 missing ones later today\.'
+- assertVisible:
+    id: publish-visibility-readers
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Publish-ios
+
+- tapOn:
+    id: publish-visibility-everyone
+- assertVisible:
+    id: publish-visibility-everyone
+- tapOn:
+    id: publish-submit
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: today-publish
+      enabled: false
+    timeout: 10000

@@ -31,7 +31,7 @@
     "inTodaysJarReaders_one": "in today’s jar · {{count}} reader",
     "inTodaysJarReaders_other": "in today’s jar · {{count}} readers",
     "publish": "Publish",
-    "publishHint": "Available soon",
+    "publishHint": "Review today’s jar and choose who can see it",
     "firstJarTitle": "Your first jar",
     "firstJarBody": "Eight moments fill it up. Start with whatever’s in front of you right now.",
     "grid": "Today’s moments",
@@ -39,7 +39,8 @@
       "title": "You’re offline.",
       "body_one": "{{count}} moment is saved on your phone and will upload when you’re back.",
       "body_other": "{{count}} moments are saved on your phone and will upload when you’re back."
-    }
+    },
+    "publishDisabledHint": "Add a moment first"
   },
   "timeZone": {
     "title": "You’re in {{zone}} time",
@@ -298,7 +299,38 @@
     "body": "Eight moments, one real day. That’s jar number {{number}}.",
     "bodyNoNumber": "Eight moments, one real day.",
     "done": "Done",
-    "doneHint": "Closes the celebration"
+    "doneHint": "Closes the celebration",
+    "publish": "Publish jar",
+    "publishHint": "Opens the review before your jar is shared"
+  },
+  "publish": {
+    "title": "Review your jar",
+    "subtitle": "{{date}} · {{moments}}",
+    "back": "Back",
+    "slots": "Your 8 moments",
+    "slotEmpty": "{{slot}}, empty",
+    "slotPrivate": "{{slot}}, private",
+    "visibilityTitle": "Who can see this jar",
+    "readers": "Readers",
+    "readersBody_one": "{{count}} person who reads your days",
+    "readersBody_other": "{{count}} people who read your days",
+    "readersBodyUnknown": "People who read your days",
+    "everyone": "Everyone",
+    "everyoneBody": "Anyone on Pickld",
+    "onlyMe": "Only me",
+    "onlyMeBody": "Keep this jar just for you",
+    "notePrivate_one": "{{count}} private moment won’t be shared.",
+    "notePrivate_other": "{{count}} private moments won’t be shared.",
+    "noteMissing_one": "You can still add the missing one later today.",
+    "noteMissing_other": "You can still add the {{count}} missing ones later today.",
+    "publish": "Publish jar",
+    "publishHint": "Shares this jar with the people you chose",
+    "notYet": "Not yet",
+    "notYetHint": "Goes back to Today without publishing",
+    "error": {
+      "failed": "Couldn’t publish. Check your connection and try again.",
+      "refused": "This jar can’t be published."
+    }
   },
   "stickerUnlocked": {
     "eyebrow": "Sticker unlocked",

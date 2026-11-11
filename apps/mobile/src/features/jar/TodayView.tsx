@@ -41,6 +41,8 @@ export type TodayViewProps = {
   onOpenMoment?: (momentId: string) => void;
   /** A live moment, or a queued photo that is waiting or failed: opens Moment options (M2-23). */
   onOpenOptions?: (tile: GridTile) => void;
+  /** Opens Publish review (M3-01); null or missing disables the jar card's Publish. */
+  onPublish?: (() => void) | null;
 };
 
 /** Tiles that open Moment options: the owner's live moments and queued photos not uploading right now. */
@@ -68,6 +70,7 @@ export function TodayView({
   zoneBanner = null,
   onOpenMoment,
   onOpenOptions,
+  onPublish = null,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -105,6 +108,7 @@ export function TodayView({
           readerCount={readerCount}
           lidColor={lidColor}
           firstDay={hasAnyJar === false && count === 0}
+          onPublish={onPublish}
         />
       </View>
       <View accessibilityLabel={t('today.grid')} style={styles.grid}>
