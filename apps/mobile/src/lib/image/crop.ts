@@ -1,4 +1,5 @@
 // 3:4 crop math for the image pipeline (FR-CAP-03). Pure.
+import { z } from 'zod';
 
 /** Uploaded photo and thumbnail sizes, portrait 3:4 (FR-CAP-03, M2-09). */
 export const FULL_SIZE = { width: 1440, height: 1920 } as const;
@@ -34,4 +35,44 @@ export function cropRect34(imageWidth: number, imageHeight: number, area?: CropR
     width,
     height,
   };
+}
+
+/** Quarter turns clockwise, as the Crop screen's Rotate button makes them. */
+export const rotations = [0, 90, 180, 270] as const;
+export type Rotation = (typeof rotations)[number];
+
+export type Size = { width: number; height: number };
+
+const positive = z.number().finite().positive();
+
+/**
+ * What the Crop screen chose (M2-10), stored on the queued photo until it is prepared. The photo is turned
+ * `rotate` degrees clockwise, then mirrored left to right when `flip`; `crop` is the frame in that turned
+ * image's pixels, measured on an image of `cropBasis` size (the size the picker reported). Preparation
+ * scales `crop` to the size it actually decodes, so a picker that reports a scaled size still crops the
+ * same part of the photo.
+ */
+export const cropSpecSchema = z.object({
+  crop: z.object({
+    originX: z.number().finite().nonnegative(),
+    originY: z.number().finite().nonnegative(),
+    width: positive,
+    height: positive,
+  }),
+  cropBasis: z.object({ width: positive, height: positive }),
+  rotate: z.literal(rotations),
+  flip: z.boolean(),
+});
+export type CropSpec = z.infer<typeof cropSpecSchema>;
+
+/** The size of `image` after `rotation`: a quarter turn swaps width and height. */
+export function rotatedSize(image: Size, rotation: Rotation): Size {
+  return rotation === 90 || rotation === 270 ? { width: image.height, height: image.width } : image;
+}
+
+/** `rect` (measured on an image of `basis` size) in the pixels of an image of `actual` size. */
+export function scaleRect(rect: CropRect, basis: Size, actual: Size): CropRect {
+  const sx = actual.width / basis.width;
+  const sy = actual.height / basis.height;
+  return { originX: rect.originX * sx, originY: rect.originY * sy, width: rect.width * sx, height: rect.height * sy };
 }

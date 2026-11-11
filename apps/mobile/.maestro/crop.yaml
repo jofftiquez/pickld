@@ -1,0 +1,83 @@
+# M2-08, M2-10 (FR-CAP-02, FR-CAP-03): gallery → Crop → editor. The Simulator has no photos worth picking
+# and the system picker can't be driven reliably, so the dev-only `?devPhoto=wide` param makes the gallery
+# button "pick" the bundled 3:2 photo assets/dev/wide.jpg (ignored in release builds). It isn't 3:4, so
+# Crop opens first.
+# Run on the iOS Simulator with a dev build (rebuilt after adding expo-image-picker), signed in as a user
+# whose open jar has SLOT empty (Done queues the photo there and opens the editor; nothing is uploaded
+# until the editor saves or the app restarts):
+#   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/crop.yaml
+#   maestro test -e SLOT=evening apps/mobile/.maestro/crop.yaml
+appId: me.pickld.app
+---
+# Default SLOT here, not in env: (a flow's env: overrides `maestro test -e` in Maestro 2.12).
+- evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'afternoon'}"
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+
+- openLink: pickld://camera?slot=${output.slot}&devPhoto=wide
+# iOS asks before opening a custom-scheme link.
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: camera-gallery
+    timeout: 10000
+
+- tapOn:
+    id: camera-gallery
+- extendedWaitUntil:
+    visible:
+      id: crop-screen
+    timeout: 10000
+- assertVisible: Crop photo
+- assertVisible: '#${output.slot} · from gallery'
+- assertVisible:
+    id: crop-aspect-chip
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Crop
+
+# Cancel goes back to the camera with nothing queued.
+- tapOn:
+    id: crop-cancel
+- extendedWaitUntil:
+    visible:
+      id: camera-gallery
+    timeout: 10000
+
+# Again, with a turn and a flip, then Next: edit.
+- tapOn:
+    id: camera-gallery
+- extendedWaitUntil:
+    visible:
+      id: crop-screen
+    timeout: 10000
+- tapOn:
+    id: crop-rotate
+- tapOn:
+    id: crop-flip
+- tapOn:
+    id: crop-reset
+- scrollUntilVisible:
+    element:
+      id: crop-done
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: crop-done
+- extendedWaitUntil:
+    visible:
+      id: editor-screen
+    timeout: 10000

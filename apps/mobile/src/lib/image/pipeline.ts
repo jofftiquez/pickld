@@ -9,7 +9,7 @@
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
-import { cropRect34, FULL_SIZE, THUMB_SIZE, type CropRect } from './crop';
+import { cropRect34, FULL_SIZE, scaleRect, THUMB_SIZE, type CropSpec } from './crop';
 import { assertNoLocationMetadata } from './exif';
 
 export type PreparedImage = { uri: string; width: number; height: number };
@@ -20,13 +20,17 @@ const THUMB_QUALITY = 0.8;
 
 type Releasable = { release(): void };
 
+/** The Crop screen's choices (see `CropSpec`); all optional. */
+export type PrepareOptions = Partial<CropSpec>;
+
 /**
  * Crops `uri` (a local file or `data:` URI) to 3:4 and writes the full photo and thumbnail as WebP
- * in the cache directory. `crop` is the Crop screen's frame in source pixels; without it the
- * largest centred 3:4 area is used. Throws `LocationMetadataError` (and deletes both outputs) if
+ * in the cache directory. The photo is first turned `rotate` degrees clockwise and mirrored when `flip`;
+ * `crop` is the Crop screen's frame in that image's pixels (scaled from `cropBasis` when given); without
+ * it the largest centred 3:4 area is used. Throws `LocationMetadataError` (and deletes both outputs) if
  * an output still carries location metadata.
  */
-export async function preparePhoto(uri: string, options: { crop?: CropRect } = {}): Promise<PreparedPhoto> {
+export async function preparePhoto(uri: string, options: PrepareOptions = {}): Promise<PreparedPhoto> {
   const refs: Releasable[] = [];
   const track = <T extends Releasable>(ref: T): T => {
     refs.push(ref);
@@ -34,8 +38,12 @@ export async function preparePhoto(uri: string, options: { crop?: CropRect } = {
   };
   const written: string[] = [];
   try {
-    const source = track(await track(ImageManipulator.manipulate(uri)).renderAsync());
-    const rect = cropRect34(source.width, source.height, options.crop);
+    const turned = track(ImageManipulator.manipulate(uri));
+    if (options.rotate) turned.rotate(options.rotate);
+    if (options.flip) turned.flip('horizontal');
+    const source = track(await turned.renderAsync());
+    const area = options.crop && options.cropBasis ? scaleRect(options.crop, options.cropBasis, source) : options.crop;
+    const rect = cropRect34(source.width, source.height, area);
 
     const full = track(await track(ImageManipulator.manipulate(source)).crop(rect).resize(FULL_SIZE).renderAsync());
     const fullOut = await full.saveAsync({ format: SaveFormat.WEBP, compress: FULL_QUALITY });

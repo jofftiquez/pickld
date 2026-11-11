@@ -354,5 +354,31 @@
     "list2": "{{a}} and {{b}}",
     "list3": "{{a}}, {{b}} and {{c}}",
     "jarStamp": "JAR #{{number}}"
+  },
+  "gallery": {
+    "permissionDescription": "Pickld opens your photos so you can add one from your gallery to your jar."
+  },
+  "crop": {
+    "title": "Crop photo",
+    "subtitle": "{{slot}} · from gallery",
+    "cancel": "Cancel",
+    "cancelHint": "Goes back without adding this photo",
+    "reset": "Reset",
+    "resetHint": "Undoes every change to the crop",
+    "aspect": "3:4",
+    "aspectLabel": "Crop locked to 3:4",
+    "hint": "Drag to reposition · pinch to zoom",
+    "photo": "Photo in the crop frame",
+    "zoom": "Zoom",
+    "rotate": "Rotate",
+    "rotateLabel": "Rotate 90 degrees",
+    "flip": "Flip",
+    "flipHint": "Mirrors the photo left to right",
+    "fit": "Fit",
+    "fitHint": "Fits the whole photo to the frame",
+    "note": "Every Pickld moment is 3:4, so your jars always line up.",
+    "done": "Next: edit",
+    "doneHint": "Adds the photo to {{slot}} and opens the editor",
+    "saveFailed": "Couldn’t add this photo. Try again."
   }
 }
