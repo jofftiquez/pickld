@@ -36,6 +36,10 @@ export const colors = {
   badge: 'rgba(10,12,8,0.6)', // "Added later" badge over photos (Story)
   ringTrack: 'rgba(255,255,255,0.3)', // unfilled part of the upload ring
   textShadow: 'rgba(0,0,0,0.4)', // labels drawn straight on photos
+  dayCellEmpty: '#eef0ea', // a past day without a cover photo (Calendar)
+  dayCellScrim: 'rgba(10,12,8,0.32)', // over a day's cover photo so its number stays readable (Calendar)
+  dayFuture: '#6f7568', // future day numbers (Calendar); 4.8:1 on white
+  fillTrack: 'rgba(255,255,255,0.35)', // unfilled part of a day's fill bar (Calendar)
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -85,6 +89,8 @@ export const type = {
 export const radius = {
   thumb: 10,
   thumbLg: 14,
+  dayCell: 13, // My days calendar cells (Calendar)
+  fillBar: 2,
   input: 16, // text fields (EditProfile)
   tile: 22,
   card: 24,
@@ -179,6 +185,11 @@ export const sizes = {
   retryPill: 26, // Retry pill on a failed tile (hitSlop brings it to 44)
   jarCardGraphic: 52,
   headerTop: 26, // space above the screen title block (Main)
+  dayCell: 46, // My days calendar cell height (Calendar); grows with large text
+  dayGap: 5, // gap between calendar cells and weekday columns (Calendar)
+  fillBar: 3, // fill bar height in a calendar cell
+  fillBarInset: 4, // fill bar distance from the cell's sides and bottom
+  todayRing: 2.5, // outline around today's cell
 } as const;
 
 export const photo = {

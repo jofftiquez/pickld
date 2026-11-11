@@ -1,0 +1,62 @@
+# M2-25: open My days, screenshot the month (design: Calendar), then go to the previous month and back.
+# Run on the iOS Simulator: maestro test apps/mobile/.maestro/my-days.yaml
+# Sign in as a user with jars in the current month (seed user dale: today, yesterday and 3 days ago).
+# Previous month is enabled only back to the month of the first jar; the flow covers both cases.
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-my-days
+- assertVisible:
+    id: screen-title
+    text: My days
+- assertVisible:
+    id: my-days-calendar
+- assertVisible:
+    id: my-days-next
+    enabled: false
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: Calendar-ios
+
+# Previous month and back, when there is an earlier month to go to.
+- runFlow:
+    when:
+      visible:
+        id: my-days-previous
+        enabled: true
+    commands:
+      - tapOn:
+          id: my-days-previous
+      - assertVisible:
+          id: my-days-next
+          enabled: true
+      - takeScreenshot: Calendar-previous-ios
+      - tapOn:
+          id: my-days-next
+      - assertVisible:
+          id: my-days-next
+          enabled: false
+# With no earlier jar (the seed data), Previous is disabled and stays on this month.
+- runFlow:
+    when:
+      visible:
+        id: my-days-previous
+        enabled: false
+    commands:
+      - tapOn:
+          id: my-days-previous
+      - assertVisible:
+          id: screen-title
+          text: My days
+      - assertVisible:
+          id: my-days-next
+          enabled: false

@@ -43,7 +43,15 @@
     "title": "Jars"
   },
   "myDays": {
-    "title": "My days"
+    "title": "My days",
+    "subtitle_one": "{{month}} · {{count}} moment",
+    "subtitle_other": "{{month}} · {{count}} moments",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "calendar": "{{month}} calendar",
+    "day": "{{date}}, {{count}} of {{total}} moments",
+    "dayToday": "{{date}}, today, {{count}} of {{total}} moments",
+    "dayFuture": "{{date}}, not yet"
   },
   "brand": {
     "tagline": "Eight moments. One real day.",
