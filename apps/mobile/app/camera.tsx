@@ -13,18 +13,20 @@ import {
 } from '@/features/capture/CameraPreview';
 import { CameraView } from '@/features/capture/CameraView';
 import { defaultCameraSlot, parseSlotParam, switchSlot } from '@/features/capture/cameraSlot';
+import { fillCameraSlot } from '@/features/capture/fillTarget';
 import { MockCameraPreview } from '@/features/capture/MockCameraPreview';
 import { parseMockAccessParam, takeMockPhoto } from '@/features/capture/mockCamera';
 import { pickFromGallery } from '@/features/capture/pickFromGallery';
 import { saveCapture } from '@/features/capture/saveCapture';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
+import { useFillCapture } from '@/features/capture/useFillCapture';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { useReduceMotion } from '@/lib/useReduceMotion';
-import type { Slot } from '@/theme/tokens';
+import { slots, type Slot } from '@/theme/tokens';
 
 const MINUTE = 60_000;
 
@@ -35,7 +37,7 @@ export default function CameraScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const reduceMotion = useReduceMotion();
-  const params = useLocalSearchParams<{ slot?: string; mockAccess?: string }>();
+  const params = useLocalSearchParams<{ slot?: string; date?: string; mockAccess?: string }>();
   const cameraAccess = useCameraAccess();
   const access = parseMockAccessParam(params.mockAccess, __DEV__) ?? cameraAccess;
 
@@ -60,13 +62,22 @@ export default function CameraScreen() {
   const tz = phoneTimeZone();
   const { userId, localDate, jar, queue } = useToday(now);
   const nowSlot = currentSlot(now, tz);
-  const taken = new Set<Slot>(
-    buildTodayGrid({ localDate: jar?.jar?.localDate ?? localDate, moments: jar?.moments ?? [], queue, nowSlot })
-      .filter(holdsSlot)
-      .map((tile) => tile.slot),
-  );
+  // Fill this jar (`?date=` a past day, M2-26): that day's jar and its missing slots instead of the open jar.
+  const fill = useFillCapture(params.date, localDate, tz);
+  const taken =
+    fill?.taken ??
+    new Set<Slot>(
+      buildTodayGrid({ localDate: jar?.jar?.localDate ?? localDate, moments: jar?.moments ?? [], queue, nowSlot })
+        .filter(holdsSlot)
+        .map((tile) => tile.slot),
+    );
   const [picked, setPicked] = useState<Slot | null>(null);
-  const slot = picked ?? defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken });
+  const fillSlot = fill ? fillCameraSlot({ param: parseSlotParam(params.slot), taken }) : null;
+  const slot =
+    picked ??
+    (fill ? (fillSlot ?? slots[0]) : defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken }));
+  // A full past jar has nothing to fill.
+  const fillFull = fill !== null && fillSlot === null;
 
   const [facing, setFacing] = useState<CameraFacing>('back');
   const [flash, setFlash] = useState<FlashSetting>('off');
@@ -110,7 +121,7 @@ export default function CameraScreen() {
     const openJar = jar?.jar ?? null;
     let queuedId: number | null = null;
     try {
-      queuedId = (await saveCapture({ uri, slot, userId, tz, shotAt, openJar })).id;
+      queuedId = (await saveCapture({ uri, slot, userId, tz, shotAt, openJar, fill: fill?.target ?? null })).id;
     } catch (error) {
       captureError(error, { area: 'capture' });
     }
@@ -154,9 +165,10 @@ export default function CameraScreen() {
       slot={slot}
       taken={taken}
       time={formatTime(now, tz)}
+      date={fill?.dateLabel}
       flash={flash}
       flashSupported={access === 'mock' || flashSupported}
-      shutterDisabled={busy || userId === null || (access !== 'mock' && access !== 'granted')}
+      shutterDisabled={busy || userId === null || fillFull || (access !== 'mock' && access !== 'granted')}
       reduceMotion={reduceMotion}
       insets={insets}
       onClose={leave}

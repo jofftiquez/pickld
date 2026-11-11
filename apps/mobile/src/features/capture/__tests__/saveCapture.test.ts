@@ -6,7 +6,7 @@ import { prepareItem } from '@/lib/queue/prepare';
 import { requestUploads } from '@/lib/queue/runner';
 import { enqueue } from '@/lib/queue/store';
 
-import { captureJarDate, saveCapture } from '../saveCapture';
+import { captureJarDate, queueTarget, saveCapture } from '../saveCapture';
 
 const mockLog: string[] = [];
 const mockDeleted: string[] = [];
@@ -125,6 +125,38 @@ describe('saveCapture', () => {
     expect(prepareItem).not.toHaveBeenCalled();
     expect(requestUploads).not.toHaveBeenCalled();
     expect(mockDeleted).toEqual([]);
+  });
+
+  it("Fill this jar queues under the past date in that jar's zone, with the real capture time", async () => {
+    await saveCapture({ ...input, tz: 'Pacific/Honolulu', fill: { localDate: '2026-11-08', tz: 'Asia/Manila' } });
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        localDate: '2026-11-08',
+        tz: 'Asia/Manila',
+        // Taken now, in the phone's zone; the server compares added_at with the jar's end (rule 6).
+        capturedAt: '2026-11-10T20:14:05-10:00',
+      }),
+    );
+  });
+});
+
+describe('queueTarget', () => {
+  // 01:00 on the 12th in Manila: the Manila jar of the 12th is open; the phone is now in Honolulu (11th).
+  const at = new Date('2026-11-11T17:00:00Z');
+  const openJar = { id: 'jar-12', localDate: '2026-11-12', tz: 'Asia/Manila' };
+
+  it('a normal capture after flying west still joins the open jar, with the phone zone as before', () => {
+    expect(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar })).toEqual({
+      localDate: '2026-11-12',
+      tz: 'Pacific/Honolulu',
+      capturedAt: '2026-11-11T07:00:00-10:00',
+    });
+    expect(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar, fill: null }).localDate).toBe('2026-11-12');
+  });
+
+  it('a Fill after flying west goes to the past date, not the open jar', () => {
+    const fill = { localDate: '2026-11-09', tz: 'Asia/Manila' };
+    expect(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar, fill })).toMatchObject(fill);
   });
 });
 
