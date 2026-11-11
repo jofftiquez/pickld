@@ -483,6 +483,49 @@ describe('editing hold and saved edits (M2-12)', () => {
       .run(USER);
     const [old] = await store.listQueue(USER);
     expect(old).toMatchObject({ slot: 'selfie', editingSince: null, prepared: true });
-    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 4 }));
+    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(
+      expect.objectContaining({ user_version: store.MIGRATIONS.length }),
+    );
+  });
+});
+
+describe('Crop screen choices on a raw gallery photo (M2-10)', () => {
+  const spec = {
+    crop: { originX: 120, originY: 0, width: 1500, height: 2000 },
+    cropBasis: { width: 4000, height: 2000 },
+    rotate: 90,
+    flip: true,
+  } as const;
+
+  it('stores the crop with the raw photo and reads it back after a restart', async () => {
+    const item = await loadStore().enqueue({ ...input, thumbUri: null, prepared: false, crop: spec });
+    expect(item.crop).toEqual(spec);
+    expect(await loadStore().getItem(item.id)).toMatchObject({ prepared: false, crop: spec });
+  });
+
+  it('a photo without crop choices has none (camera photos, exactly 3:4 gallery photos)', async () => {
+    expect((await loadStore().enqueue(input)).crop).toBeNull();
+  });
+
+  it('refuses a rotation that is not a quarter turn before copying anything', async () => {
+    const store = loadStore();
+    await expect(store.enqueue({ ...input, crop: { ...spec, rotate: 45 as 90 } })).rejects.toThrow();
+    expect(queuedFiles()).toEqual([]);
+    expect(mockLog.filter((entry) => entry.startsWith('copy:') || entry === 'sql:INSERT')).toEqual([]);
+  });
+
+  it('upgrades a version 4 queue: existing moments have no crop', async () => {
+    const store = loadStore();
+    store.MIGRATIONS.slice(0, 4).forEach((sql) => mockDisk.exec(sql));
+    mockDisk.exec('PRAGMA user_version = 4');
+    mockDisk
+      .prepare(
+        `INSERT INTO queue_items (user_id, photo_file, slot, local_date, tz, created_at, prepared)
+         VALUES (?, 'raw.jpg', 'selfie', '2026-11-10', 'Asia/Manila', 1, 0)`,
+      )
+      .run(USER);
+    const [old] = await store.listQueue(USER);
+    expect(old).toMatchObject({ slot: 'selfie', prepared: false, crop: null });
+    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 5 }));
   });
 });

@@ -55,6 +55,11 @@ export const colors = {
   overlayPlaceholder: 'rgba(127,173,51,0.6)', // dev/test-only box drawn for overlays with no renderer yet
   textOverlayShadow: 'rgba(0,0,0,0.45)', // soft shadow under light text on photos (Text)
   textOverlayShadowOnDark: 'rgba(255,255,255,0.6)', // light glow under ink text, so it reads on dark photos
+  cropScrim: 'rgba(11,13,9,0.66)', // dims the photo outside the crop frame (Crop)
+  cropOutline: 'rgba(255,255,255,0.9)', // crop frame outline
+  cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
+  cropAction: '#e2e5dc', // Cancel and Reset on the dark header (Crop); 15:1 on editor
+  cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
 } as const;
 
 // Text tool colors (Text), in the design's order. Drawn on photos with a shadow (colors.textOverlayShadow).
@@ -113,6 +118,7 @@ export const type = {
   eyebrow: { size: 12, weight: '800', letterSpacing: 0.96 }, // 0.08em, "FULL JAR", "STICKER UNLOCKED"
   celebrationTitle: { size: 26, weight: '800', letterSpacing: -0.78 }, // "Your Monday is complete" (FullJar)
   unlockTitle: { size: 28, weight: '800', letterSpacing: -0.84 }, // "Your first full jar!" (StickerUnlock)
+  cropTitle: { size: 16, weight: '700' }, // "Crop photo" (Crop)
 } as const;
 
 export const radius = {
@@ -334,6 +340,31 @@ export const stickerTool = {
   // Auto stamp (stickers/stamps art): white label, thick ink border, dashed ink ring outside it. Sizes are
   // fractions of the stamp's height so it scales with the overlay.
   stamp: { ring: 0.025, inset: 0.07, border: 0.05, radius: 0.16, text: 0.3, padding: 0.2 },
+} as const;
+
+// Crop screen (Crop, FR-CAP-03): the 3:4 frame sits this far inside the dark photo area, with the 3:4 chip
+// above it and the gesture hint below; the white tool sheet holds the zoom slider and tool buttons.
+export const crop = {
+  frameInsetX: 45, // at least this much dark photo beside the frame
+  frameInsetY: 60,
+  frameShare: 400 / 844, // the frame's height is at most this share of the screen, so the sheet fits
+  titleGap: 1,
+  sheetPaddingTop: 18,
+  frameOutline: 1.5,
+  corner: 24, // white corner marks on the frame
+  cornerWidth: 4,
+  cornerOffset: 3, // how far the marks sit outside the frame
+  cornerRadius: 4,
+  chipTop: 18,
+  chipPaddingX: 12,
+  chipPaddingY: 4,
+  chipIcon: 12,
+  chipGap: 5,
+  hintBottom: 22,
+  headerAction: 64, // Cancel and Reset minimum width
+  toolButton: 64, // Rotate, Flip, Fit (grows with large text)
+  toolRadius: 18,
+  zoomIcon: 18,
 } as const;
 
 // Speech bubbles (Bubble, FR-CAP-06). Each color's text pair meets WCAG AA (4.5:1); pickle takes ink

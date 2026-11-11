@@ -1,4 +1,5 @@
-// Prepares a raw queued camera photo (AGENTS rules 3 and 5): crop to 3:4, write the full and thumbnail
+// Prepares a raw queued camera or gallery photo (AGENTS rules 3 and 5): apply the Crop screen's choices if
+// any (else the centred 3:4 crop), write the full and thumbnail
 // WebP files without location metadata, and swap them into the queue row. Safe to call twice.
 import { File } from 'expo-file-system';
 
@@ -17,7 +18,7 @@ function deleteQuietly(uri: string): void {
 
 export async function prepareItem(item: QueueItem): Promise<QueueItem> {
   if (item.prepared) return item;
-  const prepared = await preparePhoto(item.photoUri);
+  const prepared = await preparePhoto(item.photoUri, item.crop ?? {});
   try {
     return await savePrepared(item.id, { photoUri: prepared.full.uri, thumbUri: prepared.thumb.uri });
   } finally {

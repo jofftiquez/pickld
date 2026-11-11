@@ -6,9 +6,10 @@ import { AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'r
 import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 import CameraScreen from '../../../../app/camera';
-import { parseMockAccessParam, takeMockPhoto } from '../mockCamera';
+import { parseDevPhotoParam, parseMockAccessParam, pickDevPhoto, takeMockPhoto } from '../mockCamera';
+import { usePendingCrop } from '../pendingCrop';
 import { pickFromGallery } from '../pickFromGallery';
-import { saveCapture } from '../saveCapture';
+import { saveCapture, saveGalleryPhoto } from '../saveCapture';
 import { captureError } from '@/lib/monitoring';
 import type { DayJar } from '@/features/days/useDayJar';
 import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
@@ -59,14 +60,20 @@ jest.mock('react-native-vision-camera', () => {
 jest.mock('../mockCamera', () => ({
   ...jest.requireActual<typeof import('../mockCamera')>('../mockCamera'),
   takeMockPhoto: jest.fn(async () => 'file:///cache/mock-camera.jpg'),
+  pickDevPhoto: jest.fn(async (name: string) => ({
+    uri: `file:///cache/dev-${name}.jpg`,
+    width: name === 'portrait' ? 480 : 600,
+    height: name === 'portrait' ? 640 : 400,
+    exif: null,
+  })),
 }));
 
-jest.mock('../saveCapture', () => ({ saveCapture: jest.fn() }));
-jest.mock('../pickFromGallery', () => ({
-  pickFromGallery: jest.fn(
-    jest.requireActual<typeof import('../pickFromGallery')>('../pickFromGallery').pickFromGallery,
-  ),
+jest.mock('../saveCapture', () => ({
+  ...jest.requireActual<typeof import('../saveCapture')>('../saveCapture'),
+  saveCapture: jest.fn(),
+  saveGalleryPhoto: jest.fn(),
 }));
+jest.mock('../pickFromGallery', () => ({ pickFromGallery: jest.fn() }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
@@ -108,6 +115,15 @@ const routes = {
     </View>
   ),
   camera: CameraScreen,
+  // The Crop screen has its own test; this stub shows which photo it was handed.
+  crop: function CropStub() {
+    const pending = usePendingCrop((s) => s.pending);
+    return (
+      <View>
+        <Text>Crop stub {pending?.photo.uri}</Text>
+      </View>
+    );
+  },
   // The editor (M2-12) has its own test; this stub shows which queued photo it opened on.
   'edit/[momentId]': function EditStub() {
     const { momentId } = useLocalSearchParams<{ momentId: string }>();
@@ -146,7 +162,14 @@ beforeEach(() => {
   jest.mocked(useCameraPermission).mockClear();
   jest.mocked(takeMockPhoto).mockClear();
   jest.mocked(saveCapture).mockReset();
-  jest.mocked(pickFromGallery).mockClear();
+  jest.mocked(pickFromGallery).mockReset();
+  jest.mocked(pickFromGallery).mockResolvedValue(null);
+  jest.mocked(pickDevPhoto).mockClear();
+  jest.mocked(saveGalleryPhoto).mockReset();
+  jest
+    .mocked(saveGalleryPhoto)
+    .mockImplementation(async () => ({ id: 4 }) as Awaited<ReturnType<typeof saveGalleryPhoto>>);
+  usePendingCrop.setState({ pending: null });
   jest.mocked(captureError).mockClear();
   appStateListeners.clear();
   jest.spyOn(AppState, 'addEventListener').mockImplementation((_type, listener) => {
@@ -217,13 +240,87 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     );
   });
 
-  it('the gallery shortcut calls the picker and reports that it is not installed yet', async () => {
+  it('cancelling the gallery picker does nothing', async () => {
     await openCamera();
     await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
     await act(async () => {});
     expect(pickFromGallery).toHaveBeenCalledTimes(1);
-    expect(captureError).toHaveBeenCalledWith(expect.any(Error), { area: 'gallery' });
     expect(screen).toHavePathname('/camera');
+    expect(saveGalleryPhoto).not.toHaveBeenCalled();
+    expect(usePendingCrop.getState().pending).toBeNull();
+    expect(captureError).not.toHaveBeenCalled();
+  });
+
+  it('a gallery photo that is not 3:4 opens Crop with the slot and its own date; nothing is queued yet', async () => {
+    jest.mocked(pickFromGallery).mockResolvedValue({
+      uri: 'file:///picker/beach.jpg',
+      width: 4032,
+      height: 3024,
+      exif: { DateTimeOriginal: '2026:11:08 19:30:00', OffsetTimeOriginal: '+08:00' },
+    });
+    await openCamera();
+    await fireEvent.press(screen.getByTestId('camera-slot-selfie'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await act(async () => {});
+    expect(screen).toHavePathname('/crop');
+    expect(screen.getByText('Crop stub file:///picker/beach.jpg')).toBeTruthy();
+    expect(usePendingCrop.getState().pending).toEqual({
+      photo: expect.objectContaining({ uri: 'file:///picker/beach.jpg', width: 4032, height: 3024 }),
+      slot: 'selfie',
+      userId,
+      target: { localDate: '2026-11-08', tz: 'Asia/Manila', capturedAt: '2026-11-08T19:30:00+08:00' },
+    });
+    expect(saveGalleryPhoto).not.toHaveBeenCalled();
+  });
+
+  it('an exactly 3:4 gallery photo skips Crop: queued like a shot, then the editor opens', async () => {
+    jest.mocked(pickFromGallery).mockResolvedValue({
+      uri: 'file:///picker/portrait.jpg',
+      width: 3024,
+      height: 4032,
+      exif: null,
+    });
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await act(async () => {});
+    expect(saveGalleryPhoto).toHaveBeenCalledWith({
+      uri: 'file:///picker/portrait.jpg',
+      slot: 'afternoon',
+      userId,
+      target: expect.objectContaining({ localDate: '2026-11-11', tz: 'Asia/Manila' }),
+      crop: null,
+    });
+    expect(screen).toHavePathname('/edit/4');
+    expect(saveCapture).not.toHaveBeenCalled();
+  });
+
+  it('a picker or queue failure is reported and the camera stays', async () => {
+    jest.mocked(pickFromGallery).mockRejectedValue(new Error('picker broke'));
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await act(async () => {});
+    expect(captureError).toHaveBeenCalledWith(expect.objectContaining({ message: 'picker broke' }), {
+      area: 'gallery',
+    });
+    expect(screen).toHavePathname('/camera');
+  });
+
+  it('dev-only ?devPhoto= picks a bundled photo instead of the system picker', async () => {
+    await openCamera('/camera?slot=afternoon&devPhoto=wide');
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await act(async () => {});
+    expect(pickDevPhoto).toHaveBeenCalledWith('wide');
+    expect(pickFromGallery).not.toHaveBeenCalled();
+    expect(screen).toHavePathname('/crop');
+  });
+
+  it('parseDevPhotoParam accepts only the bundled names, and only in development', () => {
+    expect(parseDevPhotoParam('wide', true)).toBe('wide');
+    expect(parseDevPhotoParam('portrait', true)).toBe('portrait');
+    expect(parseDevPhotoParam('wide', false)).toBeNull();
+    expect(parseDevPhotoParam('toString', true)).toBeNull();
+    expect(parseDevPhotoParam('../etc', true)).toBeNull();
+    expect(parseDevPhotoParam(['wide'], true)).toBeNull();
   });
 
   it('flip takes the front fixture', async () => {
@@ -411,16 +508,23 @@ describe('Camera access off (FR-CAP-11)', () => {
     expect(screen).toHavePathname('/today');
   });
 
-  it('Choose from gallery calls the picker; until it is installed the error is reported and the screen stays', async () => {
+  it('Choose from gallery instead opens the picker; cancel stays on Camera access off', async () => {
     await openCamera();
     await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery instead' }));
     await act(async () => {});
     expect(pickFromGallery).toHaveBeenCalledTimes(1);
-    expect(captureError).toHaveBeenCalledWith(expect.objectContaining({ message: 'gallery picker not installed' }), {
-      area: 'gallery',
-    });
     expect(screen).toHavePathname('/camera');
     expect(screen.getByTestId('camera-access-off')).toBeTruthy();
+  });
+
+  it('Choose from gallery instead sends a landscape photo to Crop', async () => {
+    jest
+      .mocked(pickFromGallery)
+      .mockResolvedValue({ uri: 'file:///picker/l.jpg', width: 400, height: 300, exif: null });
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery instead' }));
+    await act(async () => {});
+    expect(screen).toHavePathname('/crop');
   });
 
   it('dev-only ?mockAccess=denied forces it even on the Simulator mock camera', async () => {
@@ -510,6 +614,24 @@ describe('Fill this jar (?date=, FR-DAY-02)', () => {
     await act(async () => {});
     expect(saveCapture).toHaveBeenCalledWith(
       expect.objectContaining({ slot: 'ootd', fill: { localDate: '2026-11-08', tz: 'Asia/Manila' } }),
+    );
+  });
+
+  it('a gallery photo from Fill this jar goes to the day being filled, whatever its own date', async () => {
+    jest.mocked(pickFromGallery).mockResolvedValue({
+      uri: 'file:///picker/p.jpg',
+      width: 300,
+      height: 400,
+      exif: { DateTimeOriginal: '2026:11:02 09:00:00', OffsetTimeOriginal: '+08:00' },
+    });
+    await openCamera('/camera?date=2026-11-08&slot=selfie');
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await act(async () => {});
+    expect(saveGalleryPhoto).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slot: 'selfie',
+        target: { localDate: '2026-11-08', tz: 'Asia/Tokyo', capturedAt: '2026-11-02T09:00:00+08:00' },
+      }),
     );
   });
 

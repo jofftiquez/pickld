@@ -15,9 +15,11 @@ import { CameraView } from '@/features/capture/CameraView';
 import { defaultCameraSlot, parseSlotParam, switchSlot } from '@/features/capture/cameraSlot';
 import { fillCameraSlot } from '@/features/capture/fillTarget';
 import { MockCameraPreview } from '@/features/capture/MockCameraPreview';
-import { parseMockAccessParam, takeMockPhoto } from '@/features/capture/mockCamera';
+import { isThreeByFour } from '@/features/capture/cropMath';
+import { parseDevPhotoParam, parseMockAccessParam, pickDevPhoto, takeMockPhoto } from '@/features/capture/mockCamera';
+import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { pickFromGallery } from '@/features/capture/pickFromGallery';
-import { saveCapture } from '@/features/capture/saveCapture';
+import { galleryTarget, saveCapture, saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
 import { useFillCapture } from '@/features/capture/useFillCapture';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
@@ -37,7 +39,7 @@ export default function CameraScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const reduceMotion = useReduceMotion();
-  const params = useLocalSearchParams<{ slot?: string; date?: string; mockAccess?: string }>();
+  const params = useLocalSearchParams<{ slot?: string; date?: string; mockAccess?: string; devPhoto?: string }>();
   const cameraAccess = useCameraAccess();
   const access = parseMockAccessParam(params.mockAccess, __DEV__) ?? cameraAccess;
 
@@ -130,12 +132,29 @@ export default function CameraScreen() {
     else router.replace(`/edit/${queuedId}`);
   };
 
+  // Gallery (M2-08, M2-10; FR-CAP-02): a 3:4 photo is queued like a shot; any other opens Crop first.
+  const devPhoto = parseDevPhotoParam(params.devPhoto, __DEV__);
+  const setPendingCrop = usePendingCrop((s) => s.setPending);
   const onGallery = async () => {
+    if (busy || userId === null || fillFull) return;
+    setBusy(true);
     try {
-      // TODO(M2-08 gallery, awaiting expo-image-picker approval): send the chosen photo to Crop.
-      await pickFromGallery();
+      const photo = devPhoto ? await pickDevPhoto(devPhoto) : await pickFromGallery();
+      if (photo === null) return;
+      const openJar = jar?.jar ?? null;
+      const target = galleryTarget({ exif: photo.exif, tz, now: new Date(), openJar, fill: fill?.target ?? null });
+      if (!isThreeByFour(photo)) {
+        setPendingCrop({ photo, slot, userId, target });
+        router.push('/crop');
+        return;
+      }
+      const item = await saveGalleryPhoto({ uri: photo.uri, slot, userId, target, crop: null });
+      void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
+      router.replace(`/edit/${item.id}`);
     } catch (error) {
       captureError(error, { area: 'gallery' });
+    } finally {
+      setBusy(false);
     }
   };
 

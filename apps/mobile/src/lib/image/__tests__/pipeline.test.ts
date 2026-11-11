@@ -45,6 +45,15 @@ jest.mock('expo-image-manipulator', () => {
             size = rect;
             return ctx;
           },
+          rotate: (degrees: number) => {
+            ops.push(['rotate', degrees]);
+            if (degrees % 180 !== 0) size = { width: size.height, height: size.width };
+            return ctx;
+          },
+          flip: (axis: string) => {
+            ops.push(['flip', axis]);
+            return ctx;
+          },
           resize: (s: { width: number; height: number }) => {
             ops.push(['resize', s]);
             size = s;
@@ -114,11 +123,58 @@ describe('preparePhoto', () => {
     expect(mockState.ops[1]?.[0]).toEqual(['crop', { originX: 10, originY: 20, width: 300, height: 400 }]);
   });
 
+  it('turns and mirrors the photo before cropping, and crops the turned image', async () => {
+    // 4032 × 3024 turned a quarter: 3024 × 4032, already 3:4.
+    await preparePhoto('file:///picked.jpg', {
+      rotate: 90,
+      flip: true,
+      crop: { originX: 0, originY: 1000, width: 1500, height: 2000 },
+    });
+    expect(mockState.ops[0]).toEqual([
+      ['rotate', 90],
+      ['flip', 'horizontal'],
+    ]);
+    expect(mockState.ops[1]?.[0]).toEqual(['crop', { originX: 0, originY: 1000, width: 1500, height: 2000 }]);
+    expect(mockState.saves.map((s) => [s.width, s.height])).toEqual([
+      [1440, 1920],
+      [480, 640],
+    ]);
+  });
+
+  it('a 180° turn without flip only rotates; no options leave the photo as it is', async () => {
+    await preparePhoto('file:///picked.jpg', { rotate: 180, flip: false });
+    expect(mockState.ops[0]).toEqual([['rotate', 180]]);
+    mockState.ops = [];
+    await preparePhoto('file:///picked.jpg', { rotate: 0 });
+    expect(mockState.ops[0]).toEqual([]);
+  });
+
+  it('scales the frame from the size the Crop screen measured to the size it decodes', async () => {
+    // Measured on a 2016 × 1512 report of the 4032 × 3024 photo: everything doubles.
+    await preparePhoto('file:///picked.jpg', {
+      crop: { originX: 100, originY: 50, width: 600, height: 800 },
+      cropBasis: { width: 2016, height: 1512 },
+    });
+    expect(mockState.ops[1]?.[0]).toEqual(['crop', { originX: 200, originY: 100, width: 1200, height: 1600 }]);
+  });
+
   it('refuses and deletes outputs that still carry GPS', async () => {
     mockState.fullFixture = 'gps.webp';
     await expect(preparePhoto('file:///picked.jpg')).rejects.toBeInstanceOf(LocationMetadataError);
     expect(mockState.deleted).toEqual(['file:///cache/out-0.webp', 'file:///cache/out-1.webp']);
     expect(mockState.released).toBe(6);
+  });
+
+  it('a turned and cropped photo still goes through the location check', async () => {
+    mockState.fullFixture = 'gps.webp';
+    await expect(
+      preparePhoto('file:///picked.jpg', {
+        rotate: 270,
+        flip: true,
+        crop: { originX: 0, originY: 0, width: 300, height: 400 },
+      }),
+    ).rejects.toBeInstanceOf(LocationMetadataError);
+    expect(mockState.deleted).toEqual(['file:///cache/out-0.webp', 'file:///cache/out-1.webp']);
   });
 
   it('the source fixture really has GPS, the clean output really has none', () => {

@@ -2,6 +2,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import { z } from 'zod';
 
+import { cropSpecSchema, type CropSpec } from '@/lib/image/crop';
 import { slots } from '@/theme/tokens';
 
 import { INITIAL_STATUS, queueStateSchema, retry, type UploadStatus } from './machine';
@@ -47,6 +48,9 @@ export const MIGRATIONS: readonly string[] = [
   // with the moment. A hold left by a killed app is cleared on the next launch (openQueue) and expires
   // after EDIT_HOLD_MS regardless, so a photo is never stuck.
   `ALTER TABLE queue_items ADD COLUMN editing_since INTEGER;`,
+  // M2-10: the Crop screen's choices for a raw gallery photo (JSON CropSpec), applied when it is prepared.
+  // NULL = the default centred 3:4 crop (camera photos, exactly 3:4 gallery photos).
+  `ALTER TABLE queue_items ADD COLUMN crop TEXT;`,
 ];
 
 /** After this long an editing hold no longer stops the upload (see MIGRATIONS[3]). */
@@ -83,6 +87,8 @@ export const enqueueInputSchema = z.object({
   prepared: z.boolean().default(true),
   /** True when the editor opens on it next: no upload until it saves or closes (see MIGRATIONS[3]). */
   editing: z.boolean().default(false),
+  /** The Crop screen's frame, rotation and flip for a raw photo; preparation applies it (MIGRATIONS[4]). */
+  crop: cropSpecSchema.nullable().default(null),
 });
 export type EnqueueInput = z.input<typeof enqueueInputSchema>;
 
@@ -107,6 +113,8 @@ export interface QueueItem extends UploadStatus {
   prepared: boolean;
   /** When the editor took the item (ms), or null; see MIGRATIONS[3] and isHeldForEditing. */
   editingSince: number | null;
+  /** How preparation crops the raw photo, or null for the centred 3:4 crop (MIGRATIONS[4]). */
+  crop: CropSpec | null;
 }
 
 // Files are stored by name and resolved against the document directory on every read, because the
@@ -135,6 +143,11 @@ const rowSchema = z.object({
   moment_id: z.uuid().nullable(),
   prepared: z.union([z.literal(0), z.literal(1)]),
   editing_since: z.number().nullable(),
+  crop: z
+    .string()
+    .transform((s) => JSON.parse(s) as unknown)
+    .pipe(cropSpecSchema)
+    .nullable(),
 });
 
 function queueDir(): Directory {
@@ -161,6 +174,7 @@ function toItem(raw: unknown): QueueItem {
     momentId: row.moment_id,
     prepared: row.prepared === 1,
     editingSince: row.editing_since,
+    crop: row.crop,
     state: row.state,
     attempts: row.attempts,
     nextAttemptAt: row.next_attempt_at,
@@ -245,8 +259,8 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
     if (thumb) copies.push(thumb);
     const { lastInsertRowId } = await db.runAsync(
       `INSERT INTO queue_items (user_id, photo_file, thumb_file, slot, local_date, tz, captured_at, caption,
-         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared, editing_since)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared, editing_since, crop)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       moment.userId,
       photo.name,
       thumb?.name ?? null,
@@ -264,6 +278,7 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
       Date.now(),
       moment.prepared ? 1 : 0,
       moment.editing ? Date.now() : null,
+      moment.crop === null ? null : JSON.stringify(moment.crop),
     );
     const item = await getItem(lastInsertRowId);
     if (!item) throw new Error('Queued moment was not saved');
