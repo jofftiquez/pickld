@@ -149,5 +149,49 @@
       "dusk": "Dusk"
     },
     "notFound": "This photo is no longer waiting to be edited."
+  },
+  "moment": {
+    "close": "Close",
+    "back": "Back",
+    "backToToday": "Back to today",
+    "loading": "Loading moment",
+    "photo": "{{slot}} photo",
+    "checking": {
+      "title": "Checking your photo…",
+      "body": "This usually takes a few seconds.",
+      "photo": "{{slot}} photo, blurred while it’s checked",
+      "noteTitle": "Only you can see it for now",
+      "noteBody": "Every new photo gets a quick safety check before your readers see it."
+    },
+    "removed": {
+      "header": "Notice",
+      "label": "Moment removed",
+      "meta": "{{slot}} · {{date}}",
+      "photo": "{{slot}} photo, removed",
+      "title": "We removed one of your moments",
+      "bodyGuideline": "It didn’t follow our community guidelines on <bold>{{guideline}}</bold>. Your other moments and your account aren’t affected.",
+      "body": "It didn’t follow our community guidelines. Your other moments and your account aren’t affected.",
+      "ok": "OK"
+    },
+    "guideline": {
+      "sexual": "nudity or sexual content",
+      "harassment": "harassment or bullying",
+      "violence": "violence or dangerous acts",
+      "hate": "hate speech or symbols",
+      "spam": "spam or scams",
+      "under_13": "people under 13"
+    },
+    "notFound": {
+      "title": "This moment isn’t available",
+      "body": "It may have been deleted, or it belongs to someone else."
+    },
+    "error": {
+      "title": "Couldn’t load this moment",
+      "body": "Check your connection and try again."
+    },
+    "tile": {
+      "removed": "Removed",
+      "a11yRemoved": "removed, tap to see why"
+    }
   }
 }

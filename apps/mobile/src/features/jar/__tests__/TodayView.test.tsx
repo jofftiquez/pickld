@@ -44,6 +44,7 @@ async function renderToday(props: Partial<TodayViewProps> = {}) {
   const onCapture = jest.fn();
   const onOpenMyDays = jest.fn();
   const onRetry = jest.fn();
+  const onOpenMoment = jest.fn();
   await render(
     <TodayView
       now={NOW}
@@ -57,10 +58,11 @@ async function renderToday(props: Partial<TodayViewProps> = {}) {
       onCapture={onCapture}
       onOpenMyDays={onOpenMyDays}
       onRetry={onRetry}
+      onOpenMoment={onOpenMoment}
       {...props}
     />,
   );
-  return { onCapture, onOpenMyDays, onRetry };
+  return { onCapture, onOpenMyDays, onRetry, onOpenMoment };
 }
 
 describe('TodayView', () => {
@@ -213,5 +215,46 @@ describe('TodayView', () => {
     const style = screen.getByTestId('today-scroll').props.contentContainerStyle as object[];
     const bottom = Object.assign({}, ...style) as { paddingBottom: number };
     expect(bottom.paddingBottom).toBe(34 + sizes.tabBar + space.lg);
+  });
+
+  it('checking and removed server moments open their moment; filled and queued checking tiles do not (M2-21)', async () => {
+    const { onOpenMoment, onCapture } = await renderToday({
+      hasAnyJar: true,
+      tiles: buildTodayGrid({
+        localDate: '2026-11-10',
+        moments: [
+          live('whereami'),
+          { ...live('mebusywith'), id: 'm-checking', status: 'checking' },
+          { ...live('ootd'), id: 'm-removed', status: 'removed' },
+        ],
+        queue: [
+          {
+            id: 7,
+            slot: 'selfie',
+            state: 'uploaded',
+            localDate: '2026-11-10',
+            photoUri: 'file:///q/selfie.webp',
+            thumbUri: null,
+            capturedAt: '2026-11-10T00:10:00Z',
+            isPrivate: false,
+          },
+        ],
+        nowSlot: 'morning',
+      }),
+    });
+
+    await fireEvent.press(screen.getByTestId('tile-mebusywith'));
+    expect(onOpenMoment).toHaveBeenLastCalledWith('m-checking');
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    expect(onOpenMoment).toHaveBeenLastCalledWith('m-removed');
+    expect(screen.getByRole('button', { name: '#ootd, removed, tap to see why' })).toBeTruthy();
+
+    // Not pressable: a live tile (Moment detail is M3-08) and a checking tile still waiting for its server row.
+    expect(screen.getByTestId('tile-whereami')).toBeDisabled();
+    expect(screen.getByTestId('tile-selfie')).toBeDisabled();
+    expect(onOpenMoment).toHaveBeenCalledTimes(2);
+    expect(onCapture).not.toHaveBeenCalled();
+    // A removed moment doesn't count toward the jar.
+    expect(screen.getByText('3 of 8 moments')).toBeTruthy();
   });
 });
