@@ -14,7 +14,27 @@
     "myDays": "My days"
   },
   "today": {
-    "title": "Today"
+    "title": "Today",
+    "subtitle": "{{date}} · {{greeting}}",
+    "greeting": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}"
+    },
+    "greetingNoName": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "myDays": "My days",
+    "inTodaysJar": "in today’s jar",
+    "inTodaysJarReaders_one": "in today’s jar · {{count}} reader",
+    "inTodaysJarReaders_other": "in today’s jar · {{count}} readers",
+    "publish": "Publish",
+    "publishHint": "Available soon",
+    "firstJarTitle": "Your first jar",
+    "firstJarBody": "Eight moments fill it up. Start with whatever’s in front of you right now.",
+    "grid": "Today’s moments"
   },
   "capture": {
     "title": "Capture"

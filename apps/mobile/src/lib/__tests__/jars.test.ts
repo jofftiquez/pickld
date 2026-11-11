@@ -5,6 +5,7 @@ import {
   isJarOpen,
   jarEndsAt,
   localDateIn,
+  normalizeZone,
   serverNow,
   serverOffsetMs,
   type JarRef,
@@ -285,5 +286,26 @@ describe('server time offset', () => {
 
   it('refuses an unreadable server time', () => {
     expect(() => serverOffsetMs('not a date', at('2026-11-11T00:00:00Z'))).toThrow(RangeError);
+  });
+});
+
+describe('normalizeZone', () => {
+  it.each([
+    ['GMT', 'UTC'],
+    ['Etc/UTC', 'UTC'],
+    ['Etc/GMT', 'UTC'],
+    ['UTC', 'UTC'],
+    [undefined, 'UTC'],
+    ['', 'UTC'],
+    ['PST', 'UTC'],
+    ['Not/AZone', 'UTC'],
+    ['Asia/Manila', 'Asia/Manila'],
+    ['America/Argentina/Buenos_Aires', 'America/Argentina/Buenos_Aires'],
+  ])('%s → %s', (raw, expected) => {
+    expect(normalizeZone(raw)).toBe(expected);
+  });
+
+  it('gives a zone the jar logic accepts', () => {
+    expect(() => localDateIn(new Date('2026-11-11T05:00:00Z'), normalizeZone('GMT'))).not.toThrow();
   });
 });
