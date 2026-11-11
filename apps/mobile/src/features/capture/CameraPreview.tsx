@@ -33,7 +33,12 @@ const toFileUri = (path: string) => (path.startsWith('file://') ? path : `file:/
 export function CameraPreview({ facing, isActive, onFlashSupport, ref }: CameraPreviewProps) {
   const device = useCameraDevice(facing);
   // `speed` keeps the shutter-to-next-screen path short (FR-CAP-01: under 1 s).
-  const photoOutput = usePhotoOutput({ targetResolution: CommonResolutions.FHD_4_3, qualityPrioritization: 'speed' });
+  // JPEG, not the device default HEIC: Skia's useImage (editor) can't decode HEIC.
+  const photoOutput = usePhotoOutput({
+    targetResolution: CommonResolutions.FHD_4_3,
+    qualityPrioritization: 'speed',
+    containerFormat: 'jpeg',
+  });
   const constraints = useMemo<Constraint[]>(() => [{ resolutionBias: photoOutput }], [photoOutput]);
   const hasFlash = device?.hasFlash ?? false;
 
