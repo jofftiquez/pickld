@@ -1,11 +1,9 @@
-import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { textStyle } from '@/theme/text';
-import { colors, photo, space } from '@/theme/tokens';
+import { colors, space } from '@/theme/tokens';
 
 import { CheckingView } from './CheckingView';
 import { RemovedView } from './RemovedView';
@@ -18,8 +16,8 @@ export type OwnMomentViewProps = {
 };
 
 /**
- * /moment/[id] for the owner's own moment: Checking photo, Moment removed, or the plain photo once it is
- * live. Anything else (another user's moment, a bad or unknown id) is "not found" and shows no photo.
+ * /moment/[id] for the owner's own moment while it is checked or after it was removed. Anything else
+ * (another user's moment, a bad or unknown id) is "not found" and shows no photo.
  */
 export function OwnMomentView({ result, insets, onClose }: OwnMomentViewProps) {
   const { t } = useTranslation();
@@ -41,33 +39,8 @@ export function OwnMomentView({ result, insets, onClose }: OwnMomentViewProps) {
         />
       );
     }
-    // TODO(M3-08): the full Moment detail (progress bars, swipe, caption, likes, comments).
-    return (
-      <View style={[styles.dark, { paddingTop: insets.top }]} testID="moment-live">
-        <View style={styles.livePhoto}>
-          {moment.photoUrl ? (
-            <Image
-              testID="moment-live-photo"
-              source={{ uri: moment.photoUrl }}
-              style={StyleSheet.absoluteFill}
-              contentFit="cover"
-              accessible
-              accessibilityRole="image"
-              accessibilityLabel={t('moment.photo', { slot: t(`slots.${moment.slot}`) })}
-            />
-          ) : null}
-          <View style={styles.liveClose}>
-            <RoundIconButton
-              icon="close"
-              variant="glass"
-              accessibilityLabel={t('moment.close')}
-              onPress={onClose}
-              testID="moment-close"
-            />
-          </View>
-        </View>
-      </View>
-    );
+    // A live moment opens Moment detail; the route renders that instead.
+    return null;
   }
 
   if (result.kind === 'loading') {
@@ -96,9 +69,6 @@ export function OwnMomentView({ result, insets, onClose }: OwnMomentViewProps) {
 }
 
 const styles = StyleSheet.create({
-  dark: { flex: 1, backgroundColor: colors.camera },
-  livePhoto: { aspectRatio: photo.aspect, backgroundColor: colors.photoPlaceholder },
-  liveClose: { position: 'absolute', top: space.lg, left: space.lg },
   light: { flex: 1, backgroundColor: colors.background, paddingHorizontal: space.xxl },
   center: { alignItems: 'center', justifyContent: 'center' },
   message: { flex: 1, gap: space.md },

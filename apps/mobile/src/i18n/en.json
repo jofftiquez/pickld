@@ -142,6 +142,7 @@
     "cover": "Cover photo, {{slot}}",
     "coverAddedLater": "Cover photo, {{slot}}, added later",
     "back": "Back",
+    "openMomentHint": "Opens the moment",
     "likes_one": "{{count}} like",
     "likes_other": "{{count}} likes",
     "comments_one": "{{count}} comment",
@@ -366,6 +367,14 @@
     "tile": {
       "removed": "Removed",
       "a11yRemoved": "removed, tap to see why"
+    },
+    "detail": {
+      "photo": "{{slot}} photo, moment {{position}} of {{count}}",
+      "when": "{{time}} · {{date}}",
+      "position": "Moment {{position}} of {{count}}",
+      "positionSwipe": "Moment {{position}} of {{count}} · swipe for the next",
+      "share": "Share",
+      "notAvailable": "It may be private, or its owner hasn’t shared it with you."
     }
   },
   "fullJar": {

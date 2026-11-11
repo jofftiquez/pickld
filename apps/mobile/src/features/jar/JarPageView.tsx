@@ -1,24 +1,23 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
 import { BaseButton } from '@/components/BaseButton';
 import { Icon } from '@/components/Icon';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
-import { PhotoTile } from '@/components/PhotoTile';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { parseEdits } from '@/features/edit/edits';
 import { MomentCover } from '@/features/moment/MomentCover';
-import { hasVisibleEdits } from '@/features/moment/momentRender';
-import { deviceLocale, formatTime, formatWeekday } from '@/lib/format';
+import { deviceLocale, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { buildJarPage, type JarMoment, type JarPageData } from './jarPage';
+import { JarTile } from './JarTile';
+import { jarTitle } from './shareJar';
 
 export type JarPageViewProps = {
   /** Undefined while loading; null when the jar isn't available to this viewer. */
@@ -27,6 +26,8 @@ export type JarPageViewProps = {
   failed?: boolean;
   insets: EdgeInsets;
   onBack: () => void;
+  /** Opens Moment detail for a moment on the page. */
+  onOpenMoment?: (momentId: string) => void;
   onShare: () => void;
   onRetry: () => void;
   locale?: string;
@@ -36,23 +37,10 @@ const GRID_COLUMNS = 3;
 const GRID_GAP = space.sm;
 const GRID_PADDING = space.lg;
 
-/** "Dale" from "Dale Santos": the cover reads "Dale's Sunday" (design: Story). */
-function firstName(displayName: string): string {
-  return displayName.trim().split(/\s+/)[0] ?? displayName;
-}
-
 function formatJarDate(localDate: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(
     new Date(`${localDate}T12:00:00Z`),
   );
-}
-
-/** The jar page title, also used by the share message. */
-export function jarTitle(data: Pick<JarPageData, 'jar' | 'author'>, t: TFunction, locale = deviceLocale()): string {
-  return t('jarPage.title', {
-    name: firstName(data.author.display_name),
-    weekday: formatWeekday(data.jar.local_date, locale),
-  });
 }
 
 /**
@@ -65,6 +53,7 @@ export function JarPageView({
   failed = false,
   insets,
   onBack,
+  onOpenMoment,
   onShare,
   onRetry,
   locale = deviceLocale(),
@@ -136,13 +125,16 @@ export function JarPageView({
             style={StyleSheet.absoluteFill}
           />
           {cover ? (
-            <View
-              accessible
-              accessibilityRole="image"
+            <Pressable
+              accessibilityRole={onOpenMoment ? 'button' : 'image'}
               accessibilityLabel={t(cover.is_backfilled ? 'jarPage.coverAddedLater' : 'jarPage.cover', {
                 slot: t(`slots.${cover.slot}`),
               })}
+              accessibilityHint={onOpenMoment ? t('jarPage.openMomentHint') : undefined}
+              disabled={!onOpenMoment}
+              onPress={() => onOpenMoment?.(cover.id)}
               style={StyleSheet.absoluteFill}
+              testID="jar-cover"
             />
           ) : null}
           <View style={styles.coverFooter}>
@@ -185,60 +177,15 @@ export function JarPageView({
         )}
 
         <View style={styles.grid}>
-          {page.grid.map((m) => {
-            const edits = parseEdits(m.edits);
-            const slot = t(`slots.${m.slot}`);
-            const labelKey = m.is_private
-              ? m.is_backfilled
-                ? 'jarPage.tilePrivateAddedLater'
-                : 'jarPage.tilePrivate'
-              : m.is_backfilled
-                ? 'jarPage.tileAddedLater'
-                : 'jarPage.tile';
-            // TODO(M3-08, #69): a tap opens Moment detail.
-            return (
-              <View
-                key={m.id}
-                accessible
-                accessibilityRole="image"
-                accessibilityLabel={t(labelKey, { slot })}
-                style={{ width: tileWidth }}
-                testID={`jar-tile-${m.slot}`}
-              >
-                <PhotoTile
-                  uri={m.thumbUrl}
-                  photoView={
-                    m.thumbUrl !== null && hasVisibleEdits(edits) ? (
-                      <MomentCover uri={m.thumbUrl} edits={edits} stamp={stampOf(m)} accessible={false} />
-                    ) : undefined
-                  }
-                  height={sizes.jarTile}
-                  radius={radius.jarTile}
-                  fadeHeight={sizes.jarTileFade}
-                  label={slot}
-                  labelVariant="caption"
-                  topRight={
-                    m.is_backfilled || m.is_private ? (
-                      <>
-                        {m.is_backfilled ? (
-                          <View style={styles.badge} testID={`jar-tile-${m.slot}-added-later`}>
-                            <Text style={[textStyle('caption'), { color: colors.surface }]} numberOfLines={1}>
-                              {t('tile.addedLater')}
-                            </Text>
-                          </View>
-                        ) : null}
-                        {m.is_private ? (
-                          <View style={styles.lock} testID={`jar-tile-${m.slot}-lock`}>
-                            <Icon name="lock" color="surface" size={12} strokeWidth={2} />
-                          </View>
-                        ) : null}
-                      </>
-                    ) : null
-                  }
-                />
-              </View>
-            );
-          })}
+          {page.grid.map((m) => (
+            <JarTile
+              key={m.id}
+              moment={m}
+              width={tileWidth}
+              stamp={stampOf(m)}
+              onPress={onOpenMoment ? () => onOpenMoment(m.id) : undefined}
+            />
+          ))}
           <View
             accessible
             accessibilityLabel={t('jarPage.countA11y', { count: page.count, max: MAX_LAYERS })}
@@ -350,21 +297,6 @@ const styles = StyleSheet.create({
   },
   highlightSpacer: { height: space.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP, paddingHorizontal: GRID_PADDING },
-  badge: {
-    borderRadius: radius.pill,
-    paddingVertical: sizes.pillPaddingY - 1,
-    paddingHorizontal: space.xs + 2,
-    backgroundColor: colors.badge,
-    flexShrink: 1,
-  },
-  lock: {
-    width: sizes.lockBadge,
-    height: sizes.lockBadge,
-    borderRadius: radius.pill,
-    backgroundColor: colors.glass,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   countTile: {
     minHeight: sizes.jarTile,
     borderRadius: radius.jarTile,
