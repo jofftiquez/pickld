@@ -11,20 +11,15 @@ import { newMomentId } from '@/lib/queue/uploader';
 import { releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 
 import { parseEdits } from './edits';
-import { registerBubbleRenderer } from './bubble/BubbleOverlay';
 import { EditorView, type EditorTool } from './EditorView';
 import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
+import { registerOverlayRenderers } from './overlays/registerRenderers';
 import { stickerOverlay } from './stickers/catalog';
-import { registerStickerRenderer } from './stickers/stickerRenderer';
-import { registerTextRenderer } from './text/registerTextRenderer';
 import { useEditorState } from './useEditorState';
 
-// Until the sticker, bubble and text tools register their renderers (M2-15, M2-16, M2-17), development
-// builds draw overlays as plain boxes so the transform engine can be tried. Release builds draw nothing.
-registerStickerRenderer();
-// Bubbles draw with their own renderer (M2-16), registered first so the placeholder leaves them alone.
-registerBubbleRenderer();
-registerTextRenderer();
+// Stickers, bubbles and text draw with their own renderers (M2-15, M2-16, M2-17), registered first so
+// the development placeholders (plain boxes) only fill in for a kind without one.
+registerOverlayRenderers();
 if (__DEV__) registerPlaceholderRenderers();
 
 export const queueItemQueryKey = (id: number) => ['queueItem', id] as const;

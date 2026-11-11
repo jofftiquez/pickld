@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
+import { filterMatrices } from '@/features/edit/filters';
 import { sizes, space } from '@/theme/tokens';
 
 import { buildTodayGrid, type ServerMoment } from '../todayGrid';
@@ -256,5 +257,99 @@ describe('TodayView', () => {
     expect(onCapture).not.toHaveBeenCalled();
     // A removed moment doesn't count toward the jar.
     expect(screen.getByText('3 of 8 moments')).toBeTruthy();
+  });
+});
+
+describe('TodayView: tiles draw moments with their edits (M2-18)', () => {
+  const hidden = { includeHiddenElements: true } as const;
+  const sticker = {
+    id: 's1',
+    type: 'sticker',
+    stickerId: '4fec3a86-8a82-4601-fe12-fdbf36bead43',
+    asset: 'stickers/everyday/kape-muna.png',
+    label: 'Kape muna',
+    x: 0.3,
+    y: 0.3,
+    scale: 0.4,
+    rotation: 0.2,
+  };
+  const stamp = { ...sticker, id: 'st', asset: 'stickers/stamps/time.png', label: 'Time', stamp: 'time' };
+  const serverEdits = { v: 1, filter: 'merienda', overlays: [sticker, stamp] };
+
+  async function renderWithEdits() {
+    await renderToday({
+      hasAnyJar: true,
+      tiles: buildTodayGrid({
+        localDate: '2026-11-10',
+        nowSlot: 'afternoon',
+        jarTz: TZ,
+        moments: [
+          { ...live('ootd'), thumbUrl: 'https://photos.test/ootd.webp', edits: serverEdits },
+          { ...live('selfie'), status: 'checking', thumbUrl: 'https://photos.test/selfie.webp', edits: serverEdits },
+          { ...live('whereami'), thumbUrl: 'https://photos.test/whereami.webp', edits: {} },
+        ],
+        queue: [
+          {
+            id: 4,
+            slot: 'morning',
+            state: 'queued',
+            localDate: '2026-11-10',
+            photoUri: 'file:///q/morning.webp',
+            thumbUri: 'file:///q/morning-thumb.webp',
+            capturedAt: '2026-11-10T00:05:00Z',
+            isPrivate: false,
+            tz: TZ,
+            createdAt: Date.parse('2026-11-10T00:05:00Z'),
+            edits: {
+              v: 1,
+              filter: 'original',
+              overlays: [{ id: 'b1', type: 'bubble', text: 'hello', x: 0.5, y: 0.5, scale: 0.5, rotation: 0 }],
+            },
+          },
+        ],
+      }),
+    });
+    // The tile's width comes from the grid: lay the moment out in a 171 × 116 tile.
+    for (const slot of ['ootd', 'morning']) {
+      await fireEvent(screen.getByTestId(`tile-${slot}-moment`, hidden), 'layout', {
+        nativeEvent: { layout: { x: 0, y: 0, width: 171, height: 116 } },
+      });
+    }
+  }
+
+  it('a live moment shows its filter, its stickers and its stamp, cropped like the plain photo', async () => {
+    await renderWithEdits();
+    const tile = within(screen.getByTestId('tile-ootd-moment', hidden));
+    expect(tile.getByTestId('moment-overlay-s1', hidden)).toBeTruthy();
+    expect(tile.getByTestId('skia-image', hidden).props.accessibilityHint).toBe('https://photos.test/ootd.webp');
+    expect(JSON.parse(tile.getByTestId('color-matrix', hidden).props.accessibilityValue.text)).toEqual([
+      ...filterMatrices.merienda,
+    ]);
+    // Captured 23:30 UTC: 7:30 AM in the jar's zone.
+    expect(within(tile.getByTestId('sticker-st', hidden)).getByText('7:30 AM', hidden)).toBeTruthy();
+    // Drawn 3:4 at the tile's width and centred, so the overlays stay where they are on the photo.
+    expect(tile.getByTestId('moment-overlay-s1', hidden).props.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ width: 0.4 * 171 })]),
+    );
+    expect(within(screen.getByTestId('tile-ootd')).queryByTestId('photo-tile-image', hidden)).toBeNull();
+    expect(within(screen.getByTestId('tile-whereami')).getByTestId('photo-tile-image', hidden)).toBeTruthy();
+    // The tile still speaks for itself; the picture adds no extra stops.
+    expect(screen.getByRole('image', { name: '#ootd, 7:30 AM, added' })).toBeTruthy();
+  });
+
+  it('a queued moment shows the edits saved on the phone', async () => {
+    await renderWithEdits();
+    const tile = within(screen.getByTestId('tile-morning-moment', hidden));
+    expect(tile.getByTestId('bubble-b1', hidden)).toBeTruthy();
+    expect(tile.getByTestId('moment-view-photo', hidden).props.source).toEqual([
+      { uri: 'file:///q/morning-thumb.webp' },
+    ]);
+  });
+
+  it('a checking moment stays plain and blurred, and a moment without edits keeps the plain photo', async () => {
+    await renderWithEdits();
+    expect(screen.queryByTestId('tile-selfie-moment', hidden)).toBeNull();
+    expect(screen.queryByTestId('tile-whereami-moment', hidden)).toBeNull();
+    expect(within(screen.getByTestId('tile-selfie')).queryByTestId('moment-overlay-s1', hidden)).toBeNull();
   });
 });

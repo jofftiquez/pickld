@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type AccessibilityActionEvent } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -29,6 +29,8 @@ export type MomentTileProps = {
   state: MomentTileState;
   /** Photo (remote or queued local file) for every state except `empty` and `now`. */
   uri?: string | null;
+  /** The photo drawn with its edits, used instead of `uri`'s plain image except while it is blurred. */
+  photoView?: ReactNode;
   /** Capture time, already formatted for the user's locale (e.g. "7:30 AM"). */
   time?: string;
   isPrivate?: boolean;
@@ -56,6 +58,7 @@ export function MomentTile({
   slot,
   state,
   uri = null,
+  photoView,
   time,
   isPrivate = false,
   addedLater = false,
@@ -70,6 +73,8 @@ export function MomentTile({
   const percent = percentOf(progress);
   const indeterminate = progress === undefined;
   const hasPhoto = state !== 'empty' && state !== 'now';
+  // Checking and removed photos are unchecked or refused content: always blurred (rule 4).
+  const blurred = state === 'checking' || state === 'removed';
 
   // "#slot, time, state": every state is spoken, never conveyed by color alone.
   const flags = hasPhoto
@@ -147,10 +152,11 @@ export function MomentTile({
       ) : (
         <PhotoTile
           uri={uri}
+          // A blurred photo stays plain: its stickers and words would show through the blur.
+          photoView={blurred ? undefined : photoView}
           height={sizes.momentTile}
           label={tag}
-          // Checking and removed photos are unchecked or refused content: always blurred (rule 4).
-          blurred={state === 'checking' || state === 'removed'}
+          blurred={blurred}
           overlayColor={state === 'failed' ? 'failedOverlay' : state === 'filled' ? undefined : 'glass'}
           topLeft={time ? <Pill text={time} /> : null}
           topRight={

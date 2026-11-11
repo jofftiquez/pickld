@@ -1,3 +1,4 @@
+import { DEFAULT_EDITS } from '@/features/edit/edits';
 import { currentSlot } from '@/lib/jars';
 import { slots } from '@/theme/tokens';
 
@@ -104,6 +105,9 @@ describe('buildTodayGrid: merging server moments with the queue', () => {
       momentId: 'm-ootd',
       queueId: null,
       canRetry: false,
+      // Its edits are never drawn: the photo stays plain and blurred.
+      edits: DEFAULT_EDITS,
+      stamp: null,
     });
   });
 
@@ -336,5 +340,42 @@ describe('greetingFor', () => {
     expect(greetingFor('afternoon')).toBe('afternoon');
     expect(greetingFor('evening')).toBe('evening');
     expect(greetingFor(null)).toBe('evening');
+  });
+});
+
+describe('buildTodayGrid: edits and stamps for the moment renderer (M2-18)', () => {
+  const overlay = { id: 'b1', type: 'bubble', text: 'hi', x: 0.5, y: 0.5, scale: 0.5, rotation: 0 };
+
+  it('server moments carry their parsed edits and stamp in the jar’s zone; bad or missing edits are plain', () => {
+    const tiles = grid({
+      jarTz: 'Asia/Tokyo',
+      moments: [
+        moment('whereami', { edits: { v: 1, filter: 'mono', overlays: [overlay] } }),
+        moment('ootd', { edits: { filter: 'neon', overlays: 'x' } }),
+        moment('selfie'),
+      ],
+    });
+    expect(tiles[0]?.edits).toMatchObject({ filter: 'mono', overlays: [{ id: 'b1', shape: 'speech' }] });
+    expect(tiles[0]?.stamp).toEqual({ capturedAt: new Date('2026-11-09T04:30:00Z'), tz: 'Asia/Tokyo' });
+    expect(tiles[3]?.edits).toEqual(DEFAULT_EDITS);
+    expect(tiles[4]?.edits).toEqual(DEFAULT_EDITS);
+    // Without the jar's zone the stamps show their art rather than a time in the wrong zone.
+    expect(grid({ moments: [moment('selfie')] })[4]?.stamp).toBeNull();
+  });
+
+  it('queued items carry their local edits, stamped with the capture time or else when they were queued', () => {
+    const queuedAt = Date.parse('2026-11-09T06:00:00Z');
+    const tiles = grid({
+      queue: [
+        queued('whereami', { tz: TZ, createdAt: queuedAt, edits: { v: 1, filter: 'dusk', overlays: [overlay] } }),
+        queued('ootd', { tz: TZ, createdAt: queuedAt, capturedAt: null }),
+        queued('selfie'),
+      ],
+    });
+    expect(tiles[0]?.edits).toMatchObject({ filter: 'dusk', overlays: [{ id: 'b1' }] });
+    expect(tiles[0]?.stamp).toEqual({ capturedAt: new Date('2026-11-09T05:00:00Z'), tz: TZ });
+    expect(tiles[3]?.stamp).toEqual({ capturedAt: new Date(queuedAt), tz: TZ });
+    expect(tiles[3]?.edits).toEqual(DEFAULT_EDITS);
+    expect(tiles[4]?.stamp).toBeNull();
   });
 });

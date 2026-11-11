@@ -6,13 +6,16 @@ import type { stickerStamps } from '../edits';
 
 export type StampKind = (typeof stickerStamps)[number];
 
-/** The moment an auto stamp describes: when its photo was taken, in its jar's IANA zone. */
-export type StampMoment = { capturedAt: Date; tz: string };
+/**
+ * The moment an auto stamp describes: when its photo was taken, in its jar's IANA zone, and the jar's
+ * number when the screen knows it (the moment renderer's callers, M2-18).
+ */
+export type StampMoment = { capturedAt: Date; tz: string; jarNumber?: number | null };
 
 /**
  * The live text of an auto stamp (FR-STK-01: "auto time, date, jar number"), from the moment's capture
  * time in its jar's zone, styled like the art: "2:14 PM", "NOV 11", "WEDNESDAY". Null for the jar number,
- * which the editor doesn't know yet: that stamp shows its art.
+ * whose text is copy ("JAR #42"): StickerImage words it from `jarNumber`, or shows the art without one.
  */
 export function stampText(kind: StampKind, moment: StampMoment, locale = deviceLocale()): string | null {
   const { capturedAt, tz } = moment;
@@ -27,7 +30,6 @@ export function stampText(kind: StampKind, moment: StampMoment, locale = deviceL
     case 'weekday':
       return new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: tz }).format(capturedAt).toUpperCase();
     case 'jar_number':
-      // TODO(M2-18 #47): draw "JAR #n" once the moment renderer has the jar number; until then, the art.
       return null;
   }
 }
