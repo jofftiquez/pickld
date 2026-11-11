@@ -96,6 +96,9 @@ export const type = {
   label: { size: 12, weight: '600' },
   caption: { size: 11, weight: '700' },
   button: { size: 16, weight: '800' }, // primary and danger button labels (Welcome, Publish, Delete)
+  eyebrow: { size: 12, weight: '800', letterSpacing: 0.96 }, // 0.08em, "FULL JAR", "STICKER UNLOCKED"
+  celebrationTitle: { size: 26, weight: '800', letterSpacing: -0.78 }, // "Your Monday is complete" (FullJar)
+  unlockTitle: { size: 28, weight: '800', letterSpacing: -0.84 }, // "Your first full jar!" (StickerUnlock)
 } as const;
 
 export const radius = {
@@ -110,6 +113,11 @@ export const radius = {
   tile: 22,
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
+  celebration: 30, // Full jar card (FullJar)
+  countBadge: 10, // "8/8" badge on the full jar (FullJar)
+  milestoneCard: 18, // Milestones progress card (StickerUnlock)
+  progressBar: 3, // its bar
+  confettiStrip: 2, // ends of a confetti strip (FullJar, StickerUnlock)
   noteSheet: 28, // white sheet under the blurred photo (Checking)
   viewfinder: 28, // bottom corners of the camera viewfinder (Camera)
   cameraTag: 18, // slot tag over the viewfinder (Camera)
@@ -228,6 +236,13 @@ export const sizes = {
   editorPanelOverlap: 10, // the white tool panel tucks under the photo's rounded bottom (Capture)
   noteIcon: 44, // lock square beside the owner-only note (Checking)
   noticeThumb: 64, // blurred photo beside "Moment removed" (Removed)
+  celebrationJar: 110, // full jar on the Full jar card (FullJar)
+  unlockJar: 120, // full jar behind the earned sticker (StickerUnlock)
+  unlockArt: 240, // jar, halo and sticker area (StickerUnlock); the halo is inset by space.xl
+  unlockArtHeight: 260,
+  unlockSticker: 150, // earned sticker's width over the jar; height follows the art
+  progressBarWidth: 80, // Milestones progress bar (StickerUnlock)
+  progressBarHeight: 6,
 } as const;
 
 export const photo = {
@@ -263,4 +278,6 @@ export const motion = {
   fast: 150,
   base: 250,
   jarLayerSettle: 450, // skip when Reduce Motion is on
+  confettiFall: 900, // each confetti piece's drop (FullJar, StickerUnlock); no confetti with Reduce Motion
+  celebrationPop: 400, // celebration content grows in; a plain fade (base) with Reduce Motion
 } as const;

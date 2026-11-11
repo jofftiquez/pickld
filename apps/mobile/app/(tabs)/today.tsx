@@ -9,6 +9,7 @@ import { TodayView } from '@/features/jar/TodayView';
 import { retryUpload } from '@/features/jar/retryUpload';
 import { openTodayJar, useRollover } from '@/features/jar/rollover';
 import { buildTodayGrid, offlineBannerCount } from '@/features/jar/todayGrid';
+import { useCelebrations } from '@/features/jar/useCelebrations';
 import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { useIsOffline } from '@/lib/connectivity';
@@ -35,6 +36,8 @@ export default function TodayScreen() {
   const offline = useIsOffline();
   const zone = useTimeZoneBanner({ userId, jar: jar?.jar ?? null, previousTz: jar?.previousTz });
   const { t } = useTranslation();
+  // Full jar celebration, then Sticker unlocked, once each (M2-28).
+  useCelebrations({ userId, today: jar, open: (href) => router.push(href) });
 
   // At the jar's end (or the phone's midnight) switch to the new day at once, not at the next minute tick,
   // and refetch even when the date key stays the same (a travel jar ending on its own clock).
