@@ -9,9 +9,11 @@ export const UNDO_LIMIT = 50;
 
 // The selected overlay is not an edit: it is kept beside the history, so Undo never just moves the
 // selection, and it is ignored once its overlay is gone (deleted, or taken back by Undo).
-type State = { past: Edits[]; present: Edits; selectedId: string | null };
+// `group` is the coalescing key of the last change: a run of changes with the same key (typing into a
+// bubble) is one Undo step. Any other action ends the run.
+type State = { past: Edits[]; present: Edits; selectedId: string | null; group?: string };
 type Action =
-  | { type: 'change'; change: (edits: Edits) => Edits; select?: string | null }
+  | { type: 'change'; change: (edits: Edits) => Edits; select?: string | null; group?: string }
   | { type: 'select'; id: string | null }
   | { type: 'undo' };
 
@@ -19,18 +21,23 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'undo': {
       const previous = state.past.at(-1);
-      return previous ? { ...state, past: state.past.slice(0, -1), present: previous } : state;
+      return previous ? { ...state, past: state.past.slice(0, -1), present: previous, group: undefined } : state;
     }
     case 'select':
-      return action.id === state.selectedId ? state : { ...state, selectedId: action.id };
+      return action.id === state.selectedId ? state : { ...state, selectedId: action.id, group: undefined };
     case 'change': {
       // A change that returns the same edits (nothing to do) records no step.
       const next = action.change(state.present);
       if (next === state.present) return state;
+      const selectedId = action.select === undefined ? state.selectedId : action.select;
+      if (action.group !== undefined && action.group === state.group) {
+        return { ...state, present: next, selectedId };
+      }
       return {
         past: [...state.past, state.present].slice(-UNDO_LIMIT),
         present: next,
-        selectedId: action.select === undefined ? state.selectedId : action.select,
+        selectedId,
+        group: action.group,
       };
     }
   }
@@ -53,8 +60,16 @@ export type EditorState = {
   /** The overlay with the dashed outline and handles, if any. */
   selectedId: string | null;
   selectOverlay: (id: string | null) => void;
-  /** Adds an overlay on top and selects it (the tools in M2-15, M2-16, M2-17 call this). */
-  addOverlay: (overlay: Overlay) => void;
+  /**
+   * Adds an overlay on top and selects it (the tools in M2-15, M2-16, M2-17 call this). With a `group`,
+   * updates in the same group right after it join its Undo step (a bubble added by typing).
+   */
+  addOverlay: (overlay: Overlay, group?: string) => void;
+  /**
+   * Changes an overlay's content (a bubble's text, shape or color) in place, keeping its transform and
+   * stacking. Changes passing the same `group` back to back are one Undo step (typing a word).
+   */
+  updateOverlay: (id: string, update: (overlay: Overlay) => Overlay, group?: string) => void;
   /** Sets an overlay's position, size and angle (clamped) and brings it to the front, as one step. */
   transformOverlay: (id: string, transform: Transform) => void;
   bringToFront: (id: string) => void;
@@ -72,21 +87,40 @@ export type EditorState = {
 export function useEditorState(initial: Edits): EditorState {
   const [state, dispatch] = useReducer(reducer, { past: [], present: initial, selectedId: null });
   const edits = state.present;
-  const change = (fn: (edits: Edits) => Edits, select?: string | null) =>
-    dispatch({ type: 'change', change: fn, select });
+  const change = (fn: (edits: Edits) => Edits, select?: string | null, group?: string) =>
+    dispatch({ type: 'change', change: fn, select, group });
   return {
     edits,
     filter: edits.filter,
     selectFilter: (filter) => change((e) => (e.filter === filter ? e : { ...e, filter })),
     selectedId: edits.overlays.some((o) => o.id === state.selectedId) ? state.selectedId : null,
     selectOverlay: (id) => dispatch({ type: 'select', id }),
-    addOverlay: (overlay) =>
+    addOverlay: (overlay, group) =>
       change(
         (e) =>
           e.overlays.some((o) => o.id === overlay.id)
             ? e
             : withOverlays(e, [...e.overlays, { ...overlay, ...clampTransform(overlay) }]),
         overlay.id,
+        group,
+      ),
+    updateOverlay: (id, update, group) =>
+      change(
+        (e) => {
+          const current = e.overlays.find((o) => o.id === id);
+          if (!current) return e;
+          const next = update(current);
+          // Content only: an update can't swap the overlay for another, or change nothing.
+          if (next.id !== id || next.type !== current.type || JSON.stringify(next) === JSON.stringify(current)) {
+            return e;
+          }
+          return withOverlays(
+            e,
+            e.overlays.map((o) => (o.id === id ? next : o)),
+          );
+        },
+        undefined,
+        group,
       ),
     transformOverlay: (id, transform) =>
       change((e) => {

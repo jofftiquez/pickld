@@ -318,3 +318,52 @@ export const stickerTool = {
   // fractions of the stamp's height so it scales with the overlay.
   stamp: { ring: 0.025, inset: 0.07, border: 0.05, radius: 0.16, text: 0.3, padding: 0.2 },
 } as const;
+
+// Speech bubbles (Bubble, FR-CAP-06). Each color's text pair meets WCAG AA (4.5:1); pickle takes ink
+// text, not white, because white on it is reserved for primary buttons (AGENTS rule 12).
+export const bubbleColors = {
+  white: { fill: '#ffffff', text: '#11140d' },
+  ink: { fill: '#11140d', text: '#ffffff' },
+  pickle: { fill: '#7fad33', text: '#11140d' },
+  butter: { fill: '#ffe08a', text: '#11140d' },
+  blush: { fill: '#fdeceb', text: '#11140d' },
+  sky: { fill: '#dbe8f3', text: '#11140d' },
+} as const;
+
+// A bubble is laid out at `referenceWidth` and scaled to its overlay box, so it looks the same at any
+// size (editor, tiles, share card). Its text ignores the system text size: it is part of the picture.
+export const bubble = {
+  referenceWidth: 200,
+  fontSize: 17,
+  lineHeight: 22,
+  paddingX: 16,
+  paddingY: 10,
+  thoughtPaddingX: 24, // the pill's round ends need more room
+  charWidth: 0.62, // a generous average glyph width (em) for estimating line breaks
+  radius: 20, // speech: three round corners…
+  tailRadius: 6, // …and a sharp bottom-left one pointing at the speaker
+  shoutRadius: 4,
+  shoutSkew: '-8deg',
+  whisperRadius: 14,
+  whisperBorder: 1.5, // dashed outline in the text color
+  shadow: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  // Bubble panel
+  styleTile: 72, // style choice height (grows with large text)
+  styleTileRadius: 18,
+  styleTileBorderSelected: 2,
+  previewWidth: 38, // shape preview inside a style tile
+  previewHeight: 24,
+  previewRadius: 14,
+  previewTailRadius: 4,
+  previewThoughtRadius: 20,
+  swatch: 32, // color circle; hitSlop brings it to 44
+  swatchBorder: '#d5d9cf',
+  swatchRing: 2, // white gap, then an ink ring, around the selected color
+  colorLabelWidth: 44,
+} as const;

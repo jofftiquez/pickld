@@ -191,6 +191,30 @@
       "delete": "Delete"
     }
   },
+  "editBubble": {
+    "styles": "Bubble style",
+    "styleHint": "Adds a bubble, or changes the selected one",
+    "shape": {
+      "speech": "Speech",
+      "thought": "Thought",
+      "shout": "Shout",
+      "whisper": "Whisper"
+    },
+    "color": "Color",
+    "colors": "Bubble color",
+    "colorName": {
+      "white": "White",
+      "ink": "Black",
+      "pickle": "Green",
+      "butter": "Yellow",
+      "blush": "Pink",
+      "sky": "Blue"
+    },
+    "text": "Bubble text",
+    "textHint": "Edits the selected bubble, or adds one",
+    "label": "{{shape}} bubble: {{text}}",
+    "labelEmpty": "{{shape}} bubble, no text yet"
+  },
   "moment": {
     "close": "Close",
     "back": "Back",

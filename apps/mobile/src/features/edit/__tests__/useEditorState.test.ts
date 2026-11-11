@@ -63,7 +63,17 @@ describe('useEditorState', () => {
 
 describe('useEditorState overlays (FR-CAP-05, FR-CAP-08)', () => {
   const a: Overlay = { id: 'a', type: 'sticker', ...kape, x: 0.2, y: 0.2, scale: 0.3, rotation: 0 };
-  const b: Overlay = { id: 'b', type: 'bubble', x: 0.5, y: 0.5, scale: 0.4, rotation: 0.5 };
+  const b: Overlay = {
+    id: 'b',
+    type: 'bubble',
+    x: 0.5,
+    y: 0.5,
+    scale: 0.4,
+    rotation: 0.5,
+    shape: 'speech',
+    color: 'white',
+    text: '',
+  };
   const c: Overlay = { id: 'c', type: 'text', x: 0.8, y: 0.8, scale: 0.2, rotation: -0.5 };
   const start: Edits = { v: 1, filter: 'mono', overlays: [a, b, c] };
   const ids = (edits: Edits) => edits.overlays.map((o) => o.id);

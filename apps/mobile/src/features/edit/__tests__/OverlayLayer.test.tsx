@@ -25,7 +25,7 @@ const start: Edits = {
   filter: 'original',
   overlays: [
     { id: 'a', type: 'sticker', ...kape, x: 0.2, y: 0.2, scale: 0.3, rotation: 0 },
-    { id: 'b', type: 'bubble', x: 0.6, y: 0.6, scale: 0.4, rotation: 0 },
+    { id: 'b', type: 'bubble', x: 0.6, y: 0.6, scale: 0.4, rotation: 0, shape: 'speech', color: 'white', text: '' },
   ],
 };
 
