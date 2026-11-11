@@ -1,0 +1,97 @@
+# M2-15, M2-16, M2-17, M2-18: the editor's Stickers, Bubble and Text tools on a new photo (designs:
+# Stickers, Bubble, Text), then Today drawing the moment with its edits (design: Moment). Takes a photo
+# into SLOT with the dev mock camera, adds a sticker, a speech bubble and a text, and saves.
+# Run on the iOS Simulator with a dev build against the local stack, signed in as a user whose open jar has
+# SLOT empty (seed user dale: #ootd):
+#   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/editor-tools.yaml
+#   maestro test -e SLOT=afternoon apps/mobile/.maestro/editor-tools.yaml
+appId: me.pickld.app
+---
+- evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'ootd'}"
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+
+- openLink: pickld://camera?slot=${output.slot}
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: camera-shutter
+    timeout: 10000
+- tapOn:
+    id: camera-shutter
+- extendedWaitUntil:
+    visible:
+      id: editor-screen
+    timeout: 10000
+
+# Stickers: the catalog grid; tap the first sticker onto the photo.
+- tapOn: Stickers
+- extendedWaitUntil:
+    visible:
+      id: stickers-grid
+    timeout: 15000
+- tapOn:
+    id: sticker-option-.*
+    index: 0
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Stickers-ios
+
+# Bubble: a speech bubble with words.
+- tapOn: Bubble
+- tapOn:
+    id: bubble-style-speech
+- tapOn:
+    id: bubble-text
+- inputText: Kape muna
+# Return closes the keyboard (Maestro's hideKeyboard is unreliable on iOS).
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Bubble-ios
+
+# Text: type and add.
+- tapOn: Text
+- tapOn:
+    id: editor-text-field
+- inputText: Monday fit
+- tapOn:
+    id: editor-text-add
+# Return closes the keyboard (Maestro's hideKeyboard is unreliable on iOS).
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Text-ios
+
+- scrollUntilVisible:
+    element:
+      id: editor-save
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: editor-save
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: tile-${output.slot}
+      text: '#${output.slot}, .*'
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: Today-edits-ios

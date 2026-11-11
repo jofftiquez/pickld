@@ -1,5 +1,6 @@
 # M2-26: My days → select a past day with gaps → screenshot (design: Calendar, selected-day card) →
-# Fill this jar → Camera on that day (dev mock camera) → shutter → back on My days with the photo queued.
+# Fill this jar → Camera on that day (dev mock camera) → shutter → editor → Add to #slot → back on My days with
+# the photo queued.
 # Run on the iOS Simulator with a dev build, signed in as seed user dale (Asia/Manila). Dale's jar 3 days
 # ago has whereami, morning, ootd and evening (Added later), a removed afternoon moment, and gaps:
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/fill-past-day.yaml
@@ -7,7 +8,7 @@
 appId: me.pickld.app
 ---
 # Three days ago in Manila (the seed's zone), as the calendar's testID: day-YYYY-MM-DD.
-- evalScript: "${output.day = new Date(Date.now() + 8 * 3600000 - 3 * 86400000).toISOString().slice(0, 10)}"
+- evalScript: '${output.day = new Date(Date.now() + 8 * 3600000 - 3 * 86400000).toISOString().slice(0, 10)}'
 - launchApp
 - extendedWaitUntil:
     visible:
@@ -62,6 +63,18 @@ appId: me.pickld.app
     text: '#.*, for .*'
 - tapOn:
     id: camera-shutter
+# The editor opens on the queued photo (M2-12); Add to #slot saves it and goes back.
+- extendedWaitUntil:
+    visible:
+      id: editor-screen
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: editor-save
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: editor-save
 # Back on My days, the photo holds its slot in the card at once (queued, then uploaded).
 - extendedWaitUntil:
     visible:

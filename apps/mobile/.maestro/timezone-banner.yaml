@@ -12,6 +12,8 @@
 # The banner shows once per jar per install: erase the app's data (or reinstall) to see it again.
 appId: me.pickld.app
 ---
+# The zone's city as the banner names it; Tokyo by default (-e ZONE=Bangkok for an Asia/Bangkok jar).
+- evalScript: "${output.zone = (typeof ZONE !== 'undefined' && ZONE) ? ZONE : 'Tokyo'}"
 - launchApp
 - extendedWaitUntil:
     visible:
@@ -25,8 +27,8 @@ appId: me.pickld.app
     visible:
       id: timezone-banner
     timeout: 10000
-- assertVisible: You’re in Tokyo time
-- assertVisible: .*· Tokyo time
+- assertVisible: '.*You’re in ${output.zone} time.*'
+- assertVisible: '.*· ${output.zone} time'
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: TimeZone-ios
@@ -35,7 +37,7 @@ appId: me.pickld.app
     id: timezone-got-it
 - assertNotVisible:
     id: timezone-banner
-- assertVisible: .*· Tokyo time
+- assertVisible: '.*· ${output.zone} time'
 
 # Shown once: still gone after a relaunch.
 - stopApp
@@ -44,6 +46,6 @@ appId: me.pickld.app
     visible:
       id: screen-title
     timeout: 15000
-- assertVisible: .*· Tokyo time
+- assertVisible: '.*· ${output.zone} time'
 - assertNotVisible:
     id: timezone-banner

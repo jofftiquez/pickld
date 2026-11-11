@@ -5,8 +5,9 @@
 # Run on the iOS Simulator with a dev build, against the local stack:
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/full-jar.yaml
 #
-# Seed (supabase/seed.sql as is): signed in as dale, whose open jar today has 7 slots filled and evening
-# empty. The 8th moment (checking counts, like the server's moment_count) makes the jar full.
+# Signed in as dale, whose open jar today must have 7 slots filled and evening empty. The seed gives him 4
+# (whereami, mebusywith, selfie, morning); fill whoamiwith, ootd and afternoon first, for example with
+# camera.yaml -e SLOT=... The 8th moment (checking counts, like the server's moment_count) makes the jar full.
 # - dale already has first_full_jar (yesterday's full jar), so filling today shows the Full jar celebration
 #   but no Sticker unlocked; that screen is opened by its route, which shows any milestone's screen as is.
 # - The app shows a celebration once per jar per install. Its first launch with this build records what is
@@ -53,6 +54,18 @@ appId: me.pickld.app
     id: camera-slot-evening
 - tapOn:
     id: camera-shutter
+# The editor opens on the queued photo (M2-12); the upload waits for Add to #evening.
+- extendedWaitUntil:
+    visible:
+      id: editor-screen
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: editor-save
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: editor-save
 
 # The photo uploads, the server counts the 8th moment and Today opens the celebration.
 - extendedWaitUntil:
@@ -100,7 +113,7 @@ appId: me.pickld.app
 - assertVisible:
     id: sticker-unlocked-art
 - assertVisible: Your first full jar!
-- assertVisible: 1 of 5 earned
+- assertVisible: '.*1 of 5 earned.*'
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: StickerUnlock-ios

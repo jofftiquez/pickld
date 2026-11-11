@@ -1,0 +1,45 @@
+# M2-22 (FR-JAR-03): capturing into a filled slot asks to Replace (no design: the kit's confirm dialog).
+# Opens the dev mock camera on SLOT, presses the shutter, screenshots the dialog and cancels, so nothing is
+# queued. Run on the iOS Simulator with a dev build, signed in as a user whose open jar has SLOT filled
+# (seed user dale: #whereami):
+#   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/replace-dialog.yaml
+appId: me.pickld.app
+---
+- evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'whereami'}"
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- openLink: pickld://camera?slot=${output.slot}
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: camera-shutter
+    timeout: 10000
+- tapOn:
+    id: camera-shutter
+- extendedWaitUntil:
+    visible:
+      id: replace-dialog
+    timeout: 10000
+- assertVisible: 'Replace your #${output.slot} photo?'
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ReplaceDialog-ios
+- tapOn:
+    text: Cancel
+    childOf:
+      id: replace-dialog
+- assertNotVisible:
+    id: replace-dialog
