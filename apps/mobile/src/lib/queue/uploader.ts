@@ -35,7 +35,12 @@ export interface UploaderDeps {
   /** New moment ids; a random UUID v4 by default. */
   newId?: () => string;
   now?: () => number;
+  /** Turns a raw camera photo into the uploadable files (prepareItem by default). */
+  prepare?: (item: QueueItem) => Promise<QueueItem>;
 }
+
+// Loaded on first use, so this module doesn't pull the native image manipulator in until a raw item needs it.
+const prepareRaw = (item: QueueItem) => import('./prepare').then((m) => m.prepareItem(item));
 
 export type UploadOutcome =
   | { kind: 'uploaded'; itemId: number; momentId: string }
@@ -115,19 +120,22 @@ async function insertMoment(
 
 /** Runs one due queue item through the pipeline and persists the resulting state. */
 export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<UploadOutcome> {
-  const { client, putFile = putWithUploadTask, newId = newMomentId, now = Date.now } = deps;
+  const { client, putFile = putWithUploadTask, newId = newMomentId, now = Date.now, prepare = prepareRaw } = deps;
   const uploading = start(item, now());
   await saveStatus(uploading);
   try {
-    if (item.thumbUri === null) throw new Error('queued moment has no thumbnail');
+    // A raw camera photo (queued at the shutter) is prepared first: location never leaves the phone (rule 5).
+    const ready = item.prepared ? item : await prepare(item);
+    if (!ready.prepared) throw new Error('queued photo is not prepared');
+    if (ready.thumbUri === null) throw new Error('queued moment has no thumbnail');
     const momentId = item.momentId ?? newId();
 
     const { data: jar, error: jarError } = await client.rpc('ensure_jar', { local_date: item.localDate, tz: item.tz });
     if (jarError) throw jarError;
     await saveUploadRefs(item.id, { jarId: jar.id, momentId });
 
-    const photo = new File(item.photoUri);
-    const thumb = new File(item.thumbUri);
+    const photo = new File(ready.photoUri);
+    const thumb = new File(ready.thumbUri);
     const { data: body, error: urlError } = await client.functions.invoke<unknown>('upload-url', {
       body: {
         kind: 'moment',

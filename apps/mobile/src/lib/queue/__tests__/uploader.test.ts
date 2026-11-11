@@ -1,5 +1,5 @@
 import { BACKOFF_MS, MAX_ATTEMPTS } from '../machine';
-import { enqueue, getItem, listQueue, type EnqueueInput } from '../store';
+import { enqueue, getItem, listQueue, savePrepared, type EnqueueInput, type QueueItem } from '../store';
 import { drainQueue, uploadItem } from '../uploader';
 import { capturedFiles, fakeBackend, files, JAR, log, networkError, resetFakes, USER } from './fakes';
 
@@ -81,6 +81,51 @@ describe('uploadItem', () => {
     expect(backend.objects.get(backend.moments[0]?.photo_path as string)).toBe('jpeg:IMG_0001:full-resolution-bytes');
     expect(queuedFiles()).toEqual([]);
     expect(await listQueue(USER)).toEqual([]);
+  });
+
+  it('prepares a raw camera photo before any network call, then uploads the prepared files', async () => {
+    const raw = await queueMoment({ thumbUri: null, prepared: false });
+    log.length = 0;
+    const prepare = jest.fn(async (item: QueueItem) => {
+      log.push('prepare');
+      files.set('file:///cache/p.webp', 'webp:full');
+      files.set('file:///cache/p-thumb.webp', 'webp:thumb');
+      return savePrepared(item.id, { photoUri: 'file:///cache/p.webp', thumbUri: 'file:///cache/p-thumb.webp' });
+    });
+
+    const outcome = await uploadItem(raw, { ...deps(), prepare });
+
+    expect(outcome.kind).toBe('uploaded');
+    expect(prepare).toHaveBeenCalledWith(expect.objectContaining({ id: raw.id, prepared: false }));
+    expect(log.filter((e) => !e.startsWith('delete:')).slice(0, 2)).toEqual(['prepare', 'rpc:ensure_jar']);
+    expect(backend.objects.get(backend.moments[0]?.photo_path as string)).toBe('webp:full');
+    expect(backend.objects.get(backend.moments[0]?.thumb_path as string)).toBe('webp:thumb');
+  });
+
+  it('never sends a raw photo: a failed preparation keeps the item and makes no network call', async () => {
+    const raw = await queueMoment({ thumbUri: null, prepared: false });
+    log.length = 0;
+    const prepare = jest.fn(async () => {
+      throw new Error('decode failed');
+    });
+
+    const outcome = await uploadItem(raw, { ...deps(), prepare });
+
+    expect(outcome.kind).toBe('retrying');
+    expect(log).toEqual([]);
+    expect(await getItem(raw.id)).toMatchObject({
+      prepared: false,
+      attempts: 1,
+      lastError: expect.stringContaining('decode failed'),
+    });
+  });
+
+  it('refuses to upload an item that preparation left raw, even one with a thumbnail', async () => {
+    const raw = await queueMoment({ prepared: false });
+    log.length = 0;
+    const outcome = await uploadItem(raw, { ...deps(), prepare: async (item) => item });
+    expect(outcome.kind).toBe('retrying');
+    expect(log).toEqual([]);
   });
 
   it('turns a taken slot into a conflict, not a failure, and keeps the photo for Replace', async () => {

@@ -1,5 +1,8 @@
-// The camera's save path: capture → preparePhoto (real, over a mocked manipulator) → enqueue →
-// requestUploads. The queue and the worker are mocked; the order of calls is what's checked.
+// The camera's save path: the raw photo is queued first (so it survives a kill right after the shutter),
+// then prepared in the background, then the upload worker is asked to run. Queue, preparation and worker
+// are mocked; what's checked is the order and that saveCapture never waits for preparation.
+import { captureError } from '@/lib/monitoring';
+import { prepareItem } from '@/lib/queue/prepare';
 import { requestUploads } from '@/lib/queue/runner';
 import { enqueue } from '@/lib/queue/store';
 
@@ -7,67 +10,41 @@ import { captureJarDate, saveCapture } from '../saveCapture';
 
 const mockLog: string[] = [];
 const mockDeleted: string[] = [];
+let mockFinishPrepare: (() => void) | null = null;
+let mockFailPrepare: ((error: Error) => void) | null = null;
 
-jest.mock('expo-image-manipulator', () => {
-  let saves = 0;
-  const image = (width: number, height: number) => ({
-    width,
-    height,
-    release: () => undefined,
-    saveAsync: async () => {
-      saves += 1;
-      mockLog.push(`save ${width}x${height}`);
-      return { uri: `file:///cache/prepared-${saves}.webp`, width, height };
-    },
-  });
-  return {
-    SaveFormat: { WEBP: 'webp' },
-    ImageManipulator: {
-      manipulate: (source: unknown) => {
-        if (typeof source === 'string') mockLog.push(`manipulate ${source}`);
-        let size =
-          typeof source === 'string' ? { width: 3024, height: 4032 } : (source as { width: number; height: number });
-        const ctx = {
-          crop: (rect: { width: number; height: number }) => ((size = rect), ctx),
-          resize: (s: { width: number; height: number }) => ((size = s), ctx),
-          renderAsync: async () => image(size.width, size.height),
-          release: () => undefined,
-        };
-        return ctx;
-      },
-    },
-  };
-});
-
-jest.mock('expo-file-system', () => {
-  const nodeFs = jest.requireActual<typeof import('node:fs')>('node:fs');
-  const nodePath = jest.requireActual<typeof import('node:path')>('node:path');
-  return {
-    File: class {
-      mockUri: string;
-      constructor(uri: string) {
-        this.mockUri = uri;
-      }
-      get exists() {
-        return true;
-      }
-      async bytes() {
-        return new Uint8Array(
-          nodeFs.readFileSync(nodePath.join(__dirname, '../../../lib/image/__tests__/__fixtures__/clean.webp')),
-        );
-      }
-      delete() {
-        mockDeleted.push(this.mockUri);
-      }
-    },
-  };
-});
+jest.mock('expo-file-system', () => ({
+  File: class {
+    mockUri: string;
+    constructor(uri: string) {
+      this.mockUri = uri;
+    }
+    get exists() {
+      return true;
+    }
+    delete() {
+      mockLog.push(`delete ${this.mockUri}`);
+      mockDeleted.push(this.mockUri);
+    }
+  },
+}));
 
 jest.mock('@/lib/queue/store', () => ({
   enqueue: jest.fn(async (input: Record<string, unknown>) => {
     mockLog.push('enqueue');
     return { id: 7, ...input };
   }),
+}));
+
+jest.mock('@/lib/queue/prepare', () => ({
+  prepareItem: jest.fn(
+    () =>
+      new Promise((resolve, reject) => {
+        mockLog.push('prepare');
+        mockFinishPrepare = () => resolve({ id: 7, prepared: true });
+        mockFailPrepare = reject;
+      }),
+  ),
 }));
 
 jest.mock('@/lib/queue/runner', () => ({
@@ -77,60 +54,75 @@ jest.mock('@/lib/queue/runner', () => ({
   }),
 }));
 
+jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
 // 2026-11-11 14:14:05 in Manila (+08:00).
 const shotAt = new Date('2026-11-11T06:14:05Z');
+const input = {
+  uri: 'file:///tmp/camera-shot.jpg',
+  slot: 'afternoon',
+  userId,
+  tz: 'Asia/Manila',
+  shotAt,
+  openJar: null,
+} as const;
+const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 beforeEach(() => {
   mockLog.length = 0;
   mockDeleted.length = 0;
+  mockFinishPrepare = null;
+  mockFailPrepare = null;
   jest.mocked(enqueue).mockClear();
+  jest.mocked(prepareItem).mockClear();
   jest.mocked(requestUploads).mockClear();
+  jest.mocked(captureError).mockClear();
 });
 
 describe('saveCapture', () => {
-  it('prepares the photo, queues it, then asks the worker to upload', async () => {
-    const item = await saveCapture({
-      uri: 'file:///tmp/camera-shot.jpg',
-      slot: 'afternoon',
-      userId,
-      tz: 'Asia/Manila',
-      shotAt,
-      openJar: null,
-    });
+  it('queues the raw camera photo first and resolves without waiting for preparation', async () => {
+    const item = await saveCapture(input);
 
-    expect(mockLog).toEqual([
-      'manipulate file:///tmp/camera-shot.jpg',
-      'save 1440x1920',
-      'save 480x640',
-      'enqueue',
-      'requestUploads',
-    ]);
+    expect(item.id).toBe(7);
     expect(enqueue).toHaveBeenCalledWith({
       userId,
-      photoUri: 'file:///cache/prepared-1.webp',
-      thumbUri: 'file:///cache/prepared-2.webp',
+      photoUri: 'file:///tmp/camera-shot.jpg',
+      thumbUri: null,
       slot: 'afternoon',
       localDate: '2026-11-11',
       tz: 'Asia/Manila',
       capturedAt: '2026-11-11T14:14:05+08:00',
+      prepared: false,
     });
-    expect(item.id).toBe(7);
-    // The queue keeps its own copies; the camera file and pipeline outputs are cleaned up.
-    expect(mockDeleted).toEqual([
-      'file:///tmp/camera-shot.jpg',
-      'file:///cache/prepared-1.webp',
-      'file:///cache/prepared-2.webp',
-    ]);
+    // The camera file goes only after the queue holds its own copy; preparation is still running.
+    expect(mockLog).toEqual(['enqueue', 'delete file:///tmp/camera-shot.jpg', 'prepare']);
+    expect(requestUploads).not.toHaveBeenCalled();
   });
 
-  it('queues nothing and uploads nothing when queueing fails, and keeps the camera file', async () => {
+  it('asks the worker to upload once the photo is prepared', async () => {
+    await saveCapture(input);
+    mockFinishPrepare?.();
+    await flush();
+    expect(mockLog.slice(-2)).toEqual(['prepare', 'requestUploads']);
+  });
+
+  it('still wakes the worker when preparation fails, which prepares the item before uploading it', async () => {
+    await saveCapture(input);
+    mockFailPrepare?.(new Error('decode failed'));
+    await flush();
+    expect(captureError).toHaveBeenCalledWith(expect.objectContaining({ message: 'decode failed' }), {
+      area: 'capture',
+    });
+    expect(requestUploads).toHaveBeenCalledTimes(1);
+  });
+
+  it('queues nothing, prepares nothing and keeps the camera file when queueing fails', async () => {
     jest.mocked(enqueue).mockRejectedValueOnce(new Error('disk full'));
-    await expect(
-      saveCapture({ uri: 'file:///tmp/shot.jpg', slot: 'selfie', userId, tz: 'Asia/Manila', shotAt, openJar: null }),
-    ).rejects.toThrow('disk full');
+    await expect(saveCapture(input)).rejects.toThrow('disk full');
+    expect(prepareItem).not.toHaveBeenCalled();
     expect(requestUploads).not.toHaveBeenCalled();
-    expect(mockDeleted).not.toContain('file:///tmp/shot.jpg');
+    expect(mockDeleted).toEqual([]);
   });
 });
 
