@@ -1,0 +1,11 @@
+# Long-lived local servers for orbs; start them with `amp orb services ensure` (.agents/resume does).
+# Both need local Supabase running (`pnpm db:start`) and the .env files that .agents/setup writes.
+services:
+  # Edge Functions behind the local Supabase API: http://127.0.0.1:55421/functions/v1/<name>
+  fn-serve:
+    command: pnpm exec supabase functions serve --env-file supabase/functions/.env
+  # Local photo server (D-12): http://127.0.0.1:55430/<key>?exp=…&sig=…; unsigned requests get 403.
+  photos-worker:
+    command: deno task dev
+    cwd: workers/photos
+    port: 55430
