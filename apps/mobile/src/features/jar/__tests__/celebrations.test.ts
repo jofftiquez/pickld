@@ -31,6 +31,10 @@ describe('filledCount / isJarFull (the server count: every moment that is not re
     expect(isJarFull([...live(7), { status: 'removed' as const }])).toBe(false);
     expect(isJarFull([...live(7), { status: 'checking' as const }])).toBe(true);
   });
+  it('a replacement waiting for moderation is not an extra moment (0013, M2-22)', () => {
+    expect(isJarFull([...live(7), { status: 'checking' as const, replaces: 'm-1' }])).toBe(false);
+    expect(filledCount([...live(2), { status: 'checking' as const, replaces: null }])).toBe(3);
+  });
 });
 
 describe('nextCelebration', () => {

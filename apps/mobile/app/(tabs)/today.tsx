@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt';
 import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
 import { retryUpload } from '@/features/jar/retryUpload';
@@ -17,7 +18,7 @@ import { currentSlot } from '@/lib/jars';
 
 const MINUTE = 60_000;
 
-// Today tab (M2-05, M2-06; FR-JAR-01, FR-JAR-02, FR-JAR-04, NFR-OFF-01, NFR-OFF-03).
+// Today tab (M2-05, M2-06, M2-22; FR-JAR-01, FR-JAR-02, FR-JAR-03, FR-JAR-04, NFR-OFF-01, NFR-OFF-03).
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -70,27 +71,31 @@ export default function TodayScreen() {
   });
 
   return (
-    <TodayView
-      now={now}
-      tz={tz}
-      tiles={tiles}
-      hasAnyJar={jar ? jar.hasAnyJar : null}
-      displayName={me?.displayName ?? null}
-      avatarUrl={me?.avatarUrl ?? null}
-      readerCount={me?.readerCount ?? null}
-      lidColor={me?.lidColor}
-      insets={insets}
-      offlineCount={offlineBannerCount(queue, offline)}
-      onCapture={(slot) => router.push({ pathname: '/capture', params: { slot } })}
-      onOpenMyDays={() => router.push('/my-days')}
-      onRetry={(queueId) => void retryUpload(queueId)}
-      zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}
-      zoneBanner={
-        zone.show && zone.zones ? (
-          <TimeZoneBanner from={zone.zones.from} to={zone.zones.to} onDismiss={zone.acknowledge} />
-        ) : null
-      }
-      onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
-    />
+    <>
+      <TodayView
+        now={now}
+        tz={tz}
+        tiles={tiles}
+        hasAnyJar={jar ? jar.hasAnyJar : null}
+        displayName={me?.displayName ?? null}
+        avatarUrl={me?.avatarUrl ?? null}
+        readerCount={me?.readerCount ?? null}
+        lidColor={me?.lidColor}
+        insets={insets}
+        offlineCount={offlineBannerCount(queue, offline)}
+        onCapture={(slot) => router.push({ pathname: '/capture', params: { slot } })}
+        onOpenMyDays={() => router.push('/my-days')}
+        onRetry={(queueId) => void retryUpload(queueId)}
+        zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}
+        zoneBanner={
+          zone.show && zone.zones ? (
+            <TimeZoneBanner from={zone.zones.from} to={zone.zones.to} onDismiss={zone.acknowledge} />
+          ) : null
+        }
+        onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
+      />
+      {/* An upload whose slot was taken asks whether to Replace (M2-22). */}
+      <ConflictReplacePrompt queue={queue} />
+    </>
   );
 }

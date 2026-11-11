@@ -93,12 +93,37 @@ function message(error: unknown): string {
 
 const UNIQUE_VIOLATION = '23505';
 
-/** Inserts the moment; 'conflict' when its slot is taken by another moment. */
+/**
+ * The moment a Replace takes over from: the one holding the slot (not removed, not itself a pending
+ * replacement; 0013), or null when the slot is free. On a retry after a lost response it may be this
+ * upload's own row; the insert then hits our own primary key, which insertMoment recognises.
+ */
+async function slotHolder(client: UploaderClient, jarId: string, item: QueueItem): Promise<string | null> {
+  const { data, error } = await client
+    .from('moments')
+    .select('id')
+    .eq('jar_id', jarId)
+    .eq('slot', item.slot)
+    .neq('status', 'removed')
+    .is('replaces', null)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.id ?? null;
+}
+
+/**
+ * Inserts the moment; 'conflict' when its slot is taken by another moment. A unique violation is either
+ * the slot (index moments_slot_holder_key, or moments_one_replacement_key when the moment already has a
+ * pending replacement; 0013) or our own primary key from an earlier attempt, told apart by reading our row.
+ * A replacement (Replace, M2-22) is inserted with `replaces` set to the slot's holder: the server keeps it
+ * hidden and the old photo visible until fn:moderate approves it and retires the old moment.
+ */
 async function insertMoment(
   client: UploaderClient,
   item: QueueItem,
   row: { id: string; jarId: string; photoKey: string; thumbKey: string },
 ): Promise<'inserted' | 'conflict'> {
+  const replaces = item.replace ? await slotHolder(client, row.jarId, item) : null;
   const { error } = await client.from('moments').insert({
     id: row.id,
     jar_id: row.jarId,
@@ -111,6 +136,7 @@ async function insertMoment(
     is_private: item.isPrivate,
     edits: item.edits as NonNullable<Json>, // an object parsed from JSON by the queue store
     status: 'checking',
+    replaces,
   });
   if (!error) return 'inserted';
   if (error.code !== UNIQUE_VIOLATION) throw error;

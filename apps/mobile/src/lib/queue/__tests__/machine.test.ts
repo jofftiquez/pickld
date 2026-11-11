@@ -6,6 +6,7 @@ import {
   MAX_ATTEMPTS,
   msUntilDue,
   OFFLINE_RETRY_MS,
+  replace,
   retry,
   start,
   succeed,
@@ -144,5 +145,15 @@ describe('upload state machine', () => {
     expect(() => start(parked)).toThrow('Cannot start an item that is conflict');
     expect(() => retry(parked)).toThrow('Cannot retry an item that is conflict');
     expect(() => conflict(INITIAL_STATUS, 'x')).toThrow('Cannot mark as a conflict an item that is queued');
+  });
+
+  it('Replace starts a conflict again from attempt 0, and only a conflict (M2-22)', () => {
+    const parked = conflict(start(failOnce(INITIAL_STATUS), Date.now() + 1_000), 'slot taken');
+    const again = replace(parked);
+    expect(again).toEqual(INITIAL_STATUS);
+    expect(isDue(again)).toBe(true);
+    expect(() => replace(INITIAL_STATUS)).toThrow('Cannot replace an item that is queued');
+    const failed = { ...INITIAL_STATUS, state: 'failed' as const, attempts: MAX_ATTEMPTS };
+    expect(() => replace(failed)).toThrow('Cannot replace an item that is failed');
   });
 });

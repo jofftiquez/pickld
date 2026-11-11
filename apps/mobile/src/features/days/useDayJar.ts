@@ -42,7 +42,7 @@ async function fetchDayJar(userId: string, localDate: string): Promise<DayJar> {
   if (!jar) return { jar: null, moments: [] };
   const { data: rows, error: momentsError } = await supabase
     .from('moments')
-    .select('id, slot, status, is_private, is_backfilled, captured_at, added_at')
+    .select('id, slot, status, is_private, is_backfilled, captured_at, added_at, replaces')
     .eq('jar_id', jar.id);
   if (momentsError) throw new Error(momentsError.message);
   const urls = await thumbUrls(rows.map((m) => m.id));

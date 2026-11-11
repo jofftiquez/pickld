@@ -96,10 +96,16 @@ describe('saveCapture', () => {
       prepared: false,
       // Held for the editor the camera opens next: no upload before Add to #slot (M2-12).
       editing: true,
+      replace: false,
     });
     // The camera file goes only after the queue holds its own copy; preparation is still running.
     expect(mockLog).toEqual(['enqueue', 'delete file:///tmp/camera-shot.jpg', 'prepare']);
     expect(requestUploads).not.toHaveBeenCalled();
+  });
+
+  it('queues a photo for a filled slot as a replacement when the user chose Replace (M2-22)', async () => {
+    await saveCapture({ ...input, replace: true });
+    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ slot: 'afternoon', replace: true }));
   });
 
   it('asks the worker to upload once the photo is prepared', async () => {
@@ -279,6 +285,7 @@ describe('saveGalleryPhoto', () => {
       prepared: false,
       editing: true,
       crop,
+      replace: false,
     });
     expect(mockLog).toEqual(['enqueue', 'delete file:///picker/IMG_0042.jpg', 'prepare']);
     expect(requestUploads).not.toHaveBeenCalled();

@@ -60,6 +60,7 @@ const item: QueueItem = {
   prepared: true,
   editingSince: Date.parse('2026-11-11T06:14:05.000Z'),
   crop: null,
+  replace: false,
   state: 'queued',
   attempts: 0,
   nextAttemptAt: null,

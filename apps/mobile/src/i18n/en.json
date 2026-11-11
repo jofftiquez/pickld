@@ -380,5 +380,13 @@
     "done": "Next: edit",
     "doneHint": "Adds the photo to {{slot}} and opens the editor",
     "saveFailed": "Couldn’t add this photo. Try again."
+  },
+  "replace": {
+    "title": "Replace your {{slot}} photo?",
+    "message": "Your current photo stays up until the new one is checked.",
+    "confirm": "Replace",
+    "keep": "Keep current photo",
+    "keepHint": "Deletes the new photo from your phone",
+    "notNow": "Not now"
   }
 }
