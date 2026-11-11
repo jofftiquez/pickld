@@ -1,4 +1,4 @@
-import { BACKOFF_MS, MAX_ATTEMPTS } from '../machine';
+import { BACKOFF_MS, MAX_ATTEMPTS, OFFLINE_RETRY_MS } from '../machine';
 import { enqueue, getItem, listQueue, savePrepared, type EnqueueInput, type QueueItem } from '../store';
 import { drainQueue, uploadItem } from '../uploader';
 import { capturedFiles, fakeBackend, files, JAR, log, networkError, resetFakes, USER } from './fakes';
@@ -157,7 +157,7 @@ describe('uploadItem', () => {
     expect(await uploadItem(item, deps())).toMatchObject({ kind: 'retrying' });
     expect(queuedFiles()).toHaveLength(2);
 
-    clock += BACKOFF_MS[0];
+    clock += OFFLINE_RETRY_MS;
     const [outcome] = await drainQueue(USER, { ...deps(), newId: () => 'not-used-on-a-retry' });
     expect(outcome).toEqual({ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID });
     expect(backend.moments).toHaveLength(1);
@@ -165,9 +165,9 @@ describe('uploadItem', () => {
   });
 
   it.each([
-    ['ensure_jar', networkError()],
-    ['upload-url', networkError()],
-    ['put', networkError()],
+    ['ensure_jar', { message: 'canceling statement due to statement timeout', code: '57014' }],
+    ['upload-url', { message: 'Edge Function returned a non-2xx status code' }],
+    ['put', new Error('photo upload answered 503')],
     ['insert', { code: '42501', message: 'new row violates row-level security policy' }],
   ] as const)('keeps the files and backs off when %s fails', async (step, error) => {
     backend.failNext(step, error);
@@ -217,8 +217,8 @@ describe('uploadItem', () => {
 });
 
 describe('drainQueue', () => {
-  it('waits out the backoff after a network error, then uploads', async () => {
-    backend.failNext('upload-url', networkError());
+  it('waits out the backoff after a server error, then uploads', async () => {
+    backend.failNext('upload-url', { message: 'Edge Function returned a non-2xx status code' });
     const item = await queueMoment();
 
     expect(await drainQueue(USER, deps())).toEqual([expect.objectContaining({ kind: 'retrying' })]);
@@ -230,8 +230,8 @@ describe('drainQueue', () => {
     expect(backend.moments).toHaveLength(1);
   });
 
-  it('marks the item failed after the 5th network error and leaves the files', async () => {
-    backend.failNext('upload-url', networkError(), MAX_ATTEMPTS);
+  it('marks the item failed after the 5th server error and leaves the files', async () => {
+    backend.failNext('upload-url', { message: 'Edge Function returned a non-2xx status code' }, MAX_ATTEMPTS);
     const item = await queueMoment();
     const outcomes = [];
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
@@ -242,6 +242,21 @@ describe('drainQueue', () => {
     expect(await getItem(item.id)).toMatchObject({ state: 'failed', attempts: MAX_ATTEMPTS });
     expect(await drainQueue(USER, deps())).toEqual([]);
     expect(queuedFiles()).toHaveLength(2);
+  });
+
+  it('never gives up on a photo while offline: network errors use no attempts (D-24)', async () => {
+    backend.failNext('put', networkError(), MAX_ATTEMPTS * 2);
+    const item = await queueMoment();
+    for (let attempt = 0; attempt < MAX_ATTEMPTS * 2; attempt += 1) {
+      expect(await drainQueue(USER, deps())).toEqual([
+        { kind: 'retrying', itemId: item.id, error: 'Network request failed', nextAttemptAt: clock + OFFLINE_RETRY_MS },
+      ]);
+      clock += OFFLINE_RETRY_MS - 1;
+      expect(await drainQueue(USER, deps())).toEqual([]);
+      clock += 1;
+    }
+    expect(await getItem(item.id)).toMatchObject({ state: 'queued', attempts: 0 });
+    expect(await drainQueue(USER, deps())).toEqual([{ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID }]);
   });
 
   it('uploads every due item oldest first and stops when told to', async () => {

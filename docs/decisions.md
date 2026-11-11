@@ -51,3 +51,11 @@ jofftiquez (product owner) approved Phase 1 and accepted every recommended defau
 | # | Decision |
 | --- | --- |
 | D-22 | **Early version: photos stay on local Supabase Storage and there is no moderation** (product owner, Nov 11). Photos use the local S3-compatible bucket that M1-14/M1-15 already target; R2 and the Cloudflare worker wait for the vendor accounts. `fn:moderate` auto-approves: moments still start as `checking` and only that function sets `live`, so the full pipeline can drop in without schema or app changes. Comments, usernames and bios auto-pass (reserved usernames are still refused). Deferred to the **Before public launch** milestone: M2-20 child-safety match and second opinion (#49), M3-23 mod-action, strikes and suspension (#84), M3-24 appeal screens (#85), M3-25 to M3-28 moderation console and playbook (#86–#89), M5-05 threshold tuning (#118), and the queue-age alert in #110. Kept: block, and report (M3-20/M3-21), because app stores require both for user-generated content; reports are stored and read in Studio until the console exists. The early version must not open to the public until the deferred work ships. |
+
+## Nov 11, 2026 — During M2
+
+| # | Decision |
+| --- | --- |
+| D-23 | **`expo-network` added** (product owner, Nov 11). It reports the device's connection: the upload worker starts as soon as the connection returns, and the offline banner also shows when the device has no connection. The latest-request signal from M2-06 stays for Wi-Fi without internet or an unreachable backend. |
+| D-24 | **Offline time doesn't use up retries** (product owner: "keep it as offline with retry"). A request that never reached the server puts the photo back in the queue without counting an attempt, tries again every 30 s while the phone says it is online, and goes at once on reconnect. Photos that already ran out of attempts on network errors restart from attempt 0 on reconnect. Only server errors count toward the 5 attempts (1 s, 5 s, 30 s, 2 min, 10 min) that end in Retry. |
+| D-25 | **Sticker art is public catalog data** (product owner, Nov 11), an exception to D-12 for `stickers/` keys only. The photo worker serves sticker art without a token, cached as immutable for a year, because the editor, viewers and the anonymous web page all draw it. User photos still need a short-lived token. |

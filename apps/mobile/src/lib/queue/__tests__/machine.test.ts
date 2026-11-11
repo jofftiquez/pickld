@@ -5,10 +5,12 @@ import {
   isDue,
   MAX_ATTEMPTS,
   msUntilDue,
+  OFFLINE_RETRY_MS,
   retry,
   start,
   succeed,
   type UploadStatus,
+  waitForNetwork,
 } from '../machine';
 
 const T0 = Date.UTC(2026, 10, 11, 3, 0, 0);
@@ -27,6 +29,22 @@ function failOnce<T extends UploadStatus>(item: T): T {
 }
 
 describe('upload state machine', () => {
+  it('parks an offline attempt without counting it, however many times it happens (D-24)', () => {
+    let item: UploadStatus = { ...INITIAL_STATUS, attempts: 2 };
+    for (let i = 0; i < MAX_ATTEMPTS * 3; i += 1) {
+      item = waitForNetwork(start(item), 'Network request failed');
+      jest.advanceTimersByTime(OFFLINE_RETRY_MS);
+    }
+    expect(item).toEqual({
+      state: 'queued',
+      attempts: 2,
+      nextAttemptAt: Date.now(),
+      lastError: 'Network request failed',
+    });
+    expect(OFFLINE_RETRY_MS).toBe(30_000);
+    expect(() => waitForNetwork(item, 'x')).toThrow('Cannot park an item that is queued');
+  });
+
   it('waits exactly 1 s, 5 s, 30 s and 2 min after failures 1 to 4', () => {
     // Hand-derived: each failure schedules the next try `delay` ms after the moment it failed.
     const expected = [1_000, 5_000, 30_000, 120_000];

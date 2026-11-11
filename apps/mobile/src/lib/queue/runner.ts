@@ -1,10 +1,10 @@
 import { AppState } from 'react-native';
 
 import { useAuthStore } from '../authStore';
-import { reportNetworkResult } from '../connectivity';
+import { isNetworkError, reportNetworkResult } from '../connectivity';
 import { captureError } from '../monitoring';
 import { msUntilDue } from './machine';
-import { listQueue } from './store';
+import { listQueue, retryItem, saveStatus } from './store';
 import { drainQueue, type PutFile, type UploaderClient } from './uploader';
 
 // Drives the upload worker (M2-04; NFR-OFF-02): drains the signed-in user's queue on start (app open),
@@ -18,7 +18,7 @@ export interface NetworkSource {
 
 export interface UploadRunnerOptions {
   putFile?: PutFile;
-  /** No connectivity package is installed yet; without one, foreground and backoff timers drive retries. */
+  /** Connectivity (deviceNetwork in the app); without one, foreground and backoff timers drive retries. */
   network?: NetworkSource;
 }
 
@@ -27,6 +27,18 @@ let kickActive: (() => Promise<void>) | null = null;
 /** Asks the running worker to drain now (e.g. right after `enqueue`). Resolves when that drain ends. */
 export function requestUploads(): Promise<void> {
   return kickActive?.() ?? Promise.resolve();
+}
+
+/**
+ * After a reconnect: items parked by a network error become due now, and items that ran out of attempts
+ * on network errors (before D-24, or while the phone wrongly said online) start again from attempt 0.
+ */
+export async function wakeNetworkWaits(userId: string): Promise<void> {
+  for (const item of await listQueue(userId)) {
+    if (!isNetworkError(item.lastError ?? '')) continue;
+    if (item.state === 'queued' && item.nextAttemptAt !== null) await saveStatus({ ...item, nextAttemptAt: null });
+    else if (item.state === 'failed') await retryItem(item.id);
+  }
 }
 
 /** Starts the worker; returns a cleanup function. Only one runs at a time: a new one replaces the last. */
@@ -85,7 +97,12 @@ export function startUploadRunner(getClient: () => UploaderClient, options: Uplo
   const unsubscribeNetwork = options.network?.subscribe((next) => {
     const cameBack = next && !online;
     online = next;
-    if (cameBack) void kick();
+    if (!cameBack) return;
+    const userId = currentUser();
+    // Photos waiting on the connection go now, without their offline wait (D-24).
+    void (userId ? wakeNetworkWaits(userId) : Promise.resolve())
+      .catch((error: unknown) => captureError(error, { area: 'upload-worker' }))
+      .finally(() => void kick());
   });
 
   kickActive = kick;

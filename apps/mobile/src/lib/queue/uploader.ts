@@ -2,8 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { File, UploadTask } from 'expo-file-system';
 import { z } from 'zod';
 
+import { isNetworkError } from '../connectivity';
 import type { Database, Json } from '../database.types';
-import { conflict, fail, isDue, start, succeed } from './machine';
+import { conflict, fail, isDue, start, succeed, waitForNetwork } from './machine';
 import { getItem, listQueue, removeItem, saveStatus, saveUploadRefs, type QueueItem } from './store';
 
 // Upload worker (M2-04; NFR-OFF-01, NFR-OFF-02, FR-JAR-03; AGENTS "Upload pipeline", rules 3, 4, 6).
@@ -171,7 +172,10 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
     await removeItem(item.id);
     return { kind: 'uploaded', itemId: item.id, momentId };
   } catch (error) {
-    const next = fail(uploading, message(error), now());
+    // Offline is not a failure (D-24): the photo waits for the connection without using up attempts.
+    const next = isNetworkError(error)
+      ? waitForNetwork(uploading, message(error), now())
+      : fail(uploading, message(error), now());
     await saveStatus(next);
     return next.state === 'failed'
       ? { kind: 'failed', itemId: item.id, error: next.lastError ?? '' }

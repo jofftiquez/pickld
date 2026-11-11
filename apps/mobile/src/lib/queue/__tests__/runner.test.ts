@@ -4,15 +4,18 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { useAuthStore } from '../../authStore';
 import { reportNetworkResult } from '../../connectivity';
 import { captureError } from '../../monitoring';
-import { BACKOFF_MS } from '../machine';
+import { BACKOFF_MS, fail, MAX_ATTEMPTS, OFFLINE_RETRY_MS, start as startAttempt } from '../machine';
 import { requestUploads, startUploadRunner, type NetworkSource } from '../runner';
-import { enqueue, getItem, listQueue } from '../store';
+import { enqueue, getItem, listQueue, saveStatus } from '../store';
 import { capturedFiles, fakeBackend, networkError, resetFakes, USER } from './fakes';
 
 jest.mock('expo-sqlite', () => jest.requireActual('./fakes').expoSqlite);
 jest.mock('expo-file-system', () => jest.requireActual('./fakes').expoFileSystem);
 jest.mock('../../monitoring', () => ({ captureError: jest.fn() }));
-jest.mock('../../connectivity', () => ({ reportNetworkResult: jest.fn() }));
+jest.mock('../../connectivity', () => ({
+  ...jest.requireActual('../../connectivity'),
+  reportNetworkResult: jest.fn(),
+}));
 
 const session = { access_token: 't', user: { id: USER } } as unknown as Session;
 
@@ -89,6 +92,41 @@ describe('upload runner', () => {
     expect(await listQueue(USER)).toEqual([]);
   });
 
+  it('uploads a photo parked by a network error as soon as the network returns, without its wait', async () => {
+    jest.useFakeTimers({ now: Date.UTC(2026, 10, 11, 3), doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+    backend.failNext('put', networkError());
+    const network = fakeNetwork(true);
+    const item = await queueMoment();
+    start(network.source);
+    await requestUploads();
+    expect(await getItem(item.id)).toMatchObject({ state: 'queued', attempts: 0 });
+
+    network.set(false);
+    network.set(true);
+    await settle();
+    expect(backend.moments).toHaveLength(1);
+    expect(await getItem(item.id)).toBeNull();
+  });
+
+  it('on reconnect, restarts photos that ran out of attempts offline, but not ones the server refused', async () => {
+    const network = fakeNetwork(false);
+    const offline = await queueMoment('ootd');
+    const refused = await queueMoment('selfie');
+    const exhaust = async (id: number, error: string) => {
+      let item = (await getItem(id))!;
+      for (let i = 0; i < MAX_ATTEMPTS; i += 1) item = fail(startAttempt({ ...item, nextAttemptAt: null }), error);
+      await saveStatus(item);
+    };
+    await exhaust(offline.id, 'The Internet connection appears to be offline.');
+    await exhaust(refused.id, 'photo upload answered 403');
+    start(network.source);
+
+    network.set(true);
+    await settle();
+    expect(backend.moments.map((m) => m.slot)).toEqual(['ootd']);
+    expect(await getItem(refused.id)).toMatchObject({ state: 'failed', attempts: MAX_ATTEMPTS });
+  });
+
   it('drains when the app returns to the foreground', async () => {
     start();
     await requestUploads();
@@ -116,7 +154,7 @@ describe('upload runner', () => {
 
   it('retries by itself when the backoff delay runs out', async () => {
     jest.useFakeTimers({ now: Date.UTC(2026, 10, 11, 3), doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
-    backend.failNext('upload-url', networkError());
+    backend.failNext('upload-url', { message: 'Edge Function returned a non-2xx status code' });
     const item = await queueMoment();
     start();
     await requestUploads();
@@ -136,7 +174,7 @@ describe('upload runner', () => {
     await requestUploads();
     expect(jest.mocked(reportNetworkResult).mock.calls).toEqual([['Network request failed']]);
 
-    await jest.advanceTimersByTimeAsync(BACKOFF_MS[0]);
+    await jest.advanceTimersByTimeAsync(OFFLINE_RETRY_MS);
     await settle();
     expect(jest.mocked(reportNetworkResult).mock.calls).toEqual([['Network request failed'], [null]]);
   });
