@@ -66,7 +66,8 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
     .select('id, slot, status, is_private, is_backfilled, captured_at, added_at')
     .eq('jar_id', open.id);
   if (momentsError) throw new Error(momentsError.message);
-  const urls = await thumbUrls(rows.filter((m) => m.status !== 'removed').map((m) => m.id));
+  // Removed moments too: their tile shows the owner's photo blurred (FR-PUB-07).
+  const urls = await thumbUrls(rows.map((m) => m.id));
   return {
     hasAnyJar: true,
     jar: { id: open.id, localDate: open.local_date, tz: open.tz, endsAt: open.ends_at },

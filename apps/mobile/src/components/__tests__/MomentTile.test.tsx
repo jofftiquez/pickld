@@ -66,7 +66,16 @@ describe('PhotoTile', () => {
 
 describe('MomentTile', () => {
   it('lists every state for the gallery', () => {
-    expect(momentTileStates).toEqual(['filled', 'empty', 'now', 'waiting', 'uploading', 'failed', 'checking']);
+    expect(momentTileStates).toEqual([
+      'filled',
+      'empty',
+      'now',
+      'waiting',
+      'uploading',
+      'failed',
+      'checking',
+      'removed',
+    ]);
   });
 
   it('filled: reads "#slot, time, added", shows photo, time and tag, and opens on press', async () => {
@@ -210,7 +219,17 @@ describe('MomentTile', () => {
     expect(screen.getByTestId('tile-lock', hidden)).toBeTruthy();
   });
 
-  it('only the checking state blurs the photo', async () => {
+  it('removed: blurs the photo, says "Removed" and opens the notice when tapped', async () => {
+    const { onPress } = await renderTile({ state: 'removed', time: undefined });
+    const tile = screen.getByRole('button', { name: '#ootd, removed, tap to see why' });
+    expect(screen.getByText('Removed')).toBeTruthy();
+    expect(screen.getByTestId('photo-tile-image', hidden).props.blurRadius).toBe(photo.checkingBlur);
+    expect(overlayColor()).toBe(colors.glass);
+    await fireEvent.press(tile);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('only the checking and removed states blur the photo', async () => {
     for (const state of ['filled', 'waiting', 'uploading', 'failed'] as const) {
       await renderTile({ state });
       expect(screen.getByTestId('photo-tile-image', hidden).props.blurRadius).toBeUndefined();

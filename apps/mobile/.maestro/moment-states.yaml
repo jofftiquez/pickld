@@ -1,0 +1,56 @@
+# M2-21: the owner's Checking photo and Moment removed screens (designs: Checking, Removed).
+# Run on the iOS Simulator: maestro test apps/mobile/.maestro/moment-states.yaml
+# Sign in as seed user dale first (supabase db reset; /dev/sign-in). Today's jar has a checking
+# #mebusywith moment; the jar from 3 days ago has a removed #afternoon moment with the fixed id below.
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+
+# Checking photo: tap the checking tile on Today.
+- tapOn:
+    id: tile-mebusywith
+- extendedWaitUntil:
+    visible:
+      id: moment-checking
+    timeout: 10000
+- assertVisible: Checking your photo…
+- assertVisible:
+    id: moment-owner-note
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: CheckingPhoto-ios
+- tapOn:
+    id: moment-back-to-today
+- assertVisible:
+    id: tile-mebusywith
+
+# Moment removed: open the seeded removed moment by deep link.
+- openLink: pickld://moment/d0000000-0000-4000-8000-000000000001
+# iOS asks before opening a custom-scheme link.
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: moment-removed
+    timeout: 10000
+- assertVisible: We removed one of your moments
+- assertVisible:
+    id: moment-removed-reason
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: MomentRemoved-ios
+- tapOn:
+    id: moment-removed-ok

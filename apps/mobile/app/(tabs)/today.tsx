@@ -86,6 +86,7 @@ export default function TodayScreen() {
           <TimeZoneBanner from={zone.zones.from} to={zone.zones.to} onDismiss={zone.acknowledge} />
         ) : null
       }
+      onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
     />
   );
 }

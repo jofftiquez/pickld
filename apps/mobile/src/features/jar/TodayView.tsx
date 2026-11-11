@@ -35,6 +35,8 @@ export type TodayViewProps = {
   zoneTag?: string | null;
   /** The Time zone banner, shown under the header. */
   zoneBanner?: ReactNode;
+  /** A checking or removed server moment: opens /moment/[id] (M2-21). */
+  onOpenMoment?: (momentId: string) => void;
 };
 
 /** Today (design: Main; first day: EmptyToday). Presentational; app/(tabs)/today.tsx loads the data. */
@@ -54,6 +56,7 @@ export function TodayView({
   onRetry,
   zoneTag = null,
   zoneBanner = null,
+  onOpenMoment,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -98,7 +101,8 @@ export function TodayView({
           <View key={row[0]?.slot} style={styles.gridRow}>
             {row.map((tile) => {
               const capturable = tile.state === 'empty' || tile.state === 'now';
-              const { queueId } = tile;
+              const { queueId, momentId } = tile;
+              const openable = tile.state === 'checking' || tile.state === 'removed';
               return (
                 <View key={tile.slot} style={styles.cell}>
                   <MomentTile
@@ -109,7 +113,13 @@ export function TodayView({
                     isPrivate={tile.isPrivate}
                     addedLater={tile.addedLater}
                     // TODO(M3-08): Moment detail on filled tiles.
-                    onPress={capturable ? () => onCapture(tile.slot) : undefined}
+                    onPress={
+                      capturable
+                        ? () => onCapture(tile.slot)
+                        : openable && momentId !== null && onOpenMoment
+                          ? () => onOpenMoment(momentId)
+                          : undefined
+                    }
                     onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}
                     testID={`tile-${tile.slot}`}
                   />

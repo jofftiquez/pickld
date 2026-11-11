@@ -62,8 +62,11 @@ function emptyTile(slot: Slot, isNow: boolean): GridTile {
  * The 8 tiles in slot order.
  * - A queued, uploading or failed item wins: it is the newest photo for the slot and must stay visible
  *   until it reaches the server (rule 3), even over an older server moment it replaces (FR-JAR-03).
- * - Otherwise the server moment wins (live → filled, checking/uploading → checking). Removed moments
- *   leave the slot empty.
+ * - Otherwise the server moment wins (live → filled, checking/uploading → checking).
+ * - A removed moment shows as removed (it opens the notice, FR-PUB-07) but doesn't hold the slot: a new
+ *   queued photo for the slot wins over it, it isn't counted, and the camera may fill the slot again.
+ *   (The server still refuses that insert while unique (jar_id, slot) counts removed rows: the item
+ *   ends as a conflict and keeps its photo. A schema decision, see the M2-21 PR.)
  * - An uploaded queue item whose server moment hasn't loaded yet shows as checking with the local photo.
  * - A conflict item (the slot already had a moment) leaves the server moment showing until Replace (M2-22).
  * - Only queue items for `localDate` (the jar's date) count; the newest item per slot wins.
@@ -81,6 +84,7 @@ export function buildTodayGrid(input: {
       .filter((item) => item.slot === slot && item.localDate === localDate)
       .reduce<QueuedMoment | null>((newest, item) => (!newest || item.id > newest.id ? item : newest), null);
     const moment = moments.find((m) => m.slot === slot && m.status !== 'removed') ?? null;
+    const removed = moments.find((m) => m.slot === slot && m.status === 'removed') ?? null;
 
     const settled = queued?.state === 'uploaded' || queued?.state === 'conflict';
     if (queued && (!settled || !moment)) {
@@ -109,13 +113,22 @@ export function buildTodayGrid(input: {
         canRetry: false,
       };
     }
+    if (removed) {
+      return { ...emptyTile(slot, false), state: 'removed', uri: removed.thumbUrl, momentId: removed.id };
+    }
     return emptyTile(slot, slot === nowSlot);
   });
 }
 
-/** Tiles holding a photo (server or queued): the "n of 8 moments" count and the jar fill. */
+/** Whether a tile holds the slot (server or queued photo); empty, Now and removed tiles leave it free. */
+export function holdsSlot(tile: Pick<GridTile, 'state'>): boolean {
+  return tile.state !== 'empty' && tile.state !== 'now' && tile.state !== 'removed';
+}
+
+/** Tiles holding a photo (server or queued): the "n of 8 moments" count and the jar fill. Removed
+ * moments don't count, like the server's moment_count (D-9). */
 export function momentCount(tiles: readonly GridTile[]): number {
-  return tiles.filter((tile) => tile.state !== 'empty' && tile.state !== 'now').length;
+  return tiles.filter(holdsSlot).length;
 }
 
 /**

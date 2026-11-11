@@ -60,7 +60,8 @@ jest.mock('expo-localization', () => ({
   ...jest.requireActual<object>('expo-localization'),
   getCalendars: () => [{ timeZone: 'Asia/Manila' }],
 }));
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }), useFocusEffect: () => {} }));
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }), useFocusEffect: () => {} }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
 }));
@@ -182,5 +183,23 @@ describe('Today screen', () => {
     await renderScreen(newClient());
     await waitFor(() => expect(screen.getByText('Uploading')).toBeTruthy());
     expect(screen.queryByTestId('offline-banner')).toBeNull();
+  });
+
+  it('a checking tile and a removed tile open /moment/<id>; the removed slot can be captured again (M2-21)', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];
+    mockBackend.moments = [
+      { ...liveMoment('mebusywith'), id: 'm-checking', status: 'checking' },
+      { ...liveMoment('ootd'), id: 'm-removed', status: 'removed' },
+    ];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByRole('button', { name: '#ootd, removed, tap to see why' })).toBeTruthy());
+    expect(screen.getByText('1 of 8 moments')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('tile-mebusywith'));
+    expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/moment/[id]', params: { id: 'm-checking' } });
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/moment/[id]', params: { id: 'm-removed' } });
+    expect(mockPush).toHaveBeenCalledTimes(2);
   });
 });

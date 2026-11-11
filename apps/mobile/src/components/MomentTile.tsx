@@ -11,7 +11,7 @@ import { PRESSED_OPACITY } from './BaseButton';
 import { Icon } from './Icon';
 import { PhotoTile } from './PhotoTile';
 
-export type MomentTileState = 'filled' | 'empty' | 'now' | 'waiting' | 'uploading' | 'failed' | 'checking';
+export type MomentTileState = 'filled' | 'empty' | 'now' | 'waiting' | 'uploading' | 'failed' | 'checking' | 'removed';
 
 export const momentTileStates: readonly MomentTileState[] = [
   'filled',
@@ -21,6 +21,7 @@ export const momentTileStates: readonly MomentTileState[] = [
   'uploading',
   'failed',
   'checking',
+  'removed',
 ];
 
 export type MomentTileProps = {
@@ -87,6 +88,7 @@ export function MomentTile({
     ],
     failed: [t('tile.a11y.failed'), ...flags],
     checking: [t('tile.a11y.checking'), ...flags],
+    removed: [t('moment.tile.a11yRemoved'), ...flags],
   };
   const accessibilityLabel = [tag, time, ...stateWords[state]].filter(Boolean).join(', ');
 
@@ -147,7 +149,8 @@ export function MomentTile({
           uri={uri}
           height={sizes.momentTile}
           label={tag}
-          blurred={state === 'checking'}
+          // Checking and removed photos are unchecked or refused content: always blurred (rule 4).
+          blurred={state === 'checking' || state === 'removed'}
           overlayColor={state === 'failed' ? 'failedOverlay' : state === 'filled' ? undefined : 'glass'}
           topLeft={time ? <Pill text={time} /> : null}
           topRight={
@@ -195,6 +198,12 @@ export function MomentTile({
             </>
           ) : null}
           {state === 'checking' ? <OverlayText text={t('tile.checking')} /> : null}
+          {state === 'removed' ? (
+            <>
+              <Icon name="warning" color="surface" size={24} strokeWidth={2} />
+              <OverlayText text={t('moment.tile.removed')} />
+            </>
+          ) : null}
         </PhotoTile>
       )}
     </Pressable>
