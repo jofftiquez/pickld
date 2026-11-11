@@ -13,6 +13,8 @@ import Index from '../../../../app/index';
 
 // See TabShell.test.tsx: Reanimated can't load here, and the jar isn't under test.
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
+// Today pulls in the upload runner, which loads Sentry (ESM) through monitoring.
+jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
