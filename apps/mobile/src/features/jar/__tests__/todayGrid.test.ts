@@ -4,6 +4,7 @@ import { slots } from '@/theme/tokens';
 import {
   buildTodayGrid,
   greetingFor,
+  holdsSlot,
   momentCount,
   offlineBannerCount,
   type QueuedMoment,
@@ -91,8 +92,47 @@ describe('buildTodayGrid: merging server moments with the queue', () => {
     });
   });
 
-  it('a removed server moment leaves the slot empty', () => {
-    expect(stateOf(grid({ moments: [moment('ootd', { status: 'removed' })] }), 'ootd')).toBe('empty');
+  it('a removed server moment shows as removed with its id and thumbnail, so it can open the notice', () => {
+    const tiles = grid({ moments: [moment('ootd', { status: 'removed', is_private: true })] });
+    expect(tiles[3]).toEqual({
+      slot: 'ootd',
+      state: 'removed',
+      uri: 'https://photos.test/ootd.webp',
+      time: null,
+      isPrivate: false,
+      addedLater: false,
+      momentId: 'm-ootd',
+      queueId: null,
+      canRetry: false,
+    });
+  });
+
+  it('a removed moment in the current slot shows as removed, and no other slot becomes Now', () => {
+    const tiles = grid({ moments: [moment('morning', { status: 'removed' })], nowSlot: 'morning' });
+    expect(stateOf(tiles, 'morning')).toBe('removed');
+    expect(nowTiles(tiles)).toEqual([]);
+  });
+
+  it.each(['queued', 'uploading', 'failed', 'uploaded', 'conflict'] as const)(
+    'a %s queue item (the slot filled again) wins over a removed moment',
+    (state) => {
+      const item = queued('ootd', { state });
+      const tile = grid({ moments: [moment('ootd', { status: 'removed' })], queue: [item] })[3];
+      expect(tile).toMatchObject({ queueId: item.id, momentId: null, uri: item.thumbUri });
+      expect(tile?.state).not.toBe('removed');
+    },
+  );
+
+  it('a live or checking moment wins over a removed one in the same slot', () => {
+    const removed = moment('ootd', { id: 'm-old', status: 'removed' });
+    expect(grid({ moments: [removed, moment('ootd', { id: 'm-new' })] })[3]).toMatchObject({
+      state: 'filled',
+      momentId: 'm-new',
+    });
+    expect(grid({ moments: [removed, moment('ootd', { id: 'm-new', status: 'checking' })] })[3]).toMatchObject({
+      state: 'checking',
+      momentId: 'm-new',
+    });
   });
 
   it.each([
@@ -225,6 +265,25 @@ describe('momentCount', () => {
 
   it('empty and Now tiles do not count', () => {
     expect(momentCount(grid({ nowSlot: 'morning' }))).toBe(0);
+  });
+
+  it('removed tiles do not count (the server moment_count, D-9)', () => {
+    expect(momentCount(grid({ moments: [moment('ootd', { status: 'removed' })] }))).toBe(0);
+  });
+});
+
+describe('holdsSlot (the camera can fill free slots)', () => {
+  it('empty, Now and removed tiles leave the slot free; photo tiles hold it', () => {
+    const tiles = grid({
+      nowSlot: 'morning',
+      moments: [
+        moment('whereami'),
+        moment('mebusywith', { status: 'checking' }),
+        moment('ootd', { status: 'removed' }),
+      ],
+      queue: [queued('selfie', { state: 'failed' }), queued('evening')],
+    });
+    expect(tiles.filter(holdsSlot).map((t) => t.slot)).toEqual(['whereami', 'mebusywith', 'selfie', 'evening']);
   });
 });
 

@@ -87,6 +87,7 @@ export const font = {
 export const type = {
   screenTitle: { size: 32, weight: '800', letterSpacing: -0.96 }, // -0.03em
   sectionTitle: { size: 20, weight: '800', letterSpacing: -0.4 },
+  noticeTitle: { size: 24, weight: '800', letterSpacing: -0.48 }, // -0.02em, "We removed one of your moments" (Removed)
   cardTitle: { size: 17, weight: '700' },
   jarCardTitle: { size: 18, weight: '700' }, // "5 of 8 moments" on the Today jar card (Main)
   body: { size: 15, weight: '500' },
@@ -109,6 +110,7 @@ export const radius = {
   tile: 22,
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
+  noteSheet: 28, // white sheet under the blurred photo (Checking)
   viewfinder: 28, // bottom corners of the camera viewfinder (Camera)
   cameraTag: 18, // slot tag over the viewfinder (Camera)
   editorPhoto: 32, // bottom corners of the photo in the editor (Capture)
@@ -223,6 +225,8 @@ export const sizes = {
   filterRing: 2, // green ring around the selected filter thumbnail
   filterRingGap: 3, // white gap between the thumbnail and its ring
   editorPanelOverlap: 10, // the white tool panel tucks under the photo's rounded bottom (Capture)
+  noteIcon: 44, // lock square beside the owner-only note (Checking)
+  noticeThumb: 64, // blurred photo beside "Moment removed" (Removed)
 } as const;
 
 export const photo = {

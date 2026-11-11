@@ -11,7 +11,7 @@
 --
 -- Graph: dale reads mika and aya; mika, aya and jun read dale; jun reads mika; dale blocked lola.
 -- Jars: dale has a full published jar yesterday, a partial unpublished jar today (with a private
--- and a checking moment) and an older jar with a backfilled ("Added later") moment. mika has a
+-- and a checking moment) and an older jar with a backfilled ("Added later") and a removed moment. mika has a
 -- full Everyone jar today, aya a partial Readers jar with a removed moment, jun an unpublished
 -- partial jar, lola an Everyone jar.
 
@@ -127,7 +127,21 @@ from j join (values
   ('b0000000-0000-4000-8000-000000000501'::uuid, 'selfie',     'selfie',     null,                    interval '12 hours', interval '12 hours 1 minute', false, false, 'live')
 ) as m(jar_id, slot, img, caption, at, added, backfilled, private, status) on m.jar_id = j.id;
 
+-- dale, 3 days ago: an afternoon moment the safety check removed (M2-21, screenshot "Moment removed").
+-- Fixed id so the notice opens with a deep link: pickld://moment/d0000000-0000-4000-8000-000000000001
+insert into public.moments (id, jar_id, user_id, slot, photo_path, thumb_path, caption, captured_at, added_at, status)
+select 'd0000000-0000-4000-8000-000000000001', j.id, j.user_id, 'afternoon',
+       'seed/photos/afternoon.jpg', 'seed/thumbs/afternoon.jpg', null,
+       ((j.local_date)::timestamp at time zone j.tz) + interval '15 hours',
+       ((j.local_date)::timestamp at time zone j.tz) + interval '15 hours 2 minutes', 'removed'
+from public.jars j where j.id = 'b0000000-0000-4000-8000-000000000101';
+
 alter table public.moments enable trigger moments_bi;
+
+-- The decided auto-check item behind dale's removed moment (only moderators can read it).
+insert into public.moderation_items (moment_id, source, scores, status, decided_at, decision_reason)
+values ('d0000000-0000-4000-8000-000000000001', 'auto_check',
+        '{"provider": "seed", "scores": {"violence": 0.97}}'::jsonb, 'removed', now() - interval '2 days', 'violence');
 
 -- ---------------------------------------------------------------- social
 insert into public.reactions (user_id, target, target_id) values

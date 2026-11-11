@@ -18,7 +18,7 @@ import { parseMockAccessParam, takeMockPhoto } from '@/features/capture/mockCame
 import { pickFromGallery } from '@/features/capture/pickFromGallery';
 import { saveCapture } from '@/features/capture/saveCapture';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
-import { buildTodayGrid } from '@/features/jar/todayGrid';
+import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
@@ -62,7 +62,7 @@ export default function CameraScreen() {
   const nowSlot = currentSlot(now, tz);
   const taken = new Set<Slot>(
     buildTodayGrid({ localDate: jar?.jar?.localDate ?? localDate, moments: jar?.moments ?? [], queue, nowSlot })
-      .filter((tile) => tile.state !== 'empty' && tile.state !== 'now')
+      .filter(holdsSlot)
       .map((tile) => tile.slot),
   );
   const [picked, setPicked] = useState<Slot | null>(null);

@@ -51,6 +51,7 @@ export default function RootLayout() {
           name="edit/[momentId]"
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
         />
+        <Stack.Screen name="moment/[id]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
       </Stack>
       {splashVisible ? <SplashOverlay ready onHidden={hideSplash} /> : null}
     </PersistQueryClientProvider>
