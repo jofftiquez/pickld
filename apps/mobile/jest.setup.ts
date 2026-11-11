@@ -1,2 +1,19 @@
 // Real translations in tests, so assertions check the copy users see.
 import '@/i18n';
+
+// Skia's native canvas can't load in Jest. Screens that draw moments (Today's tiles, M2-18) get plain
+// views that show what would be drawn: the decoded image's URI and the filter's matrix. A test file's
+// own jest.mock of the module replaces this one.
+jest.mock('@shopify/react-native-skia', () => {
+  const { createElement } = jest.requireActual<typeof import('react')>('react');
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    Canvas: ({ children, testID }: { children?: import('react').ReactNode; testID?: string }) =>
+      createElement(View, { testID }, children),
+    Image: ({ children, image }: { children?: import('react').ReactNode; image: { uri: string } | null }) =>
+      createElement(View, { testID: 'skia-image', accessibilityHint: image?.uri }, children),
+    ColorMatrix: ({ matrix }: { matrix: number[] }) =>
+      createElement(View, { testID: 'color-matrix', accessibilityValue: { text: JSON.stringify(matrix) } }),
+    useImage: (uri: string | undefined) => (uri ? { uri } : null),
+  };
+});

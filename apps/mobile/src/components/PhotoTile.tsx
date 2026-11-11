@@ -9,6 +9,8 @@ import { colors, photo, radius as radii, sizes, space } from '@/theme/tokens';
 export type PhotoTileProps = {
   /** Photo to show; `null` shows the placeholder color (e.g. while a queued photo loads). */
   uri: string | null;
+  /** Drawn instead of `uri`'s plain image, filling the tile (e.g. a moment with its edits). */
+  photoView?: ReactNode;
   /** Describes the photo for screen readers. Without it the image is decorative and hidden. */
   alt?: string;
   /** Fixed height (e.g. `sizes.momentTile`); the tile still grows if its content needs more. Defaults to 3:4. */
@@ -37,6 +39,7 @@ export type PhotoTileProps = {
 /** A photo with a bottom fade, an optional caption and corner slots. Used by MomentTile, Story and jar cards. */
 export function PhotoTile({
   uri,
+  photoView,
   alt,
   height,
   radius = radii.tile,
@@ -62,7 +65,9 @@ export function PhotoTile({
         style,
       ]}
     >
-      {uri ? (
+      {photoView ? (
+        photoView
+      ) : uri ? (
         <Image
           testID="photo-tile-image"
           source={{ uri }}

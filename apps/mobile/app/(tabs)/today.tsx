@@ -66,6 +66,7 @@ export default function TodayScreen() {
     moments: jar?.moments ?? [],
     queue,
     nowSlot: currentSlot(now, tz),
+    jarTz: jar?.jar?.tz ?? null,
   });
 
   return (

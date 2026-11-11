@@ -341,5 +341,18 @@
     "loading": "Loading stickers…",
     "unavailable": "Stickers need a connection the first time. Try again when you’re online.",
     "retry": "Try again"
+  },
+  "momentRenderer": {
+    "photo": "Photo",
+    "photoWith": "Photo with {{items}}",
+    "stickers_one": "a sticker",
+    "stickers_other": "{{count}} stickers",
+    "bubbles_one": "a speech bubble",
+    "bubbles_other": "{{count}} speech bubbles",
+    "texts_one": "text",
+    "texts_other": "{{count}} texts",
+    "list2": "{{a}} and {{b}}",
+    "list3": "{{a}}, {{b}} and {{c}}",
+    "jarStamp": "JAR #{{number}}"
   }
 }
