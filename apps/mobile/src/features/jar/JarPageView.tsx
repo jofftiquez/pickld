@@ -139,7 +139,9 @@ export function JarPageView({
             <View
               accessible
               accessibilityRole="image"
-              accessibilityLabel={t('jarPage.cover', { slot: t(`slots.${cover.slot}`) })}
+              accessibilityLabel={t(cover.is_backfilled ? 'jarPage.coverAddedLater' : 'jarPage.cover', {
+                slot: t(`slots.${cover.slot}`),
+              })}
               style={StyleSheet.absoluteFill}
             />
           ) : null}
@@ -172,7 +174,11 @@ export function JarPageView({
 
         {cover && coverCaption ? (
           <Text style={[textStyle('bodyMedium', '400'), styles.highlight]} testID="jar-highlight">
-            {t('jarPage.highlight', { caption: coverCaption, slot: t(`slots.${cover.slot}`), time: timeOf(cover) })}
+            {t(cover.is_backfilled ? 'jarPage.highlightAddedLater' : 'jarPage.highlight', {
+              caption: coverCaption,
+              slot: t(`slots.${cover.slot}`),
+              time: timeOf(cover),
+            })}
           </Text>
         ) : (
           <View style={styles.highlightSpacer} />

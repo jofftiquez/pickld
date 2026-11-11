@@ -87,6 +87,15 @@ describe('JarPageView', () => {
     expect(screen.queryByTestId('jar-tile-morning')).toBeNull();
   });
 
+  it('keeps Added later visible when the backfilled moment is the cover', async () => {
+    const moments = daleJar.moments.map((m) => (m.slot === 'morning' ? { ...m, is_backfilled: true } : m));
+    await setup({ data: { ...daleJar, moments } });
+    expect(screen.getByTestId('jar-highlight')).toHaveTextContent(
+      '“Rain again. Coffee first.” — #morning, 6:48 AM · Added later',
+    );
+    expect(screen.getByLabelText('Cover photo, #morning, added later')).toBeTruthy();
+  });
+
   it('shows the owner their private moment with a lock', async () => {
     await setup({ data: { ...daleJar, viewerId: 'dale-id' } });
     expect(screen.getByLabelText('#ootd, private')).toBeTruthy();
