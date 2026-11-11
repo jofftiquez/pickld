@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import { execFileSync } from 'node:child_process';
+import { request } from 'node:http';
 import { resolve } from 'node:path';
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -39,9 +40,33 @@ const noSession = { auth: { persistSession: false, autoRefreshToken: false } };
 const putFile: PutFile = async (fileUri, target) => {
   const data = files.get(fileUri);
   if (data === undefined) throw new Error(`no local file ${fileUri}`);
-  const res = await fetch(target.url, { method: target.method, headers: target.headers, body: Buffer.from(data) });
+  const res = await nodeFetch(target.url, { method: target.method, headers: target.headers, body: Buffer.from(data) });
   if (!res.ok) throw new Error(`photo upload answered ${res.status}: ${await res.text()}`);
 };
+
+// jest-expo swaps the global fetch for a stub even in the node environment, so this test talks HTTP
+// through node:http (local Supabase is plain http).
+const nodeFetch = (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> =>
+  new Promise((resolveResponse, reject) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    const headers = Object.fromEntries(new Headers(init.headers).entries());
+    const req = request(url, { method: init.method ?? 'GET', headers }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => {
+        const status = res.statusCode ?? 500;
+        const body = status === 204 || status === 304 ? null : Buffer.concat(chunks);
+        const out = new Headers();
+        for (const [name, value] of Object.entries(res.headers)) {
+          if (value !== undefined) out.set(name, Array.isArray(value) ? value.join(', ') : value);
+        }
+        resolveResponse(new Response(body, { status, headers: out }));
+      });
+    });
+    req.on('error', reject);
+    if (init.body !== undefined && init.body !== null) req.write(init.body as string | Buffer);
+    req.end();
+  });
 
 describeLocal('upload worker against local Supabase', () => {
   let admin: SupabaseClient<Database>;
@@ -55,8 +80,8 @@ describeLocal('upload worker against local Supabase', () => {
       stdio: ['ignore', 'pipe', 'ignore'],
     });
     const status = JSON.parse(out.slice(out.indexOf('{'))) as Status;
-    admin = createClient<Database>(status.API_URL, status.SERVICE_ROLE_KEY, noSession);
-    client = createClient<Database>(status.API_URL, status.ANON_KEY, noSession);
+    admin = createClient<Database>(status.API_URL, status.SERVICE_ROLE_KEY, { ...noSession, global: { fetch: nodeFetch } });
+    client = createClient<Database>(status.API_URL, status.ANON_KEY, { ...noSession, global: { fetch: nodeFetch } });
 
     const suffix = Math.random().toString(36).slice(2, 10);
     const email = `uploader-${suffix}@jesttest.pickld.test`;
@@ -78,7 +103,7 @@ describeLocal('upload worker against local Supabase', () => {
 
   beforeEach(() => resetFakes());
 
-  it('uploads a queued moment as checking, then reports a second one for the slot as a conflict', async () => {
+  it('uploads a queued moment and moderate makes it live, then reports a second one for the slot as a conflict', async () => {
     const localDate = localDateIn(new Date(), TZ);
     const first = await enqueue({ userId, ...capturedFiles('first'), slot: 'ootd', localDate, tz: TZ });
 
@@ -96,7 +121,7 @@ describeLocal('upload worker against local Supabase', () => {
     expect(moment).toMatchObject({
       slot: 'ootd',
       is_backfilled: false,
-      status: expect.stringMatching(/^(checking|live)$/),
+      status: 'live',
     });
     const { data: photo } = await admin.storage.from('photos').download(moment?.photo_path ?? '');
     expect(photo?.size).toBe(Buffer.byteLength('jpeg:first:full-resolution-bytes'));
