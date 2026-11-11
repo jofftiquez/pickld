@@ -17,6 +17,17 @@ export function userClient(jwt: string): SupabaseClient {
   });
 }
 
+/**
+ * The server credential, for fn:moderate only: applying a verdict must be something no client can do.
+ * SUPABASE_SERVICE_ROLE_KEY is provided by the Edge runtime and never leaves the server (rule 2). Even
+ * with it, a moment becomes live or removed only through moderation_apply() (migration 0011).
+ */
+export function serviceClient(): SupabaseClient {
+  return createClient(required('SUPABASE_URL'), required('SUPABASE_SERVICE_ROLE_KEY'), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 /** The photo bucket: R2 in staging/production, the local Supabase Storage S3 endpoint in development. */
 export function s3ConfigFromEnv(): S3Config {
   return {

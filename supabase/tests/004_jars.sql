@@ -112,11 +112,10 @@ select is((select array[moment_count, visible_count]::int[] from public.jars whe
 select tests.act_as('owner');
 update public.moments set is_private = false where id = (select id from t where k = 'm_private');
 select is((select visible_count::int from public.jars where id = (select id from t where k = 'counted')), 2, 'making a moment public raises visible_count');
-select tests.act_as_service();
-update public.moments set status = 'live' where id = (select id from t where k = 'm_checking');
+select tests.set_status((select id from t where k = 'm_checking'), 'live');
 select is((select array[moment_count, visible_count]::int[] from public.jars where id = (select id from t where k = 'counted')), array[3, 3],
           'a checking moment going live raises visible_count only');
-update public.moments set status = 'removed' where id = (select id from t where k = 'm_checking');
+select tests.set_status((select id from t where k = 'm_checking'), 'removed');
 select is((select array[moment_count, visible_count]::int[] from public.jars where id = (select id from t where k = 'counted')), array[2, 2],
           'removing a live moment lowers both counts');
 

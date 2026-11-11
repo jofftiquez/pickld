@@ -31,6 +31,7 @@ Each `tests/*.sql` file runs in its own transaction and rolls back. Start every 
 The helpers create users and switch the Postgres role and JWT claims, so policies see exactly what a real
 request would: `tests.world()` creates the standard cast (owner, reader, outsider, blocked, blocker, moderator),
 `tests.act_as('reader')`, `tests.act_as_anon()`, `tests.act_as_service()`, `tests.reset_role()`,
+`tests.set_status(moment, 'live')` (as `pickld_moderation`, the only role allowed to set live or removed),
 `tests.make_jar(...)` and `tests.make_moment(...)`. Every RLS change ships with tests that try it as owner, reader,
 outsider and blocked user, plus a control case that a too-strict rule would fail.
 
@@ -39,7 +40,10 @@ outsider and blocked user, plus a control case that a too-strict rule would fail
 One folder per function (`functions/<name>/index.ts` serves, `handler.ts` holds the logic), shared code in
 `functions/_shared/`. Every function validates input with Zod and answers `{ data } | { error }`; crashes are
 reported to Sentry only when `SENTRY_DSN` is set. Functions act as the caller (RLS applies) and never use a
-service key.
+service key, except `moderate`: it checks the caller owns the moment, then applies the verdict with the runtime's
+service key through `moderation_apply()`, the only path that sets a moment `live` or `removed` (migration 0011).
+The app calls `moderate` with `{ momentId }` after inserting or changing a moment. Its provider is
+`moderate/provider.ts`; the early version auto-approves (D-22).
 
 `supabase start` serves them at `http://127.0.0.1:55421/functions/v1/<name>`. Their secrets (the photo bucket's
 `S3_*` and `PHOTO_TOKEN_SECRET`) go in `functions/.env` (git-ignored; see `functions/.env.example`). Locally
