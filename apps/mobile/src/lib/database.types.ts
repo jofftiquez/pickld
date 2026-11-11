@@ -915,8 +915,9 @@ export type Database = {
           sort: number;
           store_product_id: string | null;
           tier: Database['public']['Enums']['pack_tier'];
+          pack_usable: boolean | null;
         };
-        ComputedFields: never;
+        ComputedFields: 'pack_usable';
         Insert: {
           artist_id?: string | null;
           available_from?: string | null;
@@ -948,28 +949,35 @@ export type Database = {
           asset_path: string;
           id: string;
           label: string;
+          milestone_key: string | null;
           pack_id: string;
           slot_hint: Database['public']['Enums']['slot'] | null;
           sort: number;
+          stamp: Database['public']['Enums']['sticker_stamp'] | null;
           tags: string[];
+          sticker_usable: boolean | null;
         };
-        ComputedFields: never;
+        ComputedFields: 'sticker_usable';
         Insert: {
           asset_path: string;
           id?: string;
           label: string;
+          milestone_key?: string | null;
           pack_id: string;
           slot_hint?: Database['public']['Enums']['slot'] | null;
           sort?: number;
+          stamp?: Database['public']['Enums']['sticker_stamp'] | null;
           tags?: string[];
         };
         Update: {
           asset_path?: string;
           id?: string;
           label?: string;
+          milestone_key?: string | null;
           pack_id?: string;
           slot_hint?: Database['public']['Enums']['slot'] | null;
           sort?: number;
+          stamp?: Database['public']['Enums']['sticker_stamp'] | null;
           tags?: string[];
         };
         Relationships: [
@@ -1206,6 +1214,40 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      pack_usable: {
+        Args: {
+          p: Omit<
+            Database['public']['Tables']['sticker_packs']['Row'],
+            Database['public']['Tables']['sticker_packs']['ComputedFields']
+          >;
+        };
+        Returns: boolean;
+      };
+      public_sticker_catalog: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          asset_path: string;
+          label: string;
+          pack_name: string;
+          pack_slug: string;
+          pack_sort: number;
+          pack_tier: Database['public']['Enums']['pack_tier'];
+          slot_hint: Database['public']['Enums']['slot'];
+          sort: number;
+          stamp: Database['public']['Enums']['sticker_stamp'];
+          sticker_id: string;
+          tags: string[];
+        }[];
+      };
+      sticker_usable: {
+        Args: {
+          s: Omit<
+            Database['public']['Tables']['stickers']['Row'],
+            Database['public']['Tables']['stickers']['ComputedFields']
+          >;
+        };
+        Returns: boolean;
+      };
     };
     Enums: {
       day_slot: 'morning' | 'afternoon' | 'evening';
@@ -1219,6 +1261,7 @@ export type Database = {
       profile_status: 'active' | 'suspended' | 'deleted';
       report_reason: 'sexual' | 'harassment' | 'violence' | 'hate' | 'spam' | 'under_13' | 'other';
       slot: 'whereami' | 'mebusywith' | 'whoamiwith' | 'ootd' | 'selfie' | 'morning' | 'afternoon' | 'evening';
+      sticker_stamp: 'time' | 'date' | 'weekday' | 'jar_number';
       target_type: 'jar' | 'moment' | 'comment' | 'profile';
     };
     CompositeTypes: {
@@ -1338,6 +1381,7 @@ export const Constants = {
       profile_status: ['active', 'suspended', 'deleted'],
       report_reason: ['sexual', 'harassment', 'violence', 'hate', 'spam', 'under_13', 'other'],
       slot: ['whereami', 'mebusywith', 'whoamiwith', 'ootd', 'selfie', 'morning', 'afternoon', 'evening'],
+      sticker_stamp: ['time', 'date', 'weekday', 'jar_number'],
       target_type: ['jar', 'moment', 'comment', 'profile'],
     },
   },

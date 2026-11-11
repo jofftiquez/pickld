@@ -1,7 +1,11 @@
 // The photo Worker's request handler (D-12, NFR-SEC-02). It serves an object only when the URL carries
 // a valid, unexpired token from fn:photo-urls; everything else gets 403. It never writes: uploads go
 // straight to the bucket with presigned URLs from fn:upload-url, each under a new key.
-import { isObjectKey } from '../../../supabase/functions/_shared/object_keys.ts';
+//
+// Sticker art (`stickers/<pack>/<name>.png`) is the exception: it is public catalog data that anyone viewing a
+// moment sees, including the anonymous web page (FR-STK-04, C-6), so it is served without a token. Art never
+// changes under a key, so it is cached as immutable by the CDN and the phone (FR-STK-02).
+import { isObjectKey, isStickerKey } from '../../../supabase/functions/_shared/object_keys.ts';
 import { verifyPhotoToken } from '../../../supabase/functions/_shared/photo_token.ts';
 
 export interface StoredObject {
@@ -40,6 +44,18 @@ export async function handlePhotoRequest(
     key = decodeURIComponent(url.pathname.replace(/^\/+/, ''));
   } catch {
     return plain(403, 'Forbidden');
+  }
+  if (isStickerKey(key)) {
+    const object = await store.get(key);
+    if (!object) return plain(404, 'Not found');
+    const headers: Record<string, string> = {
+      'content-type': 'image/png',
+      'cache-control': 'public, max-age=31536000, immutable',
+      ...SECURITY_HEADERS,
+    };
+    if (object.etag) headers.etag = object.etag;
+    if (object.size !== undefined) headers['content-length'] = String(object.size);
+    return new Response(request.method === 'HEAD' ? null : object.body, { status: 200, headers });
   }
   // A malformed key gets the same answer as a bad token, so the Worker doesn't reveal which keys exist.
   if (!isObjectKey(key)) return plain(403, 'Forbidden');

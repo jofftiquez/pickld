@@ -15,6 +15,10 @@ to Only me stops loading for others when their tokens expire (15 minutes at most
 - **Keys:** `supabase/functions/_shared/object_keys.ts`. Each upload gets a fresh random id
   (`moments/<user>/<upload>/full.jpg` and `thumb.jpg`, `avatars/<user>/<upload>.jpg`,
   `covers/<user>/<upload>.jpg`), so objects are never overwritten. Malformed keys get `403`.
+- **Sticker art:** `stickers/<pack slug>/<name>.png` (`stickers.asset_path`, migration 0012) is public
+  catalog data that anyone viewing a moment sees, the anonymous web page included (FR-STK-04, C-6), so
+  it is served **without a token** with `cache-control: public, max-age=31536000, immutable`. Art never
+  changes under a key: new art gets a new file name and a new catalog row.
 - **Read-only:** `GET` and `HEAD` only. Uploads go straight to the bucket with presigned PUT URLs from
   `fn:upload-url` (`_shared/sigv4.ts`).
 
@@ -26,10 +30,19 @@ creates the private `photos` bucket. Credentials are read at runtime from `supab
 ```sh
 cp .env.example .env               # set PHOTO_TOKEN_SECRET (openssl rand -base64 48)
 pnpm db:reset                      # from the repo root: creates the bucket
-deno task seed                     # uploads design/images under the seed keys, prints two signed URLs
+deno task seed                     # uploads design/images under the seed keys and the sticker art, prints two signed URLs
+deno task stickers                 # sticker art only (assets/stickers → stickers/…); existing keys are skipped
 deno task dev                      # http://127.0.0.1:55430
 deno task test                     # valid, expired and tampered tokens; keys; SigV4 test vector
 ```
+
+### Sticker art
+
+`assets/stickers/<pack>/<name>.png` is rendered from the catalog in the database (rows in migration 0012)
+by `node scripts/render-stickers.mjs` from the repo root, after `pnpm db:reset`. To add a sticker: add its
+row in a new migration, reset, render, upload. For staging or production, run `deno task stickers` with
+`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` set to an R2 token with write
+access to that bucket.
 
 ## Staging and production (needs M1-01 and M1-28)
 
