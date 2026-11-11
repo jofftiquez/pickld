@@ -1,6 +1,8 @@
 import type { SkImage } from '@shopify/react-native-skia';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -13,9 +15,12 @@ import { SlotTag } from '@/features/capture/SlotTag';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
+import type { Overlay } from './edits';
 import { FilteredPhoto } from './FilteredPhoto';
 import { filterIdSchema, filterMatrices, type FilterId } from './filters';
 import { FilterThumbnail } from './FilterThumbnail';
+import { OverlayLayer } from './overlays/OverlayLayer';
+import type { Transform } from './overlays/transform';
 
 export const editorTools = ['filters', 'stickers', 'bubble', 'text'] as const;
 export type EditorTool = (typeof editorTools)[number];
@@ -30,6 +35,12 @@ export type EditorViewProps = {
   insets: EdgeInsets;
   onClose: () => void;
   onSelectFilter: (filter: FilterId) => void;
+  overlays: readonly Overlay[];
+  selectedOverlayId: string | null;
+  onSelectOverlay: (id: string | null) => void;
+  onTransformOverlay: (id: string, transform: Transform) => void;
+  onBringOverlayToFront: (id: string) => void;
+  onDeleteOverlay: (id: string) => void;
   onSelectTool: (tool: EditorTool) => void;
   caption: string;
   onChangeCaption: (caption: string) => void;
@@ -60,6 +71,12 @@ export function EditorView({
   insets,
   onClose,
   onSelectFilter,
+  overlays,
+  selectedOverlayId,
+  onSelectOverlay,
+  onTransformOverlay,
+  onBringOverlayToFront,
+  onDeleteOverlay,
   onSelectTool,
   caption,
   onChangeCaption,
@@ -77,123 +94,146 @@ export function EditorView({
   const available = window.height - insets.top - PANEL_MIN_HEIGHT;
   const width = Math.min(window.width, Math.max(0, available) * photo.aspect);
   const height = width / photo.aspect;
+  // The screen stops scrolling while a finger moves an overlay.
+  const [overlayGesture, setOverlayGesture] = useState(false);
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
-      keyboardShouldPersistTaps="handled"
-      automaticallyAdjustKeyboardInsets
-      testID="editor-screen"
-    >
-      <View
-        style={[styles.photo, { width, height }]}
-        accessible
-        accessibilityRole="image"
-        accessibilityLabel={t('edit.photo', { filter: t(`edit.filter.${filter}`) })}
+    // The app has no gesture root, so the editor brings its own for the overlay gestures.
+    <GestureHandlerRootView style={styles.root}>
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        scrollEnabled={!overlayGesture}
+        testID="editor-screen"
       >
-        <FilteredPhoto
-          image={image}
-          matrix={filterMatrices[filter]}
-          width={width}
-          height={height}
-          testID="editor-photo"
-        />
-      </View>
-      {/* Outside the accessible photo group so VoiceOver can reach the buttons. */}
-      <View style={[styles.topRow, { top: insets.top + space.xxl }]}>
-        <RoundIconButton
-          icon="close"
-          variant="glass"
-          accessibilityLabel={t('common.close')}
-          onPress={onClose}
-          testID="editor-close"
-        />
-        <SlotTag slot={t(`slots.${slot}`)} time={time} />
-        <View style={styles.topRowSpacer} />
-      </View>
-
-      <View style={[styles.panel, { paddingBottom: insets.bottom + space.xxl }]}>
-        <SegmentedControl
-          segments={editorTools.map((key) => ({ key, label: t(`edit.tool.${key}`) }))}
-          selected={tool}
-          onSelect={onSelectTool}
-          accessibilityLabel={t('edit.tools')}
-          variant="dark"
-          testID="editor-tools"
-        />
-        {tool === 'filters' ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            accessibilityLabel={t('edit.filters')}
-            contentContainerStyle={styles.filters}
-            testID="editor-filters"
+        <View style={[styles.photo, { width, height }]}>
+          <View
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={t('edit.photo', { filter: t(`edit.filter.${filter}`) })}
           >
-            {filterIdSchema.options.map((id) => (
-              <FilterThumbnail
-                key={id}
-                label={t(`edit.filter.${id}`)}
-                image={image}
-                matrix={filterMatrices[id]}
-                selected={id === filter}
-                onPress={() => onSelectFilter(id)}
-                testID={`editor-filter-${id}`}
-              />
-            ))}
-          </ScrollView>
-        ) : (
-          // TODO(M2-15 #44 Stickers, M2-16 #45 Bubble, M2-17 #46 Text): each tool's panel.
-          <View style={styles.emptyPanel} testID={`editor-panel-${tool}`} />
-        )}
-        <TextField
-          label={t('edit.caption')}
-          value={caption}
-          onChangeText={onChangeCaption}
-          maxLength={CAPTION_MAX}
-          placeholder={t('edit.captionPlaceholder')}
-          testID="editor-caption"
-        />
-        <View style={styles.privateRow}>
-          <View style={styles.privateText} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-            <Text style={[textStyle('bodyMedium', '600'), styles.privateLabel]}>{t('edit.private')}</Text>
-            <Text style={[textStyle('label', '500'), styles.privateHint]}>{t('edit.privateHint')}</Text>
+            <FilteredPhoto
+              image={image}
+              matrix={filterMatrices[filter]}
+              width={width}
+              height={height}
+              testID="editor-photo"
+            />
           </View>
-          <Toggle
-            value={isPrivate}
-            onValueChange={onChangePrivate}
-            accessibilityLabel={`${t('edit.private')}. ${t('edit.privateHint')}`}
-            testID="editor-private"
+          {/* A sibling of the photo, not inside it, so screen readers reach each overlay. */}
+          <OverlayLayer
+            overlays={overlays}
+            selectedId={selectedOverlayId}
+            width={width}
+            height={height}
+            onSelect={onSelectOverlay}
+            onTransform={onTransformOverlay}
+            onBringToFront={onBringOverlayToFront}
+            onDelete={onDeleteOverlay}
+            onGestureActiveChange={setOverlayGesture}
           />
         </View>
-        <View style={styles.spacer} />
-        {saveFailed ? (
-          <Text
-            style={[textStyle('bodySmall'), styles.error]}
-            accessibilityLiveRegion="polite"
-            accessibilityRole="alert"
-          >
-            {t('edit.saveFailed')}
-          </Text>
-        ) : null}
-        <View style={styles.actions}>
-          {canUndo ? (
-            <View>
-              <SecondaryButton
-                variant="outline"
-                label={t('edit.undo')}
-                accessibilityHint={t('edit.undoHint')}
-                onPress={onUndo}
-                testID="editor-undo"
-              />
+        {/* Outside the accessible photo group so VoiceOver can reach the buttons. */}
+        <View style={[styles.topRow, { top: insets.top + space.xxl }]}>
+          <RoundIconButton
+            icon="close"
+            variant="glass"
+            accessibilityLabel={t('common.close')}
+            onPress={onClose}
+            testID="editor-close"
+          />
+          <SlotTag slot={t(`slots.${slot}`)} time={time} />
+          <View style={styles.topRowSpacer} />
+        </View>
+
+        <View style={[styles.panel, { paddingBottom: insets.bottom + space.xxl }]}>
+          <SegmentedControl
+            segments={editorTools.map((key) => ({ key, label: t(`edit.tool.${key}`) }))}
+            selected={tool}
+            onSelect={onSelectTool}
+            accessibilityLabel={t('edit.tools')}
+            variant="dark"
+            testID="editor-tools"
+          />
+          {tool === 'filters' ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              accessibilityLabel={t('edit.filters')}
+              contentContainerStyle={styles.filters}
+              testID="editor-filters"
+            >
+              {filterIdSchema.options.map((id) => (
+                <FilterThumbnail
+                  key={id}
+                  label={t(`edit.filter.${id}`)}
+                  image={image}
+                  matrix={filterMatrices[id]}
+                  selected={id === filter}
+                  onPress={() => onSelectFilter(id)}
+                  testID={`editor-filter-${id}`}
+                />
+              ))}
+            </ScrollView>
+          ) : (
+            // TODO(M2-15 #44 Stickers, M2-16 #45 Bubble, M2-17 #46 Text): each tool's panel.
+            <View style={styles.emptyPanel} testID={`editor-panel-${tool}`} />
+          )}
+          <TextField
+            label={t('edit.caption')}
+            value={caption}
+            onChangeText={onChangeCaption}
+            maxLength={CAPTION_MAX}
+            placeholder={t('edit.captionPlaceholder')}
+            testID="editor-caption"
+          />
+          <View style={styles.privateRow}>
+            <View
+              style={styles.privateText}
+              importantForAccessibility="no-hide-descendants"
+              accessibilityElementsHidden
+            >
+              <Text style={[textStyle('bodyMedium', '600'), styles.privateLabel]}>{t('edit.private')}</Text>
+              <Text style={[textStyle('label', '500'), styles.privateHint]}>{t('edit.privateHint')}</Text>
             </View>
+            <Toggle
+              value={isPrivate}
+              onValueChange={onChangePrivate}
+              accessibilityLabel={`${t('edit.private')}. ${t('edit.privateHint')}`}
+              testID="editor-private"
+            />
+          </View>
+          <View style={styles.spacer} />
+          {saveFailed ? (
+            <Text
+              style={[textStyle('bodySmall'), styles.error]}
+              accessibilityLiveRegion="polite"
+              accessibilityRole="alert"
+            >
+              {t('edit.saveFailed')}
+            </Text>
           ) : null}
-          <View style={styles.save}>
-            <PrimaryButton label={saveLabel} onPress={onSave} disabled={saving} testID="editor-save" />
+          <View style={styles.actions}>
+            {canUndo ? (
+              <View>
+                <SecondaryButton
+                  variant="outline"
+                  label={t('edit.undo')}
+                  accessibilityHint={t('edit.undoHint')}
+                  onPress={onUndo}
+                  testID="editor-undo"
+                />
+              </View>
+            ) : null}
+            <View style={styles.save}>
+              <PrimaryButton label={saveLabel} onPress={onSave} disabled={saving} testID="editor-save" />
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </GestureHandlerRootView>
   );
 }
 
