@@ -1096,6 +1096,31 @@ export type Database = {
         Returns: boolean;
       };
       delete_comment: { Args: { comment_id: string }; Returns: undefined };
+      ensure_jar: {
+        Args: { local_date: string; tz: string };
+        Returns: {
+          comment_count: number;
+          created_at: string;
+          ends_at: string;
+          id: string;
+          is_full: boolean | null;
+          like_count: number;
+          local_date: string;
+          moment_count: number;
+          published_at: string | null;
+          tz: string;
+          updated_at: string;
+          user_id: string;
+          visibility: Database['public']['Enums']['jar_visibility'];
+          visible_count: number;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'jars';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
