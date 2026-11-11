@@ -1,0 +1,43 @@
+# M3-02: Today after publishing (design: TodayPublished; FR-PUB-04, FR-PUB-03) → screenshot → visibility menu
+# → Only me → the note and chip follow. Run after publish-review.yaml (dale's jar published as Everyone).
+#   maestro test --test-output-dir docs/milestones/M3 apps/mobile/.maestro/today-published.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: today-published
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- assertVisible:
+    text: 'Published at .*New moments you add today go out automatically\.'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: TodayPublished-ios
+
+- tapOn:
+    id: today-published
+- extendedWaitUntil:
+    visible:
+      id: jar-visibility
+    timeout: 5000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: JarVisibility-ios
+- tapOn:
+    id: jar-visibility-only_me
+- extendedWaitUntil:
+    visible:
+      text: '.*Only you can see this jar\.'
+    timeout: 10000
+- tapOn:
+    id: today-published
+- tapOn:
+    id: jar-visibility-everyone
+- extendedWaitUntil:
+    visible:
+      text: 'Published at .*New moments you add today go out automatically\.'
+    timeout: 10000

@@ -40,7 +40,28 @@
       "body_one": "{{count}} moment is saved on your phone and will upload when you’re back.",
       "body_other": "{{count}} moments are saved on your phone and will upload when you’re back."
     },
-    "publishDisabledHint": "Add a moment first"
+    "publishDisabledHint": "Add a moment first",
+    "published": "Published",
+    "publishedLabel": "Published, {{shared}}",
+    "publishedHint": "Changes who can see this jar",
+    "publishedNote": "Published at {{time}}. New moments you add today go out automatically.",
+    "publishedNoteOnlyMe": "Published at {{time}}. Only you can see this jar.",
+    "shared": {
+      "readers": "Shared with readers",
+      "everyone": "Shared with everyone",
+      "only_me": "Only you"
+    },
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "sharedLikes": "{{shared}} · {{likes}}"
+  },
+  "jarVisibility": {
+    "title": "Who can see this jar",
+    "body": "New moments you add today follow this choice.",
+    "error": {
+      "failed": "Couldn’t change it. Check your connection and try again.",
+      "refused": "This jar can’t be changed."
+    }
   },
   "timeZone": {
     "title": "You’re in {{zone}} time",

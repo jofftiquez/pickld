@@ -142,6 +142,42 @@ describeLocal('Publish jar against local Supabase', () => {
     expect(await seenBy(owner, jarId)).toEqual({ jar: true, slots: ['ootd', 'selfie'] });
   });
 
+  it('after publishing, a new live moment reaches readers with no further step; a private one never does (FR-PUB-04)', async () => {
+    const owner = await signedInUser('author');
+    const reader = await signedInUser('reader');
+    const outsider = await signedInUser('outsider');
+    await admin.from('follows').insert({ reader_id: reader.id, author_id: owner.id });
+    const jarId = await jarWithMoments(owner);
+    await publishJar(owner.client, jarId, 'readers');
+    expect(await seenBy(reader, jarId)).toEqual({ jar: true, slots: ['ootd'] });
+
+    const addLive = async (slot: 'morning' | 'evening', isPrivate: boolean) => {
+      const { data: row, error } = await owner.client
+        .from('moments')
+        .insert({
+          jar_id: jarId,
+          user_id: owner.id,
+          slot,
+          photo_path: `seed/photos/${slot}.jpg`,
+          thumb_path: `seed/thumbs/${slot}.jpg`,
+          is_private: isPrivate,
+          status: 'checking',
+        })
+        .select('id')
+        .single();
+      if (error) throw new Error(`insert: ${error.message}`);
+      // Still checking: nobody but the owner sees it yet.
+      expect((await seenBy(reader, jarId)).slots).not.toContain(slot);
+      await owner.client.functions.invoke('moderate', { body: { momentId: row.id } });
+    };
+
+    await addLive('morning', false);
+    await addLive('evening', true);
+    expect(await seenBy(reader, jarId)).toEqual({ jar: true, slots: ['ootd', 'morning'] });
+    expect(await seenBy(outsider, jarId)).toEqual({ jar: false, slots: [] });
+    expect(await seenBy(owner, jarId)).toEqual({ jar: true, slots: ['ootd', 'selfie', 'morning', 'evening'] });
+  });
+
   it('another user can’t publish the jar: refused, and nothing changes', async () => {
     const owner = await signedInUser('author');
     const reader = await signedInUser('reader');
