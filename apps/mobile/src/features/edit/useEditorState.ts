@@ -2,7 +2,7 @@ import { useReducer } from 'react';
 
 import type { Edits, Overlay } from './edits';
 import type { FilterId } from './filters';
-import { clampTransform, sameTransform, type Transform } from './overlays/transform';
+import { clampScale, clampTransform, sameTransform, type Transform } from './overlays/transform';
 
 /** How many steps Undo can go back. */
 export const UNDO_LIMIT = 50;
@@ -66,7 +66,7 @@ export type EditorState = {
    */
   addOverlay: (overlay: Overlay, group?: string) => void;
   /**
-   * Changes an overlay's content (a bubble's text, shape or color) in place, keeping its transform and
+   * Changes an overlay's content (a bubble's or text's words and style) in place, keeping its transform and
    * stacking. Changes passing the same `group` back to back are one Undo step (typing a word).
    */
   updateOverlay: (id: string, update: (overlay: Overlay) => Overlay, group?: string) => void;
@@ -116,7 +116,7 @@ export function useEditorState(initial: Edits): EditorState {
           }
           return withOverlays(
             e,
-            e.overlays.map((o) => (o.id === id ? next : o)),
+            e.overlays.map((o) => (o.id === id ? { ...next, scale: clampScale(next.scale) } : o)),
           );
         },
         undefined,

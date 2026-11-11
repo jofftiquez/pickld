@@ -19,6 +19,7 @@ import { kape } from './stickerFixture';
 jest.mock('react-native-reanimated', () => jest.requireActual('./reanimatedStandIn'));
 
 const PHOTO = { width: 300, height: 400 };
+const textContent = { text: 'hi', font: 'bold', color: 'white', size: 30, align: 'center' } as const;
 
 const start: Edits = {
   v: 1,
@@ -92,7 +93,10 @@ describe('OverlayLayer', () => {
       <Harness
         initial={{
           ...start,
-          overlays: [...start.overlays, { id: 't', type: 'text', x: 0.5, y: 0.5, scale: 0.2, rotation: 0 }],
+          overlays: [
+            ...start.overlays,
+            { id: 't', type: 'text', x: 0.5, y: 0.5, scale: 0.2, rotation: 0, ...textContent },
+          ],
         }}
       />,
     );

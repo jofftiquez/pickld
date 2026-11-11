@@ -24,6 +24,8 @@ import { OverlayLayer } from './overlays/OverlayLayer';
 import type { Transform } from './overlays/transform';
 import type { CatalogSticker } from './stickers/catalog';
 import { StickersPanel } from './stickers/StickersPanel';
+import { TextPanel } from './text/TextPanel';
+import { applyTextChange, type TextOverlay } from './text/textOverlay';
 
 export const editorTools = ['filters', 'stickers', 'bubble', 'text'] as const;
 export type EditorTool = (typeof editorTools)[number];
@@ -108,6 +110,7 @@ export function EditorView({
   const height = width / photo.aspect;
   // The screen stops scrolling while a finger moves an overlay.
   const [overlayGesture, setOverlayGesture] = useState(false);
+  const selectedText = overlays.find((o): o is TextOverlay => o.type === 'text' && o.id === selectedOverlayId) ?? null;
 
   return (
     // The app has no gesture root, so the editor brings its own for the overlay gestures.
@@ -198,8 +201,14 @@ export function EditorView({
               onAdd={onAddOverlay}
               onUpdate={onUpdateOverlay}
             />
+          ) : tool === 'text' ? (
+            <TextPanel
+              key={selectedText ? `${selectedText.id}:${selectedText.text}` : 'new'}
+              selected={selectedText}
+              onAdd={onAddOverlay}
+              onChange={(id, patch) => onUpdateOverlay(id, (o) => (o.type === 'text' ? applyTextChange(o, patch) : o))}
+            />
           ) : (
-            // TODO(M2-15 #44 Stickers, M2-17 #46 Text): each tool's panel.
             <View style={styles.emptyPanel} testID={`editor-panel-${tool}`} />
           )}
           <TextField
