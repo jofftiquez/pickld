@@ -210,6 +210,71 @@ export type Database = {
           },
         ];
       };
+      contact_hashes: {
+        Row: {
+          email_hash: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          email_hash: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          email_hash?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'contact_hashes_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'contact_hashes_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      contact_match_calls: {
+        Row: {
+          called_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          called_at?: string;
+          user_id: string;
+        };
+        Update: {
+          called_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'contact_match_calls_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'contact_match_calls_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       follows: {
         Row: {
           author_id: string;
@@ -1115,6 +1180,25 @@ export type Database = {
       can_view_target: {
         Args: { t: Database['public']['Enums']['target_type']; tid: string; viewer: string };
         Returns: boolean;
+      };
+      contact_hashes_pending: {
+        Args: { p_limit?: number };
+        Returns: {
+          email: string;
+          user_id: string;
+        }[];
+      };
+      contact_hashes_save: { Args: { p_hashes: string[]; p_user_ids: string[] }; Returns: number };
+      contact_match_take: { Args: { p_user: string }; Returns: string };
+      contacts_match_find: {
+        Args: { p_hashes: string[]; p_user: string };
+        Returns: {
+          avatar_path: string;
+          display_name: string;
+          id: string;
+          is_following: boolean;
+          username: string;
+        }[];
       };
       delete_comment: { Args: { comment_id: string }; Returns: undefined };
       ensure_jar: {
