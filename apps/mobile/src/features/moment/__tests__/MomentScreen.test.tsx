@@ -18,17 +18,27 @@ const LIVE_ID = 'a1a1a1a1-0000-4000-8000-000000000003';
 const OTHERS_ID = 'a1a1a1a1-0000-4000-8000-000000000004';
 const hidden = { includeHiddenElements: true } as const;
 
-type Row = { id: string; user_id: string; slot: string; status: string; jars: { local_date: string } };
+type Row = {
+  id: string;
+  user_id: string;
+  jar_id: string;
+  slot: string;
+  status: string;
+  jars: { local_date: string };
+};
+const JAR_ID = 'b1b1b1b1-0000-4000-8000-000000000001';
 const mockBackend = {
   rows: [] as Row[],
   fail: false,
   queries: [] as Record<string, string>[],
   photoCalls: 0,
+  /** What the jar page reads for a live moment (Moment detail, M3-08). */
+  jarMoments: [] as Record<string, unknown>[],
 };
 
 jest.mock('@/lib/supabase', () => {
   const client = {
-    from: () => {
+    from: (table: string) => {
       const filters: Record<string, string> = {};
       const builder = {
         select: () => builder,
@@ -36,7 +46,26 @@ jest.mock('@/lib/supabase', () => {
           filters[column] = value;
           return builder;
         },
+        // The jar page's moment list (awaited without maybeSingle).
+        then: (resolve: (r: { data: unknown; error: null }) => void) =>
+          resolve({ data: mockBackend.jarMoments, error: null }),
         maybeSingle: async () => {
+          if (table === 'jars') {
+            return {
+              data: {
+                id: JAR_ID,
+                user_id: USER,
+                local_date: '2026-11-07',
+                tz: 'Asia/Manila',
+                moment_count: 2,
+                visible_count: 2,
+                like_count: 0,
+                comment_count: 3,
+              },
+              error: null,
+            };
+          }
+          if (table === 'profiles') return { data: { username: 'dale', display_name: 'Dale Santos' }, error: null };
           mockBackend.queries.push({ ...filters });
           if (mockBackend.fail) return { data: null, error: { message: 'TypeError: Network request failed' } };
           // Like RLS plus the query's filters: only rows matching every eq() come back.
@@ -71,13 +100,17 @@ jest.mock('@/lib/supabase', () => {
 
 const mockRouter = { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
 let mockParams: { id?: string } = {};
-jest.mock('expo-router', () => ({ useRouter: () => mockRouter, useLocalSearchParams: () => mockParams }));
+jest.mock('expo-router', () => ({
+  Stack: { Screen: () => null },
+  useRouter: () => mockRouter,
+  useLocalSearchParams: () => mockParams,
+}));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
 }));
 
 function row(id: string, status: string, over: Partial<Row> = {}): Row {
-  return { id, user_id: USER, slot: 'evening', status, jars: { local_date: '2026-11-07' }, ...over };
+  return { id, user_id: USER, jar_id: JAR_ID, slot: 'evening', status, jars: { local_date: '2026-11-07' }, ...over };
 }
 
 async function renderRoute(id: string | undefined) {
@@ -219,11 +252,24 @@ describe('/moment/[id]: not the owner, or not a moment', () => {
 });
 
 describe('/moment/[id]: live', () => {
-  it('shows the plain, unblurred photo (Moment detail is M3-08)', async () => {
+  it('opens Moment detail on the owner’s live moment, through its jar', async () => {
+    const live = (id: string, slot: string, caption: string | null) => ({
+      id,
+      slot,
+      status: 'live',
+      is_private: false,
+      is_backfilled: false,
+      caption,
+      captured_at: '2026-11-07T11:20:00Z',
+      added_at: '2026-11-07T11:20:00Z',
+      edits: {},
+      like_count: 4,
+    });
+    mockBackend.jarMoments = [live(LIVE_ID, 'selfie', 'Same suit, new day'), live(CHECKING_ID, 'whereami', null)];
     await renderRoute(LIVE_ID);
-    await waitFor(() => expect(screen.getByTestId('moment-live')).toBeTruthy());
-    const image = screen.getByRole('image', { name: '#selfie photo' });
-    expect(image.props.blurRadius).toBeUndefined();
+    await waitFor(() => expect(screen.getByTestId('moment-sheet')).toBeTruthy());
+    expect(screen.getByTestId('moment-caption')).toHaveTextContent('Same suit, new day');
+    expect(screen.getByTestId('moment-position')).toHaveTextContent('Moment 2 of 2');
     expect(screen.queryByText('Checking your photo…')).toBeNull();
   });
 });
