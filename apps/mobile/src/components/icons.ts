@@ -66,6 +66,12 @@ export const icons = {
   flip: [p('M20 11a8 8 0 0 0-14.3-4.9L4 8'), p('M4 3v5h5'), p('M4 13a8 8 0 0 0 14.3 4.9L20 16'), p('M20 21v-5h-5')],
   gallery: [r(3.5, 3.5, 17, 17, 3), c(9, 9, 1.8), p('m20.5 15-5-5-11 10.5')],
   cameraOff: [p('M4 8h3l2-3h6l2 3h3v11H4z'), c(12, 13, 3.5), p('M3 3l18 18')],
+  // Crop
+  rotate: [p('M3 12a9 9 0 1 0 3-6.7L3 8'), p('M3 3v5h5')],
+  mirror: [p('M12 3v18M8 7l-5 5 5 5M16 7l5 5-5 5')],
+  fit: [p('M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5')],
+  zoomOut: [c(11, 11, 7), p('m20 20-4-4M8 11h6')],
+  zoomIn: [c(11, 11, 7), p('m20 20-4-4M8 11h6M11 8v6')],
   alignLeft: [p('M4 6h16M4 12h10M4 18h13')],
   alignCenter: [p('M4 6h16M7 12h10M5.5 18h13')],
 } satisfies Record<string, IconShape[]>;

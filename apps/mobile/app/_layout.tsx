@@ -48,6 +48,10 @@ export default function RootLayout() {
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
         />
         <Stack.Screen
+          name="crop"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
+        />
+        <Stack.Screen
           name="edit/[momentId]"
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
         />

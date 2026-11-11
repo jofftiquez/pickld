@@ -1,11 +1,12 @@
-// Camera photo → offline queue (FR-CAP-01; AGENTS rules 3, 5, 6, 7). A camera photo is queued raw with its
-// slot, jar date and phone zone, then prepared (crop to 3:4, WebP without location) and handed to the
-// upload worker. It is queued held for the editor (M2-12), which the camera opens next: the upload waits
-// until the editor saves or closes.
+// Camera or gallery photo → offline queue (FR-CAP-01, FR-CAP-02; AGENTS rules 3, 5, 6, 7). A photo is queued
+// raw with its slot, jar date and zone (and the Crop screen's choices for a gallery photo), then prepared
+// (crop to 3:4, WebP without location) and handed to the upload worker. It is queued held for the editor
+// (M2-12), which opens next: the upload waits until the editor saves or closes.
 import { File } from 'expo-file-system';
 
 import { captureInfo } from '@/lib/image/captureTime';
-import { chooseJar } from '@/lib/jars';
+import type { CropSpec } from '@/lib/image/crop';
+import { chooseJar, localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { prepareItem } from '@/lib/queue/prepare';
 import { requestUploads } from '@/lib/queue/runner';
@@ -72,6 +73,55 @@ export function queueTarget(input: Pick<SaveCaptureInput, 'tz' | 'shotAt' | 'ope
     : { localDate, tz: input.tz, capturedAt };
 }
 
+export type QueueTarget = ReturnType<typeof queueTarget>;
+
+/**
+ * The queue row's jar date and zone for a gallery photo (FR-CAP-02; AGENTS "Which jar" point 3). Its capture
+ * time comes from its EXIF (`captureInfo`). Fill this jar wins: the photo goes to that past date. Otherwise a
+ * photo taken on an earlier day than today in the phone zone goes to that day's jar, in the phone zone
+ * (ensure_jar returns an existing jar for that date unchanged; the server sets is_backfilled). A photo from
+ * today, from the future (a wrong camera clock) or without an EXIF time joins the open jar exactly as a
+ * camera photo would (`captureJarDate`, travel rule): comparing with the phone's today rather than the open
+ * jar's date keeps a photo taken today after flying west out of yesterday's jar.
+ */
+export function galleryTarget(input: {
+  exif: unknown;
+  tz: string;
+  now: Date;
+  openJar: OpenJar | null;
+  fill?: FillTarget | null;
+}): QueueTarget {
+  const { exif, tz, now, openJar, fill } = input;
+  const info = captureInfo(exif, tz, now);
+  if (fill) return { localDate: fill.localDate, tz: fill.tz, capturedAt: info.capturedAt };
+  if (info.localDate < localDateIn(now, tz)) return { localDate: info.localDate, tz, capturedAt: info.capturedAt };
+  return { localDate: captureJarDate({ tz, shotAt: now, openJar }).localDate, tz, capturedAt: info.capturedAt };
+}
+
+/** Copies the raw photo into the queue (one file copy and one SQLite row), then prepares it in the
+ * background and wakes the upload worker. */
+async function queueRaw(
+  uri: string,
+  row: { userId: string; slot: Slot; target: QueueTarget; crop: CropSpec | null },
+): Promise<QueueItem> {
+  const item = await enqueue({
+    userId: row.userId,
+    photoUri: uri,
+    thumbUri: null,
+    slot: row.slot,
+    ...row.target,
+    prepared: false,
+    editing: true,
+    ...(row.crop ? { crop: row.crop } : null),
+  });
+  // The queue holds its own copy now.
+  deleteQuietly(uri);
+  void prepareItem(item)
+    .catch((error: unknown) => captureError(error, { area: 'capture' }))
+    .finally(() => void requestUploads());
+  return item;
+}
+
 /**
  * Queues the raw camera photo at once (a file copy and one SQLite row, so a photo is never lost if the app
  * is killed right after the shutter: rule 3), then prepares it in the background and kicks the upload
@@ -79,22 +129,25 @@ export function queueTarget(input: Pick<SaveCaptureInput, 'tz' | 'shotAt' | 'ope
  * background preparation is interrupted, the upload worker prepares the item before uploading it.
  */
 export async function saveCapture(input: SaveCaptureInput): Promise<QueueItem> {
-  const { localDate, tz, capturedAt } = queueTarget(input);
-  const item = await enqueue({
-    userId: input.userId,
-    photoUri: input.uri,
-    thumbUri: null,
-    slot: input.slot,
-    localDate,
-    tz,
-    capturedAt,
-    prepared: false,
-    editing: true,
-  });
-  // The queue holds its own copy now.
-  deleteQuietly(input.uri);
-  void prepareItem(item)
-    .catch((error: unknown) => captureError(error, { area: 'capture' }))
-    .finally(() => void requestUploads());
-  return item;
+  return queueRaw(input.uri, { userId: input.userId, slot: input.slot, target: queueTarget(input), crop: null });
+}
+
+export type SaveGalleryPhotoInput = {
+  /** The picked photo's local file (deleted once queued). */
+  uri: string;
+  slot: Slot;
+  userId: string;
+  /** From `galleryTarget`. */
+  target: QueueTarget;
+  /** The Crop screen's choices; null for an exactly 3:4 photo that skipped it. */
+  crop: CropSpec | null;
+};
+
+/**
+ * Queues a gallery photo the same way as a camera photo (rule 3): the raw file goes into the queue before
+ * anything else, with the crop stored so preparation applies it; it cannot upload before it is prepared.
+ * Resolves once queued.
+ */
+export async function saveGalleryPhoto(input: SaveGalleryPhotoInput): Promise<QueueItem> {
+  return queueRaw(input.uri, input);
 }

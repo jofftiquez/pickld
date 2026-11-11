@@ -11,6 +11,8 @@ export type TextSizeSliderProps = {
   step: number;
   /** Called once per drag, when the finger lifts, so a drag is one Undo step. */
   onCommit: (value: number) => void;
+  /** Called on every move while dragging, for a live preview (Crop's zoom). */
+  onChange?: (value: number) => void;
   /** Already translated. */
   accessibilityLabel: string;
   testID?: string;
@@ -25,7 +27,16 @@ function clamp(value: number, min: number, max: number): number {
  * follows the finger and the value is committed when it lifts. Screen readers adjust it in steps.
  * Nothing animates, so Reduce Motion has nothing to turn off.
  */
-export function TextSizeSlider({ value, min, max, step, onCommit, accessibilityLabel, testID }: TextSizeSliderProps) {
+export function TextSizeSlider({
+  value,
+  min,
+  max,
+  step,
+  onCommit,
+  onChange,
+  accessibilityLabel,
+  testID,
+}: TextSizeSliderProps) {
   const [width, setWidth] = useState(0);
   const [drag, setDrag] = useState<{ startX: number; startPageX: number; value: number } | null>(null);
   const shown = drag?.value ?? value;
@@ -35,11 +46,14 @@ export function TextSizeSlider({ value, min, max, step, onCommit, accessibilityL
     travel === 0 ? value : Math.round(min + clamp((x - sizes.sliderThumb / 2) / travel, 0, 1) * (max - min));
 
   const onGrant = ({ nativeEvent }: GestureResponderEvent) => {
-    setDrag({ startX: nativeEvent.locationX, startPageX: nativeEvent.pageX, value: valueAt(nativeEvent.locationX) });
+    const next = valueAt(nativeEvent.locationX);
+    setDrag({ startX: nativeEvent.locationX, startPageX: nativeEvent.pageX, value: next });
+    onChange?.(next);
   };
   const onMove = ({ nativeEvent }: GestureResponderEvent) => {
     // locationX jumps when the finger crosses the thumb, so moves are measured from where it went down.
     setDrag((d) => (d === null ? d : { ...d, value: valueAt(d.startX + nativeEvent.pageX - d.startPageX) }));
+    if (drag !== null) onChange?.(valueAt(drag.startX + nativeEvent.pageX - drag.startPageX));
   };
   const onEnd = () => {
     if (drag !== null && drag.value !== value) onCommit(drag.value);
