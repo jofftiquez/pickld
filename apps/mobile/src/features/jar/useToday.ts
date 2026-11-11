@@ -25,6 +25,9 @@ export type TodayJar = {
    * server's `ends_at`; optional because caches persisted before M2-06 lack it. */
   jar: { id: string; localDate: string; tz: string; endsAt?: string | null } | null;
   moments: ServerMoment[];
+  /** Zone of the user's latest jar before the open one (Time zone banner, FR-JAR-05): null when there is
+   * none; missing in caches persisted before M2-29, which means unknown. */
+  previousTz?: string | null;
 };
 
 export type Me = { displayName: string; avatarUrl: string | null; readerCount: number; lidColor: string };
@@ -56,6 +59,7 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
   if (error) throw new Error(error.message);
   const open = findOpenJar(jars, now);
   if (!open) return { hasAnyJar: jars.length > 0, jar: null, moments: [] };
+  const previousTz = await fetchPreviousTz(userId, jars, open);
 
   const { data: rows, error: momentsError } = await supabase
     .from('moments')
@@ -67,7 +71,29 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
     hasAnyJar: true,
     jar: { id: open.id, localDate: open.local_date, tz: open.tz, endsAt: open.ends_at },
     moments: rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null })),
+    previousTz,
   };
+}
+
+/** The zone of the latest jar dated before `open`: from the recent jars, or one more read when `open` is
+ * the oldest of them. */
+async function fetchPreviousTz(
+  userId: string,
+  recent: readonly { local_date: string; tz: string }[],
+  open: { local_date: string },
+): Promise<string | null> {
+  const earlier = recent.find((jar) => jar.local_date < open.local_date);
+  if (earlier) return earlier.tz;
+  if (recent.length < RECENT_JARS) return null;
+  const { data, error } = await getSupabase()
+    .from('jars')
+    .select('tz')
+    .eq('user_id', userId)
+    .lt('local_date', open.local_date)
+    .order('local_date', { ascending: false })
+    .limit(1);
+  if (error) throw new Error(error.message);
+  return data[0]?.tz ?? null;
 }
 
 async function fetchMe(userId: string): Promise<Me> {
