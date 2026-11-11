@@ -29,6 +29,8 @@ export type GridTile = {
   momentId: string | null;
   /** Set when the tile shows a queued item. */
   queueId: number | null;
+  /** A failed queued item: the tile offers Retry (a conflict waits for Replace instead, M2-22). */
+  canRetry: boolean;
 };
 
 const queueTileState = {
@@ -52,6 +54,7 @@ function emptyTile(slot: Slot, isNow: boolean): GridTile {
     addedLater: false,
     momentId: null,
     queueId: null,
+    canRetry: false,
   };
 }
 
@@ -90,6 +93,7 @@ export function buildTodayGrid(input: {
         addedLater: false,
         momentId: null,
         queueId: queued.id,
+        canRetry: queued.state === 'failed',
       };
     }
     if (moment) {
@@ -102,6 +106,7 @@ export function buildTodayGrid(input: {
         addedLater: moment.is_backfilled,
         momentId: moment.id,
         queueId: null,
+        canRetry: false,
       };
     }
     return emptyTile(slot, slot === nowSlot);
@@ -111,6 +116,18 @@ export function buildTodayGrid(input: {
 /** Tiles holding a photo (server or queued): the "n of 8 moments" count and the jar fill. */
 export function momentCount(tiles: readonly GridTile[]): number {
   return tiles.filter((tile) => tile.state !== 'empty' && tile.state !== 'now').length;
+}
+
+/**
+ * The number in the offline banner ("N moments are saved on your phone and will upload when you're
+ * back"), or null when the banner is hidden. Counts the user's queued moments of any date that will
+ * upload on their own: waiting and uploading. Failed items need Retry, conflicts need Replace, and
+ * uploaded ones are already on the server. Hidden while online and when nothing is waiting.
+ */
+export function offlineBannerCount(queue: readonly Pick<QueuedMoment, 'state'>[], offline: boolean): number | null {
+  if (!offline) return null;
+  const saved = queue.filter((item) => item.state === 'queued' || item.state === 'uploading').length;
+  return saved > 0 ? saved : null;
 }
 
 export type Greeting = 'morning' | 'afternoon' | 'evening';

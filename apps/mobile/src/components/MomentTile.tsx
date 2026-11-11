@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View, type AccessibilityActionEvent } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type AccessibilityActionEvent } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { hitSlopFor } from '@/lib/hitSlop';
@@ -33,7 +33,7 @@ export type MomentTileProps = {
   isPrivate?: boolean;
   /** Backfilled moment (server sets `is_backfilled`); shows the "Added later" badge. */
   addedLater?: boolean;
-  /** Upload progress 0–1 for the `uploading` state. */
+  /** Upload progress 0–1 for the `uploading` state; leave it out when unknown to show an indeterminate spinner. */
   progress?: number;
   onPress?: () => void;
   /** Shown as a Retry button in the `failed` state. */
@@ -67,6 +67,7 @@ export function MomentTile({
   const [pressed, setPressed] = useState(false);
   const tag = t(`slots.${slot}`);
   const percent = percentOf(progress);
+  const indeterminate = progress === undefined;
   const hasPhoto = state !== 'empty' && state !== 'now';
 
   // "#slot, time, state": every state is spoken, never conveyed by color alone.
@@ -80,7 +81,10 @@ export function MomentTile({
     empty: [t('tile.a11y.empty')],
     now: [t('tile.a11y.now')],
     waiting: [t('tile.a11y.waiting'), ...flags],
-    uploading: [t('tile.a11y.uploading', { percent }), ...flags],
+    uploading: [
+      indeterminate ? t('tile.a11y.uploadingIndeterminate') : t('tile.a11y.uploading', { percent }),
+      ...flags,
+    ],
     failed: [t('tile.a11y.failed'), ...flags],
     checking: [t('tile.a11y.checking'), ...flags],
   };
@@ -165,7 +169,13 @@ export function MomentTile({
               <OverlayText text={t('tile.waiting')} />
             </>
           ) : null}
-          {state === 'uploading' ? (
+          {state === 'uploading' && indeterminate ? (
+            <>
+              <ActivityIndicator color={colors.surface} size="large" testID="tile-spinner" />
+              <OverlayText text={t('tile.uploadingIndeterminate')} />
+            </>
+          ) : null}
+          {state === 'uploading' && !indeterminate ? (
             <>
               <ProgressRing percent={percent} />
               <OverlayText text={t('tile.uploading', { percent })} />
