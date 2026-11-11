@@ -1,8 +1,11 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { isNetworkError, reportNetworkResult, trackNetwork, useIsOffline } from '../connectivity';
+import { isNetworkError, reportNetworkResult, setDeviceOnline, trackNetwork, useIsOffline } from '../connectivity';
 
-beforeEach(() => reportNetworkResult(null));
+beforeEach(() => {
+  setDeviceOnline(true);
+  reportNetworkResult(null);
+});
 
 describe('isNetworkError', () => {
   it.each([
@@ -50,6 +53,26 @@ describe('useIsOffline', () => {
     await act(() => expect(trackNetwork(Promise.reject(offline))).rejects.toBe(offline));
     expect(result.current).toBe(true);
     await act(() => expect(trackNetwork(Promise.resolve('jar'))).resolves.toBe('jar'));
+    expect(result.current).toBe(false);
+  });
+
+  it('is offline while the device has no connection, whatever the last request said (D-23)', async () => {
+    const { result } = await renderHook(() => useIsOffline());
+    await act(() => setDeviceOnline(false));
+    expect(result.current).toBe(true);
+    await act(() => reportNetworkResult(null)); // a cached answer must not hide the device being offline
+    expect(result.current).toBe(true);
+    await act(() => setDeviceOnline(true));
+    expect(result.current).toBe(false);
+  });
+
+  it('forgets an old request failure when the device reconnects, but not on a repeated online event', async () => {
+    const { result } = await renderHook(() => useIsOffline());
+    await act(() => reportNetworkResult('Network request failed'));
+    await act(() => setDeviceOnline(true)); // already online: Wi-Fi without internet stays offline
+    expect(result.current).toBe(true);
+    await act(() => setDeviceOnline(false));
+    await act(() => setDeviceOnline(true));
     expect(result.current).toBe(false);
   });
 });
