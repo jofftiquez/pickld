@@ -6,8 +6,24 @@
   "jar": {
     "moments": "{{count}} of {{total}} moments"
   },
+  "tabs": {
+    "label": "Main",
+    "today": "Today",
+    "capture": "Capture",
+    "jars": "Jars",
+    "myDays": "My days"
+  },
   "today": {
     "title": "Today"
+  },
+  "capture": {
+    "title": "Capture"
+  },
+  "jars": {
+    "title": "Jars"
+  },
+  "myDays": {
+    "title": "My days"
   },
   "brand": {
     "tagline": "Eight moments. One real day.",

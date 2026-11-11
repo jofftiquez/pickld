@@ -1,0 +1,56 @@
+# M1-23: tap each main tab and check its screen title and selected state.
+# Run on the iOS Simulator: maestro test apps/mobile/.maestro/tab-switch.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- assertVisible:
+    id: screen-title
+    text: Today
+- takeScreenshot: Today-tabs
+
+- tapOn:
+    id: tab-capture
+- assertVisible:
+    id: screen-title
+    text: Capture
+- assertVisible:
+    id: tab-capture
+    selected: true
+- takeScreenshot: Capture-tabs
+
+- tapOn:
+    id: tab-jars
+- assertVisible:
+    id: screen-title
+    text: Jars
+- assertVisible:
+    id: tab-jars
+    selected: true
+- takeScreenshot: Jars-tabs
+
+- tapOn:
+    id: tab-my-days
+- assertVisible:
+    id: screen-title
+    text: My days
+- assertVisible:
+    id: tab-my-days
+    selected: true
+- takeScreenshot: MyDays-tabs
+
+- tapOn:
+    id: tab-today
+- assertVisible:
+    id: screen-title
+    text: Today
+- assertVisible:
+    id: tab-today
+    selected: true
