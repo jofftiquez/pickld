@@ -1,6 +1,7 @@
-// Camera photo → offline queue (FR-CAP-01; AGENTS rules 3, 5, 6, 7). Until the editor exists (M2-11) a
-// camera photo goes straight to the queue: queued raw with its slot, jar date and phone zone, then
-// prepared (crop to 3:4, WebP without location) and handed to the upload worker.
+// Camera photo → offline queue (FR-CAP-01; AGENTS rules 3, 5, 6, 7). A camera photo is queued raw with its
+// slot, jar date and phone zone, then prepared (crop to 3:4, WebP without location) and handed to the
+// upload worker. It is queued held for the editor (M2-12), which the camera opens next: the upload waits
+// until the editor saves or closes.
 import { File } from 'expo-file-system';
 
 import { captureInfo } from '@/lib/image/captureTime';
@@ -69,6 +70,7 @@ export async function saveCapture(input: SaveCaptureInput): Promise<QueueItem> {
     tz: input.tz,
     capturedAt,
     prepared: false,
+    editing: true,
   });
   // The queue holds its own copy now.
   deleteQuietly(input.uri);

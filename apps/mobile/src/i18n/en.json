@@ -148,7 +148,16 @@
       "mono": "Mono",
       "dusk": "Dusk"
     },
-    "notFound": "This photo is no longer waiting to be edited."
+    "notFound": "This photo is no longer waiting to be edited.",
+    "caption": "Caption",
+    "captionPlaceholder": "Say something about this moment",
+    "private": "Keep this moment private",
+    "privateHint": "Only you will see it",
+    "undo": "Undo",
+    "undoHint": "Takes back your last change to the photo",
+    "addToSlot": "Add to {{slot}}",
+    "done": "Done",
+    "saveFailed": "Couldn’t save your changes. Try again."
   },
   "moment": {
     "close": "Close",

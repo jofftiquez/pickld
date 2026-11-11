@@ -42,7 +42,15 @@ export const MIGRATIONS: readonly string[] = [
   // then prepared (crop, WebP, no location: rule 5). 0 = still raw; the uploader prepares it before any
   // network call. Rows from before this migration were always prepared.
   `ALTER TABLE queue_items ADD COLUMN prepared INTEGER NOT NULL DEFAULT 1;`,
+  // M2-12: when the editor opened on a photo just taken (ms since epoch); NULL = not being edited. The
+  // uploader holds the item until the editor saves or closes, so the caption, privacy and edits go up
+  // with the moment. A hold left by a killed app is cleared on the next launch (openQueue) and expires
+  // after EDIT_HOLD_MS regardless, so a photo is never stuck.
+  `ALTER TABLE queue_items ADD COLUMN editing_since INTEGER;`,
 ];
+
+/** After this long an editing hold no longer stops the upload (see MIGRATIONS[3]). */
+export const EDIT_HOLD_MS = 60 * 60_000;
 
 const ianaTimeZone = z
   .string()
@@ -73,6 +81,8 @@ export const enqueueInputSchema = z.object({
   edits: editsSchema.default({}),
   /** False for a raw camera photo that still needs the image pipeline (see MIGRATIONS[2]). */
   prepared: z.boolean().default(true),
+  /** True when the editor opens on it next: no upload until it saves or closes (see MIGRATIONS[3]). */
+  editing: z.boolean().default(false),
 });
 export type EnqueueInput = z.input<typeof enqueueInputSchema>;
 
@@ -95,6 +105,8 @@ export interface QueueItem extends UploadStatus {
   momentId: string | null;
   /** False while the photo is the raw capture: it must go through prepareItem before upload (rule 5). */
   prepared: boolean;
+  /** When the editor took the item (ms), or null; see MIGRATIONS[3] and isHeldForEditing. */
+  editingSince: number | null;
 }
 
 // Files are stored by name and resolved against the document directory on every read, because the
@@ -122,6 +134,7 @@ const rowSchema = z.object({
   jar_id: z.uuid().nullable(),
   moment_id: z.uuid().nullable(),
   prepared: z.union([z.literal(0), z.literal(1)]),
+  editing_since: z.number().nullable(),
 });
 
 function queueDir(): Directory {
@@ -147,6 +160,7 @@ function toItem(raw: unknown): QueueItem {
     jarId: row.jar_id,
     momentId: row.moment_id,
     prepared: row.prepared === 1,
+    editingSince: row.editing_since,
     state: row.state,
     attempts: row.attempts,
     nextAttemptAt: row.next_attempt_at,
@@ -188,6 +202,8 @@ export function openQueue(): Promise<SQLiteDatabase> {
     const db = await openDatabaseAsync(DB_NAME);
     await migrate(db);
     await db.runAsync("UPDATE queue_items SET state = 'queued' WHERE state = 'uploading'");
+    // No editor is open at launch: photos the last run was editing upload as they are.
+    await db.runAsync('UPDATE queue_items SET editing_since = NULL WHERE editing_since IS NOT NULL');
     return db;
   })().catch((error: unknown) => {
     dbPromise = null;
@@ -229,8 +245,8 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
     if (thumb) copies.push(thumb);
     const { lastInsertRowId } = await db.runAsync(
       `INSERT INTO queue_items (user_id, photo_file, thumb_file, slot, local_date, tz, captured_at, caption,
-         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared, editing_since)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       moment.userId,
       photo.name,
       thumb?.name ?? null,
@@ -247,6 +263,7 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
       INITIAL_STATUS.lastError,
       Date.now(),
       moment.prepared ? 1 : 0,
+      moment.editing ? Date.now() : null,
     );
     const item = await getItem(lastInsertRowId);
     if (!item) throw new Error('Queued moment was not saved');
@@ -328,6 +345,45 @@ export async function savePrepared(id: number, files: { photoUri: string; thumbU
   const after = await getItem(id);
   if (!after) throw new Error(`No queued moment ${id}`);
   return after;
+}
+
+/** True while the editor holds the item back from upload (MIGRATIONS[3]); a hold older than EDIT_HOLD_MS has lapsed. */
+export function isHeldForEditing(item: Pick<QueueItem, 'editingSince'>, now: number = Date.now()): boolean {
+  return item.editingSince !== null && now - item.editingSince < EDIT_HOLD_MS;
+}
+
+export const saveEditsInputSchema = z.object({
+  caption: z.string().max(150).nullable(),
+  isPrivate: z.boolean(),
+  edits: editsSchema,
+});
+export type SaveEditsInput = z.infer<typeof saveEditsInputSchema>;
+
+/**
+ * The editor's Add to #slot / Done: stores the caption, privacy and edits on the queued moment and ends
+ * its editing hold, so the uploader sends them with it. The photo file is not touched (FR-CAP-08).
+ */
+export async function saveEdits(id: number, input: SaveEditsInput): Promise<QueueItem> {
+  const edit = saveEditsInputSchema.parse(input);
+  const db = await openQueue();
+  const { changes } = await db.runAsync(
+    'UPDATE queue_items SET caption = ?, is_private = ?, edits = ?, editing_since = NULL WHERE id = ?',
+    edit.caption,
+    edit.isPrivate ? 1 : 0,
+    JSON.stringify(edit.edits),
+    id,
+  );
+  if (changes === 0) throw new Error(`No queued moment ${id}`);
+  notify('status');
+  const item = await getItem(id);
+  if (!item) throw new Error(`No queued moment ${id}`);
+  return item;
+}
+
+/** The editor closed without saving: the photo uploads as it is. Nothing happens if it is gone. */
+export async function releaseEditing(id: number): Promise<void> {
+  const db = await openQueue();
+  await db.runAsync('UPDATE queue_items SET editing_since = NULL WHERE id = ?', id);
 }
 
 /** The Retry button: a failed item starts again from attempt 0. */

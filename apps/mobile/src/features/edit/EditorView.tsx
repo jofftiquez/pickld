@@ -1,11 +1,16 @@
 import type { SkImage } from '@shopify/react-native-skia';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
+import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
+import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
+import { TextField } from '@/components/TextField';
+import { Toggle } from '@/components/Toggle';
 import { SlotTag } from '@/features/capture/SlotTag';
+import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import { FilteredPhoto } from './FilteredPhoto';
@@ -26,10 +31,24 @@ export type EditorViewProps = {
   onClose: () => void;
   onSelectFilter: (filter: FilterId) => void;
   onSelectTool: (tool: EditorTool) => void;
+  caption: string;
+  onChangeCaption: (caption: string) => void;
+  isPrivate: boolean;
+  onChangePrivate: (isPrivate: boolean) => void;
+  canUndo: boolean;
+  onUndo: () => void;
+  /** "Add to #slot" for a photo just taken, "Done" when editing it again. Already translated. */
+  saveLabel: string;
+  saving: boolean;
+  saveFailed: boolean;
+  onSave: () => void;
 };
 
-// Room below the photo for the tool tabs and filter row on short phones.
-const PANEL_MIN_HEIGHT = 200;
+export const CAPTION_MAX = 150;
+
+// Room below the photo for the tools, caption, privacy switch and save button; the photo shrinks on
+// short phones so they fit. With large text the whole screen scrolls.
+const PANEL_MIN_HEIGHT = 330;
 
 /** The editor layout (design: Capture): the 3:4 photo with the filter applied, tool tabs, the tool's panel. */
 export function EditorView({
@@ -42,6 +61,16 @@ export function EditorView({
   onClose,
   onSelectFilter,
   onSelectTool,
+  caption,
+  onChangeCaption,
+  isPrivate,
+  onChangePrivate,
+  canUndo,
+  onUndo,
+  saveLabel,
+  saving,
+  saveFailed,
+  onSave,
 }: EditorViewProps) {
   const { t } = useTranslation();
   const window = useWindowDimensions();
@@ -50,7 +79,13 @@ export function EditorView({
   const height = width / photo.aspect;
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]} testID="editor-screen">
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+      testID="editor-screen"
+    >
       <View
         style={[styles.photo, { width, height }]}
         accessible
@@ -111,14 +146,60 @@ export function EditorView({
           // TODO(M2-15 #44 Stickers, M2-16 #45 Bubble, M2-17 #46 Text): each tool's panel.
           <View style={styles.emptyPanel} testID={`editor-panel-${tool}`} />
         )}
-        {/* TODO(M2-12 #41): caption, Keep this moment private, Undo and "Add to #slot". */}
+        <TextField
+          label={t('edit.caption')}
+          value={caption}
+          onChangeText={onChangeCaption}
+          maxLength={CAPTION_MAX}
+          placeholder={t('edit.captionPlaceholder')}
+          testID="editor-caption"
+        />
+        <View style={styles.privateRow}>
+          <View style={styles.privateText} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            <Text style={[textStyle('bodyMedium', '600'), styles.privateLabel]}>{t('edit.private')}</Text>
+            <Text style={[textStyle('label', '500'), styles.privateHint]}>{t('edit.privateHint')}</Text>
+          </View>
+          <Toggle
+            value={isPrivate}
+            onValueChange={onChangePrivate}
+            accessibilityLabel={`${t('edit.private')}. ${t('edit.privateHint')}`}
+            testID="editor-private"
+          />
+        </View>
+        <View style={styles.spacer} />
+        {saveFailed ? (
+          <Text
+            style={[textStyle('bodySmall'), styles.error]}
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+          >
+            {t('edit.saveFailed')}
+          </Text>
+        ) : null}
+        <View style={styles.actions}>
+          {canUndo ? (
+            <View>
+              <SecondaryButton
+                variant="outline"
+                label={t('edit.undo')}
+                accessibilityHint={t('edit.undoHint')}
+                onPress={onUndo}
+                testID="editor-undo"
+              />
+            </View>
+          ) : null}
+          <View style={styles.save}>
+            <PrimaryButton label={saveLabel} onPress={onSave} disabled={saving} testID="editor-save" />
+          </View>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.editor },
+  content: { flexGrow: 1 },
   photo: {
     alignSelf: 'center',
     overflow: 'hidden',
@@ -148,5 +229,19 @@ const styles = StyleSheet.create({
   },
   // 12 px between thumbnails, as designed: each thumbnail already reserves its ring and white gap.
   filters: { gap: space.md - 2 * (sizes.filterRing + sizes.filterRingGap) },
-  emptyPanel: { flex: 1 },
+  emptyPanel: { minHeight: sizes.filterThumb },
+  privateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.md,
+    minHeight: sizes.minTap,
+  },
+  privateText: { flex: 1 },
+  privateLabel: { color: colors.ink },
+  privateHint: { color: colors.muted },
+  spacer: { flexGrow: 1 },
+  error: { color: colors.danger },
+  actions: { flexDirection: 'row', gap: space.md - 2 },
+  save: { flex: 1 },
 });

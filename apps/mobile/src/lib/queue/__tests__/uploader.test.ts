@@ -1,5 +1,15 @@
 import { BACKOFF_MS, MAX_ATTEMPTS, OFFLINE_RETRY_MS } from '../machine';
-import { enqueue, getItem, listQueue, savePrepared, type EnqueueInput, type QueueItem } from '../store';
+import {
+  EDIT_HOLD_MS,
+  enqueue,
+  getItem,
+  listQueue,
+  releaseEditing,
+  saveEdits,
+  savePrepared,
+  type EnqueueInput,
+  type QueueItem,
+} from '../store';
 import { drainQueue, uploadItem } from '../uploader';
 import { capturedFiles, fakeBackend, files, JAR, log, networkError, resetFakes, USER } from './fakes';
 
@@ -272,5 +282,49 @@ describe('drainQueue', () => {
     await queueMoment({ slot: 'morning' });
     expect(await drainQueue(USER, deps(), () => false)).toEqual([]);
     expect(await listQueue(USER)).toHaveLength(1);
+  });
+});
+
+describe('drainQueue and the editor (M2-12)', () => {
+  it('holds a photo that is still in the editor, then uploads it with the saved caption, privacy and edits', async () => {
+    const item = await queueMoment({ caption: null, isPrivate: false, edits: {}, editing: true });
+    clock = (item.editingSince ?? 0) + 1000;
+    log.length = 0;
+
+    expect(await drainQueue(USER, deps())).toEqual([]);
+    expect(log).toEqual([]); // not even ensure_jar
+    expect(await getItem(item.id)).toMatchObject({ state: 'queued', attempts: 0 });
+
+    const edits = { v: 1, filter: 'dusk', overlays: [] };
+    await saveEdits(item.id, { caption: 'Lunch break, finally!', isPrivate: true, edits });
+    expect(await drainQueue(USER, deps())).toEqual([{ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID }]);
+    expect(backend.moments).toEqual([
+      expect.objectContaining({ caption: 'Lunch break, finally!', is_private: true, edits, status: 'checking' }),
+    ]);
+  });
+
+  it('uploads a photo closed without saving, as it was queued', async () => {
+    const item = await queueMoment({ caption: null, isPrivate: false, edits: {}, editing: true });
+    clock = (item.editingSince ?? 0) + 1000;
+    expect(await drainQueue(USER, deps())).toEqual([]);
+    await releaseEditing(item.id);
+    expect(await drainQueue(USER, deps())).toEqual([expect.objectContaining({ kind: 'uploaded' })]);
+    expect(backend.moments).toEqual([expect.objectContaining({ caption: null, is_private: false, edits: {} })]);
+  });
+
+  it('uploads a stale editing item once the hold lapses', async () => {
+    const item = await queueMoment({ editing: true });
+    clock = (item.editingSince ?? 0) + EDIT_HOLD_MS - 1;
+    expect(await drainQueue(USER, deps())).toEqual([]);
+    clock += 1;
+    expect(await drainQueue(USER, deps())).toEqual([{ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID }]);
+  });
+
+  it('one photo in the editor does not hold up the others', async () => {
+    const held = await queueMoment({ slot: 'ootd', editing: true });
+    const ready = await queueMoment({ slot: 'selfie' });
+    clock = (held.editingSince ?? 0) + 1000;
+    expect(await drainQueue(USER, deps())).toEqual([expect.objectContaining({ kind: 'uploaded', itemId: ready.id })]);
+    expect(await listQueue(USER)).toEqual([expect.objectContaining({ id: held.id, state: 'queued' })]);
   });
 });
