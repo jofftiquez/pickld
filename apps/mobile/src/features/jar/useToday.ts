@@ -44,6 +44,8 @@ export type TodayJar = {
 
 export type Me = {
   displayName: string;
+  /** For invite links (pickld.me/username); optional in caches persisted before M3-06. */
+  username?: string;
   avatarUrl: string | null;
   readerCount: number;
   lidColor: string;
@@ -128,13 +130,14 @@ export async function fetchMe(userId: string): Promise<Me> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, avatar_path, reader_count, lid_color, default_visibility')
+    .select('username, display_name, avatar_path, reader_count, lid_color, default_visibility')
     .eq('id', userId)
     .single();
   if (error) throw new Error(error.message);
   // TODO(M3-13): avatar photo URLs; until then the avatar shows initials.
   return {
     displayName: data.display_name,
+    username: data.username,
     avatarUrl: null,
     readerCount: data.reader_count,
     lidColor: data.lid_color,

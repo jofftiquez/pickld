@@ -1,0 +1,30 @@
+# M3-06: someone who reads nobody sees "Your feed is quiet" on the Jars tab.
+# Needs the seed data (lola reads nobody) and lola signed in:
+# maestro test apps/mobile/.maestro/jars-empty.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-empty
+    timeout: 40000
+- assertVisible: Your feed is quiet
+- assertVisible:
+    id: feed-find-people
+- assertVisible:
+    id: feed-invite
+- assertNotVisible:
+    id: feed-authors
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: JarsEmpty-ios

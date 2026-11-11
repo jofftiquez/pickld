@@ -1,16 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FeedView } from '@/features/feed/FeedView';
 import { useFeed } from '@/features/feed/useFeed';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
+import { profileUrl } from '@/lib/links';
 
 const MINUTE = 60_000;
 
 // Jars tab (M3-04; FR-SOC-01, NFR-PERF-02, NFR-OFF-03): published jars from followed authors, newest first.
 export default function JarsScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const feed = useFeed();
   const { userId, markSeen } = feed;
@@ -59,6 +63,12 @@ export default function JarsScreen() {
       }}
       onOpenNotifications={() => undefined}
       // TODO(M3-07): open the Jar page.
+      // TODO(M4-08): open Find friends (D-5); it doesn't exist yet.
+      onFindPeople={() => undefined}
+      onInvite={() => {
+        const username = me.data?.username;
+        if (username) void Share.share({ message: t('feed.inviteMessage', { url: profileUrl(username) }) });
+      }}
     />
   );
 }
