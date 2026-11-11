@@ -44,6 +44,24 @@
   "capture": {
     "title": "Capture"
   },
+  "camera": {
+    "when": "Today · {{time}}",
+    "slotTag": "{{slot}}, today at {{time}}",
+    "aspect": "3:4",
+    "flashOff": "Flash off",
+    "flashOn": "Flash on",
+    "flashHint": "Turns the flash on or off for the next photo",
+    "flip": "Flip camera",
+    "gallery": "Choose from gallery",
+    "shutter": "Take photo",
+    "shutterHint": "Adds the photo to {{slot}}",
+    "moment": "Moment",
+    "slotAdded": "{{slot}}, already added",
+    "mockPreview": "Simulator camera preview",
+    "permissionDescription": "Pickld uses the camera to take the photos for your daily jar.",
+    "accessOffTitle": "Camera access is off",
+    "accessOffBody": "Allow camera access in Settings to take photos for your jar."
+  },
   "jars": {
     "title": "Jars"
   },

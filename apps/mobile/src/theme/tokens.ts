@@ -40,6 +40,10 @@ export const colors = {
   dayCellScrim: 'rgba(10,12,8,0.32)', // over a day's cover photo so its number stays readable (Calendar)
   dayFuture: '#6f7568', // future day numbers (Calendar); 4.8:1 on white
   fillTrack: 'rgba(255,255,255,0.35)', // unfilled part of a day's fill bar (Calendar)
+  camera: '#000000', // Camera screen background
+  cameraGrid: 'rgba(255,255,255,0.35)', // rule-of-thirds lines over the viewfinder (Camera)
+  onDarkFaint: 'rgba(255,255,255,0.55)', // unselected moment tabs on the camera (6:1 on black)
+  onDarkControl: 'rgba(255,255,255,0.14)', // flip button fill on the camera
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -96,6 +100,8 @@ export const radius = {
   tile: 22,
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
+  viewfinder: 28, // bottom corners of the camera viewfinder (Camera)
+  cameraTag: 18, // slot tag over the viewfinder (Camera)
   tabBar: 26,
   sheet: 30,
   pill: 999,
@@ -194,6 +200,11 @@ export const sizes = {
   bannerPaddingY: 10, // offline banner (UploadStates)
   bannerPaddingX: 14,
   bannerGap: 10, // offline banner: icon to text, and banner to the jar card
+  shutter: 84, // camera shutter ring (Camera)
+  shutterInner: 68,
+  shutterRing: 4,
+  cameraSideButton: 52, // gallery shortcut and flip button beside the shutter
+  cameraTabUnderline: 2, // selected moment tab on the camera
 } as const;
 
 export const photo = {
