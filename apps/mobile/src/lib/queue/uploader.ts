@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { isNetworkError } from '../connectivity';
 import type { Database, Json } from '../database.types';
+import { assertDevOnline } from '../devOffline';
 import { conflict, fail, isDue, start, succeed, waitForNetwork } from './machine';
 import { getItem, isHeldForEditing, listQueue, removeItem, saveStatus, saveUploadRefs, type QueueItem } from './store';
 
@@ -131,6 +132,7 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
     if (ready.thumbUri === null) throw new Error('queued moment has no thumbnail');
     const momentId = item.momentId ?? newId();
 
+    await assertDevOnline(); // dev offline switch (M2-30): fail like a lost connection, before any request
     const { data: jar, error: jarError } = await client.rpc('ensure_jar', { local_date: item.localDate, tz: item.tz });
     if (jarError) throw jarError;
     await saveUploadRefs(item.id, { jarId: jar.id, momentId });
