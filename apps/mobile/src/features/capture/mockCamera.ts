@@ -24,6 +24,14 @@ export function shouldUseMockCamera(input: {
   return input.isDev && (input.isDevice === false || input.hasCameraDevice === false);
 }
 
+/**
+ * Dev-only `?mockAccess=denied` on the Camera route: forces the Camera access off screen, so Maestro
+ * can show it on a Simulator (where the mock camera never asks for permission). Ignored in release.
+ */
+export function parseMockAccessParam(value: unknown, isDev: boolean): 'denied' | null {
+  return isDev && value === 'denied' ? 'denied' : null;
+}
+
 /** `shouldUseMockCamera` for this app run, before any camera device is queried. */
 export function isSimulatorDevBuild(): boolean {
   return shouldUseMockCamera({ isDev: __DEV__, isDevice: Device.isDevice, hasCameraDevice: null });

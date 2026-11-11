@@ -1,0 +1,45 @@
+# M2-08 (FR-CAP-11): Camera access off. The Simulator dev build uses the mock camera and never asks for
+# permission, so the dev-only `?mockAccess=denied` param forces the denied state (ignored in release).
+# Run on the iOS Simulator with a dev build, signed in:
+#   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/camera-denied.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+
+- openLink: pickld://camera?mockAccess=denied
+# iOS asks before opening a custom-scheme link.
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: Open
+    optional: true
+
+- extendedWaitUntil:
+    visible:
+      id: camera-access-off
+    timeout: 10000
+- assertVisible: Pickld can’t use your camera
+- assertVisible:
+    id: camera-access-off-settings
+- assertVisible:
+    id: camera-access-off-gallery
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Camera access off
+
+- tapOn:
+    id: camera-access-off-close
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 10000

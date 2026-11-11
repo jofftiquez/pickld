@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CameraAccessOff } from '@/features/capture/CameraAccessOff';
@@ -14,7 +14,8 @@ import {
 import { CameraView } from '@/features/capture/CameraView';
 import { defaultCameraSlot, parseSlotParam, switchSlot } from '@/features/capture/cameraSlot';
 import { MockCameraPreview } from '@/features/capture/MockCameraPreview';
-import { takeMockPhoto } from '@/features/capture/mockCamera';
+import { parseMockAccessParam, takeMockPhoto } from '@/features/capture/mockCamera';
+import { pickFromGallery } from '@/features/capture/pickFromGallery';
 import { saveCapture } from '@/features/capture/saveCapture';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
 import { buildTodayGrid } from '@/features/jar/todayGrid';
@@ -27,15 +28,16 @@ import type { Slot } from '@/theme/tokens';
 
 const MINUTE = 60_000;
 
-// Camera (M2-07; FR-CAP-01; design: Camera). Until the editor lands (M2-11) the shutter queues the
-// photo and returns to Today; the gallery picker and the denied screen are M2-08.
+// Camera (M2-07, M2-08; FR-CAP-01, FR-CAP-11; designs: Camera, CameraDenied). Until the editor lands
+// (M2-11) the shutter queues the photo and returns to Today.
 export default function CameraScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const reduceMotion = useReduceMotion();
-  const params = useLocalSearchParams<{ slot?: string }>();
-  const access = useCameraAccess();
+  const params = useLocalSearchParams<{ slot?: string; mockAccess?: string }>();
+  const cameraAccess = useCameraAccess();
+  const access = parseMockAccessParam(params.mockAccess, __DEV__) ?? cameraAccess;
 
   // The slot tag's clock, on the minute.
   const [now, setNow] = useState(() => new Date());
@@ -115,7 +117,27 @@ export default function CameraScreen() {
     leave();
   };
 
-  if (access === 'denied') return <CameraAccessOff onClose={leave} insets={insets} />;
+  const onGallery = async () => {
+    try {
+      // TODO(M2-08 gallery, awaiting expo-image-picker approval): send the chosen photo to Crop.
+      await pickFromGallery();
+    } catch (error) {
+      captureError(error, { area: 'gallery' });
+    }
+  };
+
+  if (access === 'denied') {
+    return (
+      <CameraAccessOff
+        insets={insets}
+        onClose={leave}
+        onOpenSettings={() => {
+          Linking.openSettings().catch((error: unknown) => captureError(error, { area: 'camera' }));
+        }}
+        onChooseFromGallery={() => void onGallery()}
+      />
+    );
+  }
 
   const preview =
     access === 'mock' ? (
@@ -138,8 +160,7 @@ export default function CameraScreen() {
       onClose={leave}
       onToggleFlash={() => setFlash((f) => (f === 'on' ? 'off' : 'on'))}
       onFlip={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-      // TODO(M2-08): open the gallery picker (then Crop for non-3:4 photos).
-      onGallery={() => undefined}
+      onGallery={() => void onGallery()}
       onShutter={() => void onShutter()}
       onSelectSlot={(next) => setPicked(switchSlot(slot, next, taken))}
     />

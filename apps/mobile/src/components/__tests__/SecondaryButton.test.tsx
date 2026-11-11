@@ -22,6 +22,14 @@ describe('SecondaryButton', () => {
     expect(style.borderWidth).toBeGreaterThan(0);
   });
 
+  it('renders the onDark variant with white text on translucent white, no border', async () => {
+    await render(<SecondaryButton label="Choose from gallery instead" variant="onDark" onPress={jest.fn()} />);
+    const style = flatStyle(screen.getByRole('button', { name: 'Choose from gallery instead' }));
+    expect(style).toMatchObject({ backgroundColor: colors.onDarkButton, minHeight: sizes.buttonSecondary });
+    expect(style.borderWidth).toBeUndefined();
+    expect(StyleSheet.flatten(screen.getByText('Choose from gallery instead').props.style).color).toBe(colors.surface);
+  });
+
   it('announces and enforces disabled', async () => {
     const onPress = jest.fn();
     await render(<SecondaryButton label="Cancel" onPress={onPress} disabled />);
