@@ -2,13 +2,14 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { DEFAULT_EDITS, type Edits, type Overlay } from '../edits';
 import { UNDO_LIMIT, useEditorState } from '../useEditorState';
+import { kape } from './stickerFixture';
 
 // The editor's edit history (FR-CAP-09 Undo).
 
 const saved: Edits = {
   v: 1,
   filter: 'merienda',
-  overlays: [{ id: 's1', type: 'sticker', x: 0.5, y: 0.5, scale: 0.3, rotation: 0 }],
+  overlays: [{ id: 's1', type: 'sticker', ...kape, x: 0.5, y: 0.5, scale: 0.3, rotation: 0 }],
 };
 
 describe('useEditorState', () => {
@@ -61,7 +62,7 @@ describe('useEditorState', () => {
 });
 
 describe('useEditorState overlays (FR-CAP-05, FR-CAP-08)', () => {
-  const a: Overlay = { id: 'a', type: 'sticker', x: 0.2, y: 0.2, scale: 0.3, rotation: 0 };
+  const a: Overlay = { id: 'a', type: 'sticker', ...kape, x: 0.2, y: 0.2, scale: 0.3, rotation: 0 };
   const b: Overlay = { id: 'b', type: 'bubble', x: 0.5, y: 0.5, scale: 0.4, rotation: 0.5 };
   const c: Overlay = { id: 'c', type: 'text', x: 0.8, y: 0.8, scale: 0.2, rotation: -0.5 };
   const start: Edits = { v: 1, filter: 'mono', overlays: [a, b, c] };
@@ -69,9 +70,19 @@ describe('useEditorState overlays (FR-CAP-05, FR-CAP-08)', () => {
 
   it('adds an overlay on top, clamped, and selects it; Undo takes it away and clears the selection', async () => {
     const { result } = await renderHook(() => useEditorState(start));
-    await act(() => result.current.addOverlay({ id: 'd', type: 'sticker', x: 1.4, y: -0.1, scale: 9, rotation: 0 }));
+    await act(() =>
+      result.current.addOverlay({ id: 'd', type: 'sticker', ...kape, x: 1.4, y: -0.1, scale: 9, rotation: 0 }),
+    );
     expect(ids(result.current.edits)).toEqual(['a', 'b', 'c', 'd']);
-    expect(result.current.edits.overlays[3]).toEqual({ id: 'd', type: 'sticker', x: 1, y: 0, scale: 2, rotation: 0 });
+    expect(result.current.edits.overlays[3]).toEqual({
+      id: 'd',
+      type: 'sticker',
+      ...kape,
+      x: 1,
+      y: 0,
+      scale: 2,
+      rotation: 0,
+    });
     expect(result.current.selectedId).toBe('d');
 
     await act(() => result.current.undo());
@@ -108,7 +119,7 @@ describe('useEditorState overlays (FR-CAP-05, FR-CAP-08)', () => {
     await act(() => result.current.transformOverlay('a', { x: -0.5, y: 0.6, scale: 0.01, rotation: 3 * Math.PI }));
     expect(ids(result.current.edits)).toEqual(['b', 'c', 'a']);
     const moved = result.current.edits.overlays[2];
-    expect(moved).toMatchObject({ id: 'a', type: 'sticker', x: 0, y: 0.6, scale: 0.1 });
+    expect(moved).toMatchObject({ id: 'a', type: 'sticker', ...kape, x: 0, y: 0.6, scale: 0.1 });
     expect(moved?.rotation).toBeCloseTo(Math.PI, 10);
 
     await act(() => result.current.undo());
@@ -152,7 +163,9 @@ describe('useEditorState overlays (FR-CAP-05, FR-CAP-08)', () => {
 
   it('Undo walks back across filter and overlay changes in order', async () => {
     const { result } = await renderHook(() => useEditorState(start));
-    await act(() => result.current.addOverlay({ id: 'd', type: 'sticker', x: 0.5, y: 0.5, scale: 0.3, rotation: 0 }));
+    await act(() =>
+      result.current.addOverlay({ id: 'd', type: 'sticker', ...kape, x: 0.5, y: 0.5, scale: 0.3, rotation: 0 }),
+    );
     await act(() => result.current.transformOverlay('d', { x: 0.6, y: 0.5, scale: 0.3, rotation: 0 }));
     await act(() => result.current.selectFilter('dusk'));
     await act(() => result.current.bringToFront('a'));

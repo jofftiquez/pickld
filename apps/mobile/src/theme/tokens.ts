@@ -299,3 +299,22 @@ export const motion = {
   confettiFall: 900, // each confetti piece's drop (FullJar, StickerUnlock); no confetti with Reduce Motion
   celebrationPop: 400, // celebration content grows in; a plain fade (base) with Reduce Motion
 } as const;
+
+// Stickers tool (design: Stickers): pack tabs, the sticker grid, and auto stamps drawn with live values.
+export const stickerTool = {
+  cell: '#f7f8f5', // behind each sticker in the grid
+  cellRadius: 16,
+  cellHeight: 50,
+  cellArtHeight: 30, // sticker art inside a cell; contain keeps it whole
+  cellColumns: 3,
+  packTabHeight: 36,
+  // Unselected pack tab fills with ink text (all above 12:1); selected tabs are ink with white text.
+  packTint: { everyday: '#e6f1d3', 'the-eight': '#fbeccd', stamps: '#f0f2ec', milestones: '#efe8fb' } as Record<
+    string,
+    string
+  >,
+  packTintDefault: '#f0f2ec',
+  // Auto stamp (stickers/stamps art): white label, thick ink border, dashed ink ring outside it. Sizes are
+  // fractions of the stamp's height so it scales with the overlay.
+  stamp: { ring: 0.025, inset: 0.07, border: 0.05, radius: 0.16, text: 0.3, padding: 0.2 },
+} as const;

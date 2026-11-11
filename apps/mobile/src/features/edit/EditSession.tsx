@@ -7,15 +7,19 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { formatTime } from '@/lib/format';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
+import { newMomentId } from '@/lib/queue/uploader';
 import { releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 
 import { parseEdits } from './edits';
 import { EditorView, type EditorTool } from './EditorView';
 import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
+import { stickerOverlay } from './stickers/catalog';
+import { registerStickerRenderer } from './stickers/stickerRenderer';
 import { useEditorState } from './useEditorState';
 
 // Until the sticker, bubble and text tools register their renderers (M2-15, M2-16, M2-17), development
 // builds draw overlays as plain boxes so the transform engine can be tried. Release builds draw nothing.
+registerStickerRenderer();
 if (__DEV__) registerPlaceholderRenderers();
 
 export const queueItemQueryKey = (id: number) => ['queueItem', id] as const;
@@ -96,6 +100,7 @@ export function EditSession({ item, insets, onLeave }: EditSessionProps) {
       onTransformOverlay={editor.transformOverlay}
       onBringOverlayToFront={editor.bringToFront}
       onDeleteOverlay={editor.deleteOverlay}
+      onAddSticker={(sticker) => editor.addOverlay(stickerOverlay(sticker, newMomentId()))}
       onSelectTool={setTool}
       caption={caption}
       onChangeCaption={setCaption}

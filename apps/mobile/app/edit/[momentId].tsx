@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { EditSession, queueItemQueryKey } from '@/features/edit/EditSession';
+import { StampMomentProvider } from '@/features/edit/stickers/stamps';
 import { getItem } from '@/lib/queue/store';
 import { textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
@@ -44,7 +45,13 @@ export default function EditScreen() {
   }
   if (!item.data) return <View style={styles.missing} />;
 
-  return <EditSession key={item.data.id} item={item.data} insets={insets} onLeave={close} />;
+  // Auto stamps (M2-15) show the photo's capture time in its jar's zone, as the slot tag does.
+  const { capturedAt, createdAt, tz } = item.data;
+  return (
+    <StampMomentProvider value={{ capturedAt: new Date(capturedAt ?? createdAt), tz }}>
+      <EditSession key={item.data.id} item={item.data} insets={insets} onLeave={close} />
+    </StampMomentProvider>
+  );
 }
 
 const styles = StyleSheet.create({
