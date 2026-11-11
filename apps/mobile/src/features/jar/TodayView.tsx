@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -30,6 +31,10 @@ export type TodayViewProps = {
   onOpenMyDays: () => void;
   /** Retry on a failed tile, with the tile's queue item id. */
   onRetry?: (queueId: number) => void;
+  /** Zone tag in the header ("Tokyo time") on a jar that started in a new zone (FR-JAR-05). */
+  zoneTag?: string | null;
+  /** The Time zone banner, shown under the header. */
+  zoneBanner?: ReactNode;
 };
 
 /** Today (design: Main; first day: EmptyToday). Presentational; app/(tabs)/today.tsx loads the data. */
@@ -47,6 +52,8 @@ export function TodayView({
   onCapture,
   onOpenMyDays,
   onRetry,
+  zoneTag = null,
+  zoneBanner = null,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -70,13 +77,15 @@ export function TodayView({
         displayName={displayName}
         avatarUrl={avatarUrl}
         onOpenMyDays={onOpenMyDays}
+        zoneTag={zoneTag}
       />
+      {zoneBanner ? <View style={styles.banner}>{zoneBanner}</View> : null}
       {offlineCount !== null ? (
-        <View style={styles.banner}>
+        <View style={zoneBanner ? styles.cardUnderBanner : styles.banner}>
           <OfflineBanner count={offlineCount} />
         </View>
       ) : null}
-      <View style={offlineCount !== null ? styles.cardUnderBanner : styles.card}>
+      <View style={offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.card}>
         <JarCard
           count={count}
           readerCount={readerCount}

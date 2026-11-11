@@ -49,6 +49,8 @@ export const colors = {
   onDarkButton: 'rgba(255,255,255,0.12)', // secondary button on the camera (Choose from gallery instead)
   editor: '#0b0d09', // editor screen background behind the photo (Capture)
   editorPhoto: '#2a2d26', // behind the photo and filter thumbnails while the photo loads (Capture)
+  zoneTint: '#dbe8f3', // icon well on the Time zone banner (TimeZone)
+  zoneText: '#1d3a52', // icon on that well; 10:1 on zoneTint
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -102,6 +104,8 @@ export const radius = {
   fillBar: 2,
   input: 16, // text fields (EditProfile)
   banner: 16, // offline banner on Today (UploadStates)
+  zoneBanner: 18, // Time zone banner on Today (TimeZone)
+  zoneIcon: 13, // icon well on that banner
   tile: 22,
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
@@ -207,6 +211,7 @@ export const sizes = {
   bannerPaddingY: 10, // offline banner (UploadStates)
   bannerPaddingX: 14,
   bannerGap: 10, // offline banner: icon to text, and banner to the jar card
+  zoneIcon: 38, // icon well on the Time zone banner (TimeZone)
   shutter: 84, // camera shutter ring (Camera)
   shutterInner: 68,
   shutterRing: 4,
