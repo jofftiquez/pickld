@@ -34,6 +34,8 @@ export type CameraViewProps = {
   onGallery: () => void;
   onShutter: () => void;
   onSelectSlot: (slot: Slot) => void;
+  /** Rendered over the screen, e.g. the Replace dialog (M2-22). */
+  overlay?: ReactNode;
 };
 
 // Room below the viewfinder for the moment tabs and the shutter row on short phones.
@@ -57,6 +59,7 @@ export function CameraView({
   onGallery,
   onShutter,
   onSelectSlot,
+  overlay,
 }: CameraViewProps) {
   const { t } = useTranslation();
   const window = useWindowDimensions();
@@ -117,6 +120,7 @@ export function CameraView({
           testID="camera-flip"
         />
       </View>
+      {overlay}
     </View>
   );
 }

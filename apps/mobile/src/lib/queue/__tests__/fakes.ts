@@ -116,11 +116,13 @@ interface MomentRow {
 }
 
 /** A step of the pipeline that can be made to fail: the next `times` calls reject with `error`. */
-export type Step = 'ensure_jar' | 'upload-url' | 'put' | 'insert' | 'insert-after-write' | 'moderate';
+export type Step = 'ensure_jar' | 'upload-url' | 'put' | 'insert' | 'insert-after-write' | 'moderate' | 'select';
 
 /**
- * A fake Supabase backend: ensure_jar, fn:upload-url, the bucket and the moments table with its
- * unique (jar_id, slot) and primary key. `failures` queues errors per step.
+ * A fake Supabase backend: ensure_jar, fn:upload-url, the bucket and the moments table with its primary
+ * key and the unique indexes of 0013: one moment per slot that isn't removed or a pending replacement
+ * (moments_slot_holder_key), one pending replacement per moment (moments_one_replacement_key). fn:moderate
+ * approves at once (D-22), swapping a replacement in for the moment it replaces. `failures` queues errors per step.
  */
 export function fakeBackend() {
   const moments: MomentRow[] = [];
@@ -128,6 +130,8 @@ export function fakeBackend() {
   const failures = new Map<Step, unknown[]>();
   const uploadUrlBodies: unknown[] = [];
   const moderated: string[] = [];
+  /** Every row the fake accepted, as sent. */
+  const inserts: MomentRow[] = [];
   let uploads = 0;
 
   const failIfQueued = (step: Step) => {
@@ -154,7 +158,15 @@ export function fakeBackend() {
           } catch (error) {
             return { data: null, error };
           }
-          moderated.push((options.body as { momentId: string }).momentId);
+          const momentId = (options.body as { momentId: string }).momentId;
+          moderated.push(momentId);
+          const m = moments.find((row) => row.id === momentId);
+          if (m && m.status === 'checking') {
+            const old = moments.findIndex((row) => row.id === m.replaces && row.status !== 'removed');
+            if (old >= 0) moments.splice(old, 1);
+            m.status = 'live';
+            m.replaces = null;
+          }
           return { data: { data: { status: 'live' } }, error: null };
         }
         failIfQueued('upload-url'); // supabase-js rejects on a fetch failure
@@ -177,22 +189,51 @@ export function fakeBackend() {
         } catch (error) {
           return { data: null, error };
         }
-        if (moments.some((m) => m.id === row.id || (m.jar_id === row.jar_id && m.slot === row.slot))) {
-          return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint' } };
+        const holds = (m: MomentRow) => m.status !== 'removed' && (m.replaces ?? null) === null;
+        const index = moments.some((m) => m.id === row.id)
+          ? 'moments_pkey'
+          : (row.replaces ?? null) === null &&
+              moments.some((m) => holds(m) && m.jar_id === row.jar_id && m.slot === row.slot)
+            ? 'moments_slot_holder_key'
+            : row.replaces && moments.some((m) => m.replaces === row.replaces && m.status !== 'removed')
+              ? 'moments_one_replacement_key'
+              : null;
+        if (index) {
+          const message = `duplicate key value violates unique constraint "${index}"`;
+          return { data: null, error: { code: '23505', message } };
         }
+        if (row.replaces) {
+          const target = moments.find((m) => m.id === row.replaces);
+          if (!target || target.jar_id !== row.jar_id || target.slot !== row.slot || !holds(target)) {
+            return { data: null, error: { code: '42501', message: 'a replacement must be for your own moment' } };
+          }
+        }
+        inserts.push({ ...row });
         moments.push({ ...row });
         failIfQueued('insert-after-write'); // the row is written but the response never arrives
         return { data: null, error: null };
       },
-      select: () => ({
-        eq: (_column: 'id', id: string) => ({
+      // select('id') with eq / neq / is filters, then maybeSingle (more than one match is an error, as in PostgREST).
+      select: () => {
+        const filters: ((m: MomentRow) => boolean)[] = [];
+        const query = {
+          eq: (column: string, value: unknown) => (filters.push((m) => m[column] === value), query),
+          neq: (column: string, value: unknown) => (filters.push((m) => m[column] !== value), query),
+          is: (column: string, value: null) => (filters.push((m) => (m[column] ?? null) === value), query),
           maybeSingle: async () => {
             log.push(`select:${table}`);
-            const found = moments.find((m) => m.id === id);
-            return { data: found ? { id: found.id } : null, error: null };
+            try {
+              failIfQueued('select');
+            } catch (error) {
+              return { data: null, error };
+            }
+            const found = moments.filter((m) => filters.every((f) => f(m)));
+            if (found.length > 1) return { data: null, error: { code: 'PGRST116', message: 'multiple rows' } };
+            return { data: found[0] ? { id: found[0].id } : null, error: null };
           },
-        }),
-      }),
+        };
+        return query;
+      },
     }),
   };
 
@@ -208,6 +249,7 @@ export function fakeBackend() {
     client: client as unknown as UploaderClient,
     putFile,
     moments,
+    inserts,
     moderated,
     objects,
     uploadUrlBodies,

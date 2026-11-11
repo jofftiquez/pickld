@@ -30,6 +30,8 @@ export type SaveCaptureInput = {
   openJar: OpenJar | null;
   /** Fill this jar: queue under this past date and zone instead of the open jar (FR-DAY-02). */
   fill?: FillTarget | null;
+  /** The slot is filled and the user chose Replace (M2-22): upload as a replacement of its moment. */
+  replace?: boolean;
 };
 
 function deleteQuietly(uri: string): void {
@@ -102,7 +104,7 @@ export function galleryTarget(input: {
  * background and wakes the upload worker. */
 async function queueRaw(
   uri: string,
-  row: { userId: string; slot: Slot; target: QueueTarget; crop: CropSpec | null },
+  row: { userId: string; slot: Slot; target: QueueTarget; crop: CropSpec | null; replace?: boolean },
 ): Promise<QueueItem> {
   const item = await enqueue({
     userId: row.userId,
@@ -113,6 +115,7 @@ async function queueRaw(
     prepared: false,
     editing: true,
     ...(row.crop ? { crop: row.crop } : null),
+    replace: row.replace ?? false,
   });
   // The queue holds its own copy now.
   deleteQuietly(uri);
@@ -129,7 +132,13 @@ async function queueRaw(
  * background preparation is interrupted, the upload worker prepares the item before uploading it.
  */
 export async function saveCapture(input: SaveCaptureInput): Promise<QueueItem> {
-  return queueRaw(input.uri, { userId: input.userId, slot: input.slot, target: queueTarget(input), crop: null });
+  return queueRaw(input.uri, {
+    userId: input.userId,
+    slot: input.slot,
+    target: queueTarget(input),
+    crop: null,
+    replace: input.replace,
+  });
 }
 
 export type SaveGalleryPhotoInput = {

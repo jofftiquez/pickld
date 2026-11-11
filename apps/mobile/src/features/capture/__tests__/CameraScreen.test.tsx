@@ -75,6 +75,9 @@ jest.mock('../saveCapture', () => ({
 }));
 jest.mock('../pickFromGallery', () => ({ pickFromGallery: jest.fn() }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+// The Replace dialog (kit Dialog) reads Reduce Motion from Reanimated. expo-router's testing library mocks
+// Reanimated with `react-native-reanimated/mock`, which can't load here; give it the one hook it needs.
+jest.mock('react-native-reanimated/mock', () => ({ __esModule: true, default: {}, useReducedMotion: () => false }));
 
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
 const mockToday = {
@@ -349,6 +352,53 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(selfie.props.accessibilityState).toEqual({ selected: false, disabled: true });
     await fireEvent.press(selfie);
     expect(tagText()).toMatch(/^#afternoon,/);
+  });
+
+  describe('a filled slot asks to Replace first (M2-22)', () => {
+    const filled = (slot: QueuedMoment['slot']): QueuedMoment => ({
+      id: 1,
+      slot,
+      state: 'queued',
+      localDate: '2026-11-11',
+      photoUri: 'file:///q/1.webp',
+      thumbUri: null,
+      capturedAt: null,
+      isPrivate: false,
+    });
+
+    it('Replace takes the photo and queues it as a replacement', async () => {
+      mockToday.queue = [filled('afternoon')];
+      await openCamera('/camera?slot=afternoon');
+      await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+      expect(screen.getByRole('header', { name: 'Replace your #afternoon photo?' })).toBeTruthy();
+      expect(takeMockPhoto).not.toHaveBeenCalled();
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Replace' }));
+      await act(async () => {});
+      expect(saveCapture).toHaveBeenCalledWith(expect.objectContaining({ slot: 'afternoon', replace: true }));
+      expect(screen).toHavePathname('/edit/1');
+    });
+
+    it('Cancel takes no photo and stays on the camera', async () => {
+      mockToday.queue = [filled('afternoon')];
+      await openCamera('/camera?slot=afternoon');
+      await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+      await act(async () => {});
+      expect(takeMockPhoto).not.toHaveBeenCalled();
+      expect(saveCapture).not.toHaveBeenCalled();
+      expect(screen.queryByRole('header', { name: 'Replace your #afternoon photo?' })).toBeNull();
+      expect(screen).toHavePathname('/camera');
+    });
+
+    it('an empty slot never asks and is not a replacement', async () => {
+      mockToday.queue = [filled('selfie')];
+      await openCamera('/camera?slot=afternoon');
+      await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+      await act(async () => {});
+      expect(screen.queryByRole('header')).toBeNull();
+      expect(saveCapture).toHaveBeenCalledWith(expect.objectContaining({ slot: 'afternoon', replace: false }));
+    });
   });
 
   it('ignores a slot param that is not a slot', async () => {

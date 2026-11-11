@@ -449,6 +449,7 @@ export type Database = {
           pending_since: string | null;
           pending_thumb_path: string | null;
           photo_path: string | null;
+          replaces: string | null;
           slot: Database['public']['Enums']['slot'];
           status: Database['public']['Enums']['moment_status'];
           thumb_path: string | null;
@@ -471,6 +472,7 @@ export type Database = {
           pending_since?: string | null;
           pending_thumb_path?: string | null;
           photo_path?: string | null;
+          replaces?: string | null;
           slot: Database['public']['Enums']['slot'];
           status?: Database['public']['Enums']['moment_status'];
           thumb_path?: string | null;
@@ -492,6 +494,7 @@ export type Database = {
           pending_since?: string | null;
           pending_thumb_path?: string | null;
           photo_path?: string | null;
+          replaces?: string | null;
           slot?: Database['public']['Enums']['slot'];
           status?: Database['public']['Enums']['moment_status'];
           thumb_path?: string | null;
@@ -503,6 +506,13 @@ export type Database = {
             columns: ['jar_id'];
             isOneToOne: false;
             referencedRelation: 'jars';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moments_replaces_fkey';
+            columns: ['replaces'];
+            isOneToOne: false;
+            referencedRelation: 'moments';
             referencedColumns: ['id'];
           },
           {
@@ -1130,6 +1140,7 @@ export type Database = {
         };
       };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
+      has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };

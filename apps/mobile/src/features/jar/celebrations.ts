@@ -19,13 +19,14 @@ export type Celebration =
  * Moments that fill the jar: every server moment that isn't removed, so checking (and uploading) count as
  * well as live. This is the server's owner count (jars.moment_count, D-9), which also writes the full_jar
  * notification and grants the milestones, so the app and the server agree on when a jar is full.
- * Queued photos that haven't reached the server don't count yet.
+ * Queued photos that haven't reached the server don't count yet, nor does a pending replacement (its slot
+ * is already counted through the moment it replaces, 0013).
  */
-export function filledCount(moments: readonly Pick<ServerMoment, 'status'>[]): number {
-  return moments.filter((m) => m.status !== 'removed').length;
+export function filledCount(moments: readonly Pick<ServerMoment, 'status' | 'replaces'>[]): number {
+  return moments.filter((m) => m.status !== 'removed' && !m.replaces).length;
 }
 
-export function isJarFull(moments: readonly Pick<ServerMoment, 'status'>[]): boolean {
+export function isJarFull(moments: readonly Pick<ServerMoment, 'status' | 'replaces'>[]): boolean {
   return filledCount(moments) >= slots.length;
 }
 

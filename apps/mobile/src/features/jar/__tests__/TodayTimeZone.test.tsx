@@ -73,6 +73,8 @@ jest.mock('@/lib/queue/store', () => ({
 }));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => {}) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+// The Replace prompt (kit Dialog, M2-22) reads Reduce Motion from Reanimated, which can't load in Jest.
+jest.mock('react-native-reanimated', () => ({ __esModule: true, useReducedMotion: () => false }));
 jest.mock('expo-localization', () => ({
   ...jest.requireActual<object>('expo-localization'),
   getCalendars: () => [{ timeZone: 'Asia/Tokyo' }],
