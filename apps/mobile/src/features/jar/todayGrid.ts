@@ -37,6 +37,9 @@ const queueTileState = {
   failed: 'failed',
   // Uploaded but the server moment isn't loaded yet: it is being checked (rule 4).
   uploaded: 'checking',
+  // The slot already had a server moment; the Replace choice lands with M2-22. Shown as failed only if
+  // that moment is gone, so the photo stays reachable.
+  conflict: 'failed',
 } as const satisfies Record<QueueItem['state'], MomentTileState>;
 
 function emptyTile(slot: Slot, isNow: boolean): GridTile {
@@ -59,6 +62,7 @@ function emptyTile(slot: Slot, isNow: boolean): GridTile {
  * - Otherwise the server moment wins (live → filled, checking/uploading → checking). Removed moments
  *   leave the slot empty.
  * - An uploaded queue item whose server moment hasn't loaded yet shows as checking with the local photo.
+ * - A conflict item (the slot already had a moment) leaves the server moment showing until Replace (M2-22).
  * - Only queue items for `localDate` (the jar's date) count; the newest item per slot wins.
  * - The Now tile is the current slot (`nowSlot`, from `currentSlot`) when it is still empty.
  */
@@ -75,7 +79,8 @@ export function buildTodayGrid(input: {
       .reduce<QueuedMoment | null>((newest, item) => (!newest || item.id > newest.id ? item : newest), null);
     const moment = moments.find((m) => m.slot === slot && m.status !== 'removed') ?? null;
 
-    if (queued && (queued.state !== 'uploaded' || !moment)) {
+    const settled = queued?.state === 'uploaded' || queued?.state === 'conflict';
+    if (queued && (!settled || !moment)) {
       return {
         slot,
         state: queueTileState[queued.state],

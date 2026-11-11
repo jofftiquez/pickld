@@ -118,6 +118,16 @@ describe('buildTodayGrid: merging server moments with the queue', () => {
     expect(tiles[3]).toMatchObject({ state: 'filled', momentId: 'm-ootd', uri: 'https://photos.test/ootd.webp' });
   });
 
+  it('a slot conflict keeps the existing server moment showing until Replace (M2-22)', () => {
+    const tiles = grid({ moments: [moment('ootd')], queue: [queued('ootd', { state: 'conflict' })] });
+    expect(tiles[3]).toMatchObject({ state: 'filled', momentId: 'm-ootd', queueId: null });
+  });
+
+  it('a slot conflict whose server moment is gone shows the local photo as failed', () => {
+    const item = queued('ootd', { state: 'conflict' });
+    expect(grid({ queue: [item] })[3]).toMatchObject({ state: 'failed', uri: item.thumbUri, queueId: item.id });
+  });
+
   it('an uploaded item whose server moment has not loaded yet shows as checking with the local photo', () => {
     const item = queued('ootd', { state: 'uploaded' });
     expect(grid({ queue: [item] })[3]).toMatchObject({ state: 'checking', uri: item.thumbUri });
