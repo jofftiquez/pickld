@@ -47,6 +47,14 @@ export const lidColors = {
   ink: '#11140d',
 } as const;
 
+// Jar graphic glass, outline and shine (JarGraphic). Layers use brand / brandLayer.
+export const jar = {
+  glass: 'rgba(17,20,13,0.04)',
+  glassOnDark: 'rgba(255,255,255,0.08)',
+  strokeOnDark: 'rgba(255,255,255,0.75)',
+  highlight: 'rgba(255,255,255,0.55)',
+} as const;
+
 // Sticker colors used with white text — darkened to pass 4.5:1.
 export const stickerOnWhiteText = {
   orange: '#c4521c',
