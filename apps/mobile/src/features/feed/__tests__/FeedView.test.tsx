@@ -47,7 +47,13 @@ const authors: FeedAuthor[] = [
 ];
 
 async function setup(props: Partial<FeedViewProps> = {}) {
-  const handlers = { onRefresh: jest.fn(), onEndReached: jest.fn(), onOpenNotifications: jest.fn() };
+  const handlers = {
+    onRefresh: jest.fn(),
+    onEndReached: jest.fn(),
+    onOpenNotifications: jest.fn(),
+    onFindPeople: jest.fn(),
+    onInvite: jest.fn(),
+  };
   await render(
     <FeedView
       jars={[mika]}
@@ -111,5 +117,24 @@ describe('FeedView', () => {
   it('shows a spinner while the first page loads', async () => {
     await setup({ jars: undefined, isLoading: true });
     expect(screen.getByTestId('feed-loading')).toBeTruthy();
+  });
+
+  it('shows "Your feed is quiet" with Find people and Invite friends when the user reads nobody', async () => {
+    const { onFindPeople, onInvite } = await setup({ jars: [], authors: [] });
+    expect(screen.getByText('Your feed is quiet')).toBeTruthy();
+    expect(screen.queryByTestId('feed-authors')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Find people'));
+    expect(onFindPeople).toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText('Invite friends'));
+    expect(onInvite).toHaveBeenCalled();
+  });
+
+  it('keeps the empty state hidden while the authors load, and when the user reads someone with no jars yet', async () => {
+    await setup({ jars: undefined, authors: undefined, isLoading: true });
+    expect(screen.queryByTestId('feed-empty')).toBeNull();
+    await screen.unmount();
+    await setup({ jars: [], authors });
+    expect(screen.queryByTestId('feed-empty')).toBeNull();
+    expect(screen.getByTestId('feed-authors')).toBeTruthy();
   });
 });

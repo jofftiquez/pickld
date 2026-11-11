@@ -5,6 +5,7 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
+import { FeedEmpty } from './FeedEmpty';
 import { FeedJarCard } from './FeedJarCard';
 import type { FeedAuthor, FeedJar } from './feedModel';
 import { StoryAvatar } from './StoryAvatar';
@@ -25,6 +26,8 @@ export type FeedViewProps = {
   onEndReached: () => void;
   onOpenNotifications: () => void;
   onOpenJar?: (jarId: string) => void;
+  onFindPeople: () => void;
+  onInvite: () => void;
 };
 
 /** First name for an avatar label ("Mika Reyes" → "Mika"). */
@@ -47,10 +50,14 @@ export function FeedView({
   onEndReached,
   onOpenNotifications,
   onOpenJar,
+  onFindPeople,
+  onInvite,
 }: FeedViewProps) {
   const { t } = useTranslation();
   // Content scrolls under the floating tab bar; this keeps the last card clear of it.
   const bottomPadding = Math.max(insets.bottom, space.lg) + sizes.tabBar + space.lg;
+  // Jars, empty: only once we know the user reads nobody (FR-SOC-02), never while the authors load.
+  const readsNobody = authors !== undefined && authors.length === 0;
 
   const header = (
     <View>
@@ -72,35 +79,37 @@ export function FeedView({
           {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="feed-notifications-dot" /> : null}
         </View>
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.stories}
-        accessibilityLabel={t('feed.authors')}
-        testID="feed-authors"
-      >
-        {myName ? (
-          <StoryAvatar
-            name={myName}
-            label={t('feed.you')}
-            uri={null}
-            isNew={false}
-            accessibilityLabel={t('feed.you')}
-            testID="feed-author-me"
-          />
-        ) : null}
-        {authors?.map((a) => (
-          <StoryAvatar
-            key={a.author_id}
-            name={a.display_name}
-            label={firstName(a.display_name)}
-            uri={null}
-            isNew={a.has_new}
-            accessibilityLabel={a.has_new ? t('feed.authorNew', { name: a.display_name }) : a.display_name}
-            testID={`feed-author-${a.username}`}
-          />
-        ))}
-      </ScrollView>
+      {readsNobody ? null : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.stories}
+          accessibilityLabel={t('feed.authors')}
+          testID="feed-authors"
+        >
+          {myName ? (
+            <StoryAvatar
+              name={myName}
+              label={t('feed.you')}
+              uri={null}
+              isNew={false}
+              accessibilityLabel={t('feed.you')}
+              testID="feed-author-me"
+            />
+          ) : null}
+          {authors?.map((a) => (
+            <StoryAvatar
+              key={a.author_id}
+              name={a.display_name}
+              label={firstName(a.display_name)}
+              uri={null}
+              isNew={a.has_new}
+              accessibilityLabel={a.has_new ? t('feed.authorNew', { name: a.display_name }) : a.display_name}
+              testID={`feed-author-${a.username}`}
+            />
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 
@@ -118,7 +127,13 @@ export function FeedView({
       ItemSeparatorComponent={Separator}
       ListHeaderComponent={header}
       ListEmptyComponent={
-        isLoading ? <ActivityIndicator color={colors.muted} style={styles.loading} testID="feed-loading" /> : undefined
+        readsNobody ? (
+          <View style={styles.cardWrap}>
+            <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} />
+          </View>
+        ) : isLoading ? (
+          <ActivityIndicator color={colors.muted} style={styles.loading} testID="feed-loading" />
+        ) : undefined
       }
       ListFooterComponent={
         isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
