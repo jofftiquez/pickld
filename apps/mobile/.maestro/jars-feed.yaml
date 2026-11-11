@@ -1,0 +1,40 @@
+# M3-04: the Jars tab lists followed authors' published jars with avatar rings and photo mosaics.
+# Needs the seed data (dale reads mika and aya) and dale signed in:
+# maestro test apps/mobile/.maestro/jars-feed.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- assertVisible:
+    id: screen-title
+    text: Jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- assertVisible:
+    id: feed-author-me
+- assertVisible:
+    id: feed-author-mika
+- assertVisible:
+    id: feed-card-aya
+# Pull to refresh, then let the thumbnails arrive before the screenshot.
+- swipe:
+    start: 50%, 30%
+    end: 50%, 70%
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: Jars-ios
