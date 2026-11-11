@@ -1142,6 +1142,21 @@ export type Database = {
           thumb_path: string;
         }[];
       };
+      month_jars: {
+        Args: { month: string };
+        Returns: {
+          cover_moment_id: string;
+          cover_slot: Database['public']['Enums']['slot'];
+          cover_thumb_path: string;
+          is_full: boolean;
+          jar_id: string;
+          local_date: string;
+          moment_count: number;
+          published_at: string;
+          tz: string;
+          visibility: Database['public']['Enums']['jar_visibility'];
+        }[];
+      };
       my_pending_moments: {
         Args: Record<PropertyKey, never>;
         Returns: {
