@@ -708,6 +708,7 @@ export type Database = {
           created_at: string;
           default_visibility: Database['public']['Enums']['jar_visibility'];
           display_name: string;
+          feed_seen_at: string | null;
           home_tz: string;
           id: string;
           jar_count: number;
@@ -726,6 +727,7 @@ export type Database = {
           created_at?: string;
           default_visibility?: Database['public']['Enums']['jar_visibility'];
           display_name: string;
+          feed_seen_at?: string | null;
           home_tz?: string;
           id: string;
           jar_count?: number;
@@ -743,6 +745,7 @@ export type Database = {
           created_at?: string;
           default_visibility?: Database['public']['Enums']['jar_visibility'];
           display_name?: string;
+          feed_seen_at?: string | null;
           home_tz?: string;
           id?: string;
           jar_count?: number;
@@ -1139,6 +1142,38 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      feed_authors: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          author_id: string;
+          avatar_path: string;
+          display_name: string;
+          has_new: boolean;
+          latest_at: string;
+          username: string;
+        }[];
+      };
+      feed_page: {
+        Args: { cursor_at?: string; cursor_id?: string };
+        Returns: {
+          author_avatar_path: string;
+          author_display_name: string;
+          author_id: string;
+          author_username: string;
+          comment_count: number;
+          feed_at: string;
+          is_new: boolean;
+          jar_id: string;
+          last_caption: string;
+          like_count: number;
+          local_date: string;
+          preview_moment_ids: string[];
+          preview_thumb_paths: string[];
+          published_at: string;
+          visibility: Database['public']['Enums']['jar_visibility'];
+          visible_count: number;
+        }[];
+      };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
@@ -1152,6 +1187,7 @@ export type Database = {
         };
         Returns: string;
       };
+      mark_feed_seen: { Args: Record<PropertyKey, never>; Returns: string };
       moderation_apply: {
         Args: {
           p_decision: string;
@@ -1210,6 +1246,7 @@ export type Database = {
           created_at: string;
           default_visibility: Database['public']['Enums']['jar_visibility'];
           display_name: string;
+          feed_seen_at: string | null;
           home_tz: string;
           id: string;
           jar_count: number;
