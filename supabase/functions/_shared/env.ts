@@ -48,3 +48,8 @@ export function photoBaseUrl(): string {
 export function photoTokenSecret(): string {
   return required('PHOTO_TOKEN_SECRET');
 }
+
+/** HMAC key for contact hashes (fn:contacts-match, D-4). Never leaves the Edge Function, not even to Postgres. */
+export function contactHashSecret(): string {
+  return required('CONTACT_HASH_SECRET');
+}
