@@ -11,6 +11,8 @@ import Index from '../../../app/index';
 // Today draws a JarGraphic, which needs Reanimated's native worklets; expo-router's testing mocks
 // replace Reanimated with its own mock, which can't load under Jest in this version. The jar isn't
 // under test here.
+// Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
+jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 // Today's Retry reaches the upload worker, which reports errors through Sentry (ESM, not loadable here).
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));

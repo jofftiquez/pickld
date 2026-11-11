@@ -13,6 +13,10 @@ import { kape } from './stickerFixture';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
 import { getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import { saveMomentEdits } from '@/features/moment/momentActions';
+import { editableMomentQueryKey } from '@/features/moment/useEditableMoment';
+import { useAuthStore } from '@/lib/authStore';
+import type { Session } from '@supabase/supabase-js';
 
 // Editor (FR-CAP-04, FR-CAP-08, FR-CAP-09): loads the queued photo, draws it with the selected filter's
 // matrix, switches tools, and saves the caption, privacy and edits into the queue item. Skia's native
@@ -41,6 +45,34 @@ jest.mock('@shopify/react-native-skia', () => {
 jest.mock('@/lib/queue/store', () => ({ getItem: jest.fn(), saveEdits: jest.fn(), releaseEditing: jest.fn() }));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => undefined) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+// Uploaded moments (M2-23) are read from Supabase and saved through momentActions.
+const mockServer: { row: Record<string, unknown> | null; reads: number } = { row: null, reads: 0 };
+jest.mock('@/lib/supabase', () => {
+  const query = {
+    select: () => query,
+    eq: () => query,
+    maybeSingle: async () => {
+      mockServer.reads += 1;
+      return { data: mockServer.row, error: null };
+    },
+  };
+  return {
+    getSupabase: () => ({
+      from: () => query,
+      functions: {
+        invoke: async (_name: string, { body }: { body: { momentIds: string[] } }) => ({
+          data: {
+            data: {
+              moments: body.momentIds.map((id) => ({ id, full: `https://photos.test/${id}.webp`, thumb: null })),
+            },
+          },
+          error: null,
+        }),
+      },
+    }),
+  };
+});
+jest.mock('@/features/moment/momentActions', () => ({ saveMomentEdits: jest.fn(async () => undefined) }));
 
 const item: QueueItem = {
   id: 7,
@@ -480,5 +512,76 @@ describe('Text tool (M2-17)', () => {
     await act(async () => {});
     const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
     expect(edits.overlays[0]).toMatchObject({ id: 't1', text: 'lola’s kitchen ❤️', font: 'type', color: 'butter' });
+  });
+});
+
+describe('An uploaded moment, from Moment options (M2-23)', () => {
+  const USER = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
+  const MOMENT = '0f1e2d3c-4b5a-4968-8776-655443322110';
+  const JAR = '11111111-2222-4333-8444-555555555555';
+  const serverRow = {
+    id: MOMENT,
+    jar_id: JAR,
+    slot: 'ootd',
+    status: 'live',
+    caption: 'fresh from the server',
+    edits: { v: 1, filter: 'mono', overlays: [] },
+    is_private: false,
+    captured_at: '2026-11-08T23:30:00Z', // 7:30 AM in Manila
+    added_at: '2026-11-08T23:31:00Z',
+    jars: { tz: 'Asia/Manila' },
+  };
+
+  beforeEach(() => {
+    useAuthStore.getState().setSession({ user: { id: USER } } as Session);
+    mockServer.row = serverRow;
+    mockServer.reads = 0;
+    jest.mocked(saveMomentEdits).mockClear();
+  });
+
+  it('opens with this opening’s fetch, not a cached copy, caption focused; Done saves on the server', async () => {
+    // A copy from an earlier opening, restored from the persisted cache (JSON: no Date objects).
+    queryClient.setQueryData(editableMomentQueryKey(USER, MOMENT), {
+      id: MOMENT,
+      jarId: JAR,
+      slot: 'ootd',
+      caption: 'before the last edit',
+      edits: {},
+      isPrivate: false,
+      shotAt: '2026-11-08T23:30:00.000Z',
+      tz: 'Asia/Manila',
+      photoUrl: 'https://photos.test/expired.webp',
+    });
+    await openEditor(`/edit/${MOMENT}?focus=caption`);
+    await screen.findByTestId('editor-screen');
+
+    expect(mockServer.reads).toBe(1);
+    const caption = screen.getByLabelText('Caption');
+    expect(caption.props.value).toBe('fresh from the server');
+    expect(caption.props.autoFocus).toBe(true);
+    expect(matrixIn('editor-photo')).toEqual(filterMatrices.mono);
+    expect(screen.getAllByTestId('skia-image')[0]?.props.accessibilityHint).toBe(`https://photos.test/${MOMENT}.webp`);
+    expect(screen.getByText(/7:30/)).toBeTruthy();
+    expect(saveButton().props.accessibilityLabel).toBe('Done');
+
+    await fireEvent.changeText(caption, 'Green shirt day');
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveMomentEdits).toHaveBeenCalledWith(
+      expect.anything(),
+      { kind: 'server', momentId: MOMENT, jarId: JAR },
+      { caption: 'Green shirt day', isPrivate: false, edits: { v: 1, filter: 'mono', overlays: [] } },
+    );
+    expect(screen).toHavePathname('/today');
+    // A queued photo's hold and upload are not involved.
+    expect(releaseEditing).not.toHaveBeenCalled();
+  });
+
+  it('says it couldn’t open a removed moment', async () => {
+    mockServer.row = { ...serverRow, status: 'removed' };
+    await openEditor(`/edit/${MOMENT}`);
+    expect(await screen.findByTestId('editor-missing')).toHaveTextContent(
+      'Couldn’t open this moment. Check your connection and try again.',
+    );
   });
 });

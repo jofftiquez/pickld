@@ -55,6 +55,8 @@ export type EditorViewProps = {
   onSelectTool: (tool: EditorTool) => void;
   caption: string;
   onChangeCaption: (caption: string) => void;
+  /** Opened from Moment options' Edit caption (M2-23): the caption field starts focused. */
+  focusCaption?: boolean;
   isPrivate: boolean;
   onChangePrivate: (isPrivate: boolean) => void;
   canUndo: boolean;
@@ -94,6 +96,7 @@ export function EditorView({
   onSelectTool,
   caption,
   onChangeCaption,
+  focusCaption = false,
   isPrivate,
   onChangePrivate,
   canUndo,
@@ -217,6 +220,7 @@ export function EditorView({
             onChangeText={onChangeCaption}
             maxLength={CAPTION_MAX}
             placeholder={t('edit.captionPlaceholder')}
+            autoFocus={focusCaption}
             testID="editor-caption"
           />
           <View style={styles.privateRow}>

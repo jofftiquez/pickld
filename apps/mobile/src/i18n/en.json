@@ -164,6 +164,7 @@
       "dusk": "Dusk"
     },
     "notFound": "This photo is no longer waiting to be edited.",
+    "momentNotFound": "Couldn’t open this moment. Check your connection and try again.",
     "caption": "Caption",
     "captionPlaceholder": "Say something about this moment",
     "private": "Keep this moment private",
@@ -379,7 +380,41 @@
     "note": "Every Pickld moment is 3:4, so your jars always line up.",
     "done": "Next: edit",
     "doneHint": "Adds the photo to {{slot}} and opens the editor",
-    "saveFailed": "Couldn’t add this photo. Try again."
+    "saveFailed": "Couldn’t add this photo. Try again.",
+    "recrop": {
+      "subtitle": "{{slot}} · re-crop",
+      "cancelHint": "Goes back without changing the photo",
+      "done": "Save crop",
+      "doneHint": "Saves the new crop of your {{slot}} photo",
+      "saveFailed": "Couldn’t save the new crop. Check your connection and try again."
+    }
+  },
+  "momentOptions": {
+    "title": "Moment options",
+    "openHint": "Opens moment options",
+    "when": "{{time}} · {{date}}",
+    "editCaption": "Edit caption",
+    "editMoment": "Edit stickers and filters",
+    "recrop": "Re-crop",
+    "recropHint": "Crops the saved photo again. You can zoom in, but not back out past the last crop.",
+    "private": "Make private",
+    "privateHint": "Only you will see this moment",
+    "move": "Move to another moment",
+    "moveTitle": "Move to another moment",
+    "moveSubtitle": "Pick an empty moment in this jar for your {{slot}} photo",
+    "moveTo": "Move to {{slot}}",
+    "noFreeSlots": "Every moment in this jar is filled, so there’s nowhere to move it.",
+    "backToOptions": "Back to moment options",
+    "delete": "Delete moment",
+    "deleteTitle": "Delete your {{slot}} photo?",
+    "deleteMessage": "It’s removed from your jar for good. Likes and comments on it go too.",
+    "deleteConfirm": "Delete",
+    "error": {
+      "failed": "Couldn’t change this moment. Check your connection and try again.",
+      "busy": "This photo is uploading. Try again in a moment.",
+      "slotTaken": "That moment was just filled. Pick another one.",
+      "refused": "This moment can’t be changed right now."
+    }
   },
   "replace": {
     "title": "Replace your {{slot}} photo?",

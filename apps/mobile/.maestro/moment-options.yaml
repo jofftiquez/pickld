@@ -1,0 +1,104 @@
+# M2-23 (FR-CAP-10): Moment options on a live moment. Tap a filled Today tile → the sheet (design:
+# MomentOptions) → Move page → Delete asks first (Cancel keeps it) → Re-crop opens Crop on the saved photo
+# (Cancel changes nothing) → Edit caption opens the editor with the caption focused (Close changes nothing).
+# Nothing is changed on the server. Run on the iOS Simulator with a dev build, signed in as a user whose
+# open jar has SLOT filled with a live moment (the seeded dale@pickld.test has #whereami):
+#   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/moment-options.yaml
+#   maestro test -e SLOT=morning apps/mobile/.maestro/moment-options.yaml
+appId: me.pickld.app
+---
+- evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'whereami'}"
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+
+- tapOn:
+    id: tile-${output.slot}
+- extendedWaitUntil:
+    visible:
+      id: moment-options-delete
+    timeout: 5000
+- assertVisible: '#${output.slot}'
+- assertVisible: Edit caption
+- assertVisible: Edit stickers and filters
+- assertVisible: Re-crop
+- assertVisible: Make private
+- assertVisible: Move to another moment
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: MomentOptions-ios
+
+# Move lists the jar's empty slots; Back returns.
+- tapOn:
+    id: moment-options-move
+- assertVisible: 'Pick an empty moment in this jar for your #${output.slot} photo'
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: MomentOptions-move-ios
+- tapOn:
+    id: moment-options-move-back
+
+# Delete asks for confirmation; Cancel keeps the moment.
+- tapOn:
+    id: moment-options-delete
+- extendedWaitUntil:
+    visible: 'Delete your #${output.slot} photo?'
+    timeout: 5000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: MomentOptions-delete-ios
+- tapOn:
+    text: Cancel
+    childOf:
+      id: delete-moment-dialog
+- assertNotVisible: 'Delete your #${output.slot} photo?'
+
+# Re-crop opens Crop on the saved photo.
+- tapOn:
+    id: moment-options-recrop
+- extendedWaitUntil:
+    visible:
+      id: crop-screen
+    timeout: 15000
+- assertVisible: '#${output.slot} · re-crop'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Recrop-ios
+# The button sits below the fold on a 6.3" phone (Crop's layout follows the 844 pt design without the
+# safe areas); swipe the tool sheet itself, since a swipe over the photo pans it.
+- swipe:
+    start: 50%, 95%
+    end: 50%, 80%
+- assertVisible:
+    id: crop-done
+    text: Save crop
+- tapOn:
+    id: crop-cancel
+- extendedWaitUntil:
+    visible:
+      id: tile-${output.slot}
+    timeout: 10000
+
+# Edit caption opens the editor on the uploaded moment, caption focused.
+- tapOn:
+    id: tile-${output.slot}
+- extendedWaitUntil:
+    visible:
+      id: moment-options-caption
+    timeout: 5000
+- tapOn:
+    id: moment-options-caption
+- extendedWaitUntil:
+    visible:
+      id: editor-caption
+    timeout: 15000
+- assertVisible: Done
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: MomentOptions-caption-ios

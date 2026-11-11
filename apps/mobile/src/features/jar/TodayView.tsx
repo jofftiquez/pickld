@@ -39,7 +39,15 @@ export type TodayViewProps = {
   zoneBanner?: ReactNode;
   /** A checking or removed server moment: opens /moment/[id] (M2-21). */
   onOpenMoment?: (momentId: string) => void;
+  /** A live moment, or a queued photo that is waiting or failed: opens Moment options (M2-23). */
+  onOpenOptions?: (tile: GridTile) => void;
 };
+
+/** Tiles that open Moment options: the owner's live moments and queued photos not uploading right now. */
+export function hasOptions(tile: Pick<GridTile, 'state' | 'momentId' | 'queueId'>): boolean {
+  if (tile.queueId !== null) return tile.state === 'waiting' || tile.state === 'failed';
+  return tile.state === 'filled' && tile.momentId !== null;
+}
 
 /** Today (design: Main; first day: EmptyToday). Presentational; app/(tabs)/today.tsx loads the data. */
 export function TodayView({
@@ -59,6 +67,7 @@ export function TodayView({
   zoneTag = null,
   zoneBanner = null,
   onOpenMoment,
+  onOpenOptions,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -125,14 +134,17 @@ export function TodayView({
                     time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
                     isPrivate={tile.isPrivate}
                     addedLater={tile.addedLater}
-                    // TODO(M3-08): Moment detail on filled tiles.
+                    // TODO(M3-08): Moment detail on filled tiles, with Moment options under its More button.
                     onPress={
                       capturable
                         ? () => onCapture(tile.slot)
                         : openable && momentId !== null && onOpenMoment
                           ? () => onOpenMoment(momentId)
-                          : undefined
+                          : hasOptions(tile) && onOpenOptions
+                            ? () => onOpenOptions(tile)
+                            : undefined
                     }
+                    accessibilityHint={hasOptions(tile) && onOpenOptions ? t('momentOptions.openHint') : undefined}
                     onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}
                     testID={`tile-${tile.slot}`}
                   />

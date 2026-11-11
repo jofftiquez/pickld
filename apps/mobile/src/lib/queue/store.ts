@@ -444,6 +444,109 @@ export async function replaceItem(id: number): Promise<QueueItem> {
   return { ...next, replace: true };
 }
 
+/**
+ * Moment options (M2-23) refuse a queued moment that is uploading right now, or that has just left the
+ * queue (uploaded): changing it locally could race the upload. The caller says "try again in a moment";
+ * by then the tile shows the uploaded moment, which the options change on the server.
+ */
+export class QueueItemBusyError extends Error {
+  constructor(id: number) {
+    super(`Queued moment ${id} is uploading or gone`);
+    this.name = 'QueueItemBusyError';
+  }
+}
+
+/**
+ * Moment options on a queued moment (M2-23, FR-CAP-10): Make private, or Move to another moment. A move
+ * starts the upload again from attempt 0 for a photo that had stopped (a conflict on its old slot, or a
+ * failure), and drops a Replace choice made for the old slot. Throws QueueItemBusyError while uploading.
+ */
+export async function saveOptions(
+  id: number,
+  patch: { slot?: (typeof slots)[number]; isPrivate?: boolean },
+): Promise<QueueItem> {
+  const before = await getItem(id);
+  if (!before) throw new QueueItemBusyError(id);
+  const slot = patch.slot === undefined ? before.slot : z.enum(slots).parse(patch.slot);
+  const moved = slot !== before.slot;
+  const next: UploadStatus =
+    moved && (before.state === 'conflict' || before.state === 'failed') ? INITIAL_STATUS : before;
+  const db = await openQueue();
+  const { changes } = await db.runAsync(
+    `UPDATE queue_items SET slot = ?, is_private = ?, replace = ?, state = ?, attempts = ?, next_attempt_at = ?,
+       last_error = ?
+     WHERE id = ? AND state NOT IN ('uploading', 'uploaded')`,
+    slot,
+    (patch.isPrivate ?? before.isPrivate) ? 1 : 0,
+    before.replace && !moved ? 1 : 0,
+    next.state,
+    next.attempts,
+    next.nextAttemptAt,
+    next.lastError,
+    id,
+  );
+  if (changes === 0) throw new QueueItemBusyError(id);
+  notify('status');
+  const item = await getItem(id);
+  if (!item) throw new QueueItemBusyError(id);
+  return item;
+}
+
+/**
+ * Re-crop of a queued moment (M2-23): swaps in the newly prepared full and thumbnail files (copied into
+ * app storage) and deletes the old ones only after the row points at the new files. Edits, caption and
+ * privacy stay. Throws QueueItemBusyError (and keeps the old photo) while uploading or once uploaded.
+ */
+export async function saveRecropped(id: number, files: { photoUri: string; thumbUri: string }): Promise<QueueItem> {
+  const before = await getItem(id);
+  if (!before) throw new QueueItemBusyError(id);
+  const db = await openQueue();
+  const dir = queueDir();
+  const stem = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  const copies: File[] = [];
+  try {
+    const photo = await copyInto(dir, files.photoUri, stem);
+    copies.push(photo);
+    const thumb = await copyInto(dir, files.thumbUri, `${stem}-thumb`);
+    copies.push(thumb);
+    const { changes } = await db.runAsync(
+      `UPDATE queue_items SET photo_file = ?, thumb_file = ?, prepared = 1, crop = NULL
+       WHERE id = ? AND state NOT IN ('uploading', 'uploaded')`,
+      photo.name,
+      thumb.name,
+      id,
+    );
+    if (changes === 0) throw new QueueItemBusyError(id);
+  } catch (error) {
+    copies.forEach(deleteQuietly);
+    throw error;
+  }
+  deleteQuietly(new File(before.photoUri));
+  if (before.thumbUri) deleteQuietly(new File(before.thumbUri));
+  notify('status');
+  const after = await getItem(id);
+  if (!after) throw new QueueItemBusyError(id);
+  return after;
+}
+
+/**
+ * Delete moment on a queued moment (M2-23): the photo never reaches the server. Throws
+ * QueueItemBusyError while it is uploading or once it has been uploaded (then it is deleted on the server).
+ */
+export async function discardItem(id: number): Promise<void> {
+  const item = await getItem(id);
+  if (!item) throw new QueueItemBusyError(id);
+  const db = await openQueue();
+  const { changes } = await db.runAsync(
+    "DELETE FROM queue_items WHERE id = ? AND state NOT IN ('uploading', 'uploaded')",
+    id,
+  );
+  if (changes === 0) throw new QueueItemBusyError(id);
+  deleteQuietly(new File(item.photoUri));
+  if (item.thumbUri) deleteQuietly(new File(item.thumbUri));
+  notify('removed');
+}
+
 /** Drops a row and its files, e.g. once the moment is on the server. The row goes first so no row points at a missing file. */
 export async function removeItem(id: number): Promise<void> {
   const item = await getItem(id);
