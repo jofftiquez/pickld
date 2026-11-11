@@ -25,8 +25,27 @@ appId: me.pickld.app
 - takeScreenshot: Gallery-forms-ios
 - scrollUntilVisible:
     element:
-      id: gallery-containers
+      text: Open dialog
     direction: DOWN
+    centerElement: true
+- tapOn: Open bottom sheet
+- extendedWaitUntil:
+    visible: Delete moment
+    timeout: 5000
+- takeScreenshot: Gallery-sheet-ios
+- tapOn: Delete moment
+- extendedWaitUntil:
+    notVisible: Delete moment
+    timeout: 5000
+- tapOn: Open dialog
+- extendedWaitUntil:
+    visible: Block Mika?
+    timeout: 5000
+- takeScreenshot: Gallery-dialog-ios
+- tapOn: Cancel
+- extendedWaitUntil:
+    notVisible: Block Mika?
+    timeout: 5000
 - scrollUntilVisible:
     element:
       id: gallery-jar
