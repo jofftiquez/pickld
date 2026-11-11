@@ -73,6 +73,7 @@ export const type = {
   screenTitle: { size: 32, weight: '800', letterSpacing: -0.96 }, // -0.03em
   sectionTitle: { size: 20, weight: '800', letterSpacing: -0.4 },
   cardTitle: { size: 17, weight: '700' },
+  jarCardTitle: { size: 18, weight: '700' }, // "5 of 8 moments" on the Today jar card (Main)
   body: { size: 15, weight: '500' },
   bodyMedium: { size: 14, weight: '500' }, // chips (700), list row values
   bodySmall: { size: 13, weight: '500' },
@@ -158,6 +159,7 @@ export const sizes = {
   avatarMd: 52, // Settings profile row
   avatarLg: 64, // Block dialog
   avatarXl: 88, // profile header
+  avatarHeader: 44, // Today header, next to the calendar button (Main)
   avatarRing: 3, // white ring on profile headers
   handleWidth: 40,
   handleHeight: 5,
@@ -176,6 +178,7 @@ export const sizes = {
   pillPaddingY: 3, // time pill, Now chip and badges over photos
   retryPill: 26, // Retry pill on a failed tile (hitSlop brings it to 44)
   jarCardGraphic: 52,
+  headerTop: 26, // space above the screen title block (Main)
 } as const;
 
 export const photo = {

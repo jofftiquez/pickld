@@ -1,0 +1,22 @@
+# M2-05: open the app on Today and screenshot it (design: Main, or EmptyToday on a first day).
+# Run on the iOS Simulator: maestro test apps/mobile/.maestro/today.yaml
+# For the Main look, sign in as a user whose open jar has moments (see the M2-05 PR).
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- assertVisible:
+    id: screen-title
+    text: Today
+- assertVisible:
+    id: tile-evening
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: Main-ios
