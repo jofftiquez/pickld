@@ -21,7 +21,7 @@ appId: me.pickld.app
     visible:
       id: moment-checking
     timeout: 10000
-- assertVisible: Checking your photo…
+- assertVisible: ".*Checking your photo.*"
 - assertVisible:
     id: moment-owner-note
 - waitForAnimationToEnd:
