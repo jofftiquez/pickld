@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
-import { authorRow, jarMomentRow, jarRow, type JarPageData } from './jarPage';
+import { authorRow, jarMomentRow, jarRow, type JarPageData, type Liked } from './jarPage';
 
 const jarId = z.uuid();
 
@@ -51,7 +51,7 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
   if (moments.error) throw new Error(moments.error.message);
   if (!author.data) return null;
   const rows = z.array(jarMomentRow).parse(moments.data);
-  const urls = await photoUrls(rows.map((m) => m.id));
+  const [urls, liked] = await Promise.all([photoUrls(rows.map((m) => m.id)), fetchLiked(viewerId, id, rows)]);
   return {
     jar: jarRow.parse(jar),
     author: authorRow.parse(author.data),
@@ -61,6 +61,24 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
       fullUrl: urls.get(m.id)?.full ?? null,
     })),
     viewerId,
+    liked,
+  };
+}
+
+const likedRow = z.object({ target: z.enum(['jar', 'moment']), target_id: z.string() });
+
+/** The viewer's own likes on the jar and its moments. */
+async function fetchLiked(viewerId: string, id: string, moments: { id: string }[]): Promise<Liked> {
+  const { data, error } = await getSupabase()
+    .from('reactions')
+    .select('target, target_id')
+    .eq('user_id', viewerId)
+    .in('target_id', [id, ...moments.map((m) => m.id)]);
+  if (error) throw new Error(error.message);
+  const rows = z.array(likedRow).parse(data);
+  return {
+    jar: rows.some((r) => r.target === 'jar' && r.target_id === id),
+    moments: rows.filter((r) => r.target === 'moment').map((r) => r.target_id),
   };
 }
 
