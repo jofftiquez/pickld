@@ -1,0 +1,72 @@
+# M2-07: Capture tab → Camera (dev mock camera) → switch slot → shutter → Today shows the photo queued.
+# Run on the iOS Simulator with a dev build (no camera there, so the mock preview is used), signed in as
+# a user whose open jar has SLOT empty:
+#   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/camera.yaml
+#   maestro test -e SLOT=ootd apps/mobile/.maestro/camera.yaml
+appId: me.pickld.app
+---
+# Default SLOT here, not in env: (a flow's env: overrides `maestro test -e` in Maestro 2.12).
+- evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'selfie'}"
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+
+- tapOn:
+    id: tab-capture
+- extendedWaitUntil:
+    visible:
+      id: camera-mock-preview
+    timeout: 10000
+
+# The moment tabs scroll sideways and start centred on the default slot; a tab cut off at the edge
+# doesn't take taps. Swipe the strip back to the first slots, then forward if SLOT is further along.
+- waitForAnimationToEnd:
+    timeout: 3000
+- repeat:
+    times: 2
+    commands:
+      - swipe:
+          from:
+            id: camera-slot-switcher
+          direction: RIGHT
+- runFlow:
+    when:
+      notVisible:
+        id: camera-slot-${output.slot}
+    commands:
+      - repeat:
+          times: 2
+          commands:
+            - swipe:
+                from:
+                  id: camera-slot-switcher
+                direction: LEFT
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: camera-slot-${output.slot}
+- assertVisible:
+    id: camera-slot-tag
+    text: '#${output.slot}, today at .*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Camera-ios
+
+- tapOn:
+    id: camera-shutter
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 10000
+# Saved to the offline queue first: waiting (offline), uploading, or already checking.
+- extendedWaitUntil:
+    visible:
+      id: tile-${output.slot}
+      text: '#${output.slot}, .*(waiting for connection|uploading|checking).*'
+    timeout: 15000

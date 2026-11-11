@@ -3,7 +3,6 @@ import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
 import TabsLayout from '../../../app/(tabs)/_layout';
-import CaptureScreen from '../../../app/(tabs)/capture';
 import JarsScreen from '../../../app/(tabs)/jars';
 import MyDaysScreen from '../../../app/(tabs)/my-days';
 import TodayScreen from '../../../app/(tabs)/today';
@@ -26,14 +25,14 @@ const routes = {
   index: Index,
   '(tabs)/_layout': TabsLayout,
   '(tabs)/today': TodayScreen,
-  '(tabs)/capture': CaptureScreen,
+  '(tabs)/capture': () => null,
   '(tabs)/jars': JarsScreen,
   '(tabs)/my-days': MyDaysScreen,
 };
 
+// Capture opens the full-screen camera instead of a tab screen: see features/capture/__tests__/captureTab.test.tsx.
 const tabs = [
   { label: 'Today', path: '/today' },
-  { label: 'Capture', path: '/capture' },
   { label: 'Jars', path: '/jars' },
   { label: 'My days', path: '/my-days' },
 ];

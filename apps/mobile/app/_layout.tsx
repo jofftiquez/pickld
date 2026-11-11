@@ -14,6 +14,7 @@ import { createQueryClient, persistOptions } from '@/lib/queryClient';
 import { startUploadRunner } from '@/lib/queue/runner';
 import { getSupabase } from '@/lib/supabase';
 import { startTelemetry } from '@/lib/telemetry';
+import { useReduceMotion } from '@/lib/useReduceMotion';
 import { fontFiles } from '@/theme/fonts';
 
 void SplashScreen.preventAutoHideAsync();
@@ -26,6 +27,7 @@ export default function RootLayout() {
   const [splashVisible, setSplashVisible] = useState(true);
   const hideSplash = useCallback(() => setSplashVisible(false), []);
   const [queryClient] = useState(createQueryClient);
+  const reduceMotion = useReduceMotion();
 
   useEffect(() => startTelemetry(), []);
   useEffect(() => startAuth(getSupabase), []);
@@ -38,7 +40,13 @@ export default function RootLayout() {
   if (!loaded) return null;
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* The camera covers the tabs; Reduce Motion swaps the slide for no animation (rule 11). */}
+        <Stack.Screen
+          name="camera"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
+        />
+      </Stack>
       {splashVisible ? <SplashOverlay ready onHidden={hideSplash} /> : null}
     </PersistQueryClientProvider>
   );
