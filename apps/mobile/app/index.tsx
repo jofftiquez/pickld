@@ -1,12 +1,6 @@
-import { useTranslation } from 'react-i18next';
-import { Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
 
-// Placeholder Today route until M2-05 builds the real screen.
+// The app opens on the Today tab.
 export default function Index() {
-  const { t } = useTranslation();
-  return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <Text className="font-jakarta-800 text-screenTitle text-ink">{t('today.title')}</Text>
-    </View>
-  );
+  return <Redirect href="/(tabs)/today" />;
 }
