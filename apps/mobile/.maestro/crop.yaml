@@ -70,11 +70,11 @@ appId: me.pickld.app
     id: crop-flip
 - tapOn:
     id: crop-reset
-- scrollUntilVisible:
-    element:
-      id: crop-done
-    direction: DOWN
-    timeout: 10000
+# The button sits below the fold on a 6.3" phone (Crop's layout follows the 844 pt design without the
+# safe areas); swipe the tool sheet itself, since a swipe over the photo pans it.
+- swipe:
+    start: 50%, 95%
+    end: 50%, 80%
 - tapOn:
     id: crop-done
 - extendedWaitUntil:

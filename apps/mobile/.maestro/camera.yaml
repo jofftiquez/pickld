@@ -85,9 +85,10 @@ appId: me.pickld.app
     visible:
       id: tab-today
     timeout: 10000
-# Saved to the offline queue first: waiting (offline), uploading, or already checking.
+# Saved to the offline queue first: waiting (offline), uploading, checking, or already live (fn:moderate
+# auto-approves in the early version, D-22, so on the local stack it is often live by now).
 - extendedWaitUntil:
     visible:
       id: tile-${output.slot}
-      text: '#${output.slot}, .*(waiting for connection|uploading|checking).*'
+      text: '#${output.slot}, .*(waiting for connection|uploading|checking|added).*'
     timeout: 15000
