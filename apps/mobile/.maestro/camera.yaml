@@ -73,6 +73,12 @@ appId: me.pickld.app
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: Capture-with-caption-ios
+# The save button sits below the caption and privacy switch on smaller screens.
+- scrollUntilVisible:
+    element:
+      id: editor-save
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: editor-save
 - extendedWaitUntil:
