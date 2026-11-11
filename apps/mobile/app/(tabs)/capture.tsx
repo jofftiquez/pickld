@@ -1,14 +1,35 @@
-import { useTranslation } from 'react-i18next';
-import { Text, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useCallback, useRef } from 'react';
+import { View } from 'react-native';
 
-// Placeholder Capture tab until M2-11 builds the real screen.
+import { parseSlotParam } from '@/features/capture/cameraSlot';
+
+// Capture tab (M2-07; FR-CAP-01). The camera is a full-screen route (`/camera`) above the tabs, so
+// this tab only opens it: the Capture tab and Today's tiles (`/capture?slot=…`) both land here.
+// Coming back from the camera (Close, Back or after the shutter) goes to Today.
 export default function CaptureScreen() {
-  const { t } = useTranslation();
-  return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <Text testID="screen-title" className="font-jakarta-800 text-screenTitle text-ink">
-        {t('capture.title')}
-      </Text>
-    </View>
+  const router = useRouter();
+  const navigation = useNavigation<{ setParams(params: { slot?: string }): void }>();
+  const { slot } = useLocalSearchParams<{ slot?: string }>();
+  const opened = useRef(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (opened.current) {
+        opened.current = false;
+        router.navigate('/today');
+        return;
+      }
+      opened.current = true;
+      const target = parseSlotParam(slot);
+      router.push(target ? { pathname: '/camera', params: { slot: target } } : '/camera');
+      // Once the camera covers this tab, drop the tile's slot so the next tap on Capture doesn't reuse
+      // it. Not before: a param change while focused would run this effect again.
+      return () => {
+        if (slot !== undefined) navigation.setParams({ slot: undefined });
+      };
+    }, [router, navigation, slot]),
   );
+
+  return <View className="flex-1 bg-camera" testID="capture-launcher" />;
 }

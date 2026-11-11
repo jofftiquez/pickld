@@ -16,15 +16,21 @@ appId: me.pickld.app
     text: Today
 - takeScreenshot: Today-tabs
 
+# Capture opens the full-screen camera (M2-07); closing it returns to Today.
 - tapOn:
     id: tab-capture
-- assertVisible:
-    id: screen-title
-    text: Capture
-- assertVisible:
-    id: tab-capture
-    selected: true
+- extendedWaitUntil:
+    visible:
+      id: camera-screen
+    timeout: 10000
 - takeScreenshot: Capture-tabs
+- tapOn:
+    id: camera-close
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+      selected: true
+    timeout: 5000
 
 - tapOn:
     id: tab-jars

@@ -60,6 +60,11 @@ export const icons = {
     p('M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4'),
   ],
   evening: [p('M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z')],
+  // Camera
+  flash: [p('M13 2 4 14h7l-1 8 9-12h-7z')],
+  flashOff: [p('M13 2 4 14h7l-1 8 9-12h-7z'), p('M3 3l18 18')],
+  flip: [p('M20 11a8 8 0 0 0-14.3-4.9L4 8'), p('M4 3v5h5'), p('M4 13a8 8 0 0 0 14.3 4.9L20 16'), p('M20 21v-5h-5')],
+  gallery: [r(3.5, 3.5, 17, 17, 3), c(9, 9, 1.8), p('m20.5 15-5-5-11 10.5')],
 } satisfies Record<string, IconShape[]>;
 
 export type IconName = keyof typeof icons;
