@@ -26,6 +26,7 @@ export const colors = {
   scrim: 'rgba(10,12,8,0.55)',
   glass: 'rgba(10,12,8,0.45)', // controls over photos (with blur)
   tabBarGlass: 'rgba(255,255,255,0.86)',
+  tabBarBorder: 'rgba(17,20,13,0.05)', // 1 px ring around the floating tab bar (Main)
   onDarkMuted: '#c9cec2',
   photoPlaceholder: '#d9dcd3', // behind a photo while it loads (moment tiles)
   tileIconWell: '#f0f3ea', // slot icon and + circle on empty tiles (Main)
@@ -162,6 +163,9 @@ export const sizes = {
   handleHeight: 5,
   dialogButton: 48, // Cancel under a dialog's main action
   tabBar: 68,
+  tabPillWidth: 52, // active tab highlight behind the icon (Main)
+  tabPillHeight: 30,
+  tabIconLabelGap: 3,
   momentTile: 116, // Today grid tile height (2 columns)
   momentTileFade: 64, // bottom fade on a moment tile
   tileIconWell: 40, // slot icon square on empty and Now tiles
