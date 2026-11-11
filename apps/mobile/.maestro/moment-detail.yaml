@@ -1,0 +1,50 @@
+# M3-08: a Jar page tile opens Moment detail (design: Moment); a swipe moves to the next visible moment
+# and Close goes back to the Jar page.
+# Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
+# maestro test apps/mobile/.maestro/moment-detail.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- tapOn:
+    id: feed-card-mika
+- extendedWaitUntil:
+    visible:
+      id: jar-tile-ootd
+    timeout: 40000
+- tapOn:
+    id: jar-tile-ootd
+- extendedWaitUntil:
+    visible:
+      id: moment-sheet
+    timeout: 20000
+- assertVisible:
+    id: moment-position
+    text: Moment 4 of 8.*
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: Moment-ios
+# Swipe to the next moment (#selfie).
+- swipe:
+    start: 85%, 30%
+    end: 10%, 30%
+- assertVisible:
+    id: moment-position
+    text: Moment 5 of 8.*
+- tapOn:
+    id: moment-close
+- assertVisible:
+    id: jar-count-tile

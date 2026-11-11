@@ -1,6 +1,7 @@
 // Data for /moment/[id] (M2-21; FR-PUB-07, FR-SAF-03): one of the signed-in user's own moments and its
 // signed photo URLs. Read as the user, so RLS decides what comes back; the query also asks for
-// user_id = me, so another user's live moment is "not found" here (its detail view is M3-08).
+// user_id = me, so another user's moment is "not found" here. A live one opens Moment detail (M3-08)
+// through its jar.
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
@@ -20,6 +21,7 @@ export type OwnMoment = {
   slot: Slot;
   /** `uploading` on the server is shown like `checking`: neither has been approved yet. */
   status: 'checking' | 'live' | 'removed';
+  jarId: string;
   /** The jar's local date (YYYY-MM-DD), for "#evening · Sat, Nov 7". */
   localDate: string;
   photoUrl: string | null;
@@ -40,6 +42,7 @@ const momentRow = z.object({
   id: z.string(),
   slot: z.enum(slots),
   status: z.enum(['uploading', 'checking', 'live', 'removed']),
+  jar_id: z.string(),
   jars: z.object({ local_date: z.string() }),
 });
 
@@ -62,7 +65,7 @@ export async function photoUrls(momentId: string): Promise<{ full: string | null
 async function fetchOwnMoment(userId: string, momentId: string): Promise<OwnMoment | null> {
   const { data, error } = await getSupabase()
     .from('moments')
-    .select('id, slot, status, jars(local_date)')
+    .select('id, slot, status, jar_id, jars(local_date)')
     .eq('id', momentId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -74,6 +77,7 @@ async function fetchOwnMoment(userId: string, momentId: string): Promise<OwnMome
     id: row.data.id,
     slot: row.data.slot,
     status: row.data.status === 'uploading' ? 'checking' : row.data.status,
+    jarId: row.data.jar_id,
     localDate: row.data.jars.local_date,
     photoUrl: full,
     thumbUrl: thumb,

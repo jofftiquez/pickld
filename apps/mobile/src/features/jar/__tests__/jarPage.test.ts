@@ -12,6 +12,7 @@ function moment(over: Partial<JarMoment> & Pick<JarMoment, 'id' | 'slot'>): JarM
     captured_at: null,
     added_at: '2026-11-08T01:00:00Z',
     edits: {},
+    like_count: 0,
     thumbUrl: null,
     fullUrl: null,
     ...over,

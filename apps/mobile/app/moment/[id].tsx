@@ -1,21 +1,49 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { shareJar } from '@/features/jar/shareJar';
+import { useJarPage } from '@/features/jar/useJarPage';
+import { MomentDetailView } from '@/features/moment/MomentDetailView';
 import { OwnMomentView } from '@/features/moment/OwnMomentView';
 import { useOwnMoment } from '@/features/moment/useOwnMoment';
 
-// /moment/[id] (M2-21; FR-PUB-07, FR-SAF-03): the owner's own moment while it is checked or after it
-// was removed. The id is validated with Zod in useOwnMoment; a bad id is "not found".
+// /moment/[id]: Moment detail (M3-08; FR-SOC-04) when opened from a jar (`jar` param) or for the owner's
+// own live moment, swiping through that jar's shown moments. The owner's checking or removed moment
+// shows its own screen (M2-21; FR-PUB-07, FR-SAF-03). Ids are validated with Zod in the hooks; a bad id
+// is "not available".
 export default function MomentScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const result = useOwnMoment(id);
+  const { id, jar } = useLocalSearchParams<{ id: string; jar?: string }>();
+  // From a jar the moment is read through the jar page; otherwise it is the owner's own moment.
+  const own = useOwnMoment(jar ? undefined : id);
+  const ownLiveJar = own.kind === 'found' && own.moment.status === 'live' ? own.moment.jarId : undefined;
+  const jarId = jar ?? ownLiveJar;
+  const page = useJarPage(jarId);
 
   const close = () => {
     if (router.canGoBack()) router.back();
     else router.replace('/today');
   };
 
-  return <OwnMomentView result={result} insets={insets} onClose={close} />;
+  if (jarId === undefined) return <OwnMomentView result={own} insets={insets} onClose={close} />;
+  return (
+    <>
+      {/* Light status bar text over the dark screen. */}
+      <Stack.Screen options={{ statusBarStyle: 'light' }} />
+      <MomentDetailView
+        data={page.data}
+        failed={page.failed}
+        momentId={id ?? ''}
+        insets={insets}
+        onClose={close}
+        onShare={() => {
+          if (page.data) shareJar(page.data, t);
+        }}
+        onRetry={() => void page.refresh()}
+      />
+    </>
+  );
 }

@@ -34,6 +34,7 @@ export const jarMomentRow = z.object({
   captured_at: z.string().nullable(),
   added_at: z.string(),
   edits: z.unknown(),
+  like_count: z.number(),
 });
 export type JarMomentRow = z.infer<typeof jarMomentRow>;
 
@@ -57,6 +58,8 @@ export type JarPage = {
   cover: JarMoment | null;
   /** The rest of the shown moments in slot order; the cover is not repeated. */
   grid: JarMoment[];
+  /** Every shown moment in slot order, cover included: what Moment detail swipes through. */
+  moments: JarMoment[];
 };
 
 /** Whether `viewerId` may see the moment on this page: live, and private ones only by their owner. */
@@ -84,5 +87,6 @@ export function buildJarPage({ jar, moments, viewerId }: JarPageData): JarPage {
     isFull: count >= slots.length,
     cover,
     grid: shown.filter((m) => m !== cover),
+    moments: shown,
   };
 }

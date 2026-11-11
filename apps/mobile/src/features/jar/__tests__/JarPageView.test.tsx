@@ -33,6 +33,7 @@ function moment(over: Partial<JarMoment> & Pick<JarMoment, 'id' | 'slot'>): JarM
     captured_at: null,
     added_at: '2026-11-07T22:48:00Z', // 6:48 AM in Manila on Nov 8
     edits: {},
+    like_count: 0,
     thumbUrl: `https://photos.test/${over.id}.webp`,
     fullUrl: null,
     ...over,
