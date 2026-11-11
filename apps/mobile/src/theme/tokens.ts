@@ -47,6 +47,8 @@ export const colors = {
   cameraPanel: '#1a1c16', // top panel of Camera access off (CameraDenied)
   onDarkWell: 'rgba(255,255,255,0.1)', // icon square on Camera access off
   onDarkButton: 'rgba(255,255,255,0.12)', // secondary button on the camera (Choose from gallery instead)
+  editor: '#0b0d09', // editor screen background behind the photo (Capture)
+  editorPhoto: '#2a2d26', // behind the photo and filter thumbnails while the photo loads (Capture)
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -105,6 +107,8 @@ export const radius = {
   dialog: 28, // centered confirm dialogs (Block)
   viewfinder: 28, // bottom corners of the camera viewfinder (Camera)
   cameraTag: 18, // slot tag over the viewfinder (Camera)
+  editorPhoto: 32, // bottom corners of the photo in the editor (Capture)
+  filterThumb: 18, // filter thumbnails (Capture)
   tabBar: 26,
   sheet: 30,
   pill: 999,
@@ -210,6 +214,10 @@ export const sizes = {
   cameraTabUnderline: 2, // selected moment tab on the camera
   accessOffIconWell: 72, // camera-off icon square (CameraDenied)
   accessOffPanel: 520 / 844, // top panel's share of the screen height (CameraDenied)
+  filterThumb: 58, // filter thumbnail square (Capture)
+  filterRing: 2, // green ring around the selected filter thumbnail
+  filterRingGap: 3, // white gap between the thumbnail and its ring
+  editorPanelOverlap: 10, // the white tool panel tucks under the photo's rounded bottom (Capture)
 } as const;
 
 export const photo = {

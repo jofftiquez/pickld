@@ -47,6 +47,10 @@ export default function RootLayout() {
           name="camera"
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
         />
+        <Stack.Screen
+          name="edit/[momentId]"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
+        />
       </Stack>
       {splashVisible ? <SplashOverlay ready onHidden={hideSplash} /> : null}
     </PersistQueryClientProvider>

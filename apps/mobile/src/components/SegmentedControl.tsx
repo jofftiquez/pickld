@@ -12,6 +12,8 @@ export type SegmentedControlProps<K extends string> = {
   onSelect: (key: K) => void;
   /** Spoken name for the group (e.g. "Profile sections"). */
   accessibilityLabel: string;
+  /** `light`: white selected pill on the app background. `dark`: ink selected pill on a white sheet (editor tools). */
+  variant?: 'light' | 'dark';
   testID?: string;
 };
 
@@ -21,10 +23,17 @@ export function SegmentedControl<K extends string>({
   selected,
   onSelect,
   accessibilityLabel,
+  variant = 'light',
   testID,
 }: SegmentedControlProps<K>) {
+  const dark = variant === 'dark';
   return (
-    <View accessibilityRole="tablist" accessibilityLabel={accessibilityLabel} testID={testID} style={styles.track}>
+    <View
+      accessibilityRole="tablist"
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      style={[styles.track, dark ? styles.trackDark : null]}
+    >
       {segments.map((segment) => {
         const isSelected = segment.key === selected;
         return (
@@ -36,12 +45,12 @@ export function SegmentedControl<K extends string>({
             onPress={() => onSelect(segment.key)}
             // 36 px tab + 4 px track padding on each side reaches the 44 px minimum.
             hitSlop={{ top: space.xs, bottom: space.xs }}
-            style={[styles.tab, isSelected ? styles.selected : null]}
+            style={[styles.tab, isSelected ? (dark ? styles.selectedDark : styles.selected) : null]}
           >
             <Text
               style={[
                 textStyle('bodySmall', isSelected ? '700' : '600'),
-                { color: isSelected ? colors.ink : colors.muted },
+                { color: isSelected ? (dark ? colors.surface : colors.ink) : colors.muted },
                 styles.label,
               ]}
             >
@@ -70,6 +79,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: space.sm,
   },
+  trackDark: { backgroundColor: colors.subtle },
   selected: { backgroundColor: colors.surface },
+  selectedDark: { backgroundColor: colors.ink },
   label: { textAlign: 'center' },
 });
