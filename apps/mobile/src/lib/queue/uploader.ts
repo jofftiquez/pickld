@@ -8,7 +8,7 @@ import { getItem, listQueue, removeItem, saveStatus, saveUploadRefs, type QueueI
 
 // Upload worker (M2-04; NFR-OFF-01, NFR-OFF-02, FR-JAR-03; AGENTS "Upload pipeline", rules 3, 4, 6).
 // One queued moment: ensure_jar → fn:upload-url → PUT photo and thumbnail → insert the moment as
-// `checking` → mark uploaded and delete the local files. fn:moderate (M2-19) runs on the insert and is
+// `checking` → call fn:moderate → mark uploaded and delete the local files. fn:moderate (M2-19) is
 // the only thing that sets `live`. The server stamps added_at and is_backfilled; the app never sends them.
 
 export type UploaderClient = Pick<SupabaseClient<Database>, 'rpc' | 'from' | 'functions'>;
@@ -132,8 +132,8 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
       body: {
         kind: 'moment',
         jarId: jar.id,
-        photo: { contentType: 'image/jpeg', size: photo.size },
-        thumb: { contentType: 'image/jpeg', size: thumb.size },
+        photo: { contentType: 'image/webp', size: photo.size },
+        thumb: { contentType: 'image/webp', size: thumb.size },
       },
     });
     if (urlError) throw urlError;
@@ -152,6 +152,11 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
       await saveStatus(conflict(uploading, 'slot already has a moment'));
       return { kind: 'conflict', itemId: item.id, jarId: jar.id, slot: item.slot };
     }
+
+    // fn:moderate (M2-19) moves it out of `checking`; it is safe to repeat, so a failed call retries
+    // the whole item and the insert above recognises our own row.
+    const { error: moderateError } = await client.functions.invoke('moderate', { body: { momentId } });
+    if (moderateError) throw moderateError;
 
     // The moment is on the server: only now may the local copies go (rule 3).
     await saveStatus(succeed(uploading));

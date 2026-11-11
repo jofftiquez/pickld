@@ -50,6 +50,7 @@ describe('uploadItem', () => {
       'put:full.jpg',
       'put:thumb.jpg',
       'insert:moments',
+      'fn:moderate',
       expect.stringMatching(/^delete:.*\.jpg$/),
       expect.stringMatching(/^delete:.*-thumb\.jpg$/),
     ]);
@@ -57,8 +58,8 @@ describe('uploadItem', () => {
       {
         kind: 'moment',
         jarId: JAR,
-        photo: { contentType: 'image/jpeg', size: Buffer.byteLength('jpeg:IMG_0001:full-resolution-bytes') },
-        thumb: { contentType: 'image/jpeg', size: Buffer.byteLength('jpeg:IMG_0001:thumb') },
+        photo: { contentType: 'image/webp', size: Buffer.byteLength('jpeg:IMG_0001:full-resolution-bytes') },
+        thumb: { contentType: 'image/webp', size: Buffer.byteLength('jpeg:IMG_0001:thumb') },
       },
     ]);
     // The server sets added_at and is_backfilled (rule 6); a new moment starts as checking (rule 4).
@@ -139,6 +140,27 @@ describe('uploadItem', () => {
     expect(queuedFiles()).toHaveLength(2);
     expect(backend.moments).toEqual([]);
     expect(log.some((entry) => entry.startsWith('delete:'))).toBe(false);
+  });
+
+  it('keeps the files when moderate fails, then moderates its own row on the retry', async () => {
+    backend.failNext('moderate', { message: 'moderate unavailable' });
+    const item = await queueMoment();
+
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'retrying', error: 'moderate unavailable' });
+    expect(backend.moments).toHaveLength(1);
+    expect(backend.moderated).toEqual([]);
+    expect(queuedFiles()).toHaveLength(2);
+
+    const retry = await getItem(item.id);
+    clock = T0 + BACKOFF_MS[0];
+    expect(await uploadItem(retry!, deps())).toEqual({
+      kind: 'uploaded',
+      itemId: item.id,
+      momentId: MOMENT_ID,
+    });
+    expect(backend.moments).toHaveLength(1);
+    expect(backend.moderated).toEqual([MOMENT_ID]);
+    expect(queuedFiles()).toEqual([]);
   });
 
   it('fails without a thumbnail, before any network call', async () => {

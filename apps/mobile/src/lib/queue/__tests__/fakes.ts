@@ -116,7 +116,7 @@ interface MomentRow {
 }
 
 /** A step of the pipeline that can be made to fail: the next `times` calls reject with `error`. */
-export type Step = 'ensure_jar' | 'upload-url' | 'put' | 'insert' | 'insert-after-write';
+export type Step = 'ensure_jar' | 'upload-url' | 'put' | 'insert' | 'insert-after-write' | 'moderate';
 
 /**
  * A fake Supabase backend: ensure_jar, fn:upload-url, the bucket and the moments table with its
@@ -127,6 +127,7 @@ export function fakeBackend() {
   const objects = new Map<string, string>();
   const failures = new Map<Step, unknown[]>();
   const uploadUrlBodies: unknown[] = [];
+  const moderated: string[] = [];
   let uploads = 0;
 
   const failIfQueued = (step: Step) => {
@@ -147,6 +148,15 @@ export function fakeBackend() {
     functions: {
       invoke: async (name: string, options: { body: unknown }) => {
         log.push(`fn:${name}`);
+        if (name === 'moderate') {
+          try {
+            failIfQueued('moderate');
+          } catch (error) {
+            return { data: null, error };
+          }
+          moderated.push((options.body as { momentId: string }).momentId);
+          return { data: { data: { status: 'live' } }, error: null };
+        }
         failIfQueued('upload-url'); // supabase-js rejects on a fetch failure
         uploadUrlBodies.push(options.body);
         uploads += 1;
@@ -198,6 +208,7 @@ export function fakeBackend() {
     client: client as unknown as UploaderClient,
     putFile,
     moments,
+    moderated,
     objects,
     uploadUrlBodies,
     failNext(step: Step, error: unknown, times = 1) {
