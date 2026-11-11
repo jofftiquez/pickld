@@ -37,7 +37,9 @@ function tilesFor(moments: ServerMoment[], queue: QueuedMoment[] = []) {
   return buildTodayGrid({ localDate: DATE, moments, queue, nowSlot: null });
 }
 
-async function renderCard(props: { moments?: ServerMoment[]; queue?: QueuedMoment[]; isPast?: boolean } = {}) {
+async function renderCard(
+  props: { moments?: ServerMoment[]; queue?: QueuedMoment[]; isPast?: boolean; onViewJar?: () => void } = {},
+) {
   const onFill = jest.fn();
   await render(
     <SelectedDayCard
@@ -45,6 +47,7 @@ async function renderCard(props: { moments?: ServerMoment[]; queue?: QueuedMomen
       tiles={tilesFor(props.moments ?? SEED_MOMENTS, props.queue)}
       isPast={props.isPast ?? true}
       onFill={onFill}
+      onViewJar={props.onViewJar}
       locale="en-US"
     />,
   );
@@ -71,6 +74,15 @@ describe('SelectedDayCard', () => {
     expect(screen.getByRole('image', { name: '#evening, added later' })).toBeTruthy();
     expect(screen.getByRole('image', { name: '#morning' })).toBeTruthy();
     expect(screen.queryByRole('image', { name: '#morning, added later' })).toBeNull();
+  });
+
+  it('links to the Jar page only when the day has a jar', async () => {
+    const onViewJar = jest.fn();
+    await renderCard({ onViewJar });
+    await fireEvent.press(screen.getByRole('link', { name: 'View jar' }));
+    expect(onViewJar).toHaveBeenCalledTimes(1);
+    await renderCard();
+    expect(screen.queryByRole('link', { name: 'View jar' })).toBeNull();
   });
 
   it('leaves the Added later count out when nothing was added later', async () => {

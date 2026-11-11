@@ -125,6 +125,35 @@
     "cardLabel_one": "{{name}}’s jar, {{count}} of {{max}} moment. {{updated}}. {{likes}} likes, {{comments}} comments",
     "cardLabel_other": "{{name}}’s jar, {{count}} of {{max}} moments. {{updated}}. {{likes}} likes, {{comments}} comments"
   },
+  "jarPage": {
+    "title": "{{name}}’s {{weekday}}",
+    "subtitle_one": "{{date}} · {{count}} of {{max}} moment",
+    "subtitle_other": "{{date}} · {{count}} of {{max}} moments",
+    "fullJar": "Full jar",
+    "highlight": "“{{caption}}” — {{slot}}, {{time}}",
+    "highlightAddedLater": "“{{caption}}” — {{slot}}, {{time}} · Added later",
+    "count": "{{count}}/{{max}}",
+    "countLabel": "moments",
+    "countA11y": "{{count}} of {{max}} moments",
+    "tile": "{{slot}}",
+    "tileAddedLater": "{{slot}}, added later",
+    "tilePrivate": "{{slot}}, private",
+    "tilePrivateAddedLater": "{{slot}}, private, added later",
+    "cover": "Cover photo, {{slot}}",
+    "coverAddedLater": "Cover photo, {{slot}}, added later",
+    "back": "Back",
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "comments_one": "{{count}} comment",
+    "comments_other": "{{count}} comments",
+    "share": "Share jar",
+    "shareHint": "Shares a link to this jar",
+    "shareMessage": "{{title}} on Pickld: {{url}}",
+    "unavailableTitle": "This jar isn’t available",
+    "unavailableBody": "It may be private, or its owner hasn’t shared it with you.",
+    "failed": "Couldn’t load this jar.",
+    "retry": "Try again"
+  },
   "myDays": {
     "title": "My days",
     "subtitle_one": "{{month}} · {{count}} moment",
@@ -144,7 +173,9 @@
       "addSlot": "+ {{slot}}",
       "fill": "Fill this jar",
       "fillHint": "Opens the camera to add to {{date}}",
-      "fillNote": "Moments added now show an “Added later” badge."
+      "fillNote": "Moments added now show an “Added later” badge.",
+      "viewJar": "View jar",
+      "viewJarHint": "Opens the jar page for {{date}}"
     },
     "camera": {
       "when": "For {{date}}",

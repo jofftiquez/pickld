@@ -1,0 +1,88 @@
+// The Jar page (FR-SOC-03, FR-JAR-06; design: Story): one person's jar for one day. Rows are read as the
+// viewer, so RLS decides what comes back (moments_others_select: others get live, non-private moments of
+// a jar they may view). The model filters again so a stale cache or an owner-only row can never reach
+// another viewer's screen (rule 9).
+import { z } from 'zod';
+
+import { slots, type Slot } from '@/theme/tokens';
+
+export const jarRow = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  local_date: z.string(),
+  tz: z.string(),
+  moment_count: z.number(),
+  visible_count: z.number(),
+  like_count: z.number(),
+  comment_count: z.number(),
+});
+export type JarRow = z.infer<typeof jarRow>;
+
+export const authorRow = z.object({
+  username: z.string(),
+  display_name: z.string(),
+});
+export type AuthorRow = z.infer<typeof authorRow>;
+
+export const jarMomentRow = z.object({
+  id: z.string(),
+  slot: z.enum(slots),
+  status: z.string(),
+  is_private: z.boolean(),
+  is_backfilled: z.boolean(),
+  caption: z.string().nullable(),
+  captured_at: z.string().nullable(),
+  added_at: z.string(),
+  edits: z.unknown(),
+});
+export type JarMomentRow = z.infer<typeof jarMomentRow>;
+
+/** A moment with its signed photo URLs from `fn:photo-urls` (null when signing failed). */
+export type JarMoment = JarMomentRow & { thumbUrl: string | null; fullUrl: string | null };
+
+export type JarPageData = {
+  jar: JarRow;
+  author: AuthorRow;
+  moments: JarMoment[];
+  /** The signed-in viewer; the owner also sees their private moments. */
+  viewerId: string;
+};
+
+export type JarPage = {
+  isOwner: boolean;
+  /** The count the viewer is allowed to know (D-9): every moment that isn't removed for the owner, else visible moments. */
+  count: number;
+  isFull: boolean;
+  /** The cover photo: the moment with the newest caption, else the first in slot order. Null for an empty jar. */
+  cover: JarMoment | null;
+  /** The rest of the shown moments in slot order; the cover is not repeated. */
+  grid: JarMoment[];
+};
+
+/** Whether `viewerId` may see the moment on this page: live, and private ones only by their owner. */
+export function isShown(moment: Pick<JarMomentRow, 'status' | 'is_private'>, isOwner: boolean): boolean {
+  return moment.status === 'live' && (isOwner || !moment.is_private);
+}
+
+const slotIndex = (slot: Slot) => slots.indexOf(slot);
+
+/** The cover caption follows the feed card's quote (0014 last_caption): newest added_at, then later slot. */
+function newestCaptioned(moments: JarMoment[]): JarMoment | null {
+  const captioned = moments.filter((m) => (m.caption ?? '').trim() !== '');
+  captioned.sort((a, b) => b.added_at.localeCompare(a.added_at) || slotIndex(b.slot) - slotIndex(a.slot));
+  return captioned[0] ?? null;
+}
+
+export function buildJarPage({ jar, moments, viewerId }: JarPageData): JarPage {
+  const isOwner = jar.user_id === viewerId;
+  const shown = moments.filter((m) => isShown(m, isOwner)).sort((a, b) => slotIndex(a.slot) - slotIndex(b.slot));
+  const cover = newestCaptioned(shown) ?? shown[0] ?? null;
+  const count = isOwner ? jar.moment_count : jar.visible_count;
+  return {
+    isOwner,
+    count,
+    isFull: count >= slots.length,
+    cover,
+    grid: shown.filter((m) => m !== cover),
+  };
+}
