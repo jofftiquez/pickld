@@ -74,7 +74,19 @@ describe('useEditorState overlays (FR-CAP-05, FR-CAP-08)', () => {
     color: 'white',
     text: '',
   };
-  const c: Overlay = { id: 'c', type: 'text', x: 0.8, y: 0.8, scale: 0.2, rotation: -0.5 };
+  const c: Overlay = {
+    id: 'c',
+    type: 'text',
+    x: 0.8,
+    y: 0.8,
+    scale: 0.2,
+    rotation: -0.5,
+    text: 'hi',
+    font: 'bold',
+    color: 'white',
+    size: 30,
+    align: 'center',
+  };
   const start: Edits = { v: 1, filter: 'mono', overlays: [a, b, c] };
   const ids = (edits: Edits) => edits.overlays.map((o) => o.id);
 
@@ -193,5 +205,50 @@ describe('useEditorState overlays (FR-CAP-05, FR-CAP-08)', () => {
       ['mono', 'a@0.2', 'b@0.5', 'c@0.8'],
     ]);
     expect(result.current.canUndo).toBe(false);
+  });
+});
+
+describe('useEditorState updateOverlay for text (FR-CAP-07)', () => {
+  const sticker: Overlay = { id: 's', type: 'sticker', ...kape, x: 0.2, y: 0.2, scale: 0.3, rotation: 0 };
+  const text: Overlay = {
+    id: 't',
+    type: 'text',
+    x: 0.5,
+    y: 0.5,
+    scale: 0.4,
+    rotation: 0,
+    text: 'hi',
+    font: 'bold',
+    color: 'white',
+    size: 30,
+    align: 'center',
+  };
+  const start: Edits = { v: 1, filter: 'original', overlays: [text, sticker] };
+  const recolor = (o: Overlay): Overlay => (o.type === 'text' ? { ...o, color: 'ink' } : o);
+
+  it('changes one overlay as one Undo step and keeps it in its place in the stack', async () => {
+    const { result } = await renderHook(() => useEditorState(start));
+    await act(() => result.current.updateOverlay('t', recolor));
+    expect(result.current.edits.overlays).toEqual([{ ...text, color: 'ink' }, sticker]);
+    expect(result.current.canUndo).toBe(true);
+    await act(() => result.current.undo());
+    expect(result.current.edits).toEqual(start);
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it('records no step when the change returns the same overlay or the overlay is gone', async () => {
+    const { result } = await renderHook(() => useEditorState(start));
+    await act(() => result.current.updateOverlay('t', (o) => o));
+    await act(() => result.current.updateOverlay('missing', recolor));
+    expect(result.current.edits).toBe(start);
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it('clamps the size, and refuses a change that swaps the overlay for another', async () => {
+    const { result } = await renderHook(() => useEditorState(start));
+    await act(() => result.current.updateOverlay('t', (o) => ({ ...o, scale: 9 })));
+    expect(result.current.edits.overlays[0]).toMatchObject({ id: 't', scale: 2 });
+    await act(() => result.current.updateOverlay('t', (o) => ({ ...o, id: 'other' })));
+    expect(result.current.edits.overlays[0]).toMatchObject({ id: 't' });
   });
 });

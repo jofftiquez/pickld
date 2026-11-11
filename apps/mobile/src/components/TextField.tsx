@@ -9,6 +9,8 @@ export type TextFieldProps = {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
+  /** Typing is finished: the field lost focus or Return was pressed. */
+  onEndEditing?: () => void;
   /** Shows "n / max" under the field and stops input past max. */
   maxLength?: number;
   /** Multi-line bio-style field (74 px tall). */
@@ -26,6 +28,7 @@ export function TextField({
   label,
   value,
   onChangeText,
+  onEndEditing,
   maxLength,
   multiline = false,
   placeholder,
@@ -47,6 +50,7 @@ export function TextField({
         accessibilityHint={accessibilityHint}
         value={value}
         onChangeText={onChangeText}
+        onEndEditing={onEndEditing}
         maxLength={maxLength}
         multiline={multiline}
         placeholder={placeholder}

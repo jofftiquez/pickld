@@ -53,6 +53,18 @@ export const colors = {
   zoneText: '#1d3a52', // icon on that well; 10:1 on zoneTint
   overlayOutline: 'rgba(255,255,255,0.95)', // dashed outline around the selected overlay (Stickers)
   overlayPlaceholder: 'rgba(127,173,51,0.6)', // dev/test-only box drawn for overlays with no renderer yet
+  textOverlayShadow: 'rgba(0,0,0,0.45)', // soft shadow under light text on photos (Text)
+  textOverlayShadowOnDark: 'rgba(255,255,255,0.6)', // light glow under ink text, so it reads on dark photos
+} as const;
+
+// Text tool colors (Text), in the design's order. Drawn on photos with a shadow (colors.textOverlayShadow).
+export const textOverlayColors = {
+  white: '#ffffff',
+  ink: '#11140d',
+  pickle: '#7fad33',
+  butter: '#ffe08a',
+  blush: '#fdeceb',
+  sky: '#dbe8f3',
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -261,6 +273,11 @@ export const sizes = {
   overlayDeleteIcon: 12,
   overlayHandle: 18, // white resize-and-rotate handle on the bottom-right corner (Stickers)
   overlayHandleOffset: 12, // how far it pokes out past the overlay's bottom and right edges
+  textRowLabel: 44, // "Color" and "Size" labels in the Text panel
+  textSwatch: 32, // color circles in the Text panel
+  textSwatchRing: 2, // ink ring around the selected color, with a white gap of the same width
+  sliderTrack: 4, // size slider track (Text)
+  sliderThumb: 22,
 } as const;
 
 export const photo = {

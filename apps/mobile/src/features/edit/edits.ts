@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { filterIdSchema } from './filters';
+import { textFields } from './text/textOverlay';
 
 // The editor's edits (FR-CAP-08): stored as data in the queue item's and the moment's `edits` JSON and
 // drawn over the photo at display time. They are never burned into the photo: the uploaded file stays
@@ -59,7 +60,7 @@ const bubbleContent = {
 export const overlaySchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sticker'), ...overlayBase, ...stickerFields }),
   z.object({ type: z.literal('bubble'), ...overlayBase, ...bubbleContent }),
-  z.object({ type: z.literal('text'), ...overlayBase }),
+  z.object({ type: z.literal('text'), ...overlayBase, ...textFields }),
 ]);
 export type Overlay = z.infer<typeof overlaySchema>;
 export type Bubble = Extract<Overlay, { type: 'bubble' }>;

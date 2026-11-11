@@ -16,6 +16,7 @@ import { EditorView, type EditorTool } from './EditorView';
 import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
 import { stickerOverlay } from './stickers/catalog';
 import { registerStickerRenderer } from './stickers/stickerRenderer';
+import { registerTextRenderer } from './text/registerTextRenderer';
 import { useEditorState } from './useEditorState';
 
 // Until the sticker, bubble and text tools register their renderers (M2-15, M2-16, M2-17), development
@@ -23,6 +24,7 @@ import { useEditorState } from './useEditorState';
 registerStickerRenderer();
 // Bubbles draw with their own renderer (M2-16), registered first so the placeholder leaves them alone.
 registerBubbleRenderer();
+registerTextRenderer();
 if (__DEV__) registerPlaceholderRenderers();
 
 export const queueItemQueryKey = (id: number) => ['queueItem', id] as const;

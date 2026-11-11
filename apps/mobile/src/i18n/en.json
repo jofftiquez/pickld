@@ -215,6 +215,37 @@
     "label": "{{shape}} bubble: {{text}}",
     "labelEmpty": "{{shape}} bubble, no text yet"
   },
+  "editText": {
+    "field": "Your text",
+    "placeholder": "Type something",
+    "fieldHintSelected": "Edits the selected text",
+    "add": "Add text",
+    "fonts": "Fonts",
+    "fontLabel": "{{font}} font",
+    "font": {
+      "clean": "Clean",
+      "bold": "Bold",
+      "type": "Type",
+      "serif": "Serif"
+    },
+    "color": "Color",
+    "colors": "Text color",
+    "colorName": {
+      "white": "White",
+      "ink": "Black",
+      "pickle": "Pickle green",
+      "butter": "Butter yellow",
+      "blush": "Blush pink",
+      "sky": "Sky blue"
+    },
+    "size": "Size",
+    "sizeLabel": "Text size",
+    "align": {
+      "left": "Align left",
+      "center": "Align center"
+    },
+    "overlayLabel": "Text: {{text}}"
+  },
   "moment": {
     "close": "Close",
     "back": "Back",
