@@ -1,0 +1,112 @@
+# M2-28: Full jar celebration and Sticker unlocked (designs: FullJar, StickerUnlock; FR-JAR-07, FR-STK-05).
+# Fills the last slot of today's jar with the dev mock camera, waits for the celebration, screenshots it,
+# closes it and checks it stays closed after a relaunch; then opens Sticker unlocked by its route for the
+# second screenshot.
+# Run on the iOS Simulator with a dev build, against the local stack:
+#   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/full-jar.yaml
+#
+# Seed (supabase/seed.sql as is): signed in as dale, whose open jar today has 7 slots filled and evening
+# empty. The 8th moment (checking counts, like the server's moment_count) makes the jar full.
+# - dale already has first_full_jar (yesterday's full jar), so filling today shows the Full jar celebration
+#   but no Sticker unlocked; that screen is opened by its route, which shows any milestone's screen as is.
+# - The app shows a celebration once per jar per install. Its first launch with this build records what is
+#   already there and shows nothing, so a jar that is already full never pops up: run with evening empty.
+# - To run again: `supabase db reset` (evening empty again) and erase the app's data or reinstall.
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- assertNotVisible:
+    id: full-jar
+
+# Capture #evening with the mock camera (the steps of camera.yaml with SLOT=evening).
+- tapOn:
+    id: tab-capture
+- extendedWaitUntil:
+    visible:
+      id: camera-mock-preview
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      notVisible:
+        id: camera-slot-evening
+    commands:
+      - repeat:
+          times: 3
+          commands:
+            - swipe:
+                from:
+                  id: camera-slot-switcher
+                direction: LEFT
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: camera-slot-evening
+- tapOn:
+    id: camera-shutter
+
+# The photo uploads, the server counts the 8th moment and Today opens the celebration.
+- extendedWaitUntil:
+    visible:
+      id: full-jar
+    timeout: 45000
+- assertVisible: Your .*day is complete
+- assertVisible: Eight moments, one real day\. That’s jar number \d+\.
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: FullJar-ios
+
+- tapOn:
+    id: full-jar-done
+- extendedWaitUntil:
+    notVisible:
+      id: full-jar
+    timeout: 5000
+- assertVisible:
+    id: tab-today
+
+# Shown once: not again after a relaunch.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertNotVisible:
+    id: full-jar
+
+# Sticker unlocked for the first full jar (Today opens it after the celebration for a newly earned
+# milestone; dale's was earned at seed time, so open the screen by its route).
+- openLink: pickld://sticker-unlocked?key=first_full_jar&earned=1
+- extendedWaitUntil:
+    visible:
+      id: sticker-unlocked
+    timeout: 10000
+- assertVisible:
+    id: sticker-unlocked-art
+- assertVisible: Your first full jar!
+- assertVisible: 1 of 5 earned
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: StickerUnlock-ios
+- tapOn:
+    id: sticker-unlocked-close
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 5000
