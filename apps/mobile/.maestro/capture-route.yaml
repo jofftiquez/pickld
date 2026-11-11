@@ -3,6 +3,10 @@
 appId: me.pickld.app
 ---
 - openLink: pickld://${ROUTE}
+# iOS asks before opening a custom-scheme link.
+- tapOn:
+    text: Open
+    optional: true
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: ${OUT}

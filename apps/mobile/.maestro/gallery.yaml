@@ -4,6 +4,10 @@
 appId: me.pickld.app
 ---
 - openLink: pickld://dev/gallery
+# iOS asks before opening a custom-scheme link.
+- tapOn:
+    text: Open
+    optional: true
 - extendedWaitUntil:
     visible:
       id: gallery-buttons
