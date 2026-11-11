@@ -9,22 +9,20 @@ export type SlotTagProps = {
   slot: string;
   /** Already formatted for the phone's locale, e.g. "2:14 PM". */
   time: string;
+  /** Fill this jar: the past day being filled (already formatted), shown instead of "Today · time". */
+  date?: string;
 };
 
 /** "#afternoon / Today · 2:14 PM" over the top of the viewfinder (Camera). */
-export function SlotTag({ slot, time }: SlotTagProps) {
+export function SlotTag({ slot, time, date }: SlotTagProps) {
   const { t } = useTranslation();
+  const label = date ? t('myDays.camera.slotTag', { slot, date }) : t('camera.slotTag', { slot, time });
+  const when = date ? t('myDays.camera.when', { date }) : t('camera.when', { time });
   return (
-    <View
-      accessible
-      accessibilityRole="header"
-      accessibilityLabel={t('camera.slotTag', { slot, time })}
-      style={styles.tag}
-      testID="camera-slot-tag"
-    >
+    <View accessible accessibilityRole="header" accessibilityLabel={label} style={styles.tag} testID="camera-slot-tag">
       <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
       <Text style={[textStyle('body', '700'), { color: colors.surface }]}>{slot}</Text>
-      <Text style={[textStyle('caption', '500'), { color: colors.onDarkMuted }]}>{t('camera.when', { time })}</Text>
+      <Text style={[textStyle('caption', '500'), { color: colors.onDarkMuted }]}>{when}</Text>
     </View>
   );
 }

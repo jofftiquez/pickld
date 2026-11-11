@@ -10,7 +10,8 @@ import { parseMockAccessParam, takeMockPhoto } from '../mockCamera';
 import { pickFromGallery } from '../pickFromGallery';
 import { saveCapture } from '../saveCapture';
 import { captureError } from '@/lib/monitoring';
-import type { QueuedMoment } from '@/features/jar/todayGrid';
+import type { DayJar } from '@/features/days/useDayJar';
+import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
 
 // Camera screen wiring (FR-CAP-01, FR-CAP-11): permission branch and Camera access off, dev mock camera,
 // slot switcher, flash and flip, and the shutter path. vision-camera's native module and the save path
@@ -86,6 +87,15 @@ jest.mock('@/features/jar/useToday', () => ({
   }),
 }));
 
+// Fill this jar reads the target day's jar; null `day` means it has none.
+const mockDay = { day: undefined as DayJar | undefined, dates: [] as (string | null)[] };
+jest.mock('@/features/days/useDayJar', () => ({
+  useDayJar: (date: string | null) => {
+    mockDay.dates.push(date);
+    return { userId: mockToday.userId, day: date ? mockDay.day : undefined, queue: mockToday.queue };
+  },
+}));
+
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
 }
@@ -148,6 +158,8 @@ beforeEach(() => {
   jest.mocked(saveCapture).mockImplementation(async () => ({ id: 1 }) as Awaited<ReturnType<typeof saveCapture>>);
   mockToday.userId = userId;
   mockToday.queue = [];
+  mockDay.day = undefined;
+  mockDay.dates = [];
 });
 
 describe('Camera on the Simulator (dev mock camera)', () => {
@@ -425,5 +437,98 @@ describe('Camera access off (FR-CAP-11)', () => {
     expect(parseMockAccessParam('granted', true)).toBeNull();
     expect(parseMockAccessParam(['denied'], true)).toBeNull();
     expect(parseMockAccessParam(undefined, true)).toBeNull();
+  });
+});
+
+describe('Fill this jar (?date=, FR-DAY-02)', () => {
+  const dayMoment = (slot: ServerMoment['slot']): ServerMoment => ({
+    id: `m-${slot}`,
+    slot,
+    status: 'live',
+    is_private: false,
+    is_backfilled: false,
+    captured_at: null,
+    added_at: '2026-11-08T01:00:00Z',
+    thumbUrl: null,
+  });
+  const queued = (slot: QueuedMoment['slot'], localDate: string): QueuedMoment => ({
+    id: Math.floor(Math.random() * 1e6),
+    slot,
+    state: 'queued',
+    localDate,
+    photoUri: 'file:///q/x.webp',
+    thumbUri: null,
+    capturedAt: null,
+    isPrivate: false,
+  });
+
+  beforeEach(() => {
+    mockDay.day = {
+      jar: { id: 'jar-8', localDate: '2026-11-08', tz: 'Asia/Tokyo' },
+      moments: [dayMoment('whereami'), dayMoment('morning')],
+    };
+  });
+
+  it('targets the past day: the tag names it and the shutter queues there in that jar’s zone', async () => {
+    await openCamera('/camera?date=2026-11-08&slot=selfie');
+    expect(mockDay.dates).toContain('2026-11-08');
+    expect(tagText()).toBe('#selfie, for Sun, Nov 8');
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+    expect(saveCapture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slot: 'selfie',
+        tz: 'Asia/Manila',
+        fill: { localDate: '2026-11-08', tz: 'Asia/Tokyo' },
+      }),
+    );
+    // Like any capture, the editor opens for the queued photo (M2-12).
+    expect(screen).toHavePathname('/edit/1');
+  });
+
+  it('only the day’s missing slots are selectable; today’s jar doesn’t count', async () => {
+    // Today's jar has #selfie queued; the day being filled doesn't.
+    mockToday.queue = [queued('selfie', '2026-11-11'), queued('ootd', '2026-11-08')];
+    await openCamera('/camera?date=2026-11-08&slot=selfie');
+    for (const name of ['#whereami, already added', '#morning, already added', '#ootd, already added']) {
+      expect(screen.getByRole('tab', { name }).props.accessibilityState).toEqual({ selected: false, disabled: true });
+    }
+    await fireEvent.press(screen.getByRole('tab', { name: '#morning, already added' }));
+    expect(tagText()).toMatch(/^#selfie,/);
+    expect(screen.getByRole('tab', { name: '#selfie', selected: true })).toBeTruthy();
+  });
+
+  it('a slot param that is already filled opens on the first missing slot instead', async () => {
+    await openCamera('/camera?date=2026-11-08&slot=morning');
+    expect(tagText()).toMatch(/^#mebusywith, for /);
+  });
+
+  it('a day without a jar queues in the phone zone', async () => {
+    mockDay.day = { jar: null, moments: [] };
+    await openCamera('/camera?date=2026-11-08&slot=ootd');
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+    expect(saveCapture).toHaveBeenCalledWith(
+      expect.objectContaining({ slot: 'ootd', fill: { localDate: '2026-11-08', tz: 'Asia/Manila' } }),
+    );
+  });
+
+  it('a full past jar has nothing to fill: the shutter is disabled', async () => {
+    const all = ['whereami', 'mebusywith', 'whoamiwith', 'ootd', 'selfie', 'morning', 'afternoon', 'evening'] as const;
+    mockDay.day = { jar: { id: 'jar-8', localDate: '2026-11-08', tz: 'Asia/Tokyo' }, moments: all.map(dayMoment) };
+    await openCamera('/camera?date=2026-11-08');
+    expect(screen.getByRole('button', { name: 'Take photo' }).props.accessibilityState).toEqual({ disabled: true });
+  });
+
+  it.each([
+    ['today', '2026-11-11'],
+    ['a future date', '2026-11-12'],
+    ['a malformed date', '2026-11-8'],
+  ])('%s is a normal capture into the open jar', async (_name, date) => {
+    await openCamera(`/camera?date=${date}&slot=afternoon`);
+    expect(tagText()).toMatch(/^#afternoon, today at /);
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+    expect(saveCapture).toHaveBeenCalledWith(expect.objectContaining({ openJar: mockToday.jar, fill: null }));
   });
 });

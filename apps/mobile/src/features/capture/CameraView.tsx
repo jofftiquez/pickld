@@ -21,6 +21,8 @@ export type CameraViewProps = {
   taken: ReadonlySet<Slot>;
   /** Current time, formatted for the slot tag. */
   time: string;
+  /** Fill this jar: the past day being filled, formatted for the slot tag. */
+  date?: string;
   flash: FlashSetting;
   flashSupported: boolean;
   shutterDisabled: boolean;
@@ -43,6 +45,7 @@ export function CameraView({
   slot,
   taken,
   time,
+  date,
   flash,
   flashSupported,
   shutterDisabled,
@@ -74,7 +77,7 @@ export function CameraView({
             onPress={onClose}
             testID="camera-close"
           />
-          <SlotTag slot={tag} time={time} />
+          <SlotTag slot={tag} time={time} date={date} />
           <RoundIconButton
             icon={flash === 'on' ? 'flash' : 'flashOff'}
             variant="glass"
