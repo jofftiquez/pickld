@@ -20,6 +20,8 @@ export type TextFieldProps = {
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoComplete?: TextInputProps['autoComplete'];
   keyboardType?: TextInputProps['keyboardType'];
+  /** Focus the field (and show the keyboard) when it appears. */
+  autoFocus?: boolean;
   testID?: string;
 };
 
@@ -36,6 +38,7 @@ export function TextField({
   autoCapitalize,
   autoComplete,
   keyboardType,
+  autoFocus,
   testID,
 }: TextFieldProps) {
   const { t } = useTranslation();
@@ -58,6 +61,7 @@ export function TextField({
         autoCapitalize={autoCapitalize}
         autoComplete={autoComplete}
         keyboardType={keyboardType}
+        autoFocus={autoFocus}
         textAlignVertical={multiline ? 'top' : 'center'}
         testID={testID}
         style={[textStyle('body'), styles.input, multiline ? styles.multiline : styles.single]}

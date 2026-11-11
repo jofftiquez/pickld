@@ -130,6 +130,7 @@ export const radius = {
   banner: 16, // offline banner on Today (UploadStates)
   zoneBanner: 18, // Time zone banner on Today (TimeZone)
   zoneIcon: 13, // icon well on that banner
+  optionIcon: 13, // icon well on a Moment options row (MomentOptions)
   tile: 22,
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
@@ -284,6 +285,8 @@ export const sizes = {
   textSwatchRing: 2, // ink ring around the selected color, with a white gap of the same width
   sliderTrack: 4, // size slider track (Text)
   sliderThumb: 22,
+  optionIcon: 38, // icon well on a Moment options row (MomentOptions)
+  optionThumb: 42, // photo beside the slot in the Moment options header
 } as const;
 
 export const photo = {

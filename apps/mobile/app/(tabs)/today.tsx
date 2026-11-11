@@ -9,16 +9,17 @@ import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
 import { retryUpload } from '@/features/jar/retryUpload';
 import { openTodayJar, useRollover } from '@/features/jar/rollover';
-import { buildTodayGrid, offlineBannerCount } from '@/features/jar/todayGrid';
+import { buildTodayGrid, holdsSlot, offlineBannerCount, type GridTile } from '@/features/jar/todayGrid';
 import { useCelebrations } from '@/features/jar/useCelebrations';
 import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
+import { MomentOptions, type MomentOptionsSelection } from '@/features/moment/MomentOptions';
 import { useIsOffline } from '@/lib/connectivity';
 import { currentSlot } from '@/lib/jars';
 
 const MINUTE = 60_000;
 
-// Today tab (M2-05, M2-06, M2-22; FR-JAR-01, FR-JAR-02, FR-JAR-03, FR-JAR-04, NFR-OFF-01, NFR-OFF-03).
+// Today tab (M2-05, M2-06, M2-22, M2-23; FR-CAP-10, FR-JAR-01, FR-JAR-02, FR-JAR-03, FR-JAR-04, NFR-OFF-01, NFR-OFF-03).
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -70,6 +71,19 @@ export default function TodayScreen() {
     jarTz: jar?.jar?.tz ?? null,
   });
 
+  // Moment options (M2-23). The last selection stays while the sheet animates out; each opening starts fresh.
+  const [options, setOptions] = useState<{ selection: MomentOptionsSelection; open: boolean; n: number } | null>(null);
+  const openOptions = (tile: GridTile) => {
+    const jarId = jar?.jar?.id ?? null;
+    const target =
+      tile.queueId !== null
+        ? ({ kind: 'queued', queueId: tile.queueId } as const)
+        : tile.momentId !== null && jarId !== null
+          ? ({ kind: 'server', momentId: tile.momentId, jarId } as const)
+          : null;
+    if (target) setOptions((o) => ({ selection: { tile, target }, open: true, n: (o?.n ?? 0) + 1 }));
+  };
+
   return (
     <>
       <TodayView
@@ -93,7 +107,19 @@ export default function TodayScreen() {
           ) : null
         }
         onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
+        onOpenOptions={openOptions}
       />
+      {options && userId !== null ? (
+        <MomentOptions
+          key={options.n}
+          visible={options.open}
+          selection={options.selection}
+          userId={userId}
+          freeSlots={tiles.filter((tile) => !holdsSlot(tile)).map((tile) => tile.slot)}
+          tz={jar?.jar?.tz ?? tz}
+          onClose={() => setOptions((o) => (o ? { ...o, open: false } : o))}
+        />
+      ) : null}
       {/* An upload whose slot was taken asks whether to Replace (M2-22). */}
       <ConflictReplacePrompt queue={queue} />
     </>

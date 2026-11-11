@@ -50,7 +50,7 @@ const photoUrlsResponse = z.object({
 });
 
 /** Photo URLs from `fn:photo-urls`; a failure leaves the placeholder instead of failing the screen. */
-async function photoUrls(momentId: string): Promise<{ full: string | null; thumb: string | null }> {
+export async function photoUrls(momentId: string): Promise<{ full: string | null; thumb: string | null }> {
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', {
     body: { momentIds: [momentId] },
   });

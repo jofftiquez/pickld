@@ -74,6 +74,11 @@ export const icons = {
   zoomIn: [c(11, 11, 7), p('m20 20-4-4M8 11h6M11 8v6')],
   alignLeft: [p('M4 6h16M4 12h10M4 18h13')],
   alignCenter: [p('M4 6h16M7 12h10M5.5 18h13')],
+  // Moment options
+  caption: [p('M4 5h16v11H9l-4 3v-3H4z')],
+  sparkle: [p('M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6')],
+  photo: [r(3.5, 4.5, 17, 15, 3), c(9, 10, 1.8), p('m4 17.5 5-4.5 4 3 3-2 4.5 3.5')],
+  grid: [r(3.5, 3.5, 7, 7, 2), r(13.5, 3.5, 7, 7, 2), r(3.5, 13.5, 7, 7, 2), r(13.5, 13.5, 7, 7, 2)],
 } satisfies Record<string, IconShape[]>;
 
 export type IconName = keyof typeof icons;

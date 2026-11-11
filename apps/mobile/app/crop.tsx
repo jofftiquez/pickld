@@ -20,11 +20,15 @@ import {
 import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { todayQueryKeys } from '@/features/jar/useToday';
+import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
 import { captureError } from '@/lib/monitoring';
+import { getSupabase } from '@/lib/supabase';
 
 // Crop (M2-10; FR-CAP-02, FR-CAP-03; design: Crop). The camera opens it on a gallery photo that isn't 3:4.
 // Done queues the raw photo with the chosen frame, rotation and flip (preparation applies them and writes
 // 1440 × 1920), then opens the editor on it, as the shutter does. Cancel queues nothing.
+// Moment options' Re-crop (M2-23) opens it on a saved moment's photo: Save crop replaces the moment's photo
+// (see features/moment/recrop.ts) and goes back; Cancel changes nothing.
 export default function CropScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -56,11 +60,37 @@ export default function CropScreen() {
   const frame = cropFrame(window);
 
   const onCancel = () => {
+    discardRecropPhoto(pending);
+    setPending(null);
+    leave();
+  };
+
+  const onSaveRecrop = async (recrop: Extract<typeof pending, { recrop: object }>) => {
+    if (busy) return;
+    setBusy(true);
+    setFailed(false);
+    const rect = cropRectFor(state, image, frame);
+    try {
+      await finishRecrop(getSupabase(), recrop, {
+        crop: rect,
+        cropBasis: image,
+        rotate: state.rotation,
+        flip: state.flip,
+      });
+    } catch (error) {
+      captureError(error, { area: 'recrop' });
+      setBusy(false);
+      setFailed(true);
+      return;
+    }
+    void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(recrop.userId) });
+    void queryClient.invalidateQueries({ queryKey: ['jar', recrop.userId] });
     setPending(null);
     leave();
   };
 
   const onDone = async () => {
+    if (pending.recrop) return onSaveRecrop(pending);
     if (busy) return;
     setBusy(true);
     setFailed(false);
@@ -96,6 +126,7 @@ export default function CropScreen() {
       state={state}
       busy={busy}
       failed={failed}
+      mode={pending.recrop ? 'recrop' : 'gallery'}
       insets={insets}
       onChange={setState}
       onZoom={(zoom) => setState((s) => zoomCrop(s, zoom, image, frame))}

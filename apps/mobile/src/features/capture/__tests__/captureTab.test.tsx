@@ -12,6 +12,8 @@ import TodayScreen from '../../../../app/(tabs)/today';
 import Index from '../../../../app/index';
 
 // See TabShell.test.tsx: Reanimated can't load here, and the jar isn't under test.
+// Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
+jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 // Today pulls in the upload runner, which loads Sentry (ESM) through monitoring.
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));

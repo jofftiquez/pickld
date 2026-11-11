@@ -260,6 +260,63 @@ describe('TodayView', () => {
   });
 });
 
+describe('TodayView: Moment options (M2-23)', () => {
+  const queued = (id: number, slot: ServerMoment['slot'], state: 'queued' | 'uploading' | 'failed' | 'uploaded') => ({
+    id,
+    slot,
+    state,
+    localDate: '2026-11-10',
+    photoUri: `file:///q/${slot}.webp`,
+    thumbUri: null,
+    capturedAt: '2026-11-10T00:10:00Z',
+    isPrivate: false,
+  });
+
+  it('live moments and waiting or failed photos open options; uploading, checking, removed and empty tiles do not', async () => {
+    const onOpenOptions = jest.fn();
+    const { onOpenMoment, onCapture } = await renderToday({
+      hasAnyJar: true,
+      onOpenOptions,
+      tiles: buildTodayGrid({
+        localDate: '2026-11-10',
+        moments: [
+          live('whereami'),
+          { ...live('mebusywith'), id: 'm-checking', status: 'checking' },
+          { ...live('ootd'), id: 'm-removed', status: 'removed' },
+        ],
+        queue: [
+          queued(21, 'whoamiwith', 'queued'),
+          queued(22, 'selfie', 'uploading'),
+          queued(23, 'morning', 'failed'),
+          queued(24, 'afternoon', 'uploaded'),
+        ],
+        nowSlot: 'evening',
+      }),
+    });
+
+    await fireEvent.press(screen.getByTestId('tile-whereami'));
+    await fireEvent.press(screen.getByTestId('tile-whoamiwith'));
+    await fireEvent.press(screen.getByTestId('tile-morning'));
+    expect(onOpenOptions.mock.calls.map(([tile]) => [tile.slot, tile.momentId, tile.queueId])).toEqual([
+      ['whereami', 'm-whereami', null],
+      ['whoamiwith', null, 21],
+      ['morning', null, 23],
+    ]);
+    expect(screen.getByTestId('tile-whereami').props.accessibilityHint).toBe('Opens moment options');
+
+    // Uploading right now (changing it would race the upload) and uploaded-but-not-loaded: not pressable.
+    expect(screen.getByTestId('tile-selfie')).toBeDisabled();
+    expect(screen.getByTestId('tile-afternoon')).toBeDisabled();
+    // Checking and removed keep opening their moment; Now still opens the camera.
+    await fireEvent.press(screen.getByTestId('tile-mebusywith'));
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    await fireEvent.press(screen.getByTestId('tile-evening'));
+    expect(onOpenMoment.mock.calls).toEqual([['m-checking'], ['m-removed']]);
+    expect(onCapture.mock.calls).toEqual([['evening']]);
+    expect(onOpenOptions).toHaveBeenCalledTimes(3);
+  });
+});
+
 describe('TodayView: tiles draw moments with their edits (M2-18)', () => {
   const hidden = { includeHiddenElements: true } as const;
   const sticker = {

@@ -18,6 +18,8 @@ const USER = '6f1c1f7e-8a43-4c1e-9d0b-3c0f5d1e2a10';
 type Row = Record<string, unknown>;
 const mockBackend = { offline: false, jars: [] as Row[], moments: [] as Row[], queue: [] as Partial<QueueItem>[] };
 
+// Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
+jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
 jest.mock('@/lib/supabase', () => {
   const answer = (table: string) =>
     mockBackend.offline
@@ -172,7 +174,7 @@ describe('Today screen', () => {
     );
     expect(screen.getByText('3 of 8 moments')).toBeTruthy();
     expect(screen.getByText('in today’s jar · 312 readers')).toBeTruthy();
-    expect(screen.getByRole('image', { name: /^#ootd, .*, added$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^#ootd, .*, added$/ })).toBeTruthy();
     expect(screen.getByText('Waiting for connection')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Retry #morning' }));
@@ -220,8 +222,8 @@ describe('Today screen', () => {
 
     await waitFor(() => expect(screen.getByRole('header', { name: 'Replace your #ootd photo?' })).toBeTruthy());
     // The old photos hold their slots: the conflict's local photo and the server's pending replacement don't show.
-    expect(screen.getByRole('image', { name: /^#ootd, .*, added$/ })).toBeTruthy();
-    expect(screen.getByRole('image', { name: /^#selfie, .*, added$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^#ootd, .*, added$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^#selfie, .*, added$/ })).toBeTruthy();
     expect(screen.getByText('2 of 8 moments')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Replace' }));
