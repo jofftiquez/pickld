@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# Prepares an Amp orb for Pickld: Docker, Deno, pnpm deps, Playwright Chromium, local Supabase with
+# migrations and seed, the git-ignored local .env files, and the seeded photos and sticker art.
+# Safe to run again (Amp reruns it on top of the previous snapshot after each push to main).
+# Log: ~/.cache/amp/logs/setup.log. Long-lived servers are declared in .amp/services.yaml.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+repo="$PWD"
+
+DENO_VERSION=2.9.8
+
+step() {
+  local name="$1" start=$SECONDS
+  shift
+  echo "==> $name"
+  "$@"
+  echo "    $name: $((SECONDS - start))s"
+}
+
+docker_up() {
+  # Supabase CLI talks to the socket as this user; the orb is single-user, so open the socket up.
+  if [[ ! -f /etc/systemd/system/docker.socket.d/amp-orb.conf ]]; then
+    sudo install -d /etc/systemd/system/docker.socket.d
+    printf '[Socket]\nSocketMode=0666\n' | sudo tee /etc/systemd/system/docker.socket.d/amp-orb.conf >/dev/null
+    sudo systemctl daemon-reload
+  fi
+  sudo systemctl enable --now docker.socket docker.service >/dev/null 2>&1
+  sudo systemctl restart docker.socket 2>/dev/null || true
+  for _ in $(seq 1 30); do docker info >/dev/null 2>&1 && return; sleep 1; done
+  docker info >/dev/null
+}
+
+deno_install() {
+  if [[ "$(deno --version 2>/dev/null | head -1)" != "deno $DENO_VERSION"* ]]; then
+    # From /tmp: the installer writes a deno.lock into its working directory.
+    (cd /tmp && curl -fsSL https://deno.land/install.sh | DENO_INSTALL="$HOME/.deno" sh -s -- -y --no-modify-path "v$DENO_VERSION" >/dev/null)
+  fi
+  # On PATH for every shell, including Amp's services.
+  sudo ln -sf "$HOME/.deno/bin/deno" /usr/local/bin/deno
+  deno --version | head -1
+}
+
+deps() {
+  pnpm install --frozen-lockfile
+  # Design captures (scripts/capture-design.mjs) and sticker rendering use Playwright's Chromium.
+  pnpm exec playwright install chromium >/dev/null
+  # Warm Deno's module cache for the Edge Functions and the photo worker.
+  deno task --cwd supabase/functions check >/dev/null
+  deno task --cwd workers/photos check >/dev/null
+}
+
+supabase_up() {
+  # First run pulls the Supabase images (several minutes); the snapshot keeps them.
+  pnpm exec supabase status >/dev/null 2>&1 || pnpm db:start
+  # Applies every migration and supabase/seed.sql, so a refreshed snapshot matches main.
+  pnpm db:reset
+}
+
+status_env() {
+  pnpm exec supabase status -o env 2>/dev/null | sed -n 's/^\([A-Z0-9_]*\)="\{0,1\}\([^"]*\)"\{0,1\}$/\1=\2/p' | rg "^$1=" | cut -d= -f2-
+}
+
+env_files() {
+  umask 077
+  # One local signing secret shared by fn:photo-urls and the photo worker. Local-only; never commit it.
+  local secret=""
+  if [[ -f supabase/functions/.env ]]; then
+    secret="$(sed -n 's/^PHOTO_TOKEN_SECRET=//p' supabase/functions/.env)"
+  fi
+  [[ -n "$secret" ]] || secret="$(openssl rand -base64 48 | tr -d '\n')"
+
+  if [[ ! -f supabase/functions/.env ]]; then
+    cat >supabase/functions/.env <<EOF
+S3_ENDPOINT=$(status_env STORAGE_S3_URL)
+S3_REGION=$(status_env S3_PROTOCOL_REGION)
+S3_BUCKET=photos
+S3_ACCESS_KEY_ID=$(status_env S3_PROTOCOL_ACCESS_KEY_ID)
+S3_SECRET_ACCESS_KEY=$(status_env S3_PROTOCOL_ACCESS_KEY_SECRET)
+PHOTO_BASE_URL=http://127.0.0.1:55430
+PHOTO_TOKEN_SECRET=$secret
+SENTRY_DSN=
+APP_ENV=local
+EOF
+  fi
+  if [[ ! -f workers/photos/.env ]]; then
+    sed "s|^PHOTO_TOKEN_SECRET=.*|PHOTO_TOKEN_SECRET=$secret|" workers/photos/.env.example >workers/photos/.env
+  fi
+  if [[ ! -f apps/mobile/.env ]]; then
+    sed "s|^EXPO_PUBLIC_SUPABASE_ANON_KEY=.*|EXPO_PUBLIC_SUPABASE_ANON_KEY=$(status_env ANON_KEY)|" \
+      apps/mobile/.env.example >apps/mobile/.env
+  fi
+  for f in supabase/functions/.env workers/photos/.env apps/mobile/.env; do
+    git check-ignore -q "$f" || { echo "$f is not git-ignored" >&2; return 1; }
+  done
+}
+
+seed_photos() {
+  # Uploads design/images under the seed keys and the 50 sticker PNGs to the local photos bucket.
+  (cd workers/photos && deno task seed >/dev/null)
+}
+
+orb_notes() {
+  local notes="$HOME/.config/amp/AGENTS.md" marker="# Pickld in an orb"
+  mkdir -p "$(dirname "$notes")"
+  grep -Fqx "$marker" "$notes" 2>/dev/null && return
+  cat >>"$notes" <<'EOF'
+
+# Pickld in an orb
+
+- `.agents/setup` already ran: Docker (systemd), Deno, `pnpm install`, Playwright Chromium, local Supabase on 55420–55429 (API 55421, DB 55422, Studio 55423, Mailpit 55424) with migrations, seed users and photos/sticker art, and the git-ignored `supabase/functions/.env`, `workers/photos/.env` and `apps/mobile/.env`.
+- `amp orb services ensure` starts `fn-serve` (Edge Functions at http://127.0.0.1:55421/functions/v1/<name>) and `photos-worker` (http://127.0.0.1:55430). `.agents/resume` runs it on every wake.
+- After `pnpm db:reset`, reseed photos and stickers with `(cd workers/photos && deno task seed)`.
+- The orb has no Xcode or Android emulator. For iOS, start a Mac satellite with `forward_ports: ["55421","55430"]`, then run `scripts/mac-setup.sh` there for JDK 17 and Maestro. The Mac mirror skips git-ignored files, so `apps/mobile/.env` must be copied over.
+EOF
+}
+
+step "docker" docker_up
+step "deno" deno_install
+step "deps" deps
+step "supabase" supabase_up
+step "env files" env_files
+step "seed photos" seed_photos
+step "orb notes" orb_notes
+echo "setup: done in ${SECONDS}s ($repo)"

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Runs after an orb starts and every time it wakes: make sure local Supabase is up, then start the
+# services in .amp/services.yaml. Installs nothing. Log: ~/.cache/amp/logs/resume.log.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+docker info >/dev/null 2>&1 || sudo systemctl start docker.socket docker.service
+# Containers come back with Docker; start them if they didn't (takes about 30s with cached images).
+pnpm exec supabase status >/dev/null 2>&1 || pnpm db:start
+amp orb services ensure
