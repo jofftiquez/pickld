@@ -92,6 +92,7 @@ export const radius = {
   dayCell: 13, // My days calendar cells (Calendar)
   fillBar: 2,
   input: 16, // text fields (EditProfile)
+  banner: 16, // offline banner on Today (UploadStates)
   tile: 22,
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
@@ -190,6 +191,9 @@ export const sizes = {
   fillBar: 3, // fill bar height in a calendar cell
   fillBarInset: 4, // fill bar distance from the cell's sides and bottom
   todayRing: 2.5, // outline around today's cell
+  bannerPaddingY: 10, // offline banner (UploadStates)
+  bannerPaddingX: 14,
+  bannerGap: 10, // offline banner: icon to text, and banner to the jar card
 } as const;
 
 export const photo = {

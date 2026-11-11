@@ -1,6 +1,7 @@
 import { AppState } from 'react-native';
 
 import { useAuthStore } from '../authStore';
+import { reportNetworkResult } from '../connectivity';
 import { captureError } from '../monitoring';
 import { msUntilDue } from './machine';
 import { listQueue } from './store';
@@ -49,11 +50,14 @@ export function startUploadRunner(getClient: () => UploaderClient, options: Uplo
       const userId = currentUser();
       if (stopped || !online || !userId) return;
       const client = getClient(); // throws without app env; caught below, the queue keeps everything
-      await drainQueue(
+      const outcomes = await drainQueue(
         userId,
         { client, putFile: options.putFile },
         () => !stopped && online && currentUser() === userId,
       );
+      // The latest attempt tells the UI whether the backend is reachable (offline banner, M2-06).
+      const last = outcomes.at(-1);
+      if (last) reportNetworkResult(last.kind === 'retrying' || last.kind === 'failed' ? last.error : null);
       if (!stopped) await scheduleNext(userId);
     } while (again && !stopped);
   }

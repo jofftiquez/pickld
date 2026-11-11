@@ -34,7 +34,12 @@
     "publishHint": "Available soon",
     "firstJarTitle": "Your first jar",
     "firstJarBody": "Eight moments fill it up. Start with whatever’s in front of you right now.",
-    "grid": "Today’s moments"
+    "grid": "Today’s moments",
+    "offline": {
+      "title": "You’re offline.",
+      "body_one": "{{count}} moment is saved on your phone and will upload when you’re back.",
+      "body_other": "{{count}} moments are saved on your phone and will upload when you’re back."
+    }
   },
   "capture": {
     "title": "Capture"
@@ -75,6 +80,7 @@
     "tapToCapture": "Tap to capture",
     "waiting": "Waiting for connection",
     "uploading": "Uploading {{percent}}%",
+    "uploadingIndeterminate": "Uploading",
     "failed": "Didn’t upload",
     "retry": "Retry",
     "retryLabel": "Retry {{slot}}",
@@ -86,6 +92,7 @@
       "now": "now, tap to capture",
       "waiting": "waiting for connection",
       "uploading": "uploading {{percent}}%",
+      "uploadingIndeterminate": "uploading",
       "failed": "didn’t upload",
       "checking": "checking",
       "private": "private",

@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import { useAuthStore } from '../../authStore';
+import { reportNetworkResult } from '../../connectivity';
 import { captureError } from '../../monitoring';
 import { BACKOFF_MS } from '../machine';
 import { requestUploads, startUploadRunner, type NetworkSource } from '../runner';
@@ -11,6 +12,7 @@ import { capturedFiles, fakeBackend, networkError, resetFakes, USER } from './fa
 jest.mock('expo-sqlite', () => jest.requireActual('./fakes').expoSqlite);
 jest.mock('expo-file-system', () => jest.requireActual('./fakes').expoFileSystem);
 jest.mock('../../monitoring', () => ({ captureError: jest.fn() }));
+jest.mock('../../connectivity', () => ({ reportNetworkResult: jest.fn() }));
 
 const session = { access_token: 't', user: { id: USER } } as unknown as Session;
 
@@ -124,6 +126,25 @@ describe('upload runner', () => {
     await settle();
     expect(backend.moments).toHaveLength(1);
     expect(await getItem(item.id)).toBeNull();
+  });
+
+  it('reports each drain’s latest attempt to the offline signal (M2-06)', async () => {
+    jest.useFakeTimers({ now: Date.UTC(2026, 10, 11, 3), doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+    backend.failNext('upload-url', networkError());
+    await queueMoment();
+    start();
+    await requestUploads();
+    expect(jest.mocked(reportNetworkResult).mock.calls).toEqual([['Network request failed']]);
+
+    await jest.advanceTimersByTimeAsync(BACKOFF_MS[0]);
+    await settle();
+    expect(jest.mocked(reportNetworkResult).mock.calls).toEqual([['Network request failed'], [null]]);
+  });
+
+  it('reports nothing when there was nothing to upload', async () => {
+    start();
+    await requestUploads();
+    expect(reportNetworkResult).not.toHaveBeenCalled();
   });
 
   it('keeps everything queued when the client cannot start', async () => {

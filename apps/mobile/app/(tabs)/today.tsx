@@ -4,13 +4,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TodayView } from '@/features/jar/TodayView';
-import { buildTodayGrid } from '@/features/jar/todayGrid';
+import { retryUpload } from '@/features/jar/retryUpload';
+import { openTodayJar, useRollover } from '@/features/jar/rollover';
+import { buildTodayGrid, offlineBannerCount } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
+import { useIsOffline } from '@/lib/connectivity';
 import { currentSlot } from '@/lib/jars';
 
 const MINUTE = 60_000;
 
-// Today tab (M2-05; FR-JAR-01, FR-JAR-02). Midnight rollover and upload states come in M2-06.
+// Today tab (M2-05, M2-06; FR-JAR-01, FR-JAR-02, FR-JAR-04, NFR-OFF-01, NFR-OFF-03).
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -22,8 +25,18 @@ export default function TodayScreen() {
     return () => clearInterval(id);
   }, []);
 
-  const { userId, localDate, jar, me, queue } = useToday(now);
+  const { userId, localDate, jar: jarData, me, queue } = useToday(now);
   const tz = phoneTimeZone();
+  // Offline the persisted cache answers; a cached jar whose day has ended shows as the new, empty day.
+  const jar = openTodayJar(jarData, now);
+  const offline = useIsOffline();
+
+  // At the jar's end (or the phone's midnight) switch to the new day at once, not at the next minute tick,
+  // and refetch even when the date key stays the same (a travel jar ending on its own clock).
+  useRollover(jar?.jar ?? null, tz, () => {
+    setNow(new Date());
+    if (userId !== null) void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+  });
 
   // Coming back to the tab (e.g. after a capture) re-reads the queue and the jar; the first focus is
   // the initial load, which the queries already do.
@@ -58,8 +71,10 @@ export default function TodayScreen() {
       readerCount={me?.readerCount ?? null}
       lidColor={me?.lidColor}
       insets={insets}
+      offlineCount={offlineBannerCount(queue, offline)}
       onCapture={(slot) => router.push({ pathname: '/capture', params: { slot } })}
       onOpenMyDays={() => router.push('/my-days')}
+      onRetry={(queueId) => void retryUpload(queueId)}
     />
   );
 }

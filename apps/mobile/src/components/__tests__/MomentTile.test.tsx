@@ -160,10 +160,18 @@ describe('MomentTile', () => {
     [0.666, 'Uploading 67%'],
     [1.4, 'Uploading 100%'],
     [-0.2, 'Uploading 0%'],
-    [undefined, 'Uploading 0%'],
   ])('uploading: progress %p shows "%s"', async (progress, text) => {
     await renderTile({ state: 'uploading', progress });
     expect(screen.getByText(text)).toBeTruthy();
+  });
+
+  it('uploading without known progress: a spinner and "Uploading", no percentage', async () => {
+    await renderTile({ slot: 'selfie', state: 'uploading', time: '11:05 AM' });
+    expect(screen.getByRole('button', { name: '#selfie, 11:05 AM, uploading' })).toBeTruthy();
+    expect(screen.getByText('Uploading')).toBeTruthy();
+    expect(screen.getByTestId('tile-spinner', hidden)).toBeTruthy();
+    expect(screen.queryByTestId('tile-progress-ring', hidden)).toBeNull();
+    expect(screen.queryByText(/%/)).toBeNull();
   });
 
   it('failed: warning icon, "Didn’t upload" text and a labelled Retry with a 44 pt target', async () => {

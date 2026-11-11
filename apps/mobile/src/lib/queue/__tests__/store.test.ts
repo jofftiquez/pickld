@@ -292,4 +292,16 @@ describe('queue storage', () => {
     expect(await store.getItem(item.id)).toBeNull();
     expect(queuedFiles()).toEqual([]);
   });
+
+  it('tells subscribers about every change Today shows: added, status, removed (M2-06)', async () => {
+    const store = loadStore();
+    const changes: string[] = [];
+    const unsubscribe = store.subscribeQueue((change) => changes.push(change));
+    const item = await store.enqueue(input);
+    await store.saveStatus(start(item));
+    await store.removeItem(item.id);
+    unsubscribe();
+    await store.enqueue(input);
+    expect(changes).toEqual(['added', 'status', 'removed']);
+  });
 });
