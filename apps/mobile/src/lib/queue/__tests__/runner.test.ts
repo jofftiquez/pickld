@@ -6,7 +6,7 @@ import { reportNetworkResult } from '../../connectivity';
 import { captureError } from '../../monitoring';
 import { BACKOFF_MS, fail, MAX_ATTEMPTS, OFFLINE_RETRY_MS, start as startAttempt } from '../machine';
 import { requestUploads, startUploadRunner, type NetworkSource } from '../runner';
-import { enqueue, getItem, listQueue, saveStatus } from '../store';
+import { EDIT_HOLD_MS, enqueue, getItem, listQueue, releaseEditing, saveStatus } from '../store';
 import { capturedFiles, fakeBackend, networkError, resetFakes, USER } from './fakes';
 
 jest.mock('expo-sqlite', () => jest.requireActual('./fakes').expoSqlite);
@@ -177,6 +177,51 @@ describe('upload runner', () => {
     await jest.advanceTimersByTimeAsync(OFFLINE_RETRY_MS);
     await settle();
     expect(jest.mocked(reportNetworkResult).mock.calls).toEqual([['Network request failed'], [null]]);
+  });
+
+  it('waits for a photo in the editor without spinning, and uploads it once the hold lapses (M2-12)', async () => {
+    jest.useFakeTimers({ now: Date.UTC(2026, 10, 11, 3), doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+    const timers = jest.spyOn(global, 'setTimeout');
+    const item = await enqueue({
+      userId: USER,
+      ...capturedFiles(),
+      slot: 'ootd',
+      localDate: '2026-11-11',
+      tz: 'Asia/Manila',
+      editing: true,
+    });
+    start();
+    await requestUploads();
+    await settle();
+    expect(backend.moments).toHaveLength(0);
+    // The next wake-up is when the hold lapses, not a 0 ms loop.
+    expect(timers.mock.calls.at(-1)?.[1]).toBe(EDIT_HOLD_MS);
+
+    await jest.advanceTimersByTimeAsync(EDIT_HOLD_MS - 1);
+    await settle();
+    expect(backend.moments).toHaveLength(0);
+    await jest.advanceTimersByTimeAsync(1);
+    await settle();
+    expect(backend.moments).toHaveLength(1);
+    expect(await getItem(item.id)).toBeNull();
+  });
+
+  it('uploads a photo as soon as the editor lets go of it', async () => {
+    const item = await enqueue({
+      userId: USER,
+      ...capturedFiles(),
+      slot: 'ootd',
+      localDate: '2026-11-11',
+      tz: 'Asia/Manila',
+      editing: true,
+    });
+    start();
+    await requestUploads();
+    expect(backend.moments).toHaveLength(0);
+    await releaseEditing(item.id);
+    await requestUploads();
+    await settle();
+    expect(backend.moments).toHaveLength(1);
   });
 
   it('reports nothing when there was nothing to upload', async () => {

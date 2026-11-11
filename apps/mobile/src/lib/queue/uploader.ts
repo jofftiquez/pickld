@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { isNetworkError } from '../connectivity';
 import type { Database, Json } from '../database.types';
 import { conflict, fail, isDue, start, succeed, waitForNetwork } from './machine';
-import { getItem, listQueue, removeItem, saveStatus, saveUploadRefs, type QueueItem } from './store';
+import { getItem, isHeldForEditing, listQueue, removeItem, saveStatus, saveUploadRefs, type QueueItem } from './store';
 
 // Upload worker (M2-04; NFR-OFF-01, NFR-OFF-02, FR-JAR-03; AGENTS "Upload pipeline", rules 3, 4, 6).
 // One queued moment: ensure_jar → fn:upload-url → PUT photo and thumbnail → insert the moment as
@@ -186,6 +186,7 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
 /**
  * Uploads the user's due items one at a time, oldest first. `keepGoing` is checked before each item so
  * a sign-out or lost connection stops the drain. Rows left `uploaded` by an interrupted cleanup are removed.
+ * A photo still open in the editor waits (M2-12), so its caption, privacy and edits go up with it.
  */
 export async function drainQueue(
   userId: string,
@@ -198,7 +199,7 @@ export async function drainQueue(
     if (!keepGoing()) break;
     const item = await getItem(listed.id); // may have changed (Retry, Replace) since the list was read
     if (item?.state === 'uploaded') await removeItem(item.id);
-    else if (item && isDue(item, now())) outcomes.push(await uploadItem(item, deps));
+    else if (item && isDue(item, now()) && !isHeldForEditing(item, now())) outcomes.push(await uploadItem(item, deps));
   }
   return outcomes;
 }

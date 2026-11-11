@@ -385,3 +385,104 @@ describe('queue storage', () => {
     expect(changes).toEqual(['added', 'status', 'removed']);
   });
 });
+
+describe('editing hold and saved edits (M2-12)', () => {
+  const edits = { v: 1, filter: 'mono', overlays: [] };
+
+  it('a photo queued for the editor records when the hold began; others have none', async () => {
+    const store = loadStore();
+    const before = Date.now();
+    const held = await store.enqueue({ ...input, editing: true });
+    const plain = await store.enqueue(input);
+    expect(held.editingSince).toEqual(expect.any(Number));
+    expect(held.editingSince ?? 0).toBeGreaterThanOrEqual(before);
+    expect(store.isHeldForEditing(held)).toBe(true);
+    expect(plain.editingSince).toBeNull();
+    expect(store.isHeldForEditing(plain)).toBe(false);
+  });
+
+  it('a hold lapses after EDIT_HOLD_MS, so a forgotten edit never strands the photo', () => {
+    const store = loadStore();
+    const since = Date.UTC(2026, 10, 11, 3);
+    expect(store.isHeldForEditing({ editingSince: since }, since + store.EDIT_HOLD_MS - 1)).toBe(true);
+    expect(store.isHeldForEditing({ editingSince: since }, since + store.EDIT_HOLD_MS)).toBe(false);
+  });
+
+  it('saveEdits stores caption, privacy and edits, ends the hold, and survives a restart', async () => {
+    let store = loadStore();
+    const item = await store.enqueue({ ...input, caption: null, isPrivate: false, edits: {}, editing: true });
+    const filesBefore = new Map(mockFs);
+
+    const saved = await store.saveEdits(item.id, { caption: 'Lunch break, finally!', isPrivate: true, edits });
+    expect(saved).toMatchObject({ caption: 'Lunch break, finally!', isPrivate: true, edits, editingSince: null });
+    // Data only: the photo and thumbnail files and their paths are untouched (FR-CAP-08).
+    expect(new Map(mockFs)).toEqual(filesBefore);
+    expect(saved.photoUri).toBe(item.photoUri);
+    expect(saved.thumbUri).toBe(item.thumbUri);
+
+    store = loadStore();
+    expect(await store.getItem(item.id)).toMatchObject({ caption: 'Lunch break, finally!', isPrivate: true, edits });
+  });
+
+  it('saveEdits can clear a caption and turn privacy back off', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input); // caption 'new shoes', private
+    expect(await store.saveEdits(item.id, { caption: null, isPrivate: false, edits })).toMatchObject({
+      caption: null,
+      isPrivate: false,
+    });
+  });
+
+  it('saveEdits refuses a caption over 150 characters (moments.caption limit), changing nothing', async () => {
+    const store = loadStore();
+    const item = await store.enqueue({ ...input, editing: true });
+    await expect(store.saveEdits(item.id, { caption: 'x'.repeat(151), isPrivate: false, edits })).rejects.toThrow();
+    expect(await store.getItem(item.id)).toMatchObject({ caption: 'new shoes', edits: input.edits });
+    expect((await store.getItem(item.id))?.editingSince).not.toBeNull();
+    await expect(store.saveEdits(item.id, { caption: 'x'.repeat(150), isPrivate: false, edits })).resolves.toBeTruthy();
+  });
+
+  it('saveEdits on a moment that left the queue throws instead of pretending', async () => {
+    await expect(loadStore().saveEdits(999, { caption: null, isPrivate: false, edits })).rejects.toThrow(/999/);
+  });
+
+  it('saveEdits tells Today the item changed', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    const changes: string[] = [];
+    const unsubscribe = store.subscribeQueue((change) => changes.push(change));
+    await store.saveEdits(item.id, { caption: null, isPrivate: false, edits });
+    unsubscribe();
+    expect(changes).toEqual(['status']);
+  });
+
+  it('releaseEditing ends the hold and keeps everything else', async () => {
+    const store = loadStore();
+    const item = await store.enqueue({ ...input, editing: true });
+    await store.releaseEditing(item.id);
+    const after = await store.getItem(item.id);
+    expect(after).toEqual({ ...item, editingSince: null });
+    await expect(store.releaseEditing(999)).resolves.toBeUndefined();
+  });
+
+  it('a hold left by a killed app is cleared on the next launch', async () => {
+    const item = await loadStore().enqueue({ ...input, editing: true });
+    expect(item.editingSince).not.toBeNull();
+    expect((await loadStore().getItem(item.id))?.editingSince).toBeNull();
+  });
+
+  it('upgrades a version 3 queue: existing moments are not held', async () => {
+    const store = loadStore();
+    store.MIGRATIONS.slice(0, 3).forEach((sql) => mockDisk.exec(sql));
+    mockDisk.exec('PRAGMA user_version = 3');
+    mockDisk
+      .prepare(
+        `INSERT INTO queue_items (user_id, photo_file, slot, local_date, tz, created_at)
+         VALUES (?, 'old.jpg', 'selfie', '2026-11-10', 'Asia/Manila', 1)`,
+      )
+      .run(USER);
+    const [old] = await store.listQueue(USER);
+    expect(old).toMatchObject({ slot: 'selfie', editingSince: null, prepared: true });
+    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 4 }));
+  });
+});

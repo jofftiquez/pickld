@@ -94,6 +94,8 @@ describe('saveCapture', () => {
       tz: 'Asia/Manila',
       capturedAt: '2026-11-11T14:14:05+08:00',
       prepared: false,
+      // Held for the editor the camera opens next: no upload before Add to #slot (M2-12).
+      editing: true,
     });
     // The camera file goes only after the queue holds its own copy; preparation is still running.
     expect(mockLog).toEqual(['enqueue', 'delete file:///tmp/camera-shot.jpg', 'prepare']);
