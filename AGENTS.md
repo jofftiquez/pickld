@@ -66,7 +66,7 @@ design/
 1. **The database is the referee.** Visibility, one-moment-per-slot, ownership and the backfill flag live in Postgres (constraints, triggers, RLS). Never rely on the app alone. Every RLS change ships with a pgTAP test that tries it as owner, reader, outsider and blocked user.
 2. **Never ship a service key** to the app or web pages. Privileged work happens in Edge Functions.
 3. **Offline first for capture.** A moment is written to the local queue before any network call. Never lose a queued photo.
-4. **Nothing goes public unchecked.** Moments start in status `checking`; only the moderation function may set `live`.
+4. **Nothing goes public unchecked.** Moments start in status `checking`; only the moderation function may set `live`. Early version (D-22): the moderation function auto-approves; the full check returns before public launch.
 5. **Strip location EXIF** before upload. Keep only capture time.
 6. **Server time decides "Added later".** Never trust the phone clock for `added_at`.
 7. **Time zones are IANA names** (e.g. `Asia/Manila`), never offsets.
