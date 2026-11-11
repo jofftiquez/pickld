@@ -27,6 +27,14 @@ export const colors = {
   glass: 'rgba(10,12,8,0.45)', // controls over photos (with blur)
   tabBarGlass: 'rgba(255,255,255,0.86)',
   onDarkMuted: '#c9cec2',
+  photoPlaceholder: '#d9dcd3', // behind a photo while it loads (moment tiles)
+  tileIconWell: '#f0f3ea', // slot icon and + circle on empty tiles (Main)
+  photoFade: 'rgba(10,12,8,0.72)', // bottom fade under labels on photos
+  photoFadeClear: 'rgba(10,12,8,0)', // top end of that fade
+  failedOverlay: 'rgba(160,29,20,0.55)', // "Didn't upload" tile (UploadStates)
+  badge: 'rgba(10,12,8,0.6)', // "Added later" badge over photos (Story)
+  ringTrack: 'rgba(255,255,255,0.3)', // unfilled part of the upload ring
+  textShadow: 'rgba(0,0,0,0.4)', // labels drawn straight on photos
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -100,6 +108,20 @@ export const shadow = {
     shadowOffset: { width: 0, height: 20 },
     elevation: 16,
   },
+  tile: {
+    shadowColor: '#11140d',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  nowGlow: {
+    shadowColor: '#3f6510',
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
   brandGlow: {
     shadowColor: '#7fad33',
     shadowOpacity: 0.35,
@@ -133,6 +155,14 @@ export const sizes = {
   dialogButton: 48, // Cancel under a dialog's main action
   tabBar: 68,
   momentTile: 116, // Today grid tile height (2 columns)
+  momentTileFade: 64, // bottom fade on a moment tile
+  tileIconWell: 40, // slot icon square on empty and Now tiles
+  tilePlus: 28, // + circle on empty tiles
+  uploadRing: 34, // progress ring on an uploading tile
+  tileBorder: 1.5, // dashed border on empty tiles
+  lockBadge: 22, // round lock badge on private tiles
+  pillPaddingY: 3, // time pill, Now chip and badges over photos
+  retryPill: 26, // Retry pill on a failed tile (hitSlop brings it to 44)
   jarCardGraphic: 52,
 } as const;
 
@@ -141,6 +171,7 @@ export const photo = {
   full: { width: 1440, height: 1920 },
   thumb: { width: 480, height: 640 },
   quality: 0.8, // WebP
+  checkingBlur: 24, // blur radius on a photo while moderation checks it
 } as const;
 
 export const slots = [

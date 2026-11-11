@@ -12,5 +12,37 @@
   },
   "forms": {
     "characterCount": "{{count}} of {{max}} characters"
+  },
+  "slots": {
+    "whereami": "#whereami",
+    "mebusywith": "#mebusywith",
+    "whoamiwith": "#whoamiwith",
+    "ootd": "#ootd",
+    "selfie": "#selfie",
+    "morning": "#morning",
+    "afternoon": "#afternoon",
+    "evening": "#evening"
+  },
+  "tile": {
+    "now": "Now",
+    "tapToCapture": "Tap to capture",
+    "waiting": "Waiting for connection",
+    "uploading": "Uploading {{percent}}%",
+    "failed": "Didn’t upload",
+    "retry": "Retry",
+    "retryLabel": "Retry {{slot}}",
+    "checking": "Checking",
+    "addedLater": "Added later",
+    "a11y": {
+      "added": "added",
+      "empty": "empty",
+      "now": "now, tap to capture",
+      "waiting": "waiting for connection",
+      "uploading": "uploading {{percent}}%",
+      "failed": "didn’t upload",
+      "checking": "checking",
+      "private": "private",
+      "addedLater": "added later"
+    }
   }
 }
