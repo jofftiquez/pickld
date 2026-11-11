@@ -16,10 +16,26 @@ import type { TodayJar } from '../useToday';
 const USER = '6f1c1f7e-8a43-4c1e-9d0b-3c0f5d1e2a10';
 
 type Row = Record<string, unknown>;
-const mockBackend = { offline: false, jars: [] as Row[], moments: [] as Row[], queue: [] as Partial<QueueItem>[] };
+const mockBackend = {
+  offline: false,
+  jars: [] as Row[],
+  moments: [] as Row[],
+  queue: [] as Partial<QueueItem>[],
+  updates: [] as { table: string; values: Row; eq: [string, unknown][] }[],
+};
+// The jar's visibility menu is a bottom sheet (own tests); here only the props Today gives it matter.
+const mockSheet: { props: import('@/features/publish/JarVisibilitySheet').JarVisibilitySheetProps | null } = {
+  props: null,
+};
 
 // Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
+jest.mock('@/features/publish/JarVisibilitySheet', () => ({
+  JarVisibilitySheet: (props: NonNullable<typeof mockSheet.props>) => {
+    mockSheet.props = props;
+    return null;
+  },
+}));
 jest.mock('@/lib/supabase', () => {
   const answer = (table: string) =>
     mockBackend.offline
@@ -34,9 +50,18 @@ jest.mock('@/lib/supabase', () => {
           error: null,
         };
   const query = (table: string) => {
+    let update: (typeof mockBackend.updates)[number] | null = null;
     const builder = {
       select: () => builder,
-      eq: () => builder,
+      update: (values: Row) => {
+        update = { table, values, eq: [] };
+        mockBackend.updates.push(update);
+        return builder;
+      },
+      eq: (column: string, value: unknown) => {
+        update?.eq.push([column, value]);
+        return builder;
+      },
       order: () => builder,
       limit: () => builder,
       single: async () => answer(table),
@@ -120,6 +145,8 @@ beforeEach(() => {
   mockBackend.jars = [];
   mockBackend.moments = [];
   mockBackend.queue = [];
+  mockBackend.updates = [];
+  mockSheet.props = null;
   reportNetworkResult(null);
   useAuthStore.setState({ status: 'signedIn', session: { user: { id: USER } } as Session, error: null });
 });
@@ -149,7 +176,7 @@ describe('Today screen', () => {
     expect(mockPush).toHaveBeenCalledWith('/publish');
   });
 
-  it('a published jar: Publish is off (M3-02 shows the Published state)', async () => {
+  it('a published jar: the Published note, likes and chip; the chip changes who can see it (M3-02)', async () => {
     jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
     mockBackend.moments = [liveMoment('ootd')];
     mockBackend.jars = [
@@ -158,15 +185,30 @@ describe('Today screen', () => {
         local_date: '2026-11-10',
         tz: 'Asia/Manila',
         ends_at: null,
-        published_at: '2026-11-10T05:00:00Z',
+        visibility: 'readers',
+        published_at: '2026-11-10T05:30:00Z',
+        like_count: 21,
       },
     ];
     await renderScreen(newClient());
     await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
-    const publish = screen.getByRole('button', { name: 'Publish' });
-    expect(publish.props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }));
-    await fireEvent.press(publish);
+    // 05:30 UTC is 1:30 PM in Manila, the phone's zone.
+    expect(screen.getByText('Published at 1:30 PM. New moments you add today go out automatically.')).toBeTruthy();
+    expect(screen.getByText('Shared with readers · 21 likes')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull();
+    expect(mockSheet.props?.visible).toBe(false);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Published, Shared with readers' }));
     expect(mockPush).not.toHaveBeenCalled();
+    expect(mockSheet.props).toEqual(
+      expect.objectContaining({ visible: true, visibility: 'readers', readerCount: 312 }),
+    );
+
+    await act(async () => mockSheet.props?.onChange('everyone'));
+    expect(mockBackend.updates).toEqual([
+      { table: 'jars', values: expect.objectContaining({ visibility: 'everyone' }), eq: [['id', 'jar-10']] },
+    ]);
+    await waitFor(() => expect(mockSheet.props?.visible).toBe(false));
   });
 
   it('no jar yet: Publish is off', async () => {

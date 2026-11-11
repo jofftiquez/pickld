@@ -31,6 +31,8 @@ export type ButtonTone = {
   shadow?: ViewStyle;
   /** Fill the parent's width (full-width screen buttons) or hug the label (pills). */
   stretch: boolean;
+  /** Icon size and stroke; defaults to 20 and 2. */
+  icon?: { size: number; strokeWidth: number };
 };
 
 export const PRESSED_OPACITY = 0.85;
@@ -74,7 +76,9 @@ export function BaseButton({
         disabled ? { opacity: DISABLED_OPACITY } : null,
       ]}
     >
-      {icon ? <Icon name={icon} color={tone.text} size={20} strokeWidth={2} /> : null}
+      {icon ? (
+        <Icon name={icon} color={tone.text} size={tone.icon?.size ?? 20} strokeWidth={tone.icon?.strokeWidth ?? 2} />
+      ) : null}
       <Text style={[textStyle(tone.textVariant, tone.textWeight), { color: colors[tone.text] }, styles.label]}>
         {label}
       </Text>
