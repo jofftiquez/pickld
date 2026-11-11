@@ -88,7 +88,22 @@
     "calendar": "{{month}} calendar",
     "day": "{{date}}, {{count}} of {{total}} moments",
     "dayToday": "{{date}}, today, {{count}} of {{total}} moments",
-    "dayFuture": "{{date}}, not yet"
+    "dayFuture": "{{date}}, not yet",
+    "selected": {
+      "label": "Selected day",
+      "count": "{{count}} of {{total}} moments",
+      "addedLater": " · {{count}} added later",
+      "thumbAddedLater": "{{slot}}, added later",
+      "missing": "Missing: {{slots}}",
+      "addSlot": "+ {{slot}}",
+      "fill": "Fill this jar",
+      "fillHint": "Opens the camera to add to {{date}}",
+      "fillNote": "Moments added now show an “Added later” badge."
+    },
+    "camera": {
+      "when": "For {{date}}",
+      "slotTag": "{{slot}}, for {{date}}"
+    }
   },
   "brand": {
     "tagline": "Eight moments. One real day.",

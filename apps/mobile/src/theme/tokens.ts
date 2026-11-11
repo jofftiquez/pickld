@@ -210,6 +210,7 @@ export const sizes = {
   fillBar: 3, // fill bar height in a calendar cell
   fillBarInset: 4, // fill bar distance from the cell's sides and bottom
   todayRing: 2.5, // outline around today's cell
+  dayCardJar: 20, // jar beside the selected day's date (Calendar)
   bannerPaddingY: 10, // offline banner (UploadStates)
   bannerPaddingX: 14,
   bannerGap: 10, // offline banner: icon to text, and banner to the jar card

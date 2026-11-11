@@ -8,6 +8,8 @@ import { resolve } from 'node:path';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '../../database.types';
+import { queueTarget } from '../../../features/capture/saveCapture';
+import { fillTarget } from '../../../features/capture/fillTarget';
 import { localDateIn } from '../../jars';
 import { enqueue, getItem, listQueue } from '../store';
 import { drainQueue, type PutFile } from '../uploader';
@@ -23,6 +25,8 @@ import { capturedFiles, files, resetFakes } from './fakes';
 
 jest.mock('expo-sqlite', () => jest.requireActual('./fakes').expoSqlite);
 jest.mock('expo-file-system', () => jest.requireActual('./fakes').expoFileSystem);
+// saveCapture (for queueTarget) loads Sentry (ESM) through monitoring.
+jest.mock('../../monitoring', () => ({ captureError: jest.fn() }));
 
 const enabled = process.env.PICKLD_INTEGRATION === '1';
 const describeLocal = enabled ? describe : describe.skip;
@@ -134,5 +138,32 @@ describeLocal('upload worker against local Supabase', () => {
     expect(await listQueue(userId)).toEqual([
       expect.objectContaining({ id: second.id, state: 'conflict', attempts: 0 }),
     ]);
+  }, 60_000);
+
+  it('Fill this jar: a moment queued for a past date lands in that date’s jar with Added later (M2-26)', async () => {
+    const now = new Date();
+    const today = localDateIn(now, TZ);
+    const past = localDateIn(new Date(now.getTime() - 3 * 86_400_000), TZ);
+    // The camera's path: no jar for that day yet, so the phone zone; the open jar is today's.
+    const target = queueTarget({ tz: TZ, shotAt: now, openJar: null, fill: fillTarget(past, null, TZ) });
+    expect(target).toMatchObject({ localDate: past, tz: TZ });
+    const item = await enqueue({ userId, ...capturedFiles('fill'), slot: 'selfie', ...target });
+
+    const [uploaded] = await drainQueue(userId, { client, putFile });
+    expect(uploaded).toMatchObject({ kind: 'uploaded', itemId: item.id });
+    if (uploaded?.kind !== 'uploaded') return;
+    const { data: moment, error } = await client
+      .from('moments')
+      .select('slot, is_backfilled, jars(local_date, tz)')
+      .eq('id', uploaded.momentId)
+      .single();
+    expect(error).toBeNull();
+    expect(moment).toMatchObject({ slot: 'selfie', is_backfilled: true, jars: { local_date: past, tz: TZ } });
+
+    // A future date is refused by the server too (the app never sends one: parseFillDateParam).
+    const tomorrow = localDateIn(new Date(now.getTime() + 2 * 86_400_000), TZ);
+    expect(tomorrow > today).toBe(true);
+    const { error: futureError } = await client.rpc('ensure_jar', { local_date: tomorrow, tz: TZ });
+    expect(futureError?.message).toMatch(/future/);
   }, 60_000);
 });

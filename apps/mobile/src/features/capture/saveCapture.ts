@@ -12,6 +12,8 @@ import { requestUploads } from '@/lib/queue/runner';
 import { enqueue, type QueueItem } from '@/lib/queue/store';
 import type { Slot } from '@/theme/tokens';
 
+import type { FillTarget } from './fillTarget';
+
 export type OpenJar = { id: string; localDate: string; tz: string };
 
 export type SaveCaptureInput = {
@@ -25,6 +27,8 @@ export type SaveCaptureInput = {
   shotAt: Date;
   /** The open jar from Today, if known: a moment joins it even after a zone change (travel rule). */
   openJar: OpenJar | null;
+  /** Fill this jar: queue under this past date and zone instead of the open jar (FR-DAY-02). */
+  fill?: FillTarget | null;
 };
 
 function deleteQuietly(uri: string): void {
@@ -54,20 +58,35 @@ export function captureJarDate(input: { tz: string; shotAt: Date; openJar: OpenJ
 }
 
 /**
+ * The queue row's jar date and zone. Fill this jar uses its past date and that jar's zone (the server sets
+ * is_backfilled); a normal capture goes through `captureJarDate` with the phone zone, unchanged.
+ */
+export function queueTarget(input: Pick<SaveCaptureInput, 'tz' | 'shotAt' | 'openJar' | 'fill'>): {
+  localDate: string;
+  tz: string;
+  capturedAt: string;
+} {
+  const { localDate, capturedAt } = captureJarDate(input);
+  return input.fill
+    ? { localDate: input.fill.localDate, tz: input.fill.tz, capturedAt }
+    : { localDate, tz: input.tz, capturedAt };
+}
+
+/**
  * Queues the raw camera photo at once (a file copy and one SQLite row, so a photo is never lost if the app
  * is killed right after the shutter: rule 3), then prepares it in the background and kicks the upload
  * worker. Resolves as soon as the raw photo is queued; never waits for preparation or the network. If the
  * background preparation is interrupted, the upload worker prepares the item before uploading it.
  */
 export async function saveCapture(input: SaveCaptureInput): Promise<QueueItem> {
-  const { localDate, capturedAt } = captureJarDate(input);
+  const { localDate, tz, capturedAt } = queueTarget(input);
   const item = await enqueue({
     userId: input.userId,
     photoUri: input.uri,
     thumbUri: null,
     slot: input.slot,
     localDate,
-    tz: input.tz,
+    tz,
     capturedAt,
     prepared: false,
     editing: true,

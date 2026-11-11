@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -20,6 +21,8 @@ export type MyDaysViewProps = {
   onPrevious: () => void;
   onNext: () => void;
   onSelectDay: (date: string) => void;
+  /** The selected-day card, under the calendar. */
+  selectedDay?: ReactNode;
   locale?: string;
 };
 
@@ -53,6 +56,7 @@ export function MyDaysView({
   onPrevious,
   onNext,
   onSelectDay,
+  selectedDay,
   locale = deviceLocale(),
 }: MyDaysViewProps) {
   const { t } = useTranslation();
@@ -132,6 +136,7 @@ export function MyDaysView({
           ))}
         </View>
       </View>
+      {selectedDay}
     </ScrollView>
   );
 }
