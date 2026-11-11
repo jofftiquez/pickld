@@ -1,13 +1,10 @@
 import { useSyncExternalStore } from 'react';
 
-// Offline signal for the UI (NFR-OFF-01). No connectivity package is installed (adding expo-network needs
-// product-owner approval), and TanStack Query's onlineManager only listens to browser `online`/`offline`
-// events, so on React Native it always says online. Instead the app is "offline" when its latest request
-// to the backend failed with a network error: the upload worker reports each drain's last attempt and
-// Today reports its jar and profile fetches. Any answer from the server, even an error, means online.
-//
-// To switch to expo-network later, replace the body of `useIsOffline` with
-// `Network.useNetworkState().isInternetReachable === false`; callers stay the same.
+// Offline signal for the UI (NFR-OFF-01). Two sources: the device's connection (expo-network, see
+// network.ts; D-23) and the latest request to the backend. The app is offline when the device says it has
+// no connection, or when its latest backend request failed with a network error (connected to Wi-Fi with
+// no internet, backend unreachable). Any answer from the server, even an error, means reachable.
+// TanStack Query's onlineManager only listens to browser events, so it is not used.
 
 // Messages fetch, supabase-js and the native upload task use when no request reached the server.
 const NETWORK_ERROR =
@@ -23,8 +20,24 @@ export function isNetworkError(error: unknown): boolean {
   return false;
 }
 
+let deviceOffline = false;
+let requestFailed = false;
 let offline = false;
 const listeners = new Set<() => void>();
+
+function update(): void {
+  const next = deviceOffline || requestFailed;
+  if (next === offline) return;
+  offline = next;
+  listeners.forEach((listener) => listener());
+}
+
+/** The device's connection changed. Coming back clears the last request failure until a new one fails. */
+export function setDeviceOnline(online: boolean): void {
+  if (online && deviceOffline) requestFailed = false;
+  deviceOffline = !online;
+  update();
+}
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
@@ -33,10 +46,8 @@ function subscribe(listener: () => void): () => void {
 
 /** Records the outcome of a backend request: `null` for success, otherwise the error or its message. */
 export function reportNetworkResult(error: unknown): void {
-  const next = error !== null && error !== undefined && isNetworkError(error);
-  if (next === offline) return;
-  offline = next;
-  listeners.forEach((listener) => listener());
+  requestFailed = error !== null && error !== undefined && isNetworkError(error);
+  update();
 }
 
 /** Reports how a backend request ended and passes its result or error through unchanged. */

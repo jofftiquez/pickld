@@ -3,6 +3,7 @@ import { z } from 'zod';
 /**
  * Upload states of a queued moment (NFR-OFF-01, NFR-OFF-02).
  * queued → uploading → uploaded, or back to queued with a backoff delay; the 5th failure is `failed`.
+ * A network error (offline) goes back to queued without counting as a failure (`waitForNetwork`).
  * `failed` only leaves through `retry` (the tile's Retry button).
  * `conflict`: the slot already has a moment on the server (FR-JAR-03). Not a failure: the tile offers
  * Replace (M2-22, #51), and nothing retries it on its own.
@@ -16,6 +17,13 @@ export const BACKOFF_MS = [1_000, 5_000, 30_000, 120_000, 600_000] as const;
 
 /** The 5th failed attempt is final until the user taps Retry. */
 export const MAX_ATTEMPTS = 5;
+
+/**
+ * Wait after a request that never reached the server (D-24). Offline time does not use up attempts;
+ * reconnecting wakes the item at once (runner), so this only paces tries while the phone thinks it is
+ * online but the backend is unreachable.
+ */
+export const OFFLINE_RETRY_MS = 30_000;
 
 /** The part of a queue item the state machine owns. */
 export interface UploadStatus {
@@ -65,6 +73,12 @@ export function fail<T extends UploadStatus>(item: T, error: string, now: number
   const attempts = item.attempts + 1;
   if (attempts >= MAX_ATTEMPTS) return { ...item, state: 'failed', attempts, nextAttemptAt: null, lastError: error };
   return { ...item, state: 'queued', attempts, nextAttemptAt: now + backoffDelay(attempts), lastError: error };
+}
+
+/** The request never reached the server: back to the queue without counting an attempt (D-24). */
+export function waitForNetwork<T extends UploadStatus>(item: T, error: string, now: number = Date.now()): T {
+  assertState(item, 'uploading', 'park');
+  return { ...item, state: 'queued', nextAttemptAt: now + OFFLINE_RETRY_MS, lastError: error };
 }
 
 /** The server refused the moment because its slot is taken. Attempts are kept; no retry is scheduled. */
