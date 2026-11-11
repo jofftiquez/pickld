@@ -101,6 +101,21 @@ describe('TodayView', () => {
     expect(screen.getByText('1 of 8 moments')).toBeTruthy();
   });
 
+  it('published, Only me: the note says only the owner sees it, 1 like reads singular, no promise of sharing', async () => {
+    const onOpenVisibility = jest.fn();
+    await renderToday({
+      hasAnyJar: true,
+      tiles: buildTodayGrid({ localDate: '2026-11-10', moments: [live('ootd')], queue: [], nowSlot: 'morning' }),
+      published: { visibility: 'only_me', publishedAt: '2026-11-09T23:05:00Z', likeCount: 1 },
+      onOpenVisibility,
+    });
+    expect(screen.getByText('Published at 7:05 AM. Only you can see this jar.')).toBeTruthy();
+    expect(screen.queryByText(/go out automatically/)).toBeNull();
+    expect(screen.getByText('Only you · 1 like')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Published, Only you' }));
+    expect(onOpenVisibility).toHaveBeenCalledTimes(1);
+  });
+
   it('normal day: count, readers, a disabled Publish, and the 8 tiles in order', async () => {
     const moments = (['whereami', 'mebusywith', 'ootd', 'selfie', 'morning'] as const).map(live);
     await renderToday({

@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,12 +14,16 @@ import { useCelebrations } from '@/features/jar/useCelebrations';
 import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { MomentOptions, type MomentOptionsSelection } from '@/features/moment/MomentOptions';
+import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
+import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
 import { currentSlot } from '@/lib/jars';
+import { getSupabase } from '@/lib/supabase';
 
 const MINUTE = 60_000;
 
-// Today tab (M2-05, M2-06, M2-22, M2-23, M3-01; FR-CAP-10, FR-JAR-01, FR-JAR-02, FR-JAR-03, FR-JAR-04, FR-PUB-01, NFR-OFF-01, NFR-OFF-03).
+// Today tab (M2-05, M2-06, M2-22, M2-23, M3-01, M3-02; FR-CAP-10, FR-JAR-01, FR-JAR-02, FR-JAR-03, FR-JAR-04, FR-PUB-01,
+// FR-PUB-03, FR-PUB-04, NFR-OFF-01, NFR-OFF-03).
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -84,6 +88,25 @@ export default function TodayScreen() {
     if (target) setOptions((o) => ({ selection: { tile, target }, open: true, n: (o?.n ?? 0) + 1 }));
   };
 
+  // The jar's visibility menu (M3-02). Once published, RLS shares every new live, non-private moment with
+  // whoever the visibility allows (FR-PUB-04), so changing it is the only step. The jars trigger keeps
+  // the first published_at, so re-publishing with a new visibility is that change.
+  const [visibilityOpen, setVisibilityOpen] = useState(false);
+  const changeVisibility = useMutation({
+    networkMode: 'always',
+    mutationFn: (input: { jarId: string; visibility: Visibility }) =>
+      publishJar(getSupabase(), input.jarId, input.visibility),
+    onSuccess: () => {
+      if (userId !== null) void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+      setVisibilityOpen(false);
+    },
+  });
+  const openJar = jar?.jar ?? null;
+  const published =
+    openJar?.publishedAt && openJar.visibility
+      ? { visibility: openJar.visibility, publishedAt: openJar.publishedAt, likeCount: openJar.likeCount ?? 0 }
+      : null;
+
   return (
     <>
       <TodayView
@@ -109,7 +132,29 @@ export default function TodayScreen() {
         onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
         onOpenOptions={openOptions}
         onPublish={jar?.jar && !jar.jar.publishedAt ? () => router.push('/publish') : null}
+        published={published}
+        onOpenVisibility={() => {
+          changeVisibility.reset();
+          setVisibilityOpen(true);
+        }}
       />
+      {published && openJar ? (
+        <JarVisibilitySheet
+          visible={visibilityOpen}
+          visibility={changeVisibility.isPending ? changeVisibility.variables.visibility : published.visibility}
+          readerCount={me?.readerCount ?? null}
+          busy={changeVisibility.isPending}
+          error={
+            changeVisibility.error
+              ? changeVisibility.error instanceof PublishError
+                ? changeVisibility.error.reason
+                : 'failed'
+              : null
+          }
+          onChange={(visibility) => changeVisibility.mutate({ jarId: openJar.id, visibility })}
+          onClose={() => setVisibilityOpen(false)}
+        />
+      ) : null}
       {options && userId !== null ? (
         <MomentOptions
           key={options.n}

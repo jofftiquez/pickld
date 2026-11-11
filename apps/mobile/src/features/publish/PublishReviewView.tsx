@@ -5,7 +5,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Icon } from '@/components/Icon';
 import { MAX_LAYERS } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { RadioRow } from '@/components/RadioRow';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { holdsSlot, momentCount, type GridTile } from '@/features/jar/todayGrid';
 import { MomentCover } from '@/features/moment/MomentCover';
@@ -15,7 +14,8 @@ import { hitSlopFor } from '@/lib/hitSlop';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, shadow, sizes, space } from '@/theme/tokens';
 
-import { publishNote, VISIBILITIES, type Visibility } from './publishJar';
+import { publishNote, type Visibility } from './publishJar';
+import { VisibilityOptions } from './VisibilityOptions';
 
 export type PublishReviewViewProps = {
   /** The jar's local date (YYYY-MM-DD). */
@@ -35,8 +35,6 @@ export type PublishReviewViewProps = {
   onPublish: () => void;
   onNotYet: () => void;
 };
-
-const VISIBILITY_KEY = { readers: 'readers', everyone: 'everyone', only_me: 'onlyMe' } as const;
 
 /** A YYYY-MM-DD date as "Mon, Nov 9": read and printed in UTC so the day never shifts. */
 function jarDate(localDate: string): string {
@@ -102,26 +100,12 @@ export function PublishReviewView({
           <Text accessibilityRole="header" style={[textStyle('body', '700'), styles.choicesTitle]}>
             {t('publish.visibilityTitle')}
           </Text>
-          {VISIBILITIES.map((option, i) => {
-            const key = VISIBILITY_KEY[option];
-            return (
-              <RadioRow
-                key={option}
-                label={t(`publish.${key}`)}
-                description={
-                  option === 'readers'
-                    ? readerCount === null
-                      ? t('publish.readersBodyUnknown')
-                      : t('publish.readersBody', { count: readerCount })
-                    : t(`publish.${key}Body`)
-                }
-                selected={visibility === option}
-                onSelect={() => onChangeVisibility(option)}
-                divider={i < VISIBILITIES.length - 1}
-                testID={`publish-visibility-${option}`}
-              />
-            );
-          })}
+          <VisibilityOptions
+            visibility={visibility}
+            readerCount={readerCount}
+            onChange={onChangeVisibility}
+            testIDPrefix="publish-visibility"
+          />
         </View>
 
         {note ? (

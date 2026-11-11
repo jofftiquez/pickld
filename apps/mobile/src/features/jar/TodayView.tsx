@@ -9,8 +9,11 @@ import { formatShortDate, formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
 import { colors, sizes, space, type Slot } from '@/theme/tokens';
 
+import type { Visibility } from '@/features/publish/publishJar';
+
 import { JarCard } from './JarCard';
 import { OfflineBanner } from './OfflineBanner';
+import { PublishedNote } from './PublishedNote';
 import { TodayHeader } from './TodayHeader';
 import { greetingFor, momentCount, type GridTile } from './todayGrid';
 
@@ -43,6 +46,10 @@ export type TodayViewProps = {
   onOpenOptions?: (tile: GridTile) => void;
   /** Opens Publish review (M3-01); null or missing disables the jar card's Publish. */
   onPublish?: (() => void) | null;
+  /** A published jar (M3-02, TodayPublished): the Published note above the card, its chip and likes. */
+  published?: { visibility: Visibility; publishedAt: string; likeCount: number } | null;
+  /** The Published chip: opens the jar's visibility menu. */
+  onOpenVisibility?: () => void;
 };
 
 /** Tiles that open Moment options: the owner's live moments and queued photos not uploading right now. */
@@ -71,6 +78,8 @@ export function TodayView({
   onOpenMoment,
   onOpenOptions,
   onPublish = null,
+  published = null,
+  onOpenVisibility,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -102,13 +111,20 @@ export function TodayView({
           <OfflineBanner count={offlineCount} />
         </View>
       ) : null}
-      <View style={offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.card}>
+      {published ? (
+        <View style={offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.banner}>
+          <PublishedNote time={formatTime(new Date(published.publishedAt), tz)} visibility={published.visibility} />
+        </View>
+      ) : null}
+      <View style={offlineCount !== null || zoneBanner || published ? styles.cardUnderBanner : styles.card}>
         <JarCard
           count={count}
           readerCount={readerCount}
           lidColor={lidColor}
           firstDay={hasAnyJar === false && count === 0}
           onPublish={onPublish}
+          published={published}
+          onOpenVisibility={onOpenVisibility}
         />
       </View>
       <View accessibilityLabel={t('today.grid')} style={styles.grid}>

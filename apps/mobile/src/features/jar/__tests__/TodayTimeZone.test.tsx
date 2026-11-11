@@ -18,6 +18,7 @@ const mockBackend = { offline: false, jars: [] as Row[], olderReads: 0 };
 
 // Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
+jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
 jest.mock('@/lib/supabase', () => {
   const query = (table: string) => {
     const filters: { lt?: string; limit?: number } = {};
