@@ -1,0 +1,49 @@
+# M2-29: Time zone banner on Today (design: TimeZone; FR-JAR-05). Screenshots the banner, taps Got it,
+# then relaunches to check it stays dismissed and the zone tag stays.
+# Run on the iOS Simulator: maestro test apps/mobile/.maestro/timezone-banner.yaml
+#
+# Seed (as the signed-in user, e.g. dale):
+#   - a jar dated yesterday with tz 'Asia/Manila' (the previous jar), and
+#   - a jar dated today in Tokyo with tz 'Asia/Tokyo' (the open jar; it needs at least one moment to exist,
+#     e.g. capture one first or seed a live moment). Today's jar must be the open one: its ends_at is
+#     after now.
+# Put the Simulator in Tokyo time before launching, then restart the app:
+#   xcrun simctl spawn booted launchctl setenv TZ Asia/Tokyo
+# The banner shows once per jar per install: erase the app's data (or reinstall) to see it again.
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: timezone-banner
+    timeout: 10000
+- assertVisible: You’re in Tokyo time
+- assertVisible: .*· Tokyo time
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: TimeZone-ios
+
+- tapOn:
+    id: timezone-got-it
+- assertNotVisible:
+    id: timezone-banner
+- assertVisible: .*· Tokyo time
+
+# Shown once: still gone after a relaunch.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: screen-title
+    timeout: 15000
+- assertVisible: .*· Tokyo time
+- assertNotVisible:
+    id: timezone-banner

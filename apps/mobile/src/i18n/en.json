@@ -41,6 +41,14 @@
       "body_other": "{{count}} moments are saved on your phone and will upload when you’re back."
     }
   },
+  "timeZone": {
+    "title": "You’re in {{zone}} time",
+    "body": "Your last jar was on {{from}} time. Today’s jar follows {{to}} time.",
+    "gotIt": "Got it",
+    "gotItHint": "Hides this message",
+    "tag": "{{zone}} time",
+    "subtitle": "{{date}} · {{tag}}"
+  },
   "capture": {
     "title": "Capture"
   },

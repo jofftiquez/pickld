@@ -16,10 +16,19 @@ export type TodayHeaderProps = {
   displayName: string | null;
   avatarUrl: string | null;
   onOpenMyDays: () => void;
+  /** "Tokyo time" on a jar that started in a new zone; replaces the greeting (TimeZone). */
+  zoneTag?: string | null;
 };
 
 /** Date, greeting and the "Today" title, with the My days shortcut and avatar (Main). */
-export function TodayHeader({ date, greeting, displayName, avatarUrl, onOpenMyDays }: TodayHeaderProps) {
+export function TodayHeader({
+  date,
+  greeting,
+  displayName,
+  avatarUrl,
+  onOpenMyDays,
+  zoneTag = null,
+}: TodayHeaderProps) {
   const { t } = useTranslation();
   // Main greets by first name ("Good afternoon, Dale"), which keeps the line short.
   const firstName = displayName?.trim().split(/\s+/)[0];
@@ -30,7 +39,9 @@ export function TodayHeader({ date, greeting, displayName, avatarUrl, onOpenMyDa
     <View style={styles.row}>
       <View style={styles.titles}>
         <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]}>
-          {t('today.subtitle', { date, greeting: greetingText })}
+          {zoneTag
+            ? t('timeZone.subtitle', { date, tag: zoneTag })
+            : t('today.subtitle', { date, greeting: greetingText })}
         </Text>
         <Text
           testID="screen-title"
