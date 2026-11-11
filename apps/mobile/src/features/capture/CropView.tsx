@@ -24,6 +24,8 @@ export type CropViewProps = {
   busy: boolean;
   /** Queueing the photo failed: say so above Next: edit. */
   failed: boolean;
+  /** `recrop`: Moment options' Re-crop on a saved moment (M2-23); the copy says Save instead of Next: edit. */
+  mode?: 'gallery' | 'recrop';
   insets: EdgeInsets;
   onChange: (state: CropState) => void;
   onZoom: (zoom: number) => void;
@@ -44,8 +46,9 @@ const PERCENT = 100;
  * makes it taller than the screen.
  */
 export function CropView(props: CropViewProps) {
-  const { uri, image, slotLabel, state, busy, failed, insets, onChange, onZoom } = props;
+  const { uri, image, slotLabel, state, busy, failed, insets, onChange, onZoom, mode = 'gallery' } = props;
   const { t } = useTranslation();
+  const copy = mode === 'recrop' ? 'crop.recrop' : 'crop';
   const window = useWindowDimensions();
   const frame = cropFrame(window);
 
@@ -54,7 +57,7 @@ export function CropView(props: CropViewProps) {
       <View style={styles.header}>
         <CropHeaderAction
           label={t('crop.cancel')}
-          hint={t('crop.cancelHint')}
+          hint={t(`${copy}.cancelHint`)}
           onPress={props.onCancel}
           testID="crop-cancel"
         />
@@ -62,7 +65,7 @@ export function CropView(props: CropViewProps) {
           <Text accessibilityRole="header" style={[textStyle('cropTitle'), styles.titleText]}>
             {t('crop.title')}
           </Text>
-          <Text style={[textStyle('label', '500'), styles.subtitle]}>{t('crop.subtitle', { slot: slotLabel })}</Text>
+          <Text style={[textStyle('label', '500'), styles.subtitle]}>{t(`${copy}.subtitle`, { slot: slotLabel })}</Text>
         </View>
         <CropHeaderAction
           label={t('crop.reset')}
@@ -119,12 +122,12 @@ export function CropView(props: CropViewProps) {
         <View style={styles.spacer} />
         {failed ? (
           <Text accessibilityLiveRegion="polite" style={[textStyle('bodySmall'), styles.error]} testID="crop-error">
-            {t('crop.saveFailed')}
+            {t(`${copy}.saveFailed`)}
           </Text>
         ) : null}
         <PrimaryButton
-          label={t('crop.done')}
-          accessibilityHint={t('crop.doneHint', { slot: slotLabel })}
+          label={t(`${copy}.done`)}
+          accessibilityHint={t(`${copy}.doneHint`, { slot: slotLabel })}
           onPress={props.onDone}
           disabled={busy}
           testID="crop-done"

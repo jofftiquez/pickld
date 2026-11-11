@@ -39,6 +39,8 @@ export type MomentTileProps = {
   /** Upload progress 0–1 for the `uploading` state; leave it out when unknown to show an indeterminate spinner. */
   progress?: number;
   onPress?: () => void;
+  /** What a tap does, when the label doesn't say it (e.g. "Opens moment options"). Already translated. */
+  accessibilityHint?: string;
   /** Shown as a Retry button in the `failed` state. */
   onRetry?: () => void;
   testID?: string;
@@ -64,6 +66,7 @@ export function MomentTile({
   addedLater = false,
   progress,
   onPress,
+  accessibilityHint,
   onRetry,
   testID,
 }: MomentTileProps) {
@@ -110,6 +113,7 @@ export function MomentTile({
       accessible
       accessibilityRole={onPress ? 'button' : 'image'}
       accessibilityLabel={accessibilityLabel}
+      accessibilityHint={onPress ? accessibilityHint : undefined}
       accessibilityActions={canRetry ? [...(onPress ? [{ name: 'activate' }] : []), retryAction] : undefined}
       onAccessibilityAction={canRetry ? onAccessibilityAction : undefined}
       disabled={!onPress}

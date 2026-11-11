@@ -2,7 +2,6 @@
  * @jest-environment node
  */
 import { execFileSync } from 'node:child_process';
-import { request } from 'node:http';
 import { resolve } from 'node:path';
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -14,6 +13,7 @@ import { localDateIn } from '../../jars';
 import { enqueue, getItem, listQueue, replaceItem } from '../store';
 import { drainQueue, type PutFile, type UploaderClient } from '../uploader';
 import { capturedFiles, files, resetFakes } from './fakes';
+import { nodeFetch } from './nodeFetch';
 
 // M2-04 against the local stack: ensure_jar, fn:upload-url, the local S3 bucket (D-22) and the moments
 // table with its real one-moment-per-slot index (0013), and Replace (M2-22) through the real fn:moderate. Skipped unless PICKLD_INTEGRATION=1. Needs `pnpm db:start`
@@ -47,30 +47,6 @@ const putFile: PutFile = async (fileUri, target) => {
   const res = await nodeFetch(target.url, { method: target.method, headers: target.headers, body: Buffer.from(data) });
   if (!res.ok) throw new Error(`photo upload answered ${res.status}: ${await res.text()}`);
 };
-
-// jest-expo swaps the global fetch for a stub even in the node environment, so this test talks HTTP
-// through node:http (local Supabase is plain http).
-const nodeFetch = (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> =>
-  new Promise((resolveResponse, reject) => {
-    const url = new URL(input instanceof Request ? input.url : String(input));
-    const headers = Object.fromEntries(new Headers(init.headers).entries());
-    const req = request(url, { method: init.method ?? 'GET', headers }, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (chunk: Buffer) => chunks.push(chunk));
-      res.on('end', () => {
-        const status = res.statusCode ?? 500;
-        const body = status === 204 || status === 304 ? null : Buffer.concat(chunks);
-        const out = new Headers();
-        for (const [name, value] of Object.entries(res.headers)) {
-          if (value !== undefined) out.set(name, Array.isArray(value) ? value.join(', ') : value);
-        }
-        resolveResponse(new Response(body, { status, headers: out }));
-      });
-    });
-    req.on('error', reject);
-    if (init.body !== undefined && init.body !== null) req.write(init.body as string | Buffer);
-    req.end();
-  });
 
 describeLocal('upload worker against local Supabase', () => {
   let admin: SupabaseClient<Database>;

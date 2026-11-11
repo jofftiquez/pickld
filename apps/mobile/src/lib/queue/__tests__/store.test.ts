@@ -587,3 +587,86 @@ describe('Replace (M2-22)', () => {
     await expect(store.replaceItem(999)).rejects.toThrow('No queued moment 999');
   });
 });
+
+describe('Moment options on a queued moment (M2-23)', () => {
+  it('Make private and Move keep the photo, caption and edits, across a restart', async () => {
+    const store = loadStore();
+    const item = await store.enqueue({ ...input, isPrivate: false });
+    const changes: string[] = [];
+    const unsubscribe = store.subscribeQueue((change) => changes.push(change));
+    await store.saveOptions(item.id, { isPrivate: true });
+    const moved = await store.saveOptions(item.id, { slot: 'evening' });
+    unsubscribe();
+    expect(moved).toMatchObject({ slot: 'evening', isPrivate: true, caption: 'new shoes', edits: { filter: 'warm' } });
+    expect(moved.photoUri).toBe(item.photoUri);
+    expect(await loadStore().getItem(item.id)).toEqual(moved);
+    expect(changes).toEqual(['status', 'status']);
+  });
+
+  it('a stopped photo moved to another slot uploads again from attempt 0, without its Replace choice', async () => {
+    const store = loadStore();
+    const item = await store.enqueue({ ...input, replace: true });
+    await store.saveStatus(conflict(start(item), 'slot already has a moment'));
+    const moved = await store.saveOptions(item.id, { slot: 'selfie' });
+    expect(moved).toMatchObject({ slot: 'selfie', state: 'queued', attempts: 0, nextAttemptAt: null, lastError: null });
+    expect(moved.replace).toBe(false);
+  });
+
+  it('privacy alone leaves a failed photo failed and keeps its Replace choice', async () => {
+    const store = loadStore();
+    const item = await store.enqueue({ ...input, replace: true });
+    let failed = { ...item };
+    for (let i = 0; i < 5; i += 1) failed = { ...failed, ...fail(start(failed), 'server error', 0) };
+    await store.saveStatus(failed);
+    const changed = await store.saveOptions(item.id, { isPrivate: false, slot: 'ootd' });
+    expect(changed).toMatchObject({ state: 'failed', attempts: 5, replace: true, isPrivate: false });
+  });
+
+  it('refuses every change while the photo is uploading, and changes nothing', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    await store.saveStatus(start(item));
+    await expect(store.saveOptions(item.id, { slot: 'evening' })).rejects.toBeInstanceOf(store.QueueItemBusyError);
+    await expect(store.discardItem(item.id)).rejects.toBeInstanceOf(store.QueueItemBusyError);
+    mockFs.set('file:///cache/re.webp', 're-full');
+    mockFs.set('file:///cache/re-thumb.webp', 're-thumb');
+    await expect(
+      store.saveRecropped(item.id, { photoUri: 'file:///cache/re.webp', thumbUri: 'file:///cache/re-thumb.webp' }),
+    ).rejects.toBeInstanceOf(store.QueueItemBusyError);
+    expect(await store.getItem(item.id)).toMatchObject({ slot: 'ootd', state: 'uploading', photoUri: item.photoUri });
+    expect(mockFs.get(item.photoUri)).toBe('photo-bytes');
+    expect(queuedFiles().sort()).toEqual([item.photoUri, item.thumbUri].sort());
+  });
+
+  it('refuses a moment that already left the queue', async () => {
+    const store = loadStore();
+    await expect(store.saveOptions(404, { isPrivate: true })).rejects.toBeInstanceOf(store.QueueItemBusyError);
+    await expect(store.discardItem(404)).rejects.toBeInstanceOf(store.QueueItemBusyError);
+  });
+
+  it('Re-crop swaps in the new files after the row points at them, then deletes the old ones', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    mockFs.set('file:///cache/re.webp', 're-full');
+    mockFs.set('file:///cache/re-thumb.webp', 're-thumb');
+    mockLog.length = 0;
+    const done = await store.saveRecropped(item.id, {
+      photoUri: 'file:///cache/re.webp',
+      thumbUri: 'file:///cache/re-thumb.webp',
+    });
+    expect(mockFs.get(done.photoUri)).toBe('re-full');
+    expect(mockFs.get(done.thumbUri ?? '')).toBe('re-thumb');
+    expect(done).toMatchObject({ prepared: true, crop: null, caption: 'new shoes', edits: { filter: 'warm' } });
+    expect(mockLog.indexOf('sql:UPDATE')).toBeGreaterThan(mockLog.indexOf('copy:file:///cache/re-thumb.webp'));
+    expect(queuedFiles().sort()).toEqual([done.photoUri, done.thumbUri].sort());
+    expect(await loadStore().getItem(item.id)).toEqual(done);
+  });
+
+  it('Delete drops the row and both files', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    await store.discardItem(item.id);
+    expect(await store.getItem(item.id)).toBeNull();
+    expect(queuedFiles()).toEqual([]);
+  });
+});
