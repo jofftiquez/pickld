@@ -56,6 +56,7 @@ export default function RootLayout() {
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
         />
         <Stack.Screen name="moment/[id]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        <Stack.Screen name="jar/[id]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="publish" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         {/* Celebrations fade in; Reduce Motion keeps the fade and drops the confetti (NFR-A11Y-02). */}
         <Stack.Screen name="full-jar" options={{ presentation: 'transparentModal', animation: 'fade' }} />

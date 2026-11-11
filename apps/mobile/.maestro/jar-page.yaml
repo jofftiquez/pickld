@@ -1,0 +1,44 @@
+# M3-07: a feed card opens the author's Jar page (design: Story) with the cover, Full jar tag, grid and
+# the like, comment and Share jar bar; Back returns to the feed.
+# Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
+# maestro test apps/mobile/.maestro/jar-page.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- tapOn:
+    id: feed-card-mika
+- extendedWaitUntil:
+    visible:
+      id: jar-count-tile
+    timeout: 40000
+- assertVisible:
+    id: jar-full-tag
+- assertVisible:
+    id: jar-subtitle
+    text: .*8 of 8 moments
+- assertVisible:
+    id: jar-bar
+- assertVisible:
+    id: jar-share
+# Let the photos arrive before the screenshot.
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: Jar-ios
+- tapOn:
+    id: jar-back
+- assertVisible:
+    id: feed-card-mika

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
@@ -16,6 +16,7 @@ const MINUTE = 60_000;
 export default function JarsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const feed = useFeed();
   const { userId, markSeen } = feed;
   const me = useQuery({
@@ -62,7 +63,7 @@ export default function JarsScreen() {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
       onOpenNotifications={() => undefined}
-      // TODO(M3-07): open the Jar page.
+      onOpenJar={(jarId) => router.push({ pathname: '/jar/[id]', params: { id: jarId } })}
       // TODO(M4-08): open Find friends (D-5); it doesn't exist yet.
       onFindPeople={() => undefined}
       onInvite={() => {
