@@ -390,3 +390,21 @@ describe('Overlays (M2-13)', () => {
     expect(edits.overlays[0]?.x).toBeCloseTo(0.55, 10);
   });
 });
+
+describe('Bubble tool (M2-16)', () => {
+  it('the Bubble tab adds a bubble by typing, draws it on the photo and Add to #slot saves it as data', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('tab', { name: 'Bubble' }));
+    expect(screen.getByTestId('editor-panel-bubble')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('bubble-color-butter'));
+    await fireEvent.changeText(screen.getByLabelText('Bubble text'), 'Lunch break, finally!');
+    expect(screen.getByRole('button', { name: 'Speech bubble: Lunch break, finally!' })).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Add to #afternoon' }));
+    const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
+    expect(edits.overlays).toEqual([
+      expect.objectContaining({ type: 'bubble', shape: 'speech', color: 'butter', text: 'Lunch break, finally!' }),
+    ]);
+  });
+});

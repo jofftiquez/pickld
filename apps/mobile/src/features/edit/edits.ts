@@ -39,14 +39,30 @@ const stickerFields = {
   stamp: z.enum(stickerStamps).optional(),
 };
 
+/** Bubble text limit (FR-CAP-06). */
+export const BUBBLE_TEXT_MAX = 60;
+export const bubbleShapeSchema = z.enum(['speech', 'thought', 'shout', 'whisper']);
+export type BubbleShape = z.infer<typeof bubbleShapeSchema>;
+export const bubbleColorSchema = z.enum(['white', 'ink', 'pickle', 'butter', 'blush', 'sky']);
+export type BubbleColor = z.infer<typeof bubbleColorSchema>;
+
+// A bubble's content (M2-16). Each field has a default so bubbles saved before it existed (transform
+// only) still read back, as an empty white speech bubble.
+const bubbleContent = {
+  shape: bubbleShapeSchema.default('speech'),
+  color: bubbleColorSchema.default('white'),
+  text: z.string().max(BUBBLE_TEXT_MAX).default(''),
+};
+
 // One member per overlay kind, discriminated on `type`. M2-13 (transforms) starts from this; the tools
 // add their content fields: M2-15 the sticker id, M2-16 the bubble text and style, M2-17 the text.
 export const overlaySchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sticker'), ...overlayBase, ...stickerFields }),
-  z.object({ type: z.literal('bubble'), ...overlayBase }),
+  z.object({ type: z.literal('bubble'), ...overlayBase, ...bubbleContent }),
   z.object({ type: z.literal('text'), ...overlayBase }),
 ]);
 export type Overlay = z.infer<typeof overlaySchema>;
+export type Bubble = Extract<Overlay, { type: 'bubble' }>;
 
 export const editsSchema = z.object({
   v: z.literal(EDITS_VERSION),
