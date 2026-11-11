@@ -11,6 +11,7 @@ import { OverlayLayer } from '../overlays/OverlayLayer';
 import { registerPlaceholderRenderers } from '../overlays/PlaceholderOverlay';
 import { unregisterOverlayRenderer } from '../overlays/registry';
 import { useEditorState } from '../useEditorState';
+import { kape } from './stickerFixture';
 
 // The overlay layer (FR-CAP-05, FR-CAP-08): gestures driven through gesture-handler's jest utils and the
 // accessibility actions, wired to the real editor state so each change and its Undo are checked on the
@@ -23,7 +24,7 @@ const start: Edits = {
   v: 1,
   filter: 'original',
   overlays: [
-    { id: 'a', type: 'sticker', x: 0.2, y: 0.2, scale: 0.3, rotation: 0 },
+    { id: 'a', type: 'sticker', ...kape, x: 0.2, y: 0.2, scale: 0.3, rotation: 0 },
     { id: 'b', type: 'bubble', x: 0.6, y: 0.6, scale: 0.4, rotation: 0 },
   ],
 };

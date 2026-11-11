@@ -24,10 +24,25 @@ const overlayBase = {
     .max(2 * Math.PI),
 };
 
+export const stickerStamps = ['time', 'date', 'weekday', 'jar_number'] as const;
+
+/**
+ * A sticker (M2-15): the catalog sticker's id plus what drawing it needs, so a moment's stickers render
+ * offline and for viewers who don't own the pack (FR-STK-04) without a catalog lookup: the art's asset
+ * path (0012 format), its name for screen readers, and for an auto stamp which live value it shows.
+ */
+const stickerFields = {
+  // Catalog ids are md5-derived (0012), not RFC version 4, so any 8-4-4-4-12 hex id is accepted.
+  stickerId: z.guid(),
+  asset: z.string().regex(/^stickers\/[a-z0-9-]{1,40}\/[a-z0-9-]{1,60}\.png$/),
+  label: z.string().min(1).max(60),
+  stamp: z.enum(stickerStamps).optional(),
+};
+
 // One member per overlay kind, discriminated on `type`. M2-13 (transforms) starts from this; the tools
 // add their content fields: M2-15 the sticker id, M2-16 the bubble text and style, M2-17 the text.
 export const overlaySchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('sticker'), ...overlayBase }),
+  z.object({ type: z.literal('sticker'), ...overlayBase, ...stickerFields }),
   z.object({ type: z.literal('bubble'), ...overlayBase }),
   z.object({ type: z.literal('text'), ...overlayBase }),
 ]);

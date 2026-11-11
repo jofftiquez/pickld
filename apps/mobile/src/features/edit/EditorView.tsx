@@ -21,6 +21,8 @@ import { filterIdSchema, filterMatrices, type FilterId } from './filters';
 import { FilterThumbnail } from './FilterThumbnail';
 import { OverlayLayer } from './overlays/OverlayLayer';
 import type { Transform } from './overlays/transform';
+import type { CatalogSticker } from './stickers/catalog';
+import { StickersPanel } from './stickers/StickersPanel';
 
 export const editorTools = ['filters', 'stickers', 'bubble', 'text'] as const;
 export type EditorTool = (typeof editorTools)[number];
@@ -41,6 +43,8 @@ export type EditorViewProps = {
   onTransformOverlay: (id: string, transform: Transform) => void;
   onBringOverlayToFront: (id: string) => void;
   onDeleteOverlay: (id: string) => void;
+  /** A sticker tapped in the Stickers tool (M2-15). */
+  onAddSticker: (sticker: CatalogSticker) => void;
   onSelectTool: (tool: EditorTool) => void;
   caption: string;
   onChangeCaption: (caption: string) => void;
@@ -77,6 +81,7 @@ export function EditorView({
   onTransformOverlay,
   onBringOverlayToFront,
   onDeleteOverlay,
+  onAddSticker,
   onSelectTool,
   caption,
   onChangeCaption,
@@ -177,6 +182,8 @@ export function EditorView({
                 />
               ))}
             </ScrollView>
+          ) : tool === 'stickers' ? (
+            <StickersPanel slot={slot} onAdd={onAddSticker} />
           ) : (
             // TODO(M2-15 #44 Stickers, M2-16 #45 Bubble, M2-17 #46 Text): each tool's panel.
             <View style={styles.emptyPanel} testID={`editor-panel-${tool}`} />
