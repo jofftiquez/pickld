@@ -8,6 +8,10 @@
 //   avatars/<user id>/<upload id>.jpg
 //   covers/<user id>/<upload id>.jpg
 //   seed/{photos,thumbs,avatars}/<name>.jpg          local seed data only (supabase/seed.sql)
+//
+// Sticker art is public catalog data (FR-STK-04, C-6), kept apart from photo keys:
+//   stickers/<pack slug>/<name>.png            stickers.asset_path (0012), uploaded by workers/photos `deno task stickers`
+// Art never changes under a key: new art gets a new file name (and a new asset_path), so it can be cached forever.
 
 export type ObjectKind = 'moment' | 'avatar' | 'cover';
 export type MomentVariant = 'full' | 'thumb';
@@ -27,7 +31,15 @@ export function newProfileImageKey(kind: 'avatar' | 'cover', userId: string): st
   return `${kind}s/${userId}/${crypto.randomUUID()}.jpg`;
 }
 
-/** True for a well-formed object key (no traversal, no other prefixes). */
+// Same rule as the stickers_asset_path_format check in 0012.
+const STICKER_KEY_PATTERN = /^stickers\/[a-z0-9-]{1,40}\/[a-z0-9-]{1,60}\.png$/;
+
+/** True for a well-formed sticker art key. Sticker keys are not photo keys: isObjectKey() refuses them. */
+export function isStickerKey(key: string): boolean {
+  return STICKER_KEY_PATTERN.test(key);
+}
+
+/** True for a well-formed photo object key (no traversal, no other prefixes). */
 export function isObjectKey(key: string): boolean {
   return KEY_PATTERN.test(key);
 }

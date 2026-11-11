@@ -1,10 +1,12 @@
 // Uploads the placeholder photos in design/images to the local bucket under the keys supabase/seed.sql
-// uses (seed/photos, seed/thumbs, seed/avatars), so seeded moments load locally.
+// uses (seed/photos, seed/thumbs, seed/avatars), so seeded moments load locally, and the sticker art
+// (scripts/upload-stickers.ts).
 //   cd workers/photos && deno task seed
 // Then prints a signed URL for one photo and one thumbnail as a smoke test of the local server.
 import { presignObject } from '../../../supabase/functions/_shared/sigv4.ts';
 import { signPhotoUrl } from '../../../supabase/functions/_shared/photo_token.ts';
 import { localS3Config, requireTokenSecret } from '../src/local.ts';
+import { uploadStickers } from './upload-stickers.ts';
 
 const cfg = await localS3Config();
 const images = new URL('../../../design/images/', import.meta.url);
@@ -23,6 +25,9 @@ for await (const entry of Deno.readDir(images)) {
     console.log(`uploaded ${key}`);
   }
 }
+
+const stickers = await uploadStickers(cfg);
+console.log(`stickers: ${stickers.uploaded} uploaded, ${stickers.skipped} already there`);
 
 const base = `http://127.0.0.1:${Deno.env.get('PHOTOS_PORT') ?? 55430}`;
 const secret = requireTokenSecret();
