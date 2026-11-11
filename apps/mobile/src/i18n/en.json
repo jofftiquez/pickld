@@ -217,5 +217,46 @@
       "removed": "Removed",
       "a11yRemoved": "removed, tap to see why"
     }
+  },
+  "fullJar": {
+    "eyebrow": "Full jar",
+    "badge": "8/8",
+    "title": "Your {{weekday}} is complete",
+    "body": "Eight moments, one real day. That’s jar number {{number}}.",
+    "bodyNoNumber": "Eight moments, one real day.",
+    "done": "Done",
+    "doneHint": "Closes the celebration"
+  },
+  "stickerUnlocked": {
+    "eyebrow": "Sticker unlocked",
+    "close": "Close",
+    "art": "{{name}} sticker",
+    "earnedLine": "You earned the “{{name}}” sticker.",
+    "milestones": "Milestones",
+    "progress": "{{count}} of {{total}} earned",
+    "done": "Done",
+    "doneHint": "Back to today",
+    "names": {
+      "first_full_jar": "First full jar",
+      "full_jars_7": "7 full jars",
+      "jars_30": "30 jars",
+      "jars_100": "100 jars",
+      "one_year": "1 year of jars"
+    },
+    "titles": {
+      "first_full_jar": "Your first full jar!",
+      "full_jars_7": "7 full jars!",
+      "jars_30": "30 jars!",
+      "jars_100": "100 jars!",
+      "one_year": "A year of jars!"
+    },
+    "leads": {
+      "first_full_jar": "All 8 moments, one real day.",
+      "full_jars_7": "Seven days filled to the top.",
+      "jars_30": "Thirty real days, kept.",
+      "jars_100": "A hundred real days, kept.",
+      "one_year": "A whole year of real days."
+    },
+    "nextUp": "Next up: {{name}}."
   }
 }
