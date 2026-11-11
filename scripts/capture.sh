@@ -18,7 +18,7 @@ designs=()
 for pair in "$@"; do
   screen="${pair%%=*}"
   route="${pair#*=}"
-  maestro test -e ROUTE="$route" -e OUT="$out/$screen-ios" "$root/apps/mobile/.maestro/capture-route.yaml"
+  maestro test --test-output-dir "$out" -e ROUTE="$route" -e NAME="$screen-ios" "$root/apps/mobile/.maestro/capture-route.yaml"
   echo "$out/$screen-ios.png"
   [[ -f "$root/design/screens/$screen.html" ]] && designs+=("$screen")
 done
