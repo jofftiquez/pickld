@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { JarGraphic } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { SecondaryButton } from '@/components/SecondaryButton';
 import { formatWeekday } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space, type } from '@/theme/tokens';
@@ -19,10 +20,12 @@ export type FullJarViewProps = {
   /** Confetti and a pop, or only a fade with Reduce Motion (NFR-A11Y-02). */
   reduceMotion: boolean;
   onDone: () => void;
+  /** Opens Publish review; missing when the jar is already published (or unknown), and only Done shows. */
+  onPublish?: () => void;
 };
 
 /** Full jar celebration over Today (FullJar; FR-JAR-07): the full jar, the day and the jar number. */
-export function FullJarView({ localDate, jarNumber, lidColor, reduceMotion, onDone }: FullJarViewProps) {
+export function FullJarView({ localDate, jarNumber, lidColor, reduceMotion, onDone, onPublish }: FullJarViewProps) {
   const { t } = useTranslation();
   return (
     <View testID="full-jar" style={styles.scrim}>
@@ -45,13 +48,30 @@ export function FullJarView({ localDate, jarNumber, lidColor, reduceMotion, onDo
               {jarNumber !== null ? t('fullJar.body', { number: jarNumber }) : t('fullJar.bodyNoNumber')}
             </Text>
             <View style={styles.actions}>
-              {/* TODO(M3-01 Publish review, M4-11 Share jar card): the design's Publish jar and Share jar card. */}
-              <PrimaryButton
-                label={t('fullJar.done')}
-                accessibilityHint={t('fullJar.doneHint')}
-                onPress={onDone}
-                testID="full-jar-done"
-              />
+              {/* TODO(M4-11 Share jar card): the design's Share jar card under Publish jar, in place of Done. */}
+              {onPublish ? (
+                <PrimaryButton
+                  label={t('fullJar.publish')}
+                  accessibilityHint={t('fullJar.publishHint')}
+                  onPress={onPublish}
+                  testID="full-jar-publish"
+                />
+              ) : null}
+              {onPublish ? (
+                <SecondaryButton
+                  label={t('fullJar.done')}
+                  accessibilityHint={t('fullJar.doneHint')}
+                  onPress={onDone}
+                  testID="full-jar-done"
+                />
+              ) : (
+                <PrimaryButton
+                  label={t('fullJar.done')}
+                  accessibilityHint={t('fullJar.doneHint')}
+                  onPress={onDone}
+                  testID="full-jar-done"
+                />
+              )}
             </View>
           </View>
         </CelebrationReveal>
@@ -86,5 +106,5 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.brandText, textTransform: 'uppercase' },
   title: { color: colors.ink, textAlign: 'center' },
   body: { color: colors.inkSoft, textAlign: 'center', lineHeight: Math.round(type.bodyMedium.size * 1.5) },
-  actions: { alignSelf: 'stretch', marginTop: space.sm },
+  actions: { alignSelf: 'stretch', marginTop: space.sm, gap: space.sm },
 });

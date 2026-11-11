@@ -39,6 +39,7 @@ export const colors = {
   dayCellEmpty: '#eef0ea', // a past day without a cover photo (Calendar)
   dayCellScrim: 'rgba(10,12,8,0.32)', // over a day's cover photo so its number stays readable (Calendar)
   dayFuture: '#6f7568', // future day numbers (Calendar); 4.8:1 on white
+  slotLabelEmpty: '#6f7568', // an empty slot's tag on Publish review; darker than the design's #7d8476 for AA
   fillTrack: 'rgba(255,255,255,0.35)', // unfilled part of a day's fill bar (Calendar)
   camera: '#000000', // Camera screen background
   cameraGrid: 'rgba(255,255,255,0.35)', // rule-of-thirds lines over the viewfinder (Camera)
@@ -123,6 +124,7 @@ export const type = {
 
 export const radius = {
   thumb: 10,
+  reviewSlot: 12, // the 8 slots on Publish review (Publish)
   thumbLg: 14,
   dayCell: 13, // My days calendar cells (Calendar)
   fillBar: 2,
@@ -239,6 +241,10 @@ export const sizes = {
   uploadRing: 34, // progress ring on an uploading tile
   tileBorder: 1.5, // dashed border on empty tiles
   lockBadge: 22, // round lock badge on private tiles
+  radio: 22, // radio circle on a choice row (Publish)
+  radioDot: 12, // its selected dot
+  radioRing: 2, // its outline
+  reviewSlotGap: 6, // gap between the 8 slots on Publish review (Publish)
   pillPaddingY: 3, // time pill, Now chip and badges over photos
   retryPill: 26, // Retry pill on a failed tile (hitSlop brings it to 44)
   jarCardGraphic: 52,

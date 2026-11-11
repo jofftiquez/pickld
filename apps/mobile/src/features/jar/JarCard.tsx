@@ -13,10 +13,12 @@ export type JarCardProps = {
   lidColor?: string;
   /** First day, nothing captured yet: "Your first jar" (EmptyToday) instead of the count and Publish. */
   firstDay: boolean;
+  /** Opens Publish review; null disables Publish (no jar yet, or already published: M3-02 shows that). */
+  onPublish: (() => void) | null;
 };
 
 /** The dark card above the grid: the jar filled to today's count, readers and Publish (Main, EmptyToday). */
-export function JarCard({ count, readerCount, lidColor, firstDay }: JarCardProps) {
+export function JarCard({ count, readerCount, lidColor, firstDay, onPublish }: JarCardProps) {
   const { t } = useTranslation();
   const title = firstDay ? t('today.firstJarTitle') : t('jar.moments', { count, total: MAX_LAYERS });
   const subtitle = firstDay
@@ -35,12 +37,12 @@ export function JarCard({ count, readerCount, lidColor, firstDay }: JarCardProps
           </Text>
         </View>
         {firstDay ? null : (
-          // TODO(M3-01 #62): open Publish review. Disabled until that screen exists.
+          // TODO(M3-02 #63): the Published chip in place of Publish once the jar is published.
           <PillButton
             label={t('today.publish')}
-            accessibilityHint={t('today.publishHint')}
-            onPress={() => {}}
-            disabled
+            accessibilityHint={onPublish ? t('today.publishHint') : t('today.publishDisabledHint')}
+            onPress={() => onPublish?.()}
+            disabled={onPublish === null}
             testID="today-publish"
           />
         )}

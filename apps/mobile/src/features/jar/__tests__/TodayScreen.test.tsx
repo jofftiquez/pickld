@@ -130,6 +130,57 @@ afterEach(() => {
 });
 
 describe('Today screen', () => {
+  it('Publish opens Publish review while the jar is unpublished (M3-01)', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [
+      {
+        id: 'jar-10',
+        local_date: '2026-11-10',
+        tz: 'Asia/Manila',
+        ends_at: null,
+        visibility: 'readers',
+        published_at: null,
+      },
+    ];
+    mockBackend.moments = [liveMoment('ootd')];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
+    await fireEvent.press(screen.getByRole('button', { name: 'Publish' }));
+    expect(mockPush).toHaveBeenCalledWith('/publish');
+  });
+
+  it('a published jar: Publish is off (M3-02 shows the Published state)', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.moments = [liveMoment('ootd')];
+    mockBackend.jars = [
+      {
+        id: 'jar-10',
+        local_date: '2026-11-10',
+        tz: 'Asia/Manila',
+        ends_at: null,
+        published_at: '2026-11-10T05:00:00Z',
+      },
+    ];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
+    const publish = screen.getByRole('button', { name: 'Publish' });
+    expect(publish.props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }));
+    await fireEvent.press(publish);
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('no jar yet: Publish is off', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [
+      { id: 'jar-09', local_date: '2026-11-09', tz: 'Asia/Manila', ends_at: null, published_at: null },
+    ];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('0 of 8 moments')).toBeTruthy());
+    expect(screen.getByRole('button', { name: 'Publish' }).props.accessibilityState).toEqual(
+      expect.objectContaining({ disabled: true }),
+    );
+  });
+
   it('at 00:00 Manila switches to an empty jar for the new date, without a restart (FR-JAR-04)', async () => {
     jest.useFakeTimers({ now: new Date('2026-11-10T23:59:30+08:00') });
     mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];

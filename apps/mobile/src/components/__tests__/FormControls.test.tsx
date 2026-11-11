@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 
 import { Chip } from '../Chip';
 import { ListRow } from '../ListRow';
+import { RadioRow } from '../RadioRow';
 import { SegmentedControl } from '../SegmentedControl';
 import { TextField } from '../TextField';
 import { Toggle } from '../Toggle';
@@ -150,5 +151,36 @@ describe('ListRow', () => {
     expect(StyleSheet.flatten(screen.getByText('Delete account').props.style).color).toBe(colors.danger);
     expect(screen.queryByTestId('icon-chevronRight', { includeHiddenElements: true })).toBeNull();
     expect(flatStyle(row).borderBottomWidth).toBeUndefined();
+  });
+});
+
+describe('RadioRow', () => {
+  it('is a radio read with its description; checked shows the brand dot, unchecked only the ring', async () => {
+    const onSelect = jest.fn();
+    await render(
+      <>
+        <RadioRow
+          label="Readers"
+          description="312 people who read your days"
+          selected
+          onSelect={jest.fn()}
+          testID="a"
+        />
+        <RadioRow label="Only me" selected={false} onSelect={onSelect} divider={false} testID="b" />
+      </>,
+    );
+    const on = screen.getByRole('radio', { name: 'Readers, 312 people who read your days' });
+    const off = screen.getByRole('radio', { name: 'Only me' });
+    expect(on.props.accessibilityState).toEqual({ checked: true });
+    expect(off.props.accessibilityState).toEqual({ checked: false });
+    expect(flatStyle(screen.getByTestId('a-radio')).borderColor).toBe(colors.brand);
+    expect(flatStyle(screen.getByTestId('a-dot')).backgroundColor).toBe(colors.brand);
+    expect(screen.queryByTestId('b-dot')).toBeNull();
+    expect(flatStyle(on).borderBottomColor).toBe(colors.divider);
+    expect(flatStyle(off).borderBottomWidth).toBeUndefined();
+    expectGrowsWithText(on);
+    expect(Number(flatStyle(on).minHeight)).toBeGreaterThanOrEqual(sizes.minTap);
+    await fireEvent.press(off);
+    expect(onSelect).toHaveBeenCalledTimes(1);
   });
 });
