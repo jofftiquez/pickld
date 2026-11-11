@@ -1,7 +1,7 @@
 -- M1-09 (0004): moments guard (S-2), pending content (G-12), slot moves, backfill from ends_at.
 begin;
 \ir _helpers.psql
-select plan(43);
+select plan(44);
 
 select tests.world();
 create temp table t (k text primary key, id uuid);
@@ -48,8 +48,10 @@ select is((select status::text || '/' || like_count || '/' || coalesce(pending_c
           'uploading/0/-', 'a client insert cannot start live, forge likes or plant pending content');
 
 select tests.act_as_service();
-select lives_ok($$update public.moments set status = 'live' where id = (select id from t where k = 'checking')$$,
-                'the server can set a moment live');
+select throws_ok($$update public.moments set status = 'live' where id = (select id from t where k = 'checking')$$,
+                 '42501', 'status can only be set by the server', 'service_role cannot set a moment live (only fn:moderate, 0011)');
+select lives_ok($$select tests.set_status((select id from t where k = 'checking'), 'live')$$,
+                'the moderation role can set a moment live');
 update public.moments set status = 'checking' where id = (select id from t where k = 'checking');
 
 -- ---------------------------------------------------------------- pending content (G-12)

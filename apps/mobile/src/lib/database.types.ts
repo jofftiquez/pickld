@@ -1133,6 +1133,17 @@ export type Database = {
         };
         Returns: string;
       };
+      moderation_apply: {
+        Args: {
+          p_decision: string;
+          p_moment_id: string;
+          p_pending_since: string;
+          p_provider: string;
+          p_reason?: string;
+          p_scores?: Json;
+        };
+        Returns: string;
+      };
       moment_photo_paths: {
         Args: { ids: string[] };
         Returns: {
