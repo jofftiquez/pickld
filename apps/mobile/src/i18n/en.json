@@ -51,6 +51,8 @@
       "everyone": "Shared with everyone",
       "only_me": "Only you"
     },
+    "likeHint": "Likes it",
+    "unlikeHint": "Removes your like",
     "likes_one": "{{count}} like",
     "likes_other": "{{count}} likes",
     "sharedLikes": "{{shared}} · {{likes}}"
@@ -143,6 +145,8 @@
     "coverAddedLater": "Cover photo, {{slot}}, added later",
     "back": "Back",
     "openMomentHint": "Opens the moment",
+    "likeHint": "Likes it",
+    "unlikeHint": "Removes your like",
     "likes_one": "{{count}} like",
     "likes_other": "{{count}} likes",
     "comments_one": "{{count}} comment",

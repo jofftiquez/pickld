@@ -15,7 +15,8 @@ import { deviceLocale, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
-import { buildJarPage, type JarMoment, type JarPageData } from './jarPage';
+import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from './jarPage';
+import { LikeButton } from './LikeButton';
 import { JarTile } from './JarTile';
 import { jarTitle } from './shareJar';
 
@@ -26,6 +27,8 @@ export type JarPageViewProps = {
   failed?: boolean;
   insets: EdgeInsets;
   onBack: () => void;
+  /** Likes or unlikes the jar (FR-SOC-05). */
+  onToggleLike?: (target: LikeTarget) => void;
   /** Opens Moment detail for a moment on the page. */
   onOpenMoment?: (momentId: string) => void;
   onShare: () => void;
@@ -53,6 +56,7 @@ export function JarPageView({
   failed = false,
   insets,
   onBack,
+  onToggleLike,
   onOpenMoment,
   onShare,
   onRetry,
@@ -212,16 +216,14 @@ export function JarPageView({
       </View>
 
       <View style={[styles.bar, { bottom: insets.bottom + space.lg }]} testID="jar-bar">
-        {/* TODO(M3-09, #70): the like pill toggles the viewer's like. TODO(M3-11, #72): comments open Comments. */}
-        <View
-          accessible
-          accessibilityLabel={t('jarPage.likes', { count: jar.like_count })}
-          style={[styles.stat, { backgroundColor: colors.dangerTint }]}
+        {/* TODO(M3-11, #72): comments open Comments. */}
+        <LikeButton
+          count={jar.like_count}
+          liked={isLiked(data, { kind: 'jar' })}
+          height={sizes.minTap}
+          onPress={() => onToggleLike?.({ kind: 'jar' })}
           testID="jar-likes"
-        >
-          <Icon name="heart" color="likeText" size={16} strokeWidth={2.2} />
-          <Text style={[textStyle('bodyMedium', '700'), { color: colors.likeText }]}>{jar.like_count}</Text>
-        </View>
+        />
         <View
           accessible
           accessibilityLabel={t('jarPage.comments', { count: jar.comment_count })}

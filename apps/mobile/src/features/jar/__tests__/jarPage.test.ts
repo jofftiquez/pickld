@@ -1,4 +1,4 @@
-import { buildJarPage, type JarMoment, type JarPageData } from '../jarPage';
+import { buildJarPage, isLiked, withLike, type JarMoment, type JarPageData } from '../jarPage';
 
 const OWNER = 'owner-id';
 const READER = 'reader-id';
@@ -96,5 +96,42 @@ describe('buildJarPage', () => {
   it('has no cover for a jar with nothing to show', () => {
     const page = buildJarPage(data([moment({ id: 'p', slot: 'ootd', is_private: true })], READER));
     expect(page).toMatchObject({ cover: null, grid: [] });
+  });
+});
+
+describe('withLike', () => {
+  const page = data(
+    [moment({ id: 'a', slot: 'ootd', like_count: 3 }), moment({ id: 'b', slot: 'selfie', like_count: 5 })],
+    READER,
+  );
+  const jarLikes = { ...page, jar: { ...page.jar, like_count: 10 } };
+
+  it('moves the jar count by one and remembers the like', () => {
+    const liked = withLike(jarLikes, { kind: 'jar' }, true);
+    expect(liked.jar.like_count).toBe(11);
+    expect(isLiked(liked, { kind: 'jar' })).toBe(true);
+    const unliked = withLike(liked, { kind: 'jar' }, false);
+    expect(unliked.jar.like_count).toBe(10);
+    expect(isLiked(unliked, { kind: 'jar' })).toBe(false);
+  });
+
+  it('changes nothing when the like is already in that state, so a count never moves twice', () => {
+    const liked = withLike(jarLikes, { kind: 'jar' }, true);
+    expect(withLike(liked, { kind: 'jar' }, true)).toBe(liked);
+    expect(withLike(jarLikes, { kind: 'jar' }, false)).toBe(jarLikes);
+  });
+
+  it('likes one moment without touching the jar or the other moments', () => {
+    const liked = withLike(jarLikes, { kind: 'moment', id: 'b' }, true);
+    expect(liked.moments.map((m) => m.like_count)).toEqual([3, 6]);
+    expect(liked.jar.like_count).toBe(10);
+    expect(isLiked(liked, { kind: 'moment', id: 'b' })).toBe(true);
+    expect(isLiked(liked, { kind: 'moment', id: 'a' })).toBe(false);
+    expect(isLiked(liked, { kind: 'jar' })).toBe(false);
+  });
+
+  it('never shows a negative count when the cached count is behind', () => {
+    const stale = { ...jarLikes, jar: { ...jarLikes.jar, like_count: 0 }, liked: { jar: true, moments: [] } };
+    expect(withLike(stale, { kind: 'jar' }, false).jar.like_count).toBe(0);
   });
 });
