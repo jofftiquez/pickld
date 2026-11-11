@@ -43,6 +43,7 @@ function live(slot: ServerMoment['slot']): ServerMoment {
 async function renderToday(props: Partial<TodayViewProps> = {}) {
   const onCapture = jest.fn();
   const onOpenMyDays = jest.fn();
+  const onRetry = jest.fn();
   await render(
     <TodayView
       now={NOW}
@@ -55,10 +56,11 @@ async function renderToday(props: Partial<TodayViewProps> = {}) {
       insets={{ top: 47, bottom: 34 }}
       onCapture={onCapture}
       onOpenMyDays={onOpenMyDays}
+      onRetry={onRetry}
       {...props}
     />,
   );
-  return { onCapture, onOpenMyDays };
+  return { onCapture, onOpenMyDays, onRetry };
 }
 
 describe('TodayView', () => {
@@ -144,6 +146,66 @@ describe('TodayView', () => {
     expect(onCapture.mock.calls).toEqual([['morning'], ['evening']]);
     await fireEvent.press(screen.getByRole('button', { name: 'My days' }));
     expect(onOpenMyDays).toHaveBeenCalledTimes(1);
+  });
+
+  it('offline: the banner says how many moments are saved, above the jar card (UploadStates)', async () => {
+    await renderToday({ hasAnyJar: true, offlineCount: 2 });
+    const banner = screen.getByTestId('offline-banner');
+    expect(banner).toHaveTextContent(
+      'You’re offline. 2 moments are saved on your phone and will upload when you’re back.',
+    );
+    expect(banner.props.accessibilityLabel).toBe(
+      'You’re offline. 2 moments are saved on your phone and will upload when you’re back.',
+    );
+    await renderToday({ hasAnyJar: true, offlineCount: 1 });
+    expect(screen.getByTestId('offline-banner')).toHaveTextContent(
+      'You’re offline. 1 moment is saved on your phone and will upload when you’re back.',
+    );
+  });
+
+  it('no banner while online', async () => {
+    await renderToday({ hasAnyJar: true, offlineCount: null });
+    expect(screen.queryByTestId('offline-banner')).toBeNull();
+    expect(screen.queryByText(/offline/)).toBeNull();
+  });
+
+  it('upload states: waiting, uploading and failed tiles; Retry passes the queue item id', async () => {
+    const item = (
+      id: number,
+      slot: 'whereami' | 'selfie' | 'morning' | 'ootd',
+      state: 'queued' | 'uploading' | 'failed' | 'conflict',
+    ) => ({
+      id,
+      slot,
+      state,
+      localDate: '2026-11-10',
+      photoUri: `file:///q/${slot}.webp`,
+      thumbUri: null,
+      capturedAt: null,
+      isPrivate: false,
+    });
+    const { onRetry, onCapture } = await renderToday({
+      hasAnyJar: true,
+      tiles: buildTodayGrid({
+        localDate: '2026-11-10',
+        moments: [live('ootd')],
+        queue: [
+          item(11, 'whereami', 'queued'),
+          item(12, 'selfie', 'uploading'),
+          item(13, 'morning', 'failed'),
+          item(14, 'ootd', 'conflict'),
+        ],
+        nowSlot: 'afternoon',
+      }),
+    });
+    expect(screen.getByText('Waiting for connection')).toBeTruthy();
+    expect(screen.getByText('Uploading')).toBeTruthy(); // the worker reports no progress: indeterminate
+    expect(screen.getByText('Didn’t upload')).toBeTruthy();
+    // Only the failed tile has Retry; the conflict leaves the server moment showing.
+    expect(screen.getAllByRole('button', { name: /^Retry / })).toHaveLength(1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Retry #morning' }));
+    expect(onRetry.mock.calls).toEqual([[13]]);
+    expect(onCapture).not.toHaveBeenCalled();
   });
 
   it('pads the bottom so the last row clears the floating tab bar', async () => {

@@ -1,7 +1,14 @@
 import { currentSlot } from '@/lib/jars';
 import { slots } from '@/theme/tokens';
 
-import { buildTodayGrid, greetingFor, momentCount, type QueuedMoment, type ServerMoment } from '../todayGrid';
+import {
+  buildTodayGrid,
+  greetingFor,
+  momentCount,
+  offlineBannerCount,
+  type QueuedMoment,
+  type ServerMoment,
+} from '../todayGrid';
 
 const DATE = '2026-11-09';
 const TZ = 'Asia/Manila';
@@ -218,6 +225,49 @@ describe('momentCount', () => {
 
   it('empty and Now tiles do not count', () => {
     expect(momentCount(grid({ nowSlot: 'morning' }))).toBe(0);
+  });
+});
+
+describe('Retry on failed tiles', () => {
+  it('only a failed queue item offers Retry; a conflict waits for Replace', () => {
+    const tiles = grid({
+      queue: [
+        queued('whereami', { state: 'failed' }),
+        queued('ootd', { state: 'conflict' }),
+        queued('selfie', { state: 'queued' }),
+        queued('morning', { state: 'uploading' }),
+      ],
+      moments: [moment('evening')],
+    });
+    expect(tiles.filter((t) => t.canRetry).map((t) => t.slot)).toEqual(['whereami']);
+    expect(stateOf(tiles, 'ootd')).toBe('failed');
+  });
+});
+
+describe('offlineBannerCount', () => {
+  it('counts waiting and uploading moments of any date while offline', () => {
+    const queue = [
+      queued('whereami'),
+      queued('selfie', { state: 'uploading' }),
+      queued('ootd', { localDate: '2026-11-08' }), // yesterday's, still on the phone
+    ];
+    expect(offlineBannerCount(queue, true)).toBe(3);
+  });
+
+  it('leaves out failed (needs Retry), conflict (needs Replace) and uploaded (on the server)', () => {
+    const queue = [
+      queued('whereami'),
+      queued('selfie', { state: 'failed' }),
+      queued('ootd', { state: 'conflict' }),
+      queued('morning', { state: 'uploaded' }),
+    ];
+    expect(offlineBannerCount(queue, true)).toBe(1);
+  });
+
+  it('hides the banner while online, and when nothing is waiting', () => {
+    expect(offlineBannerCount([queued('whereami')], false)).toBeNull();
+    expect(offlineBannerCount([], true)).toBeNull();
+    expect(offlineBannerCount([queued('selfie', { state: 'failed' })], true)).toBeNull();
   });
 });
 

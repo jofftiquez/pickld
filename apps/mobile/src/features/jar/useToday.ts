@@ -1,12 +1,14 @@
 // Data for the Today screen (FR-JAR-01): the open jar and its moments from Supabase, the signed-in
 // profile, and the offline queue. Everything is read as the user, so RLS decides what comes back.
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCalendars } from 'expo-localization';
+import { useEffect } from 'react';
 import { z } from 'zod';
 
 import { useAuthStore } from '@/lib/authStore';
+import { trackNetwork } from '@/lib/connectivity';
 import { findOpenJar, localDateIn, normalizeZone } from '@/lib/jars';
-import { listQueue } from '@/lib/queue/store';
+import { listQueue, subscribeQueue } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
 
 import type { QueuedMoment, ServerMoment } from './todayGrid';
@@ -19,8 +21,9 @@ export function phoneTimeZone(): string {
 export type TodayJar = {
   /** False on the user's first day (no jar yet): the screen shows "Your first jar". */
   hasAnyJar: boolean;
-  /** The open jar (travel rule), or null until the first moment of the day creates it. */
-  jar: { id: string; localDate: string; tz: string } | null;
+  /** The open jar (travel rule), or null until the first moment of the day creates it. `endsAt` is the
+   * server's `ends_at`; optional because caches persisted before M2-06 lack it. */
+  jar: { id: string; localDate: string; tz: string; endsAt?: string | null } | null;
   moments: ServerMoment[];
 };
 
@@ -62,7 +65,7 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
   const urls = await thumbUrls(rows.filter((m) => m.status !== 'removed').map((m) => m.id));
   return {
     hasAnyJar: true,
-    jar: { id: open.id, localDate: open.local_date, tz: open.tz },
+    jar: { id: open.id, localDate: open.local_date, tz: open.tz, endsAt: open.ends_at },
     moments: rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null })),
   };
 }
@@ -93,10 +96,15 @@ export function useToday(now: Date) {
 
   const jar = useQuery({
     queryKey: todayQueryKeys.jar(userId ?? '', localDate),
-    queryFn: () => fetchTodayJar(userId ?? '', now),
+    // Fetch results feed the offline signal; offline, the persisted cache keeps the last jar (NFR-OFF-03).
+    queryFn: () => trackNetwork(fetchTodayJar(userId ?? '', now)),
     enabled,
   });
-  const me = useQuery({ queryKey: todayQueryKeys.me(userId ?? ''), queryFn: () => fetchMe(userId ?? ''), enabled });
+  const me = useQuery({
+    queryKey: todayQueryKeys.me(userId ?? ''),
+    queryFn: () => trackNetwork(fetchMe(userId ?? '')),
+    enabled,
+  });
   const queue = useQuery({
     queryKey: todayQueryKeys.queue(userId ?? ''),
     queryFn: async (): Promise<QueuedMoment[]> => listQueue(userId ?? ''),
@@ -105,6 +113,17 @@ export function useToday(now: Date) {
     networkMode: 'always',
     staleTime: 0,
   });
+
+  // Upload states change while Today is open: re-read the queue, and the jar once an item has reached the
+  // server and left the queue, so its tile shows the server moment instead of going empty.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (userId === null) return;
+    return subscribeQueue((change) => {
+      void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
+      if (change === 'removed') void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+    });
+  }, [queryClient, userId]);
 
   return {
     userId,

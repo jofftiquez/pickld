@@ -13,6 +13,8 @@ import Index from '../../../app/index';
 // replace Reanimated with its own mock, which can't load under Jest in this version. The jar isn't
 // under test here.
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
+// Today's Retry reaches the upload worker, which reports errors through Sentry (ESM, not loadable here).
+jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 
 // Today reads its data with React Query (signed out here, so no query runs).
 function wrapper({ children }: { children: ReactNode }) {

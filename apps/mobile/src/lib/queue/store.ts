@@ -156,6 +156,20 @@ export async function migrate(db: SQLiteDatabase): Promise<void> {
   }
 }
 
+/** What changed in the queue: a moment was queued, an upload state moved, or a row left (uploaded or dropped). */
+export type QueueChange = 'added' | 'status' | 'removed';
+const changeListeners = new Set<(change: QueueChange) => void>();
+
+/** Calls `listener` after every write that changes what Today shows (tile states, M2-06). */
+export function subscribeQueue(listener: (change: QueueChange) => void): () => void {
+  changeListeners.add(listener);
+  return () => changeListeners.delete(listener);
+}
+
+function notify(change: QueueChange): void {
+  changeListeners.forEach((listener) => listener(change));
+}
+
 let dbPromise: Promise<SQLiteDatabase> | null = null;
 
 /** Opens and migrates the queue once per app run. Uploads cut short by the last run go back to queued. */
@@ -225,6 +239,7 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
     );
     const item = await getItem(lastInsertRowId);
     if (!item) throw new Error('Queued moment was not saved');
+    notify('added');
     return item;
   } catch (error) {
     copies.forEach(deleteQuietly);
@@ -256,6 +271,7 @@ export async function saveStatus(item: UploadStatus & { id: number }): Promise<v
     item.lastError,
     item.id,
   );
+  notify('status');
 }
 
 /** Records the jar and moment id of an upload in progress (see MIGRATIONS[1]). */
@@ -281,4 +297,5 @@ export async function removeItem(id: number): Promise<void> {
   await db.runAsync('DELETE FROM queue_items WHERE id = ?', id);
   deleteQuietly(new File(item.photoUri));
   if (item.thumbUri) deleteQuietly(new File(item.thumbUri));
+  notify('removed');
 }
