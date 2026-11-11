@@ -44,6 +44,9 @@ export const colors = {
   cameraGrid: 'rgba(255,255,255,0.35)', // rule-of-thirds lines over the viewfinder (Camera)
   onDarkFaint: 'rgba(255,255,255,0.55)', // unselected moment tabs on the camera (6:1 on black)
   onDarkControl: 'rgba(255,255,255,0.14)', // flip button fill on the camera
+  cameraPanel: '#1a1c16', // top panel of Camera access off (CameraDenied)
+  onDarkWell: 'rgba(255,255,255,0.1)', // icon square on Camera access off
+  onDarkButton: 'rgba(255,255,255,0.12)', // secondary button on the camera (Choose from gallery instead)
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -205,6 +208,8 @@ export const sizes = {
   shutterRing: 4,
   cameraSideButton: 52, // gallery shortcut and flip button beside the shutter
   cameraTabUnderline: 2, // selected moment tab on the camera
+  accessOffIconWell: 72, // camera-off icon square (CameraDenied)
+  accessOffPanel: 520 / 844, // top panel's share of the screen height (CameraDenied)
 } as const;
 
 export const photo = {

@@ -8,7 +8,10 @@ import { isSimulatorDevBuild, shouldUseMockCamera } from './mockCamera';
  * - `mock`: development build without a camera (Simulator): show the dev mock, never ask for permission.
  * - `asking`: the permission prompt is up (first open).
  * - `granted`: show the live camera.
- * - `denied`: denied or restricted in Settings (the full screen is M2-08).
+ * - `denied`: denied or restricted in Settings: show Camera access off.
+ *
+ * vision-camera's `useCameraPermission` re-reads the status whenever the app becomes active, so a user
+ * who turns access on in Settings and comes back gets `granted` without reopening the screen.
  */
 export type CameraAccess = 'mock' | 'asking' | 'granted' | 'denied';
 

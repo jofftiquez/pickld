@@ -58,9 +58,15 @@
     "moment": "Moment",
     "slotAdded": "{{slot}}, already added",
     "mockPreview": "Simulator camera preview",
-    "permissionDescription": "Pickld uses the camera to take the photos for your daily jar.",
-    "accessOffTitle": "Camera access is off",
-    "accessOffBody": "Allow camera access in Settings to take photos for your jar."
+    "permissionDescription": "Pickld uses the camera to take the photos for your daily jar."
+  },
+  "cameraAccessOff": {
+    "title": "Pickld can’t use your camera",
+    "body": "Camera access is turned off. Turn it on in your phone’s settings to capture moments.",
+    "openSettings": "Open Settings",
+    "openSettingsHint": "Opens Pickld in your phone’s settings",
+    "gallery": "Choose from gallery instead",
+    "galleryHint": "Picks a photo from your gallery for this moment"
   },
   "jars": {
     "title": "Jars"
