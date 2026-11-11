@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { cropSpecSchema, type CropSpec } from '@/lib/image/crop';
 import { slots } from '@/theme/tokens';
 
-import { INITIAL_STATUS, queueStateSchema, retry, type UploadStatus } from './machine';
+import { INITIAL_STATUS, queueStateSchema, replace, retry, type UploadStatus } from './machine';
 
 // Offline queue (NFR-OFF-01, NFR-OFF-02; AGENTS rule 3). A moment is copied into app storage and written
 // here before any network call; the upload worker (M2-04) reads it back and drives the state machine.
@@ -51,6 +51,9 @@ export const MIGRATIONS: readonly string[] = [
   // M2-10: the Crop screen's choices for a raw gallery photo (JSON CropSpec), applied when it is prepared.
   // NULL = the default centred 3:4 crop (camera photos, exactly 3:4 gallery photos).
   `ALTER TABLE queue_items ADD COLUMN crop TEXT;`,
+  // M2-22: 1 = the user chose Replace for this photo's slot. The uploader inserts it as a replacement of
+  // the moment holding the slot (0013): the old photo stays visible until fn:moderate approves the new one.
+  `ALTER TABLE queue_items ADD COLUMN replace INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 /** After this long an editing hold no longer stops the upload (see MIGRATIONS[3]). */
@@ -89,6 +92,8 @@ export const enqueueInputSchema = z.object({
   editing: z.boolean().default(false),
   /** The Crop screen's frame, rotation and flip for a raw photo; preparation applies it (MIGRATIONS[4]). */
   crop: cropSpecSchema.nullable().default(null),
+  /** True when the user already chose Replace for a filled slot (see MIGRATIONS[5]). */
+  replace: z.boolean().default(false),
 });
 export type EnqueueInput = z.input<typeof enqueueInputSchema>;
 
@@ -115,6 +120,8 @@ export interface QueueItem extends UploadStatus {
   editingSince: number | null;
   /** How preparation crops the raw photo, or null for the centred 3:4 crop (MIGRATIONS[4]). */
   crop: CropSpec | null;
+  /** Upload as a replacement of the moment holding the slot (Replace, M2-22; see MIGRATIONS[5]). */
+  replace: boolean;
 }
 
 // Files are stored by name and resolved against the document directory on every read, because the
@@ -148,6 +155,7 @@ const rowSchema = z.object({
     .transform((s) => JSON.parse(s) as unknown)
     .pipe(cropSpecSchema)
     .nullable(),
+  replace: z.union([z.literal(0), z.literal(1)]),
 });
 
 function queueDir(): Directory {
@@ -175,6 +183,7 @@ function toItem(raw: unknown): QueueItem {
     prepared: row.prepared === 1,
     editingSince: row.editing_since,
     crop: row.crop,
+    replace: row.replace === 1,
     state: row.state,
     attempts: row.attempts,
     nextAttemptAt: row.next_attempt_at,
@@ -259,8 +268,8 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
     if (thumb) copies.push(thumb);
     const { lastInsertRowId } = await db.runAsync(
       `INSERT INTO queue_items (user_id, photo_file, thumb_file, slot, local_date, tz, captured_at, caption,
-         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared, editing_since, crop)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared, editing_since, crop, replace)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       moment.userId,
       photo.name,
       thumb?.name ?? null,
@@ -279,6 +288,7 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
       moment.prepared ? 1 : 0,
       moment.editing ? Date.now() : null,
       moment.crop === null ? null : JSON.stringify(moment.crop),
+      moment.replace ? 1 : 0,
     );
     const item = await getItem(lastInsertRowId);
     if (!item) throw new Error('Queued moment was not saved');
@@ -408,6 +418,30 @@ export async function retryItem(id: number): Promise<QueueItem> {
   const next = retry(item);
   await saveStatus(next);
   return next;
+}
+
+/**
+ * Replace on a conflict (M2-22): the item is marked as a replacement and starts again from attempt 0.
+ * Throws if it is gone or not a conflict (e.g. already chosen from another tap).
+ */
+export async function replaceItem(id: number): Promise<QueueItem> {
+  const item = await getItem(id);
+  if (!item) throw new Error(`No queued moment ${id}`);
+  const next = replace(item);
+  const db = await openQueue();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE queue_items SET replace = 1 WHERE id = ?', id);
+    await db.runAsync(
+      'UPDATE queue_items SET state = ?, attempts = ?, next_attempt_at = ?, last_error = ? WHERE id = ?',
+      next.state,
+      next.attempts,
+      next.nextAttemptAt,
+      next.lastError,
+      id,
+    );
+  });
+  notify('status');
+  return { ...next, replace: true };
 }
 
 /** Drops a row and its files, e.g. once the moment is on the server. The row goes first so no row points at a missing file. */

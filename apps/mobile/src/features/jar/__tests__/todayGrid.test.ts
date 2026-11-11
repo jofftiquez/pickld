@@ -213,6 +213,44 @@ describe('buildTodayGrid: merging server moments with the queue', () => {
   });
 });
 
+describe('buildTodayGrid: Replace keeps the old photo until the new one is live (M2-22)', () => {
+  const old = moment('ootd', { id: 'm-old', thumbUrl: 'https://photos.test/old.webp' });
+
+  it.each(['queued', 'uploading', 'uploaded', 'conflict'] as const)(
+    'a %s replacement leaves the old server photo showing',
+    (state) => {
+      const tiles = grid({ moments: [old], queue: [queued('ootd', { state, replace: true })] });
+      expect(tiles[3]).toMatchObject({ state: 'filled', momentId: 'm-old', uri: 'https://photos.test/old.webp' });
+    },
+  );
+
+  it('a failed replacement shows its photo with Retry, so it stays reachable', () => {
+    const item = queued('ootd', { state: 'failed', replace: true });
+    expect(grid({ moments: [old], queue: [item] })[3]).toMatchObject({
+      state: 'failed',
+      queueId: item.id,
+      canRetry: true,
+    });
+  });
+
+  it('a replacement for a slot that has no server moment shows its local photo', () => {
+    const item = queued('ootd', { state: 'uploading', replace: true });
+    expect(grid({ queue: [item] })[3]).toMatchObject({ state: 'uploading', queueId: item.id });
+  });
+
+  it('a server replacement waiting for moderation never shows; the moment it replaces does, in either order', () => {
+    const pending = moment('ootd', { id: 'm-new', status: 'checking', replaces: 'm-old' });
+    expect(grid({ moments: [pending, old] })[3]).toMatchObject({ state: 'filled', momentId: 'm-old' });
+    expect(grid({ moments: [old, pending] })[3]).toMatchObject({ state: 'filled', momentId: 'm-old' });
+    expect(momentCount(grid({ moments: [pending, old] }))).toBe(1);
+  });
+
+  it('after the swap the new moment holds the slot', () => {
+    const swapped = moment('ootd', { id: 'm-new', replaces: null });
+    expect(grid({ moments: [swapped] })[3]).toMatchObject({ state: 'filled', momentId: 'm-new' });
+  });
+});
+
 describe('buildTodayGrid: the Now tile', () => {
   it.each([
     ['05:00', 'morning'],

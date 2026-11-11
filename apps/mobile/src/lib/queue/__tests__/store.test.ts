@@ -1,6 +1,6 @@
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 
-import { fail, start } from '../machine';
+import { conflict, fail, start } from '../machine';
 import type { EnqueueInput } from '../store';
 
 // expo-sqlite runs on a real SQLite (node:sqlite) so the SQL and migrations are exercised for real.
@@ -526,6 +526,64 @@ describe('Crop screen choices on a raw gallery photo (M2-10)', () => {
       .run(USER);
     const [old] = await store.listQueue(USER);
     expect(old).toMatchObject({ slot: 'selfie', prepared: false, crop: null });
-    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 5 }));
+    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 6 }));
+  });
+});
+
+describe('Replace (M2-22)', () => {
+  it('upgrades a version 5 queue: existing moments are not replacements', async () => {
+    const store = loadStore();
+    store.MIGRATIONS.slice(0, 5).forEach((sql) => mockDisk.exec(sql));
+    mockDisk.exec('PRAGMA user_version = 5');
+    mockDisk
+      .prepare(
+        `INSERT INTO queue_items (user_id, photo_file, slot, local_date, tz, created_at, state)
+         VALUES (?, 'old.jpg', 'selfie', '2026-11-10', 'Asia/Manila', 1, 'conflict')`,
+      )
+      .run(USER);
+    const [old] = await store.listQueue(USER);
+    expect(old).toMatchObject({ slot: 'selfie', state: 'conflict', replace: false });
+    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 6 }));
+  });
+
+  it('enqueues a plain photo by default and a chosen replacement when asked', async () => {
+    const store = loadStore();
+    expect((await store.enqueue(input)).replace).toBe(false);
+    const chosen = await store.enqueue({ ...input, replace: true });
+    expect((await loadStore().getItem(chosen.id))?.replace).toBe(true);
+  });
+
+  it('Replace marks a conflict as a replacement and queues it again from attempt 0, across restarts', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    await store.saveStatus(fail(start(item), 'timeout'));
+    jest.useFakeTimers({ now: Date.now() + 60_000 });
+    try {
+      const failedOnce = await store.getItem(item.id);
+      await store.saveStatus(conflict(start(failedOnce ?? item), 'slot already has a moment'));
+    } finally {
+      jest.useRealTimers();
+    }
+    const changes: string[] = [];
+    const unsubscribe = store.subscribeQueue((change) => changes.push(change));
+    const replaced = await store.replaceItem(item.id);
+    unsubscribe();
+    expect(replaced).toMatchObject({
+      state: 'queued',
+      attempts: 0,
+      nextAttemptAt: null,
+      lastError: null,
+      replace: true,
+    });
+    expect(await loadStore().getItem(item.id)).toEqual(replaced);
+    expect(changes).toEqual(['status']);
+  });
+
+  it('refuses Replace on an item that is not a conflict, and changes nothing', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    await expect(store.replaceItem(item.id)).rejects.toThrow('Cannot replace an item that is queued');
+    expect(await store.getItem(item.id)).toMatchObject({ state: 'queued', replace: false });
+    await expect(store.replaceItem(999)).rejects.toThrow('No queued moment 999');
   });
 });

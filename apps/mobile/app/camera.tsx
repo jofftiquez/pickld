@@ -22,6 +22,7 @@ import { pickFromGallery } from '@/features/capture/pickFromGallery';
 import { galleryTarget, saveCapture, saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
 import { useFillCapture } from '@/features/capture/useFillCapture';
+import { useReplaceConfirm } from '@/features/capture/useReplaceConfirm';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { formatTime } from '@/lib/format';
@@ -86,6 +87,7 @@ export default function CameraScreen() {
   const [flashSupported, setFlashSupported] = useState(false);
   const [busy, setBusy] = useState(false);
   const camera = useRef<CameraHandle>(null);
+  const replaceConfirm = useReplaceConfirm();
 
   // The camera runs only while this screen is visible and the app is in the foreground.
   const [focused, setFocused] = useState(false);
@@ -108,6 +110,9 @@ export default function CameraScreen() {
 
   const onShutter = async () => {
     if (busy || userId === null) return;
+    // A filled slot asks first; Replace keeps the old photo until the new one is live (M2-22).
+    const replace = taken.has(slot);
+    if (replace && !(await replaceConfirm.confirm(slot))) return;
     setBusy(true);
     const shotAt = new Date();
     let uri: string;
@@ -123,7 +128,8 @@ export default function CameraScreen() {
     const openJar = jar?.jar ?? null;
     let queuedId: number | null = null;
     try {
-      queuedId = (await saveCapture({ uri, slot, userId, tz, shotAt, openJar, fill: fill?.target ?? null })).id;
+      queuedId = (await saveCapture({ uri, slot, userId, tz, shotAt, openJar, fill: fill?.target ?? null, replace }))
+        .id;
     } catch (error) {
       captureError(error, { area: 'capture' });
     }
@@ -196,6 +202,7 @@ export default function CameraScreen() {
       onGallery={() => void onGallery()}
       onShutter={() => void onShutter()}
       onSelectSlot={(next) => setPicked(switchSlot(slot, next, taken))}
+      overlay={replaceConfirm.dialog}
     />
   );
 }

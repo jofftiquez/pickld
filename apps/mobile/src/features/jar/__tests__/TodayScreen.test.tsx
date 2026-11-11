@@ -5,7 +5,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { useAuthStore } from '@/lib/authStore';
 import { reportNetworkResult } from '@/lib/connectivity';
 import { requestUploads } from '@/lib/queue/runner';
-import { retryItem, type QueueItem } from '@/lib/queue/store';
+import { replaceItem, retryItem, type QueueItem } from '@/lib/queue/store';
 
 import TodayScreen from '../../../../app/(tabs)/today';
 import type { TodayJar } from '../useToday';
@@ -53,9 +53,13 @@ jest.mock('@/lib/queue/store', () => ({
   listQueue: async () => mockBackend.queue,
   subscribeQueue: () => () => {},
   retryItem: jest.fn(async () => ({})),
+  replaceItem: jest.fn(async () => ({})),
+  removeItem: jest.fn(async () => {}),
 }));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => {}) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+// The Replace prompt (kit Dialog, M2-22) reads Reduce Motion from Reanimated, which can't load in Jest.
+jest.mock('react-native-reanimated', () => ({ __esModule: true, useReducedMotion: () => false }));
 jest.mock('expo-localization', () => ({
   ...jest.requireActual<object>('expo-localization'),
   getCalendars: () => [{ timeZone: 'Asia/Manila' }],
@@ -201,5 +205,28 @@ describe('Today screen', () => {
     await fireEvent.press(screen.getByTestId('tile-ootd'));
     expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/moment/[id]', params: { id: 'm-removed' } });
     expect(mockPush).toHaveBeenCalledTimes(2);
+  });
+
+  it('an upload that ended as a conflict asks to Replace; the old photo shows until the swap (M2-22)', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];
+    mockBackend.moments = [
+      liveMoment('ootd'),
+      { ...liveMoment('selfie'), id: 'm-new', status: 'checking', replaces: 'm-selfie' },
+      liveMoment('selfie'),
+    ];
+    mockBackend.queue = [queued(31, 'ootd', 'conflict')];
+    await renderScreen(newClient());
+
+    await waitFor(() => expect(screen.getByRole('header', { name: 'Replace your #ootd photo?' })).toBeTruthy());
+    // The old photos hold their slots: the conflict's local photo and the server's pending replacement don't show.
+    expect(screen.getByRole('image', { name: /^#ootd, .*, added$/ })).toBeTruthy();
+    expect(screen.getByRole('image', { name: /^#selfie, .*, added$/ })).toBeTruthy();
+    expect(screen.getByText('2 of 8 moments')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Replace' }));
+    await waitFor(() => expect(requestUploads).toHaveBeenCalledTimes(1));
+    expect(replaceItem).toHaveBeenCalledWith(31);
+    expect(screen.queryByRole('header', { name: 'Replace your #ootd photo?' })).toBeNull();
   });
 });

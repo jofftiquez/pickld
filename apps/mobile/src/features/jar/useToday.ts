@@ -63,7 +63,7 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
 
   const { data: rows, error: momentsError } = await supabase
     .from('moments')
-    .select('id, slot, status, is_private, is_backfilled, captured_at, added_at, edits')
+    .select('id, slot, status, is_private, is_backfilled, captured_at, added_at, edits, replaces')
     .eq('jar_id', open.id);
   if (momentsError) throw new Error(momentsError.message);
   // Removed moments too: their tile shows the owner's photo blurred (FR-PUB-07).

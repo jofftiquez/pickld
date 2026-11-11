@@ -13,15 +13,15 @@ export type ServerMoment = Pick<
   Tables<'moments'>,
   'id' | 'slot' | 'status' | 'is_private' | 'is_backfilled' | 'captured_at' | 'added_at'
 > &
-  // `edits` is optional: caches persisted before M2-18 lack it.
-  Partial<Pick<Tables<'moments'>, 'edits'>> & { thumbUrl: string | null };
+  // `edits` is optional: caches persisted before M2-18 lack it; `replaces` (0013): caches from before M2-22.
+  Partial<Pick<Tables<'moments'>, 'edits' | 'replaces'>> & { thumbUrl: string | null };
 
 export type QueuedMoment = Pick<
   QueueItem,
   'id' | 'slot' | 'state' | 'localDate' | 'photoUri' | 'thumbUri' | 'capturedAt' | 'isPrivate'
 > &
   // What the tile needs to draw the edits (M2-18); optional so callers that don't draw them can leave them out.
-  Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits'>>;
+  Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits' | 'replace'>>;
 
 export type GridTile = {
   slot: Slot;
@@ -49,8 +49,8 @@ const queueTileState = {
   failed: 'failed',
   // Uploaded but the server moment isn't loaded yet: it is being checked (rule 4).
   uploaded: 'checking',
-  // The slot already had a server moment; the Replace choice lands with M2-22. Shown as failed only if
-  // that moment is gone, so the photo stays reachable.
+  // The slot already had a server moment: Today asks whether to Replace it (M2-22). Shown as failed only
+  // if that moment is gone, so the photo stays reachable.
   conflict: 'failed',
 } as const satisfies Record<QueueItem['state'], MomentTileState>;
 
@@ -82,11 +82,13 @@ function emptyTile(slot: Slot, isNow: boolean): GridTile {
  *   until it reaches the server (rule 3), even over an older server moment it replaces (FR-JAR-03).
  * - Otherwise the server moment wins (live → filled, checking/uploading → checking).
  * - A removed moment shows as removed (it opens the notice, FR-PUB-07) but doesn't hold the slot: a new
- *   queued photo for the slot wins over it, it isn't counted, and the camera may fill the slot again.
- *   (The server still refuses that insert while unique (jar_id, slot) counts removed rows: the item
- *   ends as a conflict and keeps its photo. A schema decision, see the M2-21 PR.)
+ *   queued photo for the slot wins over it, it isn't counted, and the camera may fill the slot again
+ *   (D-27: the server's one-moment-per-slot index ignores removed moments, 0013).
  * - An uploaded queue item whose server moment hasn't loaded yet shows as checking with the local photo.
  * - A conflict item (the slot already had a moment) leaves the server moment showing until Replace (M2-22).
+ * - Replace keeps the old photo until the new one is live (FR-JAR-03): a replacement queue item that hasn't
+ *   failed leaves the server moment showing, and a server moment with `replaces` set (uploaded, waiting
+ *   for fn:moderate) never shows; when fn:moderate approves it the old moment is gone and it holds the slot.
  * - Only queue items for `localDate` (the jar's date) count; the newest item per slot wins.
  * - The Now tile is the current slot (`nowSlot`, from `currentSlot`) when it is still empty.
  */
@@ -103,10 +105,13 @@ export function buildTodayGrid(input: {
     const queued = queue
       .filter((item) => item.slot === slot && item.localDate === localDate)
       .reduce<QueuedMoment | null>((newest, item) => (!newest || item.id > newest.id ? item : newest), null);
-    const moment = moments.find((m) => m.slot === slot && m.status !== 'removed') ?? null;
+    const moment = moments.find((m) => m.slot === slot && m.status !== 'removed' && !m.replaces) ?? null;
     const removed = moments.find((m) => m.slot === slot && m.status === 'removed') ?? null;
 
-    const settled = queued?.state === 'uploaded' || queued?.state === 'conflict';
+    const settled =
+      queued?.state === 'uploaded' ||
+      queued?.state === 'conflict' ||
+      (queued?.replace === true && queued.state !== 'failed');
     if (queued && (!settled || !moment)) {
       return {
         slot,

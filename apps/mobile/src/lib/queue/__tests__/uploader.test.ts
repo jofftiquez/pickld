@@ -5,6 +5,7 @@ import {
   getItem,
   listQueue,
   releaseEditing,
+  replaceItem,
   saveEdits,
   savePrepared,
   type EnqueueInput,
@@ -18,6 +19,7 @@ jest.mock('expo-file-system', () => jest.requireActual('./fakes').expoFileSystem
 
 const T0 = Date.UTC(2026, 10, 11, 3, 0, 0);
 const MOMENT_ID = '9b2e4c1a-7d3f-4a6b-8c5d-1e2f3a4b5c6d';
+const OLD_ID = 'aaaaaaaa-0000-4000-8000-000000000001';
 
 async function queueMoment(overrides: Partial<EnqueueInput> = {}) {
   return enqueue({
@@ -73,7 +75,7 @@ describe('uploadItem', () => {
       },
     ]);
     // The server sets added_at and is_backfilled (rule 6); a new moment starts as checking (rule 4).
-    expect(backend.moments).toEqual([
+    expect(backend.inserts).toEqual([
       {
         id: MOMENT_ID,
         jar_id: JAR,
@@ -86,6 +88,7 @@ describe('uploadItem', () => {
         is_private: true,
         edits: { filter: 'warm' },
         status: 'checking',
+        replaces: null,
       },
     ]);
     expect(backend.objects.get(backend.moments[0]?.photo_path as string)).toBe('jpeg:IMG_0001:full-resolution-bytes');
@@ -158,6 +161,23 @@ describe('uploadItem', () => {
     clock += BACKOFF_MS[4] * 2;
     expect(await drainQueue(USER, deps())).toEqual([]);
     expect(log).toEqual([]);
+  });
+
+  it('a taken slot is a conflict even when the server names the slot index (0013)', async () => {
+    backend.moments.push({ id: OLD_ID, jar_id: JAR, slot: 'ootd', status: 'live', replaces: null });
+    const item = await queueMoment();
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'conflict' });
+    expect(backend.inserts).toEqual([]);
+  });
+
+  it('a removed moment does not hold its slot (D-27): the new photo uploads and the removed row stays', async () => {
+    backend.moments.push({ id: OLD_ID, jar_id: JAR, slot: 'ootd', status: 'removed', replaces: null });
+    const item = await queueMoment();
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'uploaded', momentId: MOMENT_ID });
+    expect(backend.moments.map((m) => `${m.id}:${String(m.status)}`)).toEqual([
+      `${OLD_ID}:removed`,
+      `${MOMENT_ID}:live`,
+    ]);
   });
 
   it('finds its own row when an earlier insert landed but its response was lost', async () => {
@@ -298,7 +318,7 @@ describe('drainQueue and the editor (M2-12)', () => {
     const edits = { v: 1, filter: 'dusk', overlays: [] };
     await saveEdits(item.id, { caption: 'Lunch break, finally!', isPrivate: true, edits });
     expect(await drainQueue(USER, deps())).toEqual([{ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID }]);
-    expect(backend.moments).toEqual([
+    expect(backend.inserts).toEqual([
       expect.objectContaining({ caption: 'Lunch break, finally!', is_private: true, edits, status: 'checking' }),
     ]);
   });
@@ -326,5 +346,82 @@ describe('drainQueue and the editor (M2-12)', () => {
     clock = (held.editingSince ?? 0) + 1000;
     expect(await drainQueue(USER, deps())).toEqual([expect.objectContaining({ kind: 'uploaded', itemId: ready.id })]);
     expect(await listQueue(USER)).toEqual([expect.objectContaining({ id: held.id, state: 'queued' })]);
+  });
+});
+
+describe('Replace (M2-22)', () => {
+  const holder = (status = 'live') => ({ id: OLD_ID, jar_id: JAR, slot: 'ootd', status, replaces: null });
+
+  it('inserts a chosen replacement with replaces = the slot holder, then fn:moderate swaps it in', async () => {
+    backend.moments.push(holder());
+    const item = await queueMoment({ replace: true });
+    log.length = 0;
+
+    expect(await uploadItem(item, deps())).toEqual({ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID });
+    expect(log.filter((e) => !e.startsWith('delete:'))).toEqual([
+      'rpc:ensure_jar',
+      'fn:upload-url',
+      'put:full.jpg',
+      'put:thumb.jpg',
+      'select:moments',
+      'insert:moments',
+      'fn:moderate',
+    ]);
+    expect(backend.inserts).toEqual([expect.objectContaining({ id: MOMENT_ID, status: 'checking', replaces: OLD_ID })]);
+    expect(backend.moments).toEqual([expect.objectContaining({ id: MOMENT_ID, status: 'live', replaces: null })]);
+    expect(await listQueue(USER)).toEqual([]);
+  });
+
+  it('Replace after a conflict: the same item goes up again as a replacement', async () => {
+    backend.moments.push(holder('checking'));
+    const item = await queueMoment();
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'conflict' });
+
+    await replaceItem(item.id);
+    const [outcome] = await drainQueue(USER, deps());
+
+    expect(outcome).toEqual({ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID });
+    expect(backend.inserts).toEqual([expect.objectContaining({ id: MOMENT_ID, replaces: OLD_ID })]);
+  });
+
+  it('a replacement for a slot that is free by now (old one deleted or removed) is a plain insert', async () => {
+    backend.moments.push(holder('removed'));
+    const item = await queueMoment({ replace: true });
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'uploaded' });
+    expect(backend.inserts).toEqual([expect.objectContaining({ id: MOMENT_ID, replaces: null })]);
+  });
+
+  it('a retry after a replacement whose response was lost finds its own row, already swapped in', async () => {
+    backend.moments.push(holder());
+    backend.failNext('insert-after-write', networkError());
+    const item = await queueMoment({ replace: true });
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'retrying' });
+
+    clock += OFFLINE_RETRY_MS;
+    const [outcome] = await drainQueue(USER, deps());
+    expect(outcome).toEqual({ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID });
+    expect(backend.inserts).toHaveLength(1);
+    expect(backend.moments.map((m) => m.id)).toEqual([MOMENT_ID]);
+  });
+
+  it('a second pending replacement for the same moment is a conflict, not a failure', async () => {
+    backend.moments.push(holder(), {
+      id: 'bbbbbbbb-0000-4000-8000-000000000002',
+      jar_id: JAR,
+      slot: 'ootd',
+      status: 'checking',
+      replaces: OLD_ID,
+    });
+    const item = await queueMoment({ replace: true });
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'conflict' });
+    expect(await getItem(item.id)).toMatchObject({ state: 'conflict', attempts: 0, replace: true });
+  });
+
+  it('a failed holder lookup retries with backoff and inserts nothing', async () => {
+    backend.moments.push(holder());
+    backend.failNext('select', { code: '500', message: 'boom' });
+    const item = await queueMoment({ replace: true });
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'retrying', error: 'boom' });
+    expect(backend.inserts).toEqual([]);
   });
 });

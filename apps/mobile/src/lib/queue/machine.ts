@@ -5,8 +5,8 @@ import { z } from 'zod';
  * queued → uploading → uploaded, or back to queued with a backoff delay; the 5th failure is `failed`.
  * A network error (offline) goes back to queued without counting as a failure (`waitForNetwork`).
  * `failed` only leaves through `retry` (the tile's Retry button).
- * `conflict`: the slot already has a moment on the server (FR-JAR-03). Not a failure: the tile offers
- * Replace (M2-22, #51), and nothing retries it on its own.
+ * `conflict`: the slot already has a moment on the server (FR-JAR-03). Not a failure: Today offers
+ * Replace (M2-22), and nothing retries it on its own; choosing Replace starts it again (`replace`).
  */
 export const QUEUE_STATES = ['queued', 'uploading', 'uploaded', 'failed', 'conflict'] as const;
 export const queueStateSchema = z.enum(QUEUE_STATES);
@@ -85,6 +85,12 @@ export function waitForNetwork<T extends UploadStatus>(item: T, error: string, n
 export function conflict<T extends UploadStatus>(item: T, error: string): T {
   assertState(item, 'uploading', 'mark as a conflict');
   return { ...item, state: 'conflict', nextAttemptAt: null, lastError: error };
+}
+
+/** Replace on a conflict (M2-22): the item starts again from attempt 0, now as a replacement. */
+export function replace<T extends UploadStatus>(item: T): T {
+  assertState(item, 'conflict', 'replace');
+  return { ...item, ...INITIAL_STATUS };
 }
 
 export function retry<T extends UploadStatus>(item: T): T {
