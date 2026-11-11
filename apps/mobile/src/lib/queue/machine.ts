@@ -4,8 +4,10 @@ import { z } from 'zod';
  * Upload states of a queued moment (NFR-OFF-01, NFR-OFF-02).
  * queued → uploading → uploaded, or back to queued with a backoff delay; the 5th failure is `failed`.
  * `failed` only leaves through `retry` (the tile's Retry button).
+ * `conflict`: the slot already has a moment on the server (FR-JAR-03). Not a failure: the tile offers
+ * Replace (M2-22, #51), and nothing retries it on its own.
  */
-export const QUEUE_STATES = ['queued', 'uploading', 'uploaded', 'failed'] as const;
+export const QUEUE_STATES = ['queued', 'uploading', 'uploaded', 'failed', 'conflict'] as const;
 export const queueStateSchema = z.enum(QUEUE_STATES);
 export type QueueState = z.infer<typeof queueStateSchema>;
 
@@ -63,6 +65,12 @@ export function fail<T extends UploadStatus>(item: T, error: string, now: number
   const attempts = item.attempts + 1;
   if (attempts >= MAX_ATTEMPTS) return { ...item, state: 'failed', attempts, nextAttemptAt: null, lastError: error };
   return { ...item, state: 'queued', attempts, nextAttemptAt: now + backoffDelay(attempts), lastError: error };
+}
+
+/** The server refused the moment because its slot is taken. Attempts are kept; no retry is scheduled. */
+export function conflict<T extends UploadStatus>(item: T, error: string): T {
+  assertState(item, 'uploading', 'mark as a conflict');
+  return { ...item, state: 'conflict', nextAttemptAt: null, lastError: error };
 }
 
 export function retry<T extends UploadStatus>(item: T): T {

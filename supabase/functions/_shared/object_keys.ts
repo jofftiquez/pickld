@@ -3,7 +3,7 @@
 // deleted (docs/architecture.md, backups). The database stores these keys in photo_path, thumb_path,
 // avatar_path and cover_path.
 //
-//   moments/<user id>/<upload id>/full.jpg     the 3:4 photo
+//   moments/<user id>/<upload id>/full.jpg     the 3:4 photo (WebP or JPEG; the suffix is fixed, the stored content type is served)
 //   moments/<user id>/<upload id>/thumb.jpg    its thumbnail
 //   avatars/<user id>/<upload id>.jpg
 //   covers/<user id>/<upload id>.jpg

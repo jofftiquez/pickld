@@ -14,7 +14,7 @@ import { presignObject, type S3Config } from '../_shared/sigv4.ts';
 /** Upload URLs expire well within the 10 minutes the acceptance criteria allow. */
 export const UPLOAD_URL_TTL_SECONDS = 5 * 60;
 
-/** Bytes. Photos are 3:4 JPEGs resized on the device (expo-image-manipulator), location EXIF stripped. */
+/** Bytes. Photos are 3:4 WebP (or JPEG) files resized on the device (expo-image-manipulator), location EXIF stripped. */
 export const SIZE_LIMITS = {
   photo: 5 * 1024 * 1024,
   thumb: 512 * 1024,
@@ -24,7 +24,7 @@ export const SIZE_LIMITS = {
 
 const file = (max: number) =>
   z.strictObject({
-    contentType: z.literal('image/jpeg'),
+    contentType: z.enum(['image/webp', 'image/jpeg']),
     size: z.number().int().min(1).max(max),
   });
 

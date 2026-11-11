@@ -1,4 +1,5 @@
 import {
+  conflict,
   fail,
   INITIAL_STATUS,
   isDue,
@@ -113,5 +114,17 @@ describe('upload state machine', () => {
     expect(() => retry(INITIAL_STATUS)).toThrow('Cannot retry an item that is queued');
     const uploaded = succeed(start(INITIAL_STATUS));
     expect(() => start(uploaded)).toThrow('Cannot start an item that is uploaded');
+  });
+
+  it('parks a slot conflict without counting a failure or scheduling a retry', () => {
+    const failed = failOnce(INITIAL_STATUS);
+    jest.advanceTimersByTime(1_000);
+    const parked = conflict(start(failed), 'slot taken');
+    expect(parked).toEqual({ state: 'conflict', attempts: 1, nextAttemptAt: null, lastError: 'slot taken' });
+    expect(isDue(parked, Date.now() + 3_600_000)).toBe(false);
+    expect(msUntilDue(parked)).toBeNull();
+    expect(() => start(parked)).toThrow('Cannot start an item that is conflict');
+    expect(() => retry(parked)).toThrow('Cannot retry an item that is conflict');
+    expect(() => conflict(INITIAL_STATUS, 'x')).toThrow('Cannot mark as a conflict an item that is queued');
   });
 });

@@ -45,8 +45,8 @@ const THUMB = new Uint8Array(300).fill(2);
 const momentBody = (jarId: string) => ({
   kind: 'moment',
   jarId,
-  photo: { contentType: 'image/jpeg', size: PHOTO.length },
-  thumb: { contentType: 'image/jpeg', size: THUMB.length },
+  photo: { contentType: 'image/webp', size: PHOTO.length },
+  thumb: { contentType: 'image/webp', size: THUMB.length },
 });
 
 Deno.test('owner gets photo and thumbnail URLs that upload to new keys', async () => {
