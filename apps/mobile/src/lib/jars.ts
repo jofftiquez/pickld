@@ -42,6 +42,44 @@ function formatterFor(tz: string): Intl.DateTimeFormat {
   return formatter;
 }
 
+// Some phones and the iOS Simulator report UTC under a legacy alias ("GMT", "Etc/UTC"), which rule 7
+// and public.is_valid_tz refuse. These all mean UTC.
+const UTC_ALIASES = new Set([
+  'GMT',
+  'GMT0',
+  'GMT+0',
+  'GMT-0',
+  'UCT',
+  'UTC',
+  'Universal',
+  'Zulu',
+  'Greenwich',
+  'Etc/GMT',
+  'Etc/GMT0',
+  'Etc/GMT+0',
+  'Etc/GMT-0',
+  'Etc/UCT',
+  'Etc/UTC',
+  'Etc/Universal',
+  'Etc/Zulu',
+  'Etc/Greenwich',
+]);
+
+/**
+ * The phone's zone as an IANA name the jar logic and the server accept: UTC aliases become "UTC", and
+ * anything else that isn't an Area/Location zone (missing, an abbreviation, a legacy one-word link)
+ * falls back to "UTC" rather than crashing the screen.
+ */
+export function normalizeZone(raw: string | null | undefined): string {
+  if (!raw || UTC_ALIASES.has(raw)) return 'UTC';
+  try {
+    formatterFor(raw);
+    return raw;
+  } catch {
+    return 'UTC';
+  }
+}
+
 type WallClock = { year: number; month: number; day: number; hour: number; minute: number; second: number };
 
 function wallClock(instant: Date, tz: string): WallClock {
