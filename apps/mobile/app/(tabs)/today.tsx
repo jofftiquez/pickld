@@ -19,7 +19,7 @@ import { currentSlot } from '@/lib/jars';
 
 const MINUTE = 60_000;
 
-// Today tab (M2-05, M2-06, M2-22, M2-23; FR-CAP-10, FR-JAR-01, FR-JAR-02, FR-JAR-03, FR-JAR-04, NFR-OFF-01, NFR-OFF-03).
+// Today tab (M2-05, M2-06, M2-22, M2-23, M3-01; FR-CAP-10, FR-JAR-01, FR-JAR-02, FR-JAR-03, FR-JAR-04, FR-PUB-01, NFR-OFF-01, NFR-OFF-03).
 export default function TodayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -108,6 +108,7 @@ export default function TodayScreen() {
         }
         onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
         onOpenOptions={openOptions}
+        onPublish={jar?.jar && !jar.jar.publishedAt ? () => router.push('/publish') : null}
       />
       {options && userId !== null ? (
         <MomentOptions

@@ -31,6 +31,27 @@ jest.mock('react-native-reanimated', () => {
 const insets = { top: 47, bottom: 34, left: 0, right: 0 };
 
 describe('FullJarView', () => {
+  it('an unpublished jar offers Publish jar first, and Done still closes (M3-01)', async () => {
+    const onDone = jest.fn();
+    const onPublish = jest.fn();
+    await render(
+      <FullJarView localDate="2026-11-09" jarNumber={129} reduceMotion onDone={onDone} onPublish={onPublish} />,
+    );
+    const buttons = screen.getAllByRole('button').map((b) => b.props.accessibilityLabel);
+    expect(buttons).toEqual(['Publish jar', 'Done']);
+    await fireEvent.press(screen.getByRole('button', { name: 'Publish jar' }));
+    expect(onPublish).toHaveBeenCalledTimes(1);
+    expect(onDone).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Done' }));
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it('without onPublish (already published) there is only Done', async () => {
+    await render(<FullJarView localDate="2026-11-09" jarNumber={129} reduceMotion onDone={jest.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Publish jar' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy();
+  });
+
   it('shows the weekday, the jar number and confetti', async () => {
     const onDone = jest.fn();
     await render(<FullJarView localDate="2026-11-09" jarNumber={129} reduceMotion={false} onDone={onDone} />);

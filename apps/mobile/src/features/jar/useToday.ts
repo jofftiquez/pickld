@@ -11,6 +11,8 @@ import { findOpenJar, localDateIn, normalizeZone } from '@/lib/jars';
 import { listQueue, subscribeQueue } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
 
+import type { Visibility } from '@/features/publish/publishJar';
+
 import type { QueuedMoment, ServerMoment } from './todayGrid';
 
 /** The phone's IANA zone (rule 7). */
@@ -23,14 +25,29 @@ export type TodayJar = {
   hasAnyJar: boolean;
   /** The open jar (travel rule), or null until the first moment of the day creates it. `endsAt` is the
    * server's `ends_at`; optional because caches persisted before M2-06 lack it. */
-  jar: { id: string; localDate: string; tz: string; endsAt?: string | null } | null;
+  jar: {
+    id: string;
+    localDate: string;
+    tz: string;
+    endsAt?: string | null;
+    /** Optional because caches persisted before M3-01 lack them; a missing `publishedAt` reads as unpublished. */
+    visibility?: Visibility;
+    publishedAt?: string | null;
+  } | null;
   moments: ServerMoment[];
   /** Zone of the user's latest jar before the open one (Time zone banner, FR-JAR-05): null when there is
    * none; missing in caches persisted before M2-29, which means unknown. */
   previousTz?: string | null;
 };
 
-export type Me = { displayName: string; avatarUrl: string | null; readerCount: number; lidColor: string };
+export type Me = {
+  displayName: string;
+  avatarUrl: string | null;
+  readerCount: number;
+  lidColor: string;
+  /** Publish review's preselected visibility (FR-PUB-01); optional in caches persisted before M3-01. */
+  defaultVisibility?: Visibility;
+};
 
 const photoUrlsResponse = z.object({
   data: z.object({ moments: z.array(z.object({ id: z.string(), thumb: z.string().nullable() })) }),
@@ -52,7 +69,7 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
   const supabase = getSupabase();
   const { data: jars, error } = await supabase
     .from('jars')
-    .select('id, local_date, tz, ends_at')
+    .select('id, local_date, tz, ends_at, visibility, published_at')
     .eq('user_id', userId)
     .order('local_date', { ascending: false })
     .limit(RECENT_JARS);
@@ -70,7 +87,14 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
   const urls = await thumbUrls(rows.map((m) => m.id));
   return {
     hasAnyJar: true,
-    jar: { id: open.id, localDate: open.local_date, tz: open.tz, endsAt: open.ends_at },
+    jar: {
+      id: open.id,
+      localDate: open.local_date,
+      tz: open.tz,
+      endsAt: open.ends_at,
+      visibility: open.visibility,
+      publishedAt: open.published_at,
+    },
     moments: rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null })),
     previousTz,
   };
@@ -101,12 +125,18 @@ async function fetchMe(userId: string): Promise<Me> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, avatar_path, reader_count, lid_color')
+    .select('display_name, avatar_path, reader_count, lid_color, default_visibility')
     .eq('id', userId)
     .single();
   if (error) throw new Error(error.message);
   // TODO(M3-13): avatar photo URLs; until then the avatar shows initials.
-  return { displayName: data.display_name, avatarUrl: null, readerCount: data.reader_count, lidColor: data.lid_color };
+  return {
+    displayName: data.display_name,
+    avatarUrl: null,
+    readerCount: data.reader_count,
+    lidColor: data.lid_color,
+    defaultVisibility: data.default_visibility,
+  };
 }
 
 export const todayQueryKeys = {
