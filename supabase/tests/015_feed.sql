@@ -3,7 +3,7 @@
 -- blocker and anon. Pagination with the (feed_at, jar_id) cursor stays stable when a newer jar arrives.
 begin;
 \ir _helpers.psql
-select plan(52);
+select plan(53);
 
 select tests.world();
 select tests.create_user('author2');  -- reader follows: 25 jars for pagination
@@ -28,6 +28,12 @@ insert into t values ('m_live', tests.make_moment((select id from t where k = 'j
 insert into t values ('m_private', tests.make_moment((select id from t where k = 'j_pub'), 'whereami', 'live', true));
 insert into t values ('m_checking', tests.make_moment((select id from t where k = 'j_pub'), 'mebusywith', 'checking'));
 insert into t values ('m_removed', tests.make_moment((select id from t where k = 'j_pub'), 'whoamiwith', 'removed'));
+update public.moments set caption = case id
+    when (select id from t where k = 'm_live') then 'shown caption'
+    when (select id from t where k = 'm_private') then 'private caption'
+    when (select id from t where k = 'm_checking') then 'unchecked caption'
+    else 'removed caption' end
+  where jar_id = (select id from t where k = 'j_pub');
 insert into t values ('m_ev', tests.make_moment((select id from t where k = 'j_everyone'), 'evening', 'live'));
 insert into t values ('m_unpub', tests.make_moment((select id from t where k = 'j_unpub'), 'evening', 'live'));
 insert into t values ('m_onlyme', tests.make_moment((select id from t where k = 'j_onlyme'), 'evening', 'live'));
@@ -94,6 +100,8 @@ select is((select preview_moment_ids from public.feed_page() where jar_id = (sel
           array[(select id from t where k = 'm_live')], 'preview ids hold only live, non-private moments');
 select is((select visible_count from public.feed_page() where jar_id = (select id from t where k = 'j_pub')), 1,
           'visible_count counts only live, non-private moments');
+select is((select last_caption from public.feed_page() where jar_id = (select id from t where k = 'j_pub')),
+          'shown caption', 'last_caption comes only from live, non-private moments');
 select is((select author_username || '/' || author_display_name from public.feed_page()
            where jar_id = (select id from t where k = 'j_pub')), 't_owner/Owner', 'author fields come along');
 select is((select visibility::text || '/' || local_date::text from public.feed_page()

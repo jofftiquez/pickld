@@ -1117,37 +1117,6 @@ export type Database = {
         Returns: boolean;
       };
       delete_comment: { Args: { comment_id: string }; Returns: undefined };
-      feed_authors: {
-        Args: Record<PropertyKey, never>;
-        Returns: {
-          author_id: string;
-          avatar_path: string;
-          display_name: string;
-          has_new: boolean;
-          latest_at: string;
-          username: string;
-        }[];
-      };
-      feed_page: {
-        Args: { cursor_at?: string; cursor_id?: string };
-        Returns: {
-          author_avatar_path: string;
-          author_display_name: string;
-          author_id: string;
-          author_username: string;
-          comment_count: number;
-          feed_at: string;
-          is_new: boolean;
-          jar_id: string;
-          like_count: number;
-          local_date: string;
-          preview_moment_ids: string[];
-          preview_thumb_paths: string[];
-          published_at: string;
-          visibility: Database['public']['Enums']['jar_visibility'];
-          visible_count: number;
-        }[];
-      };
       ensure_jar: {
         Args: { local_date: string; tz: string };
         Returns: {
@@ -1172,6 +1141,38 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      feed_authors: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          author_id: string;
+          avatar_path: string;
+          display_name: string;
+          has_new: boolean;
+          latest_at: string;
+          username: string;
+        }[];
+      };
+      feed_page: {
+        Args: { cursor_at?: string; cursor_id?: string };
+        Returns: {
+          author_avatar_path: string;
+          author_display_name: string;
+          author_id: string;
+          author_username: string;
+          comment_count: number;
+          feed_at: string;
+          is_new: boolean;
+          jar_id: string;
+          last_caption: string;
+          like_count: number;
+          local_date: string;
+          preview_moment_ids: string[];
+          preview_thumb_paths: string[];
+          published_at: string;
+          visibility: Database['public']['Enums']['jar_visibility'];
+          visible_count: number;
+        }[];
       };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };

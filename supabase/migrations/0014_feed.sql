@@ -17,7 +17,8 @@
 --     never repeat or skip a row because of it (pull to refresh shows it at the top).
 --   * Previews: up to 4 live, non-private moments with a thumbnail, in the fixed slot order (like the
 --     month_jars cover, 0009). preview_moment_ids go to fn:photo-urls; preview_thumb_paths are the keys
---     it will sign. visible_count is the count readers see (D-9), for the mosaic's "+n".
+--     it will sign. visible_count is the count readers see (D-9), for the mosaic's "+n". last_caption is
+--     the newest caption among the same live, non-private moments (the card's quote).
 --   * New: a jar is new when feed_at is later than the caller's feed_seen_at (or the caller never opened
 --     the feed). mark_feed_seen() sets feed_seen_at to the server clock; feed_authors() gives the avatar
 --     row with a has_new flag per author (the "new jar" ring).
@@ -77,6 +78,7 @@ returns table (
   comment_count int,
   preview_moment_ids uuid[],
   preview_thumb_paths text[],
+  last_caption text,
   is_new boolean
 )
 language plpgsql stable set search_path = public as $$
@@ -96,7 +98,7 @@ begin
   return query
   select j.id, j.user_id, p.username::text, p.display_name, p.avatar_path, j.local_date, j.visibility,
          j.published_at, f.feed_at, v.n, j.like_count, j.comment_count,
-         v.preview_ids, v.preview_paths, f.feed_at > coalesce(seen, '-infinity'::timestamptz)
+         v.preview_ids, v.preview_paths, v.last_caption, f.feed_at > coalesce(seen, '-infinity'::timestamptz)
   from follows fo
   join jars j on j.user_id = fo.author_id
   join profiles p on p.id = j.user_id
@@ -104,7 +106,8 @@ begin
     select count(*)::int as n,
            max(m.added_at) as last_added,
            coalesce((array_agg(m.id order by m.slot) filter (where m.thumb_path is not null))[1:4], '{}') as preview_ids,
-           coalesce((array_agg(m.thumb_path order by m.slot) filter (where m.thumb_path is not null))[1:4], '{}') as preview_paths
+           coalesce((array_agg(m.thumb_path order by m.slot) filter (where m.thumb_path is not null))[1:4], '{}') as preview_paths,
+           (array_agg(m.caption order by m.added_at desc, m.slot desc) filter (where nullif(btrim(m.caption), '') is not null))[1] as last_caption
     from moments m
     where m.jar_id = j.id and m.status = 'live' and not m.is_private
   ) v
