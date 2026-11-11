@@ -122,5 +122,24 @@
       "private": "private",
       "addedLater": "added later"
     }
+  },
+  "edit": {
+    "photo": "Photo with the {{filter}} filter",
+    "tools": "Edit tools",
+    "tool": {
+      "filters": "Filters",
+      "stickers": "Stickers",
+      "bubble": "Bubble",
+      "text": "Text"
+    },
+    "filters": "Filters",
+    "filter": {
+      "original": "Original",
+      "kalamansi": "Kalamansi",
+      "merienda": "Merienda",
+      "mono": "Mono",
+      "dusk": "Dusk"
+    },
+    "notFound": "This photo is no longer waiting to be edited."
   }
 }
