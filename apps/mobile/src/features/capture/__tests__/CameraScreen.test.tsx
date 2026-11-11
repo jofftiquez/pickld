@@ -156,7 +156,30 @@ async function openCamera(url = '/camera?slot=afternoon') {
 
 const tagText = () => screen.getByTestId('camera-slot-tag').props.accessibilityLabel as string;
 
+// The fixture's open jar is Nov 11 in Manila: pin the clock to that afternoon so the jar stays open whatever
+// day the suite runs. Only Date is faked; timers stay real.
+const NOW = new Date('2026-11-11T14:00:00+08:00');
+const REAL_TIMERS = [
+  'hrtime',
+  'nextTick',
+  'performance',
+  'queueMicrotask',
+  'requestAnimationFrame',
+  'cancelAnimationFrame',
+  'requestIdleCallback',
+  'cancelIdleCallback',
+  'setImmediate',
+  'clearImmediate',
+  'setInterval',
+  'clearInterval',
+  'setTimeout',
+  'clearTimeout',
+] as const;
+
+afterEach(() => jest.useRealTimers());
+
 beforeEach(() => {
+  jest.useFakeTimers({ now: NOW, doNotFake: [...REAL_TIMERS] });
   mockCamera.isDevice = false;
   mockCamera.permission = 'authorized';
   mockCamera.capturePhotoToFile.mockClear();
