@@ -138,6 +138,7 @@ export const radius = {
   zoneIcon: 13, // icon well on that banner
   optionIcon: 13, // icon well on a Moment options row (MomentOptions)
   tile: 22,
+  emptyTile: 12, // the three tilted tiles on Jars, empty (EmptyStories)
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
   celebration: 30, // Full jar card (FullJar)
@@ -262,6 +263,8 @@ export const sizes = {
   bannerPaddingY: 10, // offline banner (UploadStates)
   bannerPaddingX: 14,
   bannerGap: 10, // offline banner: icon to text, and banner to the jar card
+  emptyTileWidth: 56, // the three tilted tiles on Jars, empty (EmptyStories)
+  emptyTileHeight: 75,
   storyAvatar: 58, // author ring in the Jars avatar row (Feed)
   storyRing: 2.5, // ring width around it
   storyGap: 2, // background-colored gap between the ring and the photo

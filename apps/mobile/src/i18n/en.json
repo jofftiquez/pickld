@@ -102,6 +102,11 @@
     "title": "Jars"
   },
   "feed": {
+    "emptyTitle": "Your feed is quiet",
+    "emptyBody": "Read a few friends’ days and their jars will show up here.",
+    "findPeople": "Find people",
+    "inviteFriends": "Invite friends",
+    "inviteMessage": "I keep a photo diary on Pickld. Read my days: {{url}}",
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, unread",
     "authors": "People you read",
