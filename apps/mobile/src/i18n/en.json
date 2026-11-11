@@ -275,5 +275,16 @@
       "one_year": "A whole year of real days."
     },
     "nextUp": "Next up: {{name}}."
+  },
+  "editStickers": {
+    "packs": "Sticker packs",
+    "forSlot": "For {{slot}}",
+    "grid": "Stickers",
+    "add": "Add the {{label}} sticker",
+    "addHint": "Puts it in the middle of the photo",
+    "overlay": "{{label}} sticker",
+    "loading": "Loading stickers…",
+    "unavailable": "Stickers need a connection the first time. Try again when you’re online.",
+    "retry": "Try again"
   }
 }

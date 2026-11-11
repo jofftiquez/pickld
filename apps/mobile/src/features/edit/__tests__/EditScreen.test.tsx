@@ -9,6 +9,7 @@ import { Text, View } from 'react-native';
 import EditScreen from '../../../../app/edit/[momentId]';
 import { editsSchema } from '../edits';
 import { filterMatrices } from '../filters';
+import { kape } from './stickerFixture';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
 import { getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
@@ -172,7 +173,7 @@ describe('Editor', () => {
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Stickers' }));
     expect(screen.getByRole('tab', { name: 'Stickers' }).props.accessibilityState).toMatchObject({ selected: true });
-    expect(screen.getByTestId('editor-panel-stickers')).toBeTruthy();
+    expect(screen.getByTestId('stickers-loading')).toBeTruthy(); // no session in this test: the catalog isn't read
     expect(screen.queryByTestId('editor-filters')).toBeNull();
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.kalamansi);
 
@@ -359,8 +360,8 @@ describe('Overlays (M2-13)', () => {
     v: 1,
     filter: 'original',
     overlays: [
-      { id: 's1', type: 'sticker', x: 0.5, y: 0.5, scale: 0.3, rotation: 0 },
-      { id: 's2', type: 'sticker', x: 0.25, y: 0.75, scale: 0.2, rotation: 0.5 },
+      { id: 's1', type: 'sticker', ...kape, x: 0.5, y: 0.5, scale: 0.3, rotation: 0 },
+      { id: 's2', type: 'sticker', ...kape, x: 0.25, y: 0.75, scale: 0.2, rotation: 0.5 },
     ],
   };
 
