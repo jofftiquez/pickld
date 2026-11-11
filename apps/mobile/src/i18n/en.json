@@ -3,6 +3,9 @@
     "close": "Close",
     "cancel": "Cancel"
   },
+  "jar": {
+    "moments": "{{count}} of {{total}} moments"
+  },
   "today": {
     "title": "Today"
   },
