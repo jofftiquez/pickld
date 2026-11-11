@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { MomentTile } from '@/components/MomentTile';
+import { MomentCover } from '@/features/moment/MomentCover';
+import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
 import { colors, sizes, space, type Slot } from '@/theme/tokens';
@@ -109,6 +111,17 @@ export function TodayView({
                     slot={tile.slot}
                     state={tile.state}
                     uri={tile.uri}
+                    photoView={
+                      tile.uri !== null && hasVisibleEdits(tile.edits) ? (
+                        <MomentCover
+                          uri={tile.uri}
+                          edits={tile.edits}
+                          stamp={tile.stamp}
+                          accessible={false}
+                          testID={`tile-${tile.slot}-moment`}
+                        />
+                      ) : undefined
+                    }
                     time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
                     isPrivate={tile.isPrivate}
                     addedLater={tile.addedLater}

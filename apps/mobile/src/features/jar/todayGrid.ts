@@ -1,6 +1,8 @@
 // Today grid model (FR-JAR-01, FR-JAR-02). Pure: merges the jar's server moments with the offline
 // queue into the 8 tiles of the Today screen, in the fixed slot order.
 import type { MomentTileState } from '@/components/MomentTile';
+import { DEFAULT_EDITS, parseEdits, type Edits } from '@/features/edit/edits';
+import type { StampMoment } from '@/features/edit/stickers/stamps';
 import type { DaySlot } from '@/lib/jars';
 import type { Tables } from '@/lib/database.types';
 import type { QueueItem } from '@/lib/queue/store';
@@ -10,12 +12,16 @@ import { slots, type Slot } from '@/theme/tokens';
 export type ServerMoment = Pick<
   Tables<'moments'>,
   'id' | 'slot' | 'status' | 'is_private' | 'is_backfilled' | 'captured_at' | 'added_at'
-> & { thumbUrl: string | null };
+> &
+  // `edits` is optional: caches persisted before M2-18 lack it.
+  Partial<Pick<Tables<'moments'>, 'edits'>> & { thumbUrl: string | null };
 
 export type QueuedMoment = Pick<
   QueueItem,
   'id' | 'slot' | 'state' | 'localDate' | 'photoUri' | 'thumbUri' | 'capturedAt' | 'isPrivate'
->;
+> &
+  // What the tile needs to draw the edits (M2-18); optional so callers that don't draw them can leave them out.
+  Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits'>>;
 
 export type GridTile = {
   slot: Slot;
@@ -31,6 +37,10 @@ export type GridTile = {
   queueId: number | null;
   /** A failed queued item: the tile offers Retry (a conflict waits for Replace instead, M2-22). */
   canRetry: boolean;
+  /** The moment's filter and overlays (FR-CAP-08), drawn over the photo; the plain photo when none. */
+  edits: Edits;
+  /** What its auto stamps show: capture time in the jar's zone. Null for empty, Now and removed tiles. */
+  stamp: StampMoment | null;
 };
 
 const queueTileState = {
@@ -44,6 +54,12 @@ const queueTileState = {
   conflict: 'failed',
 } as const satisfies Record<QueueItem['state'], MomentTileState>;
 
+/** A queued photo's auto stamps, as the editor shows them: its capture time, or when it was queued. */
+function queueStamp({ capturedAt, createdAt, tz }: QueuedMoment): StampMoment | null {
+  const at = capturedAt !== null ? new Date(capturedAt) : createdAt !== undefined ? new Date(createdAt) : null;
+  return at !== null && tz !== undefined ? { capturedAt: at, tz } : null;
+}
+
 function emptyTile(slot: Slot, isNow: boolean): GridTile {
   return {
     slot,
@@ -55,6 +71,8 @@ function emptyTile(slot: Slot, isNow: boolean): GridTile {
     momentId: null,
     queueId: null,
     canRetry: false,
+    edits: DEFAULT_EDITS,
+    stamp: null,
   };
 }
 
@@ -77,8 +95,10 @@ export function buildTodayGrid(input: {
   moments: readonly ServerMoment[];
   queue: readonly QueuedMoment[];
   nowSlot: DaySlot | null;
+  /** The open jar's IANA zone, for the auto stamps of its server moments (null before the jar exists). */
+  jarTz?: string | null;
 }): GridTile[] {
-  const { localDate, moments, queue, nowSlot } = input;
+  const { localDate, moments, queue, nowSlot, jarTz = null } = input;
   return slots.map((slot) => {
     const queued = queue
       .filter((item) => item.slot === slot && item.localDate === localDate)
@@ -98,6 +118,9 @@ export function buildTodayGrid(input: {
         momentId: null,
         queueId: queued.id,
         canRetry: queued.state === 'failed',
+        edits: parseEdits(queued.edits),
+        // As the editor shows them: the capture time, or when it was queued if the photo had none.
+        stamp: queueStamp(queued),
       };
     }
     if (moment) {
@@ -111,6 +134,8 @@ export function buildTodayGrid(input: {
         momentId: moment.id,
         queueId: null,
         canRetry: false,
+        edits: parseEdits(moment.edits),
+        stamp: jarTz === null ? null : { capturedAt: new Date(moment.captured_at ?? moment.added_at), tz: jarTz },
       };
     }
     if (removed) {
