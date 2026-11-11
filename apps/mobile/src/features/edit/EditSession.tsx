@@ -11,7 +11,12 @@ import { releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 
 import { parseEdits } from './edits';
 import { EditorView, type EditorTool } from './EditorView';
+import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
 import { useEditorState } from './useEditorState';
+
+// Until the sticker, bubble and text tools register their renderers (M2-15, M2-16, M2-17), development
+// builds draw overlays as plain boxes so the transform engine can be tried. Release builds draw nothing.
+if (__DEV__) registerPlaceholderRenderers();
 
 export const queueItemQueryKey = (id: number) => ['queueItem', id] as const;
 
@@ -24,7 +29,7 @@ export type EditSessionProps = {
 };
 
 /**
- * One editing session on a queued moment (FR-CAP-08, FR-CAP-09): the filter with Undo, the caption and
+ * One editing session on a queued moment (FR-CAP-05, FR-CAP-08, FR-CAP-09): the filter and overlays with Undo, the caption and
  * the privacy switch, saved into the queue item by Add to #slot / Done. However the editor is left, the
  * item's editing hold ends and the upload worker is woken, so the photo is never stuck in the queue.
  */
@@ -85,6 +90,12 @@ export function EditSession({ item, insets, onLeave }: EditSessionProps) {
       insets={insets}
       onClose={onLeave}
       onSelectFilter={editor.selectFilter}
+      overlays={editor.edits.overlays}
+      selectedOverlayId={editor.selectedId}
+      onSelectOverlay={editor.selectOverlay}
+      onTransformOverlay={editor.transformOverlay}
+      onBringOverlayToFront={editor.bringToFront}
+      onDeleteOverlay={editor.deleteOverlay}
       onSelectTool={setTool}
       caption={caption}
       onChangeCaption={setCaption}

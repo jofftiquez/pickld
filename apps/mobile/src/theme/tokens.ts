@@ -51,6 +51,8 @@ export const colors = {
   editorPhoto: '#2a2d26', // behind the photo and filter thumbnails while the photo loads (Capture)
   zoneTint: '#dbe8f3', // icon well on the Time zone banner (TimeZone)
   zoneText: '#1d3a52', // icon on that well; 10:1 on zoneTint
+  overlayOutline: 'rgba(255,255,255,0.95)', // dashed outline around the selected overlay (Stickers)
+  overlayPlaceholder: 'rgba(127,173,51,0.6)', // dev/test-only box drawn for overlays with no renderer yet
 } as const;
 
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
@@ -123,6 +125,7 @@ export const radius = {
   cameraTag: 18, // slot tag over the viewfinder (Camera)
   editorPhoto: 32, // bottom corners of the photo in the editor (Capture)
   filterThumb: 18, // filter thumbnails (Capture)
+  overlayOutline: 16, // dashed outline around the selected overlay (Stickers)
   tabBar: 26,
   sheet: 30,
   pill: 999,
@@ -165,6 +168,14 @@ export const shadow = {
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 6 },
     elevation: 6,
+  },
+  overlayControl: {
+    // delete circle and handle on the selected overlay (Stickers)
+    shadowColor: '#000000',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
   brandGlow: {
     shadowColor: '#7fad33',
@@ -243,6 +254,13 @@ export const sizes = {
   unlockSticker: 150, // earned sticker's width over the jar; height follows the art
   progressBarWidth: 80, // Milestones progress bar (StickerUnlock)
   progressBarHeight: 6,
+  overlayOutlineInset: 8, // dashed outline sits this far outside the selected overlay (Stickers)
+  overlayOutlineWidth: 1.5,
+  overlayDelete: 24, // white delete circle on the outline's top-right corner (Stickers)
+  overlayDeleteOffset: 14, // how far it pokes out past the overlay's top and right edges
+  overlayDeleteIcon: 12,
+  overlayHandle: 18, // white resize-and-rotate handle on the bottom-right corner (Stickers)
+  overlayHandleOffset: 12, // how far it pokes out past the overlay's bottom and right edges
 } as const;
 
 export const photo = {
