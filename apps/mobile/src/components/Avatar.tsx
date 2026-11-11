@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
 
-export type AvatarSize = 'sm' | 'header' | 'md' | 'lg' | 'xl';
+export type AvatarSize = 'sm' | 'feed' | 'header' | 'story' | 'md' | 'lg' | 'xl';
 
 export type AvatarProps = {
   /** Display name: the accessible label, and the initials when there is no photo. */
@@ -20,7 +20,10 @@ export type AvatarProps = {
 
 const diameter: Record<AvatarSize, number> = {
   sm: sizes.avatarSm,
+  feed: sizes.feedAvatar,
   header: sizes.avatarHeader,
+  // Inside the Jars avatar row's ring and its gap (design: Feed).
+  story: sizes.storyAvatar - 2 * (sizes.storyRing + sizes.storyGap),
   md: sizes.avatarMd,
   lg: sizes.avatarLg,
   xl: sizes.avatarXl,
@@ -48,11 +51,7 @@ export function Avatar({ name, uri, size = 'md', ring = false, decorative = fals
       accessibilityLabel={decorative ? undefined : name}
       importantForAccessibility={decorative ? 'no-hide-descendants' : 'yes'}
       accessibilityElementsHidden={decorative}
-      style={[
-        styles.circle,
-        { width: d, height: d },
-        ring ? styles.ring : null,
-      ]}
+      style={[styles.circle, { width: d, height: d }, ring ? styles.ring : null]}
     >
       {uri ? (
         <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />

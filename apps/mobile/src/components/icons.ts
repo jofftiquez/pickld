@@ -79,6 +79,9 @@ export const icons = {
   sparkle: [p('M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6')],
   photo: [r(3.5, 4.5, 17, 15, 3), c(9, 10, 1.8), p('m4 17.5 5-4.5 4 3 3-2 4.5 3.5')],
   grid: [r(3.5, 3.5, 7, 7, 2), r(13.5, 3.5, 7, 7, 2), r(3.5, 13.5, 7, 7, 2), r(13.5, 13.5, 7, 7, 2)],
+  bell: [p('M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9'), p('M13.7 21a2 2 0 0 1-3.4 0')],
+  heart: [p('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z')],
+  comment: [p('M4 5h16v11H9l-4 3v-3H4z')],
 } satisfies Record<string, IconShape[]>;
 
 export type IconName = keyof typeof icons;

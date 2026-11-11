@@ -58,6 +58,9 @@ export const colors = {
   textOverlayShadowOnDark: 'rgba(255,255,255,0.6)', // light glow under ink text, so it reads on dark photos
   cropScrim: 'rgba(11,13,9,0.66)', // dims the photo outside the crop frame (Crop)
   cropOutline: 'rgba(255,255,255,0.9)', // crop frame outline
+  storyRingNew: '#d9e88a', // light end of the green ring around an author with a new jar (Feed); starts at brand
+  storyRingSeen: '#d9dcd3', // grey ring around an author with nothing new (Feed)
+  notifyDot: '#d4451f', // unread dot on the bell (Feed)
   cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
   cropAction: '#e2e5dc', // Cancel and Reset on the dark header (Crop); 15:1 on editor
   cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
@@ -126,6 +129,7 @@ export const radius = {
   thumb: 10,
   reviewSlot: 12, // the 8 slots on Publish review (Publish)
   thumbLg: 14,
+  mosaicLarge: 16, // large photo in a feed jar card's mosaic (Feed); the small ones use thumbLg
   dayCell: 13, // My days calendar cells (Calendar)
   fillBar: 2,
   input: 16, // text fields (EditProfile)
@@ -258,6 +262,14 @@ export const sizes = {
   bannerPaddingY: 10, // offline banner (UploadStates)
   bannerPaddingX: 14,
   bannerGap: 10, // offline banner: icon to text, and banner to the jar card
+  storyAvatar: 58, // author ring in the Jars avatar row (Feed)
+  storyRing: 2.5, // ring width around it
+  storyGap: 2, // background-colored gap between the ring and the photo
+  feedAvatar: 38, // author avatar on a feed jar card (Feed)
+  mosaicRow: 70, // height of each small row in a feed jar card's mosaic; the large photo spans two
+  mosaicGap: 6,
+  notifyDot: 8, // unread dot on the bell (Feed)
+  countJar: 14, // jar icon in a feed card's "6/8" pill
   zoneIcon: 38, // icon well on the Time zone banner (TimeZone)
   shutter: 84, // camera shutter ring (Camera)
   shutterInner: 68,
