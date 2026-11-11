@@ -4,7 +4,7 @@ import { useAuthStore } from '../authStore';
 import { isNetworkError, reportNetworkResult } from '../connectivity';
 import { captureError } from '../monitoring';
 import { msUntilDue } from './machine';
-import { listQueue, retryItem, saveStatus } from './store';
+import { EDIT_HOLD_MS, isHeldForEditing, listQueue, retryItem, saveStatus, type QueueItem } from './store';
 import { drainQueue, type PutFile, type UploaderClient } from './uploader';
 
 // Drives the upload worker (M2-04; NFR-OFF-02): drains the signed-in user's queue on start (app open),
@@ -50,9 +50,17 @@ export function startUploadRunner(getClient: () => UploaderClient, options: Uplo
   let timer: ReturnType<typeof setTimeout> | undefined;
   const currentUser = () => useAuthStore.getState().session?.user.id ?? null;
 
+  // An item held by the editor is due when the hold lapses; saving or closing the editor kicks sooner.
+  const msUntilReady = (item: QueueItem, now: number): number | null => {
+    const due = msUntilDue(item, now);
+    if (due === null || !isHeldForEditing(item, now)) return due;
+    return Math.max(due, (item.editingSince ?? now) + EDIT_HOLD_MS - now);
+  };
+
   async function scheduleNext(userId: string): Promise<void> {
     clearTimeout(timer);
-    const waits = (await listQueue(userId)).map((item) => msUntilDue(item)).filter((ms) => ms !== null);
+    const now = Date.now();
+    const waits = (await listQueue(userId)).map((item) => msUntilReady(item, now)).filter((ms) => ms !== null);
     if (waits.length > 0 && !stopped) timer = setTimeout(() => void kick(), Math.min(...waits));
   }
 

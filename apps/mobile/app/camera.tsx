@@ -28,8 +28,8 @@ import type { Slot } from '@/theme/tokens';
 
 const MINUTE = 60_000;
 
-// Camera (M2-07, M2-08; FR-CAP-01, FR-CAP-11; designs: Camera, CameraDenied). Until the editor lands
-// (M2-11) the shutter queues the photo and returns to Today.
+// Camera (M2-07, M2-08; FR-CAP-01, FR-CAP-11; designs: Camera, CameraDenied). The shutter queues the photo,
+// then opens the editor on it (M2-12).
 export default function CameraScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -105,16 +105,18 @@ export default function CameraScreen() {
       setBusy(false);
       return;
     }
-    // Queue the raw photo before leaving, so it survives the app being killed now; preparing and
-    // uploading run behind Today.
+    // Queue the raw photo before leaving, so it survives the app being killed now; preparing runs behind
+    // the editor, and the upload waits for it.
     const openJar = jar?.jar ?? null;
+    let queuedId: number | null = null;
     try {
-      await saveCapture({ uri, slot, userId, tz, shotAt, openJar });
+      queuedId = (await saveCapture({ uri, slot, userId, tz, shotAt, openJar })).id;
     } catch (error) {
       captureError(error, { area: 'capture' });
     }
     void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
-    leave();
+    if (queuedId === null) leave();
+    else router.replace(`/edit/${queuedId}`);
   };
 
   const onGallery = async () => {

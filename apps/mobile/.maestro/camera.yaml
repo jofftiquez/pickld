@@ -1,4 +1,5 @@
-# M2-07: Capture tab → Camera (dev mock camera) → switch slot → shutter → Today shows the photo queued.
+# M2-07, M2-12: Capture tab → Camera (dev mock camera) → switch slot → shutter → editor (caption) →
+# Add to #slot → Today shows the photo queued.
 # Run on the iOS Simulator with a dev build (no camera there, so the mock preview is used), signed in as
 # a user whose open jar has SLOT empty:
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/camera.yaml
@@ -60,6 +61,20 @@ appId: me.pickld.app
 
 - tapOn:
     id: camera-shutter
+# The editor opens on the queued photo (M2-12); the upload waits for Add to #slot.
+- extendedWaitUntil:
+    visible:
+      id: editor-screen
+    timeout: 10000
+- tapOn:
+    id: editor-caption
+- inputText: Sinigang at the office pantry
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Capture-with-caption-ios
+- tapOn:
+    id: editor-save
 - extendedWaitUntil:
     visible:
       id: tab-today

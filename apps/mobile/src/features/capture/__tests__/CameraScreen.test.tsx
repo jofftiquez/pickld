@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
-import { AppState, Linking, Text, View, type AppStateStatus } from 'react-native';
+import { AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'react-native';
 import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 import CameraScreen from '../../../../app/camera';
@@ -98,6 +98,16 @@ const routes = {
     </View>
   ),
   camera: CameraScreen,
+  // The editor (M2-12) has its own test; this stub shows which queued photo it opened on.
+  'edit/[momentId]': function EditStub() {
+    const { momentId } = useLocalSearchParams<{ momentId: string }>();
+    return (
+      <View>
+        <Text>Editor stub {String(momentId)}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Leave editor" onPress={() => router.back()} />
+      </View>
+    );
+  },
 };
 
 // Every AppState listener (the permission hook's and the screen's), so a test can bring the app back.
@@ -167,7 +177,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(screen).toHavePathname('/camera');
 
     await act(async () => finish());
-    expect(screen).toHavePathname('/today');
+    expect(screen).toHavePathname('/edit/1');
   });
 
   it('switching the slot changes the target, and the shutter queues the mock photo there and returns', async () => {
@@ -180,8 +190,8 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     await act(async () => {});
 
     expect(takeMockPhoto).toHaveBeenCalledWith('back');
-    // Back on Today once the raw photo is queued (preparing and uploading run behind it).
-    expect(screen).toHavePathname('/today');
+    // The editor opens on the queued photo once it is in the queue (preparing runs behind it).
+    expect(screen).toHavePathname('/edit/1');
     expect(saveCapture).toHaveBeenCalledTimes(1);
     expect(saveCapture).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -237,12 +247,32 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(tagText()).not.toMatch(/brunch/);
   });
 
-  it('opened by a deep link, the shutter still lands on Today', async () => {
+  it('the editor takes the camera’s place, so leaving it lands on Today, not back on the camera', async () => {
+    jest.mocked(saveCapture).mockImplementation(async () => ({ id: 42 }) as Awaited<ReturnType<typeof saveCapture>>);
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+    expect(screen).toHavePathname('/edit/42');
+    expect(screen.getByText('Editor stub 42')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Leave editor' }));
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('when the photo could not be queued, there is nothing to edit: back to Today', async () => {
+    jest.mocked(saveCapture).mockRejectedValue(new Error('disk full'));
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+    expect(captureError).toHaveBeenCalledWith(expect.any(Error), { area: 'capture' });
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('opened by a deep link, the shutter still opens the editor', async () => {
     await renderRouter(routes, { initialUrl: '/camera?slot=ootd', wrapper });
     expect(tagText()).toMatch(/^#ootd,/);
     await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
     await act(async () => {});
-    expect(screen).toHavePathname('/today');
+    expect(screen).toHavePathname('/edit/1');
   });
 
   it('Close goes back without capturing', async () => {
@@ -288,7 +318,7 @@ describe('Camera on a phone', () => {
     expect(saveCapture).toHaveBeenCalledWith(
       expect.objectContaining({ uri: 'file:///tmp/vc-shot.jpg', slot: 'afternoon' }),
     );
-    expect(screen).toHavePathname('/today');
+    expect(screen).toHavePathname('/edit/1');
   });
 
   it('flip switches to the front lens, whose missing flash disables the flash button', async () => {
