@@ -1121,6 +1121,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      grant_milestones: { Args: { uid: string }; Returns: string[] };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
