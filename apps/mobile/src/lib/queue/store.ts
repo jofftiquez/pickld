@@ -38,6 +38,10 @@ export const MIGRATIONS: readonly string[] = [
   // per queued moment, so a retry after an insert whose response was lost finds its own row.
   `ALTER TABLE queue_items ADD COLUMN jar_id TEXT;
    ALTER TABLE queue_items ADD COLUMN moment_id TEXT;`,
+  // A camera photo is queued raw the moment the shutter fires (so it survives the app being killed),
+  // then prepared (crop, WebP, no location: rule 5). 0 = still raw; the uploader prepares it before any
+  // network call. Rows from before this migration were always prepared.
+  `ALTER TABLE queue_items ADD COLUMN prepared INTEGER NOT NULL DEFAULT 1;`,
 ];
 
 const ianaTimeZone = z
@@ -67,6 +71,8 @@ export const enqueueInputSchema = z.object({
   caption: z.string().max(150).nullable().default(null),
   isPrivate: z.boolean().default(false),
   edits: editsSchema.default({}),
+  /** False for a raw camera photo that still needs the image pipeline (see MIGRATIONS[2]). */
+  prepared: z.boolean().default(true),
 });
 export type EnqueueInput = z.input<typeof enqueueInputSchema>;
 
@@ -87,6 +93,8 @@ export interface QueueItem extends UploadStatus {
   jarId: string | null;
   /** Set by the uploader before the first insert attempt and kept across retries. */
   momentId: string | null;
+  /** False while the photo is the raw capture: it must go through prepareItem before upload (rule 5). */
+  prepared: boolean;
 }
 
 // Files are stored by name and resolved against the document directory on every read, because the
@@ -113,6 +121,7 @@ const rowSchema = z.object({
   created_at: z.number(),
   jar_id: z.uuid().nullable(),
   moment_id: z.uuid().nullable(),
+  prepared: z.union([z.literal(0), z.literal(1)]),
 });
 
 function queueDir(): Directory {
@@ -137,6 +146,7 @@ function toItem(raw: unknown): QueueItem {
     createdAt: row.created_at,
     jarId: row.jar_id,
     momentId: row.moment_id,
+    prepared: row.prepared === 1,
     state: row.state,
     attempts: row.attempts,
     nextAttemptAt: row.next_attempt_at,
@@ -219,8 +229,8 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
     if (thumb) copies.push(thumb);
     const { lastInsertRowId } = await db.runAsync(
       `INSERT INTO queue_items (user_id, photo_file, thumb_file, slot, local_date, tz, captured_at, caption,
-         is_private, edits, state, attempts, next_attempt_at, last_error, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       moment.userId,
       photo.name,
       thumb?.name ?? null,
@@ -236,6 +246,7 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
       INITIAL_STATUS.nextAttemptAt,
       INITIAL_STATUS.lastError,
       Date.now(),
+      moment.prepared ? 1 : 0,
     );
     const item = await getItem(lastInsertRowId);
     if (!item) throw new Error('Queued moment was not saved');
@@ -278,6 +289,45 @@ export async function saveStatus(item: UploadStatus & { id: number }): Promise<v
 export async function saveUploadRefs(id: number, refs: { jarId: string; momentId: string }): Promise<void> {
   const db = await openQueue();
   await db.runAsync('UPDATE queue_items SET jar_id = ?, moment_id = ? WHERE id = ?', refs.jarId, refs.momentId, id);
+}
+
+/**
+ * Swaps a raw item's photo for the prepared full and thumbnail files (copied into app storage) and marks
+ * it prepared; the raw file is deleted only after the row points at the new files. If the item was
+ * already prepared (a second preparation raced this one), the new copies are dropped instead.
+ */
+export async function savePrepared(id: number, files: { photoUri: string; thumbUri: string }): Promise<QueueItem> {
+  const before = await getItem(id);
+  if (!before) throw new Error(`No queued moment ${id}`);
+  const db = await openQueue();
+  const dir = queueDir();
+  const stem = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  const copies: File[] = [];
+  try {
+    const photo = await copyInto(dir, files.photoUri, stem);
+    copies.push(photo);
+    const thumb = await copyInto(dir, files.thumbUri, `${stem}-thumb`);
+    copies.push(thumb);
+    const { changes } = await db.runAsync(
+      'UPDATE queue_items SET photo_file = ?, thumb_file = ?, prepared = 1 WHERE id = ? AND prepared = 0',
+      photo.name,
+      thumb.name,
+      id,
+    );
+    if (changes === 0) {
+      copies.forEach(deleteQuietly);
+    } else {
+      deleteQuietly(new File(before.photoUri));
+      if (before.thumbUri) deleteQuietly(new File(before.thumbUri));
+      notify('status');
+    }
+  } catch (error) {
+    copies.forEach(deleteQuietly);
+    throw error;
+  }
+  const after = await getItem(id);
+  if (!after) throw new Error(`No queued moment ${id}`);
+  return after;
 }
 
 /** The Retry button: a failed item starts again from attempt 0. */

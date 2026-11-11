@@ -103,12 +103,16 @@ export default function CameraScreen() {
       setBusy(false);
       return;
     }
-    // Leave first: preparing and queueing run behind Today, which re-reads the queue once it's saved.
-    leave();
+    // Queue the raw photo before leaving, so it survives the app being killed now; preparing and
+    // uploading run behind Today.
     const openJar = jar?.jar ?? null;
-    saveCapture({ uri, slot, userId, tz, shotAt, openJar })
-      .then(() => queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) }))
-      .catch((error: unknown) => captureError(error, { area: 'capture' }));
+    try {
+      await saveCapture({ uri, slot, userId, tz, shotAt, openJar });
+    } catch (error) {
+      captureError(error, { area: 'capture' });
+    }
+    void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
+    leave();
   };
 
   if (access === 'denied') return <CameraAccessOff onClose={leave} insets={insets} />;
