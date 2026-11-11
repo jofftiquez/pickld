@@ -15,6 +15,7 @@ import { SlotTag } from '@/features/capture/SlotTag';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
+import { BubblePanel } from './bubble/BubblePanel';
 import type { Overlay } from './edits';
 import { FilteredPhoto } from './FilteredPhoto';
 import { filterIdSchema, filterMatrices, type FilterId } from './filters';
@@ -45,6 +46,10 @@ export type EditorViewProps = {
   onDeleteOverlay: (id: string) => void;
   /** A sticker tapped in the Stickers tool (M2-15). */
   onAddSticker: (sticker: CatalogSticker) => void;
+  /** Adds an overlay on top and selects it (Bubble tool); see useEditorState.addOverlay. */
+  onAddOverlay: (overlay: Overlay, group?: string) => void;
+  /** Changes an overlay's content (Bubble tool); see useEditorState.updateOverlay. */
+  onUpdateOverlay: (id: string, update: (overlay: Overlay) => Overlay, group?: string) => void;
   onSelectTool: (tool: EditorTool) => void;
   caption: string;
   onChangeCaption: (caption: string) => void;
@@ -82,6 +87,8 @@ export function EditorView({
   onBringOverlayToFront,
   onDeleteOverlay,
   onAddSticker,
+  onAddOverlay,
+  onUpdateOverlay,
   onSelectTool,
   caption,
   onChangeCaption,
@@ -184,8 +191,15 @@ export function EditorView({
             </ScrollView>
           ) : tool === 'stickers' ? (
             <StickersPanel slot={slot} onAdd={onAddSticker} />
+          ) : tool === 'bubble' ? (
+            <BubblePanel
+              overlays={overlays}
+              selectedId={selectedOverlayId}
+              onAdd={onAddOverlay}
+              onUpdate={onUpdateOverlay}
+            />
           ) : (
-            // TODO(M2-15 #44 Stickers, M2-16 #45 Bubble, M2-17 #46 Text): each tool's panel.
+            // TODO(M2-15 #44 Stickers, M2-17 #46 Text): each tool's panel.
             <View style={styles.emptyPanel} testID={`editor-panel-${tool}`} />
           )}
           <TextField

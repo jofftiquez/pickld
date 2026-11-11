@@ -11,6 +11,7 @@ import { newMomentId } from '@/lib/queue/uploader';
 import { releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 
 import { parseEdits } from './edits';
+import { registerBubbleRenderer } from './bubble/BubbleOverlay';
 import { EditorView, type EditorTool } from './EditorView';
 import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
 import { stickerOverlay } from './stickers/catalog';
@@ -20,6 +21,8 @@ import { useEditorState } from './useEditorState';
 // Until the sticker, bubble and text tools register their renderers (M2-15, M2-16, M2-17), development
 // builds draw overlays as plain boxes so the transform engine can be tried. Release builds draw nothing.
 registerStickerRenderer();
+// Bubbles draw with their own renderer (M2-16), registered first so the placeholder leaves them alone.
+registerBubbleRenderer();
 if (__DEV__) registerPlaceholderRenderers();
 
 export const queueItemQueryKey = (id: number) => ['queueItem', id] as const;
@@ -101,6 +104,8 @@ export function EditSession({ item, insets, onLeave }: EditSessionProps) {
       onBringOverlayToFront={editor.bringToFront}
       onDeleteOverlay={editor.deleteOverlay}
       onAddSticker={(sticker) => editor.addOverlay(stickerOverlay(sticker, newMomentId()))}
+      onAddOverlay={editor.addOverlay}
+      onUpdateOverlay={editor.updateOverlay}
       onSelectTool={setTool}
       caption={caption}
       onChangeCaption={setCaption}
