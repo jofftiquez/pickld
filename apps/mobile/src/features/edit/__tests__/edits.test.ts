@@ -5,7 +5,19 @@ import { kape } from './stickerFixture';
 // (old rows, bad data, a newer app's extras) gives safe defaults instead of a crash.
 
 const sticker = { id: 's1', type: 'sticker', ...kape, x: 0.25, y: 0.75, scale: 0.3, rotation: -0.4 } as const;
-const text = { id: 't1', type: 'text', x: 0.5, y: 0.1, scale: 1.2, rotation: Math.PI } as const;
+const text = {
+  id: 't1',
+  type: 'text',
+  x: 0.5,
+  y: 0.1,
+  scale: 1.2,
+  rotation: Math.PI,
+  text: 'sinigang szn',
+  font: 'serif',
+  color: 'butter',
+  size: 40,
+  align: 'left',
+} as const;
 
 describe('edits schema', () => {
   it('round-trips through JSON (the queue column and moments.edits) unchanged', () => {

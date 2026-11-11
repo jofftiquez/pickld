@@ -408,3 +408,75 @@ describe('Bubble tool (M2-16)', () => {
     ]);
   });
 });
+
+describe('Text tool (M2-17)', () => {
+  it('Text tab: type, Add text, restyle, Undo, and Done saves the text and its style as data', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('tab', { name: 'Text' }));
+    expect(screen.getByTestId('editor-panel-text')).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByLabelText('Your text'), 'sinigang szn');
+    await fireEvent.press(screen.getByRole('button', { name: 'Add text' }));
+    const drawn = screen.getByRole('button', { name: 'Text: sinigang szn' });
+    expect(within(drawn).getByText('sinigang szn')).toBeTruthy();
+    expect(screen.getByTestId(`${drawn.props.testID as string}-selected`)).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Serif font' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Sky blue' }));
+    await fireEvent.press(screen.getByTestId('editor-undo')); // takes back the color only
+    expect(screen.getByRole('radio', { name: 'Sky blue' }).props.accessibilityState).toMatchObject({ checked: false });
+
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
+    expect(edits.overlays).toEqual([
+      expect.objectContaining({
+        type: 'text',
+        text: 'sinigang szn',
+        font: 'serif',
+        color: 'white',
+        size: 30,
+        align: 'center',
+        x: 0.5,
+        y: 0.4,
+      }),
+    ]);
+  });
+
+  it('reopening draws saved text; selecting it on the Text tab edits it', async () => {
+    const text = {
+      id: 't1',
+      type: 'text',
+      x: 0.5,
+      y: 0.4,
+      scale: 0.5,
+      rotation: 0,
+      text: 'lola’s kitchen',
+      font: 'type',
+      color: 'butter',
+      size: 30,
+      align: 'left',
+    };
+    rows.set(7, { ...item, edits: { v: 1, filter: 'original', overlays: [text] }, editingSince: null });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    expect(within(screen.getByTestId('overlay-t1')).getByText('lola’s kitchen')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Text' }));
+    await fireEvent(screen.getByTestId('overlay-t1'), 'accessibilityAction', {
+      nativeEvent: { actionName: 'activate' },
+    });
+    expect(screen.getByLabelText('Your text').props.value).toBe('lola’s kitchen');
+    expect(screen.getByRole('radio', { name: 'Type font' }).props.accessibilityState).toMatchObject({ checked: true });
+
+    await fireEvent.changeText(screen.getByLabelText('Your text'), 'lola’s kitchen ❤️');
+    await fireEvent(screen.getByLabelText('Your text'), 'endEditing');
+    expect(screen.getByRole('button', { name: 'Text: lola’s kitchen ❤️' })).toBeTruthy();
+
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
+    expect(edits.overlays[0]).toMatchObject({ id: 't1', text: 'lola’s kitchen ❤️', font: 'type', color: 'butter' });
+  });
+});
