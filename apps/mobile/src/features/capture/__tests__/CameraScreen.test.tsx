@@ -2,16 +2,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { AppState, Linking, Text, View, type AppStateStatus } from 'react-native';
 import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 import CameraScreen from '../../../../app/camera';
-import { takeMockPhoto } from '../mockCamera';
+import { parseMockAccessParam, takeMockPhoto } from '../mockCamera';
+import { pickFromGallery } from '../pickFromGallery';
 import { saveCapture } from '../saveCapture';
+import { captureError } from '@/lib/monitoring';
 import type { QueuedMoment } from '@/features/jar/todayGrid';
 
-// Camera screen wiring (FR-CAP-01): permission branch, dev mock camera, slot switcher, flash and flip,
-// and the shutter path. vision-camera and the save path are mocked; saveCapture has its own test.
+// Camera screen wiring (FR-CAP-01, FR-CAP-11): permission branch and Camera access off, dev mock camera,
+// slot switcher, flash and flip, and the shutter path. vision-camera's native module and the save path
+// are mocked; its permission hook is the real one (it re-reads the status when the app becomes active).
+// saveCapture has its own test.
 
 const mockCamera = {
   isDevice: false,
@@ -26,19 +30,27 @@ jest.mock('expo-device', () => ({
   },
 }));
 
+jest.mock('react-native-vision-camera/lib/VisionCamera', () => ({
+  VisionCamera: {
+    get cameraPermissionStatus() {
+      return mockCamera.permission;
+    },
+    requestCameraPermission: () => mockCamera.requestPermission(),
+  },
+}));
+
 jest.mock('react-native-vision-camera', () => {
   const { View: MockView } = jest.requireActual<typeof import('react-native')>('react-native');
+  const { useCameraPermission: realUseCameraPermission } = jest.requireActual<
+    typeof import('react-native-vision-camera/lib/hooks/usePermission')
+  >('react-native-vision-camera/lib/hooks/usePermission');
   const photoOutput = { capturePhotoToFile: (...args: unknown[]) => mockCamera.capturePhotoToFile(...args) };
   return {
     Camera: (props: { isActive: boolean }) => <MockView testID="camera-live-preview" {...props} />,
     CommonResolutions: { FHD_4_3: { width: 1440, height: 1920 } },
     useCameraDevice: jest.fn((position: string) => ({ id: position, hasFlash: position === 'back' })),
     usePhotoOutput: () => photoOutput,
-    useCameraPermission: jest.fn(() => ({
-      hasPermission: mockCamera.permission === 'authorized',
-      canRequestPermission: mockCamera.permission === 'not-determined',
-      requestPermission: mockCamera.requestPermission,
-    })),
+    useCameraPermission: jest.fn(() => realUseCameraPermission()),
     VisionCamera: { createDeviceFactory: async () => ({ cameraDevices: [{ id: 'back' }] }) },
   };
 });
@@ -49,6 +61,11 @@ jest.mock('../mockCamera', () => ({
 }));
 
 jest.mock('../saveCapture', () => ({ saveCapture: jest.fn() }));
+jest.mock('../pickFromGallery', () => ({
+  pickFromGallery: jest.fn(
+    jest.requireActual<typeof import('../pickFromGallery')>('../pickFromGallery').pickFromGallery,
+  ),
+}));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
@@ -83,6 +100,12 @@ const routes = {
   camera: CameraScreen,
 };
 
+// Every AppState listener (the permission hook's and the screen's), so a test can bring the app back.
+const appStateListeners = new Set<(state: AppStateStatus) => void>();
+async function setAppState(state: AppStateStatus) {
+  await act(async () => appStateListeners.forEach((listener) => listener(state)));
+}
+
 async function openCamera(url = '/camera?slot=afternoon') {
   await renderRouter(routes, { initialUrl: '/today', wrapper });
   await act(async () => {
@@ -103,6 +126,15 @@ beforeEach(() => {
   jest.mocked(useCameraPermission).mockClear();
   jest.mocked(takeMockPhoto).mockClear();
   jest.mocked(saveCapture).mockReset();
+  jest.mocked(pickFromGallery).mockClear();
+  jest.mocked(captureError).mockClear();
+  appStateListeners.clear();
+  jest.spyOn(AppState, 'addEventListener').mockImplementation((_type, listener) => {
+    const cb = listener as (state: AppStateStatus) => void;
+    appStateListeners.add(cb);
+    return { remove: () => appStateListeners.delete(cb) } as ReturnType<typeof AppState.addEventListener>;
+  });
+  jest.spyOn(Linking, 'openSettings').mockResolvedValue(undefined);
   jest.mocked(saveCapture).mockImplementation(async () => ({ id: 1 }) as Awaited<ReturnType<typeof saveCapture>>);
   mockToday.userId = userId;
   mockToday.queue = [];
@@ -161,6 +193,15 @@ describe('Camera on the Simulator (dev mock camera)', () => {
         shotAt: expect.any(Date),
       }),
     );
+  });
+
+  it('the gallery shortcut calls the picker and reports that it is not installed yet', async () => {
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await act(async () => {});
+    expect(pickFromGallery).toHaveBeenCalledTimes(1);
+    expect(captureError).toHaveBeenCalledWith(expect.any(Error), { area: 'gallery' });
+    expect(screen).toHavePathname('/camera');
   });
 
   it('flip takes the front fixture', async () => {
@@ -233,15 +274,6 @@ describe('Camera on a phone', () => {
     expect(screen.getByRole('button', { name: 'Take photo' }).props.accessibilityState).toEqual({ disabled: true });
   });
 
-  it('shows the access-off fallback when permission is denied', async () => {
-    mockCamera.permission = 'denied';
-    await openCamera();
-    expect(screen.getByText('Camera access is off')).toBeTruthy();
-    expect(mockCamera.requestPermission).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
-    expect(screen).toHavePathname('/today');
-  });
-
   it('shows the live 3:4 camera and captures with the chosen flash', async () => {
     await openCamera();
     expect(screen.getByTestId('camera-live-preview').props.isActive).toBe(true);
@@ -274,5 +306,94 @@ describe('Camera on a phone', () => {
     expect(screen).toHavePathname('/camera');
     expect(saveCapture).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Take photo' }).props.accessibilityState).toEqual({ disabled: false });
+  });
+});
+
+describe('Camera access off (FR-CAP-11)', () => {
+  beforeEach(() => {
+    mockCamera.isDevice = true;
+    mockCamera.permission = 'denied';
+  });
+
+  it('denied permission shows Camera access off instead of the camera, without asking again', async () => {
+    await openCamera();
+    expect(screen.getByRole('header', { name: 'Pickld can’t use your camera' })).toBeTruthy();
+    expect(screen.getByText(/Turn it on in your phone’s settings/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open Settings' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Choose from gallery instead' })).toBeTruthy();
+    expect(screen.queryByTestId('camera-screen')).toBeNull();
+    expect(screen.queryByTestId('camera-live-preview')).toBeNull();
+    expect(mockCamera.requestPermission).not.toHaveBeenCalled();
+  });
+
+  it('restricted access (parental controls) also shows it', async () => {
+    mockCamera.permission = 'restricted' as typeof mockCamera.permission;
+    await openCamera();
+    expect(screen.getByTestId('camera-access-off')).toBeTruthy();
+  });
+
+  it('Open Settings opens the app’s page in Settings and stays here', async () => {
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Open Settings' }));
+    expect(Linking.openSettings).toHaveBeenCalledTimes(1);
+    expect(screen).toHavePathname('/camera');
+  });
+
+  it('coming back from Settings with access on shows the live camera', async () => {
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Open Settings' }));
+    await setAppState('background');
+    mockCamera.permission = 'authorized';
+    await setAppState('active');
+    expect(screen.queryByTestId('camera-access-off')).toBeNull();
+    expect(screen.getByTestId('camera-live-preview').props.isActive).toBe(true);
+    expect(screen.getByRole('button', { name: 'Take photo' }).props.accessibilityState).toEqual({ disabled: false });
+  });
+
+  it('coming back with access still off keeps the screen', async () => {
+    await openCamera();
+    await setAppState('active');
+    expect(screen.getByTestId('camera-access-off')).toBeTruthy();
+  });
+
+  it('Close goes back to Today without capturing', async () => {
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    expect(screen).toHavePathname('/today');
+    expect(saveCapture).not.toHaveBeenCalled();
+  });
+
+  it('Close from a deep link also lands on Today', async () => {
+    await renderRouter(routes, { initialUrl: '/camera', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('Choose from gallery calls the picker; until it is installed the error is reported and the screen stays', async () => {
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery instead' }));
+    await act(async () => {});
+    expect(pickFromGallery).toHaveBeenCalledTimes(1);
+    expect(captureError).toHaveBeenCalledWith(expect.objectContaining({ message: 'gallery picker not installed' }), {
+      area: 'gallery',
+    });
+    expect(screen).toHavePathname('/camera');
+    expect(screen.getByTestId('camera-access-off')).toBeTruthy();
+  });
+
+  it('dev-only ?mockAccess=denied forces it even on the Simulator mock camera', async () => {
+    mockCamera.isDevice = false;
+    mockCamera.permission = 'authorized';
+    await openCamera('/camera?mockAccess=denied');
+    expect(screen.getByTestId('camera-access-off')).toBeTruthy();
+    expect(screen.queryByTestId('camera-mock-preview')).toBeNull();
+  });
+
+  it('release builds ignore ?mockAccess, and only "denied" is honoured', () => {
+    expect(parseMockAccessParam('denied', true)).toBe('denied');
+    expect(parseMockAccessParam('denied', false)).toBeNull();
+    expect(parseMockAccessParam('granted', true)).toBeNull();
+    expect(parseMockAccessParam(['denied'], true)).toBeNull();
+    expect(parseMockAccessParam(undefined, true)).toBeNull();
   });
 });
