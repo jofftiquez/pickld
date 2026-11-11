@@ -34,6 +34,10 @@ export const MIGRATIONS: readonly string[] = [
     last_error TEXT,
     created_at INTEGER NOT NULL
   );`,
+  // M2-04: the jar ensure_jar returned and the moment id the uploader inserts with. The id is made once
+  // per queued moment, so a retry after an insert whose response was lost finds its own row.
+  `ALTER TABLE queue_items ADD COLUMN jar_id TEXT;
+   ALTER TABLE queue_items ADD COLUMN moment_id TEXT;`,
 ];
 
 const ianaTimeZone = z
@@ -79,6 +83,10 @@ export interface QueueItem extends UploadStatus {
   isPrivate: boolean;
   edits: Record<string, unknown>;
   createdAt: number;
+  /** Set by the uploader once `ensure_jar` answered; a `conflict` item's slot is taken in this jar. */
+  jarId: string | null;
+  /** Set by the uploader before the first insert attempt and kept across retries. */
+  momentId: string | null;
 }
 
 // Files are stored by name and resolved against the document directory on every read, because the
@@ -103,6 +111,8 @@ const rowSchema = z.object({
   next_attempt_at: z.number().nullable(),
   last_error: z.string().nullable(),
   created_at: z.number(),
+  jar_id: z.uuid().nullable(),
+  moment_id: z.uuid().nullable(),
 });
 
 function queueDir(): Directory {
@@ -125,6 +135,8 @@ function toItem(raw: unknown): QueueItem {
     isPrivate: row.is_private === 1,
     edits: row.edits,
     createdAt: row.created_at,
+    jarId: row.jar_id,
+    momentId: row.moment_id,
     state: row.state,
     attempts: row.attempts,
     nextAttemptAt: row.next_attempt_at,
@@ -244,6 +256,12 @@ export async function saveStatus(item: UploadStatus & { id: number }): Promise<v
     item.lastError,
     item.id,
   );
+}
+
+/** Records the jar and moment id of an upload in progress (see MIGRATIONS[1]). */
+export async function saveUploadRefs(id: number, refs: { jarId: string; momentId: string }): Promise<void> {
+  const db = await openQueue();
+  await db.runAsync('UPDATE queue_items SET jar_id = ?, moment_id = ? WHERE id = ?', refs.jarId, refs.momentId, id);
 }
 
 /** The Retry button: a failed item starts again from attempt 0. */
