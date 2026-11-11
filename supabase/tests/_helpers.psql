@@ -8,6 +8,7 @@
 --   select tests.act_as('dale');                   -- role authenticated, JWT claims for dale
 --   select tests.act_as_anon();                    -- role anon, no user
 --   select tests.act_as_service();                 -- role service_role (Edge Functions)
+--   select tests.set_status(moment, 'live');       -- as pickld_moderation, the only role allowed (0011)
 --   select tests.reset_role();                     -- back to the postgres superuser
 --   select tests.world();                          -- owner, reader, outsider, blocked, blocker, moderator
 --   select tests.make_jar('owner', 'everyone', published => true);   -- jar for today in its zone
@@ -65,6 +66,19 @@ begin
   perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
 end $$;
 
+-- Sets a moment's status as pickld_moderation, the role that owns moderation_apply() and the only one
+-- that may set live or removed (0011). The caller's role and claims are restored afterwards.
+create function tests.set_status(p_moment uuid, p_status moment_status) returns void language plpgsql as $$
+declare
+  prev_role text := current_setting('role');
+  prev_claims text := current_setting('request.jwt.claims', true);
+begin
+  perform set_config('role', 'pickld_moderation', true);
+  update public.moments set status = p_status where id = p_moment;
+  perform set_config('role', prev_role, true);
+  perform set_config('request.jwt.claims', coalesce(prev_claims, ''), true);
+end $$;
+
 create function tests.reset_role() returns void language plpgsql as $$
 begin
   perform set_config('role', 'postgres', true);
@@ -112,7 +126,7 @@ begin
 end $$;
 
 -- A moment in p_status. Inserted through the normal trigger path, then moved to the
--- requested status as the server (service_role) would do it.
+-- requested status as the moderation role (fn:moderate through moderation_apply, 0011) would do it.
 create function tests.make_moment(p_jar uuid, p_slot slot, p_status moment_status default 'live',
                                   p_private boolean default false)
 returns uuid language plpgsql as $$
@@ -123,9 +137,7 @@ begin
   from public.jars j where j.id = p_jar
   returning id into mid;
   if p_status <> 'checking' then
-    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
-    update public.moments set status = p_status where id = mid;
-    perform set_config('request.jwt.claims', '', true);
+    perform tests.set_status(mid, p_status);
   end if;
   return mid;
 end $$;

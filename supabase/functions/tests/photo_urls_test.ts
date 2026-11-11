@@ -62,8 +62,15 @@ Deno.test('setup', async () => {
       thumb_path: `${base}/thumb.jpg`,
     });
     if (status !== 'checking') {
-      const { error } = await db.from('moments').update({ status }).eq('id', m.id);
-      if (error) throw new Error(error.message);
+      // Only moderation_apply (fn:moderate, 0011) may set live or removed.
+      const { data, error } = await db.rpc('moderation_apply', {
+        p_moment_id: m.id,
+        p_pending_since: null,
+        p_decision: status === 'live' ? 'approve' : 'remove',
+        p_provider: 'test',
+        p_reason: status === 'live' ? null : 'test',
+      });
+      if (error || data !== status) throw new Error(error?.message ?? `moderation_apply: ${data}`);
     }
     return { id: m.id, full: `${base}/full.jpg`, thumb: `${base}/thumb.jpg` };
   }
