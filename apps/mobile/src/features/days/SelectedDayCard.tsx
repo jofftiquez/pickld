@@ -1,11 +1,12 @@
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { JarGraphic } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { holdsSlot, momentCount, type GridTile } from '@/features/jar/todayGrid';
 import { deviceLocale } from '@/lib/format';
+import { hitSlopFor } from '@/lib/hitSlop';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
@@ -19,8 +20,13 @@ export type SelectedDayCardProps = {
   /** Before today in the phone zone: only past days can be filled. */
   isPast: boolean;
   onFill: () => void;
+  /** Opens the day's Jar page; left out when the day has no jar. */
+  onViewJar?: () => void;
   locale?: string;
 };
+
+// "View jar" is a text link, 10 pt above and below its label (Calendar); hitSlop brings it to 44.
+const VIEW_JAR_HEIGHT = 40;
 
 function dateTitle(date: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(
@@ -29,7 +35,14 @@ function dateTitle(date: string, locale: string): string {
 }
 
 /** The selected day under the My days calendar (Calendar, FR-DAY-02): moments, missing slots, Fill this jar. */
-export function SelectedDayCard({ date, tiles, isPast, onFill, locale = deviceLocale() }: SelectedDayCardProps) {
+export function SelectedDayCard({
+  date,
+  tiles,
+  isPast,
+  onFill,
+  onViewJar,
+  locale = deviceLocale(),
+}: SelectedDayCardProps) {
   const { t } = useTranslation();
   const title = dateTitle(date, locale);
   const filled = tiles.filter(holdsSlot);
@@ -40,13 +53,26 @@ export function SelectedDayCard({ date, tiles, isPast, onFill, locale = deviceLo
 
   return (
     <View style={styles.card} accessibilityLabel={t('myDays.selected.label')} testID="selected-day-card">
-      {/* TODO(M3-07, #68): "View jar" on the right of this row once /jar/[id] exists. */}
       <View style={styles.titles}>
         <View style={styles.titleRow}>
           <JarGraphic count={count} size={sizes.dayCardJar} decorative />
           <Text accessibilityRole="header" style={[styles.title, textStyle('cardTitle'), { color: colors.ink }]}>
             {title}
           </Text>
+          {onViewJar ? (
+            <Pressable
+              accessibilityRole="link"
+              accessibilityHint={t('myDays.selected.viewJarHint', { date: title })}
+              hitSlop={hitSlopFor(undefined, VIEW_JAR_HEIGHT)}
+              onPress={onViewJar}
+              style={styles.viewJar}
+              testID="view-jar"
+            >
+              <Text style={[textStyle('bodyMedium', '700'), { color: colors.brandLink }]}>
+                {t('myDays.selected.viewJar')}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
         <Text style={[textStyle('bodySmall'), { color: colors.muted }]} testID="selected-day-count">
           {t('myDays.selected.count', { count, total: MOMENTS_PER_JAR })}
@@ -132,7 +158,8 @@ const styles = StyleSheet.create({
   },
   titles: { gap: space.xs / 2 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  title: { flexShrink: 1 },
+  title: { flex: 1 },
+  viewJar: { minHeight: VIEW_JAR_HEIGHT, justifyContent: 'center' },
   // Eight equal squares in one row, 5 pt apart like the calendar cells.
   thumbs: { flexDirection: 'row', gap: sizes.dayGap },
   thumb: { flex: 1, aspectRatio: 1, borderRadius: radius.thumb, overflow: 'hidden' },

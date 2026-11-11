@@ -64,6 +64,9 @@ export const colors = {
   cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
   cropAction: '#e2e5dc', // Cancel and Reset on the dark header (Crop); 15:1 on editor
   cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
+  coverFadeTop: 'rgba(10,12,8,0.35)', // top of the dark fade over the Jar page cover, behind Back (Story)
+  coverFadeBottom: 'rgba(10,12,8,0.75)', // bottom of that fade, behind the author and title
+  coverSubtitle: '#eef0ea', // date and count under the title on the cover (Story)
 } as const;
 
 // Text tool colors (Text), in the design's order. Drawn on photos with a shadow (colors.textOverlayShadow).
@@ -123,6 +126,7 @@ export const type = {
   celebrationTitle: { size: 26, weight: '800', letterSpacing: -0.78 }, // "Your Monday is complete" (FullJar)
   unlockTitle: { size: 28, weight: '800', letterSpacing: -0.84 }, // "Your first full jar!" (StickerUnlock)
   cropTitle: { size: 16, weight: '700' }, // "Crop photo" (Crop)
+  countTile: { size: 26, weight: '800' }, // "8/8" on the tile ending the Jar page grid (Story)
 } as const;
 
 export const radius = {
@@ -138,6 +142,7 @@ export const radius = {
   zoneIcon: 13, // icon well on that banner
   optionIcon: 13, // icon well on a Moment options row (MomentOptions)
   tile: 22,
+  jarTile: 18, // moments in the Jar page grid (Story)
   emptyTile: 12, // the three tilted tiles on Jars, empty (EmptyStories)
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
@@ -294,6 +299,9 @@ export const sizes = {
   unlockSticker: 150, // earned sticker's width over the jar; height follows the art
   progressBarWidth: 80, // Milestones progress bar (StickerUnlock)
   progressBarHeight: 6,
+  jarCover: 230, // cover photo on the Jar page (Story)
+  jarTile: 112, // tile height in the Jar page's 3-column grid (Story)
+  jarTileFade: 48, // bottom fade under a Jar page tile's #slot
   overlayOutlineInset: 8, // dashed outline sits this far outside the selected overlay (Stickers)
   overlayOutlineWidth: 1.5,
   overlayDelete: 24, // white delete circle on the outline's top-right corner (Stickers)

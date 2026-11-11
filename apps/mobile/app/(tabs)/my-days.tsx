@@ -64,6 +64,8 @@ export default function MyDaysScreen() {
     router.push({ pathname: '/camera', params: { date: selectedDate, slot } });
   };
 
+  const jarId = day?.jar?.id ?? null;
+
   return (
     <MyDaysView
       grid={grid}
@@ -76,7 +78,13 @@ export default function MyDaysScreen() {
       onSelectDay={setSelectedDate}
       selectedDay={
         selectedDate ? (
-          <SelectedDayCard date={selectedDate} tiles={tiles} isPast={selectedDate < today} onFill={onFill} />
+          <SelectedDayCard
+            date={selectedDate}
+            tiles={tiles}
+            isPast={selectedDate < today}
+            onFill={onFill}
+            onViewJar={jarId ? () => router.push({ pathname: '/jar/[id]', params: { id: jarId } }) : undefined}
+          />
         ) : null
       }
     />
