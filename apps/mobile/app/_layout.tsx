@@ -11,6 +11,7 @@ import { LogBox } from 'react-native';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { startAuth } from '@/lib/authBootstrap';
 import { createQueryClient, persistOptions } from '@/lib/queryClient';
+import { startUploadRunner } from '@/lib/queue/runner';
 import { getSupabase } from '@/lib/supabase';
 import { startTelemetry } from '@/lib/telemetry';
 import { fontFiles } from '@/theme/fonts';
@@ -28,6 +29,7 @@ export default function RootLayout() {
 
   useEffect(() => startTelemetry(), []);
   useEffect(() => startAuth(getSupabase), []);
+  useEffect(() => startUploadRunner(getSupabase), []);
 
   useEffect(() => {
     if (loaded) void SplashScreen.hideAsync();

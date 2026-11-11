@@ -146,4 +146,4 @@ insert into public.comments (id, jar_id, user_id, parent_id, body, is_hidden, cr
 -- Private: photos are read only through the photo Worker with a token (D-12); uploads use presigned
 -- URLs from fn:upload-url. `cd workers/photos && deno task seed` fills it with design/images.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('photos', 'photos', false, 5242880, array['image/jpeg']);
+values ('photos', 'photos', false, 5242880, array['image/webp', 'image/jpeg']);

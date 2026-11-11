@@ -228,6 +228,26 @@ describe('queue storage', () => {
     await expect(loadStore().openQueue()).resolves.toBeDefined();
   });
 
+  it('upgrades a version 1 queue without losing its moments, and keeps upload refs', async () => {
+    const store = loadStore();
+    mockDisk.exec(store.MIGRATIONS[0] ?? '');
+    mockDisk.exec('PRAGMA user_version = 1');
+    mockFs.set('file:///docs/queue/old.jpg', 'photo-bytes');
+    mockDisk
+      .prepare(
+        `INSERT INTO queue_items (user_id, photo_file, slot, local_date, tz, created_at)
+         VALUES (?, 'old.jpg', 'selfie', '2026-11-10', 'Asia/Manila', 1)`,
+      )
+      .run(USER);
+
+    const [old] = await store.listQueue(USER);
+    expect(old).toMatchObject({ slot: 'selfie', state: 'queued', jarId: null, momentId: null });
+
+    const refs = { jarId: '1d4f0c6e-2b7a-4e59-9a3c-5f8e7d6c5b4a', momentId: '9b2e4c1a-7d3f-4a6b-8c5d-1e2f3a4b5c6d' };
+    await store.saveUploadRefs(old?.id ?? 0, refs);
+    expect(await loadStore().getItem(old?.id ?? 0)).toMatchObject(refs);
+  });
+
   it('lists only the signed-in user’s moments, oldest first', async () => {
     const store = loadStore();
     const a = await store.enqueue(input);
