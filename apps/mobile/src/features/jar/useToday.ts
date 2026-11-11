@@ -5,7 +5,7 @@ import { getCalendars } from 'expo-localization';
 import { z } from 'zod';
 
 import { useAuthStore } from '@/lib/authStore';
-import { findOpenJar, localDateIn } from '@/lib/jars';
+import { findOpenJar, localDateIn, normalizeZone } from '@/lib/jars';
 import { listQueue } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
 
@@ -13,7 +13,7 @@ import type { QueuedMoment, ServerMoment } from './todayGrid';
 
 /** The phone's IANA zone (rule 7). */
 export function phoneTimeZone(): string {
-  return getCalendars()[0]?.timeZone ?? 'UTC';
+  return normalizeZone(getCalendars()[0]?.timeZone);
 }
 
 export type TodayJar = {
