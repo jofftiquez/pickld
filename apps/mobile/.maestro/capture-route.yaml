@@ -1,0 +1,16 @@
+# Opens one deep link and screenshots it. Used by scripts/capture.sh:
+#   maestro test -e ROUTE=dev/gallery -e NAME=Gallery-ios --test-output-dir docs/milestones/M1 apps/mobile/.maestro/capture-route.yaml
+appId: me.pickld.app
+---
+- openLink: pickld://${ROUTE}
+# iOS asks before opening a custom-scheme link.
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: Open
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: ${NAME}

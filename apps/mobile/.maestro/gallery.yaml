@@ -1,0 +1,41 @@
+# M1-24: open the dev gallery and screenshot each section.
+# Run on the iOS Simulator with a dev build:
+#   maestro test --test-output-dir docs/milestones/M1 apps/mobile/.maestro/gallery.yaml
+appId: me.pickld.app
+---
+- openLink: pickld://dev/gallery
+# iOS asks before opening a custom-scheme link.
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: gallery-buttons
+    timeout: 20000
+- takeScreenshot: Gallery-buttons-ios
+- scrollUntilVisible:
+    element:
+      id: gallery-forms
+    direction: DOWN
+    centerElement: false
+- takeScreenshot: Gallery-forms-ios
+- scrollUntilVisible:
+    element:
+      id: gallery-containers
+    direction: DOWN
+- scrollUntilVisible:
+    element:
+      id: gallery-jar
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: Gallery-jar-ios
+- scrollUntilVisible:
+    element:
+      id: gallery-tiles
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: Gallery-tiles-ios
