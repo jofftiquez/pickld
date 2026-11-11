@@ -10,17 +10,19 @@ export type IconProps = {
   color?: keyof typeof colors;
   size?: number;
   strokeWidth?: number;
+  /** Fills the shape with its color too, e.g. a liked heart. */
+  filled?: boolean;
 };
 
 /** Decorative stroke icon. Hidden from screen readers; the control around it carries the label. */
-export function Icon({ name, color = 'ink', size = 22, strokeWidth = 1.8 }: IconProps) {
+export function Icon({ name, color = 'ink', size = 22, strokeWidth = 1.8, filled = false }: IconProps) {
   const stroke = colors[color];
   return (
     <Svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
+      fill={filled ? stroke : 'none'}
       stroke={stroke}
       strokeWidth={strokeWidth}
       strokeLinecap="round"

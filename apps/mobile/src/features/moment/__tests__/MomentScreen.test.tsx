@@ -46,9 +46,10 @@ jest.mock('@/lib/supabase', () => {
           filters[column] = value;
           return builder;
         },
-        // The jar page's moment list (awaited without maybeSingle).
+        // The jar page's moment list and the viewer's likes (awaited without maybeSingle).
+        in: () => builder,
         then: (resolve: (r: { data: unknown; error: null }) => void) =>
-          resolve({ data: mockBackend.jarMoments, error: null }),
+          resolve({ data: table === 'reactions' ? [] : mockBackend.jarMoments, error: null }),
         maybeSingle: async () => {
           if (table === 'jars') {
             return {

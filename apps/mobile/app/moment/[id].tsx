@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { shareJar } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
+import { useLike } from '@/features/jar/useLike';
 import { MomentDetailView } from '@/features/moment/MomentDetailView';
 import { OwnMomentView } from '@/features/moment/OwnMomentView';
 import { useOwnMoment } from '@/features/moment/useOwnMoment';
@@ -22,6 +23,7 @@ export default function MomentScreen() {
   const ownLiveJar = own.kind === 'found' && own.moment.status === 'live' ? own.moment.jarId : undefined;
   const jarId = jar ?? ownLiveJar;
   const page = useJarPage(jarId);
+  const like = useLike(page.data?.viewerId ?? null, page.data?.jar.id ?? null);
 
   const close = () => {
     if (router.canGoBack()) router.back();
@@ -39,6 +41,7 @@ export default function MomentScreen() {
         momentId={id ?? ''}
         insets={insets}
         onClose={close}
+        onToggleLike={like.toggle}
         onShare={() => {
           if (page.data) shareJar(page.data, t);
         }}

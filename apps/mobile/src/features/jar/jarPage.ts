@@ -47,7 +47,43 @@ export type JarPageData = {
   moments: JarMoment[];
   /** The signed-in viewer; the owner also sees their private moments. */
   viewerId: string;
+  /** What the viewer has liked on this page (FR-SOC-05). Optional: caches from before M3-09 lack it. */
+  liked?: Liked;
 };
+
+export type Liked = { jar: boolean; moments: string[] };
+
+/** A like goes on the jar or on one of its moments. */
+export type LikeTarget = { kind: 'jar' } | { kind: 'moment'; id: string };
+
+export function isLiked(data: Pick<JarPageData, 'liked'>, target: LikeTarget): boolean {
+  return target.kind === 'jar' ? (data.liked?.jar ?? false) : (data.liked?.moments.includes(target.id) ?? false);
+}
+
+/**
+ * The page with the viewer's like on `target` set to `liked`, and its count moved by one (the optimistic
+ * update; FR-SOC-05). Setting the state it already has changes nothing, so a count never moves twice.
+ */
+export function withLike(data: JarPageData, target: LikeTarget, liked: boolean): JarPageData {
+  if (isLiked(data, target) === liked) return data;
+  const step = liked ? 1 : -1;
+  const current = data.liked ?? { jar: false, moments: [] };
+  if (target.kind === 'jar') {
+    return {
+      ...data,
+      jar: { ...data.jar, like_count: Math.max(0, data.jar.like_count + step) },
+      liked: { ...current, jar: liked },
+    };
+  }
+  return {
+    ...data,
+    moments: data.moments.map((m) => (m.id === target.id ? { ...m, like_count: Math.max(0, m.like_count + step) } : m)),
+    liked: {
+      ...current,
+      moments: liked ? [...current.moments, target.id] : current.moments.filter((id) => id !== target.id),
+    },
+  };
+}
 
 export type JarPage = {
   isOwner: boolean;

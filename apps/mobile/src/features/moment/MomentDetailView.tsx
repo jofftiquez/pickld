@@ -18,7 +18,8 @@ import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { parseEdits } from '@/features/edit/edits';
-import { buildJarPage, type JarMoment, type JarPageData } from '@/features/jar/jarPage';
+import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from '@/features/jar/jarPage';
+import { LikeButton } from '@/features/jar/LikeButton';
 import { firstName } from '@/features/jar/shareJar';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
@@ -35,6 +36,8 @@ export type MomentDetailViewProps = {
   momentId: string;
   insets: EdgeInsets;
   onClose: () => void;
+  /** Likes or unlikes the moment on screen (FR-SOC-05). */
+  onToggleLike?: (target: LikeTarget) => void;
   onShare: () => void;
   onRetry: () => void;
   locale?: string;
@@ -52,6 +55,7 @@ export function MomentDetailView({
   momentId,
   insets,
   onClose,
+  onToggleLike,
   onShare,
   onRetry,
   locale = deviceLocale(),
@@ -214,16 +218,14 @@ export function MomentDetailView({
         </Text>
         <View style={styles.flex} />
         <View style={styles.actions}>
-          {/* TODO(M3-09, #70): the like pill toggles the viewer's like. TODO(M3-11, #72): comments open Comments. */}
-          <View
-            accessible
-            accessibilityLabel={t('jarPage.likes', { count: moment.like_count })}
-            style={[styles.stat, { backgroundColor: colors.dangerTint }]}
+          {/* TODO(M3-11, #72): comments open Comments. */}
+          <LikeButton
+            count={moment.like_count}
+            liked={isLiked(data, { kind: 'moment', id: moment.id })}
+            height={sizes.momentAction}
+            onPress={() => onToggleLike?.({ kind: 'moment', id: moment.id })}
             testID="moment-likes"
-          >
-            <Icon name="heart" color="likeText" size={16} strokeWidth={2.2} />
-            <Text style={[textStyle('bodyMedium', '700'), { color: colors.likeText }]}>{moment.like_count}</Text>
-          </View>
+          />
           <View
             accessible
             accessibilityLabel={t('jarPage.comments', { count: data.jar.comment_count })}
