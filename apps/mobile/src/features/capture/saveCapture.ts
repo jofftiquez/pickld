@@ -1,11 +1,12 @@
-// Camera photo → offline queue (FR-CAP-01; AGENTS rules 3, 5, 6, 7). Until the editor exists
-// (M2-11) a camera photo goes straight to the queue: crop to 3:4 and write WebP without location
-// (preparePhoto), queue it with its slot, jar date and phone zone, then ask the upload worker to run.
+// Camera photo → offline queue (FR-CAP-01; AGENTS rules 3, 5, 6, 7). Until the editor exists (M2-11) a
+// camera photo goes straight to the queue: queued raw with its slot, jar date and phone zone, then
+// prepared (crop to 3:4, WebP without location) and handed to the upload worker.
 import { File } from 'expo-file-system';
 
 import { captureInfo } from '@/lib/image/captureTime';
-import { preparePhoto } from '@/lib/image/pipeline';
 import { chooseJar } from '@/lib/jars';
+import { captureError } from '@/lib/monitoring';
+import { prepareItem } from '@/lib/queue/prepare';
 import { requestUploads } from '@/lib/queue/runner';
 import { enqueue, type QueueItem } from '@/lib/queue/store';
 import type { Slot } from '@/theme/tokens';
@@ -52,23 +53,27 @@ export function captureJarDate(input: { tz: string; shotAt: Date; openJar: OpenJ
 }
 
 /**
- * Prepares and queues a camera photo, then kicks the upload worker without waiting for it. Resolves
- * once the moment is in the queue; the network is never touched before that (rule 3).
+ * Queues the raw camera photo at once (a file copy and one SQLite row, so a photo is never lost if the app
+ * is killed right after the shutter: rule 3), then prepares it in the background and kicks the upload
+ * worker. Resolves as soon as the raw photo is queued; never waits for preparation or the network. If the
+ * background preparation is interrupted, the upload worker prepares the item before uploading it.
  */
 export async function saveCapture(input: SaveCaptureInput): Promise<QueueItem> {
   const { localDate, capturedAt } = captureJarDate(input);
-  const prepared = await preparePhoto(input.uri);
   const item = await enqueue({
     userId: input.userId,
-    photoUri: prepared.full.uri,
-    thumbUri: prepared.thumb.uri,
+    photoUri: input.uri,
+    thumbUri: null,
     slot: input.slot,
     localDate,
     tz: input.tz,
     capturedAt,
+    prepared: false,
   });
-  // The queue holds its own copies now.
-  for (const uri of [input.uri, prepared.full.uri, prepared.thumb.uri]) deleteQuietly(uri);
-  void requestUploads();
+  // The queue holds its own copy now.
+  deleteQuietly(input.uri);
+  void prepareItem(item)
+    .catch((error: unknown) => captureError(error, { area: 'capture' }))
+    .finally(() => void requestUploads());
   return item;
 }

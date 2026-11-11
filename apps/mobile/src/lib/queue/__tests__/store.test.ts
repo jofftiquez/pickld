@@ -248,6 +248,86 @@ describe('queue storage', () => {
     expect(await loadStore().getItem(old?.id ?? 0)).toMatchObject(refs);
   });
 
+  it('treats moments queued before migration 2 as prepared', async () => {
+    const store = loadStore();
+    mockDisk.exec(store.MIGRATIONS[0] ?? '');
+    mockDisk.exec(store.MIGRATIONS[1] ?? '');
+    mockDisk.exec('PRAGMA user_version = 2');
+    mockDisk
+      .prepare(
+        `INSERT INTO queue_items (user_id, photo_file, slot, local_date, tz, created_at)
+         VALUES (?, 'old.jpg', 'selfie', '2026-11-10', 'Asia/Manila', 1)`,
+      )
+      .run(USER);
+    const [old] = await store.listQueue(USER);
+    expect(old?.prepared).toBe(true);
+  });
+
+  it('keeps a raw camera photo across a restart (queued at the shutter, before preparing)', async () => {
+    await loadStore().enqueue({ ...input, thumbUri: null, prepared: false });
+    mockFs.delete(GALLERY_PHOTO); // the camera's temp file is gone after a kill
+    const [item] = await loadStore().listQueue(USER);
+    expect(item).toMatchObject({ prepared: false, thumbUri: null, slot: 'ootd' });
+    expect(mockFs.get(item?.photoUri ?? '')).toBe('photo-bytes');
+  });
+
+  it('swaps the prepared files in, then deletes the raw photo', async () => {
+    const store = loadStore();
+    const raw = await store.enqueue({ ...input, thumbUri: null, prepared: false });
+    mockFs.set('file:///cache/out.webp', 'webp-full');
+    mockFs.set('file:///cache/out-thumb.webp', 'webp-thumb');
+    mockLog.length = 0;
+
+    const done = await store.savePrepared(raw.id, {
+      photoUri: 'file:///cache/out.webp',
+      thumbUri: 'file:///cache/out-thumb.webp',
+    });
+
+    expect(done.prepared).toBe(true);
+    expect(mockFs.get(done.photoUri)).toBe('webp-full');
+    expect(mockFs.get(done.thumbUri ?? '')).toBe('webp-thumb');
+    expect(mockFs.has(raw.photoUri)).toBe(false);
+    expect(mockLog.indexOf('sql:UPDATE')).toBeGreaterThan(mockLog.indexOf('copy:file:///cache/out-thumb.webp'));
+    expect(await loadStore().getItem(raw.id)).toEqual(done);
+    expect(queuedFiles().sort()).toEqual([done.photoUri, done.thumbUri].sort());
+  });
+
+  it('keeps the raw photo when copying a prepared file fails', async () => {
+    const store = loadStore();
+    const raw = await store.enqueue({ ...input, thumbUri: null, prepared: false });
+    mockFs.set('file:///cache/out.webp', 'webp-full');
+    mockFs.set('file:///cache/out-thumb.webp', 'webp-thumb');
+    mockFailCopyOf.add('file:///cache/out-thumb.webp');
+
+    await expect(
+      store.savePrepared(raw.id, { photoUri: 'file:///cache/out.webp', thumbUri: 'file:///cache/out-thumb.webp' }),
+    ).rejects.toThrow('cannot copy');
+    expect(await store.getItem(raw.id)).toEqual(raw);
+    expect(queuedFiles()).toEqual([raw.photoUri]);
+  });
+
+  it('drops the second set of copies when two preparations race', async () => {
+    const store = loadStore();
+    const raw = await store.enqueue({ ...input, thumbUri: null, prepared: false });
+    mockFs.set('file:///cache/a.webp', 'a');
+    mockFs.set('file:///cache/a-thumb.webp', 'a-thumb');
+    mockFs.set('file:///cache/b.webp', 'b');
+    mockFs.set('file:///cache/b-thumb.webp', 'b-thumb');
+
+    const first = await store.savePrepared(raw.id, {
+      photoUri: 'file:///cache/a.webp',
+      thumbUri: 'file:///cache/a-thumb.webp',
+    });
+    const second = await store.savePrepared(raw.id, {
+      photoUri: 'file:///cache/b.webp',
+      thumbUri: 'file:///cache/b-thumb.webp',
+    });
+
+    expect(second).toEqual(first);
+    expect(mockFs.get(second.photoUri)).toBe('a');
+    expect(queuedFiles().sort()).toEqual([first.photoUri, first.thumbUri].sort());
+  });
+
   it('lists only the signed-in user’s moments, oldest first', async () => {
     const store = loadStore();
     const a = await store.enqueue(input);

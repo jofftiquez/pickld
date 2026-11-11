@@ -103,7 +103,7 @@ beforeEach(() => {
   jest.mocked(useCameraPermission).mockClear();
   jest.mocked(takeMockPhoto).mockClear();
   jest.mocked(saveCapture).mockReset();
-  jest.mocked(saveCapture).mockImplementation(() => new Promise(() => undefined));
+  jest.mocked(saveCapture).mockImplementation(async () => ({ id: 1 }) as Awaited<ReturnType<typeof saveCapture>>);
   mockToday.userId = userId;
   mockToday.queue = [];
 });
@@ -120,6 +120,24 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(mockCamera.requestPermission).not.toHaveBeenCalled();
   });
 
+  it('stays on the camera until the photo is in the queue, so a kill right after the shutter loses nothing', async () => {
+    let finish: () => void = () => undefined;
+    jest.mocked(saveCapture).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = () => resolve({ id: 1 } as Awaited<ReturnType<typeof saveCapture>>);
+        }),
+    );
+    await openCamera();
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+    expect(saveCapture).toHaveBeenCalledTimes(1);
+    expect(screen).toHavePathname('/camera');
+
+    await act(async () => finish());
+    expect(screen).toHavePathname('/today');
+  });
+
   it('switching the slot changes the target, and the shutter queues the mock photo there and returns', async () => {
     await openCamera();
     await fireEvent.press(screen.getByTestId('camera-slot-selfie'));
@@ -130,7 +148,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     await act(async () => {});
 
     expect(takeMockPhoto).toHaveBeenCalledWith('back');
-    // Back on Today while the photo is still being prepared (saveCapture never settles here).
+    // Back on Today once the raw photo is queued (preparing and uploading run behind it).
     expect(screen).toHavePathname('/today');
     expect(saveCapture).toHaveBeenCalledTimes(1);
     expect(saveCapture).toHaveBeenCalledWith(
