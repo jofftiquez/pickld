@@ -519,18 +519,18 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** —
 - **Design:** Moment
 
-### M2-19 · Edge Function: moderate (photos)
-- **Area:** backend · **Priority:** P0 · **Size:** L · **Requirements:** FR-SAF-03, FR-PUB-07, FR-JAR-03 · **Depends on:** M1-10, M1-15 · **Issue:** #48
-- **Goal:** Triggered on moment insert and pending changes: CSAM gate (per M1-26), OpenAI omni-moderation on thumbnail and caption, thresholds → live, queue or removed; swaps pending photos on approval. Stub provider locally (T-105, part 1).
+### M2-19 · Edge Function: moderate (photos), auto-approve for the early version (D-22)
+- **Area:** backend · **Priority:** P0 · **Size:** S · **Requirements:** FR-SAF-03, FR-PUB-07, FR-JAR-03 · **Depends on:** M1-10, M1-15 · **Issue:** #48
+- **Goal:** Triggered on moment insert and pending changes. Early version (D-22): no provider is called; every photo goes `checking` → `live` and pending photos swap in. The function keeps the provider seam so the full pipeline (CSAM gate, OpenAI omni-moderation, thresholds → live, queue or removed) drops in before public launch (T-105, part 1).
 - **Acceptance:**
-  - [ ] Low scores go live; medium create a pending moderation item; high are removed with a notification.
+  - [ ] Every new or replaced photo goes live through this function.
   - [ ] Only this function sets `live`/`removed`.
   - [ ] Most photos resolve within 10 seconds.
-- **Tests:** Deno tests with the stub provider for each outcome.
+- **Tests:** Deno tests: insert → live, replace → swap, and the database refuses `live` from any other role.
 - **Screenshots:** —
 - **Design:** —
 
-### M2-20 · moderate: second opinion and child-safety match
+### M2-20 · moderate: second opinion and child-safety match (deferred to Before public launch, D-22)
 - **Area:** backend · **Priority:** P0 · **Size:** M · **Requirements:** FR-SAF-04, FR-SAF-03 · **Depends on:** M2-19, M1-26 · **Issue:** #49
 - **Goal:** Borderline scores get a vision second opinion stored in `second_opinion` (D-13); a CSAM match blocks the photo, suspends the account, records a `csam_incidents` row and alerts, never entering the queue (T-105, part 2).
 - **Acceptance:**
@@ -731,13 +731,13 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** —
 - **Design:** Story, Moment
 
-### M3-10 · Text moderation
-- **Area:** backend · **Priority:** P0 · **Size:** M · **Requirements:** FR-SOC-06, FR-ACC-03, FR-SOC-11 · **Depends on:** M2-19 · **Issue:** #71
-- **Goal:** `fn:moderate` text path for comments, usernames and bios; un-hides passing comments.
+### M3-10 · Text moderation, auto-pass for the early version (D-22)
+- **Area:** backend · **Priority:** P0 · **Size:** S · **Requirements:** FR-SOC-06, FR-ACC-03, FR-SOC-11 · **Depends on:** M2-19 · **Issue:** #71
+- **Goal:** `fn:moderate` text path for comments, usernames and bios. Early version (D-22): every comment passes at once; usernames still refuse reserved route words. The provider seam stays for the full check before public launch.
 - **Acceptance:**
-  - [ ] Comments are hidden from others until checked.
-  - [ ] Flagged usernames and bios are refused at save.
-- **Tests:** Deno tests with the stub provider.
+  - [ ] Comments become visible to others as soon as they are saved.
+  - [ ] Reserved usernames are refused at save.
+- **Tests:** Deno tests for the pass path and reserved names.
 - **Screenshots:** —
 - **Design:** —
 
@@ -850,7 +850,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** Block, Blocked accounts.
 - **Design:** Block, Blocked
 
-### M3-23 · Edge Function: mod-action
+### M3-23 · Edge Function: mod-action (deferred to Before public launch, D-22)
 - **Area:** backend · **Priority:** P0 · **Size:** L · **Requirements:** FR-MOD-04, FR-MOD-05, FR-SAF-05, FR-SAF-06 · **Depends on:** M3-20, M2-20 · **Issue:** #84
 - **Goal:** Keep, Remove, Remove and warn, Escalate; appeals decided by a different moderator; strikes and 7-day suspension (D-10, D-11); audit log rows; owner notifications.
 - **Acceptance:**
@@ -860,7 +860,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** —
 - **Design:** —
 
-### M3-24 · Appeal and suspension screens
+### M3-24 · Appeal and suspension screens (deferred to Before public launch, D-22)
 - **Area:** app · **Priority:** P0 · **Size:** S · **Requirements:** FR-SAF-05, FR-SAF-06 · **Depends on:** M3-23, M2-21 · **Issue:** #85
 - **Goal:** Request a review (one per removal) and an appeal-sent state; suspension notice (no design).
 - **Acceptance:**
@@ -869,7 +869,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** Moment removed with appeal, Suspension notice.
 - **Design:** Removed
 
-### M3-25 · Moderation console scaffold
+### M3-25 · Moderation console scaffold (deferred to Before public launch, D-22)
 - **Area:** web · **Priority:** P0 · **Size:** M · **Requirements:** FR-MOD-01 · **Depends on:** M1-05 · **Issue:** #86
 - **Goal:** `apps/mod` Next.js with Supabase Auth; only the moderator role gets in, everyone else sees access denied.
 - **Acceptance:**
@@ -878,7 +878,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** Access denied (no design).
 - **Design:** ModConsole
 
-### M3-26 · Moderation queue
+### M3-26 · Moderation queue (deferred to Before public launch, D-22)
 - **Area:** web · **Priority:** P0 · **Size:** M · **Requirements:** FR-MOD-02, FR-MOD-03 · **Depends on:** M3-25, M3-23, M1-16 · **Issue:** #87
 - **Goal:** Oldest-first queue with All, Auto-check, Reports, Appeals and Escalated filters; header with pending count, median wait and open appeals; blurred thumbnails.
 - **Acceptance:**
@@ -887,7 +887,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** Moderation console.
 - **Design:** ModConsole
 
-### M3-27 · Moderation detail, decisions and audit log
+### M3-27 · Moderation detail, decisions and audit log (deferred to Before public launch, D-22)
 - **Area:** web · **Priority:** P0 · **Size:** M · **Requirements:** FR-MOD-03, FR-MOD-04, FR-MOD-05, FR-SAF-05 · **Depends on:** M3-26 · **Issue:** #88
 - **Goal:** Detail panel with score, caption, user history; K, R, E shortcuts; appeals; read-only audit log page (T-209).
 - **Acceptance:**
@@ -896,7 +896,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** Moderation console detail.
 - **Design:** ModConsole
 
-### M3-28 · Community guidelines and moderation playbook
+### M3-28 · Community guidelines and moderation playbook (deferred to Before public launch, D-22)
 - **Area:** design · **Priority:** P0 · **Size:** M · **Requirements:** — · **Depends on:** M1-27 · **Issue:** #89
 - **Goal:** Founders write the guidelines and the moderator playbook (T-210).
 - **Acceptance:**
@@ -1083,8 +1083,8 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Design:** Delete
 
 ### M4-20 · Monitoring alerts 🔑
-- **Area:** backend · **Priority:** P0 · **Size:** S · **Requirements:** NFR-REL-01 · **Depends on:** M1-17, M3-26 · **Issue:** #110
-- **Goal:** Alerts when the moderation queue is older than 2 hours or upload failures exceed 2%; uptime checks (T-306).
+- **Area:** backend · **Priority:** P0 · **Size:** S · **Requirements:** NFR-REL-01 · **Depends on:** M1-17 · **Issue:** #110
+- **Goal:** Alerts when upload failures exceed 2%; uptime checks (T-306). The moderation-queue alert (older than 2 hours) ships with the console before public launch (D-22).
 - **Acceptance:**
   - [ ] Alerts fire in a staging drill.
 - **Tests:** Scheduled function tests.
@@ -1149,7 +1149,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Screenshots:** —
 - **Design:** —
 
-### M5-05 · Moderation threshold tuning
+### M5-05 · Moderation threshold tuning (deferred to Before public launch, D-22)
 - **Area:** backend · **Priority:** P0 · **Size:** S · **Requirements:** FR-SAF-03 · **Depends on:** M2-20 · **Issue:** #118
 - **Goal:** Tune thresholds from beta decisions; pin and alert on model version (T-403, part 3).
 - **Acceptance:**
