@@ -1,0 +1,58 @@
+# M3-11: the Jar page's comment pill opens Comments (design: Comments); dale posts a comment, it shows
+# in the thread, and he deletes it again.
+# Needs the seed data (dale reads mika; mika's jar today has a comment) and dale signed in:
+# maestro test apps/mobile/.maestro/comments.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- tapOn:
+    id: feed-card-mika
+- extendedWaitUntil:
+    visible:
+      id: jar-comments
+    timeout: 40000
+- tapOn:
+    id: jar-comments
+- extendedWaitUntil:
+    visible:
+      id: comments-card
+    timeout: 20000
+- tapOn:
+    id: comments-input
+- inputText: Golden hour every day
+- tapOn:
+    id: comments-send
+- extendedWaitUntil:
+    visible: Golden hour every day
+    timeout: 20000
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Comments-ios
+# Dale's seeded comment also has a Delete: take the one under the new comment.
+- tapOn:
+    text: Delete Dale Santos’s comment
+    below: Golden hour every day
+- tapOn:
+    id: comments-delete-confirm
+- extendedWaitUntil:
+    notVisible: Golden hour every day
+    timeout: 20000
+- tapOn:
+    id: comments-back
+- assertVisible:
+    id: jar-count-tile

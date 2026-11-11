@@ -29,6 +29,9 @@ export default function JarScreen() {
       insets={insets}
       onBack={back}
       onToggleLike={like.toggle}
+      onOpenComments={() => {
+        if (data) router.push({ pathname: '/comments/[jarId]', params: { jarId: data.jar.id } });
+      }}
       onOpenMoment={(momentId) => {
         if (data) router.push({ pathname: '/moment/[id]', params: { id: momentId, jar: data.jar.id } });
       }}

@@ -19,6 +19,7 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { parseEdits } from '@/features/edit/edits';
 import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from '@/features/jar/jarPage';
+import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
 import { firstName } from '@/features/jar/shareJar';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
@@ -36,6 +37,8 @@ export type MomentDetailViewProps = {
   momentId: string;
   insets: EdgeInsets;
   onClose: () => void;
+  /** Opens the jar's Comments. */
+  onOpenComments?: () => void;
   /** Likes or unlikes the moment on screen (FR-SOC-05). */
   onToggleLike?: (target: LikeTarget) => void;
   onShare: () => void;
@@ -55,6 +58,7 @@ export function MomentDetailView({
   momentId,
   insets,
   onClose,
+  onOpenComments,
   onToggleLike,
   onShare,
   onRetry,
@@ -218,7 +222,6 @@ export function MomentDetailView({
         </Text>
         <View style={styles.flex} />
         <View style={styles.actions}>
-          {/* TODO(M3-11, #72): comments open Comments. */}
           <LikeButton
             count={moment.like_count}
             liked={isLiked(data, { kind: 'moment', id: moment.id })}
@@ -226,15 +229,12 @@ export function MomentDetailView({
             onPress={() => onToggleLike?.({ kind: 'moment', id: moment.id })}
             testID="moment-likes"
           />
-          <View
-            accessible
-            accessibilityLabel={t('jarPage.comments', { count: data.jar.comment_count })}
-            style={[styles.stat, { backgroundColor: colors.subtle }]}
+          <CommentsButton
+            count={data.jar.comment_count}
+            height={sizes.momentAction}
+            onPress={() => onOpenComments?.()}
             testID="moment-comments"
-          >
-            <Icon name="comment" color="ink" size={16} strokeWidth={2} />
-            <Text style={[textStyle('bodyMedium', '600'), { color: colors.ink }]}>{data.jar.comment_count}</Text>
-          </View>
+          />
           <View style={styles.flex} />
           <RoundIconButton
             icon="share"
@@ -323,12 +323,4 @@ const styles = StyleSheet.create({
   },
   caption: { color: colors.ink, lineHeight: 24 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  stat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.xs + 2,
-    height: sizes.momentAction,
-    paddingHorizontal: space.lg,
-    borderRadius: radius.pill,
-  },
 });
