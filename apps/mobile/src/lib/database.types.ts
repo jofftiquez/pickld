@@ -981,6 +981,19 @@ export type Database = {
           },
         ];
       };
+      reserved_usernames: {
+        Row: {
+          name: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          name: string;
+        };
+        Update: {
+          name?: string;
+        };
+        Relationships: [];
+      };
       sticker_packs: {
         Row: {
           artist_id: string | null;
@@ -1264,6 +1277,7 @@ export type Database = {
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_moderator: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_reserved_username: { Args: { candidate: string }; Returns: boolean };
       is_valid_tz: { Args: { name: string }; Returns: boolean };
       jar_ends_at: {
         Args: {
@@ -1281,6 +1295,10 @@ export type Database = {
           p_reason?: string;
           p_scores?: Json;
         };
+        Returns: string;
+      };
+      moderation_apply_comment: {
+        Args: { p_comment_id: string; p_decision: string; p_provider: string; p_reason?: string; p_scores?: Json };
         Returns: string;
       };
       moment_photo_paths: {

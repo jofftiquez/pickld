@@ -44,9 +44,9 @@ select throws_ok($$update public.comments set body = 'rewritten by owner' where 
 select throws_ok($$delete from public.comments where id = 'c1000000-0000-4000-8000-000000000001'$$, '42501', null,
                  'nobody hard-deletes comments directly');
 
--- moderation (server) unhides it
+-- moderation (fn:moderate as service_role, through moderation_apply_comment, 0016) unhides it
 select tests.act_as_service();
-update public.comments set is_hidden = false where id = 'c1000000-0000-4000-8000-000000000001';
+select public.moderation_apply_comment('c1000000-0000-4000-8000-000000000001', 'approve', 'test');
 select is(pg_temp.jar_counts('readers'), array[0, 1], 'comment_count rises when the comment passes the check');
 select tests.act_as('outsider');
 select is((select count(*) from public.comments where id = 'c1000000-0000-4000-8000-000000000001'), 0::bigint,

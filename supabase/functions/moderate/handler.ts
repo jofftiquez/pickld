@@ -1,6 +1,8 @@
-// fn:moderate (M2-19; FR-SAF-03, FR-PUB-07, FR-JAR-03; D-22). Checks what a moment would show and
-// applies the verdict: checking → live, a replacement photo or edit swapped in, queued, or removed. The
-// database lets only moderation_apply() (0011) set live or removed, and only this function calls it.
+// fn:moderate (M2-19, M3-10; FR-SAF-03, FR-PUB-07, FR-JAR-03, FR-SOC-06; D-22). Checks what a moment
+// would show and applies the verdict: checking → live, a replacement photo or edit swapped in, queued, or
+// removed. The database lets only moderation_apply() (0011) set live or removed, and only this function
+// calls it. Comments take the text path: a new comment is hidden until moderation_apply_comment() (0016)
+// shows it, queues it or refuses it.
 //
 // Triggered by the app right after it inserts a moment (status `checking`) or changes one (the update
 // lands in pending_*), as the last step of the upload pipeline. If the call is lost, the moment stays
@@ -9,12 +11,20 @@
 //
 // POST { momentId }   (the caller's own moment)
 //   → { data: { momentId, outcome, status } }
+// POST { commentId }  (the caller's own comment, right after inserting it)
+//   → { data: { commentId, outcome } }   outcome: visible | queued | removed | nothing_to_check
 //   → { error: { code, message } }
 import { type SupabaseClient, z } from '../_shared/deps.ts';
 import { bearerToken, fail, ok, readJson } from '../_shared/http.ts';
 import type { ModerationContent, ModerationProvider } from './provider.ts';
 
-export const ModerateInput = z.strictObject({ momentId: z.uuid() });
+export const ModerateInput = z.union([
+  z.strictObject({ momentId: z.uuid() }),
+  z.strictObject({ commentId: z.uuid() }),
+]);
+
+/** What moderation_apply_comment() did; see 0016_text_moderation.sql. */
+export type CommentOutcome = 'visible' | 'queued' | 'removed' | 'nothing_to_check' | 'not_found';
 
 /** What moderation_apply() did; see 0011_moderate.sql. 'stale' never escapes moderateMoment(). */
 export type Outcome = 'live' | 'swapped' | 'queued' | 'removed' | 'discarded' | 'nothing_to_check' | 'not_found';
@@ -99,6 +109,30 @@ export async function moderateMoment(
   return null;
 }
 
+/** Checks one comment's text and applies the verdict. ownerId, when given, must have written it. */
+export async function moderateComment(
+  db: SupabaseClient,
+  provider: ModerationProvider,
+  commentId: string,
+  ownerId?: string,
+): Promise<CommentOutcome> {
+  const { data, error } = await db.from('comments').select('id, user_id, body').eq('id', commentId).maybeSingle();
+  if (error) throw new Error(`comment lookup: ${error.message}`);
+  const c = data as { id: string; user_id: string; body: string } | null;
+  if (!c || (ownerId !== undefined && c.user_id !== ownerId)) return 'not_found';
+
+  const verdict = await provider.checkText({ kind: 'comment', userId: c.user_id, text: c.body });
+  const applied = await db.rpc('moderation_apply_comment', {
+    p_comment_id: c.id,
+    p_decision: verdict.decision,
+    p_provider: provider.name,
+    p_scores: verdict.scores ?? {},
+    p_reason: verdict.decision === 'approve' ? null : verdict.reason,
+  });
+  if (applied.error) throw new Error(`moderation_apply_comment: ${applied.error.message}`);
+  return applied.data as CommentOutcome;
+}
+
 export async function handleModerate(req: Request, deps: ModerateDeps): Promise<Response> {
   if (req.method !== 'POST') return fail(405, 'method_not_allowed', 'Use POST.');
 
@@ -121,6 +155,12 @@ export async function handleModerate(req: Request, deps: ModerateDeps): Promise<
         message: i.message,
       })),
     );
+  }
+  if ('commentId' in parsed.data) {
+    const { commentId } = parsed.data;
+    const outcome = await moderateComment(deps.serviceClient(), deps.provider, commentId, userId);
+    if (outcome === 'not_found') return fail(404, 'not_found', 'Comment not found.');
+    return ok({ commentId, outcome });
   }
   const { momentId } = parsed.data;
 
