@@ -4,6 +4,10 @@ appId: me.pickld.app
 ---
 - openLink: pickld://${ROUTE}
 # iOS asks before opening a custom-scheme link.
+- extendedWaitUntil:
+    visible: Open
+    timeout: 5000
+    optional: true
 - tapOn:
     text: Open
     optional: true
