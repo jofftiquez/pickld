@@ -7,6 +7,10 @@ appId: me.pickld.app
     visible:
       id: tab-today
     timeout: 15000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
 - assertVisible:
     id: screen-title
     text: Today
