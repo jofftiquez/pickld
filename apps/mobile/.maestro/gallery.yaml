@@ -39,5 +39,3 @@ appId: me.pickld.app
     direction: DOWN
     centerElement: true
 - takeScreenshot: Gallery-tiles-ios
-- scroll
-- takeScreenshot: Gallery-tiles-more-ios
