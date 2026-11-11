@@ -131,12 +131,14 @@ Deno.test('only the owner can ask, with valid input', async () => {
 Deno.test('provider seam: review queues, remove removes, and the provider sees the proposal', async () => {
   const seen: ModerationContent[] = [];
   const review: ModerationProvider = {
+    ...autoApprove,
     name: 'stub-review',
     check: (
       c,
     ) => (seen.push(c), Promise.resolve({ decision: 'review', scores: { sexual: 0.5 }, reason: 'borderline' })),
   };
   const remove: ModerationProvider = {
+    ...autoApprove,
     name: 'stub-remove',
     check: () => Promise.resolve({ decision: 'remove', scores: { violence: 0.99 }, reason: 'violence' }),
   };
@@ -161,6 +163,7 @@ Deno.test('a proposal changed during the check is checked again, never approved 
   await userClient(owner.jwt).from('moments').update({ caption: 'v2' }).eq('id', id);
   const seen: (string | null)[] = [];
   const racing: ModerationProvider = {
+    ...autoApprove,
     name: 'stub-racing',
     async check(c) {
       seen.push(c.caption);
@@ -175,6 +178,72 @@ Deno.test('a proposal changed during the check is checked again, never approved 
   assertEquals(seen, ['v2', 'v3']);
   assertEquals(json.data.outcome, 'swapped');
   assertEquals((await row(id)).caption, 'v3', 'the version that was checked last is the one that went live');
+});
+
+// ---------------------------------------------------------------- text path (M3-10, 0016)
+
+/** The reader comments on the owner's jar the way the app does: as themselves, hidden until checked. */
+async function addComment(body: string): Promise<string> {
+  const { data, error } = await userClient(reader.jwt).from('comments')
+    .insert({ jar_id: jarId, user_id: reader.id, body }).select('id').single();
+  if (error) throw new Error(`insert comment: ${error.message}`);
+  return (data as { id: string }).id;
+}
+const ownerSeesComment = async (id: string) =>
+  ((await userClient(owner.jwt).from('comments').select('id').eq('id', id)).data ?? []).length === 1;
+
+Deno.test('comment pass path (D-22): visible to others as soon as the function sees it', async () => {
+  const id = await addComment('Love the light');
+  assertEquals(await ownerSeesComment(id), false, 'hidden from the jar owner while checked');
+  const { status, json } = await call({ commentId: id }, reader);
+  assertEquals(status, 200, JSON.stringify(json));
+  assertEquals(json.data, { commentId: id, outcome: 'visible' });
+  assertEquals(await ownerSeesComment(id), true, 'the jar owner sees it');
+  assertEquals(
+    (await call({ commentId: id }, reader)).json.data.outcome,
+    'nothing_to_check',
+    'calling again is harmless',
+  );
+});
+
+Deno.test('comments: only the author can ask, and nobody can unhide one directly', async () => {
+  const id = await addComment('Mine');
+  assertEquals((await call({ commentId: id })).status, 401);
+  assertEquals((await call({ commentId: id }, owner)).status, 404, 'the jar owner cannot trigger it');
+  assertEquals((await call({ commentId: crypto.randomUUID() }, reader)).status, 404);
+  assertEquals((await call({ commentId: id, momentId: id }, reader)).status, 400, 'one id at a time');
+  const direct = await db.from('comments').update({ is_hidden: false }).eq('id', id);
+  assertEquals(direct.error?.code, '42501', 'service_role cannot unhide');
+  assertEquals(await ownerSeesComment(id), false);
+});
+
+Deno.test('comments: the provider seam can queue or refuse text', async () => {
+  const seen: string[] = [];
+  const refuse: ModerationProvider = {
+    ...autoApprove,
+    name: 'stub-text-remove',
+    checkText: (
+      c,
+    ) => (seen.push(`${c.kind}:${c.text}`),
+      Promise.resolve({ decision: 'remove', scores: { harassment: 0.98 }, reason: 'harassment' })),
+  };
+  const id = await addComment('you are awful');
+  const { json } = await call({ commentId: id }, reader, refuse);
+  assertEquals(json.data.outcome, 'removed');
+  assertEquals(seen, ['comment:you are awful']);
+  assertEquals(await ownerSeesComment(id), false, 'a refused comment stays hidden');
+});
+
+Deno.test('reserved usernames are refused at save, in any letter case', async () => {
+  const me = userClient(outsider.jwt).from('profiles');
+  for (const name of ['settings', 'Explore', 'PICKLD']) {
+    const { error } = await me.update({ username: name }).eq('id', outsider.id);
+    assertEquals(error?.code, '23514', name);
+    assertEquals(error?.message, 'username_reserved', name);
+  }
+  const fine = `jar_${crypto.randomUUID().slice(0, 8)}`;
+  const { error } = await me.update({ username: fine }).eq('id', outsider.id);
+  assertEquals(error, null, 'a name that only contains a route word is fine');
 });
 
 Deno.test('cleanup', cleanup);
