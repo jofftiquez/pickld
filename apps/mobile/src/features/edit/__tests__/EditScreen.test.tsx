@@ -1,10 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
+// After the testing library, which brings gesture-handler's jest mocks and its own Reanimated mock.
+import './mockReanimated';
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
 import EditScreen from '../../../../app/edit/[momentId]';
+import { editsSchema } from '../edits';
 import { filterMatrices } from '../filters';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
@@ -348,5 +351,41 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     await screen.findByTestId('editor-screen');
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.original);
     expect(filterButton('Original').props.accessibilityState).toMatchObject({ selected: true });
+  });
+});
+
+describe('Overlays (M2-13)', () => {
+  const savedEdits = {
+    v: 1,
+    filter: 'original',
+    overlays: [
+      { id: 's1', type: 'sticker', x: 0.5, y: 0.5, scale: 0.3, rotation: 0 },
+      { id: 's2', type: 'sticker', x: 0.25, y: 0.75, scale: 0.2, rotation: 0.5 },
+    ],
+  };
+
+  it('reopening draws the saved overlays; a change is one Undo step and Done saves it as data', async () => {
+    rows.set(7, { ...item, edits: savedEdits, editingSince: null });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    expect(screen.getByTestId('overlay-s1')).toBeTruthy();
+    expect(screen.getByTestId('overlay-s2')).toBeTruthy();
+    expect(screen.queryByTestId('editor-undo')).toBeNull();
+
+    // Through the accessibility actions (the gestures have their own test): move s1 right, then delete s2.
+    await fireEvent(screen.getByTestId('overlay-s1'), 'accessibilityAction', { nativeEvent: { actionName: 'right' } });
+    expect(screen.getByTestId('overlay-s1-selected')).toBeTruthy();
+    await fireEvent(screen.getByTestId('overlay-s2'), 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
+    expect(screen.queryByTestId('overlay-s2')).toBeNull();
+    await fireEvent.press(screen.getByTestId('editor-undo'));
+    expect(screen.getByTestId('overlay-s2')).toBeTruthy();
+    await fireEvent(screen.getByTestId('overlay-s2'), 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Done' }));
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+    const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
+    expect(edits.overlays).toHaveLength(1);
+    expect(edits.overlays[0]).toMatchObject({ id: 's1', type: 'sticker', y: 0.5, scale: 0.3, rotation: 0 });
+    expect(edits.overlays[0]?.x).toBeCloseTo(0.55, 10);
   });
 });
