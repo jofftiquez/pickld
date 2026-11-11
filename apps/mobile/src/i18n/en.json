@@ -101,6 +101,25 @@
   "jars": {
     "title": "Jars"
   },
+  "feed": {
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, unread",
+    "authors": "People you read",
+    "you": "You",
+    "authorNew": "{{name}}, new jar",
+    "updated": {
+      "now": "Updated just now",
+      "minutes": "Updated {{count}}m ago",
+      "hours": "Updated {{count}}h ago",
+      "days_one": "Updated yesterday",
+      "days_other": "Updated {{count}} days ago"
+    },
+    "count": "{{count}}/{{max}}",
+    "more": "+{{count}}",
+    "caption": "“{{caption}}”",
+    "cardLabel_one": "{{name}}’s jar, {{count}} of {{max}} moment. {{updated}}. {{likes}} likes, {{comments}} comments",
+    "cardLabel_other": "{{name}}’s jar, {{count}} of {{max}} moments. {{updated}}. {{likes}} likes, {{comments}} comments"
+  },
   "myDays": {
     "title": "My days",
     "subtitle_one": "{{month}} · {{count}} moment",

@@ -124,7 +124,7 @@ async function fetchPreviousTz(
   return data[0]?.tz ?? null;
 }
 
-async function fetchMe(userId: string): Promise<Me> {
+export async function fetchMe(userId: string): Promise<Me> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('profiles')
