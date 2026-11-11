@@ -1,7 +1,13 @@
 import { assertEquals } from 'jsr:@std/assert@1';
 import { handlePhotoRequest, type PhotoStore } from '../src/handler.ts';
 import { signPhotoToken, signPhotoUrl, verifyPhotoToken } from '../../../supabase/functions/_shared/photo_token.ts';
-import { isObjectKey, keyOwner, newMomentKeys, newProfileImageKey } from '../../../supabase/functions/_shared/object_keys.ts';
+import {
+  isObjectKey,
+  isStickerKey,
+  keyOwner,
+  newMomentKeys,
+  newProfileImageKey,
+} from '../../../supabase/functions/_shared/object_keys.ts';
 
 const SECRET = 'test-secret-that-is-at-least-32-characters-long';
 const OTHER_SECRET = 'another-secret-that-is-at-least-32-characters';
@@ -10,9 +16,11 @@ const USER = '0b6f4a8e-1c2d-4e5f-8a9b-0c1d2e3f4a5b';
 const BASE = 'https://photos.test';
 
 const keys = newMomentKeys(USER);
+const STICKER = 'stickers/everyday/kape-muna.png';
 const objects = new Map<string, string>([
   [keys.photo, 'FULL'],
   [keys.thumb, 'THUMB'],
+  [STICKER, 'PNG'],
 ]);
 const store: PhotoStore = {
   get(key) {
@@ -119,4 +127,40 @@ Deno.test('every upload gets a new key, so nothing is overwritten', () => {
   }
   assertEquals(isObjectKey('seed/photos/morning.jpg'), true);
   assertEquals(keyOwner('seed/photos/morning.jpg'), null);
+});
+
+Deno.test('sticker art is served without a token, cached as immutable', async () => {
+  const res = await get(`${BASE}/${STICKER}`);
+  assertEquals(res.status, 200);
+  assertEquals(res.body, 'PNG');
+  assertEquals(res.headers.get('content-type'), 'image/png');
+  assertEquals(res.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assertEquals((await get(`${BASE}/${STICKER}`, NOW, 'HEAD')).body, '');
+  assertEquals((await get(`${BASE}/stickers/everyday/missing.png`)).status, 404);
+  const put = await handlePhotoRequest(new Request(`${BASE}/${STICKER}`, { method: 'PUT' }), store, SECRET, NOW);
+  assertEquals(put.status, 405);
+});
+
+Deno.test('sticker keys are strict and are not photo keys', () => {
+  assertEquals(isStickerKey(STICKER), true);
+  assertEquals(isObjectKey(STICKER), false);
+  assertEquals(keyOwner(STICKER), null);
+  for (
+    const k of [
+      'stickers/everyday/kape-muna.jpg',
+      'stickers/Everyday/kape-muna.png',
+      'stickers/../moments/kape.png',
+      'stickers/everyday/sub/kape.png',
+      'stickers/kape-muna.png',
+      `stickers/${'a'.repeat(41)}/kape.png`,
+      keys.photo,
+    ]
+  ) {
+    assertEquals(isStickerKey(k), false, k);
+  }
+});
+
+Deno.test('a photo key without a token is still 403 next to public stickers', async () => {
+  assertEquals((await get(`${BASE}/${keys.photo}`)).status, 403);
+  assertEquals((await get(`${BASE}/stickers/../${keys.photo}`)).status, 403);
 });

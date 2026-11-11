@@ -1,7 +1,8 @@
 {
   "tasks": {
     "dev": "deno run --env-file=.env --allow-env --allow-net --allow-run=pnpm src/dev.ts",
-    "seed": "deno run --env-file=.env --allow-env --allow-net --allow-run=pnpm --allow-read=../../design/images scripts/seed-local.ts",
+    "seed": "deno run --env-file=.env --allow-env --allow-net --allow-run=pnpm --allow-read=../../design/images,../../assets/stickers scripts/seed-local.ts",
+    "stickers": "deno run --allow-env --allow-net --allow-run=pnpm --allow-read=../../assets/stickers scripts/upload-stickers.ts",
     "test": "deno test test/",
     "check": "deno check src/ scripts/ test/",
     "lint": "deno lint src/ scripts/ test/"

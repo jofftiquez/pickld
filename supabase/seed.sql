@@ -144,6 +144,7 @@ insert into public.comments (id, jar_id, user_id, parent_id, body, is_hidden, cr
 
 -- ---------------------------------------------------------------- photo bucket (local stand-in for R2)
 -- Private: photos are read only through the photo Worker with a token (D-12); uploads use presigned
--- URLs from fn:upload-url. `cd workers/photos && deno task seed` fills it with design/images.
+-- URLs from fn:upload-url. `cd workers/photos && deno task seed` fills it with design/images and the sticker
+-- art (assets/stickers, image/png; user uploads stay webp/jpeg, enforced by fn:upload-url).
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('photos', 'photos', false, 5242880, array['image/webp', 'image/jpeg']);
+values ('photos', 'photos', false, 5242880, array['image/webp', 'image/jpeg', 'image/png']);
