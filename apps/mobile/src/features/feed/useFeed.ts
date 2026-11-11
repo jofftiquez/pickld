@@ -73,7 +73,6 @@ export function useFeed() {
     jars: feed.data?.pages.flatMap((p) => p.jars),
     authors: authors.data,
     isLoading: feed.isLoading,
-    isRefreshing: feed.isRefetching && !feed.isFetchingNextPage,
     hasNextPage: feed.hasNextPage,
     isFetchingNextPage: feed.isFetchingNextPage,
     fetchNextPage: () => void feed.fetchNextPage(),

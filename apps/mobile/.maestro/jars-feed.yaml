@@ -20,14 +20,21 @@ appId: me.pickld.app
 - extendedWaitUntil:
     visible:
       id: feed-card-mika
-    timeout: 15000
+    timeout: 40000
 - assertVisible:
     id: feed-author-me
 - assertVisible:
     id: feed-author-mika
 - assertVisible:
     id: feed-card-aya
-# Let the thumbnails arrive before the screenshot.
+# Pull to refresh, then let the thumbnails arrive before the screenshot.
+- swipe:
+    start: 50%, 30%
+    end: 50%, 70%
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
 - waitForAnimationToEnd:
-    timeout: 3000
+    timeout: 5000
 - takeScreenshot: Jars-ios

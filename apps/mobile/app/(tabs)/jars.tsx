@@ -19,6 +19,8 @@ export default function JarsScreen() {
     queryFn: () => fetchMe(userId ?? ''),
     enabled: userId !== null,
   });
+  // The spinner shows only for a pull, not for background refetches (focus, reconnect, app start).
+  const [pulling, setPulling] = useState(false);
   // "Updated 2h ago" follows the clock.
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -44,11 +46,14 @@ export default function JarsScreen() {
       now={now}
       insets={insets}
       isLoading={feed.isLoading}
-      isRefreshing={feed.isRefreshing}
+      isRefreshing={pulling}
       isFetchingNextPage={feed.isFetchingNextPage}
       // TODO(M3-19): unread notifications and the Notifications screen.
       hasUnread={false}
-      onRefresh={() => void feed.refresh()}
+      onRefresh={() => {
+        setPulling(true);
+        void feed.refresh().finally(() => setPulling(false));
+      }}
       onEndReached={() => {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
