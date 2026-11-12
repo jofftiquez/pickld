@@ -13,16 +13,28 @@ const response = z.object({ data: z.object({ files: z.object({ file: signedUploa
 
 export type UploadedImage = { key: string; localUri: string };
 
-/** The uploaded photo's key and local preview, or null when the person cancels the picker. */
-export async function pickAndUploadProfileImage(kind: ProfileImageKind): Promise<UploadedImage | null> {
+export type PreparedImage = { uri: string; size: number };
+
+/** A picked photo prepared on the phone (cropped, JPEG, no location), or null when the person cancels. */
+export async function pickProfileImage(kind: ProfileImageKind): Promise<PreparedImage | null> {
   const picked = await pickFromGallery();
-  if (!picked) return null;
-  const prepared = await prepareProfileImage(picked.uri, kind);
+  return picked ? prepareProfileImage(picked.uri, kind) : null;
+}
+
+/** Uploads a prepared photo and returns its key. Needs an active profile (fn:upload-url, D-11). */
+export async function uploadProfileImage(prepared: PreparedImage, kind: ProfileImageKind): Promise<string> {
   const { data, error } = await getSupabase().functions.invoke<unknown>('upload-url', {
     body: { kind, file: { contentType: 'image/jpeg', size: prepared.size } },
   });
   if (error) throw new Error(error.message);
   const { file } = response.parse(data).data.files;
   await putWithUploadTask(prepared.uri, file);
-  return { key: file.key, localUri: prepared.uri };
+  return file.key;
+}
+
+/** The uploaded photo's key and local preview, or null when the person cancels the picker. */
+export async function pickAndUploadProfileImage(kind: ProfileImageKind): Promise<UploadedImage | null> {
+  const prepared = await pickProfileImage(kind);
+  if (!prepared) return null;
+  return { key: await uploadProfileImage(prepared, kind), localUri: prepared.uri };
 }
