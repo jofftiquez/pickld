@@ -596,9 +596,74 @@ export type Database = {
           },
         ];
       };
+      notification_prefs: {
+        Row: {
+          appeal_decided: boolean;
+          comment: boolean;
+          friend_joined: boolean;
+          full_jar: boolean;
+          like: boolean;
+          new_reader: boolean;
+          quiet_end: string;
+          quiet_hours: boolean;
+          quiet_start: string;
+          removed: boolean;
+          reply: boolean;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          appeal_decided?: boolean;
+          comment?: boolean;
+          friend_joined?: boolean;
+          full_jar?: boolean;
+          like?: boolean;
+          new_reader?: boolean;
+          quiet_end?: string;
+          quiet_hours?: boolean;
+          quiet_start?: string;
+          removed?: boolean;
+          reply?: boolean;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          appeal_decided?: boolean;
+          comment?: boolean;
+          friend_joined?: boolean;
+          full_jar?: boolean;
+          like?: boolean;
+          new_reader?: boolean;
+          quiet_end?: string;
+          quiet_hours?: boolean;
+          quiet_start?: string;
+          removed?: boolean;
+          reply?: boolean;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notification_prefs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notification_prefs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       notifications: {
         Row: {
           actor_id: string | null;
+          comment_id: string | null;
           created_at: string;
           id: string;
           jar_id: string | null;
@@ -610,6 +675,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           actor_id?: string | null;
+          comment_id?: string | null;
           created_at?: string;
           id?: string;
           jar_id?: string | null;
@@ -620,6 +686,7 @@ export type Database = {
         };
         Update: {
           actor_id?: string | null;
+          comment_id?: string | null;
           created_at?: string;
           id?: string;
           jar_id?: string | null;
@@ -641,6 +708,13 @@ export type Database = {
             columns: ['actor_id'];
             isOneToOne: false;
             referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notifications_comment_id_fkey';
+            columns: ['comment_id'];
+            isOneToOne: false;
+            referencedRelation: 'comments';
             referencedColumns: ['id'];
           },
           {
@@ -1364,6 +1438,18 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      notify: {
+        Args: {
+          p_actor?: string;
+          p_comment?: string;
+          p_jar?: string;
+          p_moment?: string;
+          p_type: string;
+          p_user: string;
+        };
+        Returns: undefined;
+      };
+      notify_friend_joined: { Args: { p_friends: string[]; p_new_user: string }; Returns: number };
       pack_usable: {
         Args: {
           p: Omit<
