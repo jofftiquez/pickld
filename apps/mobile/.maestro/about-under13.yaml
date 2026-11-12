@@ -1,0 +1,112 @@
+# M4-02 + M4-04: Sign up with a new email → link from Mailpit → a new account lands on About you
+# (FR-ACC-01). Fill it in (captured), then a birthday under 13 → Under 13; account-purge deletes the
+# account and the phone is signed out (FR-ACC-04). Needs local Mailpit on 55424 and fn:account-purge served.
+# Ends signed out: sign dale back in afterwards (scripts/dev-sign-in.sh).
+# maestro test apps/mobile/.maestro/about-under13.yaml
+appId: me.pickld.app
+---
+- launchApp
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 60000
+- tapOn:
+    id: welcome-get-started
+- tapOn:
+    id: intro-skip
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 10000
+- runScript: new-email.js
+- tapOn:
+    id: auth-email
+- inputText: ${output.email}
+- hideKeyboard
+- tapOn:
+    id: auth-submit
+- extendedWaitUntil:
+    visible:
+      id: check-email-screen
+    timeout: 15000
+- runScript:
+    file: mailpit-link.js
+    env:
+      EMAIL: ${output.email}
+- openLink: ${output.link}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: about-screen
+    timeout: 30000
+- tapOn:
+    id: about-name
+- inputText: Dale David
+- tapOn:
+    id: about-username
+- inputText: dale.david
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: about-username-available
+    timeout: 10000
+- tapOn:
+    id: about-month
+- tapOn:
+    id: about-month-3
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-day
+- scrollUntilVisible:
+    element:
+      id: about-day-14
+    direction: DOWN
+- tapOn:
+    id: about-day-14
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-year
+- scrollUntilVisible:
+    element:
+      id: about-year-1990
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: about-year-1990
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: About-ios
+# Under 13: a birthday this year's children have.
+- tapOn:
+    id: about-year
+- tapOn:
+    id: about-year-2020
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-continue
+- extendedWaitUntil:
+    visible:
+      id: under13-screen
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Under13-ios
+- tapOn:
+    id: under13-start
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 10000
