@@ -73,3 +73,10 @@ export function pushCronSecret(): string {
 export function expoAccessToken(): string | undefined {
   return Deno.env.get('EXPO_ACCESS_TOKEN') || undefined;
 }
+
+/** A client with only the anon key and no caller (fn:public-page): Postgres decides what anon may read. */
+export function anonClient(): SupabaseClient {
+  return createClient(required('SUPABASE_URL'), required('SUPABASE_ANON_KEY'), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}

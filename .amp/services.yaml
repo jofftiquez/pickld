@@ -9,3 +9,7 @@ services:
     command: deno task dev
     cwd: workers/photos
     port: 55430
+  # Shared-link site (apps/web, M4-13): http://127.0.0.1:3100/dale, /j/<jar id>. Needs fn-serve.
+  web:
+    command: pnpm --filter @pickld/web dev
+    port: 3100
