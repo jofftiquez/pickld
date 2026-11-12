@@ -20,11 +20,14 @@ appId: me.pickld.app
     timeout: 20000
 - tapOn:
     id: dev-notifications-allow
+# The prompt can be answered before the tap lands (it was seen, then gone), so the tap is optional.
 - runFlow:
     when:
       visible: '^Allow$'
     commands:
-      - tapOn: '^Allow$'
+      - tapOn:
+          text: '^Allow$'
+          optional: true
 - extendedWaitUntil:
     visible: 'Permission: granted'
     timeout: 10000

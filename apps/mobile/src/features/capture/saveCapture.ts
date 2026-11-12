@@ -43,9 +43,14 @@ function deleteQuietly(uri: string): void {
   }
 }
 
-/** The jar date a camera photo is queued under: the open jar's, else today's in the phone zone. */
+/**
+ * The jar date and zone a camera photo is queued under: the open jar's, else today's in the phone zone.
+ * Joining the open jar keeps that jar's zone: after flying west its date can be ahead of the phone's, and
+ * ensure_jar refuses a date that is still in the future in the zone it is given.
+ */
 export function captureJarDate(input: { tz: string; shotAt: Date; openJar: OpenJar | null }): {
   localDate: string;
+  tz: string;
   capturedAt: string;
 } {
   const { tz, shotAt, openJar } = input;
@@ -54,25 +59,26 @@ export function captureJarDate(input: { tz: string; shotAt: Date; openJar: OpenJ
   const jars = openJar ? [{ id: openJar.id, local_date: openJar.localDate, tz: openJar.tz }] : [];
   // No targetDate: a photo taken now joins the open jar even when the phone's date differs (travel rule).
   const decision = chooseJar({ jars, phoneTz: tz, now: shotAt });
+  if (decision.action === 'use')
+    return { localDate: decision.jar.local_date, tz: decision.jar.tz, capturedAt: info.capturedAt };
   return {
     localDate: decision.action === 'create' ? decision.localDate : decision.jar.local_date,
+    tz: decision.tz,
     capturedAt: info.capturedAt,
   };
 }
 
 /**
  * The queue row's jar date and zone. Fill this jar uses its past date and that jar's zone (the server sets
- * is_backfilled); a normal capture goes through `captureJarDate` with the phone zone, unchanged.
+ * is_backfilled); a normal capture goes through `captureJarDate`.
  */
 export function queueTarget(input: Pick<SaveCaptureInput, 'tz' | 'shotAt' | 'openJar' | 'fill'>): {
   localDate: string;
   tz: string;
   capturedAt: string;
 } {
-  const { localDate, capturedAt } = captureJarDate(input);
-  return input.fill
-    ? { localDate: input.fill.localDate, tz: input.fill.tz, capturedAt }
-    : { localDate, tz: input.tz, capturedAt };
+  const target = captureJarDate(input);
+  return input.fill ? { localDate: input.fill.localDate, tz: input.fill.tz, capturedAt: target.capturedAt } : target;
 }
 
 export type QueueTarget = ReturnType<typeof queueTarget>;
@@ -97,7 +103,7 @@ export function galleryTarget(input: {
   const info = captureInfo(exif, tz, now);
   if (fill) return { localDate: fill.localDate, tz: fill.tz, capturedAt: info.capturedAt };
   if (info.localDate < localDateIn(now, tz)) return { localDate: info.localDate, tz, capturedAt: info.capturedAt };
-  return { localDate: captureJarDate({ tz, shotAt: now, openJar }).localDate, tz, capturedAt: info.capturedAt };
+  return { ...captureJarDate({ tz, shotAt: now, openJar }), capturedAt: info.capturedAt };
 }
 
 /** Copies the raw photo into the queue (one file copy and one SQLite row), then prepares it in the
