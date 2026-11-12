@@ -1,6 +1,6 @@
 // fn:account-purge against the local stack: an Under 13 sign-up (an auth user with no profile) is deleted
 // with every object under their prefixes and every auth row naming them; established accounts and other
-// people are untouched. Auth tables aren't exposed through the API, so they are read with `supabase db query`.
+// people are untouched. Auth tables aren't exposed through the API, so they are read with psql in the database container.
 import { assert, assertEquals } from 'jsr:@std/assert@1';
 import { createClient } from '../_shared/deps.ts';
 import { userClient } from '../_shared/env.ts';
@@ -79,15 +79,16 @@ async function listed(userId: string): Promise<string[]> {
 }
 
 async function sql<T>(query: string): Promise<T[]> {
-  const out = await new Deno.Command('pnpm', {
-    args: ['exec', 'supabase', 'db', 'query', query, '-o', 'json'],
+  // psql in the stack's database container (named from config.toml's project_id, here and in CI); the
+  // CLI's `db query` JSON differs between versions.
+  const out = await new Deno.Command('docker', {
+    args: ['exec', 'supabase_db_pickld', 'psql', '-U', 'postgres', '-At', '-c',
+      `select coalesce(json_agg(t), '[]') from (${query}) t`],
     stdout: 'piped',
     stderr: 'piped',
   }).output();
-  const text = new TextDecoder().decode(out.stdout);
-  if (!out.success || !text.includes('{')) throw new Error(`db query failed: ${new TextDecoder().decode(out.stderr)}`);
-  // The CLI may print notices before or after the JSON (CI does), so parse only the outermost object.
-  return (JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)) as { rows: T[] }).rows;
+  if (!out.success) throw new Error(`psql failed: ${new TextDecoder().decode(out.stderr)}`);
+  return JSON.parse(new TextDecoder().decode(out.stdout)) as T[];
 }
 
 /** Rows anywhere that name the user: auth, storage, and every public table keyed to a user. */
