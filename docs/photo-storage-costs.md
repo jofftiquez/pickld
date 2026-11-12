@@ -9,20 +9,20 @@ Prices checked on 12 Nov 2026 against the [R2 pricing page](https://developers.c
 The app uploads two WebP files for each moment (`src/lib/image/pipeline.ts`): the photo at 1440×1920, quality 0.85, and a thumbnail at 480×640, quality 0.8. Assume about **0.45 MB per moment**: roughly 400 KB for the photo and 45 KB for the thumbnail. That's an estimate. Replace it with the real average from the bucket's metrics once there is traffic. Objects are never overwritten, so storage only grows, except when people delete moments or accounts.
 
 | Daily users (filling 4 slots a day on average) | Photos added a month | Storage after 12 months |
-| --- | --- | --- |
-| 1,000 | about 53 GB | about 0.6 TB |
-| 10,000 | about 530 GB | about 6.4 TB |
-| 50,000 | about 2.7 TB | about 32 TB |
+| ---------------------------------------------- | -------------------- | ----------------------- |
+| 1,000                                          | about 53 GB          | about 0.6 TB            |
+| 10,000                                         | about 530 GB         | about 6.4 TB            |
+| 50,000                                         | about 2.7 TB         | about 32 TB             |
 
 ## R2 and B2 side by side
 
-| | Cloudflare R2 (Standard) | Backblaze B2 behind Cloudflare |
-| --- | --- | --- |
-| Storage | $0.015 per GB-month (first 10 GB free) | $0.00695 per GB-month ($6.95 per TB; first 10 GB free) |
-| Uploads (2 per moment) | $4.50 per million after 1 million free a month | Free |
-| Reads by the photo Worker | $0.36 per million after 10 million free a month | Free |
-| Bandwidth to viewers | Free | Free through Cloudflare (Bandwidth Alliance); other egress free up to 3× stored data |
-| How the Worker reads photos | R2 binding (today) | A signed S3 `GET` to B2 (`_shared/sigv4.ts` already signs requests) |
+|                             | Cloudflare R2 (Standard)                        | Backblaze B2 behind Cloudflare                                                       |
+| --------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Storage                     | $0.015 per GB-month (first 10 GB free)          | $0.00695 per GB-month ($6.95 per TB; first 10 GB free)                               |
+| Uploads (2 per moment)      | $4.50 per million after 1 million free a month  | Free                                                                                 |
+| Reads by the photo Worker   | $0.36 per million after 10 million free a month | Free                                                                                 |
+| Bandwidth to viewers        | Free                                            | Free through Cloudflare (Bandwidth Alliance); other egress free up to 3× stored data |
+| How the Worker reads photos | R2 binding (today)                              | A signed S3 `GET` to B2 (`_shared/sigv4.ts` already signs requests)                  |
 
 Cloudflare Worker requests and the CDN cost the same either way, so they aren't included.
 
@@ -30,12 +30,12 @@ Cloudflare Worker requests and the CDN cost the same either way, so they aren't 
 
 R2 storage reaches $100 a month at about **6.7 TB**. That's about 12–13 months in at 10,000 daily users. At that size:
 
-| Monthly cost | R2 | B2 behind Cloudflare |
-| --- | --- | --- |
-| Storage (6.7 TB) | about $100 | about $46 |
-| Uploads (about 2.4 million) | about $6 | $0 |
-| Reads (about 15 million: 10,000 users × 50 photo views a day) | about $2 | $0 |
-| **Total** | **about $108** | **about $46** |
+| Monthly cost                                                  | R2             | B2 behind Cloudflare |
+| ------------------------------------------------------------- | -------------- | -------------------- |
+| Storage (6.7 TB)                                              | about $100     | about $46            |
+| Uploads (about 2.4 million)                                   | about $6       | $0                   |
+| Reads (about 15 million: 10,000 users × 50 photo views a day) | about $2       | $0                   |
+| **Total**                                                     | **about $108** | **about $46**        |
 
 B2 is about **45% of R2's storage price**, which works out to a little under half of the bill. The architecture plan's earlier figure was "about a third", so it has been updated. The saving grows in step with storage: about $260 a month at 32 TB.
 
