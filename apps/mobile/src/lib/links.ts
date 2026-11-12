@@ -61,3 +61,7 @@ export function incomingLink(raw: string): IncomingLink {
   }
   return { kind: 'unknown' };
 }
+
+/** Where Contact support and Send feedback write to (FR-SET-02). */
+export const SUPPORT_EMAIL = 'support@pickld.me';
+export const GUIDELINES_URL = `${WEB_BASE_URL}/guidelines`;

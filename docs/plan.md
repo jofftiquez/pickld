@@ -1059,7 +1059,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** S · **Requirements:** FR-SET-02, FR-PRV-04 · **Depends on:** M4-16 · **Issue:** #107
 - **Goal:** Searchable FAQ, Contact support and Send feedback with app version, guidelines link (T-304, part 2).
 - **Acceptance:**
-  - [ ] Email or form includes the app version.
+  - [x] Email or form includes the app version.
 - **Tests:** Jest.
 - **Screenshots:** Help & feedback.
 - **Design:** Help
