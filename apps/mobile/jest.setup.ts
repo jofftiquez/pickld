@@ -27,3 +27,15 @@ jest.mock('@shopify/react-native-skia', () => {
     screen: { ...Dimensions.get('screen'), fontScale: 1 },
   });
 }
+
+// Home screen widgets (M6-09) need the native extension, which tests don't have; the widget layouts run in
+// the widget's own JavaScript runtime, never in Jest.
+jest.mock('expo-widgets', () => {
+  const widget = { updateTimeline: jest.fn(), updateSnapshot: jest.fn(), reload: jest.fn() };
+  return { createWidget: () => widget, widgetsDirectory: null };
+});
+jest.mock('@/features/widgets/widgets', () => ({
+  TodayWidget: { updateTimeline: jest.fn(), updateSnapshot: jest.fn() },
+  FriendWidget: { updateTimeline: jest.fn(), updateSnapshot: jest.fn() },
+  widgetColors: {},
+}));
