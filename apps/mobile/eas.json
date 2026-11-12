@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-json/schema/eas.schema.json",
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "node": "24.11.0",
+      "pnpm": "12.0.0",
+      "ios": { "resourceClass": "large" }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "environment": "preview",
+      "env": { "EXPO_PUBLIC_APP_ENV": "staging" }
+    },
+    "beta": {
+      "extends": "base",
+      "distribution": "store",
+      "environment": "preview",
+      "autoIncrement": true,
+      "env": { "EXPO_PUBLIC_APP_ENV": "staging" }
+    },
+    "production": {
+      "extends": "base",
+      "distribution": "store",
+      "environment": "production",
+      "autoIncrement": true,
+      "env": { "EXPO_PUBLIC_APP_ENV": "production" }
+    }
+  },
+  "submit": {
+    "beta": {
+      "android": { "track": "internal", "releaseStatus": "completed" },
+      "ios": {}
+    },
+    "production": {
+      "android": { "track": "production", "releaseStatus": "draft" },
+      "ios": {}
+    }
+  }
+}

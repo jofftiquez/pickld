@@ -34,6 +34,8 @@ const config: ExpoConfig = {
     infoPlist: {
       NSCameraUsageDescription: en.camera.permissionDescription,
       NSPhotoLibraryUsageDescription: en.gallery.permissionDescription,
+      // HTTPS and on-phone hashing only (exempt), so TestFlight doesn't ask about export compliance.
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
@@ -97,6 +99,11 @@ const config: ExpoConfig = {
     ],
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
+  // EAS Build (M4-22): the founders' Expo project. Unset locally; set in the EAS environment or the shell
+  // (`EAS_PROJECT_ID=… npx eas-cli build --profile beta`).
+  ...(process.env.EAS_PROJECT_ID
+    ? { owner: process.env.EXPO_OWNER, extra: { eas: { projectId: process.env.EAS_PROJECT_ID } } }
+    : {}),
 };
 
 export default config;
