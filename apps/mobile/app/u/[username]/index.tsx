@@ -4,6 +4,7 @@ import { Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileView } from '@/features/profile/ProfileView';
+import { useFollow } from '@/features/profile/useFollow';
 import { useProfile } from '@/features/profile/useProfile';
 import { profileUrl } from '@/lib/links';
 
@@ -15,6 +16,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { username } = useLocalSearchParams<{ username: string }>();
   const { data, failed, refresh } = useProfile(username);
+  const follow = useFollow(data?.viewerId ?? null);
 
   const back = () => {
     if (router.canGoBack()) router.back();
@@ -31,6 +33,21 @@ export default function ProfileScreen() {
       onOpenMoment={(momentId, jarId) =>
         router.push({ pathname: '/moment/[id]', params: { id: momentId, jar: jarId } })
       }
+      onToggleReading={() => {
+        if (data) {
+          follow.setReading({
+            authorId: data.profile.id,
+            username: data.profile.username,
+            reading: !data.relationship.reading,
+          });
+        }
+      }}
+      followBusy={follow.busy}
+      onOpenList={(list) => {
+        if (data) {
+          router.push({ pathname: '/u/[username]/readers', params: { username: data.profile.username, list } });
+        }
+      }}
       onShare={() => {
         if (data) {
           void Share.share({

@@ -58,6 +58,7 @@ export default function RootLayout() {
         <Stack.Screen name="moment/[id]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="jar/[id]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="u/[username]/index" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        <Stack.Screen name="u/[username]/readers" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="comments/[jarId]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="publish" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         {/* Celebrations fade in; Reduce Motion keeps the fade and drops the confetti (NFR-A11Y-02). */}

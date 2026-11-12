@@ -610,6 +610,38 @@
     "unavailableBody": "The account may not exist, or it isn’t open to you.",
     "failed": "Couldn’t load this profile.",
     "retry": "Try again",
-    "openMine": "Opens your profile"
+    "openMine": "Opens your profile",
+    "openListHint": "Opens the list"
+  },
+  "follow": {
+    "read": "Read",
+    "readBack": "Read back",
+    "reading": "Reading",
+    "readA11y": "Read {{name}}",
+    "readBackA11y": "Read back {{name}}",
+    "readingA11y": "Reading {{name}}",
+    "readHint": "Their jars show up in your Jars tab",
+    "readBackHint": "They read you; their jars show up in your Jars tab",
+    "readingHint": "Stops reading their days"
+  },
+  "readers": {
+    "back": "Back",
+    "lists": "Readers and authors",
+    "readersTab_one": "{{value}} Reader",
+    "readersTab_other": "{{value}} Readers",
+    "authorsTab_one": "{{value}} Author",
+    "authorsTab_other": "{{value}} Authors",
+    "searchReaders": "Search readers",
+    "searchAuthors": "Search authors",
+    "row": "{{name}}, @{{username}}",
+    "openHint": "Opens their profile",
+    "noReaders": "No readers yet.",
+    "noAuthors": "Not reading anyone yet.",
+    "noMatch": "No one matches that search.",
+    "failed": "Couldn’t load this list.",
+    "remove": "Remove reader",
+    "removeTitle": "Remove {{name}}?",
+    "removeMessage": "They won’t see your readers-only jars anymore. We won’t tell them.",
+    "removeTip": "Press and hold a reader to remove them."
   }
 }

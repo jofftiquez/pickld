@@ -28,6 +28,26 @@ export type Relationship = {
 
 export type ProfileData = { profile: ProfileRow; relationship: Relationship; viewerId: string };
 
+/** The follow button's state (D-7): Reading unfollows; Read back when they already read you; else Read. */
+export type FollowAction = 'read' | 'readBack' | 'reading';
+
+export function followAction({ reading, readsYou }: Relationship): FollowAction {
+  return reading ? 'reading' : readsYou ? 'readBack' : 'read';
+}
+
+/**
+ * The profile with the viewer reading (or no longer reading) it, and its reader count moved by one: the
+ * optimistic update (FR-SOC-07). Setting the state it already has changes nothing.
+ */
+export function withReading<T extends Pick<ProfileData, 'profile' | 'relationship'>>(data: T, reading: boolean): T {
+  if (data.relationship.reading === reading) return data;
+  return {
+    ...data,
+    profile: { ...data.profile, reader_count: Math.max(0, data.profile.reader_count + (reading ? 1 : -1)) },
+    relationship: { ...data.relationship, reading },
+  };
+}
+
 /** A moment row with the jar it belongs to, as the profile grids fetch it. */
 export type ProfileMoment = JarMoment & { jar_id: string };
 

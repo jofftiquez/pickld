@@ -22,6 +22,7 @@ export const icons = {
   close: [p('M6 6l12 12M18 6 6 18')],
   check: [p('M5 12.5l4.5 4.5L19 7')],
   plus: [p('M12 5v14M5 12h14')],
+  search: [c(11, 11, 7), p('m20 20-4-4')],
   more: [c(5, 12, 1.2), c(12, 12, 1.2), c(19, 12, 1.2)],
   share: [p('M12 3v12M7 8l5-5 5 5M5 14v6h14v-6')],
   link: [
