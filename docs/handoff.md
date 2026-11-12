@@ -54,7 +54,7 @@ Plan order: M6-01 RevenueCat webhook 🔑 (#125), M6-02 Sticker shop (#126), M6-
 - **Overnight-style work:** keep going between issues. Never end a turn while waiting on CI: block with `timeout 55 gh pr checks N --watch --interval 15` and loop.
 - **Merging:** merge your own PRs (`gh pr merge N --squash --delete-branch`) after a green `ci`. Then tick the issue boxes and close the issue, or comment if it stays open for founder work.
 - **Commits:** format is `FR-ID: description`. The runner may have a global hook that adds a co-author line, so commit with `git -c core.hooksPath=/dev/null commit` if it does.
-- **Public repo:** never commit secrets, `.env.example` only. Restore `supabase/functions/deno.lock` before committing, and scan diffs before pushing.
+- **Public repo:** never commit secrets, `.env.example` only. Restore `supabase/functions/deno.lock` before committing, and scan diffs before pushing. Scan every diff for `eyJ`, `sk-`, `phc_`, `service_role`, `sb_secret` and `-----BEGIN`; vendor keys live in the runner's local env or Amp secrets.
 - **Screenshots:** when a screen PR merges, send the Space thread design next to iOS images with send_thread_message `media_paths`. Start each report with "Worker report from <thread URL>:" and use the parts Result / Not done / Where / Next. No Android captures; say so once per report.
 - **Subagents:** allowed for parts that don't touch the same files, each in its own git worktree.
 
