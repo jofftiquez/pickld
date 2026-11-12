@@ -1,0 +1,97 @@
+# M3-15: My profile → Edit profile (design: EditProfile). Live username availability (taken, then
+# available), a new name and lid, Save, and the profile shows them; then everything is put back so the
+# seed ends as it started. The photo picker is system UI Maestro can't drive, so photos aren't changed here.
+# Needs the seed data (mika exists) and dale signed in:
+# maestro test apps/mobile/.maestro/edit-profile.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: today-avatar
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: today-avatar
+- extendedWaitUntil:
+    visible:
+      id: profile-edit
+    timeout: 40000
+- tapOn:
+    id: profile-edit
+- extendedWaitUntil:
+    visible:
+      id: edit-profile-name
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: EditProfile-ios
+# Taken, then available, each well within the 500 ms target once typing stops.
+- tapOn:
+    id: edit-profile-username
+- eraseText: 20
+- inputText: mika
+- extendedWaitUntil:
+    visible:
+      id: edit-profile-username-taken
+    timeout: 5000
+- eraseText: 20
+- inputText: dale.edit
+- extendedWaitUntil:
+    visible:
+      id: edit-profile-username-available
+    timeout: 5000
+- tapOn:
+    id: edit-profile-name
+- eraseText: 40
+- inputText: Dale Edited
+- pressKey: Enter
+- tapOn:
+    id: edit-profile-lid-sky
+- takeScreenshot: EditProfileChanged-ios
+- tapOn:
+    id: edit-profile-save
+- extendedWaitUntil:
+    visible:
+      id: profile-username
+      text: '@dale.edit'
+    timeout: 20000
+- assertVisible:
+    id: profile-name
+    text: Dale Edited
+# Put it back.
+- tapOn:
+    id: profile-edit
+- extendedWaitUntil:
+    visible:
+      id: edit-profile-name
+    timeout: 20000
+- tapOn:
+    id: edit-profile-username
+- eraseText: 20
+- inputText: dale
+- tapOn:
+    id: edit-profile-name
+- eraseText: 40
+- inputText: Dale Santos
+- pressKey: Enter
+- tapOn:
+    id: edit-profile-lid-pickle
+- extendedWaitUntil:
+    visible:
+      id: edit-profile-save
+      enabled: true
+    timeout: 5000
+- tapOn:
+    id: edit-profile-save
+- extendedWaitUntil:
+    visible:
+      id: profile-username
+      text: '@dale'
+    timeout: 20000
+- assertVisible:
+    id: profile-name
+    text: Dale Santos

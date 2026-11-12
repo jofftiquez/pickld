@@ -35,7 +35,29 @@ async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null
   return new Map(results.flat().map((m) => [m.id, m.thumb]));
 }
 
-export type ProfilePage = ProfileData & { jars: ProfileJar[] };
+const profileImagesResponse = z.object({
+  data: z.object({
+    profiles: z.array(z.object({ id: z.string(), avatar: z.string().nullable(), cover: z.string().nullable() })),
+  }),
+});
+
+export type ProfileImages = { avatar: string | null; cover: string | null };
+
+/** Signed avatar and cover URLs from `fn:photo-urls` (0018 makes sure they are the person's own photos). */
+export async function profileImages(profileId: string): Promise<ProfileImages> {
+  const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', {
+    body: { profileIds: [profileId] },
+  });
+  const parsed = profileImagesResponse.safeParse(data);
+  const row = error || !parsed.success ? undefined : parsed.data.data.profiles[0];
+  return { avatar: row?.avatar ?? null, cover: row?.cover ?? null };
+}
+
+export type ProfilePage = ProfileData & {
+  jars: ProfileJar[];
+  /** Optional: caches from before M3-15 lack it. */
+  images?: ProfileImages;
+};
 
 const followRow = z.object({ reader_id: z.string(), author_id: z.string() });
 
@@ -83,11 +105,12 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
           .eq('status', 'live');
   if (moments.error) throw new Error(moments.error.message);
   const rows = z.array(jarMomentRow.extend({ jar_id: z.string() })).parse(moments.data);
-  const urls = await thumbUrls(rows.map((m) => m.id));
+  const [urls, images] = await Promise.all([thumbUrls(rows.map((m) => m.id)), profileImages(profile.id)]);
   return {
     profile,
     relationship: relationshipOf(z.array(followRow).parse(follows.data), viewerId, profile.id),
     viewerId,
+    images,
     jars: buildProfileJars(
       jarRows,
       rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null, fullUrl: null })),

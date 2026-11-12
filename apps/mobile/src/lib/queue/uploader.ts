@@ -15,7 +15,7 @@ import { getItem, isHeldForEditing, listQueue, removeItem, saveStatus, saveUploa
 
 export type UploaderClient = Pick<SupabaseClient<Database>, 'rpc' | 'from' | 'functions'>;
 
-const signedUploadSchema = z.object({
+export const signedUploadSchema = z.object({
   key: z.string().min(1),
   url: z.url(),
   method: z.literal('PUT'),

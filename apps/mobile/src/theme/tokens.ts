@@ -136,6 +136,7 @@ export const radius = {
   thumb: 10,
   reviewSlot: 12, // the 8 slots on Publish review (Publish)
   thumbLg: 14,
+  lidChoice: 12, // jar lid colour squares (EditProfile)
   mosaicLarge: 16, // large photo in a feed jar card's mosaic (Feed); the small ones use thumbLg
   dayCell: 13, // My days calendar cells (Calendar)
   fillBar: 2,
@@ -239,6 +240,8 @@ export const sizes = {
   avatarMd: 52, // Settings profile row
   avatarLg: 64, // Block dialog
   avatarXl: 88, // profile header
+  avatarEdit: 80, // Edit profile, over the cover
+  avatarEditBadge: 28, // green camera badge on it
   avatarHeader: 44, // Today header, next to the calendar button (Main)
   avatarRing: 3, // white ring on profile headers
   handleWidth: 40,
@@ -308,6 +311,12 @@ export const sizes = {
   profileAvatarOverlap: 44, // how far the profile avatar rises into the cover
   profileButton: 40, // Edit profile pill beside the avatar (Profile)
   profileTileFade: 50, // bottom fade under a profile grid tile's date and count
+  editCover: 120, // cover preview on Edit profile (EditProfile)
+  editAvatarOverlap: 36, // how far its avatar rises into the cover
+  changeCover: 34, // "Change cover" pill on the cover
+  lidChoice: 36, // jar lid colour squares (EditProfile)
+  lidRing: 2, // ink ring on the chosen one
+  lidJar: 40, // jar beside them, wearing the chosen lid
   jarTile: 112, // tile height in the Jar page's 3-column grid (Story)
   jarTileFade: 48, // bottom fade under a Jar page tile's #slot
   momentProgress: 3, // height of each of Moment detail's 8 progress bars (Moment)
