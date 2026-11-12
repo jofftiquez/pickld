@@ -204,7 +204,8 @@ Deno.test('setup', async () => {
     strays.push(k);
   }
   strays.push(...[...photos.keys()].filter((k) => k.includes(other.id)));
-  assert(await exists(SEED_KEY), 'the seed photos are in the bucket (deno task seed)');
+  // CI doesn't run `deno task seed`; a stand-in keeps the "seed survives" check meaningful there.
+  if (!(await exists(SEED_KEY))) await put(SEED_KEY, new Uint8Array([7, 8, 9]));
 });
 
 // ---------------------------------------------------------------- export
