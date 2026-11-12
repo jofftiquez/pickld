@@ -1068,7 +1068,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** backend · **Priority:** P0 · **Size:** M · **Requirements:** FR-PRV-02, FR-PRV-03 · **Depends on:** M1-15 · **Issue:** #108
 - **Goal:** `fn:data-export` zip by link within 24 h; `fn:account-delete` hides the profile at once; purge job removes everything within 30 days; `account_jobs` table (T-305).
 - **Acceptance:**
-  - [ ] Profile hidden immediately; purge verified in tests.
+  - [x] Profile hidden immediately; purge verified in tests.
 - **Tests:** Deno tests; pgTAP.
 - **Screenshots:** —
 - **Design:** —
@@ -1077,7 +1077,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** S · **Requirements:** FR-PRV-02, FR-PRV-03 · **Depends on:** M4-18, M4-16 · **Issue:** #109
 - **Goal:** What gets removed, Download first, type DELETE, Delete my account (T-304, part 3).
 - **Acceptance:**
-  - [ ] Button enabled only after typing DELETE.
+  - [x] Button enabled only after typing DELETE.
 - **Tests:** Jest.
 - **Screenshots:** Delete account.
 - **Design:** Delete
