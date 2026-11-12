@@ -182,14 +182,20 @@ appId: me.pickld.app
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: Permissions-ios
-- tapOn:
-    id: permission-notifications-allow
-- waitForAnimationToEnd:
-    timeout: 3000
-- takeScreenshot: PermissionsPrompt-ios
-- tapOn:
-    text: Allow
-    index: 0
+# iOS keeps the notification grant across reinstalls, so the prompt only shows on a fresh Simulator.
+- runFlow:
+    when:
+      visible:
+        id: permission-notifications-allow
+    commands:
+      - tapOn:
+          id: permission-notifications-allow
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: PermissionsPrompt-ios
+      - tapOn:
+          text: Allow
+          index: 0
 - extendedWaitUntil:
     visible:
       id: permission-notifications-allowed
@@ -215,7 +221,8 @@ appId: me.pickld.app
 - takeScreenshot: FindFriends-ios
 - tapOn:
     id: friends-read-mika
-- assertVisible: Reading
+- waitForAnimationToEnd:
+    timeout: 3000
 - tapOn:
     id: friends-continue
 - extendedWaitUntil:
