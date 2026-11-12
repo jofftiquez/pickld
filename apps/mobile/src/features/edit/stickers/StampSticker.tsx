@@ -37,6 +37,7 @@ export function StampSticker({ text, width, height, testID }: StampStickerProps)
           },
         ]}
       >
+        {/* a11y-fixed-size: part of the sticker artwork, scaled with the sticker */}
         <Text
           style={[textStyle('body', '800'), styles.text, { fontSize: s.text * height }]}
           allowFontScaling={false}

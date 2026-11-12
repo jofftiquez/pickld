@@ -5,7 +5,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { JarGraphic } from '@/components/JarGraphic';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, sizes, space } from '@/theme/tokens';
 
 export type Under13ViewProps = { insets: EdgeInsets; onBackToStart: () => void };
@@ -21,7 +21,11 @@ export function Under13View({ insets, onBackToStart }: Under13ViewProps) {
       <RoundIconButton icon="back" accessibilityLabel={t('setup.back')} onPress={onBackToStart} testID="under13-back" />
       <View style={styles.middle}>
         <JarGraphic count={0} size={sizes.under13Jar} decorative />
-        <Text accessibilityRole="header" style={[textStyle('celebrationTitle'), styles.center, { color: colors.ink }]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('celebrationTitle'), styles.center, { color: colors.ink }]}
+        >
           {t('setup.under13.title')}
         </Text>
         <Text style={[textStyle('body'), styles.center, styles.body]}>{t('setup.under13.body')}</Text>

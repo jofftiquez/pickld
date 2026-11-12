@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
 import { RoundIconButton } from '@/components/RoundIconButton';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
 
 import type { Greeting } from './todayGrid';
@@ -47,6 +47,7 @@ export function TodayHeader({
             : t('today.subtitle', { date, greeting: greetingText })}
         </Text>
         <Text
+          maxFontSizeMultiplier={maxTextScale.title}
           testID="screen-title"
           accessibilityRole="header"
           style={[textStyle('screenTitle'), { color: colors.ink }]}

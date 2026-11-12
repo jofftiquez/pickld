@@ -62,7 +62,12 @@ export function CropView(props: CropViewProps) {
           testID="crop-cancel"
         />
         <View style={styles.title}>
-          <Text accessibilityRole="header" style={[textStyle('cropTitle'), styles.titleText]}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            accessibilityRole="header"
+            style={[textStyle('cropTitle'), styles.headerTitle, styles.titleText]}
+          >
             {t('crop.title')}
           </Text>
           <Text style={[textStyle('label', '500'), styles.subtitle]}>{t(`${copy}.subtitle`, { slot: slotLabel })}</Text>
@@ -138,6 +143,8 @@ export function CropView(props: CropViewProps) {
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   root: { flex: 1, backgroundColor: colors.editor },
   header: {
     flexDirection: 'row',

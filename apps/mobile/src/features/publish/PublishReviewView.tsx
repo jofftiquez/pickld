@@ -70,7 +70,12 @@ export function PublishReviewView({
       <View style={styles.header}>
         <RoundIconButton icon="back" accessibilityLabel={t('publish.back')} onPress={onBack} testID="publish-back" />
         <View accessible style={styles.headerText}>
-          <Text accessibilityRole="header" style={[textStyle('cropTitle'), { color: colors.ink }]}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            accessibilityRole="header"
+            style={[textStyle('cropTitle'), styles.headerTitle, { color: colors.ink }]}
+          >
             {t('publish.title')}
           </Text>
           <Text style={[textStyle('label', '500'), { color: colors.muted }]} testID="publish-subtitle">
@@ -184,6 +189,8 @@ function ReviewSlot({ tile }: { tile: GridTile }) {
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

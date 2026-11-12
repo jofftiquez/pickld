@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { textStyle } from '@/theme/text';
 import { hitSlopFor } from '@/lib/hitSlop';
+import { useLargeText } from '@/lib/useLargeText';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { BottomSheet } from './BottomSheet';
@@ -20,6 +21,8 @@ export type SelectFieldProps<T extends string | number> = {
   /** Shown while nothing is picked. Already translated. */
   placeholder: string;
   /** `chip`: a compact pill showing only the value, the label stays spoken (Settings reminder times). */
+  /** Large text: take the whole row, for long values such as times (D-37). */
+  fullWidthWhenLarge?: boolean;
   variant?: 'field' | 'chip';
   testID?: string;
 };
@@ -32,13 +35,21 @@ export function SelectField<T extends string | number>({
   onChange,
   placeholder,
   variant = 'field',
+  fullWidthWhenLarge = false,
   testID,
 }: SelectFieldProps<T>) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
   const chip = variant === 'chip';
+  const large = useLargeText();
   return (
-    <View style={chip ? undefined : styles.container}>
+    <View
+      style={
+        chip
+          ? undefined
+          : [styles.container, large && (fullWidthWhenLarge ? styles.containerFull : styles.containerLarge)]
+      }
+    >
       {chip ? null : (
         <Text style={[textStyle('label'), styles.label]} importantForAccessibility="no" accessibilityElementsHidden>
           {label}
@@ -90,6 +101,9 @@ export function SelectField<T extends string | number>({
 
 const styles = StyleSheet.create({
   container: { flex: 1, gap: 6 },
+  // Large text: wide enough for a year, so fields in a row (Birthday) wrap instead of truncating (D-37).
+  containerLarge: { minWidth: sizes.selectFieldLarge },
+  containerFull: { minWidth: '100%' },
   label: { color: colors.muted },
   field: {
     minHeight: sizes.textField,
@@ -104,7 +118,8 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   chip: {
-    height: sizes.timeChip,
+    // minHeight: grows with large text instead of clipping the time.
+    minHeight: sizes.timeChip,
     paddingHorizontal: 10,
     borderRadius: radius.timeChip,
     backgroundColor: colors.subtle,

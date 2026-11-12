@@ -8,8 +8,9 @@ import { PillButton } from '@/components/PillButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
+import { useLargeText } from '@/lib/useLargeText';
 
 import { PERMISSIONS, type PermissionKind, type PermissionState } from './permissions';
 import { SetupProgress } from './SetupProgress';
@@ -31,6 +32,7 @@ export type PermissionsViewProps = {
 /** Permissions (FR-ONB-05): one reason card each for Camera, Photos and Notifications. */
 export function PermissionsView({ insets, states, times, onAllow, onContinue, onLater, onBack }: PermissionsViewProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   const timeList =
     times.length > 1 ? `${times.slice(0, -1).join(', ')} ${t('setup.permissions.and')} ${times.at(-1)}` : times[0];
   const reason: Record<PermissionKind, string> = {
@@ -60,7 +62,11 @@ export function PermissionsView({ insets, states, times, onAllow, onContinue, on
         )}
         <SetupProgress step={5} />
         <View style={styles.heading}>
-          <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.title}
+            accessibilityRole="header"
+            style={[textStyle('onboardTitle'), { color: colors.ink }]}
+          >
             {t('setup.permissions.title')}
           </Text>
           <Text style={[textStyle('body'), styles.body]}>{t('setup.permissions.body')}</Text>
@@ -69,11 +75,11 @@ export function PermissionsView({ insets, states, times, onAllow, onContinue, on
           const name = t(`setup.permissions.${kind}`);
           const state = states[kind];
           return (
-            <Card key={kind} style={styles.card} testID={`permission-${kind}`}>
+            <Card key={kind} style={[styles.card, large && styles.wrap]} testID={`permission-${kind}`}>
               <View style={styles.icon}>
                 <Icon name={ICON[kind]} color="brandText" size={22} />
               </View>
-              <View style={styles.text}>
+              <View style={[styles.text, large && styles.textLarge]}>
                 <Text style={[textStyle('cardTitle'), { color: colors.ink }]}>{name}</Text>
                 <Text style={[textStyle('bodySmall'), { color: colors.inkSoft }]}>{reason[kind]}</Text>
               </View>
@@ -138,6 +144,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: { flex: 1, gap: 2 },
+  // Large text: the icon, the text and the button or status each take a line, so the name keeps the card's width (D-37).
+  wrap: { flexWrap: 'wrap', rowGap: space.sm },
+  textLarge: { flexBasis: '100%' },
   allowed: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   spacer: { flex: 1, minHeight: space.md },
   later: { alignItems: 'center', paddingVertical: space.xs },

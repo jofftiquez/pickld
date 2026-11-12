@@ -15,6 +15,7 @@ import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, slots, space } from '@/theme/tokens';
+import { useLargeText } from '@/lib/useLargeText';
 
 import type { CardRef } from './shareActions';
 import type { ShareCard } from './shareCard';
@@ -72,6 +73,7 @@ export function ShareCardView({
   onBack,
 }: ShareCardViewProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   const count = card.moments.length;
   return (
     <View style={styles.screen} testID="share-screen">
@@ -156,7 +158,7 @@ export function ShareCardView({
             testID="share-captions"
           />
         </View>
-        <View style={styles.actions}>
+        <View style={[styles.actions, large && styles.actionsWrap]}>
           {ACTIONS.map(({ key, icon, label }) => (
             <Pressable
               key={key}
@@ -165,13 +167,13 @@ export function ShareCardView({
               onPress={() => onAction(key)}
               disabled={busy}
               hitSlop={hitSlopFor(sizes.shareAction, sizes.shareAction)}
-              style={styles.action}
+              style={[styles.action, large && styles.actionLarge]}
               testID={`share-${key}`}
             >
               <View style={styles.actionWell}>
                 <Icon name={icon} color="ink" size={22} />
               </View>
-              <Text style={[textStyle('bodySmall', '500'), { color: colors.ink }]}>{t(`share.${label}`)}</Text>
+              <Text style={[textStyle('bodySmall', '500'), styles.actionLabel]}>{t(`share.${label}`)}</Text>
             </Pressable>
           ))}
         </View>
@@ -231,6 +233,10 @@ const styles = StyleSheet.create({
   toggleText: { flex: 1, gap: 2 },
   actions: { flexDirection: 'row', justifyContent: 'space-around' },
   action: { alignItems: 'center', gap: space.sm },
+  actionLabel: { color: colors.ink, textAlign: 'center' },
+  // Large text: two actions a row, so their labels don't run into each other (D-37).
+  actionsWrap: { flexWrap: 'wrap', rowGap: space.lg },
+  actionLarge: { width: '50%' },
   actionWell: {
     width: sizes.shareAction,
     height: sizes.shareAction,

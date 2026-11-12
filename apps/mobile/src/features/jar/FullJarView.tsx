@@ -5,7 +5,7 @@ import { JarGraphic } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { formatWeekday } from '@/lib/format';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space, type } from '@/theme/tokens';
 
 import { CelebrationReveal } from './CelebrationReveal';
@@ -41,7 +41,11 @@ export function FullJarView({ localDate, jarNumber, lidColor, reduceMotion, onDo
               </View>
             </View>
             <Text style={[textStyle('eyebrow'), styles.eyebrow]}>{t('fullJar.eyebrow')}</Text>
-            <Text accessibilityRole="header" style={[textStyle('celebrationTitle'), styles.title]}>
+            <Text
+              maxFontSizeMultiplier={maxTextScale.title}
+              accessibilityRole="header"
+              style={[textStyle('celebrationTitle'), styles.title]}
+            >
               {t('fullJar.title', { weekday: formatWeekday(localDate) })}
             </Text>
             <Text testID="full-jar-body" style={[textStyle('bodyMedium', '400'), styles.body]}>

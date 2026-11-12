@@ -94,7 +94,12 @@ export function EditProfileView({
           onPress={onCancel}
           testID="edit-profile-cancel"
         />
-        <Text accessibilityRole="header" style={[textStyle('cropTitle'), { color: colors.ink }]}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          accessibilityRole="header"
+          style={[textStyle('cropTitle'), styles.headerTitle, { color: colors.ink }]}
+        >
           {t('editProfile.title')}
         </Text>
         <BaseButton
@@ -247,6 +252,8 @@ export function EditProfileView({
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

@@ -238,6 +238,7 @@ export const shadow = {
 } as const;
 
 export const sizes = {
+  selectFieldLarge: 128, // a select field's narrowest width at large text: fits "1990" (About, D-37)
   timeChip: 28, // reminder time chips (Settings); 44 pt tap area via hitSlop
   settingsIcon: 36, // slot icon wells on the Reminders card (Settings)
   minTap: 44, // every tap area, via hitSlop when the visual is smaller

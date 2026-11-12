@@ -65,7 +65,12 @@ export function HelpView({ insets, noMail, onBack, onContact, onFeedback, onGuid
     <View style={[styles.screen, { paddingTop: insets.top }]} testID="help-screen">
       <View style={styles.header}>
         <RoundIconButton icon="back" accessibilityLabel={t('help.back')} onPress={onBack} testID="help-back" />
-        <Text accessibilityRole="header" style={[textStyle('cropTitle'), { color: colors.ink }]}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          accessibilityRole="header"
+          style={[textStyle('cropTitle'), styles.headerTitle, { color: colors.ink }]}
+        >
           {t('help.title')}
         </Text>
         <View style={styles.headerSpacer} />
@@ -104,6 +109,7 @@ export function HelpView({ insets, noMail, onBack, onContact, onFeedback, onGuid
                 <View key={f.q} style={i < shown.length - 1 ? styles.divider : undefined}>
                   <Pressable
                     accessibilityRole="button"
+                    accessibilityLabel={f.q}
                     accessibilityState={{ expanded }}
                     onPress={() => setOpen(expanded ? null : f.q)}
                     style={styles.question}
@@ -157,6 +163,7 @@ export function HelpView({ insets, noMail, onBack, onContact, onFeedback, onGuid
         ) : null}
         <Pressable
           accessibilityRole="link"
+          accessibilityLabel={t('help.guidelines')}
           onPress={onGuidelines}
           hitSlop={hitSlopFor(undefined, 20)}
           style={styles.guidelines}
@@ -170,6 +177,8 @@ export function HelpView({ insets, noMail, onBack, onContact, onFeedback, onGuid
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

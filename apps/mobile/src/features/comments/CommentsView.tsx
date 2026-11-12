@@ -106,7 +106,12 @@ export function CommentsView({
       <View style={styles.header}>
         <RoundIconButton icon="back" accessibilityLabel={t('comments.back')} onPress={onBack} testID="comments-back" />
         <View style={styles.titles}>
-          <Text accessibilityRole="header" style={[textStyle('cropTitle'), { color: colors.ink }]}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            accessibilityRole="header"
+            style={[textStyle('cropTitle'), styles.headerTitle, { color: colors.ink }]}
+          >
             {t('comments.title')}
           </Text>
           {jarTitle !== null ? (
@@ -232,6 +237,8 @@ export function CommentsView({
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

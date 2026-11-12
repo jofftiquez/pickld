@@ -6,7 +6,7 @@ import { Icon } from '@/components/Icon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 export type CheckEmailViewProps = {
@@ -46,7 +46,11 @@ export function CheckEmailView({
         <View style={styles.well}>
           <Icon name="mail" color="brandText" size={sizes.checkEmailIcon} strokeWidth={2.4} />
         </View>
-        <Text accessibilityRole="header" style={[textStyle('onboardTitle'), styles.center, { color: colors.ink }]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('onboardTitle'), styles.center, { color: colors.ink }]}
+        >
           {t('auth.checkEmail.title')}
         </Text>
         <Text style={[textStyle('body'), styles.center, styles.body]} testID="check-email-to">

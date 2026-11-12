@@ -26,3 +26,15 @@ export function textStyle(variant: TextVariant, weight?: FontWeight): TextStyle 
     ...('letterSpacing' in t ? { letterSpacing: t.letterSpacing } : null),
   };
 }
+
+/** From this system text size on, side-by-side rows stack (useLargeText, NFR-A11Y-02, D-37). */
+export const LARGE_TEXT_SCALE = 1.5;
+
+/**
+ * How far text may grow with the system size where its box can't (D-37). Everything else scales freely.
+ * - title: screen and onboarding titles are already 30–32 pt; 1.5× (45–48 pt) keeps one long word, like
+ *   "Notifications", on one line.
+ * - tabLabel: the floating tab bar's labels, like iOS's own tab bar, grow only a little.
+ * - tile: labels drawn inside a fixed-size photo tile; the tile's screen reader label has the full text.
+ */
+export const maxTextScale = { title: 1.5, tabLabel: 1.2, tile: 1.3 } as const;

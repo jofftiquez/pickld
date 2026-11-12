@@ -9,8 +9,9 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { SelectField } from '@/components/SelectField';
 import { formatTime } from '@/lib/format';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
+import { useLargeText } from '@/lib/useLargeText';
 
 import { DAY_TYPES, timeOptions, type DayTimes, type DayType } from './dayPresets';
 import { SetupProgress } from './SetupProgress';
@@ -47,6 +48,7 @@ export function DayView({
   onBack,
 }: DayViewProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   const [editing, setEditing] = useState(false);
   return (
     <View style={styles.screen} testID="day-screen">
@@ -63,7 +65,11 @@ export function DayView({
         )}
         <SetupProgress step={2} />
         <View style={styles.heading}>
-          <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.title}
+            accessibilityRole="header"
+            style={[textStyle('onboardTitle'), { color: colors.ink }]}
+          >
             {t('setup.day.title')}
           </Text>
           <Text style={[textStyle('body'), styles.body]}>{t('setup.day.body')}</Text>
@@ -100,9 +106,9 @@ export function DayView({
             );
           })}
         </View>
-        <View style={styles.nudges} testID="day-nudges">
+        <View style={[styles.nudges, large && styles.wrap]} testID="day-nudges">
           <Icon name="bell" color="surface" size={22} />
-          <View style={styles.nudgesText}>
+          <View style={[styles.nudgesText, large && styles.nudgesTextLarge]}>
             <Text style={[textStyle('label'), { color: colors.onDarkMuted }]}>{t('setup.day.nudges')}</Text>
             <Text style={[textStyle('cardTitle', '800'), { color: colors.surface }]} testID="day-nudge-times">
               {SLOTS.map((s) => clock(times[s])).join(' · ')}
@@ -132,6 +138,7 @@ export function DayView({
                 options={timeOptions(slot).map((m) => ({ value: m, label: clock(m) }))}
                 value={times[slot]}
                 onChange={(m) => onChangeTime(slot, m)}
+                fullWidthWhenLarge
                 testID={`day-time-${slot}`}
               />
             ))}
@@ -206,6 +213,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.onDarkButton,
   },
-  times: { flexDirection: 'row', gap: space.md },
+  times: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
+  // Large text: Change / Done wraps below the times (D-37).
+  wrap: { flexWrap: 'wrap', rowGap: space.md },
+  nudgesTextLarge: { flexBasis: '70%' },
   spacer: { flex: 1, minHeight: space.lg },
 });

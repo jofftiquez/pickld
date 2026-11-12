@@ -11,7 +11,7 @@ import { TextField } from '@/components/TextField';
 import type { UsernameStatus } from '@/features/profile/editProfileModel';
 import { deviceLocale } from '@/lib/format';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { daysInMonth, yearOptions, type AboutForm, type Birthday, type YMD } from './aboutModel';
@@ -91,7 +91,11 @@ export function AboutView({
       >
         <RoundIconButton icon="back" accessibilityLabel={t('setup.back')} onPress={onBack} testID="about-back" />
         <SetupProgress step={1} />
-        <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('onboardTitle'), { color: colors.ink }]}
+        >
           {t('setup.about.title')}
         </Text>
         <Pressable
@@ -220,6 +224,6 @@ const styles = StyleSheet.create({
   usernameField: { gap: space.xs },
   status: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   birthday: { gap: space.sm },
-  birthdayRow: { flexDirection: 'row', gap: space.md },
+  birthdayRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
   spacer: { flex: 1, minHeight: space.lg },
 });

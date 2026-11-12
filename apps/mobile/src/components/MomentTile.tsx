@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, type Accessibilit
 import Svg, { Circle } from 'react-native-svg';
 
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space, type Slot } from '@/theme/tokens';
 
 import { PRESSED_OPACITY } from './BaseButton';
@@ -136,7 +136,9 @@ export function MomentTile({
             </View>
             {state === 'now' ? (
               <View style={styles.nowChip}>
-                <Text style={[textStyle('caption'), { color: colors.ink }]}>{t('tile.now')}</Text>
+                <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('caption'), { color: colors.ink }]}>
+                  {t('tile.now')}
+                </Text>
               </View>
             ) : (
               <View style={styles.plus} testID="tile-plus">
@@ -145,11 +147,19 @@ export function MomentTile({
             )}
           </View>
           <View>
-            <Text style={[textStyle('body', '700'), { color: state === 'now' ? colors.surface : colors.ink }]}>
+            <Text
+              maxFontSizeMultiplier={maxTextScale.tile}
+              style={[textStyle('body', '700'), { color: state === 'now' ? colors.surface : colors.ink }]}
+            >
               {tag}
             </Text>
             {state === 'now' ? (
-              <Text style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}>{t('tile.tapToCapture')}</Text>
+              <Text
+                maxFontSizeMultiplier={maxTextScale.tile}
+                style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}
+              >
+                {t('tile.tapToCapture')}
+              </Text>
             ) : null}
           </View>
         </>
@@ -223,7 +233,11 @@ export function MomentTile({
 function Pill({ text, tone = 'glass', testID }: { text: string; tone?: 'glass' | 'badge'; testID?: string }) {
   return (
     <View testID={testID} style={[styles.pill, { backgroundColor: colors[tone] }]}>
-      <Text style={[textStyle('caption'), { color: colors.surface }]} numberOfLines={1}>
+      <Text
+        maxFontSizeMultiplier={maxTextScale.tile}
+        style={[textStyle('caption'), { color: colors.surface }]}
+        numberOfLines={1}
+      >
         {text}
       </Text>
     </View>
@@ -231,7 +245,11 @@ function Pill({ text, tone = 'glass', testID }: { text: string; tone?: 'glass' |
 }
 
 function OverlayText({ text }: { text: string }) {
-  return <Text style={[textStyle('label', '700'), styles.overlayText]}>{text}</Text>;
+  return (
+    <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('label', '700'), styles.overlayText]}>
+      {text}
+    </Text>
+  );
 }
 
 function ProgressRing({ percent }: { percent: number }) {
@@ -275,7 +293,9 @@ function RetryButton({ label, a11yLabel, onPress }: { label: string; a11yLabel: 
       testID="tile-retry"
       style={[styles.retry, pressed ? { opacity: PRESSED_OPACITY } : null]}
     >
-      <Text style={[textStyle('label', '800'), { color: colors.likeText }]}>{label}</Text>
+      <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('label', '800'), { color: colors.likeText }]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

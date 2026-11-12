@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { formatShortDate } from '@/lib/format';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import type { GuidelineKey } from './useOwnMoment';
@@ -68,7 +68,11 @@ export function RemovedView({ slot, localDate, thumbUrl, guideline, insets, onCl
             </Text>
           </View>
         </View>
-        <Text accessibilityRole="header" style={[textStyle('noticeTitle'), { color: colors.ink }]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('noticeTitle'), { color: colors.ink }]}
+        >
           {t('moment.removed.title')}
         </Text>
         {guideline ? (

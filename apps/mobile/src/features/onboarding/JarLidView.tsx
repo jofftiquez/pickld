@@ -6,7 +6,7 @@ import { JarGraphic } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, lidColors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { SetupProgress } from './SetupProgress';
@@ -45,7 +45,11 @@ export function JarLidView({ insets, lid, busy, failed, onPick, onContinue, onBa
         )}
         <SetupProgress step={4} />
         <View style={styles.heading}>
-          <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.title}
+            accessibilityRole="header"
+            style={[textStyle('onboardTitle'), { color: colors.ink }]}
+          >
             {t('setup.lid.title')}
           </Text>
           <Text style={[textStyle('body'), styles.body]}>{t('setup.lid.body')}</Text>

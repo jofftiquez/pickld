@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { RoundIconButton } from '@/components/RoundIconButton';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { FeedEmpty } from './FeedEmpty';
@@ -66,6 +66,7 @@ export function FeedView({
     <View>
       <View style={styles.titleRow}>
         <Text
+          maxFontSizeMultiplier={maxTextScale.title}
           testID="screen-title"
           accessibilityRole="header"
           style={[textStyle('screenTitle'), { color: colors.ink }]}

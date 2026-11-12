@@ -1,0 +1,126 @@
+# M5-01 (NFR-A11Y-02): key screens at about 200% text. Set the size first, then sign dale in:
+#   xcrun simctl ui booted content_size accessibility-extra-large   (AX3, 33 pt body = 194%)
+#   maestro test apps/mobile/.maestro/large-text.yaml
+#   xcrun simctl ui booted content_size large                       (back to the default)
+# Signs dale out at the end (Welcome and Sign up). Each screen must load and keep its main control reachable; the screenshots go in the M5 report.
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- takeScreenshot: large-today
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-notifications
+    timeout: 30000
+- takeScreenshot: large-jars
+- tapOn:
+    id: tab-my-days
+- waitForAnimationToEnd
+- takeScreenshot: large-my-days
+- openLink: pickld://jar/b0000000-0000-4000-8000-000000000102
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- waitForAnimationToEnd
+- takeScreenshot: large-jar
+- openLink: pickld://comments/b0000000-0000-4000-8000-000000000102
+- waitForAnimationToEnd
+- takeScreenshot: large-comments
+- openLink: pickld://u/mika
+- extendedWaitUntil:
+    visible:
+      id: profile-name
+    timeout: 30000
+- takeScreenshot: large-profile
+- openLink: pickld://notifications
+- extendedWaitUntil:
+    visible:
+      id: notifications-screen
+    timeout: 30000
+- takeScreenshot: large-notifications
+- openLink: pickld://settings
+- waitForAnimationToEnd
+- takeScreenshot: large-settings
+# Removed-moment notice (dale's seeded removed moment), then a live moment from Mika's jar page.
+- openLink: pickld://moment/d0000000-0000-4000-8000-000000000001
+- waitForAnimationToEnd
+- takeScreenshot: large-removed
+- openLink: pickld://jar/b0000000-0000-4000-8000-000000000102
+- scrollUntilVisible:
+    element:
+      id: jar-tile-ootd
+- tapOn:
+    id: jar-tile-ootd
+- extendedWaitUntil:
+    visible:
+      id: moment-detail
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: large-moment
+- openLink: pickld://u/dale/readers
+- extendedWaitUntil:
+    visible:
+      id: readers-screen
+    timeout: 30000
+- takeScreenshot: large-readers
+- openLink: pickld://settings/profile
+- extendedWaitUntil:
+    visible:
+      id: edit-profile
+    timeout: 30000
+- takeScreenshot: large-edit-profile
+- openLink: pickld://settings/help
+- extendedWaitUntil:
+    visible:
+      id: help-screen
+    timeout: 30000
+- takeScreenshot: large-help
+- openLink: pickld://share/b0000000-0000-4000-8000-000000000201
+- extendedWaitUntil:
+    visible:
+      id: share-screen
+    timeout: 30000
+- takeScreenshot: large-share
+- openLink: pickld://settings/delete
+- extendedWaitUntil:
+    visible:
+      id: delete-screen
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: delete-submit
+- assertVisible:
+    id: delete-submit
+- takeScreenshot: large-delete
+# Signed out: Welcome and Sign up (sign dale back in afterwards with scripts/dev-sign-in.sh).
+- openLink: pickld://dev/sign-out
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: large-welcome
+- scrollUntilVisible:
+    element:
+      id: welcome-get-started
+- takeScreenshot: large-welcome-bottom
+- tapOn:
+    id: welcome-get-started
+- tapOn:
+    id: intro-skip
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 10000
+- takeScreenshot: large-sign-up

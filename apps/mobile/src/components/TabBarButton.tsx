@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { PRESSED_OPACITY } from './BaseButton';
@@ -37,7 +37,10 @@ export function TabBarButton({ icon, label, focused, onPress, onLongPress, testI
       <View style={[styles.pill, focused ? styles.pillActive : null]} testID={focused ? 'tab-active-pill' : undefined}>
         <Icon name={icon} color={tint} size={22} strokeWidth={focused ? 2 : 1.8} />
       </View>
-      <Text style={[textStyle('caption', focused ? '700' : '600'), { color: colors[tint] }, styles.label]}>
+      <Text
+        maxFontSizeMultiplier={maxTextScale.tabLabel}
+        style={[textStyle('caption', focused ? '700' : '600'), { color: colors[tint] }, styles.label]}
+      >
         {label}
       </Text>
     </Pressable>
