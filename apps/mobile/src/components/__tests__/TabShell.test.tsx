@@ -12,6 +12,7 @@ import TodayScreen from '../../../app/(tabs)/today';
 // under test here.
 // Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
+jest.mock('@/features/onboarding/FirstMomentTip', () => ({ FirstMomentTip: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 // Today's Retry reaches the upload worker, which reports errors through Sentry (ESM, not loadable here).

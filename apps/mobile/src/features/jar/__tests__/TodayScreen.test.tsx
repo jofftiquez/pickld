@@ -30,6 +30,7 @@ const mockSheet: { props: import('@/features/publish/JarVisibilitySheet').JarVis
 
 // Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
+jest.mock('@/features/onboarding/FirstMomentTip', () => ({ FirstMomentTip: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({
   JarVisibilitySheet: (props: NonNullable<typeof mockSheet.props>) => {
     mockSheet.props = props;
