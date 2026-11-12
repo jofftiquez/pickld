@@ -5,7 +5,8 @@
     "stickers": "deno run --allow-env --allow-net --allow-run=pnpm --allow-read=../../assets/stickers scripts/upload-stickers.ts",
     "test": "deno test test/",
     "check": "deno check src/ scripts/ test/",
-    "lint": "deno lint src/ scripts/ test/"
+    "lint": "deno lint src/ scripts/ test/",
+    "exif-check": "deno run --allow-env --allow-net --allow-run=pnpm scripts/exif-check.ts"
   },
   "fmt": {
     "lineWidth": 120,
