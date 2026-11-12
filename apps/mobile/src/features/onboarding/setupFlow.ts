@@ -10,6 +10,7 @@ export const SETUP_FLOW = [
   '/setup/people',
   '/setup/jar-lid',
   '/setup/permissions',
+  '/setup/friends',
 ] as const satisfies readonly Href[];
 export type SetupRoute = (typeof SETUP_FLOW)[number];
 
