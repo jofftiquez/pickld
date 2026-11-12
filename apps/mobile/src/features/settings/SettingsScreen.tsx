@@ -4,14 +4,12 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { removePushToken } from '@/features/reminders/pushToken';
-import { cancelAllReminders, expoReminderApi } from '@/features/reminders/syncReminders';
 import { useBlockedAccounts } from '@/features/safety/block';
 import { openLegal } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
-import { getSupabase } from '@/lib/supabase';
 
 import { SettingsView } from './SettingsView';
+import { signOutHere } from './signOut';
 import { useSettings } from './useSettings';
 
 /** /settings (M4-16): wires Settings to the user's data, the reminder schedule and sign-out. */
@@ -27,11 +25,7 @@ export function SettingsScreen() {
   const onSaved = { onError: () => setSaveFailed(true), onSuccess: () => setSaveFailed(false) };
 
   async function signOut() {
-    // This phone stops getting the account's reminders and pushes (rule: the next account never gets them).
-    await cancelAllReminders(expoReminderApi).catch(() => undefined);
-    await removePushToken().catch(() => undefined);
-    await getSupabase().auth.signOut({ scope: 'local' });
-    queryClient.clear();
+    await signOutHere(queryClient);
     router.replace('/welcome');
   }
 
