@@ -536,7 +536,18 @@
     "loading": "Loading the pack…",
     "failed": "This pack needs a connection. Try again when you’re online.",
     "retry": "Try again",
-    "missing": "This pack isn’t available."
+    "missing": "This pack isn’t available.",
+    "share": "Share {{name}}",
+    "shareMessage": "The {{name}} sticker pack on Pickld: {{url}}",
+    "onYourPhoto": "Preview on your photo",
+    "more": "+{{count}} more",
+    "buy": "Get {{name}} · {{price}}",
+    "buying": "Getting it…",
+    "keep": "Yours to keep. Friends see your stickers for free.",
+    "buyFailed": "That didn’t go through. Try again in a moment.",
+    "owned": "You have this pack. Find it in the Stickers tool.",
+    "notForSale": "This pack isn’t for sale right now.",
+    "bought": "{{name}} is yours"
   },
   "momentRenderer": {
     "photo": "Photo",

@@ -475,6 +475,12 @@ export const stickerShop = {
   bannerSampleHeight: 42, // and on the seasonal banner
   searchHeight: 46,
   ownedTint: '#e6f1d3', // art well behind packs the user has (Yours)
+  // Pack preview (PackPreview): the tinted hero with the user's photo and two stickers on it.
+  heroRadius: 40,
+  heroStageHeight: 226,
+  heroPhotoWidth: 168,
+  heroSampleHeight: 40,
+  cloudSampleHeight: 36,
 } as const;
 
 // Crop screen (Crop, FR-CAP-03): the 3:4 frame sits this far inside the dark photo area, with the 3:4 chip
