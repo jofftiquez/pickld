@@ -26,6 +26,9 @@ export const analyticsEvents = {
   follow: z.strictObject({}),
   report_submitted: z.strictObject({ target: z.enum(['jar', 'moment', 'comment', 'profile']) }),
   notification_opt_in: z.strictObject({ granted: z.boolean() }),
+  // Each queued photo's final result, for the upload-failure alert (NFR-REL-01, M4-20; D-34). Retries and
+  // offline waits are not results; a photo that used up its attempts is `failed`.
+  upload_result: z.strictObject({ outcome: z.enum(['uploaded', 'failed']) }),
 } as const;
 
 export type AnalyticsEvent = keyof typeof analyticsEvents;
