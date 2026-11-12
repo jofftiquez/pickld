@@ -65,7 +65,7 @@ Plan order: M6-01 RevenueCat webhook 🔑 (#125), M6-02 Sticker shop (#126), M6-
   - Edge Functions: `pnpm exec supabase functions serve --env-file supabase/functions/.env`. The photo worker: `(cd workers/photos && deno task dev)`.
   - Copy each `.env.example` to `.env` (`supabase/functions`, `workers/photos`, `apps/mobile`). `.agents/setup` shows how the orb generates the local secrets.
 - **iOS Simulator only.** No Android emulator, no Android captures (D-15). `scripts/mac-setup.sh` installs JDK 17 and Maestro 2.12.1.
-- **Dev build:** run `scripts/prepare-native.sh`, then `xcodebuild` the `Pickld` scheme (Debug, iphonesimulator) and install it. Metro: `cd apps/mobile && npx expo start --port 8081`.
+- **Dev build:** `apps/mobile/ios` is generated and ignored. After a native dependency changes, run `cd apps/mobile && npx expo prebuild --platform ios --clean --no-install`, then `cd ios && LANG=en_US.UTF-8 pod install` (CocoaPods fails without UTF-8). Then `xcodebuild -workspace Pickld.xcworkspace -scheme Pickld -configuration Debug -sdk iphonesimulator -derivedDataPath build build` and `xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/Pickld.app`. Metro: `cd apps/mobile && npx expo start --port 8081`.
 - **Sign in on the Simulator:**
   1. `bash scripts/dev-sign-in.sh dale@pickld.test` prints a `pickld://dev/sign-in?token=…` link.
   2. Open it with `xcrun simctl openurl booted "<link>"` and tap Open in the dialog.
