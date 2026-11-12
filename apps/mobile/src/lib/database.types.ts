@@ -1321,6 +1321,7 @@ export type Database = {
       };
     };
     Functions: {
+      account_purge: { Args: { p_user: string }; Returns: boolean };
       blocked_accounts: {
         Args: Record<PropertyKey, never>;
         Returns: {
