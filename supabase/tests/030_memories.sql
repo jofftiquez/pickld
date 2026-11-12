@@ -2,7 +2,7 @@
 -- recap (moments, full days, top tag, photo strip) and the year summary (FR-DAY-03).
 begin;
 \ir _helpers.psql
-select plan(21);
+select plan(22);
 
 select tests.world();
 create temp table t (k text primary key, id uuid);
@@ -72,6 +72,8 @@ select is((select array_agg(e->>'local_date' order by e->>'local_date') from pub
            jsonb_array_elements(r.strip) e),
           array['2026-10-01', '2026-10-05', '2026-10-09', '2026-10-22', '2026-10-23'],
           'the strip holds five covers from the fullest days (latest first on a tie), in date order');
+select is((select r.strip->0->>'jar_id' from public.memories_month_recap(date '2026-10-01') r),
+          (select id::text from t where k = 'oct01'), 'each strip photo names its jar');
 select is((select top_slot::text from public.memories_month_recap(date '2025-11-01')), 'ootd',
           'a tie for top tag goes to the earlier slot in the fixed order');
 select results_eq($$select moment_count, full_days, top_slot::text, strip from public.memories_month_recap(date '2026-07-01')$$,

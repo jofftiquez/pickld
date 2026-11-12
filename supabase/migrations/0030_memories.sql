@@ -50,7 +50,7 @@ end $$;
 -- ---------------------------------------------------------------- monthly recap
 -- One row for the month that `month` falls in: how many moments, how many full days, the top tag (null when
 -- the month is empty) and a photo strip of up to five covers, one per jar, from the fullest days, in date
--- order: [{ "moment_id", "slot", "thumb_path", "local_date" }].
+-- order: [{ "moment_id", "jar_id", "slot", "thumb_path", "local_date" }].
 create or replace function public.memories_month_recap(month date)
 returns table (
   moment_count int,
@@ -78,7 +78,7 @@ begin
     where m.status <> 'removed' and m.replaces is null
   ),
   covers as (
-    select mj.local_date, mj.moment_count, c.id, c.slot, c.thumb_path from mj
+    select mj.id as jar_id, mj.local_date, mj.moment_count, c.id, c.slot, c.thumb_path from mj
     join lateral (
       select mm.id, mm.slot, mm.thumb_path from mm where mm.jar_id = mj.id and mm.thumb_path is not null
       order by mm.slot limit 1
@@ -90,7 +90,7 @@ begin
     (select count(*)::int from mm),
     (select count(*)::int from mj where mj.is_full),
     (select mm.slot from mm group by mm.slot order by count(*) desc, mm.slot limit 1),
-    coalesce((select jsonb_agg(jsonb_build_object('moment_id', cv.id, 'slot', cv.slot, 'thumb_path', cv.thumb_path,
+    coalesce((select jsonb_agg(jsonb_build_object('moment_id', cv.id, 'jar_id', cv.jar_id, 'slot', cv.slot, 'thumb_path', cv.thumb_path,
                                                   'local_date', cv.local_date) order by cv.local_date)
               from covers cv), '[]'::jsonb);
 end $$;
