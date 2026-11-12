@@ -13,6 +13,7 @@ import { buildTodayGrid, holdsSlot, offlineBannerCount, type GridTile } from '@/
 import { useCelebrations } from '@/features/jar/useCelebrations';
 import { DAY_SLOTS } from '@/features/reminders/reminderPlan';
 import { useReminderSync } from '@/features/reminders/useReminderSync';
+import { useWidgetSync } from '@/features/widgets/useWidgetSync';
 import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { FirstMomentTip } from '@/features/onboarding/FirstMomentTip';
@@ -82,6 +83,12 @@ export default function TodayScreen() {
   useReminderSync(
     userId,
     DAY_SLOTS.filter((slot) => tiles.some((tile) => tile.slot === slot && holdsSlot(tile))),
+  );
+  // Home screen widgets (M6-09): every filled slot, offline captures included.
+  useWidgetSync(
+    userId,
+    tiles.filter(holdsSlot).map((tile) => tile.slot),
+    jar?.jar?.tz ?? tz,
   );
 
   // First moment tip (M4-09): once, on the first day while the jar is empty.
