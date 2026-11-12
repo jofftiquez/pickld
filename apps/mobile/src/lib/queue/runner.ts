@@ -1,5 +1,6 @@
 import { AppState } from 'react-native';
 
+import { track } from '../analytics';
 import { useAuthStore } from '../authStore';
 import { isNetworkError, reportNetworkResult } from '../connectivity';
 import { captureError } from '../monitoring';
@@ -75,6 +76,9 @@ export function startUploadRunner(getClient: () => UploaderClient, options: Uplo
         { client, putFile: options.putFile },
         () => !stopped && online && currentUser() === userId,
       );
+      for (const outcome of outcomes) {
+        if (outcome.kind === 'uploaded' || outcome.kind === 'failed') track('upload_result', { outcome: outcome.kind });
+      }
       // The latest attempt tells the UI whether the backend is reachable (offline banner, M2-06).
       const last = outcomes.at(-1);
       if (last) reportNetworkResult(last.kind === 'retrying' || last.kind === 'failed' ? last.error : null);
