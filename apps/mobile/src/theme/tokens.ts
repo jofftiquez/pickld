@@ -471,7 +471,8 @@ export const stickerShop = {
   cardWidth: 150,
   cardArtHeight: 120,
   cardRadius: 18,
-  sampleHeight: 26, // sticker art on a card or the banner
+  sampleHeight: 36, // sticker art on a card (the PNG's height, shadow margin included)
+  bannerSampleHeight: 42, // and on the seasonal banner
   searchHeight: 46,
   ownedTint: '#e6f1d3', // art well behind packs the user has (Yours)
 } as const;

@@ -200,12 +200,11 @@ function SeasonalBanner({
       style={styles.banner}
       testID={`sticker-shop-seasonal-${pack.slug}`}
     >
-      <PackArt samples={pack.stickers} layout={BANNER_LAYOUT} height={stickerShop.sampleHeight + 2} />
       <View style={styles.bannerText}>
         <Text style={[textStyle('caption', '800'), styles.eyebrow]} numberOfLines={1}>
           {until === null ? t('stickerShop.limited') : t('stickerShop.limitedUntil', { date: until })}
         </Text>
-        <Text style={[textStyle('noticeTitle'), styles.bannerTitle]} numberOfLines={1} adjustsFontSizeToFit>
+        <Text style={[textStyle('noticeTitle'), styles.bannerTitle]} numberOfLines={1}>
           {pack.name}
         </Text>
         {blurb ? (
@@ -214,6 +213,8 @@ function SeasonalBanner({
           </Text>
         ) : null}
       </View>
+      {/* Over the text, as designed: the blurb runs under the stickers. */}
+      <PackArt samples={pack.stickers} layout={BANNER_LAYOUT} height={stickerShop.bannerSampleHeight} />
       {price ? (
         <View style={styles.bannerPrice}>
           <Text style={[textStyle('label', '800'), { color: stickerShop.seasonal }]}>{price}</Text>
@@ -322,8 +323,8 @@ const styles = StyleSheet.create({
     backgroundColor: stickerShop.seasonal,
     overflow: 'hidden',
   },
-  bannerText: { position: 'absolute', left: 18, top: 16, right: 140, gap: 2 },
-  eyebrow: { color: stickerShop.seasonalEyebrow, letterSpacing: 0.88 },
+  bannerText: { position: 'absolute', left: 18, top: 16, right: 18, gap: 2 },
+  eyebrow: { color: stickerShop.seasonalEyebrow, letterSpacing: 0.88, textTransform: 'uppercase' },
   bannerTitle: { color: colors.surface },
   bannerBlurb: { color: stickerShop.seasonalText },
   bannerPrice: {

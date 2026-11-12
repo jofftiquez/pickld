@@ -38,16 +38,16 @@ export function PackArt({ samples, layout, height = stickerShop.sampleHeight }: 
 
 /** The three spots on a card (StickerShop: "For you" and "Yours"). */
 export const CARD_LAYOUT = [
-  { place: { left: 10, top: 14 }, rotate: -5 },
-  { place: { right: 8, top: 46 }, rotate: 5 },
-  { place: { left: 16, bottom: 12 }, rotate: -2 },
+  { place: { left: 6, top: 8 }, rotate: -5 },
+  { place: { right: 4, top: 42 }, rotate: 5 },
+  { place: { left: 12, bottom: 6 }, rotate: -2 },
 ] as const;
 
 /** The three spots on the seasonal banner's right side. */
 export const BANNER_LAYOUT = [
-  { place: { right: 14, top: 20 }, rotate: 8 },
-  { place: { right: 28, top: 66 }, rotate: -6 },
-  { place: { right: 12, bottom: 16 }, rotate: 4 },
+  { place: { right: 10, top: 14 }, rotate: 8 },
+  { place: { right: 24, top: 58 }, rotate: -6 },
+  { place: { right: 8, bottom: 10 }, rotate: 4 },
 ] as const;
 
 const styles = StyleSheet.create({

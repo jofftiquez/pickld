@@ -64,6 +64,7 @@ Plan order: M6-01 RevenueCat webhook 🔑 (#125), M6-02 Sticker shop (#126), M6-
   - Start it with `pnpm db:start`, then `pnpm db:reset` and `(cd workers/photos && deno task seed)` for the seed users and photos.
   - Edge Functions: `pnpm exec supabase functions serve --env-file supabase/functions/.env`. The photo worker: `(cd workers/photos && deno task dev)`.
   - Copy each `.env.example` to `.env` (`supabase/functions`, `workers/photos`, `apps/mobile`). `.agents/setup` shows how the orb generates the local secrets.
+  - For the Simulator set `PHOTO_BASE_URL=http://127.0.0.1:55430` in `supabase/functions/.env`: the photo worker listens only on 127.0.0.1, so a LAN address signs photo URLs that never load (every photo shows as an empty tile). Restart `functions serve` after changing it.
 - **iOS Simulator only.** No Android emulator, no Android captures (D-15). `scripts/mac-setup.sh` installs JDK 17 and Maestro 2.12.1.
 - **Dev build:** `apps/mobile/ios` is generated and ignored. After a native dependency changes, run `cd apps/mobile && npx expo prebuild --platform ios --clean --no-install`, then `cd ios && LANG=en_US.UTF-8 pod install` (CocoaPods fails without UTF-8). Then `xcodebuild -workspace Pickld.xcworkspace -scheme Pickld -configuration Debug -sdk iphonesimulator -derivedDataPath build build` and `xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/Pickld.app`. Metro: `cd apps/mobile && npx expo start --port 8081`.
 - **Sign in on the Simulator:**
