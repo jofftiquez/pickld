@@ -165,8 +165,10 @@ Deno.test('a suspended owner’s moments get no tokens for others', async () => 
 });
 
 Deno.test('input is validated and callers must be signed in', async () => {
-  for (const body of [{}, { momentIds: [] }, { momentIds: ['nope'] }, { momentIds: [live.id], extra: 1 },
-    { momentIds: Array.from({ length: 101 }, () => crypto.randomUUID()) }]) {
+  for (const body of [{}, { momentIds: [] }, { momentIds: [], profileIds: [] }, { momentIds: ['nope'] },
+    { profileIds: ['nope'] }, { momentIds: [live.id], extra: 1 },
+    { momentIds: Array.from({ length: 101 }, () => crypto.randomUUID()) },
+    { profileIds: Array.from({ length: 101 }, () => crypto.randomUUID()) }]) {
     const { status, json } = await call(body, reader);
     assertEquals(status, 400, JSON.stringify(body).slice(0, 60));
     assertEquals(json.error.code, 'invalid_input');
@@ -175,6 +177,45 @@ Deno.test('input is validated and callers must be signed in', async () => {
   assertEquals((await call({ momentIds: [live.id] }, { ...reader, jwt: 'not.a.jwt' })).status, 401);
   const dup = await call({ momentIds: [live.id, live.id.toUpperCase()] }, reader);
   assertEquals(dup.json.data.moments.length, 1, 'duplicates are signed once');
+});
+
+// ---------------------------------------------------------------- profile images (M3-15)
+Deno.test('a reader gets the owner’s avatar and cover, and they open through the Worker', async () => {
+  const avatar = `avatars/${owner.id}/${crypto.randomUUID()}.jpg`;
+  const cover = `covers/${owner.id}/${crypto.randomUUID()}.jpg`;
+  const { error } = await db.from('profiles').update({ avatar_path: avatar, cover_path: cover }).eq('id', owner.id);
+  if (error) throw new Error(error.message);
+  const { status, json } = await call({ profileIds: [owner.id, reader.id] }, reader);
+  assertEquals(status, 200);
+  assertEquals(json.data.moments, [], 'moments is always present');
+  const byId = new Map(json.data.profiles.map((p: { id: string }) => [p.id, p]));
+  assertEquals(byId.get(reader.id), { id: reader.id, avatar: null, cover: null }, 'no images means nulls');
+  const p = byId.get(owner.id) as { avatar: string; cover: string };
+  const store = { get: (key: string) => Promise.resolve({ body: new Blob([key]).stream(), contentType: 'image/jpeg' }) };
+  for (const [url, key] of [[p.avatar, avatar], [p.cover, cover]]) {
+    assertEquals(new URL(url).pathname.slice(1), key);
+    const res = await handlePhotoRequest(new Request(url), store, SECRET, NOW + 1);
+    assertEquals(res.status, 200);
+    assertEquals(await res.text(), key);
+  }
+});
+
+Deno.test('blocked users and blockers get no profile row; both lists come back together', async () => {
+  for (const user of [blocked, blocker]) {
+    const { status, json } = await call({ profileIds: [owner.id] }, user);
+    assertEquals(status, 200);
+    assertEquals(json.data.profiles, [], user.name);
+  }
+  const both = await call({ momentIds: [livePublic.id], profileIds: [owner.id] }, outsider);
+  assertEquals(ids(both.json), sorted(livePublic));
+  assertEquals(both.json.data.profiles.map((p: { id: string }) => p.id), [owner.id]);
+});
+
+Deno.test('a moments-only request still works and returns an empty profiles list', async () => {
+  const { status, json } = await call({ momentIds: [livePublic.id] }, outsider);
+  assertEquals(status, 200);
+  assertEquals(ids(json), sorted(livePublic));
+  assertEquals(json.data.profiles, []);
 });
 
 Deno.test({ name: 'cleanup', fn: cleanup, sanitizeResources: false, sanitizeOps: false });

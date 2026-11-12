@@ -43,6 +43,7 @@ export default function ProfileScreen() {
         }
       }}
       followBusy={follow.busy}
+      onEditProfile={() => router.push('/settings/profile')}
       onOpenList={(list) => {
         if (data) {
           router.push({ pathname: '/u/[username]/readers', params: { username: data.profile.username, list } });

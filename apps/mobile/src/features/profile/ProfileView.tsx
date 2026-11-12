@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -29,7 +30,7 @@ export type ProfileViewProps = {
   onBack: () => void;
   onOpenJar: (jarId: string) => void;
   onOpenMoment: (momentId: string, jarId: string) => void;
-  /** My profile only. TODO(M3-15): Edit profile. */
+  /** My profile only: opens Edit profile. */
   onEditProfile?: () => void;
   /** Other profile only: Read / Read back starts reading, Reading stops (FR-SOC-07). */
   onToggleReading?: () => void;
@@ -130,11 +131,27 @@ export function ProfileView({
   return (
     <View style={styles.screen} testID="profile-screen">
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + space.xxl }}>
-        {/* TODO(M3-15): the cover photo the person chose; until then a brand tint band. */}
-        <View style={[styles.cover, { height: sizes.profileCover + insets.top }]} testID="profile-cover" />
+        <View style={[styles.cover, { height: sizes.profileCover + insets.top }]} testID="profile-cover">
+          {data.images?.cover ? (
+            <Image
+              source={{ uri: data.images.cover }}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              accessible={false}
+              testID="profile-cover-photo"
+            />
+          ) : null}
+        </View>
         <View style={styles.body}>
           <View style={styles.avatarRow}>
-            <Avatar name={profile.display_name} size="xl" ring decorative testID="profile-avatar" />
+            <Avatar
+              name={profile.display_name}
+              uri={data.images?.avatar}
+              size="xl"
+              ring
+              decorative
+              testID="profile-avatar"
+            />
             <View style={styles.actions}>
               {isOwner && onEditProfile ? (
                 <BaseButton
