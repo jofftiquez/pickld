@@ -85,3 +85,18 @@ export function anonClient(): SupabaseClient {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
+
+/** The Authorization header RevenueCat sends to fn:revenuecat-webhook is `Bearer <this>` (at least 32 characters). */
+export function revenueCatWebhookSecret(): string {
+  return required('REVENUECAT_WEBHOOK_SECRET');
+}
+
+/** RevenueCat's secret API key (v1), for reading a buyer's verified purchases. Server only. */
+export function revenueCatSecretKey(): string {
+  return required('REVENUECAT_SECRET_KEY');
+}
+
+/** Sandbox receipts (TestFlight, Simulator) unlock packs everywhere except production. */
+export function revenueCatAllowSandbox(): boolean {
+  return (Deno.env.get('APP_ENV') || 'local') !== 'production';
+}

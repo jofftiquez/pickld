@@ -1,0 +1,22 @@
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "CDFD7B5B-8E0A-4B5E-9A8E-1C2D3E4F5A6B",
+    "type": "NON_RENEWING_PURCHASE",
+    "app_id": "app1234567890",
+    "app_user_id": "{{BUYER}}",
+    "original_app_user_id": "{{BUYER}}",
+    "aliases": ["$RCAnonymousID:8b5f2c0e4a1d4e9f9c3b7a6d5e4f3a2b", "{{BUYER}}"],
+    "product_id": "{{PRODUCT}}",
+    "period_type": "NORMAL",
+    "purchased_at_ms": 1794500000000,
+    "environment": "SANDBOX",
+    "store": "APP_STORE",
+    "transaction_id": "2000000999000001",
+    "original_transaction_id": "2000000999000001",
+    "price": 1.99,
+    "currency": "USD",
+    "country_code": "PH",
+    "event_timestamp_ms": 1794500000500
+  }
+}
