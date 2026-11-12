@@ -827,5 +827,94 @@
     "empty": "You haven’t blocked anyone.",
     "failed": "Couldn’t load blocked accounts.",
     "retry": "Try again"
+  },
+  "welcome": {
+    "title": "Eight moments.\nOne real day.",
+    "body": "You deserve to be you. The easiest way to tell your story, one real day at a time.",
+    "getStarted": "Get started",
+    "haveAccount": "I already have an account",
+    "logo": "Pickld"
+  },
+  "intro": {
+    "back": "Back",
+    "skip": "Skip",
+    "skipA11y": "Skip the introduction",
+    "next": "Next",
+    "create": "Create my account",
+    "page": "Page {{page}} of {{count}}",
+    "1": {
+      "title": "Eight moments a day",
+      "body": "Where you are, what keeps you busy, who you’re with, your outfit, a selfie, and your morning, afternoon and evening. Even the ordinary parts count."
+    },
+    "2": {
+      "title": "Every moment fills your jar",
+      "body": "Eight moments make a full jar. A fresh jar starts every midnight, and missed a moment? You can fill it in later. Every jar is kept in My days.",
+      "count": "5 of 8 moments"
+    },
+    "3": {
+      "title": "You deserve to be you.",
+      "body": "The easiest way to tell your story. No pretending, no pressure: just your day as it happens, shared with the people you choose.",
+      "sticker": "Real ako",
+      "bubble": "no filter, no sleep",
+      "noFilters": "No beauty filters",
+      "private": "Private moments",
+      "youPick": "You pick who reads"
+    }
+  },
+  "auth": {
+    "back": "Back",
+    "or": "or",
+    "email": "Email",
+    "emailPlaceholder": "you@email.com",
+    "signUp": {
+      "title": "Create your account",
+      "body": "It takes less than a minute.",
+      "apple": "Continue with Apple",
+      "google": "Continue with Google",
+      "email": "Continue with email",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "agree": "By continuing you agree to our",
+      "terms": "Terms",
+      "and": "and",
+      "privacy": "Privacy Policy"
+    },
+    "signIn": {
+      "title": "Welcome back",
+      "body": "Your jars are right where you left them.",
+      "apple": "Sign in with Apple",
+      "google": "Sign in with Google",
+      "hint": "We’ll email you a one-tap sign-in link. No password needed.",
+      "send": "Send sign-in link",
+      "newHere": "New here? Create an account"
+    },
+    "checkEmail": {
+      "title": "Check your email",
+      "sentTo": "We sent a sign-in link to",
+      "tapIt": ". Tap it on this phone to jump straight in.",
+      "openApp": "Open email app",
+      "resendIn": "Didn’t get it? Resend in {{time}}",
+      "resend": "Didn’t get it? Resend link",
+      "resent": "Sent again. Check your inbox.",
+      "different": "Use a different email"
+    },
+    "callback": {
+      "signingIn": "Signing you in…",
+      "failed": "That link didn’t work. It may have expired or been used already.",
+      "tryAgain": "Try again"
+    },
+    "errors": {
+      "invalidEmail": "Enter a valid email address.",
+      "noAccount": "No account uses that email yet. Create one instead?",
+      "rateLimited": "Too many tries. Wait a minute and try again.",
+      "cancelled": "Sign in was cancelled.",
+      "failed": "Something went wrong. Check your connection and try again."
+    }
+  },
+  "setup": {
+    "about": {
+      "title": "About you",
+      "body": "Your profile comes next: a photo, your name and a username."
+    }
   }
 }

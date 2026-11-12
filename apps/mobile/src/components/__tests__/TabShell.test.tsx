@@ -6,7 +6,6 @@ import TabsLayout from '../../../app/(tabs)/_layout';
 import JarsScreen from '../../../app/(tabs)/jars';
 import MyDaysScreen from '../../../app/(tabs)/my-days';
 import TodayScreen from '../../../app/(tabs)/today';
-import Index from '../../../app/index';
 
 // Today draws a JarGraphic, which needs Reanimated's native worklets; expo-router's testing mocks
 // replace Reanimated with its own mock, which can't load under Jest in this version. The jar isn't
@@ -25,7 +24,6 @@ function wrapper({ children }: { children: ReactNode }) {
 
 // The real route files from app/, wired through Expo Router's in-memory router.
 const routes = {
-  index: Index,
   '(tabs)/_layout': TabsLayout,
   '(tabs)/today': TodayScreen,
   '(tabs)/capture': () => null,
@@ -41,8 +39,9 @@ const tabs = [
 ];
 
 describe('tab shell', () => {
-  it('opens on Today with the floating tab bar', async () => {
-    await renderRouter(routes, { initialUrl: '/', wrapper });
+  // Where the app opens (Welcome, About you or Today) is in features/onboarding/__tests__/StartRoute.test.tsx.
+  it('shows Today with the floating tab bar', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
     expect(screen).toHavePathname('/today');
     expect(screen.getByRole('tab', { name: 'Today', selected: true })).toBeTruthy();
     expect(screen.getByTestId('floating-tab-bar')).toBeTruthy();

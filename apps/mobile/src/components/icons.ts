@@ -87,6 +87,7 @@ export const icons = {
   bell: [p('M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9'), p('M13.7 21a2 2 0 0 1-3.4 0')],
   heart: [p('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z')],
   comment: [p('M4 5h16v11H9l-4 3v-3H4z')],
+  mail: [r(3, 5, 18, 14, 3), p('m4 7 8 6 8-6')],
   send: [p('M4 12 20 4l-6 16-3-7z')],
 } satisfies Record<string, IconShape[]>;
 

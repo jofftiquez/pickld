@@ -18,6 +18,8 @@ export function getSupabase(): SupabaseClient<Database> {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: false,
+        // Email links and Apple/Google come back as pickld://auth/callback?code=… (src/lib/auth.ts).
+        flowType: 'pkce',
       },
     });
   }

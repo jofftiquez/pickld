@@ -1,0 +1,56 @@
+# M4-02: Sign in with an email link through local Mailpit, then land on Today (FR-ACC-02). Also captures
+# Sign in and Check your email. Starts signed out; ends with dale signed in again.
+# maestro test apps/mobile/.maestro/sign-in-email.yaml
+appId: me.pickld.app
+env:
+  EMAIL: dale@pickld.test
+---
+- launchApp
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 60000
+- tapOn:
+    id: welcome-sign-in
+- extendedWaitUntil:
+    visible:
+      id: sign-in-screen
+    timeout: 10000
+- tapOn:
+    id: auth-email
+- inputText: ${EMAIL}
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: SignIn-ios
+- tapOn:
+    id: auth-submit
+- extendedWaitUntil:
+    visible:
+      id: check-email-screen
+    timeout: 15000
+- assertVisible:
+    id: check-email-timer
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: CheckEmail-ios
+- runScript:
+    file: mailpit-link.js
+    env:
+      EMAIL: ${EMAIL}
+- openLink: ${output.link}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 30000
