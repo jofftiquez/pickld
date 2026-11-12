@@ -190,7 +190,9 @@
     "send": "Send",
     "sendFailed": "Couldn’t send. Check your connection and try again.",
     "left_one": "{{count}} character left",
-    "left_other": "{{count}} characters left"
+    "left_other": "{{count}} characters left",
+    "report": "Report",
+    "reportLabel": "Report {{name}}’s comment"
   },
   "myDays": {
     "title": "My days",
@@ -777,5 +779,36 @@
       "afternoon": "What are you up to right now?",
       "evening": "How is today winding down?"
     }
+  },
+  "report": {
+    "tab": "Report",
+    "blockTab": "Block",
+    "title": "Why are you reporting this?",
+    "anonymous": "{{name}} won’t know who reported this.",
+    "reason": {
+      "sexual": "Nudity or sexual content",
+      "harassment": "Harassment or bullying",
+      "violence": "Violence or dangerous acts",
+      "hate": "Hate speech or symbols",
+      "spam": "Spam or scam",
+      "under_13": "Involves someone under 13",
+      "other": "Something else"
+    },
+    "submit": "Submit report",
+    "error": {
+      "unavailable": "This isn’t available any more.",
+      "own": "You can’t report your own posts.",
+      "failed": "Couldn’t send the report. Check your connection and try again."
+    },
+    "sentTitle": "Thanks for telling us",
+    "sentBody": {
+      "jar": "We’ll review this jar. {{name}} won’t know who reported it.",
+      "moment": "We’ll review this moment. {{name}} won’t know who reported it.",
+      "comment": "We’ll review this comment. {{name}} won’t know who reported it.",
+      "profile": "We’ll review this account. {{name}} won’t know who reported it."
+    },
+    "alsoBlock": "Also block {{name}}",
+    "done": "Done",
+    "more": "More options"
   }
 }

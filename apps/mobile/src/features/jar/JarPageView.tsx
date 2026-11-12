@@ -36,6 +36,8 @@ export type JarPageViewProps = {
   /** Opens the author's profile from their avatar. */
   onOpenAuthor?: () => void;
   onShare: () => void;
+  /** More options on someone else's jar: Report (M3-21). Not shown to the owner. */
+  onMore?: () => void;
   onRetry: () => void;
   locale?: string;
 };
@@ -65,6 +67,7 @@ export function JarPageView({
   onOpenMoment,
   onOpenAuthor,
   onShare,
+  onMore,
   onRetry,
   locale = deviceLocale(),
 }: JarPageViewProps) {
@@ -230,7 +233,15 @@ export function JarPageView({
           onPress={onBack}
           testID="jar-back"
         />
-        {/* TODO(M3-21, #82): More options → Report on someone else's jar. */}
+        {onMore && !page.isOwner ? (
+          <RoundIconButton
+            icon="more"
+            variant="glass"
+            accessibilityLabel={t('report.more')}
+            onPress={onMore}
+            testID="jar-more"
+          />
+        ) : null}
       </View>
 
       <View style={[styles.bar, { bottom: insets.bottom + space.lg }]} testID="jar-bar">

@@ -1,0 +1,51 @@
+# M3-21: report someone else's jar from its More options; Report sent follows. A repeat run is fine
+# (a second report on the same jar is ignored). Needs the seed data (dale reads mika) and dale signed in:
+# maestro test apps/mobile/.maestro/report.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- tapOn:
+    id: feed-card-mika
+- extendedWaitUntil:
+    visible:
+      id: jar-more
+    timeout: 40000
+- tapOn:
+    id: jar-more
+- extendedWaitUntil:
+    visible: 'Why are you reporting this\?'
+    timeout: 10000
+- tapOn:
+    id: report-reason-harassment
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Report-ios
+- tapOn:
+    id: report-submit
+- extendedWaitUntil:
+    visible:
+      id: report-sent
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ReportSent-ios
+- tapOn:
+    id: report-done
+- extendedWaitUntil:
+    notVisible:
+      id: report-sheet
+    timeout: 10000

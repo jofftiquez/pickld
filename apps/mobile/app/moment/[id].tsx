@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +9,7 @@ import { useLike } from '@/features/jar/useLike';
 import { MomentDetailView } from '@/features/moment/MomentDetailView';
 import { OwnMomentView } from '@/features/moment/OwnMomentView';
 import { useOwnMoment } from '@/features/moment/useOwnMoment';
+import { ReportSheet } from '@/features/safety/ReportSheet';
 
 // /moment/[id]: Moment detail (M3-08; FR-SOC-04) when opened from a jar (`jar` param) or for the owner's
 // own live moment, swiping through that jar's shown moments. The owner's checking or removed moment
@@ -24,6 +26,7 @@ export default function MomentScreen() {
   const jarId = jar ?? ownLiveJar;
   const page = useJarPage(jarId);
   const like = useLike(page.data?.viewerId ?? null, page.data?.jar.id ?? null);
+  const [reporting, setReporting] = useState<string | null>(null);
 
   const close = () => {
     if (router.canGoBack()) router.back();
@@ -48,7 +51,14 @@ export default function MomentScreen() {
         onShare={() => {
           if (page.data) shareJar(page.data, t);
         }}
+        onMore={setReporting}
         onRetry={() => void page.refresh()}
+      />
+      <ReportSheet
+        visible={reporting !== null}
+        subject={reporting ? { target: 'moment', targetId: reporting } : null}
+        name={page.data?.author.display_name ?? ''}
+        onClose={() => setReporting(null)}
       />
     </>
   );

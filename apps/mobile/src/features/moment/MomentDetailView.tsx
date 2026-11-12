@@ -42,6 +42,8 @@ export type MomentDetailViewProps = {
   /** Likes or unlikes the moment on screen (FR-SOC-05). */
   onToggleLike?: (target: LikeTarget) => void;
   onShare: () => void;
+  /** More options on someone else's moment: Report (M3-21). Not shown to the owner. */
+  onMore?: (momentId: string) => void;
   onRetry: () => void;
   locale?: string;
 };
@@ -59,6 +61,7 @@ export function MomentDetailView({
   insets,
   onClose,
   onOpenComments,
+  onMore,
   onToggleLike,
   onShare,
   onRetry,
@@ -183,8 +186,17 @@ export function MomentDetailView({
               {firstName(data.author.display_name)}
             </Text>
           </View>
-          {/* TODO(M3-21, #82): More options → Report on someone else's moment; Moment options for the owner. */}
-          <View style={styles.topSpacer} />
+          {onMore && data.jar.user_id !== data.viewerId ? (
+            <RoundIconButton
+              icon="more"
+              variant="glass"
+              accessibilityLabel={t('report.more')}
+              onPress={() => onMore(moment.id)}
+              testID="moment-more"
+            />
+          ) : (
+            <View style={styles.topSpacer} />
+          )}
         </View>
       </View>
 

@@ -39,6 +39,8 @@ export type ProfileViewProps = {
   /** Opens Readers & authors on that list. */
   onOpenList?: (list: FollowList) => void;
   onShare: () => void;
+  /** More options on someone else's profile: Report (M3-21). */
+  onMore?: () => void;
   onRetry: () => void;
   locale?: string;
 };
@@ -70,6 +72,7 @@ export function ProfileView({
   followBusy = false,
   onOpenList,
   onShare,
+  onMore,
   onRetry,
   locale = deviceLocale(),
 }: ProfileViewProps) {
@@ -186,6 +189,14 @@ export function ProfileView({
                 onPress={onShare}
                 testID="profile-share"
               />
+              {!isOwner && onMore ? (
+                <RoundIconButton
+                  icon="more"
+                  accessibilityLabel={t('report.more')}
+                  onPress={onMore}
+                  testID="profile-more"
+                />
+              ) : null}
             </View>
           </View>
           <View style={styles.names}>
