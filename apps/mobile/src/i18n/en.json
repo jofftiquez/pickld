@@ -1235,7 +1235,7 @@
     "export": {
       "none": "Download all your photos and captions first.",
       "pending": "We’re preparing your download. It’s ready within 24 hours; come back here for the link.",
-      "done": "Your download is ready until {{time}}.",
+      "done": "Your download is ready until {{date}}, {{time}}.",
       "failed": "We couldn’t prepare your download. Try again."
     },
     "download": "Download",
