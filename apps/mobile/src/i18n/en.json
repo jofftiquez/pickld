@@ -680,5 +680,61 @@
     "discard": "Discard",
     "nameEmpty": "Add your name",
     "nameTooLong": "Up to 40 characters"
+  },
+  "reminders": {
+    "morning": {
+      "0": {
+        "title": "Morning’s here",
+        "body": "What does your morning look like? Your {{slot}} is still empty."
+      },
+      "1": {
+        "title": "Good morning",
+        "body": "One photo of how today starts. Your {{slot}} is waiting."
+      },
+      "2": {
+        "title": "Coffee, commute, chaos?",
+        "body": "Whatever it is, it fits your {{slot}}."
+      },
+      "3": {
+        "title": "A new jar today",
+        "body": "Start it with your {{slot}}."
+      }
+    },
+    "afternoon": {
+      "0": {
+        "title": "Afternoon’s here",
+        "body": "What are you up to right now? Your {{slot}} is still empty."
+      },
+      "1": {
+        "title": "Midday check-in",
+        "body": "Lunch, work or a walk? Your {{slot}} is open."
+      },
+      "2": {
+        "title": "How’s the day going?",
+        "body": "Show it in your {{slot}}."
+      },
+      "3": {
+        "title": "Right now counts",
+        "body": "An ordinary moment makes a good {{slot}}."
+      }
+    },
+    "evening": {
+      "0": {
+        "title": "Evening’s here",
+        "body": "How is today winding down? Your {{slot}} is still empty."
+      },
+      "1": {
+        "title": "Before the day ends",
+        "body": "One more photo for your {{slot}}."
+      },
+      "2": {
+        "title": "Dinner, couch, night out?",
+        "body": "Whatever it is, it fits your {{slot}}."
+      },
+      "3": {
+        "title": "Close today’s jar gently",
+        "body": "Your {{slot}} is open whenever you’re ready."
+      }
+    }
   }
 }

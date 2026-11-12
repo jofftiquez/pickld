@@ -116,7 +116,8 @@ function parseLocalDate(localDate: string): { year: number; month: number; day: 
   return { year, month, day };
 }
 
-function addDays(localDate: string, days: number): string {
+/** The calendar date `days` after (or before) a YYYY-MM-DD date. */
+export function addDays(localDate: string, days: number): string {
   const { year, month, day } = parseLocalDate(localDate);
   const d = new Date(Date.UTC(year, month - 1, day + days));
   return `${pad(d.getUTCFullYear(), 4)}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
@@ -128,9 +129,16 @@ const HOUR = 3_600_000;
  * a midnight skipped by a spring-forward gap uses the offset before the change (the day starts at the
  * change), and a repeated midnight uses the offset after the change. */
 function startOfLocalDate(localDate: string, tz: string): Date {
+  return localTimeToInstant(localDate, 0, tz);
+}
+
+/** The instant a wall-clock time (`minutes` after midnight) happens on a local date in a zone, with the
+ * same gap and overlap rules as `startOfLocalDate`: a time skipped by a spring-forward gap moves forward by
+ * the gap (02:30 becomes 03:30), and a repeated time uses the later offset. Used for slot reminders (FR-NOT-01). */
+export function localTimeToInstant(localDate: string, minutes: number, tz: string): Date {
   const { year, month, day } = parseLocalDate(localDate);
-  const wallAsUtc = Date.UTC(year, month - 1, day);
-  // Local midnight lies within UTC-14h..UTC+12h of wallAsUtc; sample the offsets on both sides.
+  const wallAsUtc = Date.UTC(year, month - 1, day, 0, minutes);
+  // The local time lies within UTC-14h..UTC+12h of wallAsUtc; sample the offsets on both sides.
   const offsets = [...new Set([offsetMs(tz, wallAsUtc - 15 * HOUR), offsetMs(tz, wallAsUtc + 15 * HOUR)])];
   const valid = offsets.filter((o) => offsetMs(tz, wallAsUtc - o) === o);
   return new Date(Math.max(...(valid.length > 0 ? valid : offsets).map((o) => wallAsUtc - o)));
