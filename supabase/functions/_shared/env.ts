@@ -53,3 +53,13 @@ export function photoTokenSecret(): string {
 export function contactHashSecret(): string {
   return required('CONTACT_HASH_SECRET');
 }
+
+/** The header value the Supabase Cron job sends to fn:send-push (at least 32 characters). */
+export function pushCronSecret(): string {
+  return required('PUSH_CRON_SECRET');
+}
+
+/** Optional: only needed when the Expo project turns on enhanced push security. */
+export function expoAccessToken(): string | undefined {
+  return Deno.env.get('EXPO_ACCESS_TOKEN') || undefined;
+}
