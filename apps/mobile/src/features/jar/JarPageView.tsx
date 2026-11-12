@@ -5,7 +5,6 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
 import { BaseButton } from '@/components/BaseButton';
-import { Icon } from '@/components/Icon';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -16,6 +15,7 @@ import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from './jarPage';
+import { CommentsButton } from './CommentsButton';
 import { LikeButton } from './LikeButton';
 import { JarTile } from './JarTile';
 import { jarTitle } from './shareJar';
@@ -29,6 +29,8 @@ export type JarPageViewProps = {
   onBack: () => void;
   /** Likes or unlikes the jar (FR-SOC-05). */
   onToggleLike?: (target: LikeTarget) => void;
+  /** Opens the jar's Comments. */
+  onOpenComments?: () => void;
   /** Opens Moment detail for a moment on the page. */
   onOpenMoment?: (momentId: string) => void;
   onShare: () => void;
@@ -57,6 +59,7 @@ export function JarPageView({
   insets,
   onBack,
   onToggleLike,
+  onOpenComments,
   onOpenMoment,
   onShare,
   onRetry,
@@ -216,7 +219,6 @@ export function JarPageView({
       </View>
 
       <View style={[styles.bar, { bottom: insets.bottom + space.lg }]} testID="jar-bar">
-        {/* TODO(M3-11, #72): comments open Comments. */}
         <LikeButton
           count={jar.like_count}
           liked={isLiked(data, { kind: 'jar' })}
@@ -224,15 +226,12 @@ export function JarPageView({
           onPress={() => onToggleLike?.({ kind: 'jar' })}
           testID="jar-likes"
         />
-        <View
-          accessible
-          accessibilityLabel={t('jarPage.comments', { count: jar.comment_count })}
-          style={[styles.stat, { backgroundColor: colors.subtle }]}
+        <CommentsButton
+          count={jar.comment_count}
+          height={sizes.minTap}
+          onPress={() => onOpenComments?.()}
           testID="jar-comments"
-        >
-          <Icon name="comment" color="ink" size={16} strokeWidth={2} />
-          <Text style={[textStyle('bodyMedium', '600'), { color: colors.ink }]}>{jar.comment_count}</Text>
-        </View>
+        />
         <View style={styles.flex} />
         <BaseButton
           label={t('jarPage.share')}
@@ -318,13 +317,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     backgroundColor: colors.surface,
     ...shadow.floating,
-  },
-  stat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.xs + 2,
-    height: sizes.minTap,
-    paddingHorizontal: space.md + 2,
-    borderRadius: radius.pill,
   },
 });

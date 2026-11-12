@@ -157,7 +157,39 @@
     "unavailableTitle": "This jar isn’t available",
     "unavailableBody": "It may be private, or its owner hasn’t shared it with you.",
     "failed": "Couldn’t load this jar.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "openComments": "Opens the comments"
+  },
+  "comments": {
+    "title": "Comments",
+    "subtitle": "{{title}} · {{count}}",
+    "back": "Back",
+    "loading": "Loading comments",
+    "failed": "Couldn’t load the comments.",
+    "empty": "No comments yet. Say something kind.",
+    "someone": "Someone",
+    "meta": " · {{when}}",
+    "checking": "Checking…",
+    "age": {
+      "now": "now",
+      "minutes": "{{count}}m",
+      "hours": "{{count}}h",
+      "days": "{{count}}d"
+    },
+    "reply": "Reply",
+    "replyTo": "Reply to {{name}}",
+    "delete": "Delete",
+    "deleteLabel": "Delete {{name}}’s comment",
+    "deleteTitle": "Delete this comment?",
+    "deleteBody": "It will be removed for everyone.",
+    "placeholder": "Add a comment…",
+    "replyPlaceholder": "Write a reply…",
+    "replying": "Replying to {{name}}",
+    "cancelReply": "Cancel reply",
+    "send": "Send",
+    "sendFailed": "Couldn’t send. Check your connection and try again.",
+    "left_one": "{{count}} character left",
+    "left_other": "{{count}} characters left"
   },
   "myDays": {
     "title": "My days",
