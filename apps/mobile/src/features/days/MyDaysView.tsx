@@ -23,6 +23,8 @@ export type MyDaysViewProps = {
   onSelectDay: (date: string) => void;
   /** The selected-day card, under the calendar. */
   selectedDay?: ReactNode;
+  /** Opens Memories (FR-DAY-03). */
+  onMemories?: () => void;
   locale?: string;
 };
 
@@ -57,6 +59,7 @@ export function MyDaysView({
   onNext,
   onSelectDay,
   selectedDay,
+  onMemories,
   locale = deviceLocale(),
 }: MyDaysViewProps) {
   const { t } = useTranslation();
@@ -91,6 +94,14 @@ export function MyDaysView({
           </Text>
         </View>
         <View style={styles.actions}>
+          {onMemories ? (
+            <RoundIconButton
+              icon="sparkle"
+              accessibilityLabel={t('myDays.memories')}
+              onPress={onMemories}
+              testID="my-days-memories"
+            />
+          ) : null}
           <RoundIconButton
             icon="back"
             accessibilityLabel={t('myDays.previousMonth')}
