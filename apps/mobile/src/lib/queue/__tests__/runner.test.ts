@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { AppState, type AppStateStatus } from 'react-native';
 
+import { track } from '../../analytics';
 import { useAuthStore } from '../../authStore';
 import { reportNetworkResult } from '../../connectivity';
 import { captureError } from '../../monitoring';
@@ -12,6 +13,7 @@ import { capturedFiles, fakeBackend, networkError, resetFakes, USER } from './fa
 jest.mock('expo-sqlite', () => jest.requireActual('./fakes').expoSqlite);
 jest.mock('expo-file-system', () => jest.requireActual('./fakes').expoFileSystem);
 jest.mock('../../monitoring', () => ({ captureError: jest.fn() }));
+jest.mock('../../analytics', () => ({ track: jest.fn() }));
 jest.mock('../../connectivity', () => ({
   ...jest.requireActual('../../connectivity'),
   reportNetworkResult: jest.fn(),
@@ -19,7 +21,7 @@ jest.mock('../../connectivity', () => ({
 
 const session = { access_token: 't', user: { id: USER } } as unknown as Session;
 
-function queueMoment(slot: 'ootd' | 'selfie' = 'ootd') {
+function queueMoment(slot: 'ootd' | 'selfie' | 'whereami' = 'ootd') {
   return enqueue({ userId: USER, ...capturedFiles(), slot, localDate: '2026-11-11', tz: 'Asia/Manila' });
 }
 
@@ -125,6 +127,27 @@ describe('upload runner', () => {
     await settle();
     expect(backend.moments.map((m) => m.slot)).toEqual(['ootd']);
     expect(await getItem(refused.id)).toMatchObject({ state: 'failed', attempts: MAX_ATTEMPTS });
+  });
+
+  it('sends each photo’s final result for the upload-failure alert, but not retries or offline waits', async () => {
+    const network = fakeNetwork(true);
+    const lastTry = await queueMoment('selfie');
+    let item = (await getItem(lastTry.id))!;
+    for (let i = 0; i < MAX_ATTEMPTS - 1; i += 1) item = fail(startAttempt({ ...item, nextAttemptAt: null }), 'x');
+    await saveStatus({ ...item, nextAttemptAt: null });
+    await queueMoment('ootd');
+    backend.failNext('upload-url', { message: 'Edge Function returned a non-2xx status code' });
+    start(network.source);
+    await requestUploads();
+    await settle();
+    expect(jest.mocked(track).mock.calls.map((c) => c[1])).toEqual([{ outcome: 'failed' }, { outcome: 'uploaded' }]);
+    expect(jest.mocked(track).mock.calls.every((c) => c[0] === 'upload_result')).toBe(true);
+
+    jest.mocked(track).mockClear();
+    backend.failNext('upload-url', networkError());
+    await queueMoment('whereami');
+    await requestUploads();
+    expect(track).not.toHaveBeenCalled();
   });
 
   it('drains when the app returns to the foreground', async () => {
