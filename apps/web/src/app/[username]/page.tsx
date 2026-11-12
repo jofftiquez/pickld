@@ -21,10 +21,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await getProfile(decodeURIComponent((await params).username));
   if (!page) return {};
   const { display_name: name, username, bio } = page.profile;
+  const title = t('profile.title', { name, username });
+  const description = bio ?? t('site.tagline');
   return {
-    title: t('profile.title', { name, username }),
-    description: bio ?? undefined,
+    title,
+    description,
     alternates: { canonical: `/${username}` },
+    openGraph: { type: 'profile', siteName: t('site.name'), title, description, url: `/${username}` },
+    twitter: { card: 'summary_large_image', title, description },
   };
 }
 

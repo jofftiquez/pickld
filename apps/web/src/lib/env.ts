@@ -22,3 +22,8 @@ export function storeLinks() {
       'https://play.google.com/store/apps/details?id=me.pickld.app',
   };
 }
+
+/** The public origin, for absolute link-preview URLs (og:url, og:image). */
+export function siteUrl(): string {
+  return optionalUrl.parse(process.env.SITE_URL || undefined) ?? 'https://pickld.me';
+}

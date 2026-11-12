@@ -52,5 +52,15 @@
     "guidelines": "Community Guidelines",
     "draft": "This page is being prepared and will be published before Pickld launches.",
     "footer": "Legal"
+  },
+  "og": {
+    "jarTitle": "{{name}}’s {{weekday}}",
+    "jarMeta": "{{date}} · {{count}} of 8",
+    "readersTitle": "{{name}} shared a {{weekday}} jar",
+    "readersBody": "Only {{name}}’s readers can see it.",
+    "profileMeta": "@{{username}} on Pickld",
+    "alt": "{{name}}’s jar on Pickld",
+    "description": "{{count}} of 8 moments from {{name}}’s {{weekday}}.",
+    "descriptionReaders": "A jar for {{name}}’s readers."
   }
 }
