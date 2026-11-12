@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
 import { RoundIconButton } from '@/components/RoundIconButton';
@@ -16,6 +16,8 @@ export type TodayHeaderProps = {
   displayName: string | null;
   avatarUrl: string | null;
   onOpenMyDays: () => void;
+  /** Opens My profile from the avatar. */
+  onOpenProfile?: () => void;
   /** "Tokyo time" on a jar that started in a new zone; replaces the greeting (TimeZone). */
   zoneTag?: string | null;
 };
@@ -27,6 +29,7 @@ export function TodayHeader({
   displayName,
   avatarUrl,
   onOpenMyDays,
+  onOpenProfile,
   zoneTag = null,
 }: TodayHeaderProps) {
   const { t } = useTranslation();
@@ -58,8 +61,19 @@ export function TodayHeader({
           onPress={onOpenMyDays}
           testID="today-my-days"
         />
-        {/* TODO(M3-13): open My profile once the route exists. */}
-        {displayName ? <Avatar name={displayName} uri={avatarUrl} size="header" testID="today-avatar" /> : null}
+        {displayName && onOpenProfile ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={displayName}
+            accessibilityHint={t('profile.openMine')}
+            onPress={onOpenProfile}
+            testID="today-avatar"
+          >
+            <Avatar name={displayName} uri={avatarUrl} size="header" decorative />
+          </Pressable>
+        ) : displayName ? (
+          <Avatar name={displayName} uri={avatarUrl} size="header" testID="today-avatar" />
+        ) : null}
       </View>
     </View>
   );
