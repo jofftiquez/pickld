@@ -49,6 +49,8 @@ const config: ExpoConfig = {
     'expo-localization',
     'expo-secure-store',
     'expo-sqlite',
+    // Local slot reminders and server pushes (FR-NOT-01, FR-NOT-02).
+    ['expo-notifications', { color: colors.brand }],
     // The gallery picker (D-26): only the photo library; the camera is vision-camera's, no microphone.
     [
       'expo-image-picker',

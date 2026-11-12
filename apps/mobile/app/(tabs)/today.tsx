@@ -11,6 +11,8 @@ import { retryUpload } from '@/features/jar/retryUpload';
 import { openTodayJar, useRollover } from '@/features/jar/rollover';
 import { buildTodayGrid, holdsSlot, offlineBannerCount, type GridTile } from '@/features/jar/todayGrid';
 import { useCelebrations } from '@/features/jar/useCelebrations';
+import { DAY_SLOTS } from '@/features/reminders/reminderPlan';
+import { useReminderSync } from '@/features/reminders/useReminderSync';
 import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { MomentOptions, type MomentOptionsSelection } from '@/features/moment/MomentOptions';
@@ -74,6 +76,11 @@ export default function TodayScreen() {
     nowSlot: currentSlot(now, tz),
     jarTz: jar?.jar?.tz ?? null,
   });
+  // Slot reminders and the push token (M3-18): a filled day slot cancels today's reminder for it.
+  useReminderSync(
+    userId,
+    DAY_SLOTS.filter((slot) => tiles.some((tile) => tile.slot === slot && holdsSlot(tile))),
+  );
 
   // Moment options (M2-23). The last selection stays while the sheet animates out; each opening starts fresh.
   const [options, setOptions] = useState<{ selection: MomentOptionsSelection; open: boolean; n: number } | null>(null);

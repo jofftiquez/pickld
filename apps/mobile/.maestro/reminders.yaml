@@ -1,0 +1,58 @@
+# M3-18: slot reminders. Allows notifications on the dev screen, lets Today schedule the week's reminders,
+# checks they are listed, then fires one 5 seconds out and captures the banner on the home screen.
+# Needs a dev build signed in: maestro test apps/mobile/.maestro/reminders.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- openLink: pickld://dev/notifications
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: dev-notifications-allow
+    timeout: 20000
+- tapOn:
+    id: dev-notifications-allow
+- runFlow:
+    when:
+      visible: '^Allow$'
+    commands:
+      - tapOn: '^Allow$'
+- extendedWaitUntil:
+    visible: 'Permission: granted'
+    timeout: 10000
+# Back to Today so useReminderSync runs with permission granted.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 5000
+- openLink: pickld://dev/notifications
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- tapOn:
+    id: dev-notifications-refresh
+- extendedWaitUntil:
+    visible: '[1-9][0-9]? reminders scheduled'
+    timeout: 10000
+- takeScreenshot: ReminderList-ios
+- tapOn:
+    id: dev-notifications-test
+- pressKey: Home
+- extendedWaitUntil:
+    visible: '.*afternoon.*'
+    timeout: 15000
+- takeScreenshot: Reminder-ios

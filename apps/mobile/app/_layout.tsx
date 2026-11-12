@@ -4,6 +4,7 @@ import '@/i18n';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useState } from 'react';
 import { LogBox } from 'react-native';
@@ -22,6 +23,11 @@ void SplashScreen.preventAutoHideAsync();
 // The dev warning toast only says "Open debugger to view warnings" and covers the bottom of the screen
 // (and every screenshot). Warnings still print in Metro and the debugger; crash screens still show.
 LogBox.ignoreAllLogs();
+// Reminders and pushes that arrive while Pickld is open still show as a banner, quietly (FR-NOT-01).
+Notifications.setNotificationHandler({
+  handleNotification: () =>
+    Promise.resolve({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
+});
 
 export default function RootLayout() {
   const [loaded] = useFonts(fontFiles);
