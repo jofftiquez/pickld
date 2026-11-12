@@ -158,7 +158,8 @@
     "unavailableBody": "It may be private, or its owner hasn’t shared it with you.",
     "failed": "Couldn’t load this jar.",
     "retry": "Try again",
-    "openComments": "Opens the comments"
+    "openComments": "Opens the comments",
+    "openAuthorHint": "Opens their profile"
   },
   "comments": {
     "title": "Comments",
@@ -576,5 +577,39 @@
     "keep": "Keep current photo",
     "keepHint": "Deletes the new photo from your phone",
     "notNow": "Not now"
+  },
+  "profile": {
+    "back": "Back",
+    "edit": "Edit profile",
+    "share": "Share profile",
+    "shareHint": "Shares a link to this profile",
+    "shareMessage": "{{name}} on Pickld: {{url}}",
+    "readsYou": "Reads you",
+    "username": "@{{username}}",
+    "thousands": "{{value}}k",
+    "readers": "Readers",
+    "authors": "Authors",
+    "jars": "Jars",
+    "readersA11y_one": "{{count}} reader",
+    "readersA11y_other": "{{count}} readers",
+    "authorsA11y_one": "{{count}} author",
+    "authorsA11y_other": "{{count}} authors",
+    "jarsA11y_one": "{{count}} jar",
+    "jarsA11y_other": "{{count}} jars",
+    "sections": "Profile sections",
+    "tabJars": "Jars",
+    "tabMoments": "Moments",
+    "jarCount": "{{count}}/{{max}}",
+    "jarTile": "{{date}}, {{count}} of {{max}} moments",
+    "momentTile": "{{slot}}, {{date}}",
+    "openJarHint": "Opens the jar",
+    "openMomentHint": "Opens the moment",
+    "emptyMine": "Your jars show up here once you add a moment.",
+    "emptyOther": "{{name}} hasn’t shared any jars with you yet.",
+    "unavailableTitle": "This profile isn’t available",
+    "unavailableBody": "The account may not exist, or it isn’t open to you.",
+    "failed": "Couldn’t load this profile.",
+    "retry": "Try again",
+    "openMine": "Opens your profile"
   }
 }

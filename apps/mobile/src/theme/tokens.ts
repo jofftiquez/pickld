@@ -128,6 +128,7 @@ export const type = {
   unlockTitle: { size: 28, weight: '800', letterSpacing: -0.84 }, // "Your first full jar!" (StickerUnlock)
   cropTitle: { size: 16, weight: '700' }, // "Crop photo" (Crop)
   countTile: { size: 26, weight: '800' }, // "8/8" on the tile ending the Jar page grid (Story)
+  profileName: { size: 22, weight: '800', letterSpacing: -0.44 }, // name on a profile header (Profile)
   momentCaption: { size: 18, weight: '700', letterSpacing: -0.18 }, // caption in Moment detail's sheet (Moment)
 } as const;
 
@@ -302,6 +303,10 @@ export const sizes = {
   progressBarWidth: 80, // Milestones progress bar (StickerUnlock)
   progressBarHeight: 6,
   jarCover: 230, // cover photo on the Jar page (Story)
+  profileCover: 150, // cover band at the top of a profile (Profile, ProfileOther)
+  profileAvatarOverlap: 44, // how far the profile avatar rises into the cover
+  profileButton: 40, // Edit profile pill beside the avatar (Profile)
+  profileTileFade: 50, // bottom fade under a profile grid tile's date and count
   jarTile: 112, // tile height in the Jar page's 3-column grid (Story)
   jarTileFade: 48, // bottom fade under a Jar page tile's #slot
   momentProgress: 3, // height of each of Moment detail's 8 progress bars (Moment)

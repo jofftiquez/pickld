@@ -33,6 +33,8 @@ export type JarPageViewProps = {
   onOpenComments?: () => void;
   /** Opens Moment detail for a moment on the page. */
   onOpenMoment?: (momentId: string) => void;
+  /** Opens the author's profile from their avatar. */
+  onOpenAuthor?: () => void;
   onShare: () => void;
   onRetry: () => void;
   locale?: string;
@@ -61,6 +63,7 @@ export function JarPageView({
   onToggleLike,
   onOpenComments,
   onOpenMoment,
+  onOpenAuthor,
   onShare,
   onRetry,
   locale = deviceLocale(),
@@ -145,7 +148,19 @@ export function JarPageView({
             />
           ) : null}
           <View style={styles.coverFooter}>
-            <Avatar name={author.display_name} uri={null} size="header" ring decorative />
+            {onOpenAuthor ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={author.display_name}
+                accessibilityHint={t('jarPage.openAuthorHint')}
+                onPress={onOpenAuthor}
+                testID="jar-author"
+              >
+                <Avatar name={author.display_name} uri={null} size="header" ring decorative />
+              </Pressable>
+            ) : (
+              <Avatar name={author.display_name} uri={null} size="header" ring decorative />
+            )}
             <View style={styles.coverTitles}>
               <Text
                 accessibilityRole="header"

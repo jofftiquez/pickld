@@ -26,6 +26,8 @@ export type FeedViewProps = {
   onEndReached: () => void;
   onOpenNotifications: () => void;
   onOpenJar?: (jarId: string) => void;
+  /** Opens a profile from the avatar row; `null` is the viewer's own ("You"). */
+  onOpenProfile?: (username: string | null) => void;
   onFindPeople: () => void;
   onInvite: () => void;
 };
@@ -50,6 +52,7 @@ export function FeedView({
   onEndReached,
   onOpenNotifications,
   onOpenJar,
+  onOpenProfile,
   onFindPeople,
   onInvite,
 }: FeedViewProps) {
@@ -94,6 +97,7 @@ export function FeedView({
               uri={null}
               isNew={false}
               accessibilityLabel={t('feed.you')}
+              onPress={onOpenProfile ? () => onOpenProfile(null) : undefined}
               testID="feed-author-me"
             />
           ) : null}
@@ -105,6 +109,7 @@ export function FeedView({
               uri={null}
               isNew={a.has_new}
               accessibilityLabel={a.has_new ? t('feed.authorNew', { name: a.display_name }) : a.display_name}
+              onPress={onOpenProfile ? () => onOpenProfile(a.username) : undefined}
               testID={`feed-author-${a.username}`}
             />
           ))}

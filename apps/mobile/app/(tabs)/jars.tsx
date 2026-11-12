@@ -64,6 +64,10 @@ export default function JarsScreen() {
       }}
       onOpenNotifications={() => undefined}
       onOpenJar={(jarId) => router.push({ pathname: '/jar/[id]', params: { id: jarId } })}
+      onOpenProfile={(username) => {
+        const name = username ?? me.data?.username;
+        if (name) router.push({ pathname: '/u/[username]', params: { username: name } });
+      }}
       // TODO(M4-08): open Find friends (D-5); it doesn't exist yet.
       onFindPeople={() => undefined}
       onInvite={() => {

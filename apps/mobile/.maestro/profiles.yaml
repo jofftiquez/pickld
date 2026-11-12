@@ -1,0 +1,68 @@
+# M3-13: Other profile from the feed's avatar row (design: ProfileOther) with "Reads you", counts and the
+# Jars / Moments switch; then My profile from the Today avatar (design: Profile).
+# Needs the seed data (dale reads mika, mika reads dale) and dale signed in:
+# maestro test apps/mobile/.maestro/profiles.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-author-mika
+    timeout: 40000
+- tapOn:
+    id: feed-author-mika
+- extendedWaitUntil:
+    visible:
+      id: profile-grid-jars
+    timeout: 40000
+- assertVisible:
+    id: profile-name
+    text: .*Mika.*
+- assertVisible:
+    id: profile-reads-you
+- assertNotVisible:
+    id: profile-edit
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: ProfileOther-ios
+- tapOn: Moments
+- assertVisible:
+    id: profile-grid-moments
+- tapOn:
+    id: profile-back
+- assertVisible:
+    id: feed-author-mika
+- tapOn:
+    id: tab-today
+- extendedWaitUntil:
+    visible:
+      id: today-avatar
+    timeout: 20000
+- tapOn:
+    id: today-avatar
+- extendedWaitUntil:
+    visible:
+      id: profile-grid-jars
+    timeout: 40000
+- assertVisible:
+    id: profile-username
+    text: '@dale'
+- assertNotVisible:
+    id: profile-reads-you
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: Profile-ios
+- tapOn:
+    id: profile-back
+- assertVisible:
+    id: today-avatar
