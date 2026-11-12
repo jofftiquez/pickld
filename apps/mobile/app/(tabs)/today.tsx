@@ -122,6 +122,9 @@ export default function TodayScreen() {
         offlineCount={offlineBannerCount(queue, offline)}
         onCapture={(slot) => router.push({ pathname: '/capture', params: { slot } })}
         onOpenMyDays={() => router.push('/my-days')}
+        onOpenProfile={
+          me ? () => router.push({ pathname: '/u/[username]', params: { username: me.username } }) : undefined
+        }
         onRetry={(queueId) => void retryUpload(queueId)}
         zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}
         zoneBanner={

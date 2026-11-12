@@ -34,6 +34,8 @@ export type TodayViewProps = {
   offlineCount?: number | null;
   onCapture: (slot: Slot) => void;
   onOpenMyDays: () => void;
+  /** Opens My profile from the header avatar. */
+  onOpenProfile?: () => void;
   /** Retry on a failed tile, with the tile's queue item id. */
   onRetry?: (queueId: number) => void;
   /** Zone tag in the header ("Tokyo time") on a jar that started in a new zone (FR-JAR-05). */
@@ -72,6 +74,7 @@ export function TodayView({
   offlineCount = null,
   onCapture,
   onOpenMyDays,
+  onOpenProfile,
   onRetry,
   zoneTag = null,
   zoneBanner = null,
@@ -103,6 +106,7 @@ export function TodayView({
         displayName={displayName}
         avatarUrl={avatarUrl}
         onOpenMyDays={onOpenMyDays}
+        onOpenProfile={onOpenProfile}
         zoneTag={zoneTag}
       />
       {zoneBanner ? <View style={styles.banner}>{zoneBanner}</View> : null}

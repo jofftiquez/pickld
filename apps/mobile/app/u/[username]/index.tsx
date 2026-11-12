@@ -1,0 +1,47 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Share } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ProfileView } from '@/features/profile/ProfileView';
+import { useProfile } from '@/features/profile/useProfile';
+import { profileUrl } from '@/lib/links';
+
+// /u/[username] (M3-13; FR-SOC-08): My profile when the username is the viewer's, else Other profile.
+// The username is validated with Zod in useProfile; a bad one is "not available".
+export default function ProfileScreen() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { username } = useLocalSearchParams<{ username: string }>();
+  const { data, failed, refresh } = useProfile(username);
+
+  const back = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/jars');
+  };
+
+  return (
+    <ProfileView
+      data={data}
+      failed={failed}
+      insets={insets}
+      onBack={back}
+      onOpenJar={(jarId) => router.push({ pathname: '/jar/[id]', params: { id: jarId } })}
+      onOpenMoment={(momentId, jarId) =>
+        router.push({ pathname: '/moment/[id]', params: { id: momentId, jar: jarId } })
+      }
+      onShare={() => {
+        if (data) {
+          void Share.share({
+            message: t('profile.shareMessage', {
+              name: data.profile.display_name,
+              url: profileUrl(data.profile.username),
+            }),
+          });
+        }
+      }}
+      onRetry={() => void refresh()}
+    />
+  );
+}

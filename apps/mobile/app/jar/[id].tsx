@@ -35,6 +35,9 @@ export default function JarScreen() {
       onOpenMoment={(momentId) => {
         if (data) router.push({ pathname: '/moment/[id]', params: { id: momentId, jar: data.jar.id } });
       }}
+      onOpenAuthor={() => {
+        if (data) router.push({ pathname: '/u/[username]', params: { username: data.author.username } });
+      }}
       onShare={() => {
         if (data) shareJar(data, t);
       }}
