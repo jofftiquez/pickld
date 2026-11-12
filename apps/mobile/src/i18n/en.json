@@ -810,5 +810,22 @@
     "alsoBlock": "Also block {{name}}",
     "done": "Done",
     "more": "More options"
+  },
+  "block": {
+    "title": "Block {{name}}?",
+    "message": "{{name}} won’t be able to see your days or find your profile. Pickld won’t tell them you blocked them.",
+    "confirm": "Block",
+    "failed": "Couldn’t block. Check your connection and try again."
+  },
+  "blocked": {
+    "title": "Blocked accounts",
+    "back": "Back",
+    "intro": "Blocked people can’t see your jars or find your profile. They aren’t told when you block or unblock them.",
+    "since": "@{{username}} · blocked {{date}}",
+    "unblock": "Unblock",
+    "unblockA11y": "Unblock {{name}}",
+    "empty": "You haven’t blocked anyone.",
+    "failed": "Couldn’t load blocked accounts.",
+    "retry": "Try again"
   }
 }
