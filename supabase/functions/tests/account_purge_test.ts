@@ -86,7 +86,8 @@ async function sql<T>(query: string): Promise<T[]> {
   }).output();
   const text = new TextDecoder().decode(out.stdout);
   if (!out.success || !text.includes('{')) throw new Error(`db query failed: ${new TextDecoder().decode(out.stderr)}`);
-  return (JSON.parse(text.slice(text.indexOf('{'))) as { rows: T[] }).rows;
+  // The CLI may print notices before or after the JSON (CI does), so parse only the outermost object.
+  return (JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1)) as { rows: T[] }).rows;
 }
 
 /** Rows anywhere that name the user: auth, storage, and every public table keyed to a user. */
