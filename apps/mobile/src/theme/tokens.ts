@@ -154,6 +154,9 @@ export const radius = {
   reminderCard: 22, // pinned reminder card on Notifications
   optionIcon: 13, // icon well on a Moment options row (MomentOptions)
   permissionIcon: 16, // icon well on each Permissions card
+  shareCard: 24, // the Share jar card (ShareCard)
+  shareTile: 8, // photos on the card
+  shareAction: 18, // action wells on Share jar
   tile: 22,
   jarTile: 18, // moments in the Jar page grid (Story)
   introTile: 18, // the eight slot tiles on Intro1
@@ -319,6 +322,9 @@ export const sizes = {
   holdButton: 82, // the green button inside it
   promiseLogo: 60, // Pickld wordmark width on Promise
   tipJar: 40, // jar beside the First moment tip title (Coach)
+  shareCardWidth: 234, // the 9:16 card preview on Share jar (ShareCard)
+  shareAction: 54, // round action wells on Share jar
+  shareLogo: 40, // wordmark width on the card
   lidStage: 200, // tinted circle behind the jar (JarLid)
   lidJarLarge: 124, // jar on Pick your jar
   lidSwatch: 44, // colour squares on Pick your jar

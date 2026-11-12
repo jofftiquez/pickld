@@ -1,9 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { shareJar } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { useLike } from '@/features/jar/useLike';
 import { MomentDetailView } from '@/features/moment/MomentDetailView';
@@ -17,7 +15,6 @@ import { useBlockFlow } from '@/features/safety/useBlockFlow';
 // shows its own screen (M2-21; FR-PUB-07, FR-SAF-03). Ids are validated with Zod in the hooks; a bad id
 // is "not available".
 export default function MomentScreen() {
-  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id, jar } = useLocalSearchParams<{ id: string; jar?: string }>();
@@ -51,7 +48,7 @@ export default function MomentScreen() {
           if (page.data) router.push({ pathname: '/comments/[jarId]', params: { jarId: page.data.jar.id } });
         }}
         onShare={() => {
-          if (page.data) shareJar(page.data, t);
+          if (page.data) router.push({ pathname: '/share/[jarId]', params: { jarId: page.data.jar.id } });
         }}
         onMore={setReporting}
         onRetry={() => void page.refresh()}

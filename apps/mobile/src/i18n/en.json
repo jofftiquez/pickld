@@ -152,8 +152,7 @@
     "comments_one": "{{count}} comment",
     "comments_other": "{{count}} comments",
     "share": "Share jar",
-    "shareHint": "Shares a link to this jar",
-    "shareMessage": "{{title}} on Pickld: {{url}}",
+    "shareHint": "Opens the share card for this jar",
     "unavailableTitle": "This jar isn’t available",
     "unavailableBody": "It may be private, or its owner hasn’t shared it with you.",
     "failed": "Couldn’t load this jar.",
@@ -1059,13 +1058,13 @@
       "failed": "Couldn’t search your contacts. Check your connection and try again.",
       "invite": "Invite with your link",
       "copy": "Copy",
-      "copyLabel": "Share your invite link {{link}}",
-      "shareMessage": "Read my jars on Pickld: {{link}}",
+      "copyLabel": "Copy your invite link {{link}}",
       "already": "Already on Pickld",
       "inContacts": "In your contacts",
       "none": "None of your contacts are on Pickld yet. Invite them with your link.",
       "continue": "Continue",
-      "skip": "Skip for now"
+      "skip": "Skip for now",
+      "copied": "Link copied"
     },
     "promise": {
       "logo": "Pickld",
@@ -1102,5 +1101,30 @@
     "later": "Missed one? Fill it in later from My days.",
     "take": "Take my first moment",
     "look": "Look around first"
+  },
+  "share": {
+    "title": "Share jar",
+    "back": "Back",
+    "card": "Share card: {{title}}, {{date}}, {{count}} of {{max}} moments",
+    "subtitle": "{{date}} · {{count}} of {{max}}",
+    "caption": "“{{caption}}”",
+    "logo": "Pickld",
+    "includeCaptions": "Include captions",
+    "includeCaptionsBody": "Shows your last caption on the card",
+    "save": "Save image",
+    "saved": "Saved to Photos",
+    "saveDenied": "Pickld can’t save to Photos. Turn it on in Settings.",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "message": "Message",
+    "more": "More",
+    "shareTo": "Share to…",
+    "failed": "Couldn’t share the card. Try again.",
+    "unavailable": "This jar isn’t available to share.",
+    "empty": "Nothing on this jar can be shared yet.",
+    "linkMessage": "{{title}} on Pickld: {{url}}"
+  },
+  "mediaLibrary": {
+    "savePermissionDescription": "Pickld saves your jar card to your photos when you tap Save image."
   }
 }
