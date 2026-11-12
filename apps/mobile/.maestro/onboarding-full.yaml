@@ -1,10 +1,13 @@
-# M4-05 + M4-06: a new account saves About you, lands on Your day, and after quitting the app resumes there
-# (FR-ONB-09). Early bird sets 7:00 AM · 12:30 PM · 7:00 PM; Change moves the evening to 7:30 PM; Continue
-# saves; Your people and Pick your jar (Mango) follow, then Permissions (camera preset to allowed; Notifications
-# names the chosen times and Allow shows the system prompt), then Find friends (contacts preset to allowed; the
-# Simulator needs the seed contacts first: xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf), then the Promise (held) and the First moment tip,
-# whose Take my first moment opens Camera (FR-ONB-02 to FR-ONB-08). Ends signed in as the new account: sign dale back in afterwards.
-# maestro test apps/mobile/.maestro/setup-day.yaml
+# M4-10 (FR-ONB-01 to FR-ONB-09): a new account from Welcome through its first moment. Sign up by email link,
+# About you, then quit mid-setup and relaunch: setup resumes at Your day (FR-ONB-09). Early bird sets
+# 7:00 AM · 12:30 PM · 7:00 PM and Change moves the evening to 7:30 PM. Your people, Pick your jar (Mango),
+# Permissions (camera preset to allowed; Notifications names the chosen times and Allow shows the prompt),
+# Find friends (contacts preset to allowed; Read follows Mika), the Pickld Promise (held), the First moment
+# tip, whose Take my first moment opens Camera on the current slot, and the first moment saved to Today.
+# Before the first run on a Simulator, add the seed contacts:
+#   xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf
+# Ends signed in as the new account: sign dale back in afterwards (scripts/dev-sign-in.sh).
+#   maestro test apps/mobile/.maestro/onboarding-full.yaml
 appId: me.pickld.app
 ---
 - launchApp:
@@ -261,9 +264,29 @@ appId: me.pickld.app
     timeout: 20000
 - assertVisible:
     id: camera-slot-tag
+# The first moment: shutter (dev mock camera), then Add to #slot in the editor.
 - tapOn:
-    id: camera-close
+    id: camera-shutter
+- extendedWaitUntil:
+    visible:
+      id: editor-screen
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: editor-save
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: editor-save
 - extendedWaitUntil:
     visible:
       id: tab-today
-    timeout: 30000
+    timeout: 15000
+# Saved to the queue first, then uploading, checking or already added (D-22 auto-approves locally).
+- extendedWaitUntil:
+    visible:
+      text: '.*(waiting for connection|uploading|checking|added).*'
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: FirstMoment-ios
