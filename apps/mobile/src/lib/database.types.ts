@@ -1630,6 +1630,35 @@ export type Database = {
         Returns: string;
       };
       mark_feed_seen: { Args: Record<PropertyKey, never>; Returns: string };
+      memories_month_recap: {
+        Args: { month: string };
+        Returns: {
+          full_days: number;
+          moment_count: number;
+          strip: Json;
+          top_slot: Database['public']['Enums']['slot'];
+        }[];
+      };
+      memories_on_this_day: {
+        Args: { today: string };
+        Returns: {
+          cover_moment_id: string;
+          cover_slot: Database['public']['Enums']['slot'];
+          cover_thumb_path: string;
+          is_full: boolean;
+          jar_id: string;
+          local_date: string;
+          moment_count: number;
+        }[];
+      };
+      memories_year_summary: {
+        Args: { year: number };
+        Returns: {
+          full_days: number;
+          jars_filled: number;
+          moment_count: number;
+        }[];
+      };
       moderation_apply: {
         Args: {
           p_decision: string;
