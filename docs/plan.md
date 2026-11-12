@@ -1180,7 +1180,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** — · **Depends on:** M5-01, M5-02 · **Issue:** #121
 - **Goal:** Run every Maestro flow on the release candidate and fix what fails.
 - **Acceptance:**
-  - [ ] All flows pass.
+  - [x] All flows pass.
 - **Tests:** Maestro.
 - **Screenshots:** —
 - **Design:** —
