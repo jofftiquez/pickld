@@ -1,5 +1,5 @@
 // Renders the sticker art in assets/stickers/<pack>/<name>.png from the catalog in the local database.
-// Usage (after `pnpm db:reset`): node scripts/render-stickers.mjs
+// Usage (after `pnpm db:reset`): node scripts/render-stickers.mjs [pack-slug ...]   (no slugs: every pack)
 //
 // The catalog (labels, packs, asset paths) lives in supabase/migrations (0012); this script reads it with the
 // anon key through public_sticker_catalog() (C-6), the same call the web page makes, so art and rows can't
@@ -32,7 +32,8 @@ const res = await fetch(`${status.API_URL}/rest/v1/rpc/public_sticker_catalog`, 
   body: '{}',
 });
 if (!res.ok) throw new Error(`public_sticker_catalog: ${res.status} ${await res.text()}`);
-const catalog = await res.json();
+const only = process.argv.slice(2);
+const catalog = (await res.json()).filter((s) => only.length === 0 || only.includes(s.pack_slug));
 
 // Hi-fi A sticker palette (tokens.ts: ink, brand, stickerOnWhiteText; the yellow and white pills of the design).
 const PALETTE = [
@@ -44,6 +45,12 @@ const PALETTE = [
   { bg: '#2f74a8', fg: '#ffffff' },
   { bg: '#6f4fae', fg: '#ffffff' },
 ];
+const CHRISTMAS = [
+  { bg: '#ffffff', fg: '#9e1b14' },
+  { bg: '#2c4a12', fg: '#ffffff' },
+  { bg: '#f2bd2e', fg: '#11140d' },
+  { bg: '#9e1b14', fg: '#ffffff' },
+];
 const TILT = [-3, 3, -2, 2, 0, -1, 1];
 // Auto stamps: the editor draws the live value; the art is a sample in the stamp's frame.
 const STAMP_SAMPLE = { time: '2:14 PM', date: 'NOV 11', weekday: 'WEDNESDAY', jar_number: 'JAR #42' };
@@ -52,6 +59,10 @@ function style(s) {
   const i = (s.pack_sort * 3 + s.sort) % PALETTE.length;
   if (s.pack_slug === 'stamps') {
     return { text: (STAMP_SAMPLE[s.stamp] ?? s.label).toUpperCase(), kind: 'stamp', tilt: TILT[i], ...PALETTE[0] };
+  }
+  // Seasonal Christmas art in the shop banner's colours (design: StickerShop): white, pine green, gold, red.
+  if (s.pack_slug.startsWith('christmas-')) {
+    return { text: s.label, kind: 'word', tilt: TILT[i], ...CHRISTMAS[s.sort % CHRISTMAS.length] };
   }
   if (s.pack_slug === 'milestones') return { text: `★ ${s.label}`, kind: 'earned', tilt: TILT[i], ...PALETTE[4] };
   return { text: s.label, kind: 'word', tilt: TILT[i], ...PALETTE[i] };
