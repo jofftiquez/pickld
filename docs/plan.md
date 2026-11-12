@@ -913,7 +913,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-ONB-01 · **Depends on:** M1-25 · **Issue:** #91
 - **Goal:** Welcome collage and three How it works screens with Skip (T-301, part 1).
 - **Acceptance:**
-  - [ ] Skip on each intro goes to Sign up.
+  - [x] Skip on each intro goes to Sign up.
 - **Tests:** Maestro.
 - **Screenshots:** Welcome, How it works 1–3.
 - **Design:** Welcome, Intro1, Intro2, Intro3
@@ -922,7 +922,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-ACC-01, FR-ACC-02, FR-PRV-04 · **Depends on:** M4-01, M1-13, M1-12 · **Issue:** #92
 - **Goal:** Apple, Google and email link; Check your email with a 60-second resend timer; links to Terms and Privacy (C-3).
 - **Acceptance:**
-  - [ ] New accounts land on About you; returning users on Today.
+  - [x] New accounts land on About you; returning users on Today.
 - **Tests:** Jest for the timer; Maestro with Inbucket.
 - **Screenshots:** Sign up, Sign in, Check your email.
 - **Design:** SignUp, SignIn, CheckEmail
@@ -931,7 +931,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** backend · **Priority:** P0 · **Size:** S · **Requirements:** FR-ACC-04 · **Depends on:** M1-07 · **Issue:** #93
 - **Goal:** Deletes the auth user and anything uploaded when the birthday is under 13 (G-20).
 - **Acceptance:**
-  - [ ] Nothing about the user remains afterwards.
+  - [x] Nothing about the user remains afterwards.
 - **Tests:** Deno test.
 - **Screenshots:** —
 - **Design:** —
@@ -940,8 +940,8 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-ACC-03, FR-ACC-04, FR-ACC-05 · **Depends on:** M4-02, M4-03, M3-12 · **Issue:** #94
 - **Goal:** Photo, name (1–40), username with live availability, birthday; Under 13 screen.
 - **Acceptance:**
-  - [ ] Under 13 deletes everything entered.
-  - [ ] Profile saved before Continue.
+  - [x] Under 13 deletes everything entered.
+  - [x] Profile saved before Continue.
 - **Tests:** Jest; Maestro.
 - **Screenshots:** About you, Under 13.
 - **Design:** About, Under13
@@ -950,8 +950,8 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-ONB-09, FR-ONB-02 · **Depends on:** M4-04 · **Issue:** #95
 - **Goal:** "Step n of 6" and resume-at-step store; Your day presets and time picker saved to reminder settings.
 - **Acceptance:**
-  - [ ] Preset times match FR-ONB-02 exactly.
-  - [ ] Quitting mid-setup resumes at the same step.
+  - [x] Preset times match FR-ONB-02 exactly.
+  - [x] Quitting mid-setup resumes at the same step.
 - **Tests:** Unit tests for presets and resume.
 - **Screenshots:** Your day.
 - **Design:** QuizDay
@@ -960,7 +960,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-ONB-03, FR-ONB-04 · **Depends on:** M4-05 · **Issue:** #96
 - **Goal:** Multi-select chips saved privately; six lid colors with Pickle default.
 - **Acceptance:**
-  - [ ] Answers stored in `onboarding_answers`; lid saved to profile.
+  - [x] Answers stored in `onboarding_answers`; lid saved to profile.
 - **Tests:** Jest.
 - **Screenshots:** Your people, Pick your jar.
 - **Design:** QuizPeople, JarLid
@@ -969,7 +969,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** S · **Requirements:** FR-ONB-05 · **Depends on:** M4-06, M3-18 · **Issue:** #97
 - **Goal:** Reason cards before each system prompt; Notifications names the chosen times; Maybe later.
 - **Acceptance:**
-  - [ ] Maybe later skips all prompts.
+  - [x] Maybe later skips all prompts.
 - **Tests:** Jest.
 - **Screenshots:** Permissions.
 - **Design:** Permissions
@@ -978,7 +978,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-ONB-06 · **Depends on:** M4-07, M3-05 · **Issue:** #98
 - **Goal:** Contact matches with Read buttons, invite link copies pickld.me/username, Skip.
 - **Acceptance:**
-  - [ ] Raw contacts never leave the phone.
+  - [x] Raw contacts never leave the phone.
 - **Tests:** Jest; unit test for hashing.
 - **Screenshots:** Find friends.
 - **Design:** FindFriends
@@ -987,7 +987,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-ONB-07, FR-ONB-08 · **Depends on:** M4-08 · **Issue:** #99
 - **Goal:** Hold 1.5 s with progress ring (timestamp saved, Skip not asked again); tip sheet over first-day Today opening Camera on the current slot.
 - **Acceptance:**
-  - [ ] Tip shown once.
+  - [x] Tip shown once.
 - **Tests:** Jest for the hold timer.
 - **Screenshots:** Pickld Promise, First moment tip.
 - **Design:** Promise, Coach
@@ -996,7 +996,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** S · **Requirements:** FR-ONB-01, FR-ONB-09 · **Depends on:** M4-09 · **Issue:** #100
 - **Goal:** Welcome through first moment, including quitting and resuming mid-setup.
 - **Acceptance:**
-  - [ ] Flow passes on the iOS Simulator.
+  - [x] Flow passes on the iOS Simulator.
 - **Tests:** Maestro.
 - **Screenshots:** Taken inside the flow.
 - **Design:** —
@@ -1005,7 +1005,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-SOC-10, FR-PUB-05 · **Depends on:** M2-18, M3-07 · **Issue:** #101
 - **Goal:** Skia 9:16 image with author, date, 8 moments, optional caption, logo and pickld.me/username; Save image, Copy link, Message, Share to… (T-302).
 - **Acceptance:**
-  - [ ] Private moments never included.
+  - [x] Private moments never included.
 - **Tests:** Unit test for the card model.
 - **Screenshots:** Share jar card.
 - **Design:** ShareCard
@@ -1014,7 +1014,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** backend · **Priority:** P0 · **Size:** S · **Requirements:** FR-WEB-01, FR-PUB-03, FR-PUB-05 · **Depends on:** M1-11, M2-14 · **Issue:** #102
 - **Goal:** Anon `public_profile(username)` and `public_jar(id)` returning Everyone, live, non-private data; teaser data for Readers jars (C-6).
 - **Acceptance:**
-  - [ ] Readers, Only me, private and non-live data never returned.
+  - [x] Readers, Only me, private and non-live data never returned.
 - **Tests:** pgTAP as anon.
 - **Screenshots:** —
 - **Design:** —
