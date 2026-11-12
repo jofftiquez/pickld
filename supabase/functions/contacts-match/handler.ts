@@ -1,35 +1,38 @@
-// fn:contacts-match (M3-05; FR-ONB-06, FR-SOC-02; D-4). Matches the caller's address book against
-// Pickld users by keyed hash. Contacts are normalized and HMAC-hashed in memory with CONTACT_HASH_SECRET;
-// only hashes reach the database, and the caller's contacts are never stored or logged, not even hashed.
-// The filtering (never the caller, never blocked users either way, active users only) is decided in
-// Postgres by contacts_match_find() (0015).
+// fn:contacts-match (M3-05, M4-08; FR-ONB-06, FR-SOC-02; D-4, D-28). Matches the caller's address book
+// against Pickld users by keyed hash. Raw contacts never leave the phone (D-28): the app normalizes each
+// email or phone number like normalizeEmail / normalizePhone (contacts.ts) and sends only its device hash,
+// lowercase hex SHA-256 of "email:<normalized>" or "phone:<normalized>". Here each device hash is keyed
+// in memory with HMAC-SHA256(CONTACT_HASH_SECRET, deviceHash), so the database never holds a plain,
+// guessable hash; the caller's hashes are never stored or logged, not even keyed. The filtering (never
+// the caller, never blocked users either way, active users only) is decided in Postgres by
+// contacts_match_find() (0015).
 //
 // Each call also keeps contact_hashes filled, because the key must never reach Postgres: it saves the
 // caller's own sign-up email hash and backfills up to BACKFILL_BATCH users whose hash is missing or stale
-// (see 0015 for why).
+// (see 0015 for why). A stored hash is HMAC(secret, sha256hex("email:" + normalizeEmail(signUpEmail))),
+// the same two steps a contact goes through, so a contact's device hash keys to it (0024 cleared the rows
+// made by the old formula).
 //
 // Friend joined (FR-NOT-02, 0019): the matches are handed to notify_friend_joined(), which tells each of
 // them the caller joined, but only while the caller's account is under 7 days old and once per pair. A
 // failure there never fails the call: finding friends matters more than the notice.
 //
-// POST { emails?: string[], phones?: string[] }   (1 to 2,000 contacts in total; each at most 320 chars)
+// POST { hashes: string[] }   (1 to 2,000 device hashes, each /^[0-9a-f]{64}$/; no other keys)
 //   → { data: { matches: [{ id, username, displayName, avatarPath, following }] } }
 //   → { error: { code, message } }   400 invalid, 401 signed out, 403 inactive, 413 too many, 429 limited
 import { type SupabaseClient, z } from '../_shared/deps.ts';
 import { bearerToken, fail, ok, readJson } from '../_shared/http.ts';
-import { contactHash, normalizeEmail, normalizePhone } from './contacts.ts';
+import { deviceHash, keyedHash, normalizeEmail } from './contacts.ts';
 
 export const MAX_CONTACTS = 2000;
 export const BACKFILL_BATCH = 500;
 const TOO_MANY = 'too_many_contacts';
 
-const Contacts = z.array(z.string().max(320)).max(MAX_CONTACTS, TOO_MANY);
-export const ContactsMatchInput = z.strictObject({ emails: Contacts.optional(), phones: Contacts.optional() })
-  .superRefine((v, ctx) => {
-    const n = (v.emails?.length ?? 0) + (v.phones?.length ?? 0);
-    if (n > MAX_CONTACTS) ctx.addIssue({ code: 'custom', message: TOO_MANY });
-    if (n === 0) ctx.addIssue({ code: 'custom', message: 'Send at least one email or phone number.' });
-  });
+export const ContactsMatchInput = z.strictObject({
+  hashes: z.array(z.string().regex(/^[0-9a-f]{64}$/, 'Each hash must be 64 lowercase hex characters.'))
+    .min(1, 'Send at least one hash.')
+    .max(MAX_CONTACTS, TOO_MANY),
+});
 
 export interface ContactMatch {
   id: string;
@@ -98,26 +101,16 @@ export async function handleContactsMatch(req: Request, deps: ContactsMatchDeps)
   if (toSave.size > 0) {
     await store.save(
       await Promise.all(
-        [...toSave].map(async ([userId, e]) => ({ userId, hash: await contactHash(secret, 'email', e) })),
+        [...toSave].map(async ([userId, e]) => ({
+          userId,
+          hash: await keyedHash(secret, await deviceHash('email', e)),
+        })),
       ),
     );
   }
 
-  // The caller's contacts: normalized, deduplicated, hashed, and then only the hashes go on.
-  const normalized = new Set<string>();
-  for (const e of parsed.data.emails ?? []) {
-    const n = normalizeEmail(e);
-    if (n) normalized.add(`email:${n}`);
-  }
-  for (const p of parsed.data.phones ?? []) {
-    const n = normalizePhone(p);
-    if (n) normalized.add(`phone:${n}`);
-  }
-  if (normalized.size === 0) return ok({ matches: [] });
-  const hashes = await Promise.all([...normalized].map((k) => {
-    const i = k.indexOf(':');
-    return contactHash(secret, k.slice(0, i) as 'email' | 'phone', k.slice(i + 1));
-  }));
+  // The caller's device hashes: deduplicated, keyed, and then only the keyed hashes go on.
+  const hashes = await Promise.all([...new Set(parsed.data.hashes)].map((h) => keyedHash(secret, h)));
 
   const matches = (await store.find(me.id, hashes)).filter((m) => m.id !== me.id);
   if (matches.length > 0) {
