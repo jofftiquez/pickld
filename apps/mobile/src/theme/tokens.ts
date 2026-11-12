@@ -177,6 +177,8 @@ export const radius = {
   overlayOutline: 16, // dashed outline around the selected overlay (Stickers)
   tabBar: 26,
   sheet: 30,
+  timeChip: 10, // reminder time chips (Settings)
+  settingsIcon: 13, // slot icon wells on the Reminders card (Settings)
   pill: 999,
 } as const;
 
@@ -236,6 +238,8 @@ export const shadow = {
 } as const;
 
 export const sizes = {
+  timeChip: 28, // reminder time chips (Settings); 44 pt tap area via hitSlop
+  settingsIcon: 36, // slot icon wells on the Reminders card (Settings)
   minTap: 44, // every tap area, via hitSlop when the visual is smaller
   buttonPrimary: 54,
   buttonSecondary: 50,

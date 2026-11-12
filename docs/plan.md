@@ -1050,7 +1050,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** FR-SET-01, FR-NOT-04, FR-PRV-04 · **Depends on:** M3-18, M3-22, M3-17 · **Issue:** #106
 - **Goal:** Account card, reminders per slot with time and switch, default visibility, notification types and quiet hours, blocked accounts, legal links, sign out (My stickers hidden, D-6) (T-304, part 1).
 - **Acceptance:**
-  - [ ] Changing reminder times reschedules local reminders.
+  - [x] Changing reminder times reschedules local reminders.
 - **Tests:** Jest; Maestro.
 - **Screenshots:** Settings.
 - **Design:** Settings

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { textStyle } from '@/theme/text';
+import { hitSlopFor } from '@/lib/hitSlop';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { BottomSheet } from './BottomSheet';
@@ -18,6 +19,8 @@ export type SelectFieldProps<T extends string | number> = {
   onChange: (value: T) => void;
   /** Shown while nothing is picked. Already translated. */
   placeholder: string;
+  /** `chip`: a compact pill showing only the value, the label stays spoken (Settings reminder times). */
+  variant?: 'field' | 'chip';
   testID?: string;
 };
 
@@ -28,27 +31,38 @@ export function SelectField<T extends string | number>({
   value,
   onChange,
   placeholder,
+  variant = 'field',
   testID,
 }: SelectFieldProps<T>) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
+  const chip = variant === 'chip';
   return (
-    <View style={styles.container}>
-      <Text style={[textStyle('label'), styles.label]} importantForAccessibility="no" accessibilityElementsHidden>
-        {label}
-      </Text>
+    <View style={chip ? undefined : styles.container}>
+      {chip ? null : (
+        <Text style={[textStyle('label'), styles.label]} importantForAccessibility="no" accessibilityElementsHidden>
+          {label}
+        </Text>
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityValue={{ text: selected?.label ?? placeholder }}
         onPress={() => setOpen(true)}
-        style={styles.field}
+        hitSlop={chip ? hitSlopFor(undefined, sizes.timeChip) : undefined}
+        style={chip ? styles.chip : styles.field}
         testID={testID}
       >
-        <Text style={[textStyle('body'), { color: selected ? colors.ink : colors.muted }]} numberOfLines={1}>
+        <Text
+          style={[
+            textStyle(chip ? 'bodySmall' : 'body', chip ? '700' : undefined),
+            { color: selected ? colors.ink : colors.muted },
+          ]}
+          numberOfLines={1}
+        >
           {selected?.label ?? placeholder}
         </Text>
-        <Icon name="chevronDown" size={18} strokeWidth={2} />
+        {chip ? null : <Icon name="chevronDown" size={18} strokeWidth={2} />}
       </Pressable>
       <BottomSheet visible={open} onClose={() => setOpen(false)} accessibilityLabel={label} scrollable>
         <Text accessibilityRole="header" style={[textStyle('body', '700'), styles.title]}>
@@ -88,6 +102,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: space.sm,
+  },
+  chip: {
+    height: sizes.timeChip,
+    paddingHorizontal: 10,
+    borderRadius: radius.timeChip,
+    backgroundColor: colors.subtle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: { color: colors.ink, marginBottom: space.xs },
 });
