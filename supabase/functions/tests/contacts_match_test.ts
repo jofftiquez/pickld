@@ -39,6 +39,8 @@ function world() {
   const seen: string[][] = []; // every hash list handed to find()
   const saved: { userId: string; hash: string }[] = [];
   let returnSelf = false;
+  const joined: { userId: string; friendIds: string[] }[] = [];
+  let joinedFails = false;
 
   const store: ContactStore = {
     take(userId) {
@@ -77,6 +79,11 @@ function world() {
           following: follows.some(([r, a]) => r === userId && a === u.id),
         }));
       return Promise.resolve(out);
+    },
+    friendJoined(userId, friendIds) {
+      if (joinedFails) return Promise.reject(new Error('notify_friend_joined: 500'));
+      joined.push({ userId, friendIds });
+      return Promise.resolve();
     },
   };
 
@@ -118,7 +125,9 @@ function world() {
     saved,
     hashes,
     call,
+    joined,
     setReturnSelf: (v: boolean) => (returnSelf = v),
+    setJoinedFails: (v: boolean) => (joinedFails = v),
   };
 }
 
@@ -171,6 +180,23 @@ Deno.test('the caller is dropped even if the store returned them', async () => {
   w.setReturnSelf(true);
   const { json } = await w.call({ emails: [w.me.email, w.friend.email] });
   assertEquals(json.data.matches.map((m: ContactMatch) => m.username), ['friend']);
+});
+
+Deno.test('the matches, never the caller, hear that the caller joined; a failure there is ignored', async () => {
+  const w = world();
+  w.setReturnSelf(true);
+  await w.call({ emails: [w.me.email, w.friend.email, w.followed.email] });
+  assertEquals(w.joined.length, 1);
+  assertEquals(w.joined[0]?.userId, w.me.id);
+  assertEquals([...(w.joined[0]?.friendIds ?? [])].sort(), [w.followed.id, w.friend.id].sort());
+
+  await w.call({ emails: ['nobody@example.com'] });
+  assertEquals(w.joined.length, 1, 'no matches, no call');
+
+  w.setJoinedFails(true);
+  const { status, json } = await w.call({ emails: [w.friend.email] });
+  assertEquals(status, 200);
+  assertEquals(json.data.matches.length, 1);
 });
 
 Deno.test('only hashes reach the database: no raw contact is passed on or logged', async () => {

@@ -8,6 +8,10 @@
 // caller's own sign-up email hash and backfills up to BACKFILL_BATCH users whose hash is missing or stale
 // (see 0015 for why).
 //
+// Friend joined (FR-NOT-02, 0019): the matches are handed to notify_friend_joined(), which tells each of
+// them the caller joined, but only while the caller's account is under 7 days old and once per pair. A
+// failure there never fails the call: finding friends matters more than the notice.
+//
 // POST { emails?: string[], phones?: string[] }   (1 to 2,000 contacts in total; each at most 320 chars)
 //   → { data: { matches: [{ id, username, displayName, avatarPath, following }] } }
 //   → { error: { code, message } }   400 invalid, 401 signed out, 403 inactive, 413 too many, 429 limited
@@ -43,6 +47,8 @@ export interface ContactStore {
   pending(limit: number): Promise<{ userId: string; email: string }[]>;
   save(rows: { userId: string; hash: string }[]): Promise<void>;
   find(userId: string, hashes: string[]): Promise<ContactMatch[]>;
+  /** Tells `friendIds` that `userId` joined (notify_friend_joined, 0019 decides who is new enough). */
+  friendJoined(userId: string, friendIds: string[]): Promise<void>;
 }
 
 export interface ContactsMatchDeps {
@@ -114,6 +120,9 @@ export async function handleContactsMatch(req: Request, deps: ContactsMatchDeps)
   }));
 
   const matches = (await store.find(me.id, hashes)).filter((m) => m.id !== me.id);
+  if (matches.length > 0) {
+    await store.friendJoined(me.id, matches.map((m) => m.id)).catch(() => undefined);
+  }
   return ok({ matches });
 }
 
@@ -155,6 +164,10 @@ export function serviceStore(db: SupabaseClient): ContactStore {
         avatarPath: r.avatar_path,
         following: r.is_following,
       }));
+    },
+    async friendJoined(userId, friendIds) {
+      const { error } = await db.rpc('notify_friend_joined', { p_new_user: userId, p_friends: friendIds });
+      if (error) throw new Error(`notify_friend_joined: ${error.code}`);
     },
   };
 }
