@@ -69,6 +69,11 @@ export function pushCronSecret(): string {
   return required('PUSH_CRON_SECRET');
 }
 
+/** The header value the Supabase Cron job sends to fn:account-jobs (at least 32 characters). */
+export function accountJobsSecret(): string {
+  return required('ACCOUNT_JOBS_SECRET');
+}
+
 /** Optional: only needed when the Expo project turns on enhanced push security. */
 export function expoAccessToken(): string | undefined {
   return Deno.env.get('EXPO_ACCESS_TOKEN') || undefined;

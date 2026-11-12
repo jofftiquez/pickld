@@ -8,6 +8,7 @@
 //   avatars/<user id>/<upload id>.jpg
 //   covers/<user id>/<upload id>.jpg
 //   seed/{photos,thumbs,avatars}/<name>.jpg          local seed data only (supabase/seed.sql)
+//   exports/<user id>/<job id>.zip             a data export (fn:account-jobs, FR-PRV-02); not a photo key
 //
 // Sticker art is public catalog data (FR-STK-04, C-6), kept apart from photo keys:
 //   stickers/<pack slug>/<name>.png            stickers.asset_path (0012), uploaded by workers/photos `deno task stickers`
@@ -55,4 +56,9 @@ export function isProfileImageKey(kind: 'avatar' | 'cover', key: string, profile
   if (!isObjectKey(key)) return false;
   if (key.startsWith(kind === 'avatar' ? 'seed/avatars/' : 'seed/photos/')) return true;
   return key.startsWith(`${kind}s/`) && keyOwner(key) === profileId;
+}
+
+/** Every prefix the app uploads to for one user: what fn:account-purge and an account delete sweep. */
+export function userPrefixes(userId: string): string[] {
+  return [`moments/${userId}/`, `avatars/${userId}/`, `covers/${userId}/`];
 }

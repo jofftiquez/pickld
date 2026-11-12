@@ -21,12 +21,11 @@
 //   → { error: { code, message } }   401 signed out, 403 not_eligible, 405 method
 import type { SupabaseClient } from '../_shared/deps.ts';
 import { bearerToken, fail, ok } from '../_shared/http.ts';
-import { presignObject, presignUrl, type S3Config } from '../_shared/sigv4.ts';
+import { deletePrefix } from '../_shared/bucket.ts';
+import { userPrefixes } from '../_shared/object_keys.ts';
+import type { S3Config } from '../_shared/sigv4.ts';
 
-/** Every prefix the app uploads to for one user (_shared/object_keys.ts). */
-export function userPrefixes(userId: string): string[] {
-  return [`moments/${userId}/`, `avatars/${userId}/`, `covers/${userId}/`];
-}
+export { userPrefixes };
 
 /** The privileged side: the photo bucket and the database as the service role. */
 export interface PurgeStore {
@@ -61,14 +60,6 @@ export async function handleAccountPurge(req: Request, deps: AccountPurgeDeps): 
   return ok({ purged: true });
 }
 
-const URL_TTL_SECONDS = 60;
-const MAX_PAGES = 50; // 50,000 objects, far more than one person's photos
-
-function xmlText(s: string): string {
-  return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&');
-}
-
 /** The PurgeStore over the S3 API (R2, or local Supabase Storage) and the service-role client. */
 export function serviceStore(db: SupabaseClient, s3: S3Config): PurgeStore {
   return {
@@ -77,30 +68,7 @@ export function serviceStore(db: SupabaseClient, s3: S3Config): PurgeStore {
       if (error) throw new Error(`profile lookup: ${error.code}`);
       return data !== null;
     },
-    async deletePrefix(prefix) {
-      // List one page, delete it, list again from the start: the listing shrinks until it is empty.
-      let deleted = 0;
-      for (let page = 0; page < MAX_PAGES; page++) {
-        const listUrl = `${s3.endpoint.replace(/\/+$/, '')}/${s3.bucket}?list-type=2&max-keys=1000&prefix=${
-          encodeURIComponent(prefix)
-        }`;
-        const res = await fetch(await presignUrl(listUrl, s3, { method: 'GET', expiresIn: URL_TTL_SECONDS }));
-        const xml = await res.text();
-        if (!res.ok) throw new Error(`list objects: ${res.status}`);
-        const keys = [...xml.matchAll(/<Key>([^<]*)<\/Key>/g)].map((m) => xmlText(m[1]))
-          .filter((k) => k.startsWith(prefix));
-        if (keys.length === 0) return deleted;
-        for (const key of keys) {
-          const del = await fetch(await presignObject(s3, key, { method: 'DELETE', expiresIn: URL_TTL_SECONDS }), {
-            method: 'DELETE',
-          });
-          await del.body?.cancel();
-          if (!del.ok && del.status !== 404) throw new Error(`delete object: ${del.status}`);
-          deleted++;
-        }
-      }
-      throw new Error('delete objects: the listing did not shrink');
-    },
+    deletePrefix: (prefix) => deletePrefix(s3, prefix),
     async purgeAccount(userId) {
       const { data, error } = await db.rpc('account_purge', { p_user: userId });
       if (error) throw new Error(`account_purge: ${error.code}`);
