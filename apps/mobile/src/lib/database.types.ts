@@ -1614,6 +1614,20 @@ export type Database = {
           visible_count: number;
         }[];
       };
+      full_jars_today: {
+        Args: { max_count?: number };
+        Returns: {
+          avatar_path: string;
+          cover_moment_id: string;
+          cover_slot: Database['public']['Enums']['slot'];
+          display_name: string;
+          jar_id: string;
+          local_date: string;
+          published_at: string;
+          user_id: string;
+          username: string;
+        }[];
+      };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       in_quiet_hours: { Args: { at: string; p_user: string }; Returns: boolean };
@@ -1812,6 +1826,18 @@ export type Database = {
           username: string;
         }[];
       };
+      search_people: {
+        Args: { max_count?: number; query: string };
+        Returns: {
+          avatar_path: string;
+          display_name: string;
+          id: string;
+          is_reading: boolean;
+          lid_color: string;
+          reader_count: number;
+          username: string;
+        }[];
+      };
       sticker_usable: {
         Args: {
           s: Omit<
@@ -1830,6 +1856,18 @@ export type Database = {
           target_id: string;
         };
         Returns: undefined;
+      };
+      suggested_authors: {
+        Args: { max_count?: number };
+        Returns: {
+          avatar_path: string;
+          display_name: string;
+          id: string;
+          lid_color: string;
+          mutual_count: number;
+          reader_count: number;
+          username: string;
+        }[];
       };
       username_available: { Args: { candidate: string }; Returns: string };
     };
