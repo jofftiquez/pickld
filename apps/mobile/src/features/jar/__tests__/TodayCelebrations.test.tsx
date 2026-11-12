@@ -24,6 +24,7 @@ const mockBackend = {
 
 // Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
+jest.mock('@/features/onboarding/FirstMomentTip', () => ({ FirstMomentTip: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
 jest.mock('@/lib/supabase', () => {
   const answer = (table: string, head: boolean) => {

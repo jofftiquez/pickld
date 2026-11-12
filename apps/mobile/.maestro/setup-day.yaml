@@ -2,7 +2,8 @@
 # (FR-ONB-09). Early bird sets 7:00 AM · 12:30 PM · 7:00 PM; Change moves the evening to 7:30 PM; Continue
 # saves; Your people and Pick your jar (Mango) follow, then Permissions (camera preset to allowed; Notifications
 # names the chosen times and Allow shows the system prompt), then Find friends (contacts preset to allowed; the
-# Simulator needs the seed contacts first: xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf), then Today (FR-ONB-02/03/04/05/06). Ends signed in as the new account: sign dale back in afterwards.
+# Simulator needs the seed contacts first: xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf), then the Promise (held) and the First moment tip,
+# whose Take my first moment opens Camera (FR-ONB-02 to FR-ONB-08). Ends signed in as the new account: sign dale back in afterwards.
 # maestro test apps/mobile/.maestro/setup-day.yaml
 appId: me.pickld.app
 ---
@@ -225,6 +226,43 @@ appId: me.pickld.app
     timeout: 3000
 - tapOn:
     id: friends-continue
+# M4-09: the Pickld Promise (hold), then the First moment tip over the first-day Today.
+- extendedWaitUntil:
+    visible:
+      id: promise-screen
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Promise-ios
+- longPressOn:
+    id: promise-hold
+- extendedWaitUntil:
+    visible:
+      id: first-tip
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: FirstTip-ios
+- tapOn:
+    id: first-tip-take
+# Under Maestro the first tap on the freshly opened sheet is dropped (cause not found yet); tap again.
+- runFlow:
+    when:
+      visible:
+        id: first-tip-take
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          id: first-tip-take
+- extendedWaitUntil:
+    visible:
+      id: camera-screen
+    timeout: 20000
+- assertVisible:
+    id: camera-slot-tag
+- tapOn:
+    id: camera-close
 - extendedWaitUntil:
     visible:
       id: tab-today
