@@ -11,6 +11,7 @@ import { jarTitle } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { ReportSheet } from '@/features/safety/ReportSheet';
+import { useBlockFlow } from '@/features/safety/useBlockFlow';
 
 // /comments/[jarId] (M3-11; FR-SOC-06): the jar's thread, from the comment pill on the Jar page or Moment
 // detail. The jar comes from the jar page query (title, owner, count); RLS decides what both return.
@@ -29,6 +30,8 @@ export default function CommentsScreen() {
   });
   const jar = page.data;
   const [reporting, setReporting] = useState<ThreadComment | null>(null);
+  // Their comments drop out when the thread is read again.
+  const blockFlow = useBlockFlow();
 
   return (
     <>
@@ -61,7 +64,15 @@ export default function CommentsScreen() {
         subject={reporting ? { target: 'comment', targetId: reporting.id } : null}
         name={reporting?.author?.display_name ?? t('comments.someone')}
         onClose={() => setReporting(null)}
+        onBlock={
+          reporting?.author
+            ? () => {
+                if (reporting.author) blockFlow.open({ id: reporting.user_id, name: reporting.author.display_name });
+              }
+            : undefined
+        }
       />
+      {blockFlow.dialog}
     </>
   );
 }

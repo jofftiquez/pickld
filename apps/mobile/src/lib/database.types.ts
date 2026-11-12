@@ -1321,6 +1321,16 @@ export type Database = {
       };
     };
     Functions: {
+      blocked_accounts: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          avatar_path: string;
+          blocked_at: string;
+          display_name: string;
+          id: string;
+          username: string;
+        }[];
+      };
       can_appeal: { Args: { item: string; uid?: string }; Returns: boolean };
       can_view_jar: {
         Args: {

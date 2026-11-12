@@ -1,0 +1,61 @@
+# M3-22: block someone from their profile (Report sheet → Block → confirm), see them on Blocked accounts,
+# and unblock. Needs the seed data and dale signed in. Afterwards dale no longer reads jun (blocking removes
+# follows both ways and unblocking doesn't restore them): re-seed, or Read jun again, before other flows.
+# maestro test apps/mobile/.maestro/block.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- openLink: pickld://u/jun
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: profile-more
+    timeout: 30000
+- tapOn:
+    id: profile-more
+- extendedWaitUntil:
+    visible:
+      id: report-block-tab
+    timeout: 10000
+- tapOn:
+    id: report-block-tab
+- extendedWaitUntil:
+    visible:
+      id: block-confirm
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Block-ios
+- tapOn:
+    id: block-confirm
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- openLink: pickld://settings/blocked
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: blocked-row-jun
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Blocked-ios
+- tapOn:
+    id: blocked-unblock-jun
+- extendedWaitUntil:
+    notVisible:
+      id: blocked-row-jun
+    timeout: 20000
