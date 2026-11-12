@@ -132,7 +132,8 @@ export function MomentDetailView({
 
   return (
     <View style={styles.screen} testID="moment-detail">
-      <View style={{ height: photoHeight + insets.top, paddingTop: insets.top }}>
+      {/* The photo runs full-bleed under the status bar (Moment); the bars and buttons sit below the inset. */}
+      <View style={{ height: photoHeight }}>
         <View
           accessible
           accessibilityRole="adjustable"
