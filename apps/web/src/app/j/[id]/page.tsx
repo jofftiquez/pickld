@@ -20,11 +20,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const jar = await getJar((await params).id);
   if (!jar) return {};
   const name = jar.author.display_name;
+  const day = weekday(jar.local_date);
+  const title = jar.readers_only ? t('jar.titleReaders', { name }) : t('jar.titleEveryone', { name, weekday: day });
+  const description = jar.readers_only
+    ? t('og.descriptionReaders', { name })
+    : t('og.description', { name, weekday: day, count: String(jar.visible_count) });
+  const url = `/j/${jar.id}`;
   return {
-    title: jar.readers_only
-      ? t('jar.titleReaders', { name })
-      : t('jar.titleEveryone', { name, weekday: weekday(jar.local_date) }),
-    alternates: { canonical: `/j/${jar.id}` },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: 'article', siteName: t('site.name'), title, description, url },
+    twitter: { card: 'summary_large_image', title, description },
   };
 }
 

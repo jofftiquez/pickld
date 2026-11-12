@@ -1032,7 +1032,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** web · **Priority:** P0 · **Size:** M · **Requirements:** FR-WEB-02 · **Depends on:** M4-13 · **Issue:** #104
 - **Goal:** Server-rendered OG images of the jar card (T-303, part 2).
 - **Acceptance:**
-  - [ ] Preview tags validate for Messenger, Facebook, X and iMessage.
+  - [x] Preview tags validate for Messenger, Facebook, X and iMessage.
 - **Tests:** Playwright reads meta tags; image snapshot.
 - **Screenshots:** OG image.
 - **Design:** ShareCard
