@@ -433,7 +433,10 @@ export type Database = {
           decided_by: string | null;
           decision_reason: string | null;
           id: string;
+          jar_id: string | null;
           moment_id: string | null;
+          profile_id: string | null;
+          report_id: string | null;
           scores: NonNullable<Json>;
           second_opinion: Json | null;
           source: Database['public']['Enums']['mod_source'];
@@ -447,7 +450,10 @@ export type Database = {
           decided_by?: string | null;
           decision_reason?: string | null;
           id?: string;
+          jar_id?: string | null;
           moment_id?: string | null;
+          profile_id?: string | null;
+          report_id?: string | null;
           scores?: NonNullable<Json>;
           second_opinion?: Json | null;
           source: Database['public']['Enums']['mod_source'];
@@ -460,7 +466,10 @@ export type Database = {
           decided_by?: string | null;
           decision_reason?: string | null;
           id?: string;
+          jar_id?: string | null;
           moment_id?: string | null;
+          profile_id?: string | null;
+          report_id?: string | null;
           scores?: NonNullable<Json>;
           second_opinion?: Json | null;
           source?: Database['public']['Enums']['mod_source'];
@@ -489,10 +498,38 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'moderation_items_jar_id_fkey';
+            columns: ['jar_id'];
+            isOneToOne: false;
+            referencedRelation: 'jars';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'moderation_items_moment_id_fkey';
             columns: ['moment_id'];
             isOneToOne: false;
             referencedRelation: 'moments';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moderation_items_profile_id_fkey';
+            columns: ['profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moderation_items_profile_id_fkey';
+            columns: ['profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moderation_items_report_id_fkey';
+            columns: ['report_id'];
+            isOneToOne: false;
+            referencedRelation: 'reports';
             referencedColumns: ['id'];
           },
         ];
@@ -503,6 +540,7 @@ export type Database = {
           caption: string | null;
           captured_at: string | null;
           edits: NonNullable<Json>;
+          hidden_at: string | null;
           id: string;
           is_backfilled: boolean;
           is_private: boolean;
@@ -526,6 +564,7 @@ export type Database = {
           caption?: string | null;
           captured_at?: string | null;
           edits?: NonNullable<Json>;
+          hidden_at?: string | null;
           id?: string;
           is_backfilled?: boolean;
           is_private?: boolean;
@@ -548,6 +587,7 @@ export type Database = {
           caption?: string | null;
           captured_at?: string | null;
           edits?: NonNullable<Json>;
+          hidden_at?: string | null;
           id?: string;
           is_backfilled?: boolean;
           is_private?: boolean;
@@ -1035,6 +1075,7 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          moderation_item_id: string | null;
           note: string | null;
           reason: Database['public']['Enums']['report_reason'];
           reporter_id: string;
@@ -1046,6 +1087,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           id?: string;
+          moderation_item_id?: string | null;
           note?: string | null;
           reason: Database['public']['Enums']['report_reason'];
           reporter_id: string;
@@ -1056,6 +1098,7 @@ export type Database = {
         Update: {
           created_at?: string;
           id?: string;
+          moderation_item_id?: string | null;
           note?: string | null;
           reason?: Database['public']['Enums']['report_reason'];
           reporter_id?: string;
@@ -1064,6 +1107,13 @@ export type Database = {
           target_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'reports_moderation_item_id_fkey';
+            columns: ['moderation_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'moderation_items';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'reports_reporter_id_fkey';
             columns: ['reporter_id'];
@@ -1545,6 +1595,15 @@ export type Database = {
           >;
         };
         Returns: boolean;
+      };
+      submit_report: {
+        Args: {
+          note?: string;
+          reason: Database['public']['Enums']['report_reason'];
+          target: Database['public']['Enums']['target_type'];
+          target_id: string;
+        };
+        Returns: undefined;
       };
       username_available: { Args: { candidate: string }; Returns: string };
     };
