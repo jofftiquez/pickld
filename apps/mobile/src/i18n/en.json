@@ -1220,5 +1220,36 @@
       "feedbackSubject": "Pickld feedback",
       "body": "\n\n—\nPickld {{version}} · {{platform}} {{os}}"
     }
+  },
+  "deleteAccount": {
+    "title": "Delete account",
+    "back": "Back",
+    "heading": "This can’t be undone",
+    "body": "Deleting your account permanently removes your {{jars}} and {{moments}}, your profile, readers, comments and reactions.",
+    "bodyUnknown": "Deleting your account permanently removes your jars and moments, your profile, readers, comments and reactions.",
+    "jars_one": "{{count}} jar",
+    "jars_other": "{{count}} jars",
+    "moments_one": "{{count}} moment",
+    "moments_other": "{{count}} moments",
+    "keep": "Keep your memories",
+    "export": {
+      "none": "Download all your photos and captions first.",
+      "pending": "We’re preparing your download. It’s ready within 24 hours; come back here for the link.",
+      "done": "Your download is ready until {{time}}.",
+      "failed": "We couldn’t prepare your download. Try again."
+    },
+    "download": "Download",
+    "downloadLabel": "Prepare a download of all your photos and captions",
+    "preparing": "Preparing",
+    "open": "Open",
+    "openLabel": "Open your download",
+    "retry": "Try again",
+    "confirmLabel": "Type DELETE to confirm",
+    "confirmWord": "DELETE",
+    "confirmHint": "The delete button turns on once you type DELETE",
+    "delete": "Delete my account",
+    "keepAccount": "Keep my account",
+    "failed": "Couldn’t delete your account. Check your connection and try again.",
+    "exportFailed": "Couldn’t ask for your download. Check your connection and try again."
   }
 }
