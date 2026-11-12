@@ -1045,6 +1045,30 @@
       "settingsLabel": "Turn on {{name}} in Settings",
       "continue": "Continue",
       "later": "Maybe later"
+    },
+    "friends": {
+      "title": "Find your people",
+      "body": "Pickld is better with a few friends reading your jars, and you reading theirs.",
+      "find": "Find friends from contacts",
+      "findBody": "We only match hashed contacts; nothing is posted.",
+      "findAction": "Find",
+      "finding": "Finding…",
+      "findLabel": "Find friends from your contacts",
+      "denied": "Contacts are off for Pickld. Turn them on in Settings to find friends.",
+      "settings": "Settings",
+      "failed": "Couldn’t search your contacts. Check your connection and try again.",
+      "invite": "Invite with your link",
+      "copy": "Copy",
+      "copyLabel": "Share your invite link {{link}}",
+      "shareMessage": "Read my jars on Pickld: {{link}}",
+      "already": "Already on Pickld",
+      "inContacts": "In your contacts",
+      "none": "None of your contacts are on Pickld yet. Invite them with your link.",
+      "continue": "Continue",
+      "skip": "Skip for now"
     }
+  },
+  "contacts": {
+    "permissionDescription": "Pickld hashes the emails and numbers in your contacts on your phone to find friends already on Pickld. Your contacts are never uploaded."
   }
 }

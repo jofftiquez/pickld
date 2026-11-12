@@ -1,0 +1,13 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Reyes;Mika;;;
+FN:Mika Reyes
+EMAIL;TYPE=HOME:  Mika@Pickld.test
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Tanaka;Aya;;;
+FN:Aya Tanaka
+EMAIL;TYPE=HOME:aya@pickld.test
+TEL;TYPE=CELL:+63 917 555 0101
+END:VCARD
