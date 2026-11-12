@@ -1789,6 +1789,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      store_purchases_sync: { Args: { p_purchases: Json; p_user: string }; Returns: Json };
       submit_report: {
         Args: {
           note?: string;

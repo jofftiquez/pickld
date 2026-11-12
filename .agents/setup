@@ -93,6 +93,9 @@ EOF
   # fn:account-jobs' cron secret; a random local value, never committed.
   grep -q '^ACCOUNT_JOBS_SECRET=.' supabase/functions/.env ||
     echo "ACCOUNT_JOBS_SECRET=$(openssl rand -hex 32)" >>supabase/functions/.env
+  # fn:revenuecat-webhook's shared secret (M6-01); a random local value, never committed.
+  grep -q '^REVENUECAT_WEBHOOK_SECRET=.' supabase/functions/.env ||
+    echo "REVENUECAT_WEBHOOK_SECRET=$(openssl rand -hex 32)" >>supabase/functions/.env
   if [[ ! -f workers/photos/.env ]]; then
     sed "s|^PHOTO_TOKEN_SECRET=.*|PHOTO_TOKEN_SECRET=$secret|" workers/photos/.env.example >workers/photos/.env
   fi

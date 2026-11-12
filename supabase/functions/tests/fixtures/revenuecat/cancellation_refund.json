@@ -1,0 +1,15 @@
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "0B1C2D3E-4F5A-4B6C-8D7E-9F0A1B2C3D4E",
+    "type": "CANCELLATION",
+    "cancel_reason": "CUSTOMER_SUPPORT",
+    "app_user_id": "{{BUYER}}",
+    "original_app_user_id": "{{BUYER}}",
+    "product_id": "{{PRODUCT}}",
+    "environment": "SANDBOX",
+    "store": "APP_STORE",
+    "transaction_id": "2000000999000001",
+    "event_timestamp_ms": 1794600000000
+  }
+}

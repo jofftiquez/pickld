@@ -1,0 +1,12 @@
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "5E6F7A8B-9C0D-4E1F-8A2B-3C4D5E6F7A8B",
+    "type": "TRANSFER",
+    "transferred_from": ["{{BUYER}}"],
+    "transferred_to": ["{{OTHER}}"],
+    "environment": "SANDBOX",
+    "store": "APP_STORE",
+    "event_timestamp_ms": 1794700000000
+  }
+}
