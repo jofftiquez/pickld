@@ -9,7 +9,7 @@ import { Icon } from '@/components/Icon';
 import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { TextField } from '@/components/TextField';
-import { formatTime } from '@/lib/format';
+import { formatShortDate, formatTime } from '@/lib/format';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
@@ -42,6 +42,8 @@ export function DeleteAccountView(props: DeleteAccountViewProps) {
       ? t('deleteAccount.export.pending')
       : card.kind === 'ready'
         ? t('deleteAccount.export.done', {
+            // The link lasts 24 hours, so the day matters as much as the time.
+            date: card.expiresAt ? formatShortDate(new Date(card.expiresAt)) : '',
             time: card.expiresAt ? formatTime(new Date(card.expiresAt)) : '',
           })
         : card.kind === 'failed'
