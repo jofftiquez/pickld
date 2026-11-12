@@ -736,5 +736,46 @@
         "body": "Your {{slot}} is open whenever you’re ready."
       }
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "close": "Close",
+    "today": "Today",
+    "week": "This week",
+    "earlier": "Earlier",
+    "capture": "Capture",
+    "captureA11y": "Capture your {{slot}}",
+    "empty": "Nothing yet. Likes, comments and new readers show up here.",
+    "failed": "Couldn’t load notifications.",
+    "retry": "Try again",
+    "age": {
+      "now": "now",
+      "minutes": "{{count}}m",
+      "hours": "{{count}}h"
+    },
+    "someone": "Someone",
+    "newReader": "<bold>{{name}}</bold> started reading your days",
+    "like_one": "<bold>{{name}}</bold> liked <bold>{{what}}</bold>",
+    "like_other": "<bold>{{name}}</bold> and {{count}} others liked <bold>{{what}}</bold>",
+    "likeTwo": "<bold>{{name}}</bold> and <bold>{{other}}</bold> liked <bold>{{what}}</bold>",
+    "yourJar": "your {{weekday}}",
+    "yourJarPlain": "your jar",
+    "yourMoment": "your moment",
+    "comment": "<bold>{{name}}</bold> commented: “{{body}}”",
+    "commentPlain": "<bold>{{name}}</bold> commented on your jar",
+    "reply": "<bold>{{name}}</bold> replied: “{{body}}”",
+    "replyPlain": "<bold>{{name}}</bold> replied to your comment",
+    "fullJar": "Your {{weekday}} jar is full. <bold>{{count}} of {{max}} moments!</bold>",
+    "fullJarPlain": "Your jar is full. <bold>{{count}} of {{max}} moments!</bold>",
+    "removed": "We removed one of your moments",
+    "appealDecided": "We reviewed your appeal",
+    "friendJoined": "<bold>{{name}}</bold> joined Pickld. Say hi?",
+    "unread": "Unread",
+    "openHint": "Opens it",
+    "reminderBody": {
+      "morning": "How does today start?",
+      "afternoon": "What are you up to right now?",
+      "evening": "How is today winding down?"
+    }
   }
 }

@@ -144,6 +144,8 @@ export const radius = {
   banner: 16, // offline banner on Today (UploadStates)
   zoneBanner: 18, // Time zone banner on Today (TimeZone)
   zoneIcon: 13, // icon well on that banner
+  notifyIcon: 13, // icon wells on Notifications (the reminder card, Full jar rows)
+  reminderCard: 22, // pinned reminder card on Notifications
   optionIcon: 13, // icon well on a Moment options row (MomentOptions)
   tile: 22,
   jarTile: 18, // moments in the Jar page grid (Story)
@@ -284,6 +286,9 @@ export const sizes = {
   mosaicRow: 70, // height of each small row in a feed jar card's mosaic; the large photo spans two
   mosaicGap: 6,
   notifyDot: 8, // unread dot on the bell (Feed)
+  notifyAvatar: 40, // avatar, icon well and thumbnail width on a Notifications row (Notifications)
+  notifyThumbHeight: 53, // 3:4 thumbnail beside a like or comment
+  notifyReminderIcon: 44, // slot icon well on the pinned reminder card
   countJar: 14, // jar icon in a feed card's "6/8" pill
   zoneIcon: 38, // icon well on the Time zone banner (TimeZone)
   shutter: 84, // camera shutter ring (Camera)

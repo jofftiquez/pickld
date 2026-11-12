@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FeedView } from '@/features/feed/FeedView';
 import { useFeed } from '@/features/feed/useFeed';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
+import { useUnreadNotifications } from '@/features/notifications/useNotifications';
 import { profileUrl } from '@/lib/links';
 
 const MINUTE = 60_000;
@@ -18,6 +19,7 @@ export default function JarsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const feed = useFeed();
+  const unread = useUnreadNotifications();
   const { userId, markSeen } = feed;
   const me = useQuery({
     queryKey: todayQueryKeys.me(userId ?? ''),
@@ -36,10 +38,11 @@ export default function JarsScreen() {
   useFocusEffect(
     useCallback(() => {
       setNow(new Date());
+      unread.refresh();
       return () => {
         if (userId !== null) markSeen();
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- markSeen is a new function each render
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- markSeen and unread.refresh are new functions each render
     }, [userId]),
   );
 
@@ -53,16 +56,16 @@ export default function JarsScreen() {
       isLoading={feed.isLoading}
       isRefreshing={pulling}
       isFetchingNextPage={feed.isFetchingNextPage}
-      // TODO(M3-19): unread notifications and the Notifications screen.
-      hasUnread={false}
+      hasUnread={unread.hasUnread}
       onRefresh={() => {
         setPulling(true);
+        unread.refresh();
         void feed.refresh().finally(() => setPulling(false));
       }}
       onEndReached={() => {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
-      onOpenNotifications={() => undefined}
+      onOpenNotifications={() => router.push('/notifications')}
       onOpenJar={(jarId) => router.push({ pathname: '/jar/[id]', params: { id: jarId } })}
       onOpenProfile={(username) => {
         const name = username ?? me.data?.username;

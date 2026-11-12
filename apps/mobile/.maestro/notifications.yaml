@@ -1,0 +1,53 @@
+# M3-19: the bell on Jars shows the unread dot, opens Notifications, and a row opens what it is about.
+# Needs dale signed in with unread notifications (the seed's new readers and full jar):
+# maestro test apps/mobile/.maestro/notifications.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-notifications-dot
+    timeout: 30000
+- tapOn:
+    id: feed-notifications
+- extendedWaitUntil:
+    visible:
+      id: notifications-screen
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: notifications-today
+    timeout: 30000
+- assertVisible: 'Today'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Notifications-ios
+# Tapping a like on the jar opens the Jar page.
+- tapOn: '.*liked your.*'
+- extendedWaitUntil:
+    visible:
+      id: jar-page
+    timeout: 20000
+- tapOn:
+    id: jar-back
+- extendedWaitUntil:
+    visible:
+      id: notifications-screen
+    timeout: 10000
+- tapOn:
+    id: notifications-close
+# Opening the screen marked everything read.
+- extendedWaitUntil:
+    notVisible:
+      id: feed-notifications-dot
+    timeout: 10000
