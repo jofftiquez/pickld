@@ -8,6 +8,7 @@ import { shareJar } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { useLike } from '@/features/jar/useLike';
 import { ReportSheet } from '@/features/safety/ReportSheet';
+import { useBlockFlow } from '@/features/safety/useBlockFlow';
 
 // /jar/[id] (M3-07; FR-SOC-03, FR-JAR-06): one person's jar for one day, from a feed card or My days.
 // The id is validated with Zod in useJarPage; a bad id is "not available".
@@ -19,6 +20,7 @@ export default function JarScreen() {
   const { data, failed, refresh } = useJarPage(id);
   const like = useLike(data?.viewerId ?? null, data?.jar.id ?? null);
   const [reporting, setReporting] = useState(false);
+  const blockFlow = useBlockFlow(() => router.replace('/jars'));
 
   const back = () => {
     if (router.canGoBack()) router.back();
@@ -53,7 +55,11 @@ export default function JarScreen() {
         subject={data ? { target: 'jar', targetId: data.jar.id } : null}
         name={data?.author.display_name ?? ''}
         onClose={() => setReporting(false)}
+        onBlock={() => {
+          if (data) blockFlow.open({ id: data.jar.user_id, name: data.author.display_name });
+        }}
       />
+      {blockFlow.dialog}
     </>
   );
 }

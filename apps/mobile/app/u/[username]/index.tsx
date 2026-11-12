@@ -8,6 +8,7 @@ import { ProfileView } from '@/features/profile/ProfileView';
 import { useFollow } from '@/features/profile/useFollow';
 import { useProfile } from '@/features/profile/useProfile';
 import { ReportSheet } from '@/features/safety/ReportSheet';
+import { useBlockFlow } from '@/features/safety/useBlockFlow';
 import { profileUrl } from '@/lib/links';
 
 // /u/[username] (M3-13; FR-SOC-08): My profile when the username is the viewer's, else Other profile.
@@ -20,6 +21,7 @@ export default function ProfileScreen() {
   const { data, failed, refresh } = useProfile(username);
   const follow = useFollow(data?.viewerId ?? null);
   const [reporting, setReporting] = useState(false);
+  const blockFlow = useBlockFlow(() => router.replace('/jars'));
 
   const back = () => {
     if (router.canGoBack()) router.back();
@@ -71,7 +73,11 @@ export default function ProfileScreen() {
         subject={data ? { target: 'profile', targetId: data.profile.id } : null}
         name={data?.profile.display_name ?? ''}
         onClose={() => setReporting(false)}
+        onBlock={() => {
+          if (data) blockFlow.open({ id: data.profile.id, name: data.profile.display_name });
+        }}
       />
+      {blockFlow.dialog}
     </>
   );
 }

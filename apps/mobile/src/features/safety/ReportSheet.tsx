@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -37,10 +37,27 @@ export function ReportSheet({ visible, subject, name, onClose, onBlock }: Report
     setReason(null);
     report.reset();
   };
+  // Block opens once the sheet is fully gone: iOS can't present its dialog over a dismissing sheet.
+  const blockAfterClose = useRef(false);
+  const closeThenBlock = () => {
+    blockAfterClose.current = true;
+    close();
+  };
   const error = report.error instanceof ReportError ? report.error.kind : report.error ? 'failed' : null;
 
   return (
-    <BottomSheet visible={visible} onClose={close} accessibilityLabel={t('report.title')} testID="report-sheet">
+    <BottomSheet
+      visible={visible}
+      onClose={close}
+      onClosed={() => {
+        if (blockAfterClose.current) {
+          blockAfterClose.current = false;
+          onBlock?.();
+        }
+      }}
+      accessibilityLabel={t('report.title')}
+      testID="report-sheet"
+    >
       {report.isSuccess && subject ? (
         <View style={styles.sent} testID="report-sent">
           <View style={styles.check}>
@@ -57,10 +74,7 @@ export function ReportSheet({ visible, subject, name, onClose, onBlock }: Report
               <SecondaryButton
                 variant="outlineDanger"
                 label={t('report.alsoBlock', { name: firstName })}
-                onPress={() => {
-                  close();
-                  onBlock();
-                }}
+                onPress={closeThenBlock}
                 testID="report-also-block"
               />
             ) : null}
@@ -80,10 +94,7 @@ export function ReportSheet({ visible, subject, name, onClose, onBlock }: Report
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t('report.blockTab')}
-                onPress={() => {
-                  close();
-                  onBlock();
-                }}
+                onPress={closeThenBlock}
                 style={[styles.tab, { backgroundColor: colors.subtle }]}
                 testID="report-block-tab"
               >

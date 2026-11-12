@@ -6,7 +6,7 @@ import GorhomBottomSheet, {
 } from '@gorhom/bottom-sheet';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +18,9 @@ export type BottomSheetProps = {
   visible: boolean;
   /** Called after the user dismisses the sheet (drag down, backdrop, Close, Android back). Set `visible` false here. */
   onClose: () => void;
+  /** Called once the sheet's native modal is fully gone, however it closed: the moment another modal (e.g.
+   * a confirm dialog) can open. iOS can't present one while this one is still dismissing. */
+  onClosed?: () => void;
   /** What the sheet is, read when it opens (e.g. "Moment options"). Already translated. */
   accessibilityLabel: string;
   children: ReactNode;
@@ -28,7 +31,7 @@ export type BottomSheetProps = {
  * Bottom sheet sized to its content (MomentOptions, Report). It renders in a native modal so VoiceOver
  * and TalkBack stay inside it, and its grab handle is the accessible Close button.
  */
-export function BottomSheet({ visible, onClose, accessibilityLabel, children, testID }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, onClosed, accessibilityLabel, children, testID }: BottomSheetProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
@@ -57,7 +60,9 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children, te
   const handleClosed = useCallback(() => {
     setMounted(false);
     if (visibleRef.current) onClose();
-  }, [onClose]);
+    // iOS reports the modal gone through onDismiss below; Android has no such callback and needs no wait.
+    if (Platform.OS !== 'ios') onClosed?.();
+  }, [onClose, onClosed]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -91,10 +96,10 @@ export function BottomSheet({ visible, onClose, accessibilityLabel, children, te
     [requestClose, t, testID],
   );
 
-  if (!mounted) return null;
   return (
     <Modal
-      visible
+      visible={mounted}
+      onDismiss={onClosed}
       transparent
       animationType="none"
       statusBarTranslucent

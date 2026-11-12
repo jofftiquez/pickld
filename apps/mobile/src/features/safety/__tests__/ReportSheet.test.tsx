@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { ReportSheet, type ReportSheetProps } from '../ReportSheet';
@@ -41,18 +41,26 @@ jest.mock('@gorhom/bottom-sheet', () => {
 async function renderSheet(props: Partial<ReportSheetProps> = {}) {
   const onClose = jest.fn();
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false, gcTime: Infinity } } });
-  await render(
+  const ui = (visible: boolean) => (
     <QueryClientProvider client={client}>
       <ReportSheet
-        visible
+        visible={visible}
         subject={{ target: 'jar', targetId: 'jar-1' }}
         name="Mika Reyes"
         onClose={onClose}
         {...props}
       />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
-  return { onClose };
+  await render(ui(true));
+  // The parent closes the sheet (onClose), then iOS reports its modal dismissed.
+  const closeAndDismiss = async () => {
+    // The sheet's native modal is the root host element.
+    const onDismiss = (screen.root?.props as { onDismiss?: () => void } | undefined)?.onDismiss;
+    await screen.rerender(ui(false));
+    await act(() => onDismiss?.());
+  };
+  return { onClose, closeAndDismiss };
 }
 
 beforeEach(() => mockRpc.mockReset());
@@ -90,14 +98,23 @@ describe('ReportSheet', () => {
     expect(screen.queryByTestId('report-also-block')).toBeNull();
   });
 
-  it('Also block closes the sheet and hands over to Block', async () => {
+  it('Also block closes the sheet and opens Block only once the sheet is gone', async () => {
     mockRpc.mockResolvedValue({ error: null });
     const onBlock = jest.fn();
-    const { onClose } = await renderSheet({ onBlock });
+    const { onClose, closeAndDismiss } = await renderSheet({ onBlock });
     await fireEvent.press(screen.getByRole('radio', { name: 'Something else' }));
     await fireEvent.press(screen.getByTestId('report-submit'));
     await fireEvent.press(await screen.findByTestId('report-also-block'));
     expect(onClose).toHaveBeenCalled();
-    expect(onBlock).toHaveBeenCalled();
+    expect(onBlock).not.toHaveBeenCalled();
+    await closeAndDismiss();
+    expect(onBlock).toHaveBeenCalledTimes(1);
+  });
+
+  it('closing the sheet any other way does not open Block', async () => {
+    const onBlock = jest.fn();
+    const { closeAndDismiss } = await renderSheet({ onBlock });
+    await closeAndDismiss();
+    expect(onBlock).not.toHaveBeenCalled();
   });
 });
