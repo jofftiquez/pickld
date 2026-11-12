@@ -109,6 +109,8 @@ jest.mock('expo-router', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
 }));
+// The Report sheet (M3-21) has its own test; here it would pull in the native bottom sheet.
+jest.mock('@/features/safety/ReportSheet', () => ({ ReportSheet: () => null }));
 
 function row(id: string, status: string, over: Partial<Row> = {}): Row {
   return { id, user_id: USER, jar_id: JAR_ID, slot: 'evening', status, jars: { local_date: '2026-11-07' }, ...over };

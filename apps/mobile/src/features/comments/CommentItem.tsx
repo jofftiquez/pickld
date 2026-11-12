@@ -17,13 +17,15 @@ export type CommentItemProps = {
   onReply?: () => void;
   /** Shown to the comment's author and the jar owner. */
   onDelete?: () => void;
+  /** Someone else's comment: opens Report. */
+  onReport?: () => void;
 };
 
-/** Text actions (Reply, Delete) are 12 pt labels 4 pt above and below (Comments); hitSlop brings them to 44. */
+/** Text actions (Reply, Delete, Report) are 12 pt labels 4 pt above and below (Comments); hitSlop brings them to 44. */
 const ACTION_HEIGHT = 24;
 
-/** One comment or reply in the thread (Comments): avatar, name and age, text, Reply and Delete. */
-export function CommentItem({ comment, isReply = false, now, onReply, onDelete }: CommentItemProps) {
+/** One comment or reply in the thread (Comments): avatar, name and age, text, Reply, Delete and Report. */
+export function CommentItem({ comment, isReply = false, now, onReply, onDelete, onReport }: CommentItemProps) {
   const { t } = useTranslation();
   const name = comment.author?.display_name ?? t('comments.someone');
   const age = ageOf(comment.created_at, now);
@@ -39,7 +41,7 @@ export function CommentItem({ comment, isReply = false, now, onReply, onDelete }
         <Text style={[textStyle('bodyMedium', '400'), styles.text]} testID={`comment-${comment.id}-body`}>
           {comment.body}
         </Text>
-        {onReply || onDelete ? (
+        {onReply || onDelete || onReport ? (
           <View style={styles.actions}>
             {onReply ? (
               <Pressable
@@ -63,6 +65,18 @@ export function CommentItem({ comment, isReply = false, now, onReply, onDelete }
                 testID={`comment-${comment.id}-delete`}
               >
                 <Text style={[textStyle('label', '700'), { color: colors.muted }]}>{t('comments.delete')}</Text>
+              </Pressable>
+            ) : null}
+            {onReport ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('comments.reportLabel', { name })}
+                hitSlop={hitSlopFor(undefined, ACTION_HEIGHT)}
+                onPress={onReport}
+                style={styles.action}
+                testID={`comment-${comment.id}-report`}
+              >
+                <Text style={[textStyle('label', '700'), { color: colors.muted }]}>{t('comments.report')}</Text>
               </Pressable>
             ) : null}
           </View>

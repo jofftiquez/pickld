@@ -49,6 +49,8 @@ export type CommentsViewProps = {
   /** Resolves true once saved; the input is cleared then. */
   onSend: (body: string, parentId: string | null) => Promise<boolean>;
   onDelete: (commentId: string) => void;
+  /** Reports someone else's comment (M3-21). */
+  onReport?: (comment: ThreadComment) => void;
 };
 
 /** The thread for one jar (Comments; FR-SOC-06): comments with one level of replies and the input bar. */
@@ -67,6 +69,7 @@ export function CommentsView({
   onRetry,
   onSend,
   onDelete,
+  onReport,
 }: CommentsViewProps) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState('');
@@ -90,6 +93,7 @@ export function CommentsView({
       now={now}
       onReply={c.canReply ? () => setReplyTo(c) : undefined}
       onDelete={c.canDelete ? () => setDeleting(c) : undefined}
+      onReport={c.canReport && onReport && !c.pending ? () => onReport(c) : undefined}
     />
   );
 
