@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,6 +7,7 @@ import { JarPageView } from '@/features/jar/JarPageView';
 import { shareJar } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { useLike } from '@/features/jar/useLike';
+import { ReportSheet } from '@/features/safety/ReportSheet';
 
 // /jar/[id] (M3-07; FR-SOC-03, FR-JAR-06): one person's jar for one day, from a feed card or My days.
 // The id is validated with Zod in useJarPage; a bad id is "not available".
@@ -16,6 +18,7 @@ export default function JarScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, failed, refresh } = useJarPage(id);
   const like = useLike(data?.viewerId ?? null, data?.jar.id ?? null);
+  const [reporting, setReporting] = useState(false);
 
   const back = () => {
     if (router.canGoBack()) router.back();
@@ -23,25 +26,34 @@ export default function JarScreen() {
   };
 
   return (
-    <JarPageView
-      data={data}
-      failed={failed}
-      insets={insets}
-      onBack={back}
-      onToggleLike={like.toggle}
-      onOpenComments={() => {
-        if (data) router.push({ pathname: '/comments/[jarId]', params: { jarId: data.jar.id } });
-      }}
-      onOpenMoment={(momentId) => {
-        if (data) router.push({ pathname: '/moment/[id]', params: { id: momentId, jar: data.jar.id } });
-      }}
-      onOpenAuthor={() => {
-        if (data) router.push({ pathname: '/u/[username]', params: { username: data.author.username } });
-      }}
-      onShare={() => {
-        if (data) shareJar(data, t);
-      }}
-      onRetry={() => void refresh()}
-    />
+    <>
+      <JarPageView
+        data={data}
+        failed={failed}
+        insets={insets}
+        onBack={back}
+        onToggleLike={like.toggle}
+        onOpenComments={() => {
+          if (data) router.push({ pathname: '/comments/[jarId]', params: { jarId: data.jar.id } });
+        }}
+        onOpenMoment={(momentId) => {
+          if (data) router.push({ pathname: '/moment/[id]', params: { id: momentId, jar: data.jar.id } });
+        }}
+        onOpenAuthor={() => {
+          if (data) router.push({ pathname: '/u/[username]', params: { username: data.author.username } });
+        }}
+        onShare={() => {
+          if (data) shareJar(data, t);
+        }}
+        onMore={() => setReporting(true)}
+        onRetry={() => void refresh()}
+      />
+      <ReportSheet
+        visible={reporting}
+        subject={data ? { target: 'jar', targetId: data.jar.id } : null}
+        name={data?.author.display_name ?? ''}
+        onClose={() => setReporting(false)}
+      />
+    </>
   );
 }

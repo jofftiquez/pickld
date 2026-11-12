@@ -24,6 +24,8 @@ export type ThreadComment = CommentRow & {
   /** The author's own comment, still being checked: only they can see it (D-22: for a moment). */
   pending: boolean;
   canDelete: boolean;
+  /** Someone else's comment: Report (M3-21). */
+  canReport: boolean;
   /** Replies only go on top-level comments. */
   canReply: boolean;
 };
@@ -40,6 +42,7 @@ export function buildThread(rows: CommentRow[], viewerId: string, jarOwnerId: st
     ...c,
     pending: c.is_hidden && c.user_id === viewerId,
     canDelete: c.user_id === viewerId || jarOwnerId === viewerId,
+    canReport: c.user_id !== viewerId,
     canReply: topLevel && !c.is_hidden,
   });
   const sorted = [...rows].sort(byTime);
