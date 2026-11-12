@@ -202,9 +202,10 @@ Deno.test('end to end on the local database: due likes batch, tickets saved, dea
       visibility: 'everyone',
       published_at: new Date().toISOString(),
     });
-    const old = new Date(Date.now() - 120_000).toISOString();
-    for (const actor of [aya, jun]) {
-      await insert('notifications', { user_id: owner.id, type: 'like', actor_id: actor.id, jar_id: jar.id, created_at: old });
+    // jun liked a second after aya, so the newest-first text is fixed (equal times made the order a coin toss).
+    for (const [i, actor] of [aya, jun].entries()) {
+      const at = new Date(Date.now() - 120_000 + i * 1000).toISOString();
+      await insert('notifications', { user_id: owner.id, type: 'like', actor_id: actor.id, jar_id: jar.id, created_at: at });
     }
 
     const expo = fakeExpo({ dead: [tokens[1]!] });
