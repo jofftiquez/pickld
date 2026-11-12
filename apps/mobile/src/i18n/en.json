@@ -1387,5 +1387,17 @@
     "searching": "Searching",
     "noResults": "No one matches that name.",
     "searchFailed": "Search didn’t work. Check your connection and try again."
+  },
+  "widgets": {
+    "todayName": "Today’s jar",
+    "todayDescription": "How full today’s jar is and what to capture next.",
+    "friendName": "Friend’s moment",
+    "friendDescription": "The latest moment from someone you read.",
+    "title": "Pickld · Today",
+    "moments": "{{count}} of {{total}} moments",
+    "nextUp": "Next up: {{tag}}",
+    "full": "Your jar is full",
+    "capture": "Capture a moment",
+    "friendEmpty": "Moments from people you read show up here."
   }
 }
