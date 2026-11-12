@@ -58,9 +58,9 @@ describe('Your day', () => {
         ],
       ],
     ]);
-    // Your day is the last step built so far: setup is marked finished and the app opens Today.
-    expect(mockSaveStep).toHaveBeenCalledWith('u-1', null);
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    // Setup continues at Your people, and a relaunch would resume there.
+    expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/people');
+    expect(mockPush).toHaveBeenCalledWith('/setup/people');
   });
 
   it('a failed save stays here, keeping the step for a relaunch', async () => {

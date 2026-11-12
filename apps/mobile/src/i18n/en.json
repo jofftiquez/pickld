@@ -972,6 +972,59 @@
       "continue": "Continue",
       "saving": "Saving…",
       "failed": "Couldn’t save your times. Check your connection and try again."
+    },
+    "people": {
+      "title": "Who’s in your days?",
+      "body": "Tap all that fit. We’ll suggest stickers that match. Nobody else sees these answers.",
+      "whoamiwith": "Usually in my #whoamiwith",
+      "mebusywith": "My #mebusywith is mostly",
+      "ootd": "My honest #ootd",
+      "options": {
+        "whoamiwith": {
+          "barkada": "Barkada",
+          "family": "Family",
+          "partner": "Partner",
+          "pets": "Pets",
+          "coworkers": "Coworkers",
+          "classmates": "Classmates",
+          "mostly_me": "Mostly me"
+        },
+        "mebusywith": {
+          "work": "Work",
+          "school": "School",
+          "side_hustle": "Side hustle",
+          "family_duties": "Family duties",
+          "figuring_it_out": "Figuring it out"
+        },
+        "ootd": {
+          "pambahay": "Pambahay",
+          "office_fit": "Office fit",
+          "uniform": "Uniform",
+          "gym_clothes": "Gym clothes",
+          "depends": "Depends on the mood"
+        }
+      },
+      "continue": "Continue",
+      "skip": "Skip",
+      "saving": "Saving…",
+      "failed": "Couldn’t save your answers. Check your connection and try again."
+    },
+    "lid": {
+      "title": "Pick your jar",
+      "body": "This lid goes on every jar you fill. You can change it anytime.",
+      "picked": "{{name}} it is!",
+      "hint": "Your lid shows on your profile and your jar card.",
+      "continue": "Continue",
+      "saving": "Saving…",
+      "failed": "Couldn’t save your lid. Check your connection and try again.",
+      "names": {
+        "pickle": "Pickle",
+        "mango": "Mango",
+        "ube": "Ube",
+        "sunset": "Sunset",
+        "sky": "Sky",
+        "ink": "Ink"
+      }
     }
   }
 }
