@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchMe, phoneTimeZone, todayQueryKeys } from '@/features/jar/useToday';
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { formatDate } from '@/lib/format';
 import { getSupabase } from '@/lib/supabase';
@@ -30,6 +31,7 @@ export function PromiseScreen() {
 
   const finish = async () => {
     if (!userId) return;
+    track('signup_step_completed', { step: 'promise' });
     await saveSetupStep(userId, null);
     router.replace('/');
   };

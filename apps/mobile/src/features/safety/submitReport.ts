@@ -4,6 +4,7 @@
 // "Report sent" signal.
 import { useMutation } from '@tanstack/react-query';
 
+import { track } from '@/lib/analytics';
 import type { Enums } from '@/lib/database.types';
 import { getSupabase } from '@/lib/supabase';
 
@@ -38,5 +39,8 @@ export async function submitReport({ target, targetId, reason }: ReportInput): P
 }
 
 export function useReport() {
-  return useMutation({ mutationFn: submitReport });
+  return useMutation({
+    mutationFn: submitReport,
+    onSuccess: (_data, { target }) => track('report_submitted', { target }),
+  });
 }

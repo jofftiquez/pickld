@@ -5,13 +5,15 @@
 // and the feed are read again, so the counts on both profiles match the server.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { track } from '@/lib/analytics';
 import { getSupabase } from '@/lib/supabase';
 
 import { withReading } from './profileModel';
 import type { FollowListRow } from './useFollowList';
 import { profileQueryKeys, type ProfilePage } from './useProfile';
 
-/** Starts or stops `viewerId` reading `authorId`. Already in that state (another device) is fine. */
+/** Starts or stops `viewerId` reading `authorId`. Already in that state (another device) is fine. A Read or
+ * Read back that went through is one `follow` event (NFR-ANL-01), wherever it was tapped. */
 export async function setReading(viewerId: string, authorId: string, reading: boolean): Promise<void> {
   const supabase = getSupabase();
   const row = { reader_id: viewerId, author_id: authorId };
@@ -19,6 +21,7 @@ export async function setReading(viewerId: string, authorId: string, reading: bo
     ? await supabase.from('follows').upsert(row, { onConflict: 'reader_id,author_id', ignoreDuplicates: true })
     : await supabase.from('follows').delete().eq('reader_id', viewerId).eq('author_id', authorId);
   if (error) throw new Error(error.message);
+  if (reading) track('follow', {});
 }
 
 /** The author `viewerId` removes `readerId` from their readers. */

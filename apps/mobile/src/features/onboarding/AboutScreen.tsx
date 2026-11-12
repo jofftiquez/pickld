@@ -7,6 +7,7 @@ import { phoneTimeZone } from '@/features/jar/useToday';
 import { saveErrorOf } from '@/features/profile/editProfileModel';
 import { pickProfileImage, uploadProfileImage, type PreparedImage } from '@/features/profile/uploadProfileImage';
 import { useUsernameAvailability } from '@/features/profile/useUsernameAvailability';
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { localDateIn } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
@@ -48,6 +49,7 @@ export function AboutScreen() {
   const canContinue = saved || aboutProblems(form, usernameStatus).length === 0;
 
   const finish = async () => {
+    track('signup_step_completed', { step: 'about' });
     queryClient.setQueryData(['hasProfile', userId], true);
     const next = nextSetupRoute('/setup/about');
     if (userId) await saveSetupStep(userId, next);
