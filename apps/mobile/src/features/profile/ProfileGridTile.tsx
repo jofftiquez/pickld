@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { PhotoTile } from '@/components/PhotoTile';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 export type ProfileGridTileProps = {
@@ -46,11 +46,19 @@ export function ProfileGridTile({
     >
       <PhotoTile uri={uri} radius={radius.thumbLg} fadeHeight={sizes.profileTileFade}>
         <View style={styles.text} pointerEvents="none">
-          <Text style={[textStyle('label', '700'), { color: colors.surface }]} numberOfLines={1}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.tile}
+            style={[textStyle('label', '700'), { color: colors.surface }]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
           {detail ? (
-            <Text style={[textStyle('caption', '600'), { color: colors.surface }]} numberOfLines={1}>
+            <Text
+              maxFontSizeMultiplier={maxTextScale.tile}
+              style={[textStyle('caption', '600'), { color: colors.surface }]}
+              numberOfLines={1}
+            >
               {detail}
             </Text>
           ) : null}

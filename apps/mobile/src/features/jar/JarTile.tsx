@@ -9,7 +9,7 @@ import { parseEdits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
 import { MomentCover } from '@/features/moment/MomentCover';
 import { hasVisibleEdits } from '@/features/moment/momentRender';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import type { JarMoment } from './jarPage';
@@ -64,7 +64,11 @@ export function JarTile({ moment, width, stamp, onPress }: JarTileProps) {
             <>
               {moment.is_backfilled ? (
                 <View style={styles.badge} testID={`jar-tile-${moment.slot}-added-later`}>
-                  <Text style={[textStyle('caption'), { color: colors.surface }]} numberOfLines={1}>
+                  <Text
+                    maxFontSizeMultiplier={maxTextScale.tile}
+                    style={[textStyle('caption'), { color: colors.surface }]}
+                    numberOfLines={1}
+                  >
                     {t('tile.addedLater')}
                   </Text>
                 </View>

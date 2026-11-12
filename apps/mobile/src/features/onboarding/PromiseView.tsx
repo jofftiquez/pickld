@@ -10,7 +10,7 @@ import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, sizes, space } from '@/theme/tokens';
 
 import { HOLD_MS } from './useHold';
@@ -88,7 +88,11 @@ export function PromiseView({
             accessibilityRole="image"
             accessibilityLabel={t('setup.promise.logo')}
           />
-          <Text accessibilityRole="header" style={[textStyle('onboardTitle'), styles.center, { color: colors.ink }]}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.title}
+            accessibilityRole="header"
+            style={[textStyle('onboardTitle'), styles.center, { color: colors.ink }]}
+          >
             {t('setup.promise.title')}
           </Text>
           <Text style={[textStyle('body'), styles.center, { color: colors.inkSoft }]}>{t('setup.promise.body')}</Text>

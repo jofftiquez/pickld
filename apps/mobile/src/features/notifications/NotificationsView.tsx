@@ -8,7 +8,8 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { deviceLocale } from '@/lib/format';
 import type { DaySlot } from '@/lib/jars';
-import { textStyle } from '@/theme/text';
+import { useLargeText } from '@/lib/useLargeText';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { NotificationRow } from './NotificationRow';
@@ -59,6 +60,7 @@ export function NotificationsView({
   locale = deviceLocale(),
 }: NotificationsViewProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   const sections = data ? buildSections(data.rows, now, tz) : [];
   const reading = new Set(data?.reading ?? []);
 
@@ -70,7 +72,11 @@ export function NotificationsView({
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]} testID="notifications-screen">
       <View style={styles.header}>
-        <Text accessibilityRole="header" style={[textStyle('screenTitle'), { color: colors.ink }]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('screenTitle'), { color: colors.ink }]}
+        >
           {t('notifications.title')}
         </Text>
         <RoundIconButton
@@ -85,11 +91,11 @@ export function NotificationsView({
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       >
         {reminderSlot ? (
-          <View style={styles.reminder} testID="notifications-reminder">
+          <View style={[styles.reminder, large && styles.reminderWrap]} testID="notifications-reminder">
             <View style={styles.reminderIcon}>
               <Icon name={reminderSlot} color="surface" size={20} />
             </View>
-            <View style={styles.reminderText}>
+            <View style={[styles.reminderText, large && styles.reminderTextLarge]}>
               <Text style={[textStyle('body', '700'), { color: colors.surface }]}>
                 {t(`reminders.${reminderSlot}.0.title`)}
               </Text>
@@ -193,6 +199,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   reminderText: { flex: 1, gap: 2 },
+  // Large text: Capture wraps below, so the reminder keeps the card's width.
+  reminderWrap: { flexWrap: 'wrap', rowGap: space.md },
+  reminderTextLarge: { flexBasis: '70%' },
   section: { gap: space.sm + 2 },
   sectionTitle: { color: colors.muted, marginTop: space.sm, marginHorizontal: space.xs },
   card: {

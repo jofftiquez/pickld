@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { deviceLocale } from '@/lib/format';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { CalendarDay } from './CalendarDay';
@@ -82,6 +82,7 @@ export function MyDaysView({
             {t('myDays.subtitle', { month, count: momentCount })}
           </Text>
           <Text
+            maxFontSizeMultiplier={maxTextScale.title}
             testID="screen-title"
             accessibilityRole="header"
             style={[textStyle('screenTitle'), { color: colors.ink }]}

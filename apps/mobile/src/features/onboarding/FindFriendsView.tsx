@@ -11,8 +11,9 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { FollowButton } from '@/features/profile/FollowButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
+import { useLargeText } from '@/lib/useLargeText';
 
 import type { FriendMatch } from './findFriends';
 import { SetupProgress } from './SetupProgress';
@@ -53,6 +54,7 @@ export function FindFriendsView({
   onBack,
 }: FindFriendsViewProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   return (
     <View style={styles.screen} testID="friends-screen">
       <ScrollView
@@ -68,16 +70,20 @@ export function FindFriendsView({
         )}
         <SetupProgress step={6} />
         <View style={styles.heading}>
-          <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.title}
+            accessibilityRole="header"
+            style={[textStyle('onboardTitle'), { color: colors.ink }]}
+          >
             {t('setup.friends.title')}
           </Text>
           <Text style={[textStyle('body'), styles.body]}>{t('setup.friends.body')}</Text>
         </View>
-        <Card style={styles.card} testID="friends-find-card">
+        <Card style={[styles.card, large && styles.wrap]} testID="friends-find-card">
           <View style={[styles.icon, { backgroundColor: colors.brandTint }]}>
             <Icon name="selfie" color="brandText" size={22} />
           </View>
-          <View style={styles.text}>
+          <View style={[styles.text, large && styles.textLarge]}>
             <Text style={[textStyle('cardTitle'), { color: colors.ink }]}>{t('setup.friends.find')}</Text>
             <Text style={[textStyle('bodySmall'), { color: colors.inkSoft }]}>{t('setup.friends.findBody')}</Text>
           </View>
@@ -98,11 +104,11 @@ export function FindFriendsView({
             />
           )}
         </Card>
-        <Card style={styles.card} testID="friends-invite-card">
+        <Card style={[styles.card, large && styles.wrap]} testID="friends-invite-card">
           <View style={[styles.icon, { backgroundColor: colors.tileIconWell }]}>
             <Icon name="link" color="ink" size={22} />
           </View>
-          <View style={styles.text}>
+          <View style={[styles.text, large && styles.textLarge]}>
             <Text style={[textStyle('cardTitle'), { color: colors.ink }]}>{t('setup.friends.invite')}</Text>
             <Text style={[textStyle('bodySmall'), { color: colors.inkSoft }]} testID="friends-link">
               {link}
@@ -144,9 +150,9 @@ export function FindFriendsView({
                 {matches.map((m, i) => (
                   <Fragment key={m.id}>
                     {i > 0 ? <View style={styles.divider} /> : null}
-                    <View style={styles.row} testID={`friends-match-${m.username}`}>
+                    <View style={[styles.row, large && styles.wrap]} testID={`friends-match-${m.username}`}>
                       <Avatar name={m.displayName} uri={m.avatarUrl} size="notify" decorative />
-                      <View style={styles.text}>
+                      <View style={[styles.text, large && styles.textLarge]}>
                         <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{m.displayName}</Text>
                         <Text style={[textStyle('bodySmall'), { color: colors.inkSoft }]}>
                           {t('setup.friends.inContacts')}
@@ -197,6 +203,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: { flex: 1, gap: 2 },
+  // Large text: the button or status wraps below, so the name keeps the card's width (D-37).
+  wrap: { flexWrap: 'wrap', rowGap: space.sm },
+  textLarge: { flexBasis: '70%' },
   section: { gap: space.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.xs },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: space.sm },

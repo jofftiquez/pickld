@@ -5,7 +5,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { IntroArt } from './IntroArt';
@@ -43,7 +43,11 @@ export function IntroView({ step, insets, onBack, onSignUp, onNext }: IntroViewP
       </View>
       <IntroArt step={step} />
       <View style={[styles.body, { paddingBottom: insets.bottom + space.xxxl }]}>
-        <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('onboardTitle'), { color: colors.ink }]}
+        >
           {t(`intro.${step}.title`)}
         </Text>
         <Text style={[textStyle('body'), styles.text]}>{t(`intro.${step}.body`)}</Text>

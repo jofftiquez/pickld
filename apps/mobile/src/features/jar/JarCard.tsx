@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { PillButton } from '@/components/PillButton';
 import type { Visibility } from '@/features/publish/publishJar';
+import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
@@ -34,6 +35,7 @@ export function JarCard({
   onOpenVisibility,
 }: JarCardProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   const title = firstDay ? t('today.firstJarTitle') : t('jar.moments', { count, total: MAX_LAYERS });
   const subtitle = firstDay
     ? t('today.firstJarBody')
@@ -47,9 +49,9 @@ export function JarCard({
         : t('today.inTodaysJarReaders', { count: readerCount });
   return (
     <View style={styles.card} testID={firstDay ? 'jar-card-first-day' : 'jar-card'}>
-      <View style={styles.row}>
+      <View style={[styles.row, large ? styles.rowWrap : null]}>
         <JarGraphic count={count} lidColor={lidColor} onDark decorative />
-        <View accessible style={styles.text}>
+        <View accessible style={[styles.text, large ? styles.textLarge : null]}>
           <Text style={[textStyle('jarCardTitle'), { color: colors.surface }]}>{title}</Text>
           <Text style={[textStyle(firstDay ? 'bodySmall' : 'label', '500'), { color: colors.onDarkMuted }]}>
             {subtitle}
@@ -88,4 +90,7 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: sizes.cardPadding },
   text: { flex: 1, gap: space.xs },
+  // Large text: Publish wraps below, so the count keeps the card's width instead of breaking mid-word.
+  rowWrap: { flexWrap: 'wrap', rowGap: space.md },
+  textLarge: { flexBasis: '60%' },
 });

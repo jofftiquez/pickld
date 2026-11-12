@@ -7,7 +7,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { TextField } from '@/components/TextField';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { onboardingPhotos, type OnboardingPhoto } from './photos';
@@ -89,7 +89,11 @@ export function AuthView({
             />
           ))}
         </View>
-        <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('onboardTitle'), { color: colors.ink }]}
+        >
           {t(`${k}.title`)}
         </Text>
         <Text style={[textStyle('body'), styles.body]}>{t(`${k}.body`)}</Text>
@@ -124,6 +128,12 @@ export function AuthView({
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
+          autoCorrect={false}
+          // Send from the keyboard: at large text the button can sit under it.
+          returnKeyType="send"
+          onSubmitEditing={() => {
+            if (!busy && email.trim().length > 0) onSubmitEmail();
+          }}
           testID="auth-email"
         />
         {error ? (

@@ -45,7 +45,7 @@ export function BubbleOverlay({ overlay, width, height }: OverlayContentProps<'b
     >
       {text === '' ? null : (
         <Text
-          // Part of the picture: same size on every screen, whatever the system text size.
+          // a11y-fixed-size: part of the picture, same size on every screen, whatever the system text size.
           allowFontScaling={false}
           numberOfLines={bubbleLines(text, shape)}
           adjustsFontSizeToFit

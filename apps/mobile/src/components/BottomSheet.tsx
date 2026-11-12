@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hitSlopFor } from '@/lib/hitSlop';
 import { colors, motion, radius, sizes, space } from '@/theme/tokens';
+import { useLargeText } from '@/lib/useLargeText';
 
 export type BottomSheetProps = {
   visible: boolean;
@@ -41,11 +42,14 @@ export function BottomSheet({
   accessibilityLabel,
   children,
   testID,
-  scrollable = false,
+  scrollable: scrollableProp = false,
 }: BottomSheetProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
+  // Large text can make any sheet taller than the screen; it then scrolls so its buttons stay reachable (D-37).
+  const large = useLargeText();
+  const scrollable = scrollableProp || large;
   const sheet = useRef<GorhomBottomSheet>(null);
   // Stay mounted after `visible` turns false until the close animation ends.
   const [mounted, setMounted] = useState(visible);

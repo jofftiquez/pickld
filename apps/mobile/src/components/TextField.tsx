@@ -4,6 +4,7 @@ import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-na
 
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
+import { useLargeText } from '@/lib/useLargeText';
 
 export type TextFieldProps = {
   /** Visible label above the field; also its spoken name. Already translated. */
@@ -21,6 +22,10 @@ export type TextFieldProps = {
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoComplete?: TextInputProps['autoComplete'];
   keyboardType?: TextInputProps['keyboardType'];
+  autoCorrect?: boolean;
+  /** The keyboard's return key: `returnKeyType` names it and `onSubmitEditing` runs when it's pressed. */
+  returnKeyType?: TextInputProps['returnKeyType'];
+  onSubmitEditing?: () => void;
   /** Focus the field (and show the keyboard) when it appears. */
   autoFocus?: boolean;
   testID?: string;
@@ -41,12 +46,18 @@ export function TextField({
   autoCapitalize,
   autoComplete,
   keyboardType,
+  autoCorrect,
+  returnKeyType,
+  onSubmitEditing,
   autoFocus,
   testID,
   trailing,
 }: TextFieldProps) {
   const { t } = useTranslation();
   const count = value.length;
+  // Large text: the trailing status goes under the field, where it can't cover what's typed (D-37).
+  const large = useLargeText();
+  const inside = trailing && !large;
   return (
     <View style={styles.container}>
       <Text style={[textStyle('label'), styles.label]} importantForAccessibility="no" accessibilityElementsHidden>
@@ -66,6 +77,9 @@ export function TextField({
           autoCapitalize={autoCapitalize}
           autoComplete={autoComplete}
           keyboardType={keyboardType}
+          autoCorrect={autoCorrect}
+          returnKeyType={returnKeyType}
+          onSubmitEditing={onSubmitEditing}
           autoFocus={autoFocus}
           textAlignVertical={multiline ? 'top' : 'center'}
           testID={testID}
@@ -73,11 +87,12 @@ export function TextField({
             textStyle('body'),
             styles.input,
             multiline ? styles.multiline : styles.single,
-            trailing ? styles.withTrailing : null,
+            inside ? styles.withTrailing : null,
           ]}
         />
-        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
+        {inside ? <View style={styles.trailing}>{trailing}</View> : null}
       </View>
+      {trailing && large ? <View style={styles.trailingBelow}>{trailing}</View> : null}
       {maxLength !== undefined ? (
         <Text
           style={[textStyle('caption', '500'), styles.counter]}
@@ -107,5 +122,6 @@ const styles = StyleSheet.create({
   multiline: { minHeight: sizes.textArea, paddingTop: space.md, paddingBottom: space.md },
   counter: { alignSelf: 'flex-end', color: colors.muted },
   withTrailing: { paddingRight: sizes.textFieldTrailing },
+  trailingBelow: { flexDirection: 'row' },
   trailing: { position: 'absolute', right: 14, top: 0, bottom: 0, justifyContent: 'center' },
 });
