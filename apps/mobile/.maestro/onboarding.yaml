@@ -1,0 +1,82 @@
+# M4-01: Welcome → How it works 1–3; Skip on every page goes to Sign up (FR-ONB-01).
+# Starts signed out through the dev sign-out link; sign back in afterwards (scripts/dev-sign-in.sh).
+# maestro test apps/mobile/.maestro/onboarding.yaml
+appId: me.pickld.app
+---
+- launchApp
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Welcome-ios
+- tapOn:
+    id: welcome-get-started
+- extendedWaitUntil:
+    visible:
+      id: intro-1
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Intro1-ios
+# Skip on page 1 → Sign up, then back.
+- tapOn:
+    id: intro-skip
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 10000
+- tapOn:
+    id: auth-back
+- tapOn:
+    id: intro-next
+- extendedWaitUntil:
+    visible:
+      id: intro-2
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Intro2-ios
+- tapOn:
+    id: intro-skip
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 10000
+- tapOn:
+    id: auth-back
+- tapOn:
+    id: intro-next
+- extendedWaitUntil:
+    visible:
+      id: intro-3
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Intro3-ios
+- tapOn:
+    id: intro-skip
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 10000
+- tapOn:
+    id: auth-back
+# Create my account on the last page also goes to Sign up.
+- assertVisible: Create my account
+- tapOn:
+    id: intro-next
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: SignUp-ios

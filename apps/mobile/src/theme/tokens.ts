@@ -22,6 +22,11 @@ export const colors = {
   chevron: '#8b9184', // row chevrons (Settings); icon only, 3.3:1 on white meets the 3:1 non-text minimum
   danger: '#b42318',
   dangerTint: '#fdeceb',
+  // Google's four-color G on Continue with Google (Sign up); brand mark colors, used nowhere else.
+  googleBlue: '#4285f4',
+  googleGreen: '#34a853',
+  googleYellow: '#fbbc05',
+  googleRed: '#ea4335',
   likeText: '#a01d14',
   scrim: 'rgba(10,12,8,0.55)',
   glass: 'rgba(10,12,8,0.45)', // controls over photos (with blur)
@@ -130,6 +135,7 @@ export const type = {
   countTile: { size: 26, weight: '800' }, // "8/8" on the tile ending the Jar page grid (Story)
   profileName: { size: 22, weight: '800', letterSpacing: -0.44 }, // name on a profile header (Profile)
   momentCaption: { size: 18, weight: '700', letterSpacing: -0.18 }, // caption in Moment detail's sheet (Moment)
+  onboardTitle: { size: 30, weight: '800', letterSpacing: -0.9 }, // Welcome, How it works, Sign up (-0.03em)
 } as const;
 
 export const radius = {
@@ -149,6 +155,8 @@ export const radius = {
   optionIcon: 13, // icon well on a Moment options row (MomentOptions)
   tile: 22,
   jarTile: 18, // moments in the Jar page grid (Story)
+  introTile: 18, // the eight slot tiles on Intro1
+  introHero: 22, // tilted selfie on Intro3
   emptyTile: 12, // the three tilted tiles on Jars, empty (EmptyStories)
   card: 24,
   dialog: 28, // centered confirm dialogs (Block)
@@ -286,6 +294,20 @@ export const sizes = {
   mosaicRow: 70, // height of each small row in a feed jar card's mosaic; the large photo spans two
   mosaicGap: 6,
   notifyDot: 8, // unread dot on the bell (Feed)
+  welcomeCollage: 470, // photo collage above the Welcome sheet (Welcome)
+  welcomeSheetOverlap: 24, // the sheet tucks this far over the collage
+  welcomeLogo: 76, // Pickld wordmark width on the Welcome sheet
+  introArt: 400, // illustration area on How it works (Intro1–3)
+  introPhoto: 74, // tilted photos around the jar (Intro2)
+  introJar: 120, // jar in the middle of Intro2
+  introHero: 160, // tilted selfie on Intro3
+  introCheck: 26, // check circle beside each promise (Intro3)
+  photoFrame: 3, // white frame around tilted photos (Intro2, Sign up)
+  authPhoto: 84, // fanned photos above Sign up and Sign in
+  pageDot: 7, // How it works page dots
+  pageDotActive: 22,
+  checkEmailWell: 96, // envelope tile on Check your email (CheckEmail)
+  checkEmailIcon: 40,
   notifyAvatar: 40, // avatar, icon well and thumbnail width on a Notifications row (Notifications)
   notifyThumbHeight: 53, // 3:4 thumbnail beside a like or comment
   notifyReminderIcon: 44, // slot icon well on the pinned reminder card
