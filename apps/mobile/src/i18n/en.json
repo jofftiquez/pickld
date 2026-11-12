@@ -219,7 +219,8 @@
     "camera": {
       "when": "For {{date}}",
       "slotTag": "{{slot}}, for {{date}}"
-    }
+    },
+    "memories": "Memories"
   },
   "brand": {
     "tagline": "Eight moments. One real day.",
@@ -1336,5 +1337,33 @@
     "keepAccount": "Keep my account",
     "failed": "Couldn’t delete your account. Check your connection and try again.",
     "exportFailed": "Couldn’t ask for your download. Check your connection and try again."
+  },
+  "memories": {
+    "title": "Memories",
+    "back": "Back",
+    "open": "Memories",
+    "loading": "Loading your memories…",
+    "failed": "Your memories didn’t load. Check your connection and try again.",
+    "retry": "Try again",
+    "onThisDay": "On this day",
+    "dateAgo": "{{date}} · {{ago}}",
+    "yearsAgo_one": "one year ago",
+    "yearsAgo_other": "{{count}} years ago",
+    "dayTitle": "Your {{weekday}}",
+    "dayMoments": "{{count}} of {{total}} moments",
+    "onThisDayLabel": "On this day: {{title}}, {{date}}, {{moments}}",
+    "recapTitle": "{{month}} recap",
+    "recapMoments_one": "{{count}} moment",
+    "recapMoments_other": "{{count}} moments",
+    "recapFull_one": "{{count}} full day",
+    "recapFull_other": "{{count}} full days",
+    "recapTag": "top tag {{tag}}",
+    "recapEmpty": "No moments in {{month}}.",
+    "play": "Play",
+    "playLabel": "Play your {{month}} recap",
+    "photoLabel": "{{slot}} moment",
+    "yearTitle": "Your {{year}} so far",
+    "yearBody_one": "{{count}} jar filled. Turn them into a year book later.",
+    "yearBody_other": "{{count}} jars filled. Turn them into a year book later."
   }
 }
