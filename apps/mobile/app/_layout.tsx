@@ -69,6 +69,15 @@ export default function RootLayout() {
         <Stack.Screen name="settings/blocked" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="comments/[jarId]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="notifications" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        {/* Over the editor (a full-screen modal), so these present as modals too. */}
+        <Stack.Screen
+          name="stickers/shop"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="stickers/pack/[slug]"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
+        />
         <Stack.Screen name="publish" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         {/* Celebrations fade in; Reduce Motion keeps the fade and drops the confetti (NFR-A11Y-02). */}
         <Stack.Screen name="full-jar" options={{ presentation: 'transparentModal', animation: 'fade' }} />
