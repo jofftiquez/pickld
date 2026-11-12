@@ -912,9 +912,38 @@
     }
   },
   "setup": {
+    "back": "Back",
+    "step": "Step {{step}} of {{count}}",
     "about": {
       "title": "About you",
-      "body": "Your profile comes next: a photo, your name and a username."
+      "changePhoto": "Change photo",
+      "addPhoto": "Add photo",
+      "photoA11y": "Choose a profile photo",
+      "name": "Name",
+      "username": "Username",
+      "available": "Available",
+      "birthday": "Birthday",
+      "month": "Month",
+      "day": "Day",
+      "year": "Year",
+      "monthPlaceholder": "Month",
+      "dayPlaceholder": "Day",
+      "yearPlaceholder": "Year",
+      "birthdayHint": "You must be 13 or older. This isn’t shown on your profile.",
+      "continue": "Continue",
+      "saving": "Saving…",
+      "errors": {
+        "taken": "Someone just took that username. Try another.",
+        "reserved": "That username isn’t available. Try another.",
+        "birthday": "You must be 13 or older.",
+        "failed": "Couldn’t save your profile. Check your connection and try again.",
+        "upload": "Your profile is saved, but the photo didn’t upload. You can add it later in Edit profile."
+      }
+    },
+    "under13": {
+      "title": "Pickld is for ages 13 and up",
+      "body": "We can’t create an account for you yet. We haven’t saved anything you entered.",
+      "back": "Back to start"
     }
   }
 }
