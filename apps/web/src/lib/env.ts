@@ -27,3 +27,18 @@ export function storeLinks() {
 export function siteUrl(): string {
   return optionalUrl.parse(process.env.SITE_URL || undefined) ?? 'https://pickld.me';
 }
+
+/** App identity for universal links / app links (M4-15); null until the founders set them. */
+export function appIdentity() {
+  const team = z
+    .string()
+    .regex(/^[A-Z0-9]{10}$/)
+    .safeParse(process.env.APPLE_TEAM_ID);
+  const certs = (process.env.ANDROID_CERT_SHA256 ?? '')
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(s));
+  return { appleTeamId: team.success ? team.data : null, androidCerts: certs };
+}
+
+export const APP_ID = 'me.pickld.app';

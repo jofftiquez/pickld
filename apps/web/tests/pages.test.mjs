@@ -19,6 +19,8 @@ const READERS = '22222222-2222-4222-8222-222222222222';
 
 let stub, stubUrl, web, base, browser;
 const SITE = 'https://pickld.test';
+const TEAM = 'ABCDE12345';
+const CERT = Array.from({ length: 32 }, (_, i) => i.toString(16).padStart(2, '0').toUpperCase()).join(':');
 /** Photo paths the stub served, to see what a preview fetched. */
 const served = [];
 
@@ -95,7 +97,7 @@ before(async () => {
   const nextBin = createRequire(import.meta.url).resolve('next/dist/bin/next');
   web = spawn(process.execPath, [nextBin, 'start', '-p', String(port), '-H', '127.0.0.1'], {
     cwd: path.join(here, '..'),
-    env: { ...process.env, SUPABASE_URL: stubUrl, SUPABASE_ANON_KEY: ANON, SITE_URL: SITE },
+    env: { ...process.env, SUPABASE_URL: stubUrl, SUPABASE_ANON_KEY: ANON, SITE_URL: SITE, APPLE_TEAM_ID: TEAM, ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} ` },
     stdio: ['ignore', 'ignore', 'inherit'],
   });
   for (let i = 0; i < 100; i++) {
@@ -264,4 +266,27 @@ test('the jar preview matches its snapshot', async () => {
   }, [`data:image/png;base64,${png.toString('base64')}`, `data:image/png;base64,${readFileSync(ref).toString('base64')}`]);
   await page.close();
   assert.ok(diff < 0.001, `${(diff * 100).toFixed(2)}% of pixels differ from tests/snapshots/og-jar.png`);
+});
+
+// ---------------------------------------------------------------- universal links / app links (M4-15)
+
+test('the AASA file lets the app open profile, jar and sign-in links but not legal pages', async () => {
+  const res = await fetch(`${base}/.well-known/apple-app-site-association`, { redirect: 'manual' });
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /^application\/json/);
+  const [detail] = (await res.json()).applinks.details;
+  assert.deepEqual(detail.appIDs, [`${TEAM}.me.pickld.app`]);
+  const excluded = detail.components.filter((c) => c.exclude).map((c) => c['/']);
+  assert.deepEqual(excluded, ['/terms', '/privacy', '/guidelines', '/.well-known/*']);
+  // iOS takes the first matching component, so the exclusions must come before the catch-all.
+  const all = detail.components.map((c) => c['/']);
+  assert.ok(all.indexOf('/terms') < all.indexOf('/*'));
+});
+
+test('assetlinks.json names the app and its normalised signing certificate', async () => {
+  const res = await fetch(`${base}/.well-known/assetlinks.json`, { redirect: 'manual' });
+  assert.equal(res.status, 200);
+  const [link] = await res.json();
+  assert.deepEqual(link.relation, ['delegate_permission/common.handle_all_urls']);
+  assert.deepEqual(link.target, { namespace: 'android_app', package_name: 'me.pickld.app', sha256_cert_fingerprints: [CERT] });
 });
