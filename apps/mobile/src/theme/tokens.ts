@@ -483,6 +483,15 @@ export const stickerShop = {
   cloudSampleHeight: 36,
 } as const;
 
+// My stickers (MyStickers, FR-STK-08): each pack row has a drag grip, a tinted tile with its first sticker
+// and a switch.
+export const myStickers = {
+  tile: 52,
+  tileRadius: 14,
+  tileSampleHeight: 26,
+  tileSampleMaxWidth: 0.9, // share of the tile a wide sample may span
+} as const;
+
 // Crop screen (Crop, FR-CAP-03): the 3:4 frame sits this far inside the dark photo area, with the 3:4 chip
 // above it and the gesture hint below; the white tool sheet holds the zoom slider and tool buttons.
 export const crop = {

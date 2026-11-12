@@ -56,6 +56,10 @@ export const answersRowSchema = z.object({
   ootd: z.string().nullable(),
 });
 
+/** The user's My stickers choices for one pack (user_pack_prefs, FR-STK-08). */
+export const packPrefRowSchema = z.object({ pack_id: z.string(), sort: z.number(), hidden: z.boolean() });
+
+export type PackPrefRow = z.infer<typeof packPrefRowSchema>;
 export type PackRow = z.infer<typeof packRowSchema>;
 export type StickerRow = z.infer<typeof stickerRowSchema>;
 export type AnswersRow = z.infer<typeof answersRowSchema>;
@@ -110,18 +114,49 @@ export function isOnSale(
   return true;
 }
 
+export function parsePackPrefs(rows: unknown[]): Map<string, PackPrefRow> {
+  return new Map(
+    rows.flatMap((row) => {
+      const parsed = packPrefRowSchema.safeParse(row);
+      return parsed.success ? [[parsed.data.pack_id, parsed.data] as const] : [];
+    }),
+  );
+}
+
+/**
+ * The user's pack order (My stickers, FR-STK-08): packs they arranged by their position, then any pack they
+ * haven't arranged yet (just bought or earned) in the order it came in.
+ */
+export function orderPacks<T extends { id: string }>(
+  packs: readonly T[],
+  prefs: ReadonlyMap<string, PackPrefRow>,
+): T[] {
+  return packs
+    .map((pack, index) => ({ pack, index, sort: prefs.get(pack.id)?.sort }))
+    .sort((a, b) => {
+      if (a.sort !== undefined && b.sort !== undefined) return a.sort - b.sort || a.index - b.index;
+      if (a.sort !== undefined) return -1;
+      if (b.sort !== undefined) return 1;
+      return a.index - b.index;
+    })
+    .map((e) => e.pack);
+}
+
 /**
  * Builds the catalog from the server rows. Rows that don't parse are dropped one by one. A pack's stickers
  * show only if the user may use it and it has a sticker they may add (a pack on sale that they don't own
  * is listed in `locked` instead, without stickers); within it, a sticker shows only if
- * sticker_usable (so an unearned milestone stays out) and this app has its art.
+ * sticker_usable (so an unearned milestone stays out) and this app has its art. Usable packs follow the
+ * user's My stickers order, and packs they turned off are left out (`prefRows`, user_pack_prefs).
  */
 export function buildCatalog(
   packRows: unknown[],
   stickerRows: unknown[],
   answers: unknown,
   now: Date = new Date(),
+  prefRows: unknown[] = [],
 ): StickerCatalog {
+  const prefs = parsePackPrefs(prefRows);
   const parsedPacks = packRows
     .flatMap((row) => {
       const parsed = packRowSchema.safeParse(row);
@@ -141,8 +176,10 @@ export function buildCatalog(
     const parsed = stickerRowSchema.safeParse(row);
     return parsed.success ? [parsed.data] : [];
   });
-  const packs = parsedPacks
-    .filter((pack) => pack.pack_usable === true)
+  const packs = orderPacks(
+    parsedPacks.filter((pack) => pack.pack_usable === true && prefs.get(pack.id)?.hidden !== true),
+    prefs,
+  )
     .map((pack): CatalogPack => ({
       id: pack.id,
       slug: pack.slug,
