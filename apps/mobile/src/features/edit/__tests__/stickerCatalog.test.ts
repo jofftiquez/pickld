@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 import { overlaySchema } from '../edits';
 import { buildCatalog, stickerOverlay, suggestionsFor, toTag, type StickerCatalog } from '../stickers/catalog';
 import { stickerArt, stickerArtFor } from '../stickers/stickerArt';
@@ -11,9 +14,15 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012 seeds, and nothing else', () => {
+  it('has a PNG for every sticker 0012 and 0029 seed, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
-    expect(Object.keys(stickerArt).sort()).toEqual(seededStickers.map((s) => s.asset).sort());
+    const paid = [
+      ...readFileSync(join(__dirname, '../../../../../../supabase/migrations/0029_paid_packs.sql'), 'utf8').matchAll(
+        /'(stickers\/[a-z0-9-]+\/[a-z0-9-]+\.png)'/g,
+      ),
+    ].map((m) => m[1]);
+    expect(paid).toHaveLength(76);
+    expect(Object.keys(stickerArt).sort()).toEqual([...seededStickers.map((s) => s.asset), ...paid].sort());
     for (const art of Object.values(stickerArt)) expect(art.width).toBeGreaterThan(art.height);
   });
 
@@ -46,17 +55,42 @@ describe('buildCatalog', () => {
     expect(catalog.packs[0]?.stickers[0]?.label).toBe('Kape muna');
   });
 
-  it('never offers a locked pack or its stickers, even where its stickers match the slot (D-6)', () => {
+  it("never offers a locked pack's stickers, even where they match the slot, but lists the pack as locked", () => {
     const catalog = buildCatalog(packRows(), stickerRows(), noAnswers);
     expect(catalog.packs.some((p) => p.id === packIds.christmas)).toBe(false);
     expect(labels(allStickers(catalog))).not.toContain('Noche Buena');
     expect(labels(suggestionsFor(catalog, 'afternoon'))).not.toContain('Noche Buena');
+    expect(catalog.locked).toEqual([
+      {
+        id: packIds.christmas,
+        slug: 'christmas',
+        name: 'Christmas',
+        productId: 'me.pickld.pack.christmas',
+        seasonal: false,
+      },
+    ]);
 
     // The pack's own lock wins even if its sticker rows disagree (e.g. read at different moments).
     const disagreeing = stickerRows().map((s) =>
       s.pack_id === packIds.christmas ? { ...s, sticker_usable: true } : s,
     );
     expect(labels(allStickers(buildCatalog(packRows(), disagreeing, null)))).not.toContain('Noche Buena');
+  });
+
+  it('lists a pack as locked only while it is on sale, and never once the user owns it', () => {
+    const seasonal = (window: { available_from: string | null; available_to: string | null }) =>
+      packRows().map((p) => (p.slug === 'christmas' ? { ...p, tier: 'seasonal', ...window } : p));
+    const season = { available_from: '2026-09-01T00:00:00+08:00', available_to: '2027-01-01T00:00:00+08:00' };
+    const at = (iso: string) => buildCatalog(seasonal(season), stickerRows(), null, new Date(iso)).locked;
+    expect(at('2026-08-31T15:59:59Z')).toEqual([]); // 23:59:59 on Aug 31 in Manila
+    expect(at('2026-08-31T16:00:00Z').map((p) => p.seasonal)).toEqual([true]);
+    expect(at('2026-12-31T15:59:59Z')).toHaveLength(1);
+    expect(at('2026-12-31T16:00:00Z')).toEqual([]); // the window's end is the first instant off sale
+
+    const noProduct = packRows().map((p) => (p.slug === 'christmas' ? { ...p, store_product_id: null } : p));
+    expect(buildCatalog(noProduct, stickerRows(), null).locked).toEqual([]);
+    const owned = packRows().map((p) => (p.slug === 'christmas' ? { ...p, pack_usable: true } : p));
+    expect(buildCatalog(owned, stickerRows(), null).locked).toEqual([]);
   });
 
   it('offers a milestone sticker only once its own milestone is earned, not just the pack', () => {

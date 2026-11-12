@@ -27,7 +27,7 @@ export const packIds: Record<string, string> = {
   christmas: '00000000-0000-4000-8000-000000000005',
 };
 
-/** 0001's launch packs, plus a premium pack the user doesn't own (not in the catalog yet; M6). */
+/** 0001's launch packs, plus a premium pack on sale that the user doesn't own (a locked tab, FR-STK-06). */
 const packs = [
   { slug: 'everyday', name: 'Everyday', tier: 'free', sort: 1 },
   { slug: 'the-eight', name: 'The Eight', tier: 'free', sort: 2 },
@@ -75,13 +75,17 @@ const lockedSticker: StickerSeed = {
 
 export type Viewer = { earned?: string[] };
 
-/** sticker_packs rows as `select('id, slug, name, sort, pack_usable')` returns them for this user. */
+/** sticker_packs rows as `select('id, slug, name, sort, tier, store_product_id, available_from, available_to, pack_usable')` returns them for this user. */
 export function packRows({ earned = [] }: Viewer = {}) {
   return packs.map((p) => ({
     id: packIds[p.slug],
     slug: p.slug,
     name: p.name,
     sort: p.sort,
+    tier: p.tier,
+    store_product_id: p.tier === 'premium' ? 'me.pickld.pack.christmas' : null,
+    available_from: null,
+    available_to: null,
     // 0010 grants the Milestones pack with the first milestone; premium packs aren't owned here.
     pack_usable: p.tier === 'free' || (p.tier === 'earned' && earned.length > 0),
   }));

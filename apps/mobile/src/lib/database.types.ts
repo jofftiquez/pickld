@@ -1207,6 +1207,7 @@ export type Database = {
           artist_id: string | null;
           available_from: string | null;
           available_to: string | null;
+          description: string | null;
           id: string;
           locale: string | null;
           name: string;
@@ -1221,6 +1222,7 @@ export type Database = {
           artist_id?: string | null;
           available_from?: string | null;
           available_to?: string | null;
+          description?: string | null;
           id?: string;
           locale?: string | null;
           name: string;
@@ -1233,6 +1235,7 @@ export type Database = {
           artist_id?: string | null;
           available_from?: string | null;
           available_to?: string | null;
+          description?: string | null;
           id?: string;
           locale?: string | null;
           name?: string;

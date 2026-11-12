@@ -26,6 +26,11 @@ export const packRowSchema = z.object({
   slug: z.string(),
   name: z.string(),
   sort: z.number(),
+  // What a pack is for sale as (0001, 0029); a row without them is a pack that isn't sold.
+  tier: z.enum(['free', 'premium', 'earned', 'seasonal']).catch('free'),
+  store_product_id: z.string().nullable().default(null),
+  available_from: z.string().nullable().default(null),
+  available_to: z.string().nullable().default(null),
   // Computed field; null only if the server couldn't answer, which is treated as not usable.
   pack_usable: z.boolean().nullable(),
 });
@@ -66,9 +71,14 @@ export type CatalogSticker = {
 
 export type CatalogPack = { id: string; slug: string; name: string; stickers: CatalogSticker[] };
 
+/** A pack for sale that the user doesn't own: a locked tab that opens Pack preview (FR-STK-06). */
+export type LockedPack = { id: string; slug: string; name: string; productId: string; seasonal: boolean };
+
 export type StickerCatalog = {
-  /** Usable packs in catalog order, each with only the stickers the user may add. Locked packs are left out (D-6). */
+  /** Usable packs in catalog order, each with only the stickers the user may add. */
   packs: CatalogPack[];
+  /** Packs on sale that the user doesn't own, in catalog order; their stickers are never offered. */
+  locked: LockedPack[];
   /** Words from the onboarding answers, in the catalog's tag form (e.g. "side_hustle"). */
   interests: string[];
 };
@@ -88,22 +98,51 @@ function interestsFrom(answers: AnswersRow | null): string[] {
   return [...new Set(values.flatMap((v) => (v === null ? [] : [toTag(v)])).filter((v) => v !== ''))];
 }
 
+/** Sold right now: a paid pack with a store product, inside its sale window (0029). */
+export function isOnSale(
+  pack: Pick<PackRow, 'tier' | 'store_product_id' | 'available_from' | 'available_to'>,
+  now: Date,
+): boolean {
+  if ((pack.tier !== 'premium' && pack.tier !== 'seasonal') || pack.store_product_id === null) return false;
+  const t = now.getTime();
+  if (pack.available_from !== null && Date.parse(pack.available_from) > t) return false;
+  if (pack.available_to !== null && Date.parse(pack.available_to) <= t) return false;
+  return true;
+}
+
 /**
- * Builds the catalog from the server rows. Rows that don't parse are dropped one by one. A pack shows
- * only if the user may use it and it has a sticker they may add; within it, a sticker shows only if
+ * Builds the catalog from the server rows. Rows that don't parse are dropped one by one. A pack's stickers
+ * show only if the user may use it and it has a sticker they may add (a pack on sale that they don't own
+ * is listed in `locked` instead, without stickers); within it, a sticker shows only if
  * sticker_usable (so an unearned milestone stays out) and this app has its art.
  */
-export function buildCatalog(packRows: unknown[], stickerRows: unknown[], answers: unknown): StickerCatalog {
+export function buildCatalog(
+  packRows: unknown[],
+  stickerRows: unknown[],
+  answers: unknown,
+  now: Date = new Date(),
+): StickerCatalog {
+  const parsedPacks = packRows
+    .flatMap((row) => {
+      const parsed = packRowSchema.safeParse(row);
+      return parsed.success ? [parsed.data] : [];
+    })
+    .sort((a, b) => a.sort - b.sort);
+  const locked = parsedPacks
+    .filter((pack) => pack.pack_usable !== true && isOnSale(pack, now))
+    .map((pack): LockedPack => ({
+      id: pack.id,
+      slug: pack.slug,
+      name: pack.name,
+      productId: pack.store_product_id ?? '',
+      seasonal: pack.tier === 'seasonal',
+    }));
   const stickers = stickerRows.flatMap((row) => {
     const parsed = stickerRowSchema.safeParse(row);
     return parsed.success ? [parsed.data] : [];
   });
-  const packs = packRows
-    .flatMap((row) => {
-      const parsed = packRowSchema.safeParse(row);
-      return parsed.success && parsed.data.pack_usable === true ? [parsed.data] : [];
-    })
-    .sort((a, b) => a.sort - b.sort)
+  const packs = parsedPacks
+    .filter((pack) => pack.pack_usable === true)
     .map((pack): CatalogPack => ({
       id: pack.id,
       slug: pack.slug,
@@ -125,7 +164,7 @@ export function buildCatalog(packRows: unknown[], stickerRows: unknown[], answer
     }))
     .filter((pack) => pack.stickers.length > 0);
   const parsedAnswers = answersRowSchema.safeParse(answers);
-  return { packs, interests: interestsFrom(parsedAnswers.success ? parsedAnswers.data : null) };
+  return { packs, locked, interests: interestsFrom(parsedAnswers.success ? parsedAnswers.data : null) };
 }
 
 /**

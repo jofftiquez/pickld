@@ -439,14 +439,41 @@ export const stickerTool = {
   cellColumns: 3,
   packTabHeight: 36,
   // Unselected pack tab fills with ink text (all above 12:1); selected tabs are ink with white text.
-  packTint: { everyday: '#e6f1d3', 'the-eight': '#fbeccd', stamps: '#f0f2ec', milestones: '#efe8fb' } as Record<
-    string,
-    string
-  >,
+  packTint: {
+    everyday: '#e6f1d3',
+    'the-eight': '#fbeccd',
+    stamps: '#f0f2ec',
+    milestones: '#efe8fb',
+    'pinoy-life': '#fbeccd',
+    barkada: '#efe8fb',
+    'work-from-wherever': '#dbe8f3',
+    'pet-parent': '#e6f1d3',
+    'christmas-2026': '#f6dcd9',
+  } as Record<string, string>,
   packTintDefault: '#f0f2ec',
+  // "New: Christmas pack · ₱49 · Shop" under the grid (FR-STK-06): ink text, "Shop" in brown (8:1 on it).
+  shopBanner: '#fbeccd',
+  shopBannerLink: '#6b4b10',
+  shopBannerRadius: 16,
   // Auto stamp (stickers/stamps art): white label, thick ink border, dashed ink ring outside it. Sizes are
   // fractions of the stamp's height so it scales with the overlay.
   stamp: { ring: 0.025, inset: 0.07, border: 0.05, radius: 0.16, text: 0.3, padding: 0.2 },
+} as const;
+
+// Sticker shop (StickerShop, FR-STK-06): the seasonal banner (white text 7:1 on its red), pack cards with a
+// tinted art well, and the price pill (white on brand, the primary-button pairing by decision).
+export const stickerShop = {
+  seasonal: '#a01d14',
+  seasonalEyebrow: '#ffd6d2',
+  seasonalText: '#ffe3e0',
+  bannerHeight: 150,
+  bannerRadius: 24,
+  cardWidth: 150,
+  cardArtHeight: 120,
+  cardRadius: 18,
+  sampleHeight: 26, // sticker art on a card or the banner
+  searchHeight: 46,
+  ownedTint: '#e6f1d3', // art well behind packs the user has (Yours)
 } as const;
 
 // Crop screen (Crop, FR-CAP-03): the 3:4 frame sits this far inside the dark photo area, with the 3:4 chip

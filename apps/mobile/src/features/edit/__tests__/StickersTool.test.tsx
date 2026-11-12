@@ -102,6 +102,11 @@ const routes = {
     </View>
   ),
   'edit/[momentId]': EditScreen,
+  'stickers/pack/[slug]': function PackStub() {
+    const { slug } = jest.requireActual<typeof import('expo-router')>('expo-router').useLocalSearchParams();
+    return <Text>{`Pack preview stub ${String(slug)}`}</Text>;
+  },
+  'stickers/shop': () => <Text>Shop stub</Text>,
 };
 
 async function openStickers() {
@@ -141,7 +146,7 @@ beforeEach(() => {
 });
 
 describe('Stickers tool', () => {
-  it('leads with "For #afternoon", then the usable packs; locked and unearned packs are not offered', async () => {
+  it('leads with "For #afternoon", then the usable packs; unearned packs are not offered', async () => {
     await openStickers();
     await screen.findByTestId('stickers-panel');
     expect(tabLabels()).toEqual(['For #afternoon', 'Everyday', 'The Eight', 'Stamps']);
@@ -153,11 +158,30 @@ describe('Stickers tool', () => {
       'Add the Siesta? sticker',
       'Add the Halfway there sticker',
     ]);
-    expect(screen.queryByText(/Christmas|Noche Buena|Shop/)).toBeNull();
+    expect(screen.queryByText('Noche Buena')).toBeNull();
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Everyday' }));
     expect(optionLabels()).toHaveLength(15);
     expect(optionLabels()[0]).toBe('Add the Kape muna sticker');
+  });
+
+  it('shows a pack on sale that the user lacks as a locked tab that opens Pack preview, never its stickers (FR-STK-06)', async () => {
+    await openStickers();
+    await screen.findByTestId('stickers-panel');
+    const locked = screen.getByRole('button', { name: 'Christmas, locked' });
+    // After the usable packs, and not a tab: it never shows its stickers in the grid.
+    expect(within(screen.getByTestId('stickers-tabs')).getAllByRole('tab')).toHaveLength(4);
+    await fireEvent.press(locked);
+    expect(await screen.findByText('Pack preview stub christmas')).toBeTruthy();
+  });
+
+  it('links to the shop under the grid while a pack is for sale', async () => {
+    await openStickers();
+    await screen.findByTestId('stickers-panel');
+    // The pack on sale here is premium, not seasonal, so the banner doesn't name it.
+    expect(screen.getByRole('link', { name: 'More sticker packs' })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('link', { name: 'More sticker packs' }));
+    expect(await screen.findByText('Shop stub')).toBeTruthy();
   });
 
   it('shows the Milestones pack with only the stickers earned', async () => {

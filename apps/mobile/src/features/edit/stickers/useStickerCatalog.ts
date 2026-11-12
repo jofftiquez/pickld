@@ -13,7 +13,9 @@ export const stickerCatalogQueryKey = (userId: string) => ['stickerCatalog', use
 async function fetchCatalog(userId: string): Promise<StickerCatalog> {
   const supabase = getSupabase();
   const [packs, stickers, answers] = await Promise.all([
-    supabase.from('sticker_packs').select('id, slug, name, sort, pack_usable'),
+    supabase
+      .from('sticker_packs')
+      .select('id, slug, name, sort, tier, store_product_id, available_from, available_to, pack_usable'),
     supabase
       .from('stickers')
       .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable'),
