@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
@@ -23,6 +24,8 @@ export type TextFieldProps = {
   /** Focus the field (and show the keyboard) when it appears. */
   autoFocus?: boolean;
   testID?: string;
+  /** Shown inside the field on the right, such as "✓ Available" (About). */
+  trailing?: ReactNode;
 };
 
 /** Labelled text input from EditProfile, with an optional character counter. */
@@ -40,6 +43,7 @@ export function TextField({
   keyboardType,
   autoFocus,
   testID,
+  trailing,
 }: TextFieldProps) {
   const { t } = useTranslation();
   const count = value.length;
@@ -48,24 +52,32 @@ export function TextField({
       <Text style={[textStyle('label'), styles.label]} importantForAccessibility="no" accessibilityElementsHidden>
         {label}
       </Text>
-      <TextInput
-        accessibilityLabel={label}
-        accessibilityHint={accessibilityHint}
-        value={value}
-        onChangeText={onChangeText}
-        onEndEditing={onEndEditing}
-        maxLength={maxLength}
-        multiline={multiline}
-        placeholder={placeholder}
-        placeholderTextColor={colors.muted}
-        autoCapitalize={autoCapitalize}
-        autoComplete={autoComplete}
-        keyboardType={keyboardType}
-        autoFocus={autoFocus}
-        textAlignVertical={multiline ? 'top' : 'center'}
-        testID={testID}
-        style={[textStyle('body'), styles.input, multiline ? styles.multiline : styles.single]}
-      />
+      <View>
+        <TextInput
+          accessibilityLabel={label}
+          accessibilityHint={accessibilityHint}
+          value={value}
+          onChangeText={onChangeText}
+          onEndEditing={onEndEditing}
+          maxLength={maxLength}
+          multiline={multiline}
+          placeholder={placeholder}
+          placeholderTextColor={colors.muted}
+          autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
+          keyboardType={keyboardType}
+          autoFocus={autoFocus}
+          textAlignVertical={multiline ? 'top' : 'center'}
+          testID={testID}
+          style={[
+            textStyle('body'),
+            styles.input,
+            multiline ? styles.multiline : styles.single,
+            trailing ? styles.withTrailing : null,
+          ]}
+        />
+        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
+      </View>
       {maxLength !== undefined ? (
         <Text
           style={[textStyle('caption', '500'), styles.counter]}
@@ -94,4 +106,6 @@ const styles = StyleSheet.create({
   single: { minHeight: sizes.textField },
   multiline: { minHeight: sizes.textArea, paddingTop: space.md, paddingBottom: space.md },
   counter: { alignSelf: 'flex-end', color: colors.muted },
+  withTrailing: { paddingRight: sizes.textFieldTrailing },
+  trailing: { position: 'absolute', right: 14, top: 0, bottom: 0, justifyContent: 'center' },
 });

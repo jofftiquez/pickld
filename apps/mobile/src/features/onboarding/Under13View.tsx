@@ -21,7 +21,7 @@ export function Under13View({ insets, onBackToStart }: Under13ViewProps) {
       <RoundIconButton icon="back" accessibilityLabel={t('setup.back')} onPress={onBackToStart} testID="under13-back" />
       <View style={styles.middle}>
         <JarGraphic count={0} size={sizes.under13Jar} decorative />
-        <Text accessibilityRole="header" style={[textStyle('onboardTitle'), styles.center, { color: colors.ink }]}>
+        <Text accessibilityRole="header" style={[textStyle('celebrationTitle'), styles.center, { color: colors.ink }]}>
           {t('setup.under13.title')}
         </Text>
         <Text style={[textStyle('body'), styles.center, styles.body]}>{t('setup.under13.body')}</Text>
@@ -38,13 +38,7 @@ export function Under13View({ insets, onBackToStart }: Under13ViewProps) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background, paddingHorizontal: space.xxl },
-  middle: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.lg,
-    paddingBottom: sizes.under13Jar * 2,
-  },
+  middle: { flex: 1, alignItems: 'center', gap: space.lg, paddingTop: sizes.under13Top },
   center: { textAlign: 'center' },
   body: { color: colors.inkSoft, lineHeight: 23 },
 });

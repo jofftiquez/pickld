@@ -308,9 +308,11 @@ export const sizes = {
   pageDotActive: 22,
   checkEmailWell: 96, // envelope tile on Check your email (CheckEmail)
   checkEmailIcon: 40,
+  textFieldTrailing: 120, // room kept on the right of a field for its trailing note (About: ✓ Available)
   sheetMaxHeight: 520, // a scrollable sheet stops growing here and scrolls (SelectField on About)
   setupStep: 5, // height of each step in the setup progress bar (About … Promise)
-  under13Jar: 120, // empty jar on Under 13
+  under13Jar: 96, // empty jar on Under 13
+  under13Top: 80, // space above the jar on Under 13
   notifyAvatar: 40, // avatar, icon well and thumbnail width on a Notifications row (Notifications)
   notifyThumbHeight: 53, // 3:4 thumbnail beside a like or comment
   notifyReminderIcon: 44, // slot icon well on the pinned reminder card
