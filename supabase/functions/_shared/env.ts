@@ -39,6 +39,16 @@ export function s3ConfigFromEnv(): S3Config {
   };
 }
 
+/**
+ * The photo bucket for requests a function sends itself (fn:account-purge's sweep). Signed URLs for the app
+ * keep S3_ENDPOINT; locally that is 127.0.0.1, which inside the Edge runtime container is the container,
+ * so S3_INTERNAL_ENDPOINT (http://host.docker.internal:…) reaches the host instead. Unset with R2.
+ */
+export function s3ServerConfigFromEnv(): S3Config {
+  const config = s3ConfigFromEnv();
+  return { ...config, endpoint: Deno.env.get('S3_INTERNAL_ENDPOINT') || config.endpoint };
+}
+
 /** Origin of the photo Worker (workers/photos). */
 export function photoBaseUrl(): string {
   return required('PHOTO_BASE_URL');

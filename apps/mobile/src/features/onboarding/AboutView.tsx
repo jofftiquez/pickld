@@ -127,21 +127,25 @@ export function AboutView({
             autoCapitalize="none"
             autoComplete="username-new"
             testID="about-username"
+            trailing={
+              usernameStatus === 'available' && username !== '' ? (
+                <View style={styles.status} accessibilityLiveRegion="polite" testID="about-username-available">
+                  <Icon name="check" color="brandText" size={16} strokeWidth={2.4} />
+                  <Text style={[textStyle('label', '700'), { color: colors.brandText }]}>
+                    {t('setup.about.available')}
+                  </Text>
+                </View>
+              ) : undefined
+            }
           />
-          {status ? (
-            <View style={styles.status} accessibilityLiveRegion="polite" testID={`about-username-${usernameStatus}`}>
-              {usernameStatus === 'available' ? (
-                <Icon name="check" color="brandText" size={16} strokeWidth={2.4} />
-              ) : null}
-              <Text
-                style={[
-                  textStyle('label', '700'),
-                  { color: usernameStatus === 'available' ? colors.brandText : colors.danger },
-                ]}
-              >
-                {status}
-              </Text>
-            </View>
+          {status && usernameStatus !== 'available' ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[textStyle('label', '700'), { color: colors.danger }]}
+              testID={`about-username-${usernameStatus}`}
+            >
+              {status}
+            </Text>
           ) : null}
         </View>
         <View style={styles.birthday} accessibilityRole="none">
