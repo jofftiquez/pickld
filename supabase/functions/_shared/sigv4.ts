@@ -12,7 +12,7 @@ export interface S3Config {
 }
 
 export interface PresignOptions {
-  method: 'GET' | 'HEAD' | 'PUT';
+  method: 'GET' | 'HEAD' | 'PUT' | 'DELETE';
   /** Seconds the URL stays valid (1 to 604800). */
   expiresIn: number;
   /** Headers the client must send unchanged, e.g. content-type and content-length for an upload. */
