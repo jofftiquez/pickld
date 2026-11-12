@@ -1546,6 +1546,8 @@ export type Database = {
         };
         Returns: boolean;
       };
+      public_jar: { Args: { p_id: string }; Returns: Json };
+      public_profile: { Args: { p_username: string }; Returns: Json };
       public_sticker_catalog: {
         Args: Record<PropertyKey, never>;
         Returns: {
