@@ -1,0 +1,22 @@
+import type { ReactNode } from 'react';
+
+import { storeLinks } from '~/lib/env';
+
+import { Footer } from './Footer';
+import { GetAppCard } from './GetAppCard';
+import { Header } from './Header';
+
+/** Header, content, the Get the app card and the legal footer, shared by every shared-link page. */
+export function Page({ appUrl, children }: { appUrl: string; children: ReactNode }) {
+  const stores = storeLinks();
+  return (
+    <>
+      <Header getAppUrl={stores.appStore ?? stores.googlePlay} />
+      <main style={{ padding: '18px 18px 0', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        {children}
+        <GetAppCard stores={stores} appUrl={appUrl} />
+      </main>
+      <Footer />
+    </>
+  );
+}

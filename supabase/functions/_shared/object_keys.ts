@@ -49,3 +49,10 @@ export function keyOwner(key: string): string | null {
   const m = KEY_PATTERN.exec(key);
   return m ? (m[1] ?? m[2] ?? m[3] ?? null) : null;
 }
+
+/** The profile's own avatar or cover key, or a local seed key; anything else is never signed. */
+export function isProfileImageKey(kind: 'avatar' | 'cover', key: string, profileId: string): boolean {
+  if (!isObjectKey(key)) return false;
+  if (key.startsWith(kind === 'avatar' ? 'seed/avatars/' : 'seed/photos/')) return true;
+  return key.startsWith(`${kind}s/`) && keyOwner(key) === profileId;
+}

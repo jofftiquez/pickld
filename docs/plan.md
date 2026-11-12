@@ -1023,7 +1023,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** web · **Priority:** P0 · **Size:** L · **Requirements:** FR-WEB-01, FR-WEB-03, FR-PRV-04 · **Depends on:** M4-12, M1-27 · **Issue:** #103
 - **Goal:** `apps/web` Next.js: pickld.me/<username> and /j/<id> pages, Readers teaser, store buttons, legal pages (T-303, part 1).
 - **Acceptance:**
-  - [ ] Everyone jars render; Readers jars show a teaser.
+  - [x] Everyone jars render; Readers jars show a teaser.
 - **Tests:** Playwright at 390 px.
 - **Screenshots:** Shared link web page.
 - **Design:** WebShare

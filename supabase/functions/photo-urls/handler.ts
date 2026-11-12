@@ -13,7 +13,7 @@
 // Ids the caller can't view are left out, so they can't be told apart from ids that don't exist.
 import { type SupabaseClient, z } from '../_shared/deps.ts';
 import { bearerToken, fail, ok, readJson } from '../_shared/http.ts';
-import { isObjectKey, keyOwner } from '../_shared/object_keys.ts';
+import { isObjectKey, isProfileImageKey } from '../_shared/object_keys.ts';
 import { signPhotoUrl } from '../_shared/photo_token.ts';
 
 export const PHOTO_TOKEN_TTL_SECONDS = 15 * 60;
@@ -54,13 +54,6 @@ interface ProfileRow {
   id: string;
   avatar_path: string | null;
   cover_path: string | null;
-}
-
-/** The profile's own key of this kind, or a local seed key; anything else is never signed. */
-function isProfileImageKey(kind: 'avatar' | 'cover', key: string, profileId: string): boolean {
-  if (!isObjectKey(key)) return false;
-  if (key.startsWith(kind === 'avatar' ? 'seed/avatars/' : 'seed/photos/')) return true;
-  return key.startsWith(`${kind}s/`) && keyOwner(key) === profileId;
 }
 
 interface PathRow {
