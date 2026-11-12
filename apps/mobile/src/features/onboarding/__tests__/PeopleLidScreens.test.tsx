@@ -1,12 +1,15 @@
 import type { Session } from '@supabase/supabase-js';
 import { act, render } from '@testing-library/react-native';
 
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 
 import { JarLidScreen } from '../JarLidScreen';
 import type { JarLidViewProps } from '../JarLidView';
 import { PeopleScreen } from '../PeopleScreen';
 import type { PeopleViewProps } from '../PeopleView';
+
+jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 
 // The views are checked on the simulator; here their props drive what the screens save.
 const mockViews: { people: PeopleViewProps | null; lid: JarLidViewProps | null } = { people: null, lid: null };
@@ -77,6 +80,7 @@ describe('Your people and Pick your jar', () => {
     ]);
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/jar-lid');
     expect(mockPush).toHaveBeenCalledWith('/setup/jar-lid');
+    expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'people' }]]);
   });
 
   it('Skip writes nothing and still moves on', async () => {
@@ -93,5 +97,6 @@ describe('Your people and Pick your jar', () => {
     await act(async () => mockViews.lid!.onPick('mango'));
     await act(async () => mockViews.lid!.onContinue());
     expect(mockWrites).toEqual([['profiles', 'update', { lid_color: '#f2b632' }, 'id', 'u-1']]);
+    expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'jar_lid' }]]);
   });
 });

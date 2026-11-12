@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { registerPushToken } from '@/features/reminders/pushToken';
 import { fetchReminderSettings, reminderQueryKeys } from '@/features/reminders/useReminderSync';
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { formatTime } from '@/lib/format';
 
@@ -66,6 +67,7 @@ export function PermissionsScreen({ api = expoPermissionApi }: { api?: Permissio
     }
     const state = await api.request(kind).catch((): PermissionState => 'ask');
     setStates((s) => ({ ...s, [kind]: state }));
+    if (kind === 'notifications') track('notification_opt_in', { granted: state === 'granted' });
     if (kind === 'notifications' && state === 'granted' && userId) {
       void registerPushToken(userId).catch(() => undefined);
     }
@@ -73,6 +75,7 @@ export function PermissionsScreen({ api = expoPermissionApi }: { api?: Permissio
 
   const goNext = async () => {
     if (!userId) return;
+    track('signup_step_completed', { step: 'permissions' });
     const next = nextSetupRoute('/setup/permissions');
     await saveSetupStep(userId, next);
     if (next) router.push(next);

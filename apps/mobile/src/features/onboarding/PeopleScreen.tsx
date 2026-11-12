@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
@@ -20,6 +21,7 @@ export function PeopleScreen() {
 
   const moveOn = async () => {
     if (!userId) return;
+    track('signup_step_completed', { step: 'people' });
     const next = nextSetupRoute('/setup/people');
     await saveSetupStep(userId, next);
     if (next) router.push(next);

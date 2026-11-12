@@ -2,8 +2,11 @@ import { act, render } from '@testing-library/react-native';
 
 import type { AboutViewProps } from '../AboutView';
 import { AboutScreen } from '../AboutScreen';
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import type { Session } from '@supabase/supabase-js';
+
+jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 
 // The view is tested on the simulator (Maestro); here its props drive the screen's decisions.
 const mockView: { props: AboutViewProps | null } = { props: null };
@@ -68,6 +71,7 @@ describe('About you', () => {
     expect(mockInsert).not.toHaveBeenCalled();
     expect(mockReplace).toHaveBeenCalledWith('/setup/under13');
     expect(mockSignOut).toHaveBeenCalled();
+    expect(track).not.toHaveBeenCalled();
   });
 
   it('a failed purge stays here with an error, without showing Under 13', async () => {
@@ -96,6 +100,7 @@ describe('About you', () => {
     // Setup continues at Your day, and a relaunch would resume there.
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/day');
     expect(mockReplace).toHaveBeenCalledWith('/setup/day');
+    expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'about' }]]);
   });
 
   it('a username taken meanwhile is reported and nothing moves on', async () => {

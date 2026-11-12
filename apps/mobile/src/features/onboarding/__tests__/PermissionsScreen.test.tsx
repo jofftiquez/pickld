@@ -2,11 +2,13 @@ import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 
 import type { PermissionApi, PermissionKind, PermissionState } from '../permissions';
 import { PermissionsScreen } from '../PermissionsScreen';
 
+jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
@@ -68,6 +70,7 @@ describe('Permissions (FR-ONB-05)', () => {
     expect(mockRegister).not.toHaveBeenCalled();
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/friends');
     expect(mockPush).toHaveBeenCalledWith('/setup/friends');
+    expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'permissions' }]]);
   });
 
   it('Notifications names the enabled reminder times in order', async () => {
@@ -83,6 +86,15 @@ describe('Permissions (FR-ONB-05)', () => {
     expect(screen.getByTestId('permission-notifications-allowed')).toBeTruthy();
     expect(screen.getByTestId('permission-camera-allow')).toBeTruthy();
     expect(mockRegister).toHaveBeenCalledWith('u-1');
+    expect(jest.mocked(track).mock.calls).toEqual([['notification_opt_in', { granted: true }]]);
+  });
+
+  it('a refused notifications prompt is an opt-in of false; Camera’s prompt sends nothing', async () => {
+    const { api } = fakeApi('ask', 'blocked');
+    await renderScreen(api);
+    await act(async () => fireEvent.press(screen.getByTestId('permission-camera-allow')));
+    await act(async () => fireEvent.press(screen.getByTestId('permission-notifications-allow')));
+    expect(jest.mocked(track).mock.calls).toEqual([['notification_opt_in', { granted: false }]]);
   });
 
   it('a permission already allowed shows Allowed and no button', async () => {

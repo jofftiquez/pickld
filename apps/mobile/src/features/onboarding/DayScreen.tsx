@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { reminderQueryKeys } from '@/features/reminders/useReminderSync';
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
@@ -41,6 +42,7 @@ export function DayScreen() {
       );
       if (reminders.error) throw reminders.error;
       void queryClient.invalidateQueries({ queryKey: reminderQueryKeys.settings(userId) });
+      track('signup_step_completed', { step: 'day' });
       const next = nextSetupRoute('/setup/day');
       await saveSetupStep(userId, next);
       if (next) router.push(next);

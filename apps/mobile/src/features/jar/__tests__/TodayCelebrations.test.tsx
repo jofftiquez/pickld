@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, waitFor } from '@testing-library/react-native';
 
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { reportNetworkResult } from '@/lib/connectivity';
 
@@ -74,6 +75,7 @@ jest.mock('@/lib/queue/store', () => ({
 }));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => {}) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 // The Replace prompt (kit Dialog, M2-22) reads Reduce Motion from Reanimated, which can't load in Jest.
 jest.mock('react-native-reanimated', () => ({ __esModule: true, useReducedMotion: () => false }));
 jest.mock('expo-localization', () => ({
@@ -173,6 +175,7 @@ beforeEach(() => {
   mockDisk.clear();
   mockDisk.set(SEEN_KEY, JSON.stringify({ jars: [], milestones: [] }));
   mockPush.mockClear();
+  jest.mocked(track).mockClear();
   mockFocus.focused = true;
   reportNetworkResult(null);
   useAuthStore.setState({ status: 'signedIn', session: { user: { id: USER } } as Session, error: null });
@@ -186,6 +189,7 @@ describe('Today celebrations', () => {
     await launch();
     await refocus();
     expect(mockPush).not.toHaveBeenCalled();
+    expect(track).not.toHaveBeenCalled();
   });
 
   it('opens the Full jar celebration at 8 moments with the jar number, then Sticker unlocked once it closes', async () => {
@@ -208,6 +212,7 @@ describe('Today celebrations', () => {
 
     await refocus(); // Sticker unlocked closed: nothing more
     expect(mockPush).toHaveBeenCalledTimes(2);
+    expect(jest.mocked(track).mock.calls).toEqual([['jar_full', {}]]);
   });
 
   it('leaves the number out when it cannot be read', async () => {
@@ -235,6 +240,7 @@ describe('Today celebrations', () => {
     await settle();
     await refocus();
     expect(mockPush).not.toHaveBeenCalled();
+    expect(jest.mocked(track).mock.calls).toEqual([['jar_full', {}]]); // the first launch's, once
   });
 
   it('opens for the next day’s full jar', async () => {

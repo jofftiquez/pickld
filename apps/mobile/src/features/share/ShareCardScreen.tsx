@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { jarTitle } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
+import { track } from '@/lib/analytics';
 import { formatDate } from '@/lib/format';
 import { jarUrl } from '@/lib/links';
 import { textStyle } from '@/theme/text';
@@ -62,9 +63,9 @@ export function ShareCardScreen({ jarId }: { jarId: string | undefined }) {
       switch (action) {
         case 'save': {
           const uri = await renderCardImage(cardRef, data.jar.id);
-          return (await saveImage(uri)) === 'saved'
-            ? { text: t('share.saved'), error: false }
-            : { text: t('share.saveDenied'), error: true };
+          if ((await saveImage(uri)) === 'denied') return { text: t('share.saveDenied'), error: true };
+          track('share_card_exported', { destination: 'save' });
+          return { text: t('share.saved'), error: false };
         }
         case 'copy':
           await copyLink(jarUrl(data.jar.id));
@@ -95,6 +96,7 @@ export function ShareCardScreen({ jarId }: { jarId: string | undefined }) {
       onShareTo={() =>
         void run(async () => {
           await shareImage(await renderCardImage(cardRef, data.jar.id), t('share.title'));
+          track('share_card_exported', { destination: 'share' });
           return null;
         })
       }

@@ -2,12 +2,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
+import { track } from '@/lib/analytics';
+
 import { ReportSheet, type ReportSheetProps } from '../ReportSheet';
 
 // Report and Report sent (M3-21, FR-SAF-01) inside the real kit sheet, with submit_report mocked.
 
 const mockRpc = jest.fn();
 jest.mock('@/lib/supabase', () => ({ getSupabase: () => ({ rpc: mockRpc }) }));
+jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 jest.mock('react-native-reanimated', () => ({
   __esModule: true,
   useReducedMotion: () => false,
@@ -63,7 +66,10 @@ async function renderSheet(props: Partial<ReportSheetProps> = {}) {
   return { onClose, closeAndDismiss };
 }
 
-beforeEach(() => mockRpc.mockReset());
+beforeEach(() => {
+  mockRpc.mockReset();
+  jest.mocked(track).mockClear();
+});
 
 describe('ReportSheet', () => {
   it('sends the chosen reason for the subject, then shows Report sent', async () => {
@@ -77,6 +83,7 @@ describe('ReportSheet', () => {
     expect(mockRpc).toHaveBeenCalledWith('submit_report', { target: 'jar', target_id: 'jar-1', reason: 'harassment' });
     expect(await screen.findByText('Thanks for telling us')).toBeTruthy();
     expect(screen.getByText('We’ll review this jar. Mika won’t know who reported it.')).toBeTruthy();
+    expect(jest.mocked(track).mock.calls).toEqual([['report_submitted', { target: 'jar' }]]);
   });
 
   it('says why when the server refuses, and stays on the form', async () => {
@@ -86,6 +93,7 @@ describe('ReportSheet', () => {
     await fireEvent.press(screen.getByTestId('report-submit'));
     expect(await screen.findByText('This isn’t available any more.')).toBeTruthy();
     expect(screen.queryByTestId('report-sent')).toBeNull();
+    expect(track).not.toHaveBeenCalled();
   });
 
   it('hides Block and Also block until blocking is wired', async () => {

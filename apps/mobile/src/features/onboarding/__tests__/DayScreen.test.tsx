@@ -1,10 +1,13 @@
 import type { Session } from '@supabase/supabase-js';
 import { act, render } from '@testing-library/react-native';
 
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 
 import { DayScreen } from '../DayScreen';
 import type { DayViewProps } from '../DayView';
+
+jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 
 // The view is checked on the simulator; here its props drive what the screen saves.
 const mockView: { props: DayViewProps | null } = { props: null };
@@ -61,6 +64,7 @@ describe('Your day', () => {
     // Setup continues at Your people, and a relaunch would resume there.
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/people');
     expect(mockPush).toHaveBeenCalledWith('/setup/people');
+    expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'day' }]]);
   });
 
   it('a failed save stays here, keeping the step for a relaunch', async () => {
@@ -70,5 +74,6 @@ describe('Your day', () => {
     expect(props().failed).toBe(true);
     expect(mockSaveStep).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
+    expect(track).not.toHaveBeenCalled();
   });
 });
