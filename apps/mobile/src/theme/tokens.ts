@@ -312,6 +312,10 @@ export const sizes = {
   sheetMaxHeight: 520, // a scrollable sheet stops growing here and scrolls (SelectField on About)
   quizIcon: 48, // icon well on a Your day choice (QuizDay)
   quizCheck: 24, // radio / check circle on a Your day choice
+  peopleIcon: 30, // icon well beside each Your people question (QuizPeople)
+  lidStage: 200, // tinted circle behind the jar (JarLid)
+  lidJarLarge: 124, // jar on Pick your jar
+  lidSwatch: 44, // colour squares on Pick your jar
   setupStep: 5, // height of each step in the setup progress bar (About … Promise)
   under13Jar: 96, // empty jar on Under 13
   under13Top: 80, // space above the jar on Under 13

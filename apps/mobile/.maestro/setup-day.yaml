@@ -1,6 +1,6 @@
-# M4-05: a new account saves About you, lands on Your day, and after quitting the app resumes there
+# M4-05 + M4-06: a new account saves About you, lands on Your day, and after quitting the app resumes there
 # (FR-ONB-09). Early bird sets 7:00 AM · 12:30 PM · 7:00 PM; Change moves the evening to 7:30 PM; Continue
-# saves and opens Today (FR-ONB-02). Ends signed in as the new account: sign dale back in afterwards.
+# saves; Your people and Pick your jar (Mango) follow, then Today (FR-ONB-02/03/04). Ends signed in as the new account: sign dale back in afterwards.
 # maestro test apps/mobile/.maestro/setup-day.yaml
 appId: me.pickld.app
 ---
@@ -125,6 +125,40 @@ appId: me.pickld.app
 - takeScreenshot: QuizDayChange-ios
 - tapOn:
     id: day-continue
+# M4-06: Your people (private answers), then Pick your jar.
+- extendedWaitUntil:
+    visible:
+      id: people-screen
+    timeout: 20000
+- tapOn:
+    id: people-whoamiwith-barkada
+- tapOn:
+    id: people-whoamiwith-family
+- tapOn:
+    id: people-whoamiwith-pets
+- tapOn:
+    id: people-mebusywith-work
+- tapOn:
+    id: people-mebusywith-side_hustle
+- tapOn:
+    id: people-ootd-pambahay
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: QuizPeople-ios
+- tapOn:
+    id: people-continue
+- extendedWaitUntil:
+    visible:
+      id: jar-lid-screen
+    timeout: 20000
+- tapOn:
+    id: jar-lid-mango
+- assertVisible: Mango it is!
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: JarLid-ios
+- tapOn:
+    id: jar-lid-continue
 - extendedWaitUntil:
     visible:
       id: tab-today
