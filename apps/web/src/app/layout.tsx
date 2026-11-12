@@ -6,6 +6,7 @@ import { colors } from '@/theme/tokens';
 
 import { FilterDefs } from '~/components/FilterDefs';
 import { t } from '~/i18n/t';
+import { siteUrl } from '~/lib/env';
 
 const jakarta = localFont({
   src: [
@@ -17,7 +18,7 @@ const jakarta = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://pickld.me'),
+  metadataBase: new URL(siteUrl()),
   title: t('site.name'),
   description: t('site.tagline'),
 };

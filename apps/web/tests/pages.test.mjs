@@ -3,7 +3,7 @@
 // in supabase/functions/tests/public_page_test.ts. Run after `next build` (see the test script).
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -18,6 +18,9 @@ const EVERYONE = '11111111-1111-4111-8111-111111111111';
 const READERS = '22222222-2222-4222-8222-222222222222';
 
 let stub, stubUrl, web, base, browser;
+const SITE = 'https://pickld.test';
+/** Photo paths the stub served, to see what a preview fetched. */
+const served = [];
 
 const author = (url) => ({
   id: '33333333-3333-4333-8333-333333333333',
@@ -68,6 +71,7 @@ function pages(url) {
 before(async () => {
   stub = createServer((req, res) => {
     if (req.url.startsWith('/img/')) {
+      served.push(req.url);
       const file = path.join(images, path.basename(req.url));
       res.writeHead(200, { 'content-type': 'image/jpeg' });
       return res.end(readFileSync(file));
@@ -91,7 +95,7 @@ before(async () => {
   const nextBin = createRequire(import.meta.url).resolve('next/dist/bin/next');
   web = spawn(process.execPath, [nextBin, 'start', '-p', String(port), '-H', '127.0.0.1'], {
     cwd: path.join(here, '..'),
-    env: { ...process.env, SUPABASE_URL: stubUrl, SUPABASE_ANON_KEY: ANON },
+    env: { ...process.env, SUPABASE_URL: stubUrl, SUPABASE_ANON_KEY: ANON, SITE_URL: SITE },
     stdio: ['ignore', 'ignore', 'inherit'],
   });
   for (let i = 0; i < 100; i++) {
@@ -184,4 +188,80 @@ test('legal pages are reachable from the footer', async () => {
     await page.goBack();
   }
   await page.close();
+});
+
+// ---------------------------------------------------------------- link previews (M4-14, FR-WEB-02)
+
+async function meta(route) {
+  const html = await (await fetch(base + route)).text();
+  const tags = {};
+  for (const m of html.matchAll(/<meta (?:property|name)="((?:og|twitter):[^"]+)" content="([^"]*)"/g)) tags[m[1]] ??= m[2];
+  return tags;
+}
+
+/** PNG width and height from the IHDR chunk. */
+const pngSize = (buf) => ({ width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) });
+
+async function preview(tags) {
+  const url = new URL(tags['og:image']);
+  assert.equal(url.origin, SITE, 'absolute URL on the public origin');
+  const res = await fetch(base + url.pathname + url.search);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('content-type'), 'image/png');
+  const png = Buffer.from(await res.arrayBuffer());
+  assert.deepEqual(pngSize(png), { width: 1200, height: 630 });
+  return png;
+}
+
+test('jar links carry the tags Messenger, Facebook, X and iMessage read', async () => {
+  const tags = await meta(`/j/${EVERYONE}`);
+  assert.equal(tags['og:title'], 'Dale’s Sunday on Pickld');
+  assert.equal(tags['og:description'], '3 of 8 moments from Dale’s Sunday.');
+  assert.equal(tags['og:url'], `${SITE}/j/${EVERYONE}`);
+  assert.equal(tags['og:type'], 'article');
+  assert.equal(tags['og:site_name'], 'Pickld');
+  assert.equal(tags['og:image:width'], '1200');
+  assert.equal(tags['og:image:height'], '630');
+  assert.equal(tags['twitter:card'], 'summary_large_image');
+  assert.equal(tags['twitter:image'], tags['og:image']);
+  await preview(tags);
+  const profile = await meta('/dale');
+  assert.equal(profile['og:url'], `${SITE}/dale`);
+  assert.equal(profile['twitter:card'], 'summary_large_image');
+  await preview(profile);
+});
+
+test('a Readers jar preview fetches no moment photos', async () => {
+  const tags = await meta(`/j/${READERS}`);
+  assert.equal(tags['og:description'], 'A jar for Dale’s readers.');
+  served.length = 0;
+  await preview(tags);
+  assert.deepEqual(served, ['/img/av_dale.jpg']);
+});
+
+test('the jar preview matches its snapshot', async () => {
+  const png = await preview(await meta(`/j/${EVERYONE}`));
+  const ref = path.join(here, 'snapshots/og-jar.png');
+  if (process.env.UPDATE_SNAPSHOTS || !existsSync(ref)) writeFileSync(ref, png);
+  const page = await browser.newPage();
+  // Share of pixels whose channels differ by more than 32 of 255 (font hinting stays well under that).
+  const diff = await page.evaluate(async ([a, b]) => {
+    const load = async (src) => {
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      const c = new OffscreenCanvas(img.width, img.height);
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      return ctx.getImageData(0, 0, img.width, img.height).data;
+    };
+    const [x, y] = await Promise.all([load(a), load(b)]);
+    let off = 0;
+    for (let i = 0; i < x.length; i += 4) {
+      if (Math.max(Math.abs(x[i] - y[i]), Math.abs(x[i + 1] - y[i + 1]), Math.abs(x[i + 2] - y[i + 2])) > 32) off++;
+    }
+    return off / (x.length / 4);
+  }, [`data:image/png;base64,${png.toString('base64')}`, `data:image/png;base64,${readFileSync(ref).toString('base64')}`]);
+  await page.close();
+  assert.ok(diff < 0.001, `${(diff * 100).toFixed(2)}% of pixels differ from tests/snapshots/og-jar.png`);
 });
