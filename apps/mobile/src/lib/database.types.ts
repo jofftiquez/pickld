@@ -668,6 +668,8 @@ export type Database = {
           id: string;
           jar_id: string | null;
           moment_id: string | null;
+          push_result: string | null;
+          pushed_at: string | null;
           read_at: string | null;
           type: string;
           user_id: string;
@@ -680,6 +682,8 @@ export type Database = {
           id?: string;
           jar_id?: string | null;
           moment_id?: string | null;
+          push_result?: string | null;
+          pushed_at?: string | null;
           read_at?: string | null;
           type: string;
           user_id: string;
@@ -691,6 +695,8 @@ export type Database = {
           id?: string;
           jar_id?: string | null;
           moment_id?: string | null;
+          push_result?: string | null;
+          pushed_at?: string | null;
           read_at?: string | null;
           type?: string;
           user_id?: string;
@@ -892,6 +898,25 @@ export type Database = {
           reader_count?: number;
           status?: Database['public']['Enums']['profile_status'];
           username?: string;
+        };
+        Relationships: [];
+      };
+      push_tickets: {
+        Row: {
+          created_at: string;
+          ticket_id: string;
+          token: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          ticket_id: string;
+          token: string;
+        };
+        Update: {
+          created_at?: string;
+          ticket_id?: string;
+          token?: string;
         };
         Relationships: [];
       };
@@ -1347,6 +1372,7 @@ export type Database = {
       };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
+      in_quiet_hours: { Args: { at: string; p_user: string }; Returns: boolean };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
@@ -1475,6 +1501,31 @@ export type Database = {
           tags: string[];
         }[];
       };
+      push_receipts_settle: { Args: { p_dead_tokens: string[]; p_ticket_ids: string[] }; Returns: number };
+      push_retry: { Args: { p_ids: string[] }; Returns: undefined };
+      push_take: {
+        Args: { p_limit?: number; p_settle?: string };
+        Returns: {
+          actor_name: string;
+          comment_body: string;
+          comment_id: string;
+          id: string;
+          jar_id: string;
+          jar_local_date: string;
+          moment_id: string;
+          tokens: string[];
+          type: string;
+          user_id: string;
+        }[];
+      };
+      push_tickets_due: {
+        Args: { p_limit?: number };
+        Returns: {
+          ticket_id: string;
+          token: string;
+        }[];
+      };
+      push_tickets_save: { Args: { p_ticket_ids: string[]; p_tokens: string[] }; Returns: undefined };
       search_follow_list: {
         Args: { lim?: number; list: string; owner: string; query?: string };
         Returns: {
