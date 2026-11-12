@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
@@ -12,8 +12,10 @@ import { deviceLocale } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, slots, space } from '@/theme/tokens';
 
-import { compactCount, isOwnProfile, profileMoments } from './profileModel';
+import { FollowButton } from './FollowButton';
+import { compactCount, followAction, isOwnProfile, profileMoments } from './profileModel';
 import { ProfileGridTile } from './ProfileGridTile';
+import type { FollowList } from './useFollowList';
 import type { ProfilePage } from './useProfile';
 
 export type ProfileTab = 'jars' | 'moments';
@@ -29,6 +31,12 @@ export type ProfileViewProps = {
   onOpenMoment: (momentId: string, jarId: string) => void;
   /** My profile only. TODO(M3-15): Edit profile. */
   onEditProfile?: () => void;
+  /** Other profile only: Read / Read back starts reading, Reading stops (FR-SOC-07). */
+  onToggleReading?: () => void;
+  /** A follow request is in flight. */
+  followBusy?: boolean;
+  /** Opens Readers & authors on that list. */
+  onOpenList?: (list: FollowList) => void;
   onShare: () => void;
   onRetry: () => void;
   locale?: string;
@@ -57,6 +65,9 @@ export function ProfileView({
   onOpenJar,
   onOpenMoment,
   onEditProfile,
+  onToggleReading,
+  followBusy = false,
+  onOpenList,
   onShare,
   onRetry,
   locale = deviceLocale(),
@@ -142,6 +153,15 @@ export function ProfileView({
                   }}
                 />
               ) : null}
+              {!isOwner && onToggleReading ? (
+                <FollowButton
+                  action={followAction(relationship)}
+                  name={profile.display_name}
+                  onPress={onToggleReading}
+                  disabled={followBusy}
+                  testID="profile-follow"
+                />
+              ) : null}
               <RoundIconButton
                 icon="share"
                 accessibilityLabel={t('profile.share')}
@@ -179,17 +199,34 @@ export function ProfileView({
             {counts.map(({ key, n }) => {
               const c = compactCount(n, locale);
               const value = c.thousands ? t('profile.thousands', { value: c.value }) : c.value;
-              return (
-                // TODO(M3-14): Readers and Authors open Readers & authors.
-                <View
+              const content = (
+                <>
+                  <Text style={[textStyle('cardTitle', '800'), { color: colors.ink }]}>{value}</Text>
+                  <Text style={[textStyle('label', '500'), { color: colors.muted }]}>{t(`profile.${key}`)}</Text>
+                </>
+              );
+              const label = t(`profile.${key}A11y`, { count: n });
+              return key !== 'jars' && onOpenList ? (
+                <Pressable
                   key={key}
-                  accessible
-                  accessibilityLabel={t(`profile.${key}A11y`, { count: n })}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                  accessibilityHint={t('profile.openListHint')}
+                  onPress={() => onOpenList(key)}
                   style={styles.count}
                   testID={`profile-count-${key}`}
                 >
-                  <Text style={[textStyle('cardTitle', '800'), { color: colors.ink }]}>{value}</Text>
-                  <Text style={[textStyle('label', '500'), { color: colors.muted }]}>{t(`profile.${key}`)}</Text>
+                  {content}
+                </Pressable>
+              ) : (
+                <View
+                  key={key}
+                  accessible
+                  accessibilityLabel={label}
+                  style={styles.count}
+                  testID={`profile-count-${key}`}
+                >
+                  {content}
                 </View>
               );
             })}

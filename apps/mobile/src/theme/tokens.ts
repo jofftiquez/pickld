@@ -226,6 +226,7 @@ export const sizes = {
   buttonSecondary: 50,
   pillButton: 36,
   textField: 50,
+  searchField: 46, // search field on Readers & authors (Readers)
   textArea: 74,
   segment: 36,
   chip: 42,

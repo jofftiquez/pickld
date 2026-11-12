@@ -86,6 +86,25 @@ describe('ProfileView', () => {
     expect(onOpenMoment).toHaveBeenCalledWith('m1', 'jar-1');
   });
 
+  it('shows Read back to someone who reads you, Reading once you read them, and opens the lists', async () => {
+    const onToggleReading = jest.fn();
+    const onOpenList = jest.fn();
+    await renderView({ data: page('dale-id', true), onToggleReading, onOpenList });
+    expect(screen.getByTestId('profile-follow')).toHaveTextContent('Read back');
+    await fireEvent.press(screen.getByTestId('profile-follow'));
+    expect(onToggleReading).toHaveBeenCalled();
+    await fireEvent.press(screen.getByTestId('profile-count-authors'));
+    expect(onOpenList).toHaveBeenCalledWith('authors');
+    const reading = page('dale-id', true);
+    await renderView({ data: { ...reading, relationship: { reading: true, readsYou: true } }, onToggleReading });
+    expect(screen.getByTestId('profile-follow')).toHaveTextContent('Reading');
+  });
+
+  it('has no follow button on your own profile', async () => {
+    await renderView({ data: page('mika-id', false), onToggleReading: jest.fn() });
+    expect(screen.queryByTestId('profile-follow')).toBeNull();
+  });
+
   it('says so when another person has shared nothing', async () => {
     await renderView({ data: { ...page('dale-id', false), jars: [] } });
     expect(screen.getByTestId('profile-empty')).toHaveTextContent('Mika Reyes hasn’t shared any jars with you yet.');

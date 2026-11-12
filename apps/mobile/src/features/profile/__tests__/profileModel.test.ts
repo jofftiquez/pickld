@@ -1,6 +1,14 @@
 import type { JarRow } from '@/features/jar/jarPage';
 
-import { buildProfileJars, compactCount, profileMoments, relationshipOf, type ProfileMoment } from '../profileModel';
+import {
+  buildProfileJars,
+  compactCount,
+  followAction,
+  profileMoments,
+  relationshipOf,
+  withReading,
+  type ProfileMoment,
+} from '../profileModel';
 
 function jar(id: string, local_date: string, over: Partial<JarRow> = {}): JarRow {
   return {
@@ -102,5 +110,49 @@ describe('compactCount', () => {
     [48_700, '48', true],
   ])('%i → %s', (n, value, thousands) => {
     expect(compactCount(n, 'en-US')).toEqual({ value, thousands });
+  });
+});
+
+describe('followAction (D-7)', () => {
+  it.each([
+    [{ reading: false, readsYou: false }, 'read'],
+    [{ reading: false, readsYou: true }, 'readBack'],
+    [{ reading: true, readsYou: true }, 'reading'],
+    [{ reading: true, readsYou: false }, 'reading'],
+  ] as const)('%o → %s', (relationship, action) => {
+    expect(followAction(relationship)).toBe(action);
+  });
+});
+
+describe('withReading', () => {
+  const data = {
+    profile: {
+      id: 'mika',
+      username: 'mika',
+      display_name: 'Mika',
+      bio: null,
+      lid_color: '#7fad33',
+      reader_count: 2,
+      author_count: 1,
+      jar_count: 1,
+    },
+    relationship: { reading: false, readsYou: true },
+  };
+
+  it('moves the reader count with the state, once', () => {
+    const on = withReading(data, true);
+    expect(on.profile.reader_count).toBe(3);
+    expect(on.relationship).toEqual({ reading: true, readsYou: true });
+    expect(withReading(on, true)).toBe(on);
+    expect(withReading(on, false).profile.reader_count).toBe(2);
+  });
+
+  it('never goes below zero', () => {
+    const odd = {
+      ...data,
+      profile: { ...data.profile, reader_count: 0 },
+      relationship: { reading: true, readsYou: false },
+    };
+    expect(withReading(odd, false).profile.reader_count).toBe(0);
   });
 });
