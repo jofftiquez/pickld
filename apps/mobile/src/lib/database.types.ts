@@ -1389,6 +1389,17 @@ export type Database = {
           tags: string[];
         }[];
       };
+      search_follow_list: {
+        Args: { lim?: number; list: string; owner: string; query?: string };
+        Returns: {
+          avatar_path: string;
+          display_name: string;
+          follows_viewer: boolean;
+          id: string;
+          is_following: boolean;
+          username: string;
+        }[];
+      };
       sticker_usable: {
         Args: {
           s: Omit<
@@ -1398,6 +1409,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      username_available: { Args: { candidate: string }; Returns: string };
     };
     Enums: {
       day_slot: 'morning' | 'afternoon' | 'evening';
