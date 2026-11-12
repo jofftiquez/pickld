@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
 
-export type AvatarSize = 'sm' | 'feed' | 'header' | 'story' | 'md' | 'lg' | 'xl';
+export type AvatarSize = 'sm' | 'feed' | 'header' | 'story' | 'md' | 'lg' | 'edit' | 'xl';
 
 export type AvatarProps = {
   /** Display name: the accessible label, and the initials when there is no photo. */
@@ -26,6 +26,7 @@ const diameter: Record<AvatarSize, number> = {
   story: sizes.storyAvatar - 2 * (sizes.storyRing + sizes.storyGap),
   md: sizes.avatarMd,
   lg: sizes.avatarLg,
+  edit: sizes.avatarEdit,
   xl: sizes.avatarXl,
 };
 

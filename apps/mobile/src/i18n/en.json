@@ -643,5 +643,42 @@
     "removeTitle": "Remove {{name}}?",
     "removeMessage": "They won’t see your readers-only jars anymore. We won’t tell them.",
     "removeTip": "Press and hold a reader to remove them."
+  },
+  "editProfile": {
+    "title": "Edit profile",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "changeCover": "Change cover",
+    "changeAvatar": "Change profile photo",
+    "name": "Name",
+    "usernameLabel": "Username",
+    "bio": "Bio",
+    "lid": "Jar lid",
+    "username": {
+      "checking": "Checking…",
+      "available": "@{{username}} is available",
+      "taken": "@{{username}} is taken",
+      "reserved": "@{{username}} isn’t available",
+      "invalid": "3–20 letters, numbers, dots or underscores"
+    },
+    "lids": {
+      "pickle": "Pickle green",
+      "mango": "Mango",
+      "ube": "Ube",
+      "sunset": "Sunset",
+      "sky": "Sky",
+      "ink": "Ink"
+    },
+    "errors": {
+      "taken": "Someone just took that username. Try another.",
+      "reserved": "That username isn’t available. Try another.",
+      "failed": "Couldn’t save your profile. Check your connection and try again.",
+      "upload": "Couldn’t upload that photo. Try again."
+    },
+    "discardTitle": "Discard your changes?",
+    "discard": "Discard",
+    "nameEmpty": "Add your name",
+    "nameTooLong": "Up to 40 characters"
   }
 }
