@@ -1,5 +1,6 @@
 import GorhomBottomSheet, {
   BottomSheetBackdrop,
+  BottomSheetScrollView,
   BottomSheetView,
   useBottomSheetTimingConfigs,
   type BottomSheetBackdropProps,
@@ -25,13 +26,23 @@ export type BottomSheetProps = {
   accessibilityLabel: string;
   children: ReactNode;
   testID?: string;
+  /** Long content (a SelectField's list) scrolls inside the sheet, which stops at `sizes.sheetMaxHeight`. */
+  scrollable?: boolean;
 };
 
 /**
  * Bottom sheet sized to its content (MomentOptions, Report). It renders in a native modal so VoiceOver
  * and TalkBack stay inside it, and its grab handle is the accessible Close button.
  */
-export function BottomSheet({ visible, onClose, onClosed, accessibilityLabel, children, testID }: BottomSheetProps) {
+export function BottomSheet({
+  visible,
+  onClose,
+  onClosed,
+  accessibilityLabel,
+  children,
+  testID,
+  scrollable = false,
+}: BottomSheetProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
@@ -111,6 +122,7 @@ export function BottomSheet({ visible, onClose, onClosed, accessibilityLabel, ch
           ref={sheet}
           index={0}
           enablePanDownToClose
+          maxDynamicContentSize={scrollable ? sizes.sheetMaxHeight : undefined}
           onClose={handleClosed}
           animationConfigs={reduceMotion ? shortTiming : undefined}
           backdropComponent={renderBackdrop}
@@ -119,14 +131,26 @@ export function BottomSheet({ visible, onClose, onClosed, accessibilityLabel, ch
           // gorhom groups the whole sheet into one "adjustable" element by default; keep rows reachable.
           accessible={false}
         >
-          <BottomSheetView
-            testID={testID}
-            accessibilityLabel={accessibilityLabel}
-            accessibilityViewIsModal
-            style={[styles.content, { paddingBottom: space.xxxl + insets.bottom }]}
-          >
-            {children}
-          </BottomSheetView>
+          {/* gorhom only hands a swipe to a scrollable of its own, so long lists use its ScrollView. */}
+          {scrollable ? (
+            <BottomSheetScrollView
+              testID={testID}
+              accessibilityLabel={accessibilityLabel}
+              accessibilityViewIsModal
+              contentContainerStyle={[styles.content, { paddingBottom: space.xxxl + insets.bottom }]}
+            >
+              {children}
+            </BottomSheetScrollView>
+          ) : (
+            <BottomSheetView
+              testID={testID}
+              accessibilityLabel={accessibilityLabel}
+              accessibilityViewIsModal
+              style={[styles.content, { paddingBottom: space.xxxl + insets.bottom }]}
+            >
+              {children}
+            </BottomSheetView>
+          )}
         </GorhomBottomSheet>
       </GestureHandlerRootView>
     </Modal>
