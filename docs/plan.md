@@ -1041,7 +1041,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** web · **Priority:** P0 · **Size:** S · **Requirements:** FR-WEB-03, FR-ACC-02 · **Depends on:** M4-13, M4-02 · **Issue:** #105
 - **Goal:** AASA and assetlinks files; app routes for profile, jar and auth links (T-303, part 3).
 - **Acceptance:**
-  - [ ] With the app installed, links open the matching screen.
+  - [x] With the app installed, links open the matching screen.
 - **Tests:** Unit tests for link parsing (Zod); Simulator check.
 - **Screenshots:** —
 - **Design:** —
