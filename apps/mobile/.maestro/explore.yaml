@@ -1,0 +1,25 @@
+# M6-08: Explore (design: Explore). Opens /explore, checks both sections, then searches "ju" and finds Jun.
+# Needs the seed data (dale reads mika and aya, not jun) and dale signed in:
+# maestro test apps/mobile/.maestro/explore.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: today-avatar
+    timeout: 20000
+- openLink: pickld://explore
+- extendedWaitUntil:
+    visible:
+      id: explore-search
+    timeout: 20000
+- assertVisible: Suggested authors
+- assertVisible: Full jars today
+- tapOn:
+    id: explore-search
+- inputText: ju
+- extendedWaitUntil:
+    visible:
+      id: explore-result-jun
+    timeout: 10000
+- assertNotVisible: Suggested authors

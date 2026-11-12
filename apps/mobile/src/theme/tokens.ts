@@ -486,6 +486,16 @@ export const stickerShop = {
 
 // My stickers (MyStickers, FR-STK-08): each pack row has a drag grip, a tinted tile with its first sticker
 // and a switch.
+export const explore = {
+  searchHeight: 48, // Search people or @username (Explore)
+  searchRadius: 22,
+  cardWidth: 152, // a Suggested authors card
+  cardGap: 10,
+  gridColumns: 3, // Full jars today
+  gridGap: 8,
+  tileRadius: 16,
+} as const;
+
 export const memories = {
   heroHeight: 300, // On this day photo card (Memories)
   heroRadius: 26,
