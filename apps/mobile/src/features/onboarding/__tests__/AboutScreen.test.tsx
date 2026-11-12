@@ -25,6 +25,11 @@ jest.mock('@/features/profile/uploadProfileImage', () => ({
   uploadProfileImage: (...a: unknown[]) => mockUpload(...a),
 }));
 jest.mock('@/features/jar/useToday', () => ({ phoneTimeZone: () => 'Asia/Manila' }));
+const mockSaveStep = jest.fn(async (..._a: unknown[]) => undefined);
+jest.mock('../setupFlow', () => ({
+  ...jest.requireActual('../setupFlow'),
+  saveSetupStep: (...a: unknown[]) => mockSaveStep(...a),
+}));
 const mockSetQueryData = jest.fn();
 jest.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ setQueryData: mockSetQueryData }) }));
 
@@ -74,7 +79,7 @@ describe('About you', () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it('13 today: saves the profile with the birthday and phone zone before moving on', async () => {
+  it('13 today: saves the profile with the birthday and phone zone, then goes on to Your day', async () => {
     mockInsert.mockResolvedValue({ error: null });
     await render(<AboutScreen />);
     await fill(2013, 11, 12);
@@ -88,7 +93,9 @@ describe('About you', () => {
       home_tz: 'Asia/Manila',
     });
     expect(mockSetQueryData).toHaveBeenCalledWith(['hasProfile', 'u-1'], true);
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    // Setup continues at Your day, and a relaunch would resume there.
+    expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/day');
+    expect(mockReplace).toHaveBeenCalledWith('/setup/day');
   });
 
   it('a username taken meanwhile is reported and nothing moves on', async () => {
