@@ -24,7 +24,7 @@ export type HelpViewProps = {
   onGuidelines: () => void;
 };
 
-/** Help & feedback (FR-SET-02; design: Help). The sticker restore question waits for sticker sales (D-6). */
+/** Help & feedback (FR-SET-02; design: Help). */
 export function HelpView({ insets, noMail, onBack, onContact, onFeedback, onGuidelines }: HelpViewProps) {
   const { t } = useTranslation();
   const faq = t('help.faq', { returnObjects: true }) as unknown as Faq[];

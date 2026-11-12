@@ -140,6 +140,26 @@ describe('buildCatalog', () => {
   });
 });
 
+describe('My stickers order (user_pack_prefs, FR-STK-08)', () => {
+  const pref = (slug: string, sort: number, hidden = false) => ({ pack_id: packIds[slug], sort, hidden });
+
+  it("follows the user's order, leaves out packs they turned off, and puts packs they haven't arranged last", () => {
+    const catalog = buildCatalog(packRows(), stickerRows(), noAnswers, new Date(), [
+      pref('stamps', 0),
+      pref('the-eight', 1, true),
+    ]);
+    // Everyday has no row yet (new to the user), so it follows the arranged Stamps.
+    expect(catalog.packs.map((p) => p.name)).toEqual(['Stamps', 'Everyday']);
+    expect(labels(allStickers(catalog))).not.toContain(seededStickers.find((s) => s.pack === 'the-eight')?.label);
+  });
+
+  it('never lets a preference row show a pack the user may not use', () => {
+    const catalog = buildCatalog(packRows(), stickerRows(), noAnswers, new Date(), [pref('christmas', 0)]);
+    expect(catalog.packs.map((p) => p.name)).toEqual(['Everyday', 'The Eight', 'Stamps']);
+    expect(catalog.locked.map((p) => p.slug)).toEqual(['christmas']);
+  });
+});
+
 describe('suggestionsFor (the "For #slot" row, FR-STK-03)', () => {
   it('lists every addable sticker hinted for the slot, in catalog order', () => {
     const catalog = buildCatalog(packRows(), stickerRows(), noAnswers);

@@ -549,6 +549,35 @@
     "notForSale": "This pack isn’t for sale right now.",
     "bought": "{{name}} is yours"
   },
+  "myStickers": {
+    "title": "My stickers",
+    "back": "Back",
+    "intro": "Drag to reorder how packs appear in the editor. Turn one off to hide it without losing it.",
+    "loading": "Loading your stickers…",
+    "failed": "Your stickers didn’t load. Check your connection and try again.",
+    "retry": "Try again",
+    "free_one": "Free · {{count}} sticker",
+    "free_other": "Free · {{count}} stickers",
+    "bought_one": "Bought {{date}} · {{count}} sticker",
+    "bought_other": "Bought {{date}} · {{count}} stickers",
+    "earned": "Earned · {{used}} of {{count}}",
+    "rowLabel": "{{name}}, {{detail}}, {{position}} of {{total}}",
+    "toggle": "Show {{name}} in the editor",
+    "show": "Show in the editor",
+    "hide": "Hide from the editor",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "saveFailed": "That change didn’t save. Try again.",
+    "restoreTitle": "Restore purchases",
+    "restoreBody": "Bought on another phone? Bring them back.",
+    "restore": "Restore",
+    "restoring": "Restoring…",
+    "restored_one": "{{count}} pack is back.",
+    "restored_other": "{{count}} packs are back.",
+    "restoredNone": "Nothing new to restore. Your packs are all here.",
+    "restoreFailed": "That didn’t go through. Try again in a moment.",
+    "more": "Get more stickers"
+  },
   "momentRenderer": {
     "photo": "Photo",
     "photoWith": "Photo with {{items}}",
@@ -1228,7 +1257,8 @@
     "version": "Pickld {{version}}",
     "saveFailed": "Couldn’t save that change. Check your connection and try again.",
     "failed": "Couldn’t load your settings.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "myStickers": "My stickers"
   },
   "help": {
     "title": "Help & feedback",
@@ -1253,6 +1283,10 @@
       {
         "q": "What happens when I travel?",
         "a": "Today’s jar keeps the time zone it started in until it closes. Your next jar starts at the new local midnight, and a one-time banner explains the switch."
+      },
+      {
+        "q": "How do I get my sticker packs on a new phone?",
+        "a": "Sign in with the same account, then open Settings → My stickers and tap Restore. Packs you bought come back; earned and free packs are always there."
       }
     ],
     "stuck": "Still stuck?",

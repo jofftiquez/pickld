@@ -1,5 +1,5 @@
 // The Stickers tool's catalog (FR-STK-02): packs and stickers with the server's usable flags, and the
-// user's onboarding answers for suggestions (owner-only RLS). React Query, so the persisted cache keeps
+// user's onboarding answers for suggestions and My stickers order (owner-only RLS). React Query, so the persisted cache keeps
 // the sheet working offline once it has loaded; the art itself is bundled (stickerArt.ts).
 import { useQuery } from '@tanstack/react-query';
 
@@ -12,7 +12,7 @@ export const stickerCatalogQueryKey = (userId: string) => ['stickerCatalog', use
 
 async function fetchCatalog(userId: string): Promise<StickerCatalog> {
   const supabase = getSupabase();
-  const [packs, stickers, answers] = await Promise.all([
+  const [packs, stickers, answers, prefs] = await Promise.all([
     supabase
       .from('sticker_packs')
       .select('id, slug, name, sort, tier, store_product_id, available_from, available_to, pack_usable'),
@@ -24,11 +24,13 @@ async function fetchCatalog(userId: string): Promise<StickerCatalog> {
       .select('day_type, whoamiwith, mebusywith, ootd')
       .eq('user_id', userId)
       .maybeSingle(),
+    supabase.from('user_pack_prefs').select('pack_id, sort, hidden').eq('user_id', userId),
   ]);
   if (packs.error) throw new Error(packs.error.message);
   if (stickers.error) throw new Error(stickers.error.message);
   // Suggestions still work without the answers (slot hints alone).
-  return buildCatalog(packs.data, stickers.data, answers.error ? null : answers.data);
+  // Without the user's order the sheet still works, in catalog order.
+  return buildCatalog(packs.data, stickers.data, answers.error ? null : answers.data, new Date(), prefs.data ?? []);
 }
 
 /** The signed-in user's catalog; `data` is undefined while loading or offline with nothing cached. */
