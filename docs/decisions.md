@@ -61,3 +61,11 @@ jofftiquez (product owner) approved Phase 1 and accepted every recommended defau
 | D-25 | **Sticker art is public catalog data** (product owner, Nov 11), an exception to D-12 for `stickers/` keys only. The photo worker serves sticker art without a token, cached as immutable for a year, because the editor, viewers and the anonymous web page all draw it. User photos still need a short-lived token. |
 | D-26 | **`expo-image-picker` added** (product owner, Nov 11) for "Choose from gallery" and the Crop screen (M2-08, M2-10). Expo's standard picker, free. |
 | D-27 | **A removed photo's slot can be filled again** (product owner, Nov 11). The one-moment-per-slot rule ignores removed moments (a partial unique index replacing the plain `unique (jar_id, slot)`; no column dropped or renamed). Removed rows stay for the moderation and appeal record. The same rule leaves room for Replace (M2-22) to keep the old photo visible until the new one is live. |
+
+## Nov 12, 2026 — M3 approval
+
+| # | Decision |
+| --- | --- |
+| D-28 | **`expo-contacts` added** (product owner, Nov 12, approving the M3 report). Expo's free contacts module, for "People you may know" on Jars, empty (M3-06) and Find friends (M4-08). The address book never leaves the phone: numbers and emails are normalised and hashed on the device and only the hashes go to `fn:contacts-match` (D-4). |
+| D-29 | **No likes on comments** (product owner, Nov 12). The heart on each comment in the Comments design is dropped; `reactions.target` stays jar and moment. |
+| D-30 | **No notification to reporters about a moderator's decision** for now (M3 report question left unanswered; the existing default stands). Report sent doesn't promise one. |
