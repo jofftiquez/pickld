@@ -28,6 +28,8 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: 'me.pickld.app',
     supportsTablet: false,
+    // Universal links (M4-15): pickld.me serves /.well-known/apple-app-site-association (apps/web).
+    associatedDomains: ['applinks:pickld.me'],
     icon: './assets/brand/icon.png',
     infoPlist: {
       NSCameraUsageDescription: en.camera.permissionDescription,
@@ -37,6 +39,16 @@ const config: ExpoConfig = {
   android: {
     package: 'me.pickld.app',
     predictiveBackGestureEnabled: false,
+    // App links (M4-15), verified against pickld.me/.well-known/assetlinks.json (apps/web). Legal pages
+    // match too and are sent back to the browser by app/+native-intent.tsx.
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: [{ scheme: 'https', host: 'pickld.me' }],
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+    ],
     permissions: ['android.permission.CAMERA'],
     adaptiveIcon: {
       backgroundColor: colors.brand,
