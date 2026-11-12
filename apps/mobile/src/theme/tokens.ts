@@ -153,6 +153,7 @@ export const radius = {
   notifyIcon: 13, // icon wells on Notifications (the reminder card, Full jar rows)
   reminderCard: 22, // pinned reminder card on Notifications
   optionIcon: 13, // icon well on a Moment options row (MomentOptions)
+  permissionIcon: 16, // icon well on each Permissions card
   tile: 22,
   jarTile: 18, // moments in the Jar page grid (Story)
   introTile: 18, // the eight slot tiles on Intro1
@@ -313,6 +314,7 @@ export const sizes = {
   quizIcon: 48, // icon well on a Your day choice (QuizDay)
   quizCheck: 24, // radio / check circle on a Your day choice
   peopleIcon: 30, // icon well beside each Your people question (QuizPeople)
+  permissionIcon: 46, // icon well on each Permissions card
   lidStage: 200, // tinted circle behind the jar (JarLid)
   lidJarLarge: 124, // jar on Pick your jar
   lidSwatch: 44, // colour squares on Pick your jar

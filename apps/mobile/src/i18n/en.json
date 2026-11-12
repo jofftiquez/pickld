@@ -1025,6 +1025,26 @@
         "sky": "Sky",
         "ink": "Ink"
       }
+    },
+    "permissions": {
+      "title": "A few permissions",
+      "body": "So you can capture moments the second they happen.",
+      "camera": "Camera",
+      "cameraBody": "To take photos for your moments.",
+      "photos": "Photos",
+      "photosBody": "To add moments from your gallery.",
+      "notifications": "Notifications",
+      "notificationsBody": "So your {{times}} nudges arrive.",
+      "notificationsBodyNoTimes": "So your nudges arrive.",
+      "and": "and",
+      "allow": "Allow",
+      "allowLabel": "Allow {{name}}",
+      "allowed": "Allowed",
+      "allowedLabel": "{{name}} allowed",
+      "settings": "Settings",
+      "settingsLabel": "Turn on {{name}} in Settings",
+      "continue": "Continue",
+      "later": "Maybe later"
     }
   }
 }
