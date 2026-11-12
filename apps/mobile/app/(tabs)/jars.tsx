@@ -71,8 +71,7 @@ export default function JarsScreen() {
         const name = username ?? me.data?.username;
         if (name) router.push({ pathname: '/u/[username]', params: { username: name } });
       }}
-      // TODO(M4-08): open Find friends (D-5); it doesn't exist yet.
-      onFindPeople={() => undefined}
+      onFindPeople={() => router.push('/explore')}
       onInvite={() => {
         const username = me.data?.username;
         if (username) void Share.share({ message: t('feed.inviteMessage', { url: profileUrl(username) }) });

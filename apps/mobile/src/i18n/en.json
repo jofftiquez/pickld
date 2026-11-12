@@ -1365,5 +1365,27 @@
     "yearTitle": "Your {{year}} so far",
     "yearBody_one": "{{count}} jar filled. Turn them into a year book later.",
     "yearBody_other": "{{count}} jars filled. Turn them into a year book later."
+  },
+  "explore": {
+    "title": "Explore",
+    "back": "Back",
+    "searchPlaceholder": "Search people or @username",
+    "searchLabel": "Search people by name or username",
+    "suggested": "Suggested authors",
+    "suggestedEmpty": "No suggestions yet. Read a few friends and people they read show up here.",
+    "fullJars": "Full jars today",
+    "fullJarsEmpty": "No full jars yet today. Check back later.",
+    "reasonFull": "8/8 today",
+    "reasonFriends_one": "Read by 1 friend",
+    "reasonFriends_other": "Read by {{count}} friends",
+    "reasonContact": "In your contacts",
+    "authorLabel": "{{name}}, {{reason}}. Open profile",
+    "jarLabel": "{{name}}’s full jar today",
+    "loading": "Loading Explore",
+    "failed": "Explore didn’t load. Check your connection and try again.",
+    "retry": "Try again",
+    "searching": "Searching",
+    "noResults": "No one matches that name.",
+    "searchFailed": "Search didn’t work. Check your connection and try again."
   }
 }
