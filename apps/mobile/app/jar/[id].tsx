@@ -1,10 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { JarPageView } from '@/features/jar/JarPageView';
-import { shareJar } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { useLike } from '@/features/jar/useLike';
 import { ReportSheet } from '@/features/safety/ReportSheet';
@@ -13,7 +11,6 @@ import { useBlockFlow } from '@/features/safety/useBlockFlow';
 // /jar/[id] (M3-07; FR-SOC-03, FR-JAR-06): one person's jar for one day, from a feed card or My days.
 // The id is validated with Zod in useJarPage; a bad id is "not available".
 export default function JarScreen() {
-  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,7 +42,7 @@ export default function JarScreen() {
           if (data) router.push({ pathname: '/u/[username]', params: { username: data.author.username } });
         }}
         onShare={() => {
-          if (data) shareJar(data, t);
+          if (data) router.push({ pathname: '/share/[jarId]', params: { jarId: data.jar.id } });
         }}
         onMore={() => setReporting(true)}
         onRetry={() => void refresh()}

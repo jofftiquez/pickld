@@ -1,0 +1,64 @@
+# M4-11 (FR-SOC-10): Share jar on mika's Jar page opens the Share jar card (design: ShareCard): 9:16 card with
+# author, date, the moments, last caption, logo and pickld.me/mika. Include captions toggles the caption,
+# Copy link copies, and Save image saves the rendered card to Photos.
+# Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
+# maestro test apps/mobile/.maestro/share-card.yaml
+appId: me.pickld.app
+---
+- launchApp:
+    permissions:
+      photos: allow
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- tapOn:
+    id: feed-card-mika
+- extendedWaitUntil:
+    visible:
+      id: jar-share
+    timeout: 40000
+- tapOn:
+    id: jar-share
+- extendedWaitUntil:
+    visible:
+      id: share-card
+    timeout: 20000
+# The card is one accessible image, so its contents are checked in the screenshot.
+# Let the photos arrive before the screenshot.
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: ShareCard-ios
+- tapOn:
+    id: share-captions
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ShareCardNoCaption-ios
+- tapOn:
+    id: share-captions
+- tapOn:
+    id: share-copy
+- extendedWaitUntil:
+    visible: Link copied
+    timeout: 5000
+- tapOn:
+    id: share-save
+- extendedWaitUntil:
+    visible: Saved to Photos
+    timeout: 15000
+- tapOn:
+    id: share-back
+- extendedWaitUntil:
+    visible:
+      id: jar-share
+    timeout: 10000
