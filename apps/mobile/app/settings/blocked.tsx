@@ -4,8 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBlock, useBlockedAccounts } from '@/features/safety/block';
 import { BlockedView } from '@/features/safety/BlockedView';
 
-// /settings/blocked (M3-22; FR-PUB-06): Blocked accounts. Settings (M4-16) will link here; until then it
-// opens by deep link (pickld://settings/blocked).
+// /settings/blocked (M3-22; FR-PUB-06): Blocked accounts, opened from Settings.
 export default function BlockedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

@@ -1126,5 +1126,57 @@
   },
   "mediaLibrary": {
     "savePermissionDescription": "Pickld saves your jar card to your photos when you tap Save image."
+  },
+  "settings": {
+    "title": "Settings",
+    "back": "Back",
+    "open": "Settings",
+    "account": "@{{username}} · {{email}}",
+    "accountNoEmail": "@{{username}}",
+    "edit": "Edit",
+    "editHint": "Opens Edit profile",
+    "reminders": "Reminders",
+    "slot": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening"
+    },
+    "reminderTime": "{{slot}} reminder time",
+    "reminderToggle": "{{slot}} reminder",
+    "notifications": "Notifications",
+    "push": {
+      "new_reader": "New readers",
+      "like": "Likes",
+      "comment": "Comments",
+      "reply": "Replies to your comments",
+      "full_jar": "Full jars from people you read",
+      "friend_joined": "Friends who join Pickld"
+    },
+    "quietHours": "Quiet hours",
+    "quietHoursBody": "No pushes from {{start}} to {{end}}",
+    "privacy": "Privacy",
+    "defaultVisibility": "Default visibility",
+    "defaultVisibilityHint": "Who sees a new jar unless you choose otherwise",
+    "visibilityTitle": "Default visibility",
+    "visibilityBody": "New jars start with this. You can change it on each jar.",
+    "visibility": {
+      "readers": "Readers",
+      "everyone": "Everyone",
+      "only_me": "Only me"
+    },
+    "blocked": "Blocked accounts",
+    "accountSection": "Account",
+    "help": "Help & feedback",
+    "legal": "Terms & privacy policy",
+    "signOut": "Sign out",
+    "signOutTitle": "Sign out of Pickld?",
+    "signOutBody": "Reminders on this phone stop until you sign in again. Photos still waiting to upload stay on this phone.",
+    "signOutConfirm": "Sign out",
+    "cancel": "Cancel",
+    "delete": "Delete account",
+    "version": "Pickld {{version}}",
+    "saveFailed": "Couldn’t save that change. Check your connection and try again.",
+    "failed": "Couldn’t load your settings.",
+    "retry": "Try again"
   }
 }
