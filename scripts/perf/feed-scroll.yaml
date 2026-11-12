@@ -1,0 +1,18 @@
+appId: me.pickld.app
+# Eight fast swipes down the Jars feed (scripts/perf/record.sh scroll).
+---
+- launchApp:
+    stopApp: true
+- tapOn: "Jars"
+- extendedWaitUntil:
+    visible:
+      id: "feed-list"
+    timeout: 10000
+- waitForAnimationToEnd
+- repeat:
+    times: 8
+    commands:
+      - swipe:
+          start: 50%, 85%
+          end: 50%, 15%
+          duration: 300
