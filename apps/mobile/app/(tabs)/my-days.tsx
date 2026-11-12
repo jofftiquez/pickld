@@ -76,6 +76,7 @@ export default function MyDaysScreen() {
       onPrevious={() => nav.canGoPrevious && setMonth(addMonths(month, -1))}
       onNext={() => nav.canGoNext && setMonth(addMonths(month, 1))}
       onSelectDay={setSelectedDate}
+      onMemories={() => router.push('/memories')}
       selectedDay={
         selectedDate ? (
           <SelectedDayCard

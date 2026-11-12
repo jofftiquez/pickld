@@ -67,6 +67,7 @@ export const colors = {
   storyRingSeen: '#d9dcd3', // grey ring around an author with nothing new (Feed)
   notifyDot: '#d4451f', // unread dot on the bell (Feed)
   cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
+  onPhotoMuted: '#e2e5dc', // date and count over a photo (Memories); 12:1 on the photo fade
   cropAction: '#e2e5dc', // Cancel and Reset on the dark header (Crop); 15:1 on editor
   cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
   coverFadeTop: 'rgba(10,12,8,0.35)', // top of the dark fade over the Jar page cover, behind Back (Story)
@@ -485,6 +486,16 @@ export const stickerShop = {
 
 // My stickers (MyStickers, FR-STK-08): each pack row has a drag grip, a tinted tile with its first sticker
 // and a switch.
+export const memories = {
+  heroHeight: 300, // On this day photo card (Memories)
+  heroRadius: 26,
+  heroFade: 0.55, // share of the card the bottom fade covers
+  stripGap: 5, // between the recap's five photos
+  stripColumns: 5,
+  yearIcon: 44, // sparkle well on the year summary
+  yearIconRadius: 13,
+} as const;
+
 export const myStickers = {
   tile: 52,
   tileRadius: 14,
