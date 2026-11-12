@@ -80,7 +80,8 @@
     "lint": "eslint .",
     "test": "jest && node --test scripts/*.test.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs app src app.config.ts .env.example",
-    "scan:bundle": "expo export --platform ios --platform android --no-bytecode --output-dir dist/secret-scan && node scripts/scan-secrets.mjs dist/secret-scan"
+    "scan:bundle": "expo export --platform ios --platform android --no-bytecode --output-dir dist/secret-scan && node scripts/scan-secrets.mjs dist/secret-scan",
+    "eas-build-post-install": "bash scripts/prepare-native.sh"
   },
   "private": true
 }
