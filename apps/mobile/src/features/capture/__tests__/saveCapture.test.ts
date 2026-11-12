@@ -151,10 +151,11 @@ describe('queueTarget', () => {
   const at = new Date('2026-11-11T17:00:00Z');
   const openJar = { id: 'jar-12', localDate: '2026-11-12', tz: 'Asia/Manila' };
 
-  it('a normal capture after flying west still joins the open jar, with the phone zone as before', () => {
+  it("a normal capture after flying west joins the open jar in that jar's zone, so the server accepts its date", () => {
+    // The 12th is still the future in Honolulu: ensure_jar refuses ('2026-11-12', 'Pacific/Honolulu').
     expect(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar })).toEqual({
       localDate: '2026-11-12',
-      tz: 'Pacific/Honolulu',
+      tz: 'Asia/Manila',
       capturedAt: '2026-11-11T07:00:00-10:00',
     });
     expect(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar, fill: null }).localDate).toBe('2026-11-12');
@@ -170,6 +171,7 @@ describe('captureJarDate', () => {
   it("uses today's date in the phone zone when there is no open jar", () => {
     expect(captureJarDate({ tz: 'Asia/Manila', shotAt, openJar: null })).toEqual({
       localDate: '2026-11-11',
+      tz: 'Asia/Manila',
       capturedAt: '2026-11-11T14:14:05+08:00',
     });
   });
@@ -249,7 +251,7 @@ describe('galleryTarget (FR-CAP-02; AGENTS "Which jar" point 3)', () => {
         now: at,
         openJar: manila12,
       });
-      expect(target.localDate).toBe('2026-11-12');
+      expect(target).toMatchObject({ localDate: '2026-11-12', tz: 'Asia/Manila' });
       expect(target.localDate).toBe(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar: manila12 }).localDate);
     });
 
