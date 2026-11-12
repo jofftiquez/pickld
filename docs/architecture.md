@@ -16,7 +16,7 @@ Three principles shape everything:
 
 | Decision | Recommendation | Why | Alternative |
 | --- | --- | --- | --- |
-| Photo storage | Cloudflare R2 + Cloudflare CDN | No bandwidth fees, which matters with 8 photos per user per day | Backblaze B2 behind Cloudflare (about a third of R2’s cost at scale; revisit when photo costs pass about $100 a month) or Supabase Storage (simplest, most expensive at scale) |
+| Photo storage | Cloudflare R2 + Cloudflare CDN | No bandwidth fees, which matters with 8 photos per user per day | Backblaze B2 behind Cloudflare (a little under half of R2’s storage cost; revisit when photo costs pass about $100 a month, see `docs/photo-storage-costs.md`) or Supabase Storage (simplest, most expensive at scale) |
 | Data region | Supabase in Singapore | Closest to the Philippines launch base, fine for global users | Tokyo, or US East for a US-first audience |
 | Child-safety scanning | Cloudflare CSAM Scanning Tool | Free with Cloudflare, matches known material on upload | Microsoft PhotoDNA, Thorn Safer |
 | Nudity and violence checks | OpenAI omni-moderation (free), plus a vision AI second opinion on borderline photos | No per-call cost; scores photos for sexual content, violence and self-harm, and text for hate and harassment | Hive, AWS Rekognition or Google SafeSearch if more image categories are needed |
