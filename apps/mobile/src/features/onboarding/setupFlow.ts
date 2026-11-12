@@ -5,7 +5,12 @@
 import type { Href } from 'expo-router';
 import Storage from 'expo-sqlite/kv-store';
 
-export const SETUP_FLOW = ['/setup/day', '/setup/people', '/setup/jar-lid'] as const satisfies readonly Href[];
+export const SETUP_FLOW = [
+  '/setup/day',
+  '/setup/people',
+  '/setup/jar-lid',
+  '/setup/permissions',
+] as const satisfies readonly Href[];
 export type SetupRoute = (typeof SETUP_FLOW)[number];
 
 const key = (userId: string) => `setupStep:${userId}`;

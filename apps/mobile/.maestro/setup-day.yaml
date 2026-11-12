@@ -1,10 +1,15 @@
 # M4-05 + M4-06: a new account saves About you, lands on Your day, and after quitting the app resumes there
 # (FR-ONB-09). Early bird sets 7:00 AM · 12:30 PM · 7:00 PM; Change moves the evening to 7:30 PM; Continue
-# saves; Your people and Pick your jar (Mango) follow, then Today (FR-ONB-02/03/04). Ends signed in as the new account: sign dale back in afterwards.
+# saves; Your people and Pick your jar (Mango) follow, then Permissions (camera preset to allowed; Notifications
+# names the chosen times and Allow shows the system prompt), then Today (FR-ONB-02/03/04/05). Ends signed in as the new account: sign dale back in afterwards.
 # maestro test apps/mobile/.maestro/setup-day.yaml
 appId: me.pickld.app
 ---
-- launchApp
+- launchApp:
+    permissions:
+      camera: allow
+      photos: unset
+      notifications: unset
 - openLink: pickld://dev/sign-out
 - runFlow:
     when:
@@ -94,7 +99,11 @@ appId: me.pickld.app
     timeout: 20000
 # Quit mid-setup: the next launch resumes at Your day.
 - stopApp
-- launchApp
+- launchApp:
+    permissions:
+      camera: allow
+      photos: unset
+      notifications: unset
 - extendedWaitUntil:
     visible:
       id: day-screen
@@ -159,6 +168,31 @@ appId: me.pickld.app
 - takeScreenshot: JarLid-ios
 - tapOn:
     id: jar-lid-continue
+# M4-07: Permissions.
+- extendedWaitUntil:
+    visible:
+      id: permissions-screen
+    timeout: 20000
+- assertVisible:
+    id: permission-camera-allowed
+- assertVisible: 'So your 7:00.AM, 12:30.PM and 7:30.PM nudges arrive.'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Permissions-ios
+- tapOn:
+    id: permission-notifications-allow
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: PermissionsPrompt-ios
+- tapOn:
+    text: Allow
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: permission-notifications-allowed
+    timeout: 10000
+- tapOn:
+    id: permissions-continue
 - extendedWaitUntil:
     visible:
       id: tab-today
