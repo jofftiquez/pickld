@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
@@ -51,11 +50,11 @@ export function SelectField<T extends string | number>({
         </Text>
         <Icon name="chevronDown" size={18} strokeWidth={2} />
       </Pressable>
-      <BottomSheet visible={open} onClose={() => setOpen(false)} accessibilityLabel={label}>
+      <BottomSheet visible={open} onClose={() => setOpen(false)} accessibilityLabel={label} scrollable>
         <Text accessibilityRole="header" style={[textStyle('body', '700'), styles.title]}>
           {label}
         </Text>
-        <ScrollView style={styles.list} accessibilityRole="radiogroup">
+        <View accessibilityRole="radiogroup">
           {options.map((o, i) => (
             <RadioRow
               key={o.value}
@@ -69,7 +68,7 @@ export function SelectField<T extends string | number>({
               testID={testID ? `${testID}-${o.value}` : undefined}
             />
           ))}
-        </ScrollView>
+        </View>
       </BottomSheet>
     </View>
   );
@@ -91,5 +90,4 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   title: { color: colors.ink, marginBottom: space.xs },
-  list: { maxHeight: sizes.selectList },
 });

@@ -55,7 +55,8 @@ appId: me.pickld.app
 - tapOn:
     id: about-username
 - inputText: dale.david
-- hideKeyboard
+# hideKeyboard is unreliable on iOS; tapping the title dismisses it.
+- tapOn: About you
 - extendedWaitUntil:
     visible:
       id: about-username-available

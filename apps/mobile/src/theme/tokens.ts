@@ -308,7 +308,7 @@ export const sizes = {
   pageDotActive: 22,
   checkEmailWell: 96, // envelope tile on Check your email (CheckEmail)
   checkEmailIcon: 40,
-  selectList: 360, // tallest list in a SelectField sheet before it scrolls (About birthday)
+  sheetMaxHeight: 520, // a scrollable sheet stops growing here and scrolls (SelectField on About)
   setupStep: 5, // height of each step in the setup progress bar (About … Promise)
   under13Jar: 120, // empty jar on Under 13
   notifyAvatar: 40, // avatar, icon well and thumbnail width on a Notifications row (Notifications)
