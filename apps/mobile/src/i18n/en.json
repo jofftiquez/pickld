@@ -944,6 +944,34 @@
       "title": "Pickld is for ages 13 and up",
       "body": "We can’t create an account for you yet. We haven’t saved anything you entered.",
       "back": "Back to start"
+    },
+    "day": {
+      "title": "What’s your day like?",
+      "body": "Pick the one that’s most you. We’ll time your nudges around it.",
+      "types": {
+        "early_bird": {
+          "title": "Early bird",
+          "body": "Up before 6, asleep by 10"
+        },
+        "coffee_first": {
+          "title": "Coffee first",
+          "body": "Fully human after 8 AM"
+        },
+        "night_owl": {
+          "title": "Night owl",
+          "body": "Best ideas after midnight"
+        }
+      },
+      "nudges": "Your nudges",
+      "change": "Change",
+      "done": "Done",
+      "changeA11y": "Change your nudge times",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "continue": "Continue",
+      "saving": "Saving…",
+      "failed": "Couldn’t save your times. Check your connection and try again."
     }
   }
 }

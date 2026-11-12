@@ -7,6 +7,11 @@ import { Text } from 'react-native';
 import Index from '../../../../app/index';
 import { useAuthStore } from '@/lib/authStore';
 
+const mockDisk = new Map<string, string>();
+jest.mock('expo-sqlite/kv-store', () => ({
+  __esModule: true,
+  default: { getItem: async (k: string) => mockDisk.get(k) ?? null },
+}));
 const mockProfileLookup = jest.fn();
 jest.mock('@/lib/supabase', () => ({
   getSupabase: () => ({
@@ -23,12 +28,16 @@ const routes = {
   index: Index,
   welcome: () => <Text>Welcome</Text>,
   'setup/about': () => <Text>About you</Text>,
+  'setup/day': () => <Text>Your day</Text>,
   '(tabs)/today': () => <Text>Today</Text>,
 };
 const signIn = () => useAuthStore.getState().setSession({ user: { id: 'u-1' } } as Session);
 
 describe('where the app opens', () => {
-  beforeEach(() => mockProfileLookup.mockReset());
+  beforeEach(() => {
+    mockProfileLookup.mockReset();
+    mockDisk.clear();
+  });
 
   it('signed out → Welcome', async () => {
     useAuthStore.getState().setSession(null);
@@ -50,6 +59,14 @@ describe('where the app opens', () => {
     mockProfileLookup.mockResolvedValue({ data: { id: 'u-1' }, error: null });
     await renderRouter(routes, { initialUrl: '/', wrapper });
     expect(await screen.findByText('Today')).toBeTruthy();
+  });
+
+  it('setup left unfinished on this phone → that step (FR-ONB-09)', async () => {
+    signIn();
+    mockDisk.set('setupStep:u-1', '/setup/day');
+    mockProfileLookup.mockResolvedValue({ data: { id: 'u-1' }, error: null });
+    await renderRouter(routes, { initialUrl: '/', wrapper });
+    expect(await screen.findByText('Your day')).toBeTruthy();
   });
 
   it('can’t reach the server → Today (a stored session is almost always a returning user)', async () => {

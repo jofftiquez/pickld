@@ -13,6 +13,7 @@ import { getSupabase } from '@/lib/supabase';
 
 import { aboutProblems, completeBirthday, emptyAbout, isoDate, isUnder13, type AboutForm } from './aboutModel';
 import { AboutView, type AboutError } from './AboutView';
+import { nextSetupRoute, saveSetupStep } from './setupFlow';
 
 const todayYMD = () => {
   const [year, month, day] = localDateIn(new Date(), phoneTimeZone()).split('-').map(Number) as [
@@ -46,9 +47,11 @@ export function AboutScreen() {
   const usernameStatus = useUsernameAvailability(form.username, '');
   const canContinue = saved || aboutProblems(form, usernameStatus).length === 0;
 
-  const finish = () => {
+  const finish = async () => {
     queryClient.setQueryData(['hasProfile', userId], true);
-    router.replace('/');
+    const next = nextSetupRoute('/setup/about');
+    if (userId) await saveSetupStep(userId, next);
+    router.replace(next ?? '/');
   };
 
   const onContinue = async () => {
@@ -100,7 +103,7 @@ export function AboutScreen() {
           }
         }
       }
-      finish();
+      await finish();
     } catch {
       setError('failed');
     } finally {

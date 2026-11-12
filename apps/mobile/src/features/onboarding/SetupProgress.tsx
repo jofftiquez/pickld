@@ -19,7 +19,7 @@ export function SetupProgress({ step }: { step: number }) {
       testID="setup-progress"
     >
       {Array.from({ length: SETUP_STEPS }, (_, i) => (
-        <View key={i} style={[styles.segment, { backgroundColor: i < step ? colors.brand : colors.segmentTrack }]} />
+        <View key={i} style={[styles.segment, { backgroundColor: i < step ? colors.brand : colors.border }]} />
       ))}
     </View>
   );

@@ -1,0 +1,131 @@
+# M4-05: a new account saves About you, lands on Your day, and after quitting the app resumes there
+# (FR-ONB-09). Early bird sets 7:00 AM · 12:30 PM · 7:00 PM; Change moves the evening to 7:30 PM; Continue
+# saves and opens Today (FR-ONB-02). Ends signed in as the new account: sign dale back in afterwards.
+# maestro test apps/mobile/.maestro/setup-day.yaml
+appId: me.pickld.app
+---
+- launchApp
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 60000
+- tapOn:
+    id: welcome-get-started
+- tapOn:
+    id: intro-skip
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 10000
+- runScript: new-email.js
+- tapOn:
+    id: auth-email
+- inputText: ${output.email}
+- tapOn: Create your account
+- tapOn:
+    id: auth-submit
+- extendedWaitUntil:
+    visible:
+      id: check-email-screen
+    timeout: 15000
+- runScript:
+    file: mailpit-link.js
+    env:
+      EMAIL: ${output.email}
+- openLink: ${output.link}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: about-screen
+    timeout: 30000
+- tapOn:
+    id: about-name
+- inputText: New Tester
+- tapOn:
+    id: about-username
+- inputText: ${output.username}
+- tapOn: About you
+- extendedWaitUntil:
+    visible:
+      id: about-username-available
+    timeout: 10000
+- tapOn:
+    id: about-month
+- tapOn:
+    id: about-month-3
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-day
+- scrollUntilVisible:
+    element:
+      id: about-day-14
+    direction: DOWN
+- tapOn:
+    id: about-day-14
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-year
+- scrollUntilVisible:
+    element:
+      id: about-year-1990
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: about-year-1990
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-continue
+- extendedWaitUntil:
+    visible:
+      id: day-screen
+    timeout: 20000
+# Quit mid-setup: the next launch resumes at Your day.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: day-screen
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: QuizDay-ios
+- tapOn:
+    id: day-early_bird
+- assertVisible:
+    id: day-nudge-times
+    text: '7:00.AM · 12:30.PM · 7:00.PM'
+- tapOn:
+    id: day-change
+- tapOn:
+    id: day-time-evening
+- scrollUntilVisible:
+    element:
+      id: day-time-evening-1170
+    direction: DOWN
+- tapOn:
+    id: day-time-evening-1170
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: day-nudge-times
+    text: '7:00.AM · 12:30.PM · 7:30.PM'
+- takeScreenshot: QuizDayChange-ios
+- tapOn:
+    id: day-continue
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 30000
