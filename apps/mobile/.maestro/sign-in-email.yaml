@@ -25,7 +25,8 @@ env:
 - tapOn:
     id: auth-email
 - inputText: ${EMAIL}
-- hideKeyboard
+# The email field's return key is Send (M5-01), which hideKeyboard can't use; tapping the title dismisses it.
+- tapOn: Welcome back
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: SignIn-ios

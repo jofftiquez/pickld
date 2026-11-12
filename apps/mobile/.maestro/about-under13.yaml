@@ -28,7 +28,8 @@ appId: me.pickld.app
 - tapOn:
     id: auth-email
 - inputText: ${output.email}
-- hideKeyboard
+# The email field's return key is Send (M5-01), which hideKeyboard can't use; tapping the title dismisses it.
+- tapOn: Create your account
 - tapOn:
     id: auth-submit
 - extendedWaitUntil:
