@@ -3,6 +3,65 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      account_jobs: {
+        Row: {
+          attempts: number;
+          completed_at: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key: string | null;
+          run_after: string;
+          status: Database['public']['Enums']['account_job_status'];
+          updated_at: string;
+          user_id: string;
+          account_delete_latest: string | null;
+        };
+        ComputedFields: 'account_delete_latest';
+        Insert: {
+          attempts?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key?: string | null;
+          run_after?: string;
+          status?: Database['public']['Enums']['account_job_status'];
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          attempts?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          kind?: Database['public']['Enums']['account_job_kind'];
+          result_key?: string | null;
+          run_after?: string;
+          status?: Database['public']['Enums']['account_job_status'];
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'account_jobs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'account_jobs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       appeals: {
         Row: {
           created_at: string;
@@ -1321,7 +1380,128 @@ export type Database = {
       };
     };
     Functions: {
+      account_delete_defer: { Args: { p_from: string; p_user: string }; Returns: undefined };
+      account_delete_latest: {
+        Args: {
+          p_job: Omit<
+            Database['public']['Tables']['account_jobs']['Row'],
+            Database['public']['Tables']['account_jobs']['ComputedFields']
+          >;
+        };
+        Returns: string;
+      };
+      account_delete_purge: { Args: { p_user: string }; Returns: boolean };
+      account_delete_request: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          attempts: number;
+          completed_at: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key: string | null;
+          run_after: string;
+          status: Database['public']['Enums']['account_job_status'];
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'account_jobs';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      account_job_done: {
+        Args: { p_id: string; p_result_key?: string };
+        Returns: {
+          attempts: number;
+          completed_at: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key: string | null;
+          run_after: string;
+          status: Database['public']['Enums']['account_job_status'];
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'account_jobs';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      account_job_fail: {
+        Args: { p_error: string; p_id: string };
+        Returns: {
+          attempts: number;
+          completed_at: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key: string | null;
+          run_after: string;
+          status: Database['public']['Enums']['account_job_status'];
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'account_jobs';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      account_jobs_claim: {
+        Args: { p_limit?: number };
+        Returns: {
+          attempts: number;
+          completed_at: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key: string | null;
+          run_after: string;
+          status: Database['public']['Enums']['account_job_status'];
+          updated_at: string;
+          user_id: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'account_jobs';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       account_purge: { Args: { p_user: string }; Returns: boolean };
+      account_request_export: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          attempts: number;
+          completed_at: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key: string | null;
+          run_after: string;
+          status: Database['public']['Enums']['account_job_status'];
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'account_jobs';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       blocked_accounts: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1621,6 +1801,8 @@ export type Database = {
       username_available: { Args: { candidate: string }; Returns: string };
     };
     Enums: {
+      account_job_kind: 'export' | 'delete';
+      account_job_status: 'pending' | 'running' | 'done' | 'failed';
       day_slot: 'morning' | 'afternoon' | 'evening';
       day_type: 'early_bird' | 'coffee_first' | 'night_owl';
       jar_visibility: 'readers' | 'everyone' | 'only_me';
@@ -1741,6 +1923,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_job_kind: ['export', 'delete'],
+      account_job_status: ['pending', 'running', 'done', 'failed'],
       day_slot: ['morning', 'afternoon', 'evening'],
       day_type: ['early_bird', 'coffee_first', 'night_owl'],
       jar_visibility: ['readers', 'everyone', 'only_me'],

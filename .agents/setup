@@ -90,6 +90,9 @@ EOF
   # fn:contacts-match's HMAC key (D-4); a random local value, never committed.
   grep -q '^CONTACT_HASH_SECRET=.' supabase/functions/.env ||
     echo "CONTACT_HASH_SECRET=$(openssl rand -hex 32)" >>supabase/functions/.env
+  # fn:account-jobs' cron secret; a random local value, never committed.
+  grep -q '^ACCOUNT_JOBS_SECRET=.' supabase/functions/.env ||
+    echo "ACCOUNT_JOBS_SECRET=$(openssl rand -hex 32)" >>supabase/functions/.env
   if [[ ! -f workers/photos/.env ]]; then
     sed "s|^PHOTO_TOKEN_SECRET=.*|PHOTO_TOKEN_SECRET=$secret|" workers/photos/.env.example >workers/photos/.env
   fi
