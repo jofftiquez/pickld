@@ -83,6 +83,7 @@ select is((select count(*) from public.push_take(interval '60 seconds')), 0::big
 -- ---------------------------------------------------------------- retry and receipts
 select public.push_retry(array[(select id from n where k = 'f1')]);
 select is(pg_temp.result((select id from n where k = 'f1')), 'pending', 'push_retry puts a sent row back');
+delete from public.push_tickets; -- function tests leave rows in a shared local database
 select public.push_tickets_save(array['t1', 't2'], array['ExponentPushToken[owner]', 'ExponentPushToken[reader]']);
 update public.push_tickets set created_at = now() - interval '20 minutes' where ticket_id = 't1';
 select is((select array_agg(ticket_id) from public.push_tickets_due()), array['t1'], 'only tickets older than 15 minutes are due');
