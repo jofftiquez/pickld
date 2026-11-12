@@ -1,0 +1,187 @@
+// The shared-link pages in a 390 px Chromium (M4-13; FR-WEB-01, FR-WEB-03, FR-PRV-04). A stub stands in
+// for fn:public-page, whose own rules (what is public, what gets signed) are tested against the local stack
+// in supabase/functions/tests/public_page_test.ts. Run after `next build` (see the test script).
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import { after, before, test } from 'node:test';
+
+import { chromium } from 'playwright';
+
+const here = path.dirname(new URL(import.meta.url).pathname);
+const images = path.join(here, '../../../design/images');
+const ANON = 'stub-anon-key-0123456789abcdef';
+const EVERYONE = '11111111-1111-4111-8111-111111111111';
+const READERS = '22222222-2222-4222-8222-222222222222';
+
+let stub, stubUrl, web, base, browser;
+
+const author = (url) => ({
+  id: '33333333-3333-4333-8333-333333333333',
+  username: 'dale',
+  display_name: 'Dale',
+  bio: 'coffee, commutes and cats',
+  lid_color: '#7fad33',
+  reader_count: 3,
+  author_count: 1,
+  created_at: '2026-09-01T00:00:00Z',
+  avatar: `${url}/img/av_dale.jpg`,
+  cover: null,
+});
+const moment = (url, n, slot, extra = {}) => ({
+  id: `44444444-4444-4444-8444-44444444444${n}`,
+  slot,
+  caption: null,
+  captured_at: null,
+  added_at: `2026-11-08T0${n}:00:00Z`,
+  is_backfilled: false,
+  edits: {},
+  full: `${url}/img/${slot}.jpg`,
+  thumb: `${url}/img/${slot}.jpg`,
+  ...extra,
+});
+
+function pages(url) {
+  // Out of slot order on purpose: the page sorts them.
+  const moments = [
+    moment(url, 3, 'evening', { caption: 'Early night. Ordinary and good.' }),
+    moment(url, 1, 'morning', { caption: 'older caption', edits: { v: 1, filter: 'mono', overlays: [] } }),
+    moment(url, 2, 'whereami'),
+  ];
+  return {
+    jars: {
+      [EVERYONE]: { kind: 'jar', assetBase: url, id: EVERYONE, local_date: '2026-11-08', visibility: 'everyone',
+        readers_only: false, published_at: '2026-11-08T14:00:00Z', visible_count: 3, author: author(url), moments },
+      [READERS]: { kind: 'jar', assetBase: url, id: READERS, local_date: '2026-11-07', visibility: 'readers',
+        readers_only: true, published_at: '2026-11-07T14:00:00Z', visible_count: 8, author: author(url) },
+    },
+    profiles: {
+      dale: { kind: 'profile', assetBase: url, profile: author(url),
+        jars: [{ id: EVERYONE, local_date: '2026-11-08', published_at: '2026-11-08T14:00:00Z', visible_count: 3, moments }] },
+    },
+  };
+}
+
+before(async () => {
+  stub = createServer((req, res) => {
+    if (req.url.startsWith('/img/')) {
+      const file = path.join(images, path.basename(req.url));
+      res.writeHead(200, { 'content-type': 'image/jpeg' });
+      return res.end(readFileSync(file));
+    }
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      assert.equal(req.headers.authorization, `Bearer ${ANON}`);
+      const input = JSON.parse(body);
+      const data = pages(stubUrl);
+      const found = input.jarId ? data.jars[input.jarId] : data.profiles[String(input.username).toLowerCase()];
+      res.writeHead(found ? 200 : 404, { 'content-type': 'application/json' });
+      res.end(JSON.stringify(found ? { data: found } : { error: { code: 'not_found', message: 'none' } }));
+    });
+  });
+  await new Promise((r) => stub.listen(0, '127.0.0.1', r));
+  stubUrl = `http://127.0.0.1:${stub.address().port}`;
+
+  const port = 3200 + Math.floor(Math.random() * 500);
+  base = `http://127.0.0.1:${port}`;
+  const nextBin = createRequire(import.meta.url).resolve('next/dist/bin/next');
+  web = spawn(process.execPath, [nextBin, 'start', '-p', String(port), '-H', '127.0.0.1'], {
+    cwd: path.join(here, '..'),
+    env: { ...process.env, SUPABASE_URL: stubUrl, SUPABASE_ANON_KEY: ANON },
+    stdio: ['ignore', 'ignore', 'inherit'],
+  });
+  for (let i = 0; i < 100; i++) {
+    try {
+      if ((await fetch(base)).ok) break;
+    } catch {
+      /* not up yet */
+    }
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  browser = await chromium.launch();
+});
+
+after(async () => {
+  await browser?.close();
+  web?.kill();
+  stub?.close();
+});
+
+async function open(route) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const res = await page.goto(base + route);
+  await page.waitForLoadState('networkidle');
+  return { page, status: res.status() };
+}
+
+const noSideScroll = (page) => page.evaluate(() => document.documentElement.scrollWidth <= 390);
+
+test('an Everyone jar shows its moments in slot order with the newest caption', async () => {
+  const { page, status } = await open(`/j/${EVERYONE}`);
+  assert.equal(status, 200);
+  assert.equal(await page.locator('h1').textContent(), 'Dale shared a Sunday jar');
+  const alts = await page.locator('section img').evaluateAll((els) => els.map((e) => e.getAttribute('alt')));
+  assert.deepEqual(alts, ['Dale’s #whereami moment', 'Dale’s #morning moment', 'Dale’s #evening moment']);
+  // Every photo actually loaded.
+  assert.ok(await page.locator('section img').evaluateAll((els) => els.every((e) => e.naturalWidth > 0)));
+  assert.ok(await page.getByText('pickld.me/dale · Nov 8, 2026 · 3 of 8 moments').isVisible());
+  assert.ok(await page.getByText('“Early night. Ordinary and good.”').isVisible());
+  assert.equal(await page.getByText('older caption').count(), 0);
+  // The morning moment's Mono filter is drawn, not baked in.
+  assert.match(await page.locator('img[alt="Dale’s #morning moment"]').getAttribute('style'), /filter-mono/);
+  assert.equal(await page.getByRole('link', { name: 'Open in the app' }).getAttribute('href'), `pickld://jar/${EVERYONE}`);
+  assert.ok(await page.getByRole('link', { name: 'Google Play' }).isVisible());
+  assert.ok(await noSideScroll(page));
+  assert.ok(!(await page.content()).includes(ANON), 'the anon key stays on the server');
+  await page.close();
+});
+
+test('a Readers jar is a teaser with no photos', async () => {
+  const { page, status } = await open(`/j/${READERS}`);
+  assert.equal(status, 200);
+  assert.ok(await page.getByTestId('readers-teaser').isVisible());
+  assert.ok(await page.getByText('Only Dale’s readers can see this jar').isVisible());
+  assert.equal(await page.locator('section img').count(), 0);
+  assert.ok(await noSideScroll(page));
+  await page.close();
+});
+
+test('a profile lists its public jars, linking to each jar page', async () => {
+  const { page, status } = await open('/dale');
+  assert.equal(status, 200);
+  assert.equal(await page.locator('h1').textContent(), 'Dale');
+  const jar = page.getByRole('link', { name: 'Nov 8, 2026, 3 of 8 moments' });
+  assert.equal(await jar.getAttribute('href'), `/j/${EVERYONE}`);
+  assert.ok(await noSideScroll(page));
+  await page.close();
+});
+
+test('/u/<username> redirects to the canonical profile link', async () => {
+  const res = await fetch(`${base}/u/dale`, { redirect: 'manual' });
+  assert.equal(res.status, 308);
+  assert.equal(new URL(res.headers.get('location'), base).pathname, '/dale');
+});
+
+test('anything not public is a 404', async () => {
+  for (const route of ['/j/55555555-5555-4555-8555-555555555555', '/j/not-a-uuid', '/nobody_here', '/a']) {
+    const { page, status } = await open(route);
+    assert.equal(status, 404, route);
+    assert.ok(await page.getByText('Nothing to see here').isVisible(), route);
+    await page.close();
+  }
+});
+
+test('legal pages are reachable from the footer', async () => {
+  const { page } = await open(`/j/${EVERYONE}`);
+  for (const [name, route] of [['Terms', '/terms'], ['Privacy Policy', '/privacy'], ['Community Guidelines', '/guidelines']]) {
+    await page.getByRole('link', { name }).click();
+    await page.waitForURL(base + route);
+    assert.equal(await page.locator('h1').textContent(), name);
+    await page.goBack();
+  }
+  await page.close();
+});

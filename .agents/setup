@@ -97,7 +97,10 @@ EOF
     sed "s|^EXPO_PUBLIC_SUPABASE_ANON_KEY=.*|EXPO_PUBLIC_SUPABASE_ANON_KEY=$(status_env ANON_KEY)|" \
       apps/mobile/.env.example >apps/mobile/.env
   fi
-  for f in supabase/functions/.env workers/photos/.env apps/mobile/.env; do
+  if [[ ! -f apps/web/.env.local ]]; then
+    printf 'SUPABASE_URL=http://127.0.0.1:55421\nSUPABASE_ANON_KEY=%s\n' "$(status_env ANON_KEY)" >apps/web/.env.local
+  fi
+  for f in supabase/functions/.env workers/photos/.env apps/mobile/.env apps/web/.env.local; do
     git check-ignore -q "$f" || { echo "$f is not git-ignored" >&2; return 1; }
   done
 }

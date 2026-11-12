@@ -28,6 +28,8 @@ jobs:
         run: pnpm typecheck
       - name: Lint
         run: pnpm lint
+      - name: Chromium for the web page tests
+        run: pnpm exec playwright install --with-deps chromium
       - name: Unit tests
         run: pnpm test
       - name: Start local Supabase
@@ -44,3 +46,4 @@ jobs:
         run: |
           pnpm --filter @pickld/mobile scan:secrets
           pnpm --filter @pickld/mobile scan:bundle
+          node apps/mobile/scripts/scan-secrets.mjs apps/web/src apps/web/.env.example apps/web/.next/static

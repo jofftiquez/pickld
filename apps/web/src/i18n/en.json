@@ -1,0 +1,56 @@
+{
+  "site": {
+    "name": "Pickld",
+    "tagline": "A photo diary of eight moments a day.",
+    "getApp": "Get the app",
+    "logo": "Pickld"
+  },
+  "jar": {
+    "shared": "{{name}} shared a {{weekday}} jar",
+    "meta": "{{link}} · {{date}} · {{count}} of 8 moments",
+    "caption": "“{{caption}}”",
+    "photo": "{{name}}’s #{{slot}} moment",
+    "addedLater": "Added later",
+    "avatar": "{{name}}’s photo",
+    "readersTitle": "Only {{name}}’s readers can see this jar",
+    "readersBody": "Get Pickld and read {{name}} to see all {{count}} moments.",
+    "titleEveryone": "{{name}}’s {{weekday}} on Pickld",
+    "titleReaders": "{{name}} shared a jar on Pickld"
+  },
+  "profile": {
+    "title": "{{name}} (@{{username}}) on Pickld",
+    "username": "@{{username}}",
+    "readers_one": "{{count}} reader",
+    "readers_other": "{{count}} readers",
+    "authors_one": "{{count}} author",
+    "authors_other": "{{count}} authors",
+    "jars": "Jars",
+    "noJars": "No public jars yet.",
+    "jarLink": "{{date}}, {{count}} of 8 moments"
+  },
+  "cta": {
+    "title1": "Eight moments.",
+    "title2": "One real day.",
+    "body": "You deserve to be you. Tell your story on Pickld, free.",
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "already": "Already on Pickld?",
+    "openApp": "Open in the app"
+  },
+  "notFound": {
+    "title": "Nothing to see here",
+    "body": "This page may be private, or it doesn’t exist.",
+    "home": "Go to pickld.me"
+  },
+  "home": {
+    "title": "Pickld",
+    "body": "Fill a jar with eight moments of your day, and read the people you care about."
+  },
+  "legal": {
+    "terms": "Terms",
+    "privacy": "Privacy Policy",
+    "guidelines": "Community Guidelines",
+    "draft": "This page is being prepared and will be published before Pickld launches.",
+    "footer": "Legal"
+  }
+}
