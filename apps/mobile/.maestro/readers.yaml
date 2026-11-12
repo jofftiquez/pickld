@@ -1,0 +1,72 @@
+# M3-14: My profile → Readers & authors (design: Readers). Reading / Read back per row, search, the
+# Authors switch, and Read back → Reading → Read back on Jun, so the seed ends as it started.
+# Needs the seed data (mika, aya and jun read dale; dale reads mika and aya) and dale signed in:
+# maestro test apps/mobile/.maestro/readers.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: today-avatar
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: today-avatar
+- extendedWaitUntil:
+    visible:
+      id: profile-count-readers
+    timeout: 40000
+- tapOn:
+    id: profile-count-readers
+- extendedWaitUntil:
+    visible:
+      id: readers-list-readers
+    timeout: 40000
+- assertVisible:
+    id: follow-row-mika-button
+    text: Reading.*
+- assertVisible:
+    id: follow-row-jun-button
+    text: Read back.*
+- takeScreenshot: Readers-ios
+# Read back Jun, then stop again.
+- tapOn:
+    id: follow-row-jun-button
+- extendedWaitUntil:
+    visible:
+      id: follow-row-jun-button
+      text: Reading.*
+    timeout: 20000
+- tapOn:
+    id: follow-row-jun-button
+- extendedWaitUntil:
+    visible:
+      id: follow-row-jun-button
+      text: Read back.*
+    timeout: 20000
+- tapOn:
+    id: readers-search
+- inputText: mik
+- extendedWaitUntil:
+    notVisible:
+      id: follow-row-jun
+    timeout: 10000
+- assertVisible:
+    id: follow-row-mika
+- hideKeyboard
+- tapOn:
+    id: readers-tabs
+    text: .*Authors
+- extendedWaitUntil:
+    visible:
+      id: readers-list-authors
+    timeout: 20000
+- assertVisible:
+    id: follow-row-aya
+- tapOn:
+    id: readers-back
+- assertVisible:
+    id: profile-count-readers
