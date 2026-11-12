@@ -51,6 +51,7 @@ export function SettingsScreen() {
       onPref={(key, value) => savePref.mutate({ key, value }, onSaved)}
       onVisibility={(v) => saveVisibility.mutate(v, onSaved)}
       onBlocked={() => router.push('/settings/blocked')}
+      onMyStickers={() => router.push('/stickers/mine')}
       onHelp={() => router.push('/settings/help')}
       onLegal={() => openLegal('terms')}
       onSignOut={() => void signOut()}

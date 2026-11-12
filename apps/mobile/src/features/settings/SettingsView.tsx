@@ -46,6 +46,7 @@ export type SettingsViewProps = {
   onPref: (key: PrefKey, value: boolean) => void;
   onVisibility: (visibility: Visibility) => void;
   onBlocked: () => void;
+  onMyStickers: () => void;
   onHelp: () => void;
   onLegal: () => void;
   onSignOut: () => void;
@@ -55,7 +56,7 @@ export type SettingsViewProps = {
 /** A wall-clock time in the phone's locale, e.g. "7:30 PM". */
 const clock = (minutes: number) => formatTime(new Date(Date.UTC(2000, 0, 1, 0, minutes)), 'UTC');
 
-/** Settings (FR-SET-01, FR-NOT-04; design: Settings). My stickers is hidden until stickers are sold (D-6). */
+/** Settings (FR-SET-01, FR-NOT-04, FR-STK-08; design: Settings). */
 export function SettingsView(props: SettingsViewProps) {
   const { t } = useTranslation();
   const { insets, account, reminders, prefs } = props;
@@ -215,8 +216,13 @@ export function SettingsView(props: SettingsViewProps) {
               label={t('settings.blocked')}
               value={props.blockedCount ? String(props.blockedCount) : undefined}
               onPress={props.onBlocked}
-              divider={false}
               testID="settings-blocked"
+            />
+            <ListRow
+              label={t('settings.myStickers')}
+              onPress={props.onMyStickers}
+              divider={false}
+              testID="settings-my-stickers"
             />
           </Card>
 
