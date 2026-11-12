@@ -66,8 +66,8 @@ describe('Permissions (FR-ONB-05)', () => {
     await act(async () => fireEvent.press(screen.getByTestId('permissions-later')));
     expect(requested).toEqual([]);
     expect(mockRegister).not.toHaveBeenCalled();
-    expect(mockSaveStep).toHaveBeenCalledWith('u-1', null);
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/friends');
+    expect(mockPush).toHaveBeenCalledWith('/setup/friends');
   });
 
   it('Notifications names the enabled reminder times in order', async () => {

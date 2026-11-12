@@ -1,7 +1,8 @@
 # M4-05 + M4-06: a new account saves About you, lands on Your day, and after quitting the app resumes there
 # (FR-ONB-09). Early bird sets 7:00 AM · 12:30 PM · 7:00 PM; Change moves the evening to 7:30 PM; Continue
 # saves; Your people and Pick your jar (Mango) follow, then Permissions (camera preset to allowed; Notifications
-# names the chosen times and Allow shows the system prompt), then Today (FR-ONB-02/03/04/05). Ends signed in as the new account: sign dale back in afterwards.
+# names the chosen times and Allow shows the system prompt), then Find friends (contacts preset to allowed; the
+# Simulator needs the seed contacts first: xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf), then Today (FR-ONB-02/03/04/05/06). Ends signed in as the new account: sign dale back in afterwards.
 # maestro test apps/mobile/.maestro/setup-day.yaml
 appId: me.pickld.app
 ---
@@ -10,6 +11,7 @@ appId: me.pickld.app
       camera: allow
       photos: unset
       notifications: unset
+      contacts: allow
 - openLink: pickld://dev/sign-out
 - runFlow:
     when:
@@ -104,6 +106,7 @@ appId: me.pickld.app
       camera: allow
       photos: unset
       notifications: unset
+      contacts: allow
 - extendedWaitUntil:
     visible:
       id: day-screen
@@ -193,6 +196,28 @@ appId: me.pickld.app
     timeout: 10000
 - tapOn:
     id: permissions-continue
+# M4-08: Find friends. Contacts are hashed on the phone; Mika's address-book email differs in case.
+- extendedWaitUntil:
+    visible:
+      id: friends-screen
+    timeout: 20000
+- assertVisible: 'pickld.me/${output.username}'
+- tapOn:
+    id: friends-find
+- extendedWaitUntil:
+    visible:
+      id: friends-match-mika
+    timeout: 20000
+- assertVisible:
+    id: friends-match-aya
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: FindFriends-ios
+- tapOn:
+    id: friends-read-mika
+- assertVisible: Reading
+- tapOn:
+    id: friends-continue
 - extendedWaitUntil:
     visible:
       id: tab-today
