@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 import { lidColors } from '@/theme/tokens';
@@ -28,6 +29,7 @@ export function JarLidScreen() {
       const { error } = await getSupabase().from('profiles').update({ lid_color: lidColors[lid] }).eq('id', userId);
       if (error) throw error;
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      track('signup_step_completed', { step: 'jar_lid' });
       const next = nextSetupRoute('/setup/jar-lid');
       await saveSetupStep(userId, next);
       if (next) router.push(next);

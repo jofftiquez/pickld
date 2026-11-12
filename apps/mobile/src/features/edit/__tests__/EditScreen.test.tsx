@@ -14,6 +14,7 @@ import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
 import { getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 import { saveMomentEdits } from '@/features/moment/momentActions';
+import { trackMomentAdded } from '@/features/capture/momentAnalytics';
 import { editableMomentQueryKey } from '@/features/moment/useEditableMoment';
 import { useAuthStore } from '@/lib/authStore';
 import type { Session } from '@supabase/supabase-js';
@@ -45,6 +46,7 @@ jest.mock('@shopify/react-native-skia', () => {
 jest.mock('@/lib/queue/store', () => ({ getItem: jest.fn(), saveEdits: jest.fn(), releaseEditing: jest.fn() }));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => undefined) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+jest.mock('@/features/capture/momentAnalytics', () => ({ trackMomentAdded: jest.fn(async () => undefined) }));
 // Uploaded moments (M2-23) are read from Supabase and saved through momentActions.
 const mockServer: { row: Record<string, unknown> | null; reads: number } = { row: null, reads: 0 };
 jest.mock('@/lib/supabase', () => {
@@ -155,6 +157,7 @@ beforeEach(() => {
   });
   jest.mocked(requestUploads).mockClear();
   jest.mocked(captureError).mockClear();
+  jest.mocked(trackMomentAdded).mockClear();
 });
 
 describe('Editor', () => {
@@ -230,6 +233,8 @@ describe('Editor', () => {
       jest.mocked(requestUploads).mock.invocationCallOrder[0] ?? 0,
     );
     expect(rows.get(7)).toMatchObject({ caption: null, edits: {}, editingSince: null });
+    // Closed as it is, the photo is still added: public, as queued (NFR-ANL-01).
+    expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), false]]);
   });
 
   it.each(['/edit/abc', '/edit/0', '/edit/1.5'])(
@@ -312,6 +317,8 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     expect(jest.mocked(saveEdits).mock.invocationCallOrder[0]).toBeLessThan(
       jest.mocked(requestUploads).mock.invocationCallOrder[0] ?? 0,
     );
+    // Added once, with the privacy chosen here (leaving the editor afterwards adds nothing more).
+    expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), true]]);
   });
 
   it('saves an empty or blank caption as no caption', async () => {
@@ -378,6 +385,10 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     expect(screen.getByLabelText('Caption').props.value).toBe('evening walk');
     expect(privateSwitch().props.accessibilityState).toMatchObject({ checked: true });
     expect(saveButton().props.accessibilityLabel).toBe('Done');
+    // Editing it again is not another added moment.
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(trackMomentAdded).toHaveBeenCalledTimes(1);
   });
 
   it('reads old or broken stored edits as Original without crashing', async () => {

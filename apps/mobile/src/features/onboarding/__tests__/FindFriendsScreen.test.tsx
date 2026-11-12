@@ -2,11 +2,13 @@ import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 
 import type { FriendMatch } from '../findFriends';
 import { FindFriendsScreen, type FindFriendsDeps } from '../FindFriendsScreen';
 
+jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
@@ -55,6 +57,7 @@ describe('Find friends (FR-ONB-06)', () => {
     expect(deps.matchContacts).not.toHaveBeenCalled();
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/promise');
     expect(mockPush).toHaveBeenCalledWith('/setup/promise');
+    expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'friends' }]]);
   });
 
   it('Find sends only the hashes to matching and lists the matches; Read follows', async () => {

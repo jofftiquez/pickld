@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { track } from '@/lib/analytics';
 import { AuthFlowError, openLegal, sendEmailLink, signInWithProvider } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
 
@@ -26,6 +27,8 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
     setError(null);
     try {
       await work();
+      // Sign up is done once a provider signed in or the email link went out.
+      if (mode === 'signUp') track('signup_step_completed', { step: 'sign_up' });
     } catch (e) {
       const kind = e instanceof AuthFlowError ? e.kind : 'failed';
       if (kind !== 'cancelled') setError(t(`auth.errors.${kind}`));

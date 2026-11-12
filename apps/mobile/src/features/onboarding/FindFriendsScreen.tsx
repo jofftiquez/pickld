@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { setReading } from '@/features/profile/useFollow';
 import { copyLink } from '@/features/share/shareActions';
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { profileUrl } from '@/lib/links';
 
@@ -75,6 +76,7 @@ export function FindFriendsScreen({ deps = defaultDeps }: { deps?: FindFriendsDe
 
   const finish = async () => {
     if (!userId) return;
+    track('signup_step_completed', { step: 'friends' });
     const next = nextSetupRoute('/setup/friends');
     await saveSetupStep(userId, next);
     if (next) router.push(next);

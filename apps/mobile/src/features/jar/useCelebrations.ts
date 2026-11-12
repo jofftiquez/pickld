@@ -7,6 +7,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
+import { track } from '@/lib/analytics';
 import { getSupabase } from '@/lib/supabase';
 
 import { filledCount, milestoneKeys, nextCelebration, type Celebration, type CelebrationsSeen } from './celebrations';
@@ -145,6 +146,8 @@ export function useCelebrations(input: {
       open.current(celebrationHref(show, { jarNumber: null, earned }));
       return;
     }
+    // Once per jar, like the celebration itself (the seen record above).
+    track('jar_full', {});
     void fetchJarNumber(userId, show.localDate)
       .catch(() => null)
       .then((jarNumber) => open.current(celebrationHref(show, { jarNumber, earned })));
