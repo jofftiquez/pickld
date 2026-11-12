@@ -309,7 +309,10 @@ export const sizes = {
   checkEmailWell: 96, // envelope tile on Check your email (CheckEmail)
   checkEmailIcon: 40,
   textFieldTrailing: 120, // room kept on the right of a field for its trailing note (About: ✓ Available)
-  sheetMaxHeight: 520, // a scrollable sheet stops growing here and scrolls (SelectField on About)
+  sheetMaxHeight: 520,
+  quizIcon: 48, // icon well on a Your day choice (QuizDay)
+  quizCheck: 24, // radio / check circle on a Your day choice
+ // a scrollable sheet stops growing here and scrolls (SelectField on About)
   setupStep: 5, // height of each step in the setup progress bar (About … Promise)
   under13Jar: 96, // empty jar on Under 13
   under13Top: 80, // space above the jar on Under 13
