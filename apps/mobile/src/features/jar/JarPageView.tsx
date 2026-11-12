@@ -11,7 +11,7 @@ import { SecondaryButton } from '@/components/SecondaryButton';
 import { parseEdits } from '@/features/edit/edits';
 import { MomentCover } from '@/features/moment/MomentCover';
 import { deviceLocale, formatTime } from '@/lib/format';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from './jarPage';
@@ -217,10 +217,15 @@ export function JarPageView({
             style={[styles.countTile, { width: tileWidth }]}
             testID="jar-count-tile"
           >
-            <Text style={[textStyle('countTile'), { color: colors.surface }]}>
+            <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('countTile'), { color: colors.surface }]}>
               {t('jarPage.count', { count: page.count, max: MAX_LAYERS })}
             </Text>
-            <Text style={[textStyle('caption', '500'), { color: colors.onDarkMuted }]}>{t('jarPage.countLabel')}</Text>
+            <Text
+              maxFontSizeMultiplier={maxTextScale.tile}
+              style={[textStyle('caption', '500'), { color: colors.onDarkMuted }]}
+            >
+              {t('jarPage.countLabel')}
+            </Text>
           </View>
         </View>
       </ScrollView>

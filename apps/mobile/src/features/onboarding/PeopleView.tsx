@@ -7,7 +7,7 @@ import { Icon } from '@/components/Icon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { isSelected, PEOPLE_OPTIONS, type PeopleAnswers } from './peopleModel';
@@ -49,7 +49,11 @@ export function PeopleView({ insets, answers, busy, failed, onToggle, onContinue
         )}
         <SetupProgress step={3} />
         <View style={styles.heading}>
-          <Text accessibilityRole="header" style={[textStyle('onboardTitle'), { color: colors.ink }]}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.title}
+            accessibilityRole="header"
+            style={[textStyle('onboardTitle'), { color: colors.ink }]}
+          >
             {t('setup.people.title')}
           </Text>
           <Text style={[textStyle('body'), styles.body]}>{t('setup.people.body')}</Text>

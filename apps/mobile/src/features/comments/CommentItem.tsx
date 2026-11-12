@@ -92,6 +92,6 @@ const styles = StyleSheet.create({
   reply: { marginLeft: sizes.feedAvatar + space.sm },
   body: { flex: 1, gap: 3 },
   text: { color: colors.ink, lineHeight: 20 },
-  actions: { flexDirection: 'row', gap: space.lg },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.lg, rowGap: space.xs },
   action: { minHeight: ACTION_HEIGHT, justifyContent: 'center' },
 });

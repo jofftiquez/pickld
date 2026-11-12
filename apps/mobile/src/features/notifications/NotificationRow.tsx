@@ -7,6 +7,7 @@ import { Avatar } from '@/components/Avatar';
 import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { Icon } from '@/components/Icon';
 import { formatWeekday } from '@/lib/format';
+import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, slots, space } from '@/theme/tokens';
 
@@ -103,6 +104,7 @@ export function NotificationRow({
 }: NotificationRowProps) {
   const { t } = useTranslation();
   const [pressed, setPressed] = useState(false);
+  const large = useLargeText();
   const { key, values } = sentence(entry, t as unknown as (k: string, o?: Record<string, unknown>) => string, locale);
   // Plain text for screen readers: the same sentence without the <bold> tags.
   const spoken = t(key, values).replace(/<\/?bold>/g, '');
@@ -111,7 +113,10 @@ export function NotificationRow({
     entry.type === 'full_jar' ? 'jars' : entry.type === 'removed' || entry.type === 'appeal_decided' ? 'warning' : null;
 
   return (
-    <View style={[styles.row, divider ? styles.divider : null]} testID={`notification-${entry.type}`}>
+    <View
+      style={[styles.row, large && styles.rowWrap, divider ? styles.divider : null]}
+      testID={`notification-${entry.type}`}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${entry.unread ? `${t('notifications.unread')}, ` : ''}${spoken}, ${age}`}
@@ -120,7 +125,7 @@ export function NotificationRow({
         onPress={onOpen ?? undefined}
         onPressIn={() => setPressed(true)}
         onPressOut={() => setPressed(false)}
-        style={[styles.main, pressed ? { opacity: PRESSED_OPACITY } : null]}
+        style={[styles.main, large && styles.mainLarge, pressed ? { opacity: PRESSED_OPACITY } : null]}
         testID={`notification-${entry.key}`}
       >
         {icon ? (
@@ -155,6 +160,9 @@ export function NotificationRow({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.sm + 3 },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
+  // Large text: Read back or the photo wraps below, so the sentence keeps the row's width.
+  rowWrap: { flexWrap: 'wrap', rowGap: space.sm },
+  mainLarge: { flexBasis: '100%' },
   main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: sizes.minTap },
   text: { flex: 1, gap: 2 },
   sentence: { color: colors.ink, lineHeight: 19 },

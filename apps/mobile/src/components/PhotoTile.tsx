@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { textStyle, type FontWeight, type TextVariant } from '@/theme/text';
+import { maxTextScale, textStyle, type FontWeight, type TextVariant } from '@/theme/text';
 import { colors, photo, radius as radii, sizes, space } from '@/theme/tokens';
 
 export type PhotoTileProps = {
@@ -101,7 +101,11 @@ export function PhotoTile({
         </View>
       ) : null}
       {label ? (
-        <Text style={[textStyle(labelVariant, labelWeight), styles.label]} numberOfLines={1}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.tile}
+          style={[textStyle(labelVariant, labelWeight), styles.label]}
+          numberOfLines={1}
+        >
           {label}
         </Text>
       ) : null}

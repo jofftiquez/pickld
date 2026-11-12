@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PRESSED_OPACITY } from '@/components/BaseButton';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
 
 import { fillFraction, type DayCell } from './monthGrid';
@@ -57,7 +57,9 @@ export function CalendarDay({ cell, accessibilityLabel, selected, onPress }: Cal
           <View style={[StyleSheet.absoluteFill, styles.scrim]} />
         </>
       ) : null}
-      <Text style={[textStyle('bodySmall', '700'), { color: numberColor }]}>{cell.day}</Text>
+      <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('bodySmall', '700'), { color: numberColor }]}>
+        {cell.day}
+      </Text>
       {count > 0 ? (
         <View testID="day-fill" style={[styles.track, { backgroundColor: cover ? colors.fillTrack : colors.border }]}>
           <View style={[styles.fill, { width: `${fillFraction(count) * 100}%` }]} />

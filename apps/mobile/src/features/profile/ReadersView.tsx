@@ -75,9 +75,10 @@ export function ReadersView({
       <View style={styles.header}>
         <RoundIconButton icon="back" accessibilityLabel={t('readers.back')} onPress={onBack} testID="readers-back" />
         <Text
-          accessibilityRole="header"
-          style={[textStyle('cropTitle'), styles.title, { color: colors.ink }]}
           numberOfLines={1}
+          adjustsFontSizeToFit
+          accessibilityRole="header"
+          style={[textStyle('cropTitle'), styles.headerTitle, styles.title, { color: colors.ink }]}
           testID="readers-title"
         >
           {profile?.username ?? ''}
@@ -190,6 +191,8 @@ export function ReadersView({
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

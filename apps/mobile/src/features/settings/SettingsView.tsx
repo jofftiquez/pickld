@@ -24,6 +24,7 @@ import { hitSlopFor } from '@/lib/hitSlop';
 import type { DaySlot } from '@/lib/jars';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
+import { useLargeText } from '@/lib/useLargeText';
 
 import type { NotificationPrefs, PrefKey, SettingsAccount } from './useSettings';
 import { PUSH_TYPES } from './useSettings';
@@ -58,6 +59,7 @@ const clock = (minutes: number) => formatTime(new Date(Date.UTC(2000, 0, 1, 0, m
 export function SettingsView(props: SettingsViewProps) {
   const { t } = useTranslation();
   const { insets, account, reminders, prefs } = props;
+  const large = useLargeText();
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const loading = account === undefined || reminders === undefined || prefs === undefined;
@@ -71,7 +73,12 @@ export function SettingsView(props: SettingsViewProps) {
           onPress={props.onBack}
           testID="settings-back"
         />
-        <Text accessibilityRole="header" style={[textStyle('cropTitle'), { color: colors.ink }]}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          accessibilityRole="header"
+          style={[textStyle('cropTitle'), styles.headerTitle, { color: colors.ink }]}
+        >
           {t('settings.title')}
         </Text>
         <View style={styles.headerSpacer} />
@@ -103,6 +110,7 @@ export function SettingsView(props: SettingsViewProps) {
             </View>
             <Pressable
               accessibilityRole="link"
+              accessibilityLabel={t('settings.edit')}
               accessibilityHint={t('settings.editHint')}
               onPress={props.onEditProfile}
               hitSlop={hitSlopFor(undefined, 20)}
@@ -131,13 +139,13 @@ export function SettingsView(props: SettingsViewProps) {
               return (
                 <View
                   key={r.slot}
-                  style={[styles.reminderRow, i < reminders.length - 1 && styles.divider]}
+                  style={[styles.reminderRow, large && styles.rowWrap, i < reminders.length - 1 && styles.divider]}
                   testID={`settings-reminder-${r.slot}`}
                 >
                   <View style={styles.iconWell}>
                     <Icon name={r.slot} size={20} strokeWidth={1.8} />
                   </View>
-                  <Text style={[textStyle('body', '600'), styles.rowLabel]}>{slot}</Text>
+                  <Text style={[textStyle('body', '600'), styles.rowLabel, large && styles.rowLabelLarge]}>{slot}</Text>
                   <SelectField
                     variant="chip"
                     label={t('settings.reminderTime', { slot })}
@@ -285,6 +293,8 @@ export function SettingsView(props: SettingsViewProps) {
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
@@ -302,6 +312,9 @@ const styles = StyleSheet.create({
   section: { color: colors.muted, marginTop: space.sm, marginHorizontal: space.xs },
   listCard: { paddingVertical: 2 },
   reminderRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.sm + 2 },
+  // Large text: the time and switch wrap under the slot name instead of squeezing it letter by letter.
+  rowWrap: { flexWrap: 'wrap', rowGap: space.sm },
+  rowLabelLarge: { flexBasis: '70%' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 52, paddingVertical: space.sm },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
   iconWell: {

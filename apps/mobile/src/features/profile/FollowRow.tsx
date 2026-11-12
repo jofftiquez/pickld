@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
 import { PRESSED_OPACITY } from '@/components/BaseButton';
+import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, sizes, space } from '@/theme/tokens';
 
@@ -26,9 +27,13 @@ export type FollowRowProps = {
 /** One person in Readers & authors (Readers): avatar, name, @username and their Read / Read back / Reading button. */
 export function FollowRow({ row, isViewer, divider, onOpen, onToggleReading, onRemove, disabled }: FollowRowProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   const [pressed, setPressed] = useState(false);
   return (
-    <View style={[styles.row, divider ? styles.divider : null]} testID={`follow-row-${row.username}`}>
+    <View
+      style={[styles.row, large && styles.rowWrap, divider ? styles.divider : null]}
+      testID={`follow-row-${row.username}`}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('readers.row', { name: row.display_name, username: row.username })}
@@ -41,7 +46,7 @@ export function FollowRow({ row, isViewer, divider, onOpen, onToggleReading, onR
         onLongPress={onRemove}
         onPressIn={() => setPressed(true)}
         onPressOut={() => setPressed(false)}
-        style={[styles.person, pressed ? { opacity: PRESSED_OPACITY } : null]}
+        style={[styles.person, large && styles.personLarge, pressed ? { opacity: PRESSED_OPACITY } : null]}
         testID={`follow-row-${row.username}-open`}
       >
         <Avatar name={row.display_name} size="header" decorative />
@@ -70,6 +75,9 @@ export function FollowRow({ row, isViewer, divider, onOpen, onToggleReading, onR
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: space.sm + 1 },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
+  // Large text: the Read button wraps below, so the name isn't cut to one letter (D-37).
+  rowWrap: { flexWrap: 'wrap', rowGap: space.sm },
+  personLarge: { flexBasis: '100%' },
   person: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: sizes.minTap },
   names: { flex: 1, gap: 1 },
 });

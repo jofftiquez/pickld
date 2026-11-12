@@ -11,7 +11,7 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { TextField } from '@/components/TextField';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { canDelete, type ExportCard } from './deleteModel';
@@ -63,7 +63,12 @@ export function DeleteAccountView(props: DeleteAccountViewProps) {
           onPress={props.onBack}
           testID="delete-back"
         />
-        <Text accessibilityRole="header" style={[textStyle('cropTitle'), { color: colors.ink }]}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          accessibilityRole="header"
+          style={[textStyle('cropTitle'), styles.headerTitle, { color: colors.ink }]}
+        >
           {t('deleteAccount.title')}
         </Text>
         <View style={styles.headerSpacer} />
@@ -72,7 +77,11 @@ export function DeleteAccountView(props: DeleteAccountViewProps) {
         <View style={styles.warning}>
           <Icon name="warning" size={28} strokeWidth={2} color="danger" />
         </View>
-        <Text accessibilityRole="header" style={[textStyle('screenTitle'), styles.heading]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('screenTitle'), styles.heading]}
+        >
           {t('deleteAccount.heading')}
         </Text>
         <Text style={[textStyle('body'), styles.body]} testID="delete-body">
@@ -144,6 +153,7 @@ export function DeleteAccountView(props: DeleteAccountViewProps) {
         />
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={t('deleteAccount.keepAccount')}
           onPress={props.onBack}
           hitSlop={hitSlopFor(undefined, 20)}
           style={styles.keep}
@@ -157,6 +167,8 @@ export function DeleteAccountView(props: DeleteAccountViewProps) {
 }
 
 const styles = StyleSheet.create({
+  // Shrinks to fit one line at large text instead of pushing the header's buttons off screen (D-37).
+  headerTitle: { flexShrink: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',

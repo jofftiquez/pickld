@@ -1117,7 +1117,7 @@ GitHub: [milestones](https://github.com/jofftiquez/pickld/milestones). Issues #1
 - **Area:** app · **Priority:** P0 · **Size:** M · **Requirements:** NFR-A11Y-01, NFR-A11Y-02, NFR-A11Y-03, NFR-A11Y-04 · **Depends on:** M4-22 · **Issue:** #114
 - **Goal:** Audit labels, 200% text on every screen, Reduce Motion, tap areas; fix gaps (T-401).
 - **Acceptance:**
-  - [ ] Every screen passes the checklist at 200% text.
+  - [x] Every screen passes the checklist at 200% text.
 - **Tests:** Automated label audit test; Maestro at large text.
 - **Screenshots:** Key screens at 200% text.
 - **Design:** —

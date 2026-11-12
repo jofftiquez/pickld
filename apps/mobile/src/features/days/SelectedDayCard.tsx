@@ -62,6 +62,7 @@ export function SelectedDayCard({
           {onViewJar ? (
             <Pressable
               accessibilityRole="link"
+              accessibilityLabel={t('myDays.selected.viewJar')}
               accessibilityHint={t('myDays.selected.viewJarHint', { date: title })}
               hitSlop={hitSlopFor(undefined, VIEW_JAR_HEIGHT)}
               onPress={onViewJar}

@@ -25,6 +25,7 @@ export function TextOverlayView({ overlay, width }: OverlayContentProps<'text'>)
       style={{ paddingHorizontal: layout.padX * k, paddingVertical: layout.padY * k }}
       testID={`text-overlay-${overlay.id}`}
     >
+      {/* a11y-fixed-size: drawn into the photo at the photo's scale, not the phone's text size */}
       <Text
         allowFontScaling={false}
         style={[

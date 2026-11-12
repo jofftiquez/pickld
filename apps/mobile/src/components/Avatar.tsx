@@ -58,7 +58,7 @@ export function Avatar({ name, uri, size = 'md', ring = false, decorative = fals
       {uri ? (
         <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
       ) : (
-        // Fixed inside a fixed circle, so it doesn't scale with system text; the name is the label.
+        // a11y-fixed-size: fixed inside a fixed circle, so it doesn't scale with system text; the name is the label.
         <Text
           allowFontScaling={false}
           style={[textStyle('label', '800'), { fontSize: Math.round(d * 0.38), color: colors.brandText }]}

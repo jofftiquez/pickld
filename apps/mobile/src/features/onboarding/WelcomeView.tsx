@@ -1,11 +1,11 @@
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { Image as RNImage, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image as RNImage, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { onboardingPhotos, type OnboardingPhoto } from './photos';
@@ -30,7 +30,13 @@ export type WelcomeViewProps = {
 export function WelcomeView({ insets, onGetStarted, onSignIn }: WelcomeViewProps) {
   const { t } = useTranslation();
   return (
-    <View style={styles.screen} testID="welcome-screen">
+    // Scrolls only when the content is taller than the screen (200% text), so Get started stays reachable.
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.scrollContent}
+      bounces={false}
+      testID="welcome-screen"
+    >
       <View
         style={[styles.collage, { height: sizes.welcomeCollage }]}
         accessibilityElementsHidden
@@ -54,7 +60,11 @@ export function WelcomeView({ insets, onGetStarted, onSignIn }: WelcomeViewProps
           accessibilityRole="image"
           accessibilityLabel={t('welcome.logo')}
         />
-        <Text accessibilityRole="header" style={[textStyle('onboardTitle'), styles.title]}>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.title}
+          accessibilityRole="header"
+          style={[textStyle('onboardTitle'), styles.title]}
+        >
           {t('welcome.title')}
         </Text>
         <Text style={[textStyle('body'), styles.body]}>{t('welcome.body')}</Text>
@@ -71,12 +81,13 @@ export function WelcomeView({ insets, onGetStarted, onSignIn }: WelcomeViewProps
           <Text style={[textStyle('bodyMedium', '700'), styles.linkText]}>{t('welcome.haveAccount')}</Text>
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { flexGrow: 1 },
   collage: { flexDirection: 'row', gap: space.sm, paddingHorizontal: space.md, overflow: 'hidden' },
   column: { flex: 1, gap: space.sm },
   photo: {

@@ -17,3 +17,13 @@ jest.mock('@shopify/react-native-skia', () => {
     useImage: (uri: string | undefined) => (uri ? { uri } : null),
   };
 });
+
+// React Native's Jest preset reports a 2× system text size, which would put every screen in its large-text
+// layout (D-37). Tests start at the default size; a test of large text sets fontScale itself.
+{
+  const { Dimensions } = jest.requireActual<typeof import('react-native')>('react-native');
+  Dimensions.set({
+    window: { ...Dimensions.get('window'), fontScale: 1 },
+    screen: { ...Dimensions.get('screen'), fontScale: 1 },
+  });
+}

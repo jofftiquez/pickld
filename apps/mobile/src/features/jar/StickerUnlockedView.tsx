@@ -6,7 +6,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { JarGraphic } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space, type } from '@/theme/tokens';
 
 import { CelebrationReveal } from './CelebrationReveal';
@@ -85,7 +85,11 @@ export function StickerUnlockedView({ milestone, earned, reduceMotion, insets, o
             </View>
           </View>
           <Text style={[textStyle('eyebrow'), styles.eyebrow]}>{t('stickerUnlocked.eyebrow')}</Text>
-          <Text accessibilityRole="header" style={[textStyle('unlockTitle'), styles.title]}>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.title}
+            accessibilityRole="header"
+            style={[textStyle('unlockTitle'), styles.title]}
+          >
             {t(`stickerUnlocked.titles.${milestone}`)}
           </Text>
           <Text style={[textStyle('body', '400'), styles.body]}>{body}</Text>
