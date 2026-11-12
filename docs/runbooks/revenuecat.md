@@ -9,7 +9,10 @@ Sticker pack purchases (FR-STK-07) go through RevenueCat. The code works against
    - Authorization header: `Bearer <REVENUECAT_WEBHOOK_SECRET>` (generate with `openssl rand -hex 32`)
    - Environments: both sandbox and production.
 4. **Secrets** on each Supabase project: `supabase secrets set REVENUECAT_WEBHOOK_SECRET=… REVENUECAT_SECRET_KEY=…` (the project's secret API key, v1; never put it in the app or the repo).
-5. **Deploy** with `supabase functions deploy revenuecat-webhook` (its `verify_jwt = false` comes from `supabase/config.toml`; the function checks the shared secret itself).
-6. **Check:** "Send test event" in the dashboard should answer 200.
+5. **App key:** set `EXPO_PUBLIC_REVENUECAT_IOS_KEY` (the public `appl_…` SDK key) in the EAS build environment, then make a new native build: `react-native-purchases` is a native module.
+6. **Deploy** with `supabase functions deploy revenuecat-webhook store-sync` (its `verify_jwt = false` comes from `supabase/config.toml`; the function checks the shared secret itself).
+7. **Check:** "Send test event" in the dashboard should answer 200.
 
 How it works: the webhook only says _who_ bought. The function reads that user's verified one-time purchases from RevenueCat's REST API and makes their `purchase` rows in `owned_packs` match (`store_purchases_sync`, migration 0028), so refunds and restores to another account take a pack away and a forged event can't grant one. Sandbox receipts unlock packs except where `APP_ENV=production`.
+
+Right after a purchase or Restore purchases, the app calls `fn: store-sync` with the user's own JWT, so the pack unlocks without waiting for the webhook. It runs the same sync for the caller only. With no `REVENUECAT_SECRET_KEY` and `APP_ENV=local`, the app's dev store passes `{ devProductId }` and the function grants that product to the caller, so the purchase flow can be tried locally with no RevenueCat account. Outside local, a missing key is an error.

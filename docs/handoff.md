@@ -47,6 +47,7 @@ Plan order: M6-01 RevenueCat webhook 🔑 (#125), M6-02 Sticker shop (#126), M6-
 
 - **M6-11 Android widgets (#135): skip.** He asked for iOS only; list it as not done in the M6 report.
 - **Purchases:** RevenueCat is in AGENTS.md. Build against its sandbox and test mode only; real purchases and store products need his accounts. D-6 hid My stickers and sticker restore until sales exist, so M6-02 to M6-04 bring them back.
+- **Pack purchase (M6-03):** `getStore()` uses RevenueCat when `EXPO_PUBLIC_REVENUECAT_IOS_KEY` starts with `appl_`; otherwise the dev store (local only). After a purchase the app calls `fn: store-sync`. Locally it grants the dev product to the caller. Delete test rows with `delete from owned_packs where source='purchase'`. After `pnpm install` changes node_modules, restart Metro with `--clear`, or it can't resolve packages such as `react-native-css-interop/jsx-runtime`.
 - **Widgets (M6-09/10):** they need an App Group and a widget extension (a native target). Use the Expo config-plugin route, and run `scripts/prepare-native.sh` (D-35) after changing native config.
 
 ## 4. Standing rules (unchanged)
