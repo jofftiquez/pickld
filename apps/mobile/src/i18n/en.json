@@ -1066,9 +1066,41 @@
       "none": "None of your contacts are on Pickld yet. Invite them with your link.",
       "continue": "Continue",
       "skip": "Skip for now"
+    },
+    "promise": {
+      "logo": "Pickld",
+      "title": "The Pickld Promise",
+      "body": "One last thing before your first jar.",
+      "points": [
+        "I’ll post the real stuff, not just the highlights.",
+        "Messy rooms and bad hair days count.",
+        "I’ll be kind about other people’s ordinary days."
+      ],
+      "signed": "Signed, {{name}}",
+      "hold": "Hold to promise",
+      "holdHint": "Touch and hold for a moment to promise.",
+      "saved": "Promised!",
+      "failed": "Couldn’t save your promise. Check your connection and try again.",
+      "skip": "Skip"
     }
   },
   "contacts": {
     "permissionDescription": "Pickld hashes the emails and numbers in your contacts on your phone to find friends already on Pickld. Your contacts are never uploaded."
+  },
+  "firstTip": {
+    "label": "Your first moment",
+    "title": "Your first moment",
+    "ready": "It’s {{period}}, so #{{slot}} is ready.",
+    "readyAny": "Pick any slot to start.",
+    "periods": {
+      "morning": "morning",
+      "afternoon": "afternoon",
+      "evening": "evening"
+    },
+    "snap": "Snap whatever’s in front of you. Messy counts.",
+    "private": "Not ready to share? Mark any moment private.",
+    "later": "Missed one? Fill it in later from My days.",
+    "take": "Take my first moment",
+    "look": "Look around first"
   }
 }

@@ -315,6 +315,10 @@ export const sizes = {
   quizCheck: 24, // radio / check circle on a Your day choice
   peopleIcon: 30, // icon well beside each Your people question (QuizPeople)
   permissionIcon: 46, // icon well on each Permissions card
+  holdRing: 104, // progress ring around Hold to promise (Promise)
+  holdButton: 82, // the green button inside it
+  promiseLogo: 60, // Pickld wordmark width on Promise
+  tipJar: 40, // jar beside the First moment tip title (Coach)
   lidStage: 200, // tinted circle behind the jar (JarLid)
   lidJarLarge: 124, // jar on Pick your jar
   lidSwatch: 44, // colour squares on Pick your jar

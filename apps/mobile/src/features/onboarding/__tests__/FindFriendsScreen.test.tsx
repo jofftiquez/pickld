@@ -53,8 +53,8 @@ describe('Find friends (FR-ONB-06)', () => {
     await act(async () => fireEvent.press(screen.getByTestId('friends-skip')));
     expect(deps.hashAddressBook).not.toHaveBeenCalled();
     expect(deps.matchContacts).not.toHaveBeenCalled();
-    expect(mockSaveStep).toHaveBeenCalledWith('u-1', null);
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/promise');
+    expect(mockPush).toHaveBeenCalledWith('/setup/promise');
   });
 
   it('Find sends only the hashes to matching and lists the matches; Read follows', async () => {

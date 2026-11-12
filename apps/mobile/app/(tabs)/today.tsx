@@ -15,6 +15,8 @@ import { DAY_SLOTS } from '@/features/reminders/reminderPlan';
 import { useReminderSync } from '@/features/reminders/useReminderSync';
 import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
+import { FirstMomentTip } from '@/features/onboarding/FirstMomentTip';
+import { useFirstMomentTip } from '@/features/onboarding/useFirstMomentTip';
 import { MomentOptions, type MomentOptionsSelection } from '@/features/moment/MomentOptions';
 import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
@@ -81,6 +83,12 @@ export default function TodayScreen() {
     userId,
     DAY_SLOTS.filter((slot) => tiles.some((tile) => tile.slot === slot && holdsSlot(tile))),
   );
+
+  // First moment tip (M4-09): once, on the first day while the jar is empty.
+  const nowSlot = currentSlot(now, tz);
+  const tip = useFirstMomentTip(userId, jar?.hasAnyJar === false && !tiles.some(holdsSlot));
+  // Take my first moment opens Camera once the sheet's modal has closed.
+  const takeAfterTip = useRef(false);
 
   // Moment options (M2-23). The last selection stays while the sheet animates out; each opening starts fresh.
   const [options, setOptions] = useState<{ selection: MomentOptionsSelection; open: boolean; n: number } | null>(null);
@@ -176,6 +184,21 @@ export default function TodayScreen() {
           onClose={() => setOptions((o) => (o ? { ...o, open: false } : o))}
         />
       ) : null}
+      <FirstMomentTip
+        visible={tip.visible}
+        slot={nowSlot}
+        lidColor={me?.lidColor}
+        onClose={tip.close}
+        onTake={() => {
+          takeAfterTip.current = true;
+          tip.close();
+        }}
+        onClosed={() => {
+          if (!takeAfterTip.current) return;
+          takeAfterTip.current = false;
+          router.push({ pathname: '/capture', params: nowSlot ? { slot: nowSlot } : {} });
+        }}
+      />
       {/* An upload whose slot was taken asks whether to Replace (M2-22). */}
       <ConflictReplacePrompt queue={queue} />
     </>
