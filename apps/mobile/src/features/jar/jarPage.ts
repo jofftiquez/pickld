@@ -106,7 +106,7 @@ export function isShown(moment: Pick<JarMomentRow, 'status' | 'is_private'>, isO
 const slotIndex = (slot: Slot) => slots.indexOf(slot);
 
 /** The cover caption follows the feed card's quote (0014 last_caption): newest added_at, then later slot. */
-function newestCaptioned(moments: JarMoment[]): JarMoment | null {
+export function newestCaptioned<T extends Pick<JarMoment, 'caption' | 'added_at' | 'slot'>>(moments: T[]): T | null {
   const captioned = moments.filter((m) => (m.caption ?? '').trim() !== '');
   captioned.sort((a, b) => b.added_at.localeCompare(a.added_at) || slotIndex(b.slot) - slotIndex(a.slot));
   return captioned[0] ?? null;
