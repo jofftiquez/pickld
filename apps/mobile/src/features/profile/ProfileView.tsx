@@ -32,6 +32,8 @@ export type ProfileViewProps = {
   onOpenMoment: (momentId: string, jarId: string) => void;
   /** My profile only: opens Edit profile. */
   onEditProfile?: () => void;
+  /** Your own profile only: the gear opening Settings (design: Profile). */
+  onSettings?: () => void;
   /** Other profile only: Read / Read back starts reading, Reading stops (FR-SOC-07). */
   onToggleReading?: () => void;
   /** A follow request is in flight. */
@@ -68,6 +70,7 @@ export function ProfileView({
   onOpenJar,
   onOpenMoment,
   onEditProfile,
+  onSettings,
   onToggleReading,
   followBusy = false,
   onOpenList,
@@ -315,6 +318,15 @@ export function ProfileView({
       </ScrollView>
       <View style={[styles.topBar, { top: insets.top + space.xl }]} pointerEvents="box-none">
         {backButton}
+        {isOwner && onSettings ? (
+          <RoundIconButton
+            icon="settings"
+            variant="glass"
+            accessibilityLabel={t('settings.open')}
+            onPress={onSettings}
+            testID="profile-settings"
+          />
+        ) : null}
       </View>
     </View>
   );
@@ -323,7 +335,13 @@ export function ProfileView({
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   centered: { alignItems: 'center', justifyContent: 'center' },
-  topBar: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row' },
+  topBar: {
+    position: 'absolute',
+    left: space.lg,
+    right: space.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   message: { gap: space.md, alignItems: 'center', paddingHorizontal: space.xxl },
   centerText: { textAlign: 'center' },
   cover: { backgroundColor: colors.brandTint },

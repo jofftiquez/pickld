@@ -47,7 +47,7 @@ export async function registerPushToken(userId: string): Promise<'saved' | 'skip
 
 /**
  * At sign-out: forget this device's token, so the next account on the phone never gets the last one's
- * pushes. TODO(M4-16, #106): call from Settings → Sign out, with cancelAllReminders.
+ * pushes. Settings → Sign out calls it, with cancelAllReminders.
  */
 export async function removePushToken(): Promise<void> {
   const projectId = easProjectId();
