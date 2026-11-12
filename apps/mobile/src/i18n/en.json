@@ -1178,5 +1178,47 @@
     "saveFailed": "Couldn’t save that change. Check your connection and try again.",
     "failed": "Couldn’t load your settings.",
     "retry": "Try again"
+  },
+  "help": {
+    "title": "Help & feedback",
+    "back": "Back",
+    "search": "Search help",
+    "searchLabel": "Search the common questions",
+    "common": "Common questions",
+    "noResults": "No questions match “{{query}}”. Try another word, or message us below.",
+    "faq": [
+      {
+        "q": "How do jars and moments work?",
+        "a": "Each day gets one jar with eight slots: where you are, what you’re busy with, who you’re with, your outfit, a selfie, and your morning, afternoon and evening. Fill a slot with one photo, a moment. A new jar starts at your local midnight."
+      },
+      {
+        "q": "Why does a moment say “Added later”?",
+        "a": "A moment added after its day ended, from your gallery or with Fill this jar, carries an “Added later” badge. Pickld’s server decides this from its own clock, not your phone’s."
+      },
+      {
+        "q": "Who can see my jars?",
+        "a": "You choose for each jar: Readers (people who read you), Everyone, or Only me. Private moments are never shown to anyone else, in any jar. Set the default in Settings."
+      },
+      {
+        "q": "What happens when I travel?",
+        "a": "Today’s jar keeps the time zone it started in until it closes. Your next jar starts at the new local midnight, and a one-time banner explains the switch."
+      }
+    ],
+    "stuck": "Still stuck?",
+    "contact": "Contact support",
+    "contactBody": "We reply by email.",
+    "contactAction": "Message",
+    "contactLabel": "Email Pickld support",
+    "feedback": "Send feedback",
+    "feedbackBody": "Ideas, bugs, sticker requests.",
+    "feedbackAction": "Write",
+    "feedbackLabel": "Email feedback to Pickld",
+    "guidelines": "Community guidelines",
+    "noMail": "No email app is set up. Write to {{email}}.",
+    "mail": {
+      "supportSubject": "Pickld support",
+      "feedbackSubject": "Pickld feedback",
+      "body": "\n\n—\nPickld {{version}} · {{platform}} {{os}}"
+    }
   }
 }
