@@ -18,7 +18,9 @@ async function fetchShopRows(userId: string): Promise<ShopRows> {
       .select('id, slug, name, tier, description, store_product_id, available_from, available_to, sort, pack_usable'),
     supabase
       .from('stickers')
-      .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable'),
+      .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable')
+      // Retired stickers (0032) aren't offered; moments that use them still draw their bundled art.
+      .is('retired_at', null),
     supabase
       .from('onboarding_answers')
       .select('day_type, whoamiwith, mebusywith, ootd')
