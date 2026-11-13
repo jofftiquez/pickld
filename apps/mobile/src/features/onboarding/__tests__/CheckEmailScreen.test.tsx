@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
+import { useAuthStore } from '@/lib/authStore';
+
 import { CheckEmailScreen } from '../CheckEmailScreen';
 
 jest.mock('expo-router', () => {
@@ -17,14 +19,21 @@ jest.mock('react-native-safe-area-context', () => ({
 const mockSend = jest.fn();
 jest.mock('@/lib/auth', () => ({
   ...jest.requireActual('@/lib/auth'),
-  sendEmailLink: (...args: unknown[]) => mockSend(...args),
+  sendEmailCode: (...args: unknown[]) => mockSend(...args),
 }));
-jest.mock('@/lib/supabase', () => ({ getSupabase: jest.fn() }));
+const mockVerifyOtp = jest.fn();
+jest.mock('@/lib/supabase', () => ({
+  getSupabase: () => ({ auth: { verifyOtp: (args: unknown) => mockVerifyOtp(args) } }),
+}));
+
+const refused = { data: {}, error: { status: 403, code: 'otp_expired', message: 'Token has expired or is invalid' } };
 
 describe('Check your email', () => {
   beforeEach(() => {
     jest.useFakeTimers({ now: new Date('2026-11-12T08:00:00Z') });
     mockSend.mockReset().mockResolvedValue('dale@pickld.test');
+    mockVerifyOtp.mockReset().mockResolvedValue(refused);
+    useAuthStore.setState({ status: 'signedOut', session: null, error: null });
   });
   afterEach(() => jest.useRealTimers());
 
@@ -62,5 +71,60 @@ describe('Check your email', () => {
     await fireEvent.press(screen.getByTestId('check-email-resend'));
     expect(await screen.findByText('Something went wrong. Check your connection and try again.')).toBeTruthy();
     expect(screen.getByTestId('check-email-resend')).toBeTruthy();
+  });
+
+  it('says where the code went and labels the code field for screen readers', async () => {
+    await render(<CheckEmailScreen />);
+    expect(screen.getByText(/We sent a 6-digit code to/)).toBeTruthy();
+    expect(screen.getByText(/Enter it below\./)).toBeTruthy();
+    const field = screen.getByLabelText('6-digit code');
+    expect(field.props.textContentType).toBe('oneTimeCode');
+    expect(field.props.autoComplete).toBe('one-time-code');
+    expect(field.props.keyboardType).toBe('number-pad');
+  });
+
+  it('checks a valid code at the 6th digit; the session then takes them into the app', async () => {
+    mockVerifyOtp.mockResolvedValue({ data: {}, error: null });
+    await render(<CheckEmailScreen />);
+    const field = screen.getByTestId('check-email-code');
+    await fireEvent.changeText(field, '12345');
+    expect(mockVerifyOtp).not.toHaveBeenCalled();
+    // Pasted or autofilled text keeps only the digits.
+    await fireEvent.changeText(field, '12 34 56');
+    expect(mockVerifyOtp).toHaveBeenCalledTimes(1);
+    expect(mockVerifyOtp).toHaveBeenCalledWith({ email: 'dale@pickld.test', token: '123456', type: 'email' });
+    expect(await screen.findByText('Checking your code…')).toBeTruthy();
+    expect(screen.getByTestId('check-email-code').props.editable).toBe(false);
+
+    // supabase-js's onAuthStateChange (authBootstrap) stores the session; the screen leaves.
+    await act(async () => useAuthStore.getState().setSession({ user: { id: 'u1' } } as never));
+    expect(screen.getByText('redirect:/')).toBeTruthy();
+  });
+
+  it('a wrong code says so, clears the boxes and lets them type again', async () => {
+    await render(<CheckEmailScreen />);
+    await tick(30_000);
+    await fireEvent.changeText(screen.getByTestId('check-email-code'), '000000');
+    expect(await screen.findByText('That code isn’t right.')).toBeTruthy();
+    expect(screen.getByTestId('check-email-code').props.value).toBe('');
+    expect(screen.getByTestId('check-email-code').props.editable).toBe(true);
+    await fireEvent.changeText(screen.getByTestId('check-email-code'), '1');
+    expect(screen.queryByText('That code isn’t right.')).toBeNull();
+  });
+
+  it('a code past its 10 minutes is expired; a resent code gets a fresh 10 minutes', async () => {
+    await render(<CheckEmailScreen />);
+    await tick(10 * 60_000);
+    await fireEvent.changeText(screen.getByTestId('check-email-code'), '123456');
+    expect(await screen.findByText('That code has expired. Send a new one.')).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId('check-email-resend'));
+    expect(mockSend).toHaveBeenCalledWith('dale@pickld.test', 'signIn');
+    expect(screen.queryByText('That code has expired. Send a new one.')).toBeNull();
+    expect(await screen.findByText('Sent again. Check your inbox.')).toBeTruthy();
+
+    await tick(60_000);
+    await fireEvent.changeText(screen.getByTestId('check-email-code'), '654321');
+    expect(await screen.findByText('That code isn’t right.')).toBeTruthy();
   });
 });

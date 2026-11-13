@@ -5,11 +5,14 @@
   },
   "signIn": {
     "title": "Moderator sign in",
-    "body": "We'll email you a sign-in link. Only moderator accounts can open the console.",
+    "body": "We'll email you a 6-digit code. Only moderator accounts can open the console.",
     "email": "Email",
-    "send": "Email me a link",
-    "sent": "If that address belongs to a Pickld account, a sign-in link is on its way. It works once.",
-    "badLink": "That link has expired or was already used. Ask for a new one.",
+    "send": "Email me a code",
+    "sent": "If {{email}} belongs to a Pickld account, a 6-digit code is on its way. It works once, for 10 minutes.",
+    "code": "Enter the 6-digit code",
+    "verify": "Sign in",
+    "different": "Use a different email",
+    "wrongCode": "That code isn't right, or it has expired. Check the email or ask for a new one.",
     "invalid": "Enter a valid email address."
   },
   "denied": {

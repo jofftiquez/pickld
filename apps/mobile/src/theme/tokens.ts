@@ -321,6 +321,7 @@ export const sizes = {
   pageDotActive: 22,
   checkEmailWell: 96, // envelope tile on Check your email (CheckEmail)
   checkEmailIcon: 40,
+  codeBox: 56, // each of the six code boxes on Check your email (CheckEmail); grows with large text
   textFieldTrailing: 120, // room kept on the right of a field for its trailing note (About: ✓ Available)
   sheetMaxHeight: 520, // a scrollable sheet stops growing here and scrolls (SelectField on About)
   quizIcon: 48, // icon well on a Your day choice (QuizDay)
