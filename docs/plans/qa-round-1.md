@@ -1,6 +1,6 @@
 # Plan — QA round 1 (iPhone test, Nov 13)
 
-Nov 13, 2026. Planning only: nothing here is built yet. The product owner tested "Pickld Local" on his iPhone against the Mac's local Supabase and sent 18 items. Each item below says what happens today and why, the proposed change, what it touches, which design screens change, the risks and a rough size. The work is grouped into pieces that ship separately, in order, with the pieces that can run at the same time marked. Open decisions are at the end, each with a recommendation.
+Nov 13, 2026. Planning only: nothing here is built yet. The product owner tested "Pickld Local" on his iPhone against the Mac's local Supabase and sent 18 items, then added item 19 (email sign-in with a code). Each item below says what happens today and why, the proposed change, what it touches, which design screens change, the risks and a rough size. The work is grouped into pieces that ship separately, in order, with the pieces that can run at the same time marked. Open decisions are at the end, each with a recommendation.
 
 Sizes: **S** is under half a day, **M** is 1–2 days, **L** is 3–5 days. iOS only.
 
@@ -18,6 +18,7 @@ Sizes: **S** is under half a day, **M** is 1–2 days, **L** is 3–5 days. iOS 
   - Moment likes already exist in the database and on Moment detail.
 - **Item 8 needs no change:** the Jars timeline already shows only published jars.
 - **The rest is UI work:** navigation, the editor, the camera, the day page, the cover photo, Liquid Glass and animations.
+- **Email sign-in switches from a link to a 6-digit code (19).** No schema change. The app, the moderation console, the dev sign-in script and the Mac's sign-in helper page must switch in the same release as the email templates, because the templates are shared.
 
 ## Root causes of the two bugs
 
@@ -396,23 +397,72 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 
 **Size:** M.
 
+### 19. Email sign-in sends a code instead of a magic link
+
+**Today:**
+
+- Sign up and Sign in call `sendEmailLink` (`apps/mobile/src/lib/auth.ts`): `signInWithOtp` with `emailRedirectTo: pickld://auth/callback`. Supabase emails a link.
+- Tapping it goes through Supabase's `/auth/v1/verify`, which redirects to `pickld://auth/callback?code=…`. `AuthCallbackScreen` exchanges the code with the Proof Key for Code Exchange (PKCE) verifier saved when the email was requested, so the link works only on the phone that asked for it.
+- Check your email (`CheckEmailScreen`, design **CheckEmail**) says "Tap it on this phone", with Open email app, a 60-second Resend and Use a different email.
+- On his iPhone the link points at `127.0.0.1:55421`, the Mac's local Supabase, which the phone can't reach. That's why he signs in through the helper page on the Mac (below).
+- Apple and Google sign-in also return through `pickld://auth/callback`. They are off locally (`[auth.external.apple] enabled = false`) but are P0 in FR-ACC-01.
+
+**Change:**
+
+- **App:**
+  - `sendEmailLink` becomes `sendEmailCode`: the same `signInWithOtp` call (sign up may create the account, sign in may not), without `emailRedirectTo`.
+  - Check your email gets a code field: one `TextInput` with `textContentType="oneTimeCode"` and `autoComplete="one-time-code"`, number pad, shown as six boxes. iOS 17 and later offer the code from Mail above the keyboard.
+  - It submits by itself at the 6th digit with `verifyOtp({ email, token, type: 'email' })`. The session then reaches `useAuthStore`, and the route guard from item 13 opens About you or Today.
+  - New errors: "That code isn't right" and "That code has expired. Send a new one." Resend, Open email app and Use a different email stay.
+  - Copy: "We sent a 6-digit code to … Enter it below."
+- **Supabase Auth settings:**
+  - Local (`supabase/config.toml`, `[auth.email]`): `otp_length = 6` stays; `otp_expiry` goes from 3600 to **600** (10 minutes, decision D13). Supabase allows 6–10 digits.
+  - Staging and production: `scripts/deploy/configure.sh` sets `mailer_otp_length = 6` and `mailer_otp_exp = 600` through the Management API, next to the redirect list it already sets.
+  - Brute force: `token_verifications = 30` per 5 minutes per IP address stays, and each code dies after 10 minutes or once used.
+- **Email templates:** a separate thread owns their wording. The plan only needs both the **Magic link** and **Confirm signup** templates to show the code with `{{ .Token }}`: a brand-new account can get Confirm signup when confirmations are on. Recommendation (D13): code only, no link.
+- **`pickld://auth/callback` and D-33:**
+  - The route and `AuthCallbackScreen` stay for Apple and Google, and the redirect allow list keeps `pickld://auth/callback`. Emails stop using it.
+  - D-33's sentence "Sign-in emails still use `pickld://auth/callback` until the Supabase redirect allow list includes the https form" is replaced by "Sign-in emails carry a 6-digit code and no link; `/auth/callback` is used only by Apple and Google sign-in." The `pickld.me/auth/callback` universal link stays for the providers.
+  - A link email sent before the switch keeps working until it expires.
+- **Moderation console (`apps/mod`):**
+  - Today `/sign-in` emails a link to `/auth/confirm`, which exchanges the code using the PKCE cookie.
+  - The templates are shared, so the console must switch too. The sign-in page becomes two steps: email, then "Enter the 6-digit code". A server action calls `verifyOtp({ email, token, type: 'email' })`, which sets the session cookies.
+  - `/auth/confirm` is removed. `access.test.mjs` and `decide.test.mjs` sign in with the code from `auth.admin.generateLink` (`properties.email_otp`) through the real form, instead of the `token_hash` link.
+  - The answer stays the same whether or not the address has an account.
+- **Dev sign-in:** `scripts/dev-sign-in.sh` reads `verify?token=` from the email in Mailpit, the local test inbox; that breaks once the email has no link. It switches to the code and prints `pickld://dev/sign-in?email=…&code=…`. `DevSignIn` calls `verifyOtp({ email, token, type: 'email' })`. The Maestro flows that use the script keep working.
+- **The Mac's sign-in helper page:** `/signin` on port 55431, served by the `pickld-tailscale-bridge` service from the untracked `pickld-staging/.amp/in/tailscale-bridge.mjs`. Today it lists the newest Mailpit emails as "Sign in as …" links and opens them on the phone. It changes to list each address with its code in large digits and its age, so he reads it and types it on the phone. Picking up the change means restarting that service for a few seconds; I'll ask first.
+
+**Touches:** `src/lib/auth.ts`, `CheckEmailScreen`/`CheckEmailView`, `SignUpScreen`/`SignInScreen` (function name), `DevSignIn`, i18n (`auth.checkEmail`, `auth.errors`), `supabase/config.toml`, `scripts/deploy/configure.sh`, `scripts/dev-sign-in.sh`, `apps/mod` sign-in page and `/auth/confirm`, their tests (`auth.test.ts`, the onboarding screen tests, the mod Playwright tests), the Maestro onboarding flow, the bridge script. No schema or RPC change.
+
+**Design:** **CheckEmail** (code boxes, wrong and expired states); **SignUp** and **SignIn** copy ("We'll email you a code").
+
+**Risks:**
+
+- **Ordering with the template thread.** If the templates switch to code-only first, the console, the dev script and the helper page stop working until this piece lands. If this piece lands first, the app waits for a code the email doesn't show. They must ship together: this piece's PR carries the config, and the template change is applied right after it merges.
+- The "Pickld Local" build on his phone needs a new build after the switch, because the old build only understands links.
+- The code field must work at 200% text (D-37) and have a label for VoiceOver.
+
+**Size:** M.
+
 ## Pieces, order and what runs in parallel
 
-| #   | Piece                       | Items                                      | Schema | Size | Depends on                    |
-| --- | --------------------------- | ------------------------------------------ | ------ | ---- | ----------------------------- |
-| 1   | Bug fixes                   | 1, 13                                      | —      | S–M  | —                             |
-| 2   | Navigation and quick polish | 4 (Today \| Jars), 5, 6, 12, 15            | —      | M    | —                             |
-| 3   | Editor toolbar and parallax | 14, 16                                     | —      | M    | —                             |
-| 4   | Moment visibility           | 7, 8 (confirm), 9 (jars)                   | 0066   | L    | decisions D1–D3               |
-| 5   | Moments timeline and tab    | 2 (timeline), 4 (Moments tab), 9 (moments) | 0067   | L    | 4                             |
-| 6   | Moment comments             | 2 (comments)                               | 0068   | M–L  | 4                             |
-| 7   | Moment preview              | 3                                          | —      | M    | 4 (for the Visibility action) |
-| 8   | Day page for past days      | 10                                         | —      | M    | 2                             |
-| 9   | Cover photo                 | 11                                         | 0069   | M    | 4, 7                          |
-| 10  | Liquid Glass                | 17                                         | —      | M    | 2, 3, 7                       |
-| 11  | Animations                  | 18                                         | —      | M    | 2, 7                          |
+| #   | Piece                       | Items                                      | Schema | Size | Depends on                            |
+| --- | --------------------------- | ------------------------------------------ | ------ | ---- | ------------------------------------- |
+| 1   | Bug fixes                   | 1, 13                                      | —      | S–M  | —                                     |
+| 2   | Navigation and quick polish | 4 (Today \| Jars), 5, 6, 12, 15            | —      | M    | —                                     |
+| 3   | Editor toolbar and parallax | 14, 16                                     | —      | M    | —                                     |
+| 4   | Moment visibility           | 7, 8 (confirm), 9 (jars)                   | 0066   | L    | decisions D1–D3                       |
+| 5   | Moments timeline and tab    | 2 (timeline), 4 (Moments tab), 9 (moments) | 0067   | L    | 4                                     |
+| 6   | Moment comments             | 2 (comments)                               | 0068   | M–L  | 4                                     |
+| 7   | Moment preview              | 3                                          | —      | M    | 4 (for the Visibility action)         |
+| 8   | Day page for past days      | 10                                         | —      | M    | 2                                     |
+| 9   | Cover photo                 | 11                                         | 0069   | M    | 4, 7                                  |
+| 10  | Liquid Glass                | 17                                         | —      | M    | 2, 3, 7                               |
+| 11  | Animations                  | 18                                         | —      | M    | 2, 7                                  |
+| 12  | Email code sign-in          | 19                                         | —      | M    | 1 (route guard), D13, template thread |
 
 - **Pieces 1, 2 and 3 run in parallel now.** They touch different files and none needs a decision except D5 (tab bar) and D12 (Save in the toolbar).
+- **Piece 12 runs alongside 2 and 3** once piece 1 has merged (both touch the onboarding navigation). It ships together with the template change from the other thread.
 - **Piece 4 is the gate** for the rule changes. After it, **5, 6 and 7 run in parallel**, and **8** can run alongside.
 - **9, 10 and 11 come last.** They build on the preview, the new bars and the jar card.
 - Each piece is one PR (or two for the large ones: schema first, then the app). Each waits for a green `ci` and its pgTAP tests, and each new rule is recorded as a D-number in `docs/decisions.md`. After each piece the local stack and his phone build are refreshed so he can check it on the iPhone.
@@ -433,6 +483,8 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 - **D-36 #4:** the Promise stays without confetti; confetti is added to publishing.
 - **D-37:** the three-tab bar and the new toolbar follow the same large-text rules.
 - **D-3, D-27:** unchanged. Moves stay within a jar; a removed slot can still be filled again.
+- **FR-ACC-01/02:** "email link" becomes "email code": email sends a 6-digit code, Check your email takes it, and the 60-second resend stays.
+- **D-33:** the sign-in email sentence is replaced (item 19); universal links and `/auth/callback` stay for Apple and Google.
 
 ## Open decisions
 
@@ -450,3 +502,4 @@ Each has a recommendation; "yes" accepts it.
 10. **D10 Liquid Glass:** use `expo-glass-effect` on iOS 26+ for the tab bar, round buttons, editor toolbar and preview bar, with today's blur below iOS 26 or with Reduce Transparency on. Keep the custom tab bar instead of native tabs.
 11. **D11 Animations:** add `expo-haptics` (free) for light taps on publish, fill and like. Confetti on publishing, a pop when a slot fills, and the Promise stays plain.
 12. **D12 Editor Save:** Save moves to the new top toolbar and the bottom button goes away.
+13. **D13 Email code:** sign-in emails carry only a 6-digit code (no link), valid for 10 minutes, for both the app and the moderation console. `pickld://auth/callback` stays only for Apple and Google.
