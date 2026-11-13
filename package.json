@@ -14,6 +14,12 @@
     "fn:test": "deno task --cwd supabase/functions test"
   },
   "devDependencies": {
+    "@expo-google-fonts/archivo-black": "^0.4.1",
+    "@expo-google-fonts/bungee": "^0.4.1",
+    "@expo-google-fonts/luckiest-guy": "^0.4.1",
+    "@expo-google-fonts/pacifico": "^0.4.1",
+    "@expo-google-fonts/patrick-hand": "^0.4.1",
+    "@expo-google-fonts/racing-sans-one": "^0.4.1",
     "playwright": "^1.65.0",
     "supabase": "^3.1.0"
   }

@@ -18,13 +18,13 @@ select results_eq(
             ('barkada', 'premium', 'me.pickld.pack.barkada', 25), ('work-from-wherever', 'premium', 'me.pickld.pack.work_from_wherever', 24),
             ('pet-parent', 'premium', 'me.pickld.pack.pet_parent', 21),
             ('olivia', 'premium', 'me.pickld.pack.olivia', 16), ('fish-moods', 'premium', 'me.pickld.pack.fish_moods', 16),
-            ('corporate', 'premium', 'me.pickld.pack.corporate', 12), ('gen-z', 'premium', 'me.pickld.pack.gen_z', 12),
-            ('trentahin', 'premium', 'me.pickld.pack.trentahin', 12), ('pride', 'premium', 'me.pickld.pack.pride', 12),
-            ('cyclists', 'premium', 'me.pickld.pack.cyclists', 12) $$,
-  'twelve paid packs (seven added in 0060), each with its store product and stickers');
+            ('corporate', 'premium', 'me.pickld.pack.corporate', 24), ('gen-z', 'premium', 'me.pickld.pack.gen_z', 24),
+            ('trentahin', 'premium', 'me.pickld.pack.trentahin', 24), ('pride', 'premium', 'me.pickld.pack.pride', 24),
+            ('cyclists', 'premium', 'me.pickld.pack.cyclists', 24), ('hashtags', 'premium', 'me.pickld.pack.hashtags', 16) $$,
+  'thirteen paid packs (seven added in 0060, Hashtags in 0065; 0065 also restyles the word packs), each with its store product and stickers');
 select is((select count(*)::int from public.sticker_packs where tier in ('premium', 'seasonal') and (description is null or store_product_id is null)), 0,
           'every paid pack has a description and a store product');
-select is((select count(distinct store_product_id)::int from public.sticker_packs where store_product_id is not null), 12,
+select is((select count(distinct store_product_id)::int from public.sticker_packs where store_product_id is not null), 13,
           'store products are distinct');
 select is((select available_from || ' – ' || available_to from public.sticker_packs where slug = 'christmas-2026'),
           '2026-08-31 16:00:00+00 – 2026-12-31 16:00:00+00', 'the Christmas pack sells Sep 1 – Dec 31, Manila time');

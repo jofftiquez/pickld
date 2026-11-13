@@ -109,6 +109,24 @@ importers:
 
   .:
     devDependencies:
+      '@expo-google-fonts/archivo-black':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/bungee':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/luckiest-guy':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/pacifico':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/patrick-hand':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@expo-google-fonts/racing-sans-one':
+        specifier: ^0.4.1
+        version: 0.4.1
       playwright:
         specifier: ^1.65.0
         version: 1.65.0
@@ -957,8 +975,26 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@expo-google-fonts/archivo-black@0.4.1':
+    resolution: {integrity: sha512-Zi4M9NPyKBllCd8TobvYRRAAm/dbhnrYTywbkfGVOJ7cThEetli+jYBh/deAjzOEqYMTrlSM89uEiherIPjkpQ==}
+
+  '@expo-google-fonts/bungee@0.4.1':
+    resolution: {integrity: sha512-t62Y/bjQUYpaLZ9Wtu2vcmbWjB78gZDKGgaXsrBWI/2Qy1ShlxFycQP8GBUcNx7x3wTy/JJCHrU8YkxywYBKqw==}
+
+  '@expo-google-fonts/luckiest-guy@0.4.1':
+    resolution: {integrity: sha512-Ag8izurRDir0mvOi68wsNoNdw1Oh50m1RJT3U3vVtCNJW0ZNEqOTvd00mjDxGpXMYIU7tvUe0kGk0MawLap+fQ==}
+
+  '@expo-google-fonts/pacifico@0.4.1':
+    resolution: {integrity: sha512-w21ZIeNdwVWPH173HNszX8ML1deogOsHcxhJ0ghpbyBzr7R6PGSJ6yWL5jBixvWV/E34xDk28aNn/cX+gqzf3Q==}
+
+  '@expo-google-fonts/patrick-hand@0.4.1':
+    resolution: {integrity: sha512-Z/gioyynhzrsF6Od8E2QKpQooHnEzUmfen9ohVT6uaeWAmQy3pkl9r7AGdJx9ersDSLUciCNFV442leHIieJqQ==}
+
   '@expo-google-fonts/plus-jakarta-sans@0.4.2':
     resolution: {integrity: sha512-6LYVmVGwjQvH+uzzWlVc9+oMj4lkNQ41aymVDjO+x8aFk8kCye20wOyLomYMZaMezA++Uf1mZRCw3W3Fy/hxEA==}
+
+  '@expo-google-fonts/racing-sans-one@0.4.1':
+    resolution: {integrity: sha512-Y3YLl1aPBGxh5+7hTvo5/6WJEDWL5fyhngL5O2j9INwRiNMijRW3KgJw5OWCzUGz3fGA+gascczB192ffdBSZQ==}
 
   '@expo/cli@58.1.19':
     resolution: {integrity: sha512-zoLhSlFnln0xn1fiW0+kb1J0lNv06HAy+FQ27HHwEEWoAClCE13FnTQBOW5bOVYc3c7hsGM8ypKcZGS7RGqjQA==}
@@ -7250,7 +7286,19 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
+  '@expo-google-fonts/archivo-black@0.4.1': {}
+
+  '@expo-google-fonts/bungee@0.4.1': {}
+
+  '@expo-google-fonts/luckiest-guy@0.4.1': {}
+
+  '@expo-google-fonts/pacifico@0.4.1': {}
+
+  '@expo-google-fonts/patrick-hand@0.4.1': {}
+
   '@expo-google-fonts/plus-jakarta-sans@0.4.2': {}
+
+  '@expo-google-fonts/racing-sans-one@0.4.1': {}
 
   '@expo/cli@58.1.19(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.17)(expo-constants@58.0.15)(expo-font@58.0.11(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(expo-router@58.0.30)(expo@58.0.23)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.13(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
