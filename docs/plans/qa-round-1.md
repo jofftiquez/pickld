@@ -581,7 +581,7 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 
 ## Open decisions
 
-Each has a recommendation; "yes" accepts it.
+Each has a recommendation; "yes" accepts it. **Accepted Nov 13:** the product owner accepted all 16 as recommended; they are recorded as D-48 to D-63 in `docs/decisions.md` (D1 is D-48, D16 is D-63).
 
 1. **D1 Moment visibility:** each moment has its own visibility (Readers, Everyone, Only me), starts at the default visibility, and is visible once live without waiting for Publish jar. Publishing only adds the jar to the Jars timeline.
 2. **D2 Existing moments:** published jars' moments take the jar's visibility, private ones become Only me, and unpublished jars' moments become Only me, so nothing hidden becomes visible.
