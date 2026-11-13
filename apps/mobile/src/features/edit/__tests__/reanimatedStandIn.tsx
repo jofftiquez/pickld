@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 // Minimal Reanimated stand-in for the editor's tests (use with jest.mock): shared values are plain boxes
 // and animated styles are computed on render, so the committed placement can be read off the views.
@@ -7,7 +7,7 @@ import { View } from 'react-native';
 
 type Box<T> = { value: T; get: () => T; set: (value: T) => void };
 
-export default { View, createAnimatedComponent: <T,>(component: T) => component };
+export default { View, ScrollView, createAnimatedComponent: <T,>(component: T) => component };
 
 export function useSharedValue<T>(initial: T): Box<T> {
   const [box] = useState(() => {
@@ -24,6 +24,7 @@ export function useSharedValue<T>(initial: T): Box<T> {
 }
 
 export const useAnimatedStyle = (style: () => object) => style();
+export const useAnimatedScrollHandler = () => () => undefined;
 export const useHandler = () => ({ doDependenciesDiffer: false, context: {} });
 export const useEvent = () => () => undefined;
 export const useComposedEventHandler = () => () => undefined;
