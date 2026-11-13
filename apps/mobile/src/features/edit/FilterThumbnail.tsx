@@ -14,11 +14,21 @@ export type FilterThumbnailProps = {
   matrix: ColorMatrix;
   selected: boolean;
   onPress: () => void;
+  /** The thumbnail square; the editor sizes it so the row ends on half a thumbnail (filterRow.ts). */
+  size?: number;
   testID?: string;
 };
 
 /** A filter choice previewing the real photo, with a green ring when selected (Capture). */
-export function FilterThumbnail({ label, image, matrix, selected, onPress, testID }: FilterThumbnailProps) {
+export function FilterThumbnail({
+  label,
+  image,
+  matrix,
+  selected,
+  onPress,
+  size = sizes.filterThumb,
+  testID,
+}: FilterThumbnailProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -26,12 +36,13 @@ export function FilterThumbnail({ label, image, matrix, selected, onPress, testI
       accessibilityState={{ selected }}
       onPress={onPress}
       testID={testID}
-      style={styles.root}
+      // A fixed width, so the row's layout (filterRow.ts) doesn't depend on the label's length or weight.
+      style={[styles.root, { width: size + 2 * (sizes.filterRing + sizes.filterRingGap) }]}
     >
       {/* The ring is always laid out so choosing a filter doesn't shift the row. */}
       <View style={[styles.ring, selected ? styles.ringSelected : null]}>
-        <View style={styles.thumb}>
-          <FilteredPhoto image={image} matrix={matrix} width={sizes.filterThumb} height={sizes.filterThumb} />
+        <View style={[styles.thumb, { width: size, height: size }]}>
+          <FilteredPhoto image={image} matrix={matrix} width={size} height={size} />
         </View>
       </View>
       <Text style={[textStyle('label', selected ? '700' : '500'), styles.label]}>{label}</Text>
@@ -40,7 +51,7 @@ export function FilterThumbnail({ label, image, matrix, selected, onPress, testI
 }
 
 const styles = StyleSheet.create({
-  // Thumbnail plus ring is 68 px wide, above the 44 px minimum tap size.
+  // Thumbnail plus ring is about 68 px wide, above the 44 px minimum tap size.
   root: { alignItems: 'center', gap: space.xs },
   ring: {
     padding: sizes.filterRingGap,
@@ -50,8 +61,6 @@ const styles = StyleSheet.create({
   },
   ringSelected: { borderColor: colors.brand },
   thumb: {
-    width: sizes.filterThumb,
-    height: sizes.filterThumb,
     borderRadius: radius.filterThumb,
     overflow: 'hidden',
     backgroundColor: colors.editorPhoto,

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useMirrorSelfies } from '@/features/capture/cameraPrefs';
 import { useBlockedAccounts } from '@/features/safety/block';
 import { openLegal } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
@@ -13,7 +14,8 @@ import { SettingsView } from './SettingsView';
 import { signOutHere } from './signOut';
 import { useSettings } from './useSettings';
 
-/** /settings (M4-16): wires Settings to the user's data, the reminder schedule and sign-out. */
+/** /settings (M4-16): wires Settings to the user's data, the reminder schedule, this phone's camera
+ * preference and sign-out. */
 export function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -22,6 +24,7 @@ export function SettingsScreen() {
   const userId = session?.user.id ?? '';
   const { account, reminders, prefs, saveReminder, savePref, saveVisibility } = useSettings(userId);
   const blocked = useBlockedAccounts();
+  const [mirrorSelfies, setMirrorSelfies] = useMirrorSelfies();
   const [saveFailed, setSaveFailed] = useState(false);
   const onSaved = { onError: () => setSaveFailed(true), onSuccess: () => setSaveFailed(false) };
 
@@ -50,6 +53,8 @@ export function SettingsScreen() {
       onEditProfile={() => router.push('/settings/profile')}
       onReminder={(slot, change) => saveReminder.mutate({ slot, ...change }, onSaved)}
       onPref={(key, value) => savePref.mutate({ key, value }, onSaved)}
+      mirrorSelfies={mirrorSelfies}
+      onMirrorSelfies={setMirrorSelfies}
       onVisibility={(v) => saveVisibility.mutate(v, onSaved)}
       onBlocked={() => router.push('/settings/blocked')}
       onMyStickers={() => router.push('/stickers/mine')}

@@ -71,7 +71,19 @@ const overlaySchema = z.discriminatedUnion('type', [
   }),
 ]);
 type Overlay = z.infer<typeof overlaySchema>;
-const filterId = z.enum(['original', 'kalamansi', 'merienda', 'mono', 'dusk']);
+const filterId = z.enum([
+  'original',
+  'kalamansi',
+  'merienda',
+  'mono',
+  'dusk',
+  'kape',
+  'ube',
+  'sampaguita',
+  'gabi',
+  'luma',
+  'ulan',
+]);
 
 export interface FinishedEdits {
   filter: z.infer<typeof filterId>;

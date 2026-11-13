@@ -3,7 +3,7 @@ import 'react-native-gesture-handler/jestSetup';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
 import '../../edit/__tests__/mockReanimated';
 import type { ReactNode } from 'react';
 import { Dimensions, Text, View } from 'react-native';
@@ -29,7 +29,8 @@ const pending: PendingCrop = {
   userId,
   target: { localDate: '2026-11-08', tz: 'Asia/Manila', capturedAt: '2026-11-08T19:30:00+08:00' },
 };
-const frame = () => cropFrame(Dimensions.get('window'));
+// The test renderer has no safe areas, so the screen sizes the frame with zero insets.
+const frame = () => cropFrame(Dimensions.get('window'), { top: 0, bottom: 0 });
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
@@ -100,6 +101,41 @@ describe('Crop screen', () => {
       expect(screen.getByRole('button', { name })).toBeTruthy();
     }
     expect(screen.getByText('Every Pickld moment is 3:4, so your jars always line up.')).toBeTruthy();
+  });
+
+  it('puts Next: edit in the header as a pill and Reset with the tools (D-65); the frame fits the sheet', async () => {
+    await openCrop();
+    const header = screen.getByTestId('crop-header');
+    expect(within(header).getByRole('button', { name: 'Cancel' })).toBeTruthy();
+    expect(within(header).getByRole('button', { name: 'Next: edit' }).props.accessibilityHint).toBe(
+      'Adds the photo to #afternoon and opens the editor',
+    );
+    expect(within(header).queryByRole('button', { name: 'Reset' })).toBeNull();
+    const tools = within(screen.getByTestId('crop-tools')).getAllByRole('button');
+    expect(tools.map((tool) => tool.props.accessibilityLabel)).toEqual(['Rotate 90 degrees', 'Flip', 'Fit', 'Reset']);
+    expect(screen.getByRole('button', { name: 'Reset' }).props.accessibilityHint).toBe(
+      'Undoes every change to the crop',
+    );
+    // The drawn frame is the one Done crops to.
+    const drawn = screen.getByTestId('crop-frame', { includeHiddenElements: true });
+    expect(drawn).toHaveStyle({ width: frame().width, height: frame().height });
+  });
+
+  it('disables the header button while the photo is being added', async () => {
+    let finish: (value: Awaited<ReturnType<typeof saveGalleryPhoto>>) => void = () => {};
+    jest.mocked(saveGalleryPhoto).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    await openCrop();
+    await press('Next: edit');
+    expect(screen.getByRole('button', { name: 'Next: edit' }).props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
+    await act(async () => finish({ id: 9 } as Awaited<ReturnType<typeof saveGalleryPhoto>>));
+    expect(screen).toHavePathname('/edit/9');
   });
 
   it('Done right away queues the centred 3:4 crop with the slot and gallery date, then opens the editor', async () => {

@@ -33,6 +33,14 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock('expo-constants', () => ({ expoConfig: { version: '2.0.0' } }));
+const mockDisk = new Map<string, string>();
+jest.mock('expo-sqlite/kv-store', () => ({
+  __esModule: true,
+  default: {
+    getItem: async (k: string) => mockDisk.get(k) ?? null,
+    setItem: async (k: string, v: string) => void mockDisk.set(k, v),
+  },
+}));
 jest.mock('@/features/safety/block', () => ({ useBlockedAccounts: () => ({ rows: [] }) }));
 jest.mock('@/features/profile/useProfile', () => ({
   profileImages: async () => ({ avatar: null, cover: null }),
@@ -114,6 +122,16 @@ describe('Settings', () => {
     mockDb.writes = [];
     mockDb.failWrites = false;
     useAuthStore.getState().setSession({ user: { id: 'u-1', email: 'dale@pickld.test' } } as Session);
+  });
+
+  it('Mirror selfies is on by default and saved on this phone only, not through the server (D-66)', async () => {
+    mockDisk.clear();
+    await renderScreen();
+    expect(props().mirrorSelfies).toBe(true);
+    await act(async () => props().onMirrorSelfies(false));
+    expect(props().mirrorSelfies).toBe(false);
+    await waitFor(() => expect(mockDisk.get('camera:mirrorSelfies')).toBe('off'));
+    expect(mockDb.writes).toEqual([]);
   });
 
   it('a new reminder time is saved with its switch and reschedules the reminders', async () => {
