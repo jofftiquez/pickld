@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
+import { GlassSurface } from '@/components/GlassSurface';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { VISIBILITY_ICON, VisibilityBadge } from '@/components/VisibilityBadge';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
@@ -236,7 +237,15 @@ export function MomentPreviewView({
           </Text>
         ) : null}
         {actions.length > 0 ? (
-          <View style={[styles.actions, large ? styles.actionsWide : null]} testID="preview-actions">
+          // Liquid Glass on iOS 26 (D-57); below that, or with Reduce Transparency on, the bar stays plain on the sheet.
+          <GlassSurface
+            tone="light"
+            radius={radius.card}
+            tint={colors.tabBarGlass}
+            fallback="none"
+            style={[styles.actions, large ? styles.actionsWide : null]}
+            testID="preview-actions"
+          >
             {actions.map((action) => {
               switch (action) {
                 case 'edit':
@@ -308,7 +317,7 @@ export function MomentPreviewView({
                   );
               }
             })}
-          </View>
+          </GlassSurface>
         ) : null}
       </View>
     </View>

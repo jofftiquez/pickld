@@ -1,10 +1,11 @@
-import { BlurView } from 'expo-blur';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useLiquidGlass } from '@/lib/useLiquidGlass';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
+import { GlassSurface } from './GlassSurface';
 import type { IconName } from './icons';
 import { TabBarButton } from './TabBarButton';
 
@@ -26,14 +27,18 @@ function isMainTab(name: string): name is MainTab {
 
 /**
  * Custom `tabBar` for the Expo Router `Tabs` in `app/(tabs)/_layout.tsx` (design: Main).
- * Floats over the screen, inset from the edges and above the home indicator.
+ * Floats over the screen, inset from the edges and above the home indicator. Liquid Glass on iOS 26, the light
+ * frosted blur below that or with Reduce Transparency on (D-57).
  */
 export function FloatingTabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const { t } = useTranslation();
+  const glass = useLiquidGlass();
   return (
     <View
       style={[
         styles.outer,
+        // The blur look's milky fill sits here so the shadow has a shape; glass carries it as its tint.
+        glass ? null : styles.fill,
         {
           left: space.md + insets.left,
           right: space.md + insets.right,
@@ -42,8 +47,8 @@ export function FloatingTabBar({ state, emitter, navigateToTab, insets }: Bottom
       ]}
       testID="floating-tab-bar"
     >
-      <View style={styles.clip}>
-        <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} testID="tab-bar-blur" />
+      {/* Separate from the outer view so the clip doesn't cut off the iOS shadow. */}
+      <GlassSurface tone="light" radius={radius.tabBar} tint={colors.tabBarGlass} blurIntensity={40} testID="tab-bar">
         <View accessibilityRole="tablist" accessibilityLabel={t('tabs.label')} style={styles.row}>
           {state.routes.map((route, index) => {
             if (!isMainTab(route.name)) return null;
@@ -66,7 +71,7 @@ export function FloatingTabBar({ state, emitter, navigateToTab, insets }: Bottom
             );
           })}
         </View>
-      </View>
+      </GlassSurface>
     </View>
   );
 }
@@ -75,12 +80,10 @@ const styles = StyleSheet.create({
   outer: {
     position: 'absolute',
     borderRadius: radius.tabBar,
-    backgroundColor: colors.tabBarGlass,
     borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: colors.tabBarBorder,
     ...shadow.floating,
   },
-  // Separate from `outer` so the clip doesn't cut off the iOS shadow.
-  clip: { borderRadius: radius.tabBar, overflow: 'hidden' },
+  fill: { backgroundColor: colors.tabBarGlass },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: sizes.tabBar },
 });

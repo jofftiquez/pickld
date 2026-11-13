@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
@@ -6,6 +5,7 @@ import { hitSlopFor } from '@/lib/hitSlop';
 import { colors, radius, shadow, sizes } from '@/theme/tokens';
 
 import { DISABLED_OPACITY, PRESSED_OPACITY } from './BaseButton';
+import { GlassSurface } from './GlassSurface';
 import { Icon } from './Icon';
 import type { IconName } from './icons';
 
@@ -14,7 +14,10 @@ export type RoundIconButtonProps = {
   /** Required: icon-only buttons need a spoken name (e.g. "Back", "More options"). Already translated. */
   accessibilityLabel: string;
   onPress: () => void;
-  /** `light` on app backgrounds; `glass` (frosted, white icon) over photos and the camera. */
+  /**
+   * `light` on app backgrounds; `glass` (white icon) over photos and the camera: Liquid Glass on iOS 26, a
+   * dark frosted blur below that or with Reduce Transparency on (D-57).
+   */
   variant?: 'light' | 'glass';
   disabled?: boolean;
   accessibilityHint?: string;
@@ -51,7 +54,17 @@ export function RoundIconButton({
         disabled ? { opacity: DISABLED_OPACITY } : null,
       ]}
     >
-      {glass ? <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} testID="glass-blur" /> : null}
+      {glass ? (
+        <GlassSurface
+          tone="dark"
+          radius={radius.pill}
+          tint={colors.glass}
+          fallbackColor={colors.glass}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+          testID="glass"
+        />
+      ) : null}
       <Icon name={icon} color={glass ? 'surface' : 'ink'} size={22} strokeWidth={2} />
     </Pressable>
   );
@@ -66,5 +79,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   light: { backgroundColor: colors.surface, ...shadow.card },
-  glass: { backgroundColor: colors.glass, overflow: 'hidden' },
+  // The surface (and its color) is the GlassSurface behind the icon.
+  glass: { overflow: 'hidden' },
 });
