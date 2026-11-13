@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { buildTodayGrid, type GridTile } from '@/features/jar/todayGrid';
+import { useToastStore } from '@/lib/toast';
 
 import { MomentOptions, type MomentOptionsProps } from '../MomentOptions';
 import { deleteMoment, MomentOptionError, moveMoment, setMomentVisibility } from '../momentActions';
@@ -109,6 +110,7 @@ const row = (name: string) => screen.getByRole('button', { name });
 beforeEach(() => {
   jest.clearAllMocks();
   usePendingCrop.getState().setPending(null);
+  useToastStore.setState({ current: null });
 });
 
 describe('Moment options', () => {
@@ -149,6 +151,7 @@ describe('Moment options', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['jar', USER] });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['queue', USER] });
+    expect(useToastStore.getState().current?.key).toBe('momentDeleted');
   });
 
   it('Visibility opens Readers, Everyone and Only me; a choice applies at once, a failure keeps the old one', async () => {
@@ -194,10 +197,12 @@ describe('Moment options', () => {
       'That moment was just filled. Pick another one.',
     );
     expect(onClose).not.toHaveBeenCalled();
+    expect(useToastStore.getState().current).toBeNull();
 
     await fireEvent.press(row('Move to #evening'));
     expect(moveMoment).toHaveBeenLastCalledWith(mockClient, server.target, 'evening');
     expect(onClose).toHaveBeenCalledTimes(1);
+    expect(useToastStore.getState().current).toMatchObject({ key: 'momentMoved', params: { slot: '#evening' } });
   });
 
   it('Move with no empty slot says there is nowhere to go, and Back returns to the options', async () => {

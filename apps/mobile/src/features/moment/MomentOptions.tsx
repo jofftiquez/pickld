@@ -9,6 +9,7 @@ import type { GridTile } from '@/features/jar/todayGrid';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
@@ -125,6 +126,7 @@ export function MomentOptions({ visible, selection, userId, freeSlots, tz, onClo
           if (!ok) return;
           refreshToday();
           onClose();
+          showToast('momentMoved', { slot: t(`slots.${slot}`) });
         });
       }}
       onDelete={() => {
@@ -132,6 +134,7 @@ export function MomentOptions({ visible, selection, userId, freeSlots, tz, onClo
           if (!ok) return;
           refreshToday();
           onClose();
+          showToast('momentDeleted');
         });
       }}
       onClose={onClose}

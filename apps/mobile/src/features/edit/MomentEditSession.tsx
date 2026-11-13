@@ -5,6 +5,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { saveMomentEdits } from '@/features/moment/momentActions';
 import type { EditableMoment } from '@/features/moment/useEditableMoment';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 
 import { EditSession } from './EditSession';
 
@@ -38,6 +39,7 @@ export function MomentEditSession({ moment, userId, focusCaption, insets, onLeav
       onSave={async (input) => {
         await saveMomentEdits(getSupabase(), { kind: 'server', momentId: moment.id, jarId: moment.jarId }, input);
         void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+        showToast('changesSaved');
       }}
     />
   );

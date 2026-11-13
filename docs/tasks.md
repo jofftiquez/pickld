@@ -9,7 +9,7 @@ Legend: **[A]** app · **[B]** backend & safety · **[W]** web · **[D]** design
 ## Phase 1 · Foundations (weeks 1–2)
 
 - [ ] **T-001 [A] Expo app scaffold.** Expo Router, TypeScript strict, NativeWind wired to `src/theme/tokens.ts`, Plus Jakarta Sans loaded, Sentry + PostHog initialized, i18n with `en.json`. _Done:_ app boots to a placeholder Today on iOS and Android.
-- [ ] **T-002 [A] Component kit + gallery screen.** PrimaryButton, SecondaryButton, DangerButton, PillButton, RoundIconButton (light/glass), Chip, Card, ListRow, Toggle, SegmentedControl, TextField, Avatar, JarGraphic (0–8 layers, lid color, animated), MomentTile (filled/empty/now), PhotoTile, BottomSheet, Dialog, FloatingTabBar. _Done:_ `/dev/gallery` shows all states; each matches Hi-fi A. _FR:_ NFR-A11Y-01..03.
+- [ ] **T-002 [A] Component kit + gallery screen.** PrimaryButton, SecondaryButton, DangerButton, PillButton, RoundIconButton (light/glass), Chip, Card, ListRow, Toggle, SegmentedControl, TextField, Avatar, JarGraphic (0–8 layers, lid color, animated), MomentTile (filled/empty/now), PhotoTile, BottomSheet, Dialog, FloatingTabBar, Toast (D-63). _Done:_ `/dev/gallery` shows all states; each matches Hi-fi A. _FR:_ NFR-A11Y-01..03.
 - [ ] **T-003 [B] Supabase projects.** dev, staging, prod in Singapore; apply `0001_init.sql`; generate types. _Done:_ migrations run cleanly on all three.
 - [ ] **T-004 [B] RLS test suite.** pgTAP tests for jars, moments, comments, reactions, follows, blocks as owner, reader, outsider, blocked user, moderator. _Done:_ CI fails on any visibility leak. _FR:_ FR-PUB-02, FR-PUB-05, FR-PUB-06, NFR-SEC-01.
 - [ ] **T-005 [B] Auth.** Apple, Google, email magic link; deep link back into app. _FR:_ FR-ACC-01, FR-ACC-02.

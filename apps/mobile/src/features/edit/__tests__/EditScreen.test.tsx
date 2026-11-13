@@ -17,6 +17,8 @@ import { saveMomentEdits } from '@/features/moment/momentActions';
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
 import { editableMomentQueryKey } from '@/features/moment/useEditableMoment';
 import { useAuthStore } from '@/lib/authStore';
+import { setDeviceOnline } from '@/lib/connectivity';
+import { useToastStore } from '@/lib/toast';
 import type { Session } from '@supabase/supabase-js';
 
 // Editor (FR-CAP-04, FR-CAP-08, FR-CAP-09): loads the queued photo, draws it with the selected filter's
@@ -336,6 +338,27 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     expect(saveEdits).toHaveBeenCalledWith(7, expect.objectContaining({ caption: null, visibility: 'readers' }));
   });
 
+  it('confirms a new photo with a toast (D-63): added to its slot, or saved to upload later when offline', async () => {
+    useToastStore.setState({ current: null });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(useToastStore.getState().current).toMatchObject({ key: 'momentAdded', params: { slot: '#afternoon' } });
+
+    rows.set(8, { ...item, id: 8 });
+    setDeviceOnline(false);
+    try {
+      await openEditor('/edit/8');
+      await screen.findByTestId('editor-screen');
+      await fireEvent.press(saveButton());
+      await act(async () => {});
+      expect(useToastStore.getState().current?.key).toBe('momentSavedOffline');
+    } finally {
+      setDeviceOnline(true);
+    }
+  });
+
   it('a failed save stays in the editor with the edits intact and says so', async () => {
     jest.mocked(saveEdits).mockRejectedValueOnce(new Error('disk full'));
     await openEditor('/edit/7');
@@ -617,6 +640,7 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
       { caption: 'Green shirt day', visibility: 'readers', edits: { v: 1, filter: 'mono', overlays: [] } },
     );
     expect(screen).toHavePathname('/today');
+    expect(useToastStore.getState().current?.key).toBe('changesSaved');
     // A queued photo's hold and upload are not involved.
     expect(releaseEditing).not.toHaveBeenCalled();
   });

@@ -318,6 +318,7 @@ All Hi-fi A screens were checked for text contrast, text size, touch target size
 - **Don’t rely on color alone:** private moments show a lock icon, failed uploads show a warning icon and text, and the calendar shows counts, not just shades.
 - **Photos:** moment photos get alt text from the hashtag and caption; decorative images are hidden from screen readers.
 - **Haptics:** a light tap on capture and on a full jar, never as the only feedback.
+- **Success toasts:** read aloud when they appear (`announceForAccessibility`), fade instead of sliding with Reduce Motion, and can be dismissed by the screen reader's Close action.
 
 ## Design system
 
@@ -373,7 +374,9 @@ Users pick a lid color in onboarding (Pick your jar) and can change it later. Th
 
 ### Core components
 
-Floating tab bar · round icon button (light and glass) · primary, secondary and danger buttons · pill button · moment tile (filled, empty, Now) · photo tile with fade and label · jar graphic · jar card · card · list row · toggle · segmented control · text field · chip · avatar · bottom sheet · dialog.
+Floating tab bar · round icon button (light and glass) · primary, secondary and danger buttons · pill button · moment tile (filled, empty, Now) · photo tile with fade and label · jar graphic · jar card · card · list row · toggle · segmented control · text field · chip · avatar · bottom sheet · dialog · toast.
+
+**Toast** (D-63): the one success message in the app. A short dark pill under the status bar with a check and one line, for a moment added, saved, moved or deleted, a jar published, a link copied, an image saved, a profile change, reading or blocking someone, and a sticker pack added. It leaves after about 2.5 seconds or with a swipe up, a new one replaces it, the screen reader reads it aloud, and with Reduce Motion it fades instead of sliding. It never shows a photo or caption. Errors keep their inline messages and alerts.
 
 ## Sticker sets
 

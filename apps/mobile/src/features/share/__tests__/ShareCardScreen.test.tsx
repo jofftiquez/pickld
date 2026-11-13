@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react-native';
 
 import { track } from '@/lib/analytics';
+import { useToastStore } from '@/lib/toast';
 
 import { renderCardImage, saveImage, shareImage } from '../shareActions';
 import { ShareCardScreen } from '../ShareCardScreen';
@@ -77,6 +78,20 @@ describe('Share jar card analytics', () => {
     await act(async () => props().onAction('copy'));
     await act(async () => props().onAction('more'));
     expect(track).not.toHaveBeenCalled();
+  });
+
+  it('Save image and Copy link confirm with a toast; a refused Photos permission says so on the page', async () => {
+    useToastStore.setState({ current: null });
+    await render(<ShareCardScreen jarId="jar-10" />);
+    jest.mocked(saveImage).mockResolvedValueOnce('denied');
+    await act(async () => props().onAction('save'));
+    expect(useToastStore.getState().current).toBeNull();
+    expect(props().notice).toEqual({ text: 'Pickld can’t save to Photos. Turn it on in Settings.', error: true });
+    await act(async () => props().onAction('save'));
+    expect(useToastStore.getState().current?.key).toBe('imageSaved');
+    expect(props().notice).toBeNull();
+    await act(async () => props().onAction('copy'));
+    expect(useToastStore.getState().current?.key).toBe('linkCopied');
   });
 });
 

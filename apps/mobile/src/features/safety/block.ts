@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 
 export const blockedAccount = z.object({
   id: z.string(),
@@ -55,10 +56,12 @@ export function useBlock() {
     );
   const block = useMutation({
     mutationFn: (blockedId: string) => blockUser(viewerId ?? '', blockedId),
+    onSuccess: () => showToast('blocked'),
     onSettled: refetch,
   });
   const unblock = useMutation({
     mutationFn: (blockedId: string) => unblockUser(viewerId ?? '', blockedId),
+    onSuccess: () => showToast('unblocked'),
     onSettled: refetch,
   });
   return {

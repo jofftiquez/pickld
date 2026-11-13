@@ -5,9 +5,11 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
+import { useIsOffline } from '@/lib/connectivity';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
 import { releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import { showToast } from '@/lib/toast';
 import type { Visibility } from '@/lib/visibility';
 
 import { EditSession } from './EditSession';
@@ -34,6 +36,7 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave }: Queue
   const [ownerDefault] = useState(
     () => queryClient.getQueryData<Me>(todayQueryKeys.me(item.userId))?.defaultVisibility ?? null,
   );
+  const offline = useIsOffline();
   // A photo just taken is held for the editor; one that is already waiting is being edited again.
   const [isNew] = useState(item.editingSince !== null);
   // A photo just taken becomes a moment when this editor is left, saved or not: its analytics go once, then.
@@ -75,6 +78,9 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave }: Queue
         // Reopening the editor starts from what was saved, not a cached copy from before.
         queryClient.setQueryData(queueItemQueryKey(item.id), saved);
         void requestUploads();
+        showToast(isNew ? (offline ? 'momentSavedOffline' : 'momentAdded') : 'changesSaved', {
+          slot: t(`slots.${item.slot}`),
+        });
       }}
     />
   );

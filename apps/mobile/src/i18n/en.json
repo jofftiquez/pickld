@@ -962,6 +962,23 @@
     "failed": "Couldn’t load blocked accounts.",
     "retry": "Try again"
   },
+  "toast": {
+    "momentAdded": "Moment added to {{slot}}",
+    "momentSavedOffline": "Saved to {{slot}}. It uploads when you’re online.",
+    "changesSaved": "Changes saved",
+    "momentMoved": "Moment moved to {{slot}}",
+    "momentDeleted": "Moment deleted",
+    "jarPublished": "Jar published",
+    "linkCopied": "Link copied",
+    "imageSaved": "Saved to Photos",
+    "profileUpdated": "Profile updated",
+    "photoUpdated": "Photo updated",
+    "following": "You’re reading @{{username}}",
+    "unfollowed": "You stopped reading @{{username}}",
+    "blocked": "Blocked",
+    "unblocked": "Unblocked",
+    "packAdded": "Sticker pack added"
+  },
   "welcome": {
     "title": "Eight moments.\nOne real day.",
     "body": "You deserve to be you. The easiest way to tell your story, one real day at a time.",
@@ -1202,8 +1219,7 @@
       "inContacts": "In your contacts",
       "none": "None of your contacts are on Pickld yet. Invite them with your link.",
       "continue": "Continue",
-      "skip": "Skip for now",
-      "copied": "Link copied"
+      "skip": "Skip for now"
     },
     "promise": {
       "logo": "Pickld",
@@ -1267,10 +1283,8 @@
     "includeCaptionsBody": "Shows your last caption on the card",
     "includeCaptionsBodyMoment": "Shows this moment’s caption on the image",
     "save": "Save image",
-    "saved": "Saved to Photos",
     "saveDenied": "Pickld can’t save to Photos. Turn it on in Settings.",
     "copy": "Copy link",
-    "copied": "Link copied",
     "message": "Message",
     "more": "More",
     "shareTo": "Share to…",

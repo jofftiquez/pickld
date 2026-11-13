@@ -9,6 +9,7 @@ import { useJarPage } from '@/features/jar/useJarPage';
 import { track } from '@/lib/analytics';
 import { formatDate } from '@/lib/format';
 import { jarUrl } from '@/lib/links';
+import { showToast } from '@/lib/toast';
 import { textStyle } from '@/theme/text';
 import { colors, slots, space } from '@/theme/tokens';
 
@@ -75,11 +76,13 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
           const uri = await renderCardImage(cardRef, fileName);
           if ((await saveImage(uri)) === 'denied') return { text: t('share.saveDenied'), error: true };
           track('share_card_exported', { destination: 'save' });
-          return { text: t('share.saved'), error: false };
+          showToast('imageSaved');
+          return null;
         }
         case 'copy':
           await copyLink(jarUrl(data.jar.id));
-          return { text: t('share.copied'), error: false };
+          showToast('linkCopied');
+          return null;
         case 'message':
           await messageLink(linkText);
           return null;
