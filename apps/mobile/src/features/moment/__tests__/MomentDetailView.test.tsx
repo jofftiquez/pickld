@@ -104,13 +104,15 @@ describe('MomentDetailView', () => {
     await setup({ momentId: 'private', data: { ...jar, viewerId: 'dale-id' } });
     expect(screen.getByTestId('moment-private')).toBeTruthy();
     expect(screen.getByTestId('moment-position')).toHaveTextContent('Moment 3 of 4 · swipe for the next');
+    // The owner sees it, but can't share it (rule 9).
+    expect(screen.queryByTestId('moment-share')).toBeNull();
   });
 
-  it('closes and shares', async () => {
+  it('closes and shares the moment on screen', async () => {
     const { onClose, onShare } = await setup();
     await fireEvent.press(screen.getByRole('button', { name: 'Share' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
-    expect(onShare).toHaveBeenCalledTimes(1);
+    expect(onShare.mock.calls).toEqual([['ootd']]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

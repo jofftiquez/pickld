@@ -2,8 +2,9 @@ import { useLocalSearchParams } from 'expo-router';
 
 import { ShareCardScreen } from '@/features/share/ShareCardScreen';
 
-// /share/[jarId] (M4-11; FR-SOC-10): the Share jar card. The id is validated with Zod in useJarPage.
+// /share/[jarId]?moment=<id> (M4-11, T-509; FR-SOC-10): share the jar, or one of its moments. The jar id is
+// validated with Zod in useJarPage; the moment id only selects a moment the viewer can already see.
 export default function ShareRoute() {
-  const { jarId } = useLocalSearchParams<{ jarId: string }>();
-  return <ShareCardScreen jarId={jarId} />;
+  const { jarId, moment } = useLocalSearchParams<{ jarId: string; moment?: string }>();
+  return <ShareCardScreen jarId={jarId} momentId={typeof moment === 'string' ? moment : undefined} />;
 }

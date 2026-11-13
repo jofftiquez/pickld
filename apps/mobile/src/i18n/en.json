@@ -438,6 +438,7 @@
       "position": "Moment {{position}} of {{count}}",
       "positionSwipe": "Moment {{position}} of {{count}} · swipe for the next",
       "share": "Share",
+      "shareHint": "Opens Share for this moment",
       "notAvailable": "It may be private, or its owner hasn’t shared it with you."
     }
   },
@@ -1225,13 +1226,29 @@
   },
   "share": {
     "title": "Share jar",
+    "titleMoment": "Share moment",
     "back": "Back",
     "card": "Share card: {{title}}, {{date}}, {{count}} of {{max}} moments",
+    "cardMoment": "Share card: {{name}}’s {{slot}}, {{date}}",
+    "format": {
+      "label": "Image size",
+      "story": "Story 9:16",
+      "feed": "Post 4:5"
+    },
+    "background": {
+      "label": "Background",
+      "blur": "Blurred photo",
+      "lid": "Lid color",
+      "paper": "Paper",
+      "ink": "Night",
+      "print": "Print"
+    },
     "subtitle": "{{date}} · {{count}} of {{max}}",
     "caption": "“{{caption}}”",
     "logo": "Pickld",
     "includeCaptions": "Include captions",
     "includeCaptionsBody": "Shows your last caption on the card",
+    "includeCaptionsBodyMoment": "Shows this moment’s caption on the image",
     "save": "Save image",
     "saved": "Saved to Photos",
     "saveDenied": "Pickld can’t save to Photos. Turn it on in Settings.",
@@ -1242,6 +1259,7 @@
     "shareTo": "Share to…",
     "failed": "Couldn’t share the card. Try again.",
     "unavailable": "This jar isn’t available to share.",
+    "unavailableMoment": "This moment isn’t available to share.",
     "empty": "Nothing on this jar can be shared yet.",
     "linkMessage": "{{title}} on Pickld: {{url}}"
   },
