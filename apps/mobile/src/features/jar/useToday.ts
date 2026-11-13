@@ -207,6 +207,8 @@ export function useToday(now: Date) {
     jar: jar.data,
     me: me.data,
     queue: queue.data ?? [],
+    /** The queue has been read once (the tiles' pops wait for it, D-77). */
+    queueLoaded: queue.data !== undefined,
     refetch: () => Promise.all([jar.refetch(), queue.refetch()]),
   };
 }

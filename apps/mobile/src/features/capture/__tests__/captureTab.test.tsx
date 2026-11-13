@@ -15,6 +15,10 @@ import Index from '../../../../app/index';
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
 jest.mock('@/features/onboarding/FirstMomentTip', () => ({ FirstMomentTip: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
+// The tiles' pop and the publish burst (D-58) use Reanimated, which the router test harness can't load; they
+// have their own tests.
+jest.mock('@/features/jar/TilePop', () => ({ TilePop: ({ children }: { children: React.ReactNode }) => children }));
+jest.mock('@/features/jar/PublishBurst', () => ({ PublishBurst: () => null }));
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 // Today pulls in the upload runner, which loads Sentry (ESM) through monitoring.
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));

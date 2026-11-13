@@ -95,6 +95,25 @@ describe('JarGraphic', () => {
     expect(withTiming).not.toHaveBeenCalledWith(1, expect.objectContaining({ duration: motion.jarLayerSettle }));
   });
 
+  it('closes the lid when the day is published (D-58)', async () => {
+    const view = await render(<JarGraphic count={3} />);
+    expect(withTiming).not.toHaveBeenCalled();
+    await view.rerender(<JarGraphic count={3} closeLid />);
+    expect(withTiming).toHaveBeenCalledWith(1, expect.objectContaining({ duration: motion.celebrationPop }));
+    // It starts above the jar and drops shut.
+    expect(screen.getByTestId('jar-lid').props.y).toBeLessThan(2);
+  });
+
+  it('fades the lid in place with Reduce Motion', async () => {
+    jest.mocked(useReducedMotion).mockReturnValue(true);
+    const view = await render(<JarGraphic count={3} />);
+    await view.rerender(<JarGraphic count={3} closeLid />);
+    expect(withTiming).toHaveBeenCalledWith(1, { duration: motion.base });
+    expect(withTiming).not.toHaveBeenCalledWith(1, expect.objectContaining({ duration: motion.celebrationPop }));
+    // It never moves.
+    expect(screen.getByTestId('jar-lid').props.y).toBe(2);
+  });
+
   it('does not animate when a layer is removed', async () => {
     const view = await render(<JarGraphic count={3} />);
     await view.rerender(<JarGraphic count={2} />);

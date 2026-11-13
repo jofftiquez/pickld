@@ -104,5 +104,7 @@ export function useDayJar(localDate: string | null) {
     /** Undefined while loading (or offline with nothing cached). */
     day: day.data,
     queue: queue.data ?? [],
+    /** The queue has been read once (the tiles' pops wait for it, D-77). */
+    queueLoaded: queue.data !== undefined,
   };
 }

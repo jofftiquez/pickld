@@ -21,6 +21,9 @@ const BODY = { x: 5, y: 15, width: 38, height: 42, rx: 10 };
 const LAYER = { x: 6, width: 36, height: 5.3, bottomY: 51, step: 5 };
 // The newest layer drops from this far above its resting place.
 const SETTLE_DROP = 24;
+// Publishing (D-77): the lid starts this far above the jar and drops shut.
+const LID = { x: 10, y: 2, width: 28, height: 8, rx: 3 };
+const LID_LIFT = 10;
 
 export const MAX_LAYERS = slots.length;
 
@@ -39,6 +42,8 @@ export type JarGraphicProps = {
   onDark?: boolean;
   /** Hide from screen readers when the count is already read next to it. */
   decorative?: boolean;
+  /** The day was just published (D-58): the lid drops shut, or fades in with Reduce Motion. Plays when it turns true. */
+  closeLid?: boolean;
   testID?: string;
 };
 
@@ -49,6 +54,7 @@ export function JarGraphic({
   size = sizes.jarCardGraphic,
   onDark = false,
   decorative = false,
+  closeLid = false,
   testID,
 }: JarGraphicProps) {
   const { t } = useTranslation();
@@ -75,6 +81,20 @@ export function JarGraphic({
     opacity: reduceMotion ? settle.value : 1,
   }));
 
+  // 1 means the lid is shut. It plays when closeLid turns true, including a graphic that mounts with it.
+  const lid = useSharedValue(closeLid ? 0 : 1);
+  useEffect(() => {
+    if (!closeLid) return;
+    lid.value = 0;
+    lid.value = reduceMotion
+      ? withTiming(1, { duration: motion.base })
+      : withTiming(1, { duration: motion.celebrationPop, easing: Easing.out(Easing.cubic) });
+  }, [closeLid, lid, reduceMotion]);
+  const lidProps = useAnimatedProps(() => ({
+    y: reduceMotion ? LID.y : LID.y - LID_LIFT * (1 - lid.value),
+    opacity: reduceMotion ? lid.value : 1,
+  }));
+
   const stroke = onDark ? jar.strokeOnDark : colors.ink;
   const layerColor = (i: number) => (i % 2 === 0 ? colors.brand : colors.brandLayer);
 
@@ -97,7 +117,15 @@ export function JarGraphic({
         <Rect {...BODY} fill={onDark ? jar.glassOnDark : jar.glass} />
         <G clipPath={`url(#${clipId})`}>
           {Array.from({ length: Math.max(0, layers - 1) }, (_, i) => (
-            <Rect key={i} testID="jar-layer" x={LAYER.x} y={layerY(i)} width={LAYER.width} height={LAYER.height} fill={layerColor(i)} />
+            <Rect
+              key={i}
+              testID="jar-layer"
+              x={LAYER.x}
+              y={layerY(i)}
+              width={LAYER.width}
+              height={LAYER.height}
+              fill={layerColor(i)}
+            />
           ))}
           {layers > 0 ? (
             <AnimatedRect
@@ -112,7 +140,15 @@ export function JarGraphic({
         </G>
         <Rect {...BODY} fill="none" stroke={stroke} strokeWidth={2} />
         <Rect x={13} y={10} width={22} height={5} rx={1.5} fill="none" stroke={stroke} strokeWidth={2} />
-        <Rect testID="jar-lid" x={10} y={2} width={28} height={8} rx={3} fill={lidColor} />
+        <AnimatedRect
+          testID="jar-lid"
+          x={LID.x}
+          width={LID.width}
+          height={LID.height}
+          rx={LID.rx}
+          fill={lidColor}
+          animatedProps={lidProps}
+        />
         <Path d="M11 24v18" stroke={jar.highlight} strokeWidth={2.5} strokeLinecap="round" />
       </Svg>
     </View>

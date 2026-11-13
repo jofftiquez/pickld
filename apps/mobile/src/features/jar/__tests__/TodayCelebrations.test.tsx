@@ -1,10 +1,12 @@
 import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, waitFor } from '@testing-library/react-native';
+import { act, render, screen, waitFor } from '@testing-library/react-native';
+import * as Haptics from 'expo-haptics';
 
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { reportNetworkResult } from '@/lib/connectivity';
+import { markJarPublished, PUBLISH_CELEBRATION_MS } from '@/features/publish/publishCelebration';
 
 import TodayScreen from '../../../../app/(tabs)/today';
 
@@ -76,8 +78,6 @@ jest.mock('@/lib/queue/store', () => ({
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => {}) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
-// The Replace prompt (kit Dialog, M2-22) reads Reduce Motion from Reanimated, which can't load in Jest.
-jest.mock('react-native-reanimated', () => ({ __esModule: true, useReducedMotion: () => false }));
 jest.mock('expo-localization', () => ({
   ...jest.requireActual<object>('expo-localization'),
   getCalendars: () => [{ timeZone: 'Asia/Manila' }],
@@ -176,6 +176,7 @@ beforeEach(() => {
   mockDisk.set(SEEN_KEY, JSON.stringify({ jars: [], milestones: [] }));
   mockPush.mockClear();
   jest.mocked(track).mockClear();
+  jest.mocked(Haptics.impactAsync).mockClear();
   mockFocus.focused = true;
   reportNetworkResult(null);
   useAuthStore.setState({ status: 'signedIn', session: { user: { id: USER } } as Session, error: null });
@@ -272,5 +273,80 @@ describe('Today celebrations', () => {
     expect(mockPush).not.toHaveBeenCalled();
     await act(async () => mockFocus.set(true));
     await calls(1);
+  });
+});
+
+// D-58: the publish moment and a slot filling, on the real Today route.
+describe('Today animations', () => {
+  const popping = () => screen.queryAllByTestId(/^tile-\w+-pop$/).map((el) => el.props.testID as string);
+  const burst = () => screen.queryByTestId('publish-burst');
+
+  it('celebrates a publish once, when Today is back in front, and not on plain visits', async () => {
+    mockBackend.moments = moments(3);
+    await launch();
+    expect(burst()).toBeNull();
+    await refocus(); // a plain visit
+    expect(burst()).toBeNull();
+
+    // Publish opens over Today and comes back after publishing this jar.
+    await act(async () => mockFocus.set(false));
+    await act(async () => markJarPublished('jar-10'));
+    expect(burst()).toBeNull();
+    await act(async () => mockFocus.set(true));
+    await settle();
+    expect(burst()).toBeTruthy();
+
+    // It ends on its own, and the next visit plays nothing.
+    // (setTimeout is real here; the fake clock only fixes the date.)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, PUBLISH_CELEBRATION_MS + 100));
+    });
+    expect(burst()).toBeNull();
+    await refocus();
+    expect(burst()).toBeNull();
+  });
+
+  it('does not celebrate a different jar’s publish (a past day’s page plays that one)', async () => {
+    mockBackend.moments = moments(3);
+    await launch();
+    await act(async () => markJarPublished('jar-9'));
+    await refocus();
+    expect(burst()).toBeNull();
+  });
+
+  it('pops only the newly filled tile, with one light haptic', async () => {
+    mockBackend.moments = moments(3);
+    await launch();
+    await refocus();
+    expect(popping()).toEqual([]);
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
+
+    // The camera covers Today while the 4th moment (#ootd) is taken.
+    await act(async () => mockFocus.set(false));
+    mockBackend.moments = moments(4);
+    await act(async () => mockFocus.set(true));
+    await settle();
+    expect(popping()).toEqual(['tile-ootd-pop']);
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
+
+    // Coming back again with nothing new: no new pop or haptic.
+    await refocus();
+    expect(popping()).toEqual(['tile-ootd-pop']);
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('the 8th moment opens the Full jar celebration instead of popping its tile', async () => {
+    mockBackend.moments = moments(7);
+    await launch();
+    await act(async () => mockFocus.set(false));
+    mockBackend.moments = moments(8);
+    await act(async () => mockFocus.set(true));
+    await settle();
+    await calls(1);
+    expect(mockPush).toHaveBeenLastCalledWith(expect.objectContaining({ pathname: '/full-jar' }));
+    expect(popping()).toEqual([]);
+    // The fill still gets its light haptic.
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
   });
 });

@@ -107,7 +107,7 @@ The daily loop is Today → Capture (or Crop for gallery photos) → edit tools 
 The home screen and the first tab. The header shows the date, a greeting by time of day, a Stickers shortcut, a My days shortcut and the user’s avatar.
 
 - **Jar card (dark):** a jar graphic filled to the number of moments, “5 of 8 moments in today’s jar · 312 readers”, and the **Publish** button.
-- **Moment grid (2 columns, 8 tiles):** filled tiles show the photo, capture time and hashtag; empty tiles are dashed with a “+”; the current time slot is a dark “Now · Tap to capture” tile.
+- **Moment grid (2 columns, 8 tiles):** filled tiles show the photo, capture time and hashtag; empty tiles are dashed with a “+”; the current time slot is a dark “Now · Tap to capture” tile. A tile that fills pops in as the jar's fill rises (D-58).
 - Floating tab bar: Today · Capture · Jars · My days.
 
 Goes to: tile → Capture (that slot) or Moment detail if filled · Publish → Publish review · avatar → My profile · stickers icon → Stickers · calendar icon → My days.
@@ -144,7 +144,7 @@ Confirms what will be shared before a jar goes out.
 - Grid of all 8 slots in 3:4, with empty ones dashed and private ones marked with a lock.
 - **Who can see this jar:** Readers (default), Everyone, or Only me (“Keep this jar just for you”).
 - Note: private moments aren’t shared; missing moments can still be added today.
-- **Publish jar** → Today (published state) · **Not yet** → Today.
+- **Publish jar** → Today (published state), with a short confetti burst and the jar's lid closing (D-58) · **Not yet** → Today.
 
 ## Jars and social
 
@@ -321,10 +321,10 @@ All Hi-fi A screens were checked for text contrast, text size, touch target size
 
 - **Screen readers:** label every moment by slot, time and state (“#ootd, 7:30 AM, private”); announce the jar as “5 of 8 moments”; group each photo with its caption.
 - **Larger text:** support the system text size (Dynamic Type on iOS, font scale on Android) up to at least 200%; let cards grow rather than truncate.
-- **Reduce motion:** when the system setting is on, skip confetti and replace the jar-filling animation with a simple fade.
+- **Reduce motion:** when the system setting is on, skip confetti and replace the jar-filling animation with a simple fade; tile, heart and lid pops fade in place too (D-77).
 - **Don’t rely on color alone:** private moments show a lock icon, failed uploads show a warning icon and text, and the calendar shows counts, not just shades.
 - **Photos:** moment photos get alt text from the hashtag and caption; decorative images are hidden from screen readers.
-- **Haptics:** a light tap on capture and on a full jar, never as the only feedback.
+- **Haptics:** a light tap when a slot fills (the 8th too) and on a like, and a success tap on publish (D-58), never as the only feedback.
 - **Success toasts:** read aloud when they appear (`announceForAccessibility`), fade instead of sliding with Reduce Motion, and can be dismissed by the screen reader's Close action.
 
 ## Design system
