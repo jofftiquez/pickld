@@ -436,7 +436,8 @@ export const stickerTool = {
   cell: '#f7f8f5', // behind each sticker in the grid
   cellRadius: 16,
   cellHeight: 50,
-  cellArtHeight: 30, // sticker art inside a cell; contain keeps it whole
+  cellArtHeight: 30, // word-sticker art inside a cell; contain keeps it whole
+  cellPictureHeight: 40, // near-square picture stickers (T-506) get a taller box so they read at the same weight
   cellColumns: 3,
   packTabHeight: 36,
   // Unselected pack tab fills with ink text (all above 12:1); selected tabs are ink with white text.

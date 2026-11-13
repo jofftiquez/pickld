@@ -1315,6 +1315,7 @@ export type Database = {
           label: string;
           milestone_key: string | null;
           pack_id: string;
+          retired_at: string | null;
           slot_hint: Database['public']['Enums']['slot'] | null;
           sort: number;
           stamp: Database['public']['Enums']['sticker_stamp'] | null;
@@ -1328,6 +1329,7 @@ export type Database = {
           label: string;
           milestone_key?: string | null;
           pack_id: string;
+          retired_at?: string | null;
           slot_hint?: Database['public']['Enums']['slot'] | null;
           sort?: number;
           stamp?: Database['public']['Enums']['sticker_stamp'] | null;
@@ -1339,6 +1341,7 @@ export type Database = {
           label?: string;
           milestone_key?: string | null;
           pack_id?: string;
+          retired_at?: string | null;
           slot_hint?: Database['public']['Enums']['slot'] | null;
           sort?: number;
           stamp?: Database['public']['Enums']['sticker_stamp'] | null;

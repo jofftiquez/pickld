@@ -22,7 +22,9 @@ async function fetchMyPacks(userId: string): Promise<MyPack[]> {
       .select('id, slug, name, sort, tier, store_product_id, available_from, available_to, pack_usable'),
     supabase
       .from('stickers')
-      .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable'),
+      .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable')
+      // Retired stickers (0032) aren't offered; moments that use them still draw their bundled art.
+      .is('retired_at', null),
     supabase.from('owned_packs').select('pack_id, source, acquired_at').eq('user_id', userId),
     supabase.from('user_pack_prefs').select('pack_id, sort, hidden').eq('user_id', userId),
   ]);

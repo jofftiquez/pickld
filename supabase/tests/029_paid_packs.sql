@@ -14,9 +14,9 @@ grant execute on all functions in schema pg_temp to anon, authenticated, service
 select results_eq(
   $$ select p.slug, p.tier::text, p.store_product_id, count(s.id)::int from public.sticker_packs p join public.stickers s on s.pack_id = p.id
      where p.tier in ('premium', 'seasonal') group by p.slug, p.tier, p.store_product_id, p.sort order by p.sort $$,
-  $$ values ('christmas-2026', 'seasonal', 'me.pickld.pack.christmas_2026', 12), ('pinoy-life', 'premium', 'me.pickld.pack.pinoy_life', 18),
-            ('barkada', 'premium', 'me.pickld.pack.barkada', 16), ('work-from-wherever', 'premium', 'me.pickld.pack.work_from_wherever', 16),
-            ('pet-parent', 'premium', 'me.pickld.pack.pet_parent', 14) $$,
+  $$ values ('christmas-2026', 'seasonal', 'me.pickld.pack.christmas_2026', 18), ('pinoy-life', 'premium', 'me.pickld.pack.pinoy_life', 26),
+            ('barkada', 'premium', 'me.pickld.pack.barkada', 25), ('work-from-wherever', 'premium', 'me.pickld.pack.work_from_wherever', 24),
+            ('pet-parent', 'premium', 'me.pickld.pack.pet_parent', 21) $$,
   'five paid packs, each with its store product and stickers');
 select is((select count(*)::int from public.sticker_packs where tier in ('premium', 'seasonal') and (description is null or store_product_id is null)), 0,
           'every paid pack has a description and a store product');

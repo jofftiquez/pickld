@@ -14,16 +14,29 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012 and 0029 seed, and nothing else', () => {
+  it('has a PNG for every sticker 0012, 0029 and 0032 seed, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
-    const paid = [
-      ...readFileSync(join(__dirname, '../../../../../../supabase/migrations/0029_paid_packs.sql'), 'utf8').matchAll(
-        /'(stickers\/[a-z0-9-]+\/[a-z0-9-]+\.png)'/g,
-      ),
-    ].map((m) => m[1]);
+    const assetsIn = (migration: string, from = 'insert into') =>
+      [
+        ...readFileSync(join(__dirname, '../../../../../../supabase/migrations', migration), 'utf8')
+          .split(from)
+          .slice(1)
+          .join(from)
+          .matchAll(/'(stickers\/[a-z0-9-]+\/[a-z0-9-]+\.png)'/g),
+      ].map((m) => m[1] ?? '');
+    const paid = assetsIn('0029_paid_packs.sql');
     expect(paid).toHaveLength(76);
-    expect(Object.keys(stickerArt).sort()).toEqual([...seededStickers.map((s) => s.asset), ...paid].sort());
-    for (const art of Object.values(stickerArt)) expect(art.width).toBeGreaterThan(art.height);
+    // 0032 retires word stickers by asset path first; its insert adds the picture stickers.
+    const pictures = assetsIn('0032_picture_stickers.sql');
+    expect(pictures).toHaveLength(64);
+    const words = [...seededStickers.map((s) => s.asset), ...paid];
+    expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures].sort());
+    // Word stickers are wide labels; picture stickers fit a near-square box.
+    for (const asset of words) expect(stickerArt[asset]!.width).toBeGreaterThan(stickerArt[asset]!.height);
+    for (const asset of pictures) {
+      const art = stickerArt[asset]!;
+      expect(Math.max(art.width, art.height)).toBeLessThanOrEqual(360);
+    }
   });
 
   it('looks art up by asset_path only', () => {
