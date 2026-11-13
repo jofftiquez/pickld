@@ -16,6 +16,8 @@ import type { Visibility } from '@/features/publish/publishJar';
 import { DayHeader } from './DayHeader';
 import { JarCard } from './JarCard';
 import { OfflineBanner } from './OfflineBanner';
+import { PublishBurst } from './PublishBurst';
+import { TilePop } from './TilePop';
 import { TodayHeader } from './TodayHeader';
 import { greetingFor, momentCount, type GridTile } from './todayGrid';
 
@@ -64,6 +66,10 @@ export type TodayViewProps = {
    * date and Back instead of the greeting, nothing is the Now tile, and the page sits above the tab bar.
    */
   day?: { date: string; onBack: () => void } | null;
+  /** Slots that just filled: their tiles pop in (D-58; `useFillPops`). */
+  poppingSlots?: ReadonlySet<Slot>;
+  /** The jar was just published (D-58; `usePublishCelebration`): confetti and the lid closing on the card. */
+  celebratePublish?: boolean;
 };
 
 /** Today (design: Main; first day: EmptyToday), or a past day's page (Day). Presentational; app/(tabs)/today.tsx
@@ -93,6 +99,8 @@ export function TodayView({
   published = null,
   onOpenVisibility,
   day = null,
+  poppingSlots,
+  celebratePublish = false,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -104,107 +112,113 @@ export function TodayView({
   const missing = tiles.some((tile) => tile.state === 'empty');
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + sizes.headerTop, paddingBottom: bottomPadding },
-      ]}
-      testID={day ? 'day-scroll' : 'today-scroll'}
-    >
-      {day ? (
-        <DayHeader date={day.date} onBack={day.onBack} />
-      ) : (
-        <TodayHeader
-          date={formatShortDate(now, tz)}
-          greeting={greetingFor(currentSlot(now, tz))}
-          displayName={displayName}
-          avatarUrl={avatarUrl}
-          onOpenMyDays={onOpenMyDays}
-          onOpenStickers={onOpenStickers}
-          onOpenProfile={onOpenProfile}
-          zoneTag={zoneTag}
-        />
-      )}
-      {suspension ? <View style={styles.banner}>{suspension}</View> : null}
-      {zoneBanner ? <View style={suspension ? styles.cardUnderBanner : styles.banner}>{zoneBanner}</View> : null}
-      {offlineCount !== null ? (
-        <View style={suspension || zoneBanner ? styles.cardUnderBanner : styles.banner}>
-          <OfflineBanner count={offlineCount} />
-        </View>
-      ) : null}
-      <View style={suspension || offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.card}>
-        <JarCard
-          count={count}
-          readerCount={readerCount}
-          lidColor={lidColor}
-          firstDay={!day && hasAnyJar === false && count === 0}
-          pastDay={day !== null}
-          onPublish={onPublish}
-          published={
-            published
-              ? {
-                  visibility: published.visibility,
-                  likeCount: published.likeCount,
-                  time: formatTime(new Date(published.publishedAt), tz),
-                }
-              : null
-          }
-          onOpenVisibility={onOpenVisibility}
-        />
-      </View>
-      <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
-        {rows.map((row) => (
-          <View key={row[0]?.slot} style={styles.gridRow}>
-            {row.map((tile) => {
-              const capturable = tile.state === 'empty' || tile.state === 'now';
-              const { queueId, momentId } = tile;
-              const openable = tile.state === 'checking' || tile.state === 'removed';
-              return (
-                <View key={tile.slot} style={styles.cell}>
-                  <MomentTile
-                    slot={tile.slot}
-                    state={tile.state}
-                    uri={tile.uri}
-                    photoView={
-                      tile.uri !== null && hasVisibleEdits(tile.edits) ? (
-                        <MomentCover
-                          uri={tile.uri}
-                          edits={tile.edits}
-                          stamp={tile.stamp}
-                          accessible={false}
-                          testID={`tile-${tile.slot}-moment`}
-                        />
-                      ) : undefined
-                    }
-                    time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
-                    visibility={tile.visibility}
-                    addedLater={tile.addedLater}
-                    onPress={
-                      capturable
-                        ? () => onCapture(tile.slot)
-                        : openable && momentId !== null && onOpenMoment
-                          ? () => onOpenMoment(momentId)
-                          : opensPreview(tile) && onOpenPreview
-                            ? () => onOpenPreview(tile)
-                            : undefined
-                    }
-                    accessibilityHint={opensPreview(tile) && onOpenPreview ? t('preview.openHint') : undefined}
-                    onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}
-                    testID={`tile-${tile.slot}`}
-                  />
-                </View>
-              );
-            })}
+    <View style={styles.screen}>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + sizes.headerTop, paddingBottom: bottomPadding },
+        ]}
+        testID={day ? 'day-scroll' : 'today-scroll'}
+      >
+        {day ? (
+          <DayHeader date={day.date} onBack={day.onBack} />
+        ) : (
+          <TodayHeader
+            date={formatShortDate(now, tz)}
+            greeting={greetingFor(currentSlot(now, tz))}
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+            onOpenMyDays={onOpenMyDays}
+            onOpenStickers={onOpenStickers}
+            onOpenProfile={onOpenProfile}
+            zoneTag={zoneTag}
+          />
+        )}
+        {suspension ? <View style={styles.banner}>{suspension}</View> : null}
+        {zoneBanner ? <View style={suspension ? styles.cardUnderBanner : styles.banner}>{zoneBanner}</View> : null}
+        {offlineCount !== null ? (
+          <View style={suspension || zoneBanner ? styles.cardUnderBanner : styles.banner}>
+            <OfflineBanner count={offlineCount} />
           </View>
-        ))}
-      </View>
-      {day && missing ? (
-        <Text style={[textStyle('bodySmall'), styles.note]} testID="day-added-later-note">
-          {t('day.addedLaterNote')}
-        </Text>
-      ) : null}
-    </ScrollView>
+        ) : null}
+        <View style={suspension || offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.card}>
+          <JarCard
+            count={count}
+            readerCount={readerCount}
+            lidColor={lidColor}
+            firstDay={!day && hasAnyJar === false && count === 0}
+            pastDay={day !== null}
+            onPublish={onPublish}
+            published={
+              published
+                ? {
+                    visibility: published.visibility,
+                    likeCount: published.likeCount,
+                    time: formatTime(new Date(published.publishedAt), tz),
+                  }
+                : null
+            }
+            onOpenVisibility={onOpenVisibility}
+            closeLid={celebratePublish}
+          />
+        </View>
+        <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
+          {rows.map((row) => (
+            <View key={row[0]?.slot} style={styles.gridRow}>
+              {row.map((tile) => {
+                const capturable = tile.state === 'empty' || tile.state === 'now';
+                const { queueId, momentId } = tile;
+                const openable = tile.state === 'checking' || tile.state === 'removed';
+                return (
+                  <View key={tile.slot} style={styles.cell}>
+                    <TilePop play={poppingSlots?.has(tile.slot) ?? false} slot={tile.slot}>
+                      <MomentTile
+                        slot={tile.slot}
+                        state={tile.state}
+                        uri={tile.uri}
+                        photoView={
+                          tile.uri !== null && hasVisibleEdits(tile.edits) ? (
+                            <MomentCover
+                              uri={tile.uri}
+                              edits={tile.edits}
+                              stamp={tile.stamp}
+                              accessible={false}
+                              testID={`tile-${tile.slot}-moment`}
+                            />
+                          ) : undefined
+                        }
+                        time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
+                        visibility={tile.visibility}
+                        addedLater={tile.addedLater}
+                        onPress={
+                          capturable
+                            ? () => onCapture(tile.slot)
+                            : openable && momentId !== null && onOpenMoment
+                              ? () => onOpenMoment(momentId)
+                              : opensPreview(tile) && onOpenPreview
+                                ? () => onOpenPreview(tile)
+                                : undefined
+                        }
+                        accessibilityHint={opensPreview(tile) && onOpenPreview ? t('preview.openHint') : undefined}
+                        onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}
+                        testID={`tile-${tile.slot}`}
+                      />
+                    </TilePop>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+        {day && missing ? (
+          <Text style={[textStyle('bodySmall'), styles.note]} testID="day-added-later-note">
+            {t('day.addedLaterNote')}
+          </Text>
+        ) : null}
+      </ScrollView>
+      {celebratePublish ? <PublishBurst /> : null}
+    </View>
   );
 }
 

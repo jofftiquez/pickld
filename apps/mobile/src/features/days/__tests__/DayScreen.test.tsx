@@ -6,12 +6,21 @@ import { Pressable, Text } from 'react-native';
 
 import DayScreen from '../../../../app/day/[date]';
 import type { ServerMoment } from '@/features/jar/todayGrid';
+import { markJarPublished } from '@/features/publish/publishCelebration';
 
 import type { DayJar } from '../useDayJar';
 
 // The day page (D-55, FR-DAY-02): only past dates have one; it is Today's grid and jar card for that date.
 // Empty tiles open the camera in Fill mode, filled ones the moment preview for that day, and Publish that
 // day's review. Data hooks are mocked; TodayView, the camera, the preview and Publish have their own tests.
+// The tiles' pop and the publish burst (D-58) use Reanimated, which the router test harness can't load; they
+// have their own tests.
+jest.mock('@/features/jar/TilePop', () => ({ TilePop: ({ children }: { children: React.ReactNode }) => children }));
+jest.mock('@/features/jar/PublishBurst', () => {
+  const { createElement } = jest.requireActual<typeof import('react')>('react');
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  return { PublishBurst: () => createElement(View, { testID: 'publish-burst' }) };
+});
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
 jest.mock('@/features/jar/retryUpload', () => ({ retryUpload: jest.fn() }));
@@ -167,5 +176,16 @@ describe('Day page route', () => {
     await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(screen).toHavePathname('/my-days');
+  });
+
+  it('publishing that day’s jar comes back to a celebration on the day page, once (D-58)', async () => {
+    await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
+    expect(screen.queryByTestId('publish-burst')).toBeNull();
+    await fireEvent.press(screen.getByTestId('today-publish'));
+    expect(screen).toHavePathname('/publish');
+    await act(async () => markJarPublished('jar-8'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Close publish' }));
+    expect(screen).toHavePathname('/day/2026-11-08');
+    expect(screen.getByTestId('publish-burst')).toBeTruthy();
   });
 });

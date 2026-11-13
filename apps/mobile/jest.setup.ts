@@ -53,3 +53,15 @@ jest.mock('expo-glass-effect', () => {
     isGlassEffectAPIAvailable: jest.fn(() => false),
   };
 });
+
+// Haptics (D-58) need the phone's haptic engine. Tests read the calls off these mocks.
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(async () => {}),
+  notificationAsync: jest.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+}));
+
+// Reanimated's native worklets can't load in Jest. Files without their own mock get a stand-in where
+// animations land at once (the screens' pops and the publish burst, D-58).
+jest.mock('react-native-reanimated', () => jest.requireActual('@/features/edit/__tests__/reanimatedStandIn'));

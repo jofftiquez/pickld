@@ -8,9 +8,11 @@ import { useDayJar } from '@/features/days/useDayJar';
 import { openTodayJar } from '@/features/jar/rollover';
 import { buildTodayGrid } from '@/features/jar/todayGrid';
 import { phoneTimeZone, useToday } from '@/features/jar/useToday';
+import { markJarPublished } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { PublishReviewView } from '@/features/publish/PublishReviewView';
 import { track } from '@/lib/analytics';
+import { successHaptic } from '@/lib/haptics';
 import { currentSlot } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
@@ -19,7 +21,7 @@ import { showToast } from '@/lib/toast';
 // the profile's default visibility (Readers unless changed). Publishing needs a connection; on failure the
 // screen stays with a message. Today opens it from the jar card and the Full jar celebration.
 // `?date=YYYY-MM-DD` (a past day) reviews that day's jar instead: the day page opens it (D-55, FR-DAY-02).
-// Either way it goes back to where it was opened from.
+// Either way it goes back to where it was opened from, which then celebrates once (D-58, D-77).
 export default function PublishScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -49,6 +51,8 @@ export default function PublishScreen() {
       publishJar(getSupabase(), input.jarId, input.visibility),
     onSuccess: (_publishedAt, input) => {
       track('jar_published', { visibility: input.visibility });
+      successHaptic();
+      markJarPublished(input.jarId);
       if (userId !== null) {
         void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
         void queryClient.invalidateQueries({ queryKey: ['day', userId] });

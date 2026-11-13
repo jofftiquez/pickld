@@ -6,25 +6,6 @@ import { sizes, space } from '@/theme/tokens';
 import { buildTodayGrid, type ServerMoment } from '../todayGrid';
 import { TodayView, type TodayViewProps } from '../TodayView';
 
-// Reanimated needs native worklets; JarGraphic only uses it to animate a new layer.
-jest.mock('react-native-reanimated', () => {
-  const { createElement } = jest.requireActual<typeof import('react')>('react');
-  return {
-    __esModule: true,
-    default: {
-      createAnimatedComponent:
-        (C: React.ComponentType<Record<string, unknown>>) =>
-        ({ animatedProps, ...rest }: { animatedProps: object }) =>
-          createElement(C, { ...rest, ...animatedProps }),
-    },
-    Easing: { out: () => 'easeOut', cubic: 'cubic' },
-    useReducedMotion: () => false,
-    useSharedValue: (value: number) => ({ value }),
-    useAnimatedProps: (fn: () => object) => fn(),
-    withTiming: (to: number) => to,
-  };
-});
-
 const TZ = 'Asia/Manila';
 const NOW = new Date('2026-11-10T08:15:00+08:00'); // Tue, Nov 10, morning
 

@@ -7,10 +7,12 @@ import { parseFillDateParam } from '@/features/capture/fillTarget';
 import { useDayJar } from '@/features/days/useDayJar';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TodayView } from '@/features/jar/TodayView';
+import { useFillPops } from '@/features/jar/useFillPops';
 import { retryUpload } from '@/features/jar/retryUpload';
 import { buildTodayGrid, offlineBannerCount } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
+import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
 import { localDateIn } from '@/lib/jars';
@@ -29,7 +31,7 @@ export default function DayScreen() {
   const [now] = useState(() => new Date());
   const phoneTz = phoneTimeZone();
   const date = parseFillDateParam(params.date, localDateIn(now, phoneTz));
-  const { userId, day, queue } = useDayJar(date);
+  const { userId, day, queue, queueLoaded } = useDayJar(date);
   // The profile (readers, lid color, suspension) from Today's cached query.
   const { me } = useToday(now);
   const offline = useIsOffline();
@@ -62,11 +64,18 @@ export default function DayScreen() {
     },
   });
 
+  const jar = day?.jar ?? null;
+  const tiles =
+    date === null
+      ? []
+      : buildTodayGrid({ localDate: date, moments: day?.moments ?? [], queue, nowSlot: null, jarTz: jar?.tz });
+  // A tile filled from here pops in with a light haptic, and Publish comes back to confetti (D-58).
+  const poppingSlots = useFillPops(tiles, date !== null && day !== undefined && queueLoaded ? date : null);
+  const celebratePublish = usePublishCelebration(jar?.id ?? null);
+
   if (date === null) return <Redirect href="/today" />;
 
-  const jar = day?.jar ?? null;
   const tz = jar?.tz ?? phoneTz;
-  const tiles = buildTodayGrid({ localDate: date, moments: day?.moments ?? [], queue, nowSlot: null, jarTz: jar?.tz });
   const published =
     jar?.publishedAt && jar.visibility
       ? { visibility: jar.visibility, publishedAt: jar.publishedAt, likeCount: jar.likeCount ?? 0 }
@@ -100,6 +109,8 @@ export default function DayScreen() {
           setVisibilityOpen(true);
         }}
         day={{ date, onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-days')) }}
+        poppingSlots={poppingSlots}
+        celebratePublish={celebratePublish}
       />
       {published && jar ? (
         <JarVisibilitySheet

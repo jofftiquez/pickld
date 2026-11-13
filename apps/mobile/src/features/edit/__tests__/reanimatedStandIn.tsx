@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createElement, useState, type ComponentType } from 'react';
 import { ScrollView, View } from 'react-native';
 
 // Minimal Reanimated stand-in for the editor's tests (use with jest.mock): shared values are plain boxes
@@ -7,7 +7,14 @@ import { ScrollView, View } from 'react-native';
 
 type Box<T> = { value: T; get: () => T; set: (value: T) => void };
 
-export default { View, ScrollView, createAnimatedComponent: <T,>(component: T) => component };
+// Animated components take their animated props as plain props, so a drawing's committed values can be read.
+function createAnimatedComponent<P extends object>(component: ComponentType<P>) {
+  return function AnimatedComponent({ animatedProps, ...rest }: P & { animatedProps?: object }) {
+    return createElement(component, { ...rest, ...animatedProps } as P);
+  };
+}
+
+export default { View, ScrollView, createAnimatedComponent };
 
 export function useSharedValue<T>(initial: T): Box<T> {
   const [box] = useState(() => {
@@ -29,3 +36,13 @@ export const useHandler = () => ({ doDependenciesDiffer: false, context: {} });
 export const useEvent = () => () => undefined;
 export const useComposedEventHandler = () => () => undefined;
 export const isSharedValue = () => false;
+
+// Enough for the screens' small animations (JarGraphic, pops, the publish burst; D-58): animations land at
+// once and Reduce Motion is off. jest.setup.ts uses this stand-in for every test file without its own mock.
+export const useReducedMotion = () => false;
+export const useAnimatedProps = (props: () => object) => props();
+export const withTiming = <T,>(to: T) => to;
+export const withSpring = <T,>(to: T) => to;
+export const withDelay = <T,>(_ms: number, value: T) => value;
+export const Easing = { out: (easing: unknown) => easing, cubic: 'cubic' };
+export const ReduceMotion = { System: 'system', Always: 'always', Never: 'never' };

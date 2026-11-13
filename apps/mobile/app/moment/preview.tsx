@@ -2,6 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
@@ -22,9 +24,12 @@ import { currentSlot } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
+import { usePop } from '@/lib/usePop';
 import { slots } from '@/theme/tokens';
 
 const slotParam = z.enum(slots);
+// The preview grows in from this share of its size as it fades in (D-77).
+const PREVIEW_ENTER_FROM = 0.96;
 
 // /moment/preview?slot=<slot>: the moment preview (QA item 3, D-54; FR-JAR-02), opened from a filled tile on
 // Today. It reads Today's own data (the open jar, the offline queue) so photos still on the phone can be
@@ -129,6 +134,10 @@ export default function MomentPreviewScreen() {
     showToast('momentDeleted');
   };
 
+  // Opening from a tile: the screen fades in (the stack's animation) and grows slightly; with Reduce Motion only
+  // the fade (D-58, D-77).
+  const enter = usePop(true, PREVIEW_ENTER_FROM, true);
+
   const editHref = (item: PreviewItem) =>
     item.target.kind === 'queued' ? `/edit/${item.target.queueId}` : `/edit/${item.target.momentId}`;
 
@@ -136,29 +145,31 @@ export default function MomentPreviewScreen() {
     <>
       {/* Light status bar text over the dark screen. */}
       <Stack.Screen options={{ statusBarStyle: 'light' }} />
-      <MomentPreviewView
-        items={items}
-        startSlot={startSlot}
-        tz={shown?.jar?.tz ?? tz}
-        insets={insets}
-        busy={busy}
-        error={error}
-        onClose={close}
-        onEdit={(item) => router.push(editHref(item))}
-        onShare={(item) => {
-          if (item.target.kind === 'server')
-            router.push({
-              pathname: '/share/[jarId]',
-              params: { jarId: item.target.jarId, moment: item.target.momentId },
-            });
-        }}
-        onVisibility={(item) => openOptions(item, 'visibility')}
-        onMore={(item) => openOptions(item, 'more')}
-        onDelete={(item) => {
-          setError(null);
-          setConfirmDelete(item);
-        }}
-      />
+      <Animated.View style={[styles.enter, enter]}>
+        <MomentPreviewView
+          items={items}
+          startSlot={startSlot}
+          tz={shown?.jar?.tz ?? tz}
+          insets={insets}
+          busy={busy}
+          error={error}
+          onClose={close}
+          onEdit={(item) => router.push(editHref(item))}
+          onShare={(item) => {
+            if (item.target.kind === 'server')
+              router.push({
+                pathname: '/share/[jarId]',
+                params: { jarId: item.target.jarId, moment: item.target.momentId },
+              });
+          }}
+          onVisibility={(item) => openOptions(item, 'visibility')}
+          onMore={(item) => openOptions(item, 'more')}
+          onDelete={(item) => {
+            setError(null);
+            setConfirmDelete(item);
+          }}
+        />
+      </Animated.View>
       {options && userId !== null ? (
         <MomentOptions
           key={options.n}
@@ -191,3 +202,7 @@ export default function MomentPreviewScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  enter: { flex: 1 },
+});
