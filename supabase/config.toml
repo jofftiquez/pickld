@@ -249,16 +249,56 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# Pickld's branded auth emails. The same files go to every environment (`supabase config push` for cloud
+# projects); a local change shows after the local stack restarts. Sign-in, sign-up and password reset
+# still use Supabase's default link emails until the app takes codes (QA round 1, piece 12).
+[auth.email.template.email_change]
+subject = "Confirm your new Pickld email"
+content_path = "./supabase/templates/email_change.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./supabase/templates/password_changed_notification.html"
+[auth.email.template.reauthentication]
+subject = "{{ .Token }} is your Pickld code"
+content_path = "./supabase/templates/reauthentication.html"
+
+[auth.email.template.invite]
+subject = "You’re invited to Pickld"
+content_path = "./supabase/templates/invite.html"
+
+# Security notices after an account change. Branded but off until we decide to send them.
+[auth.email.notification.password_changed]
+enabled = false
+subject = "Your Pickld password changed"
+content_path = "./supabase/templates/password_changed_notification.html"
+
+[auth.email.notification.email_changed]
+enabled = false
+subject = "Your Pickld email changed"
+content_path = "./supabase/templates/email_changed_notification.html"
+
+[auth.email.notification.phone_changed]
+enabled = false
+subject = "Your Pickld phone number changed"
+content_path = "./supabase/templates/phone_changed_notification.html"
+
+[auth.email.notification.identity_linked]
+enabled = false
+subject = "New sign-in method on Pickld"
+content_path = "./supabase/templates/identity_linked_notification.html"
+
+[auth.email.notification.identity_unlinked]
+enabled = false
+subject = "Sign-in method removed from Pickld"
+content_path = "./supabase/templates/identity_unlinked_notification.html"
+
+[auth.email.notification.mfa_factor_enrolled]
+enabled = false
+subject = "Extra sign-in check added on Pickld"
+content_path = "./supabase/templates/mfa_factor_enrolled_notification.html"
+
+[auth.email.notification.mfa_factor_unenrolled]
+enabled = false
+subject = "Extra sign-in check removed on Pickld"
+content_path = "./supabase/templates/mfa_factor_unenrolled_notification.html"
 
 [auth.sms]
 # Allow/disallow the phone provider. When false, users can't sign up or sign in with SMS.
