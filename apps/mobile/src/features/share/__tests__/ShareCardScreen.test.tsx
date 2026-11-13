@@ -1,8 +1,8 @@
-import { act, render } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 
 import { track } from '@/lib/analytics';
 
-import { saveImage, shareImage } from '../shareActions';
+import { renderCardImage, saveImage, shareImage } from '../shareActions';
 import { ShareCardScreen } from '../ShareCardScreen';
 import type { ShareCardViewProps } from '../ShareCardView';
 
@@ -24,13 +24,20 @@ jest.mock('../shareActions', () => ({
   messageLink: jest.fn(async () => undefined),
   shareLink: jest.fn(async () => undefined),
 }));
-jest.mock('../shareCard', () => ({ buildShareCard: () => ({}) }));
+jest.mock('../shareCard', () => ({
+  buildShareCard: () => ({ moments: [] }),
+  onCard: (m: { status: string; is_private: boolean }) => m.status === 'live' && !m.is_private,
+}));
 jest.mock('@/features/jar/shareJar', () => ({ jarTitle: () => 'Tuesday' }));
 jest.mock('@/features/jar/useJarPage', () => ({
   useJarPage: () => ({
     data: {
       jar: { id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila' },
       author: { display_name: 'Dale Cruz' },
+      moments: [
+        { id: 'ootd', slot: 'ootd', status: 'live', is_private: false },
+        { id: 'selfie', slot: 'selfie', status: 'live', is_private: true },
+      ],
     },
   }),
 }));
@@ -70,5 +77,26 @@ describe('Share jar card analytics', () => {
     await act(async () => props().onAction('copy'));
     await act(async () => props().onAction('more'));
     expect(track).not.toHaveBeenCalled();
+  });
+});
+
+describe('Share a moment (T-509)', () => {
+  beforeEach(() => {
+    mockView.props = null;
+  });
+
+  it('shares the chosen moment, saved under its own file name', async () => {
+    await render(<ShareCardScreen jarId="jar-10" momentId="ootd" />);
+    expect(props().heading).toBe('Share moment');
+    expect(props().story.moment?.id).toBe('ootd');
+    expect(props().story.background).toBe('blur');
+    await act(async () => props().onAction('save'));
+    expect(jest.mocked(renderCardImage).mock.calls[0]?.[1]).toBe('pickld-moment-ootd');
+  });
+
+  it('never shows a private moment, even to its owner', async () => {
+    await render(<ShareCardScreen jarId="jar-10" momentId="selfie" />);
+    expect(mockView.props).toBeNull();
+    expect(screen.getByText('This moment isn’t available to share.')).toBeTruthy();
   });
 });

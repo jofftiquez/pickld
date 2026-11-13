@@ -10,12 +10,12 @@ import { Linking, Platform, Share, type View } from 'react-native';
 
 export type CardRef = RefObject<ComponentRef<typeof View> | null>;
 
-/** Renders the card view to a PNG in the cache; resolves with its file URI. */
-export async function renderCardImage(view: CardRef, jarId: string): Promise<string> {
+/** Renders the card view to `<name>.png` in the cache; resolves with its file URI. */
+export async function renderCardImage(view: CardRef, name: string): Promise<string> {
   // Skia's type predates React Native's element refs; it reads the native view behind any host ref.
   const image = await makeImageFromView(view as unknown as Parameters<typeof makeImageFromView>[0]);
   if (!image) throw new Error('card render failed');
-  const file = new File(Paths.cache, `pickld-jar-${jarId}.png`);
+  const file = new File(Paths.cache, `${name}.png`);
   if (file.exists) file.delete();
   file.create();
   file.write(image.encodeToBytes());

@@ -21,6 +21,8 @@ export type JarRow = z.infer<typeof jarRow>;
 export const authorRow = z.object({
   username: z.string(),
   display_name: z.string(),
+  /** For the Share background in the lid color; feed rows don't select it. */
+  lid_color: z.string().nullish(),
 });
 export type AuthorRow = z.infer<typeof authorRow>;
 
