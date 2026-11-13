@@ -49,11 +49,6 @@ appId: me.pickld.app
 - eraseText: 160
 - inputText: Coffee first
 - hideKeyboard
-- scrollUntilVisible:
-    element:
-      id: editor-save
-    direction: DOWN
-    timeout: 10000
 - tapOn:
     id: editor-save
 - extendedWaitUntil:
@@ -72,11 +67,6 @@ appId: me.pickld.app
 
 # Edit stickers and filters: Mono, Done; the tile draws the filter.
 - tapOn: Mono
-- scrollUntilVisible:
-    element:
-      id: editor-save
-    direction: DOWN
-    timeout: 10000
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

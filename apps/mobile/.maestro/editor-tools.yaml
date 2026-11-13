@@ -76,11 +76,6 @@ appId: me.pickld.app
     timeout: 3000
 - takeScreenshot: Text-ios
 
-- scrollUntilVisible:
-    element:
-      id: editor-save
-    direction: DOWN
-    timeout: 10000
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

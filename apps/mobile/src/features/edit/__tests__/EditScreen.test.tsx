@@ -391,6 +391,33 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     expect(trackMomentAdded).toHaveBeenCalledTimes(1);
   });
 
+  it('Save sits in the fixed top toolbar (FR-CAP-09), not below the panel, and is disabled while saving', async () => {
+    let finish = () => {};
+    jest.mocked(saveEdits).mockImplementationOnce(
+      (id, input) =>
+        new Promise<QueueItem>((resolve) => {
+          finish = () => {
+            const saved = { ...(rows.get(id) ?? item), ...input };
+            rows.set(id, saved);
+            resolve(saved);
+          };
+        }),
+    );
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    expect(screen.getAllByTestId('editor-save')).toHaveLength(1);
+    expect(within(screen.getByTestId('editor-toolbar')).getByTestId('editor-save')).toBe(saveButton());
+    expect(within(screen.getByTestId('editor-screen')).queryByTestId('editor-save')).toBeNull();
+
+    await fireEvent.press(saveButton());
+    expect(saveButton().props.accessibilityState).toMatchObject({ disabled: true });
+    await fireEvent.press(saveButton());
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+
+    await act(async () => finish());
+    expect(screen).toHavePathname('/today');
+  });
+
   it('reads old or broken stored edits as Original without crashing', async () => {
     rows.set(7, { ...item, edits: { filter: 'warm', overlays: 'x' } });
     await openEditor('/edit/7');
