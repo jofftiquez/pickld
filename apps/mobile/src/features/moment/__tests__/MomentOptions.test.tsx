@@ -133,6 +133,23 @@ describe('Moment options', () => {
     ]);
   });
 
+  it('as the preview’s More menu, leaves out what the preview’s bar already has (QA item 3, D-54)', async () => {
+    await renderOptions({ mode: 'more' });
+    const labels = screen
+      .getAllByRole(/button|switch/)
+      .map((b) => b.props.accessibilityLabel as string)
+      .filter((l) => l !== 'Close');
+    expect(labels).toEqual(['Re-crop', 'Move to another moment', 'Delete moment', 'Cancel']);
+  });
+
+  it('as the preview’s Visibility action, opens on the Visibility page with no Back', async () => {
+    await renderOptions({ mode: 'visibility' });
+    expect(screen.getByRole('header', { name: 'Who can see this moment' })).toBeTruthy();
+    expect(screen.queryByTestId('moment-options-visibility-back')).toBeNull();
+    await fireEvent.press(screen.getByTestId('moment-options-visibility-only_me'));
+    expect(setMomentVisibility).toHaveBeenCalledWith(mockClient, server.target, 'only_me');
+  });
+
   it('Delete asks first: Cancel keeps the moment, Delete removes it and closes', async () => {
     const { onClose } = await renderOptions();
     await fireEvent.press(row('Delete moment'));

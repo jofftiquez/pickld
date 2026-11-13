@@ -19,8 +19,16 @@ import { MomentView } from './MomentView';
 import type { OptionError } from './momentActions';
 import { OptionRow } from './OptionRow';
 
+/**
+ * `all`: every option. `more`: the moment preview's More menu (D-54), without what its action bar already
+ * has (Edit caption, Edit stickers and filters, Visibility). `visibility`: the preview's Visibility action,
+ * opened straight on the Visibility page with no way back to the options.
+ */
+export type MomentOptionsMode = 'all' | 'more' | 'visibility';
+
 export type MomentOptionsSheetProps = {
   visible: boolean;
+  mode?: MomentOptionsMode;
   slot: Slot;
   /** "7:30 AM · Mon, Nov 9", already formatted in the jar's zone. */
   when: string;
@@ -50,15 +58,16 @@ export type MomentOptionsSheetProps = {
  * confirmation first. Cancel closes it.
  */
 export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
-  const { slot, freeSlots, busy, error, visibility } = props;
+  const { slot, freeSlots, busy, error, visibility, mode = 'all' } = props;
   const { t } = useTranslation();
-  const [page, setPage] = useState<'options' | 'move' | 'visibility'>('options');
+  const firstPage = mode === 'visibility' ? 'visibility' : 'options';
+  const [page, setPage] = useState<'options' | 'move' | 'visibility'>(firstPage);
   const visibilityLabel = t(`visibility.${VISIBILITY_KEY[visibility]}`);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const slotLabel = t(`slots.${slot}`);
 
   const close = () => {
-    setPage('options');
+    setPage(firstPage);
     setConfirmDelete(false);
     props.onClose();
   };
@@ -67,7 +76,7 @@ export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
     <BottomSheet
       visible={props.visible}
       onClose={close}
-      accessibilityLabel={t('momentOptions.title')}
+      accessibilityLabel={mode === 'visibility' ? t('momentOptions.visibilityTitle') : t('momentOptions.title')}
       testID="moment-options"
     >
       {page === 'options' ? (
@@ -83,20 +92,24 @@ export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
               <Text style={[textStyle('label', '500'), styles.muted]}>{props.when}</Text>
             </View>
           </View>
-          <OptionRow
-            icon="caption"
-            label={t('momentOptions.editCaption')}
-            onPress={props.onEditCaption}
-            disabled={busy}
-            testID="moment-options-caption"
-          />
-          <OptionRow
-            icon="sparkle"
-            label={t('momentOptions.editMoment')}
-            onPress={props.onEditMoment}
-            disabled={busy}
-            testID="moment-options-edit"
-          />
+          {mode === 'all' ? (
+            <>
+              <OptionRow
+                icon="caption"
+                label={t('momentOptions.editCaption')}
+                onPress={props.onEditCaption}
+                disabled={busy}
+                testID="moment-options-caption"
+              />
+              <OptionRow
+                icon="sparkle"
+                label={t('momentOptions.editMoment')}
+                onPress={props.onEditMoment}
+                disabled={busy}
+                testID="moment-options-edit"
+              />
+            </>
+          ) : null}
           <OptionRow
             icon="photo"
             label={t('momentOptions.recrop')}
@@ -105,21 +118,23 @@ export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
             disabled={busy}
             testID="moment-options-recrop"
           />
-          <OptionRow
-            icon={VISIBILITY_ICON[visibility]}
-            label={t('momentOptions.visibility')}
-            accessibilityLabel={t('momentOptions.visibilityValue', { value: visibilityLabel })}
-            accessibilityHint={t('momentOptions.visibilityHint')}
-            onPress={() => setPage('visibility')}
-            trailing={
-              <View style={styles.trailingValue}>
-                <Text style={[textStyle('bodyMedium', '500'), styles.muted]}>{visibilityLabel}</Text>
-                <Icon name="chevronRight" color="chevron" size={18} strokeWidth={2} />
-              </View>
-            }
-            disabled={busy}
-            testID="moment-options-visibility"
-          />
+          {mode === 'all' ? (
+            <OptionRow
+              icon={VISIBILITY_ICON[visibility]}
+              label={t('momentOptions.visibility')}
+              accessibilityLabel={t('momentOptions.visibilityValue', { value: visibilityLabel })}
+              accessibilityHint={t('momentOptions.visibilityHint')}
+              onPress={() => setPage('visibility')}
+              trailing={
+                <View style={styles.trailingValue}>
+                  <Text style={[textStyle('bodyMedium', '500'), styles.muted]}>{visibilityLabel}</Text>
+                  <Icon name="chevronRight" color="chevron" size={18} strokeWidth={2} />
+                </View>
+              }
+              disabled={busy}
+              testID="moment-options-visibility"
+            />
+          ) : null}
           <OptionRow
             icon="grid"
             label={t('momentOptions.move')}
@@ -141,12 +156,14 @@ export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
       ) : page === 'visibility' ? (
         <View>
           <View style={styles.moveHeader}>
-            <RoundIconButton
-              icon="back"
-              accessibilityLabel={t('momentOptions.backToOptions')}
-              onPress={() => setPage('options')}
-              testID="moment-options-visibility-back"
-            />
+            {mode === 'visibility' ? null : (
+              <RoundIconButton
+                icon="back"
+                accessibilityLabel={t('momentOptions.backToOptions')}
+                onPress={() => setPage('options')}
+                testID="moment-options-visibility-back"
+              />
+            )}
             <View style={styles.headerText}>
               <Text accessibilityRole="header" style={[textStyle('body', '700'), styles.slot]}>
                 {t('momentOptions.visibilityTitle')}

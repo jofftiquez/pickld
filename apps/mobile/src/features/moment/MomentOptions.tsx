@@ -21,13 +21,15 @@ import {
   type MomentTarget,
   type OptionError,
 } from './momentActions';
-import { MomentOptionsSheet } from './MomentOptionsSheet';
+import { MomentOptionsSheet, type MomentOptionsMode } from './MomentOptionsSheet';
 import { openRecrop } from './recrop';
 
 export type MomentOptionsSelection = { tile: GridTile; target: MomentTarget };
 
 export type MomentOptionsProps = {
   visible: boolean;
+  /** Which options the sheet shows (MomentOptionsSheet); the moment preview opens `more` and `visibility`. */
+  mode?: MomentOptionsMode;
   /** The tile the sheet is about; kept after closing so the sheet can animate out. */
   selection: MomentOptionsSelection;
   userId: string;
@@ -45,11 +47,11 @@ function editHref(target: MomentTarget, focusCaption: boolean): string {
 }
 
 /**
- * Moment options on Today (M2-23, FR-CAP-10). Visibility, Move and Delete apply here and Today refreshes
+ * Moment options (M2-23, FR-CAP-10), opened from the moment preview (QA item 3). Visibility, Move and Delete apply here and Today refreshes
  * underneath; Edit caption and Edit stickers and filters open the editor, Re-crop the Crop screen. See
  * momentActions.ts for what each does to a queued or an uploaded moment.
  */
-export function MomentOptions({ visible, selection, userId, freeSlots, tz, onClose }: MomentOptionsProps) {
+export function MomentOptions({ visible, mode, selection, userId, freeSlots, tz, onClose }: MomentOptionsProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -93,6 +95,7 @@ export function MomentOptions({ visible, selection, userId, freeSlots, tz, onClo
   return (
     <MomentOptionsSheet
       visible={visible}
+      mode={mode}
       slot={tile.slot}
       when={
         time === null ? '' : t('momentOptions.when', { time: formatTime(time, tz), date: formatShortDate(time, tz) })

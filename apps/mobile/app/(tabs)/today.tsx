@@ -10,7 +10,7 @@ import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
 import { retryUpload } from '@/features/jar/retryUpload';
 import { openTodayJar, useRollover } from '@/features/jar/rollover';
-import { buildTodayGrid, holdsSlot, offlineBannerCount, type GridTile } from '@/features/jar/todayGrid';
+import { buildTodayGrid, holdsSlot, offlineBannerCount } from '@/features/jar/todayGrid';
 import { useCelebrations } from '@/features/jar/useCelebrations';
 import { DAY_SLOTS } from '@/features/reminders/reminderPlan';
 import { useReminderSync } from '@/features/reminders/useReminderSync';
@@ -19,7 +19,6 @@ import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { FirstMomentTip } from '@/features/onboarding/FirstMomentTip';
 import { useFirstMomentTip } from '@/features/onboarding/useFirstMomentTip';
-import { MomentOptions, type MomentOptionsSelection } from '@/features/moment/MomentOptions';
 import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
@@ -98,19 +97,6 @@ export default function TodayScreen() {
   // Take my first moment opens Camera once the sheet's modal has closed.
   const takeAfterTip = useRef(false);
 
-  // Moment options (M2-23). The last selection stays while the sheet animates out; each opening starts fresh.
-  const [options, setOptions] = useState<{ selection: MomentOptionsSelection; open: boolean; n: number } | null>(null);
-  const openOptions = (tile: GridTile) => {
-    const jarId = jar?.jar?.id ?? null;
-    const target =
-      tile.queueId !== null
-        ? ({ kind: 'queued', queueId: tile.queueId } as const)
-        : tile.momentId !== null && jarId !== null
-          ? ({ kind: 'server', momentId: tile.momentId, jarId } as const)
-          : null;
-    if (target) setOptions((o) => ({ selection: { tile, target }, open: true, n: (o?.n ?? 0) + 1 }));
-  };
-
   // The jar's visibility menu (M3-02). Once published, RLS shares every new live, non-private moment with
   // whoever the visibility allows (FR-PUB-04), so changing it is the only step. The jars trigger keeps
   // the first published_at, so re-publishing with a new visibility is that change.
@@ -157,7 +143,8 @@ export default function TodayScreen() {
           ) : null
         }
         onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
-        onOpenOptions={openOptions}
+        // The moment preview (QA item 3, D-54); Moment options is its More menu.
+        onOpenPreview={(tile) => router.push({ pathname: '/moment/preview', params: { slot: tile.slot } })}
         onPublish={jar?.jar && !jar.jar.publishedAt ? () => router.push('/publish') : null}
         published={published}
         onOpenVisibility={() => {
@@ -180,17 +167,6 @@ export default function TodayScreen() {
           }
           onChange={(visibility) => changeVisibility.mutate({ jarId: openJar.id, visibility })}
           onClose={() => setVisibilityOpen(false)}
-        />
-      ) : null}
-      {options && userId !== null ? (
-        <MomentOptions
-          key={options.n}
-          visible={options.open}
-          selection={options.selection}
-          userId={userId}
-          freeSlots={tiles.filter((tile) => !holdsSlot(tile)).map((tile) => tile.slot)}
-          tz={jar?.jar?.tz ?? tz}
-          onClose={() => setOptions((o) => (o ? { ...o, open: false } : o))}
         />
       ) : null}
       <FirstMomentTip
