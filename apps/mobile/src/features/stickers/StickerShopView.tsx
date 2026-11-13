@@ -3,11 +3,10 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/Icon';
-import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { deviceLocale } from '@/lib/format';
-import { maxTextScale, textStyle } from '@/theme/text';
-import { colors, radius, shadow, sizes, space, stickerShop, stickerTool } from '@/theme/tokens';
+import { textStyle } from '@/theme/text';
+import { colors, radius, shadow, space, stickerShop, stickerTool } from '@/theme/tokens';
 
 import { BANNER_LAYOUT, CARD_LAYOUT, PackArt } from './PackArt';
 import type { Shop, ShopPack } from './shop';
@@ -21,7 +20,6 @@ export type StickerShopViewProps = {
   query: string;
   onQuery: (query: string) => void;
   insets: EdgeInsets;
-  onClose: () => void;
   onOpenPack: (pack: ShopPack) => void;
   onRetry: () => void;
   locale?: string;
@@ -30,6 +28,7 @@ export type StickerShopViewProps = {
 /**
  * The Sticker shop (StickerShop; FR-STK-06): search, the seasonal pack on sale, "For you" (paid packs that
  * match the onboarding answers first) and "Yours" (owned and earned packs). Every pack opens Pack preview.
+ * The Stickers page shows it under Shop (D-61) and draws the title above it.
  */
 export function StickerShopView({
   shop,
@@ -38,7 +37,6 @@ export function StickerShopView({
   query,
   onQuery,
   insets,
-  onClose,
   onOpenPack,
   onRetry,
   locale = deviceLocale(),
@@ -49,22 +47,7 @@ export function StickerShopView({
   const empty = shop !== undefined && !shop.seasonal && shop.forYou.length === 0 && shop.yours.length === 0;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]} testID="sticker-shop">
-      <View style={styles.header}>
-        <Text
-          maxFontSizeMultiplier={maxTextScale.title}
-          accessibilityRole="header"
-          style={[textStyle('screenTitle'), { color: colors.ink }]}
-        >
-          {t('stickerShop.title')}
-        </Text>
-        <RoundIconButton
-          icon="close"
-          accessibilityLabel={t('stickerShop.close')}
-          onPress={onClose}
-          testID="sticker-shop-close"
-        />
-      </View>
+    <View style={styles.screen} testID="sticker-shop">
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space.xxl }]}
@@ -295,14 +278,6 @@ function PackCard({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space.xl,
-    paddingTop: sizes.headerTop,
-    paddingBottom: space.md,
-  },
   content: { paddingHorizontal: space.xl, gap: space.md + 2 },
   search: {
     flexDirection: 'row',

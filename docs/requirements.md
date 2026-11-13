@@ -118,9 +118,9 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 | FR-STK-03 | Suggestions | The current slot’s suggested stickers appear first, tuned by onboarding answers | P0 | Stickers tool |
 | FR-STK-04 | Viewers never pay | Anyone who can see a moment sees all its stickers, whether or not they own the pack | P0 | All |
 | FR-STK-05 | Earned stickers | Milestone stickers unlock automatically (first full jar, 7 full jars, 30 jars, 100 jars, 1 year) with the Sticker unlocked screen | P0 | Sticker unlocked |
-| FR-STK-06 | Sticker shop | Seasonal banner, For you row, owned and earned packs; locked packs show a lock in the editor | P1 | Sticker shop |
+| FR-STK-06 | Sticker shop | Seasonal banner, For you row, owned and earned packs; locked packs show a lock in the editor. Shown as Shop on the Stickers page (`/stickers?tab=shop`, D-61), opened from a stickers button in Today’s header, a Stickers row on your own profile and the editor’s shop banner; `/stickers/shop` redirects there | P1 | Sticker shop, Stickers home |
 | FR-STK-07 | Buy a pack | Pack preview on the user’s own photo; store purchase; pack unlocks within 5 seconds of a verified receipt; seasonal packs stay owned after their season | P1 | Pack preview |
-| FR-STK-08 | My stickers | Reorder packs, hide packs, Restore purchases | P1 | My stickers |
+| FR-STK-08 | My stickers | Reorder packs, hide packs, Restore purchases. Shown as Mine, the default tab of the Stickers page (`/stickers`, D-61), also opened from Settings → My stickers; `/stickers/mine` redirects there | P1 | My stickers, Stickers home |
 
 ## Settings, privacy and safety
 

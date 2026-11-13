@@ -107,7 +107,10 @@ const routes = {
     const { slug } = jest.requireActual<typeof import('expo-router')>('expo-router').useLocalSearchParams();
     return <Text>{`Pack preview stub ${String(slug)}`}</Text>;
   },
-  'stickers/shop': () => <Text>Shop stub</Text>,
+  'stickers/index': function StickersStub() {
+    const { tab } = jest.requireActual<typeof import('expo-router')>('expo-router').useLocalSearchParams();
+    return <Text>{`Stickers stub ${String(tab)}`}</Text>;
+  },
 };
 
 async function openStickers() {
@@ -182,7 +185,7 @@ describe('Stickers tool', () => {
     // The pack on sale here is premium, not seasonal, so the banner doesn't name it.
     expect(screen.getByRole('link', { name: 'More sticker packs' })).toBeTruthy();
     await fireEvent.press(screen.getByRole('link', { name: 'More sticker packs' }));
-    expect(await screen.findByText('Shop stub')).toBeTruthy();
+    expect(await screen.findByText('Stickers stub shop')).toBeTruthy();
   });
 
   it('fades the grid’s bottom edge while more rows remain below, and drops the fade at the end', async () => {
