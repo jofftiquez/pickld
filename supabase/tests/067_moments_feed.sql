@@ -93,6 +93,7 @@ select tests.act_as('owner');
 select is((select liked from public.moments_feed_page() where moment_id = (select id from mm where name = 'unpublished everyone')),
           false, 'liked is the caller''s own like, not someone else''s');
 select tests.reset_role();
+update public.jars set comment_count = 3 where id in (select id from t where k in ('jar_pub', 'jar_unpub'));
 update public.moments set comment_count = 3 where id in (select id from mm where name in ('published readers', 'unpublished readers'));
 select tests.act_as('reader');
 select is((select comment_count::text || '/' || jar_visible from public.moments_feed_page()
