@@ -8,13 +8,15 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 import type { IconName } from './icons';
 import { TabBarButton } from './TabBarButton';
 
-/** The four main tabs, keyed by route name under `app/(tabs)/`. */
+/**
+ * The main tabs, keyed by route name under `app/(tabs)/` (D-52): Today | Jars, with Today emphasized.
+ * Routes not listed here (the hidden Capture route) get no tab. The Moments tab (QA round 1, piece 5)
+ * goes between Today and Jars.
+ */
 export const mainTabs = {
-  today: { icon: 'today', label: 'tabs.today' },
-  capture: { icon: 'capture', label: 'tabs.capture' },
-  jars: { icon: 'jars', label: 'tabs.jars' },
-  'my-days': { icon: 'myDays', label: 'tabs.myDays' },
-} as const satisfies Record<string, { icon: IconName; label: `tabs.${string}` }>;
+  today: { icon: 'today', label: 'tabs.today', emphasized: true },
+  jars: { icon: 'jars', label: 'tabs.jars', emphasized: false },
+} as const satisfies Record<string, { icon: IconName; label: `tabs.${string}`; emphasized: boolean }>;
 
 type MainTab = keyof typeof mainTabs;
 
@@ -56,6 +58,7 @@ export function FloatingTabBar({ state, emitter, navigateToTab, insets }: Bottom
                 key={route.key}
                 icon={mainTabs[route.name].icon}
                 label={t(mainTabs[route.name].label)}
+                emphasized={mainTabs[route.name].emphasized}
                 focused={focused}
                 onPress={onPress}
                 onLongPress={onLongPress}

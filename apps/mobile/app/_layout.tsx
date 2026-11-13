@@ -69,6 +69,7 @@ export default function RootLayout() {
         <Stack.Screen name="settings/blocked" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="comments/[jarId]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="notifications" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        <Stack.Screen name="my-days" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         {/* Over the editor (a full-screen modal), so these present as modals too. */}
         <Stack.Screen
           name="stickers/shop"

@@ -274,6 +274,10 @@ export const sizes = {
   tabPillWidth: 52, // active tab highlight behind the icon (Main)
   tabPillHeight: 30,
   tabIconLabelGap: 3,
+  tabIcon: 22, // tab icon (Main)
+  tabIconEmphasized: 26, // Today's larger icon in its green pill (D-52)
+  tabEmphasisMinWidth: 96, // Today's green pill around icon and label (D-52)
+  tabEmphasisRing: 2, // dark ring on that pill while Today is selected
   momentTile: 116, // Today grid tile height (2 columns)
   momentTileFade: 64, // bottom fade on a moment tile
   tileIconWell: 40, // slot icon square on empty and Now tiles

@@ -20,7 +20,8 @@ import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone } from '@/features/jar/useToday';
 import { localDateIn } from '@/lib/jars';
 
-// My days tab (M2-25, M2-26; FR-DAY-01, FR-DAY-02): the month calendar and the selected day with Fill this jar.
+// My days (M2-25, M2-26; FR-DAY-01, FR-DAY-02): the month calendar and the selected day with Fill this jar.
+// A stack screen opened from the calendar button on Today, not a tab (D-52).
 export default function MyDaysScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function MyDaysScreen() {
   const { userId, jars, firstJarMonth } = useMonthJars(month);
   const { day, queue } = useDayJar(selectedDate);
 
-  // Coming back to the tab (e.g. after a capture) re-reads the months; the first focus is the initial load.
+  // Coming back to the screen (e.g. after a capture) re-reads the months; the first focus is the initial load.
   const focusedOnce = useRef(false);
   useFocusEffect(
     useCallback(() => {
@@ -73,6 +74,7 @@ export default function MyDaysScreen() {
       nav={nav}
       selectedDate={selectedDate}
       insets={insets}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
       onPrevious={() => nav.canGoPrevious && setMonth(addMonths(month, -1))}
       onNext={() => nav.canGoNext && setMonth(addMonths(month, 1))}
       onSelectDay={setSelectedDate}

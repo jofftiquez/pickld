@@ -9,9 +9,7 @@
   "tabs": {
     "label": "Main",
     "today": "Today",
-    "capture": "Capture",
-    "jars": "Jars",
-    "myDays": "My days"
+    "jars": "Jars"
   },
   "today": {
     "title": "Today",
@@ -196,6 +194,7 @@
     "reportLabel": "Report {{name}}’s comment"
   },
   "myDays": {
+    "back": "Back",
     "title": "My days",
     "subtitle_one": "{{month}} · {{count}} moment",
     "subtitle_other": "{{month}} · {{count}} moments",

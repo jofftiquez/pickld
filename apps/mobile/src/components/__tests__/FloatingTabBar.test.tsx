@@ -5,8 +5,9 @@ import { FloatingTabBar } from '../FloatingTabBar';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 import { expectMinTapArea, flatStyle } from './testUtils';
 
-const routes = ['today', 'capture', 'jars', 'my-days'].map((name) => ({ key: `${name}-key`, name }));
-const labels = ['Today', 'Capture', 'Jars', 'My days'];
+// The navigator's routes include the hidden Capture route (`href: null`); it must get no tab (D-52).
+const routes = ['today', 'capture', 'jars'].map((name) => ({ key: `${name}-key`, name }));
+const labels = ['Today', 'Jars'];
 
 function setup({ index = 0, preventDefault = false, insets = { top: 0, right: 0, bottom: 0, left: 0 } } = {}) {
   const emit = jest.fn(() => ({ defaultPrevented: preventDefault }));
@@ -22,23 +23,20 @@ function setup({ index = 0, preventDefault = false, insets = { top: 0, right: 0,
 }
 
 describe('FloatingTabBar', () => {
-  it('shows the four tabs in order with translated labels inside a named tablist', async () => {
+  it('shows Today and Jars in order with translated labels inside a named tablist, and no Capture tab', async () => {
     const { props } = setup();
     await render(<FloatingTabBar {...props} />);
     expect(screen.getByLabelText('Main').props.accessibilityRole).toBe('tablist');
     expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityLabel)).toEqual(labels);
     for (const label of labels) expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.queryByTestId('tab-capture')).toBeNull();
+    expect(screen.queryByText('Capture')).toBeNull();
   });
 
   it('announces only the focused tab as selected and highlights it per Main', async () => {
     const { props } = setup({ index: 2 });
     await render(<FloatingTabBar {...props} />);
-    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityState.selected)).toEqual([
-      false,
-      false,
-      true,
-      false,
-    ]);
+    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityState.selected)).toEqual([false, true]);
     expect(screen.getAllByRole('tab', { selected: true })).toHaveLength(1);
     expect(screen.getByRole('tab', { name: 'Jars', selected: true })).toBeTruthy();
 
@@ -49,28 +47,45 @@ describe('FloatingTabBar', () => {
     });
     expect(screen.getAllByTestId('tab-active-pill')).toHaveLength(1);
     expect(screen.getByText('Jars').props.style).toEqual(expect.arrayContaining([{ color: colors.brandText }]));
-    expect(screen.getByText('Today').props.style).toEqual(expect.arrayContaining([{ color: colors.muted }]));
     const icon = (name: string) => screen.getByTestId(`icon-${name}`, { includeHiddenElements: true }).props;
     expect(icon('jars').stroke).toBe(colors.brandText);
-    expect(icon('today').stroke).toBe(colors.muted);
     expect(icon('jars').strokeWidth).toBe(2);
-    expect(icon('today').strokeWidth).toBe(1.8);
+  });
+
+  it('Today is a green pill with a larger white icon and label, selected or not; selected adds a ring', async () => {
+    const pill = (id: string) => flatStyle(screen.getByTestId(id));
+    const icon = () => screen.getByTestId('icon-today', { includeHiddenElements: true }).props;
+
+    const other = setup({ index: 2 });
+    await render(<FloatingTabBar {...other.props} />);
+    expect(pill('tab-emphasis-pill')).toMatchObject({ backgroundColor: colors.brand, borderColor: colors.brand });
+    expect(icon()).toMatchObject({ stroke: colors.surface, width: sizes.tabIconEmphasized });
+    expect(screen.getByText('Today').props.style).toEqual(expect.arrayContaining([{ color: colors.surface }]));
+    expect(screen.getByRole('tab', { name: 'Today' }).props.accessibilityState).toEqual({ selected: false });
+
+    const today = setup({ index: 0 });
+    await render(<FloatingTabBar {...today.props} />);
+    expect(screen.queryByTestId('tab-emphasis-pill')).toBeNull();
+    expect(pill('tab-active-pill')).toMatchObject({ backgroundColor: colors.brand, borderColor: colors.brandText });
+    expect(icon()).toMatchObject({ stroke: colors.surface, width: sizes.tabIconEmphasized });
+    expect(screen.getByRole('tab', { name: 'Today', selected: true })).toBeTruthy();
+    expect(screen.getAllByRole('tab', { selected: true })).toHaveLength(1);
   });
 
   it('pressing an unfocused tab emits tabPress and navigates to that route', async () => {
     const { props, emit, navigateToTab } = setup({ index: 0 });
     await render(<FloatingTabBar {...props} />);
-    await fireEvent.press(screen.getByRole('tab', { name: 'My days' }));
-    expect(emit).toHaveBeenCalledWith({ type: 'tabPress', target: 'my-days-key', canPreventDefault: true });
+    await fireEvent.press(screen.getByRole('tab', { name: 'Jars' }));
+    expect(emit).toHaveBeenCalledWith({ type: 'tabPress', target: 'jars-key', canPreventDefault: true });
     expect(navigateToTab).toHaveBeenCalledTimes(1);
-    expect(navigateToTab).toHaveBeenCalledWith('my-days-key');
+    expect(navigateToTab).toHaveBeenCalledWith('jars-key');
   });
 
   it('does not navigate when the tab is already focused or a listener prevents it', async () => {
-    const focused = setup({ index: 1 });
+    const focused = setup({ index: 2 });
     await render(<FloatingTabBar {...focused.props} />);
-    await fireEvent.press(screen.getByRole('tab', { name: 'Capture' }));
-    expect(focused.emit).toHaveBeenCalledWith(expect.objectContaining({ type: 'tabPress', target: 'capture-key' }));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Jars' }));
+    expect(focused.emit).toHaveBeenCalledWith(expect.objectContaining({ type: 'tabPress', target: 'jars-key' }));
     expect(focused.navigateToTab).not.toHaveBeenCalled();
 
     const prevented = setup({ index: 0, preventDefault: true });

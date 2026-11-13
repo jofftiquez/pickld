@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Stack } from 'expo-router';
 import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 
 import TabsLayout from '../../../app/(tabs)/_layout';
 import JarsScreen from '../../../app/(tabs)/jars';
-import MyDaysScreen from '../../../app/(tabs)/my-days';
 import TodayScreen from '../../../app/(tabs)/today';
+import MyDaysScreen from '../../../app/my-days';
 
 // Today draws a JarGraphic, which needs Reanimated's native worklets; expo-router's testing mocks
 // replace Reanimated with its own mock, which can't load under Jest in this version. The jar isn't
@@ -25,18 +26,19 @@ function wrapper({ children }: { children: ReactNode }) {
 
 // The real route files from app/, wired through Expo Router's in-memory router.
 const routes = {
+  _layout: () => <Stack screenOptions={{ headerShown: false }} />,
   '(tabs)/_layout': TabsLayout,
   '(tabs)/today': TodayScreen,
   '(tabs)/capture': () => null,
   '(tabs)/jars': JarsScreen,
-  '(tabs)/my-days': MyDaysScreen,
+  'my-days': MyDaysScreen,
 };
 
-// Capture opens the full-screen camera instead of a tab screen: see features/capture/__tests__/captureTab.test.tsx.
+// D-52: Today | Jars. Capture is hidden (its route opens the camera: see
+// features/capture/__tests__/captureTab.test.tsx) and My days is a stack screen opened from Today.
 const tabs = [
   { label: 'Today', path: '/today' },
   { label: 'Jars', path: '/jars' },
-  { label: 'My days', path: '/my-days' },
 ];
 
 describe('tab shell', () => {
@@ -59,5 +61,15 @@ describe('tab shell', () => {
       // The screen title, not just the tab label, is on screen.
       expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(2);
     }
+    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityLabel)).toEqual(['Today', 'Jars']);
+  });
+
+  it('opens My days from Today’s calendar button, over the tabs, and Back returns to Today', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'My days' }));
+    expect(screen).toHavePathname('/my-days');
+    expect(screen.getByRole('header', { name: 'My days' })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(screen).toHavePathname('/today');
   });
 });
