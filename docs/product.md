@@ -255,7 +255,8 @@ These screens fill the gaps that shape the architecture: offline saving, the upl
 | Screen (artboard) | What it shows | Leads to |
 | --- | --- | --- |
 | Camera | Live 3:4 viewfinder with grid, slot tag and time, flash, moment switcher, shutter, gallery and flip | Shutter → Capture · gallery → Crop |
-| Moment options | Sheet on a moment: edit caption, edit stickers and filters, re-crop, make private, move to another moment, delete | Re-crop → Crop |
+| Moment preview | Full-screen preview of your own moment from Today (D-54, D-71): photo with edits, slot, time, visibility, caption, likes and comments; swipe through today’s moments; bar with Edit, Share, Visibility and More (only Edit and Delete for a photo not uploaded yet) | Edit → Capture · Share → Share card · Visibility and More → Moment options |
+| Moment options | Sheet on a moment: edit caption, edit stickers and filters, re-crop, visibility, move to another moment, delete. From the moment preview, More shows only re-crop, move and delete, and Visibility opens its page directly | Re-crop → Crop |
 | Today, published | Today after publishing: “Published” chip, likes count, and a note that new moments today go out automatically | — |
 | Full jar | Celebration when a jar reaches 8 of 8, with the jar number | Publish jar → Publish review · Share jar card |
 | Time zone banner | “You’re in Tokyo time”: today’s jar stays on Manila time until it closes; the next jar follows local time | Got it dismisses |

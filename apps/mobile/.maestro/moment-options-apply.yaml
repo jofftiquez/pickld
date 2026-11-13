@@ -1,5 +1,5 @@
-# M2-23 (FR-CAP-10): every Moment option applied to a live moment, checking Today after each. Visibility:
-# Only me (D-48)
+# M2-23 (FR-CAP-10) and QA item 3 (D-54): every action applied to a live moment from the moment preview,
+# checking Today after each. Visibility: Only me (D-48)
 # → Edit caption (Done, then reopened to see it saved) → Edit stickers and filters (Mono) → Move to TO →
 # Re-crop (flip, Save crop) → Delete (confirmed). Changes the server: run it on local Supabase only, signed in
 # as a user whose open jar has FROM live and TO empty (the seeded dale@pickld.test: #morning and
@@ -24,7 +24,7 @@ appId: me.pickld.app
 - tapOn:
     id: tile-${output.from}
 - tapOn:
-    id: moment-options-visibility
+    id: preview-visibility-action
 - tapOn:
     id: moment-options-visibility-only_me
 - extendedWaitUntil:
@@ -34,17 +34,19 @@ appId: me.pickld.app
     timeout: 10000
 - tapOn:
     id: moment-options-cancel
+- tapOn:
+    id: preview-close
 - extendedWaitUntil:
     visible:
       id: tile-${output.from}
       text: '#${output.from}, .*private.*'
     timeout: 10000
 
-# Edit caption: saved through fn:moderate; reopening the editor shows it.
+# Edit caption: saved through fn:moderate; reopening the editor shows it. The editor returns to the preview.
 - tapOn:
     id: tile-${output.from}
 - tapOn:
-    id: moment-options-caption
+    id: preview-edit
 - extendedWaitUntil:
     visible:
       id: editor-caption
@@ -56,12 +58,10 @@ appId: me.pickld.app
     id: editor-save
 - extendedWaitUntil:
     visible:
-      id: tab-today
+      id: moment-preview
     timeout: 15000
 - tapOn:
-    id: tile-${output.from}
-- tapOn:
-    id: moment-options-edit
+    id: preview-edit
 - extendedWaitUntil:
     visible:
       id: editor-caption
@@ -74,19 +74,33 @@ appId: me.pickld.app
     id: editor-save
 - extendedWaitUntil:
     visible:
-      id: tab-today
+      id: moment-preview
     timeout: 15000
+- tapOn:
+    id: preview-close
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 10000
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: MomentOptions-edited-ios
 
-# Move to an empty slot: the photo leaves FROM and fills TO.
+# Move to an empty slot (under More): the photo leaves FROM and fills TO.
 - tapOn:
     id: tile-${output.from}
+- tapOn:
+    id: preview-more
 - tapOn:
     id: moment-options-move
 - tapOn:
     id: moment-options-move-${output.to}
+- extendedWaitUntil:
+    visible:
+      id: moment-preview
+    timeout: 10000
+- tapOn:
+    id: preview-close
 - extendedWaitUntil:
     visible:
       id: tile-${output.to}
@@ -100,6 +114,8 @@ appId: me.pickld.app
 - tapOn:
     id: tile-${output.to}
 - tapOn:
+    id: preview-more
+- tapOn:
     id: moment-options-recrop
 - extendedWaitUntil:
     visible:
@@ -111,19 +127,35 @@ appId: me.pickld.app
     id: crop-done
 - extendedWaitUntil:
     visible:
-      id: tab-today
+      id: moment-preview
     timeout: 30000
+- tapOn:
+    id: preview-close
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 10000
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: MomentOptions-recropped-ios
 
-# Delete asks first; confirming empties the slot.
+# Delete (under More) asks first; confirming empties the slot. The preview moves to the next moment, or
+# closes when none is left.
 - tapOn:
     id: tile-${output.to}
+- tapOn:
+    id: preview-more
 - tapOn:
     id: moment-options-delete
 - tapOn:
     id: delete-moment-confirm
+- runFlow:
+    when:
+      visible:
+        id: preview-close
+    commands:
+      - tapOn:
+          id: preview-close
 - extendedWaitUntil:
     visible:
       id: tile-${output.to}

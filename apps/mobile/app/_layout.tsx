@@ -76,6 +76,7 @@ export default function RootLayout() {
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
         />
         <Stack.Screen name="moment/[id]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        <Stack.Screen name="moment/preview" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="jar/[id]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="u/[username]/index" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="u/[username]/readers" options={{ animation: reduceMotion ? 'none' : 'default' }} />

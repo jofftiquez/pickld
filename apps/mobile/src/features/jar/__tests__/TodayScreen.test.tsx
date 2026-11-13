@@ -32,7 +32,6 @@ const mockSheet: { props: import('@/features/publish/JarVisibilitySheet').JarVis
 };
 
 // Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
-jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
 jest.mock('@/features/onboarding/FirstMomentTip', () => ({ FirstMomentTip: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({
   JarVisibilitySheet: (props: NonNullable<typeof mockSheet.props>) => {
@@ -350,6 +349,21 @@ describe('Today screen', () => {
     await fireEvent.press(screen.getByTestId('tile-ootd'));
     expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/moment/[id]', params: { id: 'm-removed' } });
     expect(mockPush).toHaveBeenCalledTimes(2);
+  });
+
+  it('a live tile and a photo still on the phone open the moment preview on their slot (QA item 3, D-54)', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];
+    mockBackend.moments = [liveMoment('ootd')];
+    mockBackend.queue = [queued(31, 'selfie', 'queued')];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('2 of 8 moments')).toBeTruthy());
+
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/moment/preview', params: { slot: 'ootd' } });
+    await fireEvent.press(screen.getByTestId('tile-selfie'));
+    expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/moment/preview', params: { slot: 'selfie' } });
+    expect(screen.getByTestId('tile-ootd').props.accessibilityHint).toBe('Opens the moment preview');
   });
 
   it('an upload that ended as a conflict asks to Replace; the old photo shows until the swap (M2-22)', async () => {

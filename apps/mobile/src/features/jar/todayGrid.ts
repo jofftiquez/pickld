@@ -21,8 +21,9 @@ export type QueuedMoment = Pick<
   QueueItem,
   'id' | 'slot' | 'state' | 'localDate' | 'photoUri' | 'thumbUri' | 'capturedAt' | 'visibility'
 > &
-  // What the tile needs to draw the edits (M2-18); optional so callers that don't draw them can leave them out.
-  Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits' | 'replace'>>;
+  // What the tile needs to draw the edits (M2-18), and the caption and photo the preview shows (QA item 3);
+  // optional so callers that don't need them can leave them out.
+  Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits' | 'replace' | 'caption' | 'prepared'>>;
 
 export type GridTile = {
   slot: Slot;

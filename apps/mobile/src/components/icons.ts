@@ -27,6 +27,9 @@ export const icons = {
   grip: [c(9, 6, 1.2), c(15, 6, 1.2), c(9, 12, 1.2), c(15, 12, 1.2), c(9, 18, 1.2), c(15, 18, 1.2)],
   download: [p('M12 4v11M7 10l5 5 5-5M5 20h14')],
   share: [p('M12 3v12M7 8l5-5 5 5M5 14v6h14v-6')],
+  // Moment preview's action bar (QA item 3): a pencil for Edit, a bin for Delete.
+  edit: [p('M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3z'), p('m13.5 8.5 3 3')],
+  trash: [p('M4 7h16M10 11v6M14 11v6'), p('M6 7l1 13h10l1-13'), p('M9 7V4h6v3')],
   link: [
     p('M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1'),
     p('M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'),
