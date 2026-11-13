@@ -44,7 +44,7 @@ export const editableMomentQueryKey = (userId: string, momentId: string) => ['ed
 async function fetchEditableMoment(userId: string, momentId: string): Promise<EditableMoment | null> {
   const { data, error } = await getSupabase()
     .from('moments')
-    .select('id, jar_id, slot, status, caption, edits, visibility, captured_at, added_at, jars(tz)')
+    .select('id, jar_id, slot, status, caption, edits, visibility, captured_at, added_at, jars!moments_jar_id_fkey(tz)')
     .eq('id', momentId)
     .eq('user_id', userId)
     .maybeSingle();
