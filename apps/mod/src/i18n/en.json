@@ -109,5 +109,74 @@
     "hidden": "Hidden from readers until decided",
     "visible": "Still visible to readers",
     "notApplicable": "—"
+  },
+  "decide": {
+    "label": "Decision",
+    "guideline": "Guideline it broke",
+    "guidelinePick": "Pick a guideline",
+    "keep": "Keep (K)",
+    "remove": "Remove (R)",
+    "removeWarn": "Remove and warn",
+    "escalate": "Escalate (E)",
+    "keepHint": "Keep it and close the item",
+    "removeHint": "Remove it under the chosen guideline",
+    "removeWarnHint": "Remove it and send the owner a warning",
+    "escalateHint": "Pass it to a senior moderator",
+    "working": "Saving…",
+    "needGuideline": "Pick the guideline it broke before removing.",
+    "shortcuts": "Shortcuts: K keep, R remove, E escalate.",
+    "errors": {
+      "not_found": "This item doesn’t exist any more.",
+      "already_decided": "Someone already decided this item.",
+      "same_moderator": "A different moderator has to decide this appeal.",
+      "own_content": "You can’t decide about your own content.",
+      "unsupported": "Jar and profile reports can only be kept or escalated.",
+      "not_moderator": "Your account isn’t a moderator any more.",
+      "unknown": "That didn’t save. Try again."
+    }
+  },
+  "guideline": {
+    "sexual": "Nudity or sexual content",
+    "harassment": "Harassment or bullying",
+    "violence": "Violence or dangerous acts",
+    "hate": "Hate speech or symbols",
+    "spam": "Spam or scam",
+    "under_13": "Involves someone under 13",
+    "other": "Something else"
+  },
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "Every moderation decision, newest first · read-only",
+    "label": "Audit entries",
+    "columns": {
+      "when": "When",
+      "who": "Who",
+      "action": "Action",
+      "target": "Target",
+      "details": "Details"
+    },
+    "system": "System",
+    "empty": "No decisions yet.",
+    "older": "Older entries",
+    "newest": "Back to newest",
+    "actions": {
+      "keep": "Kept",
+      "remove": "Removed",
+      "remove_warn": "Removed and warned",
+      "escalate": "Escalated",
+      "suspend": "Suspended",
+      "lift_suspension": "Lifted suspension"
+    },
+    "guideline": "Guideline: {{guideline}}",
+    "note": "Note: {{note}}",
+    "outcome": {
+      "overturned": "Appeal: removal overturned",
+      "upheld": "Appeal: removal upheld"
+    },
+    "lifted": {
+      "expired": "Suspension ran out",
+      "appeal_overturned": "Appeal overturned"
+    },
+    "strikes": "Strikes: {{count}}"
   }
 }
