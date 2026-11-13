@@ -137,4 +137,27 @@ describe('FeedView', () => {
     expect(screen.queryByTestId('feed-empty')).toBeNull();
     expect(screen.getByTestId('feed-authors')).toBeTruthy();
   });
+
+  it('reading nobody, lists the user’s own published jars under a Find people card, not the empty state (D-53)', async () => {
+    const own: FeedJar = {
+      ...mika,
+      jar_id: 'jar-dale',
+      author_id: 'dale-id',
+      author_display_name: 'Dale Santos',
+      is_new: false,
+    };
+    const { onFindPeople } = await setup({ jars: [own], authors: [] });
+    expect(screen.queryByTestId('feed-empty')).toBeNull();
+    expect(screen.getByTestId('feed-find-people-card')).toBeTruthy();
+    expect(screen.getByText('Read a few friends’ days')).toBeTruthy();
+    expect(screen.queryByText('Your feed is quiet')).toBeNull();
+    expect(screen.getByText('Dale Santos')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Find people'));
+    expect(onFindPeople).toHaveBeenCalled();
+  });
+
+  it('shows no Find people card once the user reads someone', async () => {
+    await setup();
+    expect(screen.queryByTestId('feed-find-people-card')).toBeNull();
+  });
 });

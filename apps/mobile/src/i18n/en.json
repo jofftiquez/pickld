@@ -106,6 +106,8 @@
   "feed": {
     "emptyTitle": "Your feed is quiet",
     "emptyBody": "Read a few friends’ days and their jars will show up here.",
+    "findPeopleTitle": "Read a few friends’ days",
+    "findPeopleBody": "Their jars will show up here with yours.",
     "findPeople": "Find people",
     "inviteFriends": "Invite friends",
     "inviteMessage": "I keep a photo diary on Pickld. Read my days: {{url}}",

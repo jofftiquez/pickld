@@ -12,6 +12,8 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 export type FeedEmptyProps = {
   onFindPeople: () => void;
   onInvite: () => void;
+  /** The user's own published jars are listed below (D-53): the card leads them instead of standing alone. */
+  aboveOwnJars?: boolean;
 };
 
 // The design fans out three placeholder photos; slot icons stand in until there is cleared artwork.
@@ -21,23 +23,30 @@ const tiles: { icon: IconName; rotate: string }[] = [
   { icon: 'evening', rotate: '8deg' },
 ];
 
-/** Jars, empty (design: EmptyStories): shown when the user reads nobody yet (FR-SOC-02). */
-export function FeedEmpty({ onFindPeople, onInvite }: FeedEmptyProps) {
+/**
+ * Jars, empty (design: EmptyStories), shown when the user reads nobody yet (FR-SOC-02). With nothing at all
+ * it stands alone; with the user's own published jars below it, it is the Find people card on top (D-53).
+ */
+export function FeedEmpty({ onFindPeople, onInvite, aboveOwnJars = false }: FeedEmptyProps) {
   const { t } = useTranslation();
   return (
-    <Card style={styles.card} testID="feed-empty">
+    <Card style={styles.card} testID={aboveOwnJars ? 'feed-find-people-card' : 'feed-empty'}>
       <View style={styles.intro}>
-        <View style={styles.tiles} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {tiles.map(({ icon, rotate }) => (
-            <View key={icon} style={[styles.tile, { transform: [{ rotate }] }]}>
-              <Icon name={icon} size={22} color="brandText" />
-            </View>
-          ))}
-        </View>
+        {aboveOwnJars ? null : (
+          <View style={styles.tiles} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            {tiles.map(({ icon, rotate }) => (
+              <View key={icon} style={[styles.tile, { transform: [{ rotate }] }]}>
+                <Icon name={icon} size={22} color="brandText" />
+              </View>
+            ))}
+          </View>
+        )}
         <Text accessibilityRole="header" style={[textStyle('sectionTitle'), styles.title]}>
-          {t('feed.emptyTitle')}
+          {t(aboveOwnJars ? 'feed.findPeopleTitle' : 'feed.emptyTitle')}
         </Text>
-        <Text style={[textStyle('bodyMedium'), styles.body]}>{t('feed.emptyBody')}</Text>
+        <Text style={[textStyle('bodyMedium'), styles.body]}>
+          {t(aboveOwnJars ? 'feed.findPeopleBody' : 'feed.emptyBody')}
+        </Text>
       </View>
       <View style={styles.actions}>
         <PrimaryButton label={t('feed.findPeople')} onPress={onFindPeople} testID="feed-find-people" />
