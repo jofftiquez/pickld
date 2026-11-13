@@ -214,6 +214,7 @@ export type Database = {
           id: string;
           is_hidden: boolean;
           jar_id: string;
+          moment_id: string | null;
           parent_id: string | null;
           user_id: string;
         };
@@ -225,6 +226,7 @@ export type Database = {
           id?: string;
           is_hidden?: boolean;
           jar_id: string;
+          moment_id?: string | null;
           parent_id?: string | null;
           user_id: string;
         };
@@ -235,6 +237,7 @@ export type Database = {
           id?: string;
           is_hidden?: boolean;
           jar_id?: string;
+          moment_id?: string | null;
           parent_id?: string | null;
           user_id?: string;
         };
@@ -244,6 +247,13 @@ export type Database = {
             columns: ['jar_id'];
             isOneToOne: false;
             referencedRelation: 'jars';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'comments_moment_id_fkey';
+            columns: ['moment_id'];
+            isOneToOne: false;
+            referencedRelation: 'moments';
             referencedColumns: ['id'];
           },
           {
@@ -670,6 +680,7 @@ export type Database = {
           added_at: string;
           caption: string | null;
           captured_at: string | null;
+          comment_count: number;
           edits: NonNullable<Json>;
           hidden_at: string | null;
           id: string;
@@ -695,6 +706,7 @@ export type Database = {
           added_at?: string;
           caption?: string | null;
           captured_at?: string | null;
+          comment_count?: number;
           edits?: NonNullable<Json>;
           hidden_at?: string | null;
           id?: string;
@@ -719,6 +731,7 @@ export type Database = {
           added_at?: string;
           caption?: string | null;
           captured_at?: string | null;
+          comment_count?: number;
           edits?: NonNullable<Json>;
           hidden_at?: string | null;
           id?: string;
@@ -1619,6 +1632,7 @@ export type Database = {
         }[];
       };
       can_appeal: { Args: { item: string; uid?: string }; Returns: boolean };
+      can_view_comment_thread: { Args: { p_jar: string; p_moment: string; viewer: string }; Returns: boolean };
       can_view_jar: {
         Args: {
           j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;

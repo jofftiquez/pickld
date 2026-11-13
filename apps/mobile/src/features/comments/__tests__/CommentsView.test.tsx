@@ -116,6 +116,22 @@ describe('CommentsView', () => {
     expect(onDelete).toHaveBeenCalledWith('c2');
   });
 
+  it('shows the moment above a moment thread (D-51)', async () => {
+    await setup({
+      jarTitle: 'Mika’s #morning',
+      count: 4,
+      moment: { thumbUrl: null, slot: '#morning', caption: 'Pandesal run.' },
+    });
+    expect(screen.getByTestId('comments-subtitle')).toHaveTextContent('Mika’s #morning · 4');
+    expect(screen.getByLabelText('Comments on the #morning moment: Pandesal run.')).toBeTruthy();
+    expect(screen.getByTestId('comments-moment')).toHaveTextContent(/#morning.*Pandesal run\./);
+  });
+
+  it('has no moment header on the jar thread', async () => {
+    await setup();
+    expect(screen.queryByTestId('comments-moment')).toBeNull();
+  });
+
   it('shows an empty thread, and hides the input on a jar the viewer can’t see', async () => {
     await setup({ thread: [] });
     expect(screen.getByTestId('comments-empty')).toHaveTextContent('No comments yet. Say something kind.');

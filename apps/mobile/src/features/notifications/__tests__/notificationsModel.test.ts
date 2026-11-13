@@ -1,4 +1,4 @@
-import { ageLabel, buildSections, targetOf, type NotificationRow } from '../notificationsModel';
+import { ageLabel, buildSections, pushTarget, targetOf, type NotificationRow } from '../notificationsModel';
 
 const TZ = 'Asia/Manila';
 // Thu 2026-11-12 15:00 in Manila.
@@ -90,6 +90,13 @@ describe('targetOf', () => {
     expect(targetOf(entry(r))).toEqual({ pathname: '/comments/[jarId]', params: { jarId: 'j9' } });
   });
 
+  it("opens the moment's own thread for a comment or reply on a moment (0068)", () => {
+    for (const type of ['comment', 'reply'] as const) {
+      const r = row({ id: '1', type, actor: jun, jar_id: 'j9', moment_id: 'mo1', comment_id: 'c1', created_at: at });
+      expect(targetOf(entry(r))).toEqual({ pathname: '/comments/[jarId]', params: { jarId: 'j9', momentId: 'mo1' } });
+    }
+  });
+
   it('opens the moment for a moment like and the jar for a jar like or full jar', () => {
     expect(
       targetOf(entry(row({ id: '1', type: 'like', actor: aya, jar_id: 'j1', moment_id: 'mo1', created_at: at }))),
@@ -118,5 +125,30 @@ describe('ageLabel', () => {
     expect(ageLabel('2026-11-12T05:00:00Z', NOW, TZ, 'en-US')).toEqual({ kind: 'hours', count: 2 });
     expect(ageLabel('2026-11-08T07:00:00Z', NOW, TZ, 'en-US')).toEqual({ kind: 'date', text: 'Sun' });
     expect(ageLabel('2026-11-01T07:00:00Z', NOW, TZ, 'en-US')).toEqual({ kind: 'date', text: 'Nov 1' });
+  });
+});
+
+describe('pushTarget', () => {
+  it("opens what the Notifications row opens: a moment comment opens the moment's thread", () => {
+    expect(
+      pushTarget({ type: 'comment', notificationIds: ['n1'], jarId: 'j9', momentId: 'mo1', commentId: 'c1' }),
+    ).toEqual({
+      pathname: '/comments/[jarId]',
+      params: { jarId: 'j9', momentId: 'mo1' },
+    });
+    expect(pushTarget({ type: 'comment', notificationIds: ['n1'], jarId: 'j9', commentId: 'c1' })).toEqual({
+      pathname: '/comments/[jarId]',
+      params: { jarId: 'j9' },
+    });
+    expect(pushTarget({ type: 'like', notificationIds: ['n1', 'n2'], jarId: 'j1' })).toEqual({
+      pathname: '/jar/[id]',
+      params: { id: 'j1' },
+    });
+  });
+
+  it('falls back to Notifications when the push has no screen of its own, and ignores reminders', () => {
+    expect(pushTarget({ type: 'new_reader', notificationIds: ['n1'] })).toEqual({ pathname: '/notifications' });
+    expect(pushTarget({ kind: 'reminder', slot: 'morning', localDate: '2026-11-13' })).toBeNull();
+    expect(pushTarget(undefined)).toBeNull();
   });
 });

@@ -55,11 +55,8 @@ export default function MomentsScreen() {
       onOpenNotifications={() => router.push('/notifications')}
       onOpenMoment={(m) => router.push({ pathname: '/moment/[id]', params: { id: m.moment_id, jar: m.jar_id } })}
       onToggleLike={feed.toggleLike}
-      // Until moment threads arrive (piece 6), comments are the jar's thread, open only with the jar.
       onOpenComments={(m) =>
-        m.jar_visible
-          ? router.push({ pathname: '/comments/[jarId]', params: { jarId: m.jar_id } })
-          : router.push({ pathname: '/moment/[id]', params: { id: m.moment_id, jar: m.jar_id } })
+        router.push({ pathname: '/comments/[jarId]', params: { jarId: m.jar_id, momentId: m.moment_id } })
       }
       onFindPeople={() => router.push('/explore')}
       onInvite={() => {

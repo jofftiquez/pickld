@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,11 +28,21 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 import { CommentItem } from './CommentItem';
 import { COMMENT_MAX, COUNTER_FROM, sendable, type ThreadComment, type ThreadEntry } from './commentsModel';
 
+/** The moment a moment thread is about (0068; D-51), shown above its comments. */
+export type CommentsMoment = {
+  thumbUrl: string | null;
+  /** "#morning" */
+  slot: string;
+  caption: string | null;
+};
+
 export type CommentsViewProps = {
-  /** "Dale’s Sunday"; null while the jar loads. */
+  /** "Dale’s Sunday" (the jar thread) or "Dale’s #morning" (a moment thread); null while it loads. */
   jarTitle: string | null;
-  /** The jar's visible comment count, for the header. */
+  /** The thread's visible comment count, for the header. */
   count: number | null;
+  /** A moment thread's moment; absent for the jar thread. */
+  moment?: CommentsMoment | null;
   /** Undefined while loading. */
   thread: ThreadEntry[] | undefined;
   /** Loading failed and nothing is cached. */
@@ -53,10 +64,14 @@ export type CommentsViewProps = {
   onReport?: (comment: ThreadComment) => void;
 };
 
-/** The thread for one jar (Comments; FR-SOC-06): comments with one level of replies and the input bar. */
+/**
+ * One thread (Comments; FR-SOC-06): a jar's own, or one moment's under a small header with the moment
+ * (D-51). Comments with one level of replies and the input bar.
+ */
 export function CommentsView({
   jarTitle,
   count,
+  moment,
   thread,
   failed,
   unavailable,
@@ -126,6 +141,33 @@ export function CommentsView({
         </View>
         <View style={styles.headerSpacer} />
       </View>
+
+      {moment && !unavailable ? (
+        <View
+          accessible
+          accessibilityLabel={
+            moment.caption
+              ? t('comments.momentA11yCaption', { slot: moment.slot, caption: moment.caption })
+              : t('comments.momentA11y', { slot: moment.slot })
+          }
+          style={styles.moment}
+          testID="comments-moment"
+        >
+          {moment.thumbUrl ? (
+            <Image source={{ uri: moment.thumbUrl }} style={styles.momentThumb} contentFit="cover" accessible={false} />
+          ) : (
+            <View style={styles.momentThumb} />
+          )}
+          <View style={styles.momentText}>
+            <Text style={[textStyle('bodyMedium', '600'), { color: colors.ink }]}>{moment.slot}</Text>
+            {moment.caption ? (
+              <Text numberOfLines={2} style={[textStyle('bodySmall', '400'), { color: colors.muted }]}>
+                {moment.caption}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
 
       {unavailable ? (
         <View style={styles.message}>
@@ -250,6 +292,25 @@ const styles = StyleSheet.create({
   },
   titles: { flex: 1, alignItems: 'center' },
   headerSpacer: { width: sizes.roundButton },
+  moment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    marginHorizontal: space.xl,
+    marginBottom: space.md,
+    padding: space.md,
+    borderRadius: radius.card,
+    backgroundColor: colors.surface,
+    ...shadow.card,
+  },
+  // The Notifications row's 3:4 thumbnail size.
+  momentThumb: {
+    width: sizes.notifyAvatar,
+    height: sizes.notifyThumbHeight,
+    borderRadius: radius.thumb,
+    backgroundColor: colors.photoPlaceholder,
+  },
+  momentText: { flex: 1, gap: space.xs },
   message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, paddingHorizontal: space.xxl },
   center: { textAlign: 'center' },
   list: { paddingHorizontal: space.xl, paddingBottom: space.lg },

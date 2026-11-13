@@ -11,7 +11,7 @@ import { localDateIn } from '../../../lib/jars';
 import { nodeFetch } from '../../../lib/queue/__tests__/nodeFetch';
 import { deleteComment, fetchComments, postComment } from '../useComments';
 
-// Comments (M3-11) against the local stack: the app's own postComment / fetchComments / deleteComment
+// Comments (M3-11; moment threads 0068) against the local stack: the app's own postComment / fetchComments / deleteComment
 // with RLS (0001 comments_select), the hidden-on-insert trigger (0005) and the real fn:moderate text path
 // (0016; D-22 auto-pass). Skipped unless PICKLD_INTEGRATION=1; needs `pnpm db:start` and Edge Functions
 // served with supabase/functions/.env. Keys come from `supabase status` at runtime.
@@ -116,5 +116,35 @@ describeLocal('Comments against local Supabase', () => {
     await expect(as(outsider, () => deleteComment(parent))).rejects.toThrow();
     await as(owner, () => deleteComment(parent));
     expect(await ids(reader)).not.toContain(parent);
+  }, 60_000);
+
+  it('a moment has its own thread, counted on the moment and not on the jar (0068)', async () => {
+    const { data: m, error } = await owner.client
+      .from('moments')
+      .insert({
+        jar_id: jarId,
+        user_id: owner.id,
+        slot: 'morning',
+        photo_path: 'seed/photos/morning.jpg',
+        thumb_path: 'seed/thumbs/morning.jpg',
+        visibility: 'readers',
+        status: 'checking',
+      })
+      .select('id')
+      .single();
+    if (error) throw new Error(error.message);
+    await owner.client.functions.invoke('moderate', { body: { momentId: m.id } });
+    const jarCount = async () =>
+      (await admin.from('jars').select('comment_count').eq('id', jarId).single()).data?.comment_count;
+    const before = await jarCount();
+
+    const posted = await as(reader, () => postComment(jarId, reader.id, 'That light', null, m.id));
+    const thread = (await as(owner, () => fetchComments(jarId, m.id))).map((c) => c.id);
+    expect(thread).toEqual([posted]);
+    expect(await ids(owner)).not.toContain(posted);
+    await expect(as(outsider, () => postComment(jarId, outsider.id, 'Hi', null, m.id))).rejects.toThrow();
+    const moment = await admin.from('moments').select('comment_count').eq('id', m.id).single();
+    expect(moment.data?.comment_count).toBe(1);
+    expect(await jarCount()).toBe(before);
   }, 60_000);
 });

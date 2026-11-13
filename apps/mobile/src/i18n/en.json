@@ -178,6 +178,9 @@
   "comments": {
     "title": "Comments",
     "subtitle": "{{title}} · {{count}}",
+    "momentTitle": "{{name}}’s {{slot}}",
+    "momentA11y": "Comments on the {{slot}} moment",
+    "momentA11yCaption": "Comments on the {{slot}} moment: {{caption}}",
     "back": "Back",
     "loading": "Loading comments",
     "failed": "Couldn’t load the comments.",
@@ -912,6 +915,8 @@
     "yourMoment": "your moment",
     "comment": "<bold>{{name}}</bold> commented: “{{body}}”",
     "commentPlain": "<bold>{{name}}</bold> commented on your jar",
+    "commentMoment": "<bold>{{name}}</bold> commented on your moment: “{{body}}”",
+    "commentMomentPlain": "<bold>{{name}}</bold> commented on your moment",
     "reply": "<bold>{{name}}</bold> replied: “{{body}}”",
     "replyPlain": "<bold>{{name}}</bold> replied to your comment",
     "fullJar": "Your {{weekday}} jar is full. <bold>{{count}} of {{max}} moments!</bold>",
