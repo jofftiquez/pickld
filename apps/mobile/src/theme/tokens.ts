@@ -331,9 +331,8 @@ export const sizes = {
   holdButton: 82, // the green button inside it
   promiseLogo: 60, // Pickld wordmark width on Promise
   tipJar: 40, // jar beside the First moment tip title (Coach)
-  shareCardWidth: 234, // the 9:16 card preview on Share jar (ShareCard)
+  shareSwatch: 44, // background swatches on Share (T-509)
   shareAction: 54, // round action wells on Share jar
-  shareLogo: 40, // wordmark width on the card
   lidStage: 200, // tinted circle behind the jar (JarLid)
   lidJarLarge: 124, // jar on Pick your jar
   lidSwatch: 44, // colour squares on Pick your jar

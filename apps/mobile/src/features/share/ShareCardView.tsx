@@ -1,31 +1,30 @@
 import { Image } from 'expo-image';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PixelRatio, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
-import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import type { IconName } from '@/components/icons';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { Toggle } from '@/components/Toggle';
-import { parseEdits } from '@/features/edit/edits';
-import { MomentCover } from '@/features/moment/MomentCover';
-import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
-import { colors, radius, sizes, slots, space } from '@/theme/tokens';
 import { useLargeText } from '@/lib/useLargeText';
+import { textStyle } from '@/theme/text';
+import { colors, radius, sizes, space } from '@/theme/tokens';
 
-import type { CardRef } from './shareActions';
-import type { ShareCard } from './shareCard';
-
-// The wordmark pre-coloured brand green (see PromiseView).
-const logo = require('../../../assets/brand/wordmark.png');
-const LOGO_ASPECT = 1200 / 496;
-const CARD_HEIGHT = (sizes.shareCardWidth * 16) / 9;
-const GAP = 4;
-const TILE_WIDTH = (sizes.shareCardWidth - 2 * space.md - 3 * GAP) / 4;
+import { StoryCard, type StoryCardProps } from './StoryCard';
+import {
+  canvasSize,
+  exportUnit,
+  paletteFor,
+  storyBackgrounds,
+  storyFormats,
+  type StoryBackground,
+  type StoryFormat,
+} from './storyLayout';
 
 export type ShareAction = 'save' | 'copy' | 'message' | 'more';
 const ACTIONS: { key: ShareAction; icon: IconName; label: 'save' | 'copy' | 'message' | 'more' }[] = [
@@ -37,36 +36,35 @@ const ACTIONS: { key: ShareAction; icon: IconName; label: 'save' | 'copy' | 'mes
 
 export type ShareCardViewProps = {
   insets: EdgeInsets;
-  /** The card view, rendered to the image (collapsable off so Skia can snapshot it). */
-  cardRef: CardRef;
-  card: ShareCard;
-  title: string;
-  /** "Nov 8, 2026" */
-  date: string;
-  authorName: string;
-  tz: string;
+  /** Everything the shared image shows; its ref is rendered to the image. */
+  story: Omit<StoryCardProps, 'unit'>;
+  /** "Share jar" or "Share moment". */
+  heading: string;
   includeCaption: boolean;
   /** Short feedback after an action ("Link copied"), or an error. */
   notice: { text: string; error: boolean } | null;
   busy: boolean;
+  onFormat: (format: StoryFormat) => void;
+  onBackground: (background: StoryBackground) => void;
   onToggleCaption: (value: boolean) => void;
   onAction: (action: ShareAction) => void;
   onShareTo: () => void;
   onBack: () => void;
 };
 
-/** Share jar (FR-SOC-10; design: ShareCard): the 9:16 card, Include captions, and the share actions. */
+/**
+ * Share a jar or a moment (FR-SOC-10, T-509; design: ShareCard): the Story or post image, its format and
+ * background, Include captions, and the share actions.
+ */
 export function ShareCardView({
   insets,
-  cardRef,
-  card,
-  title,
-  date,
-  authorName,
-  tz,
+  story,
+  heading,
   includeCaption,
   notice,
   busy,
+  onFormat,
+  onBackground,
   onToggleCaption,
   onAction,
   onShareTo,
@@ -74,7 +72,12 @@ export function ShareCardView({
 }: ShareCardViewProps) {
   const { t } = useTranslation();
   const large = useLargeText();
-  const count = card.moments.length;
+  const [stage, setStage] = useState({ width: 0, height: 0 });
+  const unit = exportUnit(PixelRatio.get());
+  const canvas = canvasSize(story.format);
+  const full = { width: canvas.width * unit, height: canvas.height * unit };
+  const scale = Math.max(0.01, Math.min(stage.width / full.width, stage.height / full.height));
+  const swatchUri = (story.moment ?? story.card.moments[0])?.thumbUrl ?? null;
   return (
     <View style={styles.screen} testID="share-screen">
       <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
@@ -86,59 +89,32 @@ export function ShareCardView({
           testID="share-back"
         />
         <Text accessibilityRole="header" style={[textStyle('cardTitle'), styles.headerTitle]}>
-          {t('share.title')}
+          {heading}
         </Text>
         <View style={styles.headerSpace} />
       </View>
-      <View style={styles.stage}>
+      <View
+        style={styles.stage}
+        onLayout={({ nativeEvent: { layout } }) => setStage({ width: layout.width, height: layout.height })}
+      >
+        {/* The card is laid out at its export size and only scaled down here, so the saved image is sharp. */}
         <View
-          ref={cardRef}
-          collapsable={false}
-          style={styles.card}
-          accessible
-          accessibilityRole="image"
-          accessibilityLabel={t('share.card', { title, date, count, max: slots.length })}
-          testID="share-card"
+          style={{
+            width: full.width * scale,
+            height: full.height * scale,
+            borderRadius: radius.shareCard,
+            overflow: 'hidden',
+          }}
         >
-          <View style={styles.author}>
-            <Avatar name={authorName} size="sm" decorative />
-            <View style={styles.authorText}>
-              <Text style={[textStyle('bodyMedium', '700'), { color: colors.ink }]} numberOfLines={1}>
-                {title}
-              </Text>
-              <Text style={[textStyle('caption'), { color: colors.inkSoft }]}>
-                {t('share.subtitle', { date, count, max: slots.length })}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.grid}>
-            {card.moments.map((m) => {
-              const edits = parseEdits(m.edits);
-              return (
-                <View key={m.id} style={styles.tile} testID={`share-card-${m.slot}`}>
-                  {m.thumbUrl !== null && hasVisibleEdits(edits) ? (
-                    <MomentCover
-                      uri={m.thumbUrl}
-                      edits={edits}
-                      stamp={{ capturedAt: new Date(m.captured_at ?? m.added_at), tz }}
-                      accessible={false}
-                    />
-                  ) : m.thumbUrl !== null ? (
-                    <Image source={{ uri: m.thumbUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
-          {card.caption ? (
-            <Text style={[textStyle('caption'), { color: colors.inkSoft }]} numberOfLines={3} testID="share-caption">
-              {t('share.caption', { caption: card.caption })}
-            </Text>
-          ) : null}
-          <View style={styles.spacer} />
-          <View style={styles.footer}>
-            <Image source={logo} style={styles.logo} contentFit="contain" accessible={false} />
-            <Text style={[textStyle('caption', '600'), { color: colors.inkSoft }]}>{card.link}</Text>
+          <View
+            style={{
+              position: 'absolute',
+              left: (full.width * (scale - 1)) / 2,
+              top: (full.height * (scale - 1)) / 2,
+              transform: [{ scale }],
+            }}
+          >
+            <StoryCard {...story} unit={unit} />
           </View>
         </View>
       </View>
@@ -146,10 +122,50 @@ export function ShareCardView({
         style={styles.sheet}
         contentContainerStyle={[styles.sheetContent, { paddingBottom: insets.bottom + space.lg }]}
       >
+        <SegmentedControl
+          segments={storyFormats.map((key) => ({ key, label: t(`share.format.${key}`) }))}
+          selected={story.format}
+          onSelect={onFormat}
+          accessibilityLabel={t('share.format.label')}
+          variant="dark"
+          testID="share-format"
+        />
+        <View accessibilityRole="radiogroup" accessibilityLabel={t('share.background.label')} style={styles.swatches}>
+          {storyBackgrounds.map((key) => {
+            const palette = paletteFor(key, story.lidColor);
+            const selected = key === story.background;
+            return (
+              <Pressable
+                key={key}
+                accessibilityRole="radio"
+                accessibilityLabel={t(`share.background.${key}`)}
+                accessibilityState={{ checked: selected }}
+                onPress={() => onBackground(key)}
+                hitSlop={hitSlopFor(sizes.shareSwatch, sizes.shareSwatch)}
+                style={[styles.swatch, selected && styles.swatchSelected]}
+                testID={`share-bg-${key}`}
+              >
+                <View style={[styles.swatchFill, { backgroundColor: palette.fill }]}>
+                  {palette.blurred && swatchUri ? (
+                    <Image
+                      source={{ uri: swatchUri }}
+                      style={StyleSheet.absoluteFill}
+                      contentFit="cover"
+                      blurRadius={6}
+                    />
+                  ) : null}
+                  {palette.card ? <View style={styles.swatchCard} /> : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
         <View style={styles.toggleRow}>
           <View style={styles.toggleText}>
             <Text style={[textStyle('cardTitle'), { color: colors.ink }]}>{t('share.includeCaptions')}</Text>
-            <Text style={[textStyle('bodySmall'), { color: colors.inkSoft }]}>{t('share.includeCaptionsBody')}</Text>
+            <Text style={[textStyle('bodySmall'), { color: colors.inkSoft }]}>
+              {t(story.moment ? 'share.includeCaptionsBodyMoment' : 'share.includeCaptionsBody')}
+            </Text>
           </View>
           <Toggle
             value={includeCaption}
@@ -199,29 +215,27 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: space.xxl, paddingBottom: space.md },
   headerTitle: { flex: 1, textAlign: 'center', color: colors.surface },
   headerSpace: { width: sizes.roundButton },
-  stage: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: space.md },
-  card: {
-    width: sizes.shareCardWidth,
-    height: CARD_HEIGHT,
-    borderRadius: radius.shareCard,
-    backgroundColor: colors.background,
-    padding: space.md,
-    gap: space.md,
-    overflow: 'hidden',
+  stage: { flex: 1, alignItems: 'center', justifyContent: 'center', marginVertical: space.md },
+  swatches: { flexDirection: 'row', justifyContent: 'space-between' },
+  swatch: {
+    width: sizes.shareSwatch,
+    height: sizes.shareSwatch,
+    borderRadius: sizes.shareSwatch / 2,
+    padding: 3,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  author: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  authorText: { flex: 1 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
-  tile: {
-    width: TILE_WIDTH,
-    height: (TILE_WIDTH * 4) / 3,
-    borderRadius: radius.shareTile,
+  swatchSelected: { borderColor: colors.ink },
+  swatchFill: {
+    flex: 1,
+    borderRadius: sizes.shareSwatch / 2,
     overflow: 'hidden',
-    backgroundColor: colors.tileIconWell,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
-  spacer: { flex: 1 },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  logo: { width: sizes.shareLogo, height: sizes.shareLogo / LOGO_ASPECT },
+  swatchCard: { width: '45%', height: '55%', borderRadius: radius.shareTile / 2, backgroundColor: colors.surface },
   sheet: {
     flexGrow: 0,
     backgroundColor: colors.surface,

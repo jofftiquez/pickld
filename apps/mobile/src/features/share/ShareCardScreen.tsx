@@ -10,31 +10,38 @@ import { track } from '@/lib/analytics';
 import { formatDate } from '@/lib/format';
 import { jarUrl } from '@/lib/links';
 import { textStyle } from '@/theme/text';
-import { colors, space } from '@/theme/tokens';
+import { colors, slots, space } from '@/theme/tokens';
 
 import { type CardRef, copyLink, messageLink, renderCardImage, saveImage, shareImage, shareLink } from './shareActions';
 import { buildShareCard } from './shareCard';
 import { ShareCardView, type ShareAction } from './ShareCardView';
+import { shareableMoment, type StoryBackground, type StoryFormat } from './storyLayout';
 
-/** Share jar for one jar (FR-SOC-10). Reads the jar as the viewer, so RLS and the card model both filter. */
-export function ShareCardScreen({ jarId }: { jarId: string | undefined }) {
+/**
+ * Share a jar, or one moment of it when `momentId` is set (FR-SOC-10, T-509). Reads the jar as the viewer,
+ * so RLS and the card model both filter; a private, checking or removed moment can't be shared.
+ */
+export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined; momentId?: string }) {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data } = useJarPage(jarId);
   const cardRef: CardRef = useRef(null);
   const [includeCaption, setIncludeCaption] = useState(true);
+  const [format, setFormat] = useState<StoryFormat>('story');
+  const [background, setBackground] = useState<StoryBackground>('blur');
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/jars'));
 
-  if (!data) {
+  const moment = data && momentId !== undefined ? shareableMoment(data.moments, momentId) : null;
+  if (!data || (momentId !== undefined && !moment)) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.camera, justifyContent: 'center', padding: space.xxl }}>
-        {data === null ? (
+        {data !== undefined ? (
           <Text style={[textStyle('body'), { color: colors.surface, textAlign: 'center' }]}>
-            {t('share.unavailable')}
+            {t(data === null ? 'share.unavailable' : 'share.unavailableMoment')}
           </Text>
         ) : null}
       </View>
@@ -44,6 +51,9 @@ export function ShareCardScreen({ jarId }: { jarId: string | undefined }) {
   const card = buildShareCard(data, { includeCaption });
   const title = jarTitle(data, t);
   const linkText = t('share.linkMessage', { title, url: jarUrl(data.jar.id) });
+  const heading = t(moment ? 'share.titleMoment' : 'share.title');
+  const fileName = moment ? `pickld-moment-${moment.id}` : `pickld-jar-${data.jar.id}`;
+  const date = formatDate(new Date(`${data.jar.local_date}T12:00:00Z`), 'UTC');
 
   type Notice = { text: string; error: boolean } | null;
   const run = async (work: () => Promise<Notice>) => {
@@ -62,7 +72,7 @@ export function ShareCardScreen({ jarId }: { jarId: string | undefined }) {
     void run(async () => {
       switch (action) {
         case 'save': {
-          const uri = await renderCardImage(cardRef, data.jar.id);
+          const uri = await renderCardImage(cardRef, fileName);
           if ((await saveImage(uri)) === 'denied') return { text: t('share.saveDenied'), error: true };
           track('share_card_exported', { destination: 'save' });
           return { text: t('share.saved'), error: false };
@@ -82,12 +92,25 @@ export function ShareCardScreen({ jarId }: { jarId: string | undefined }) {
   return (
     <ShareCardView
       insets={insets}
-      cardRef={cardRef}
-      card={card}
-      title={title}
-      date={formatDate(new Date(`${data.jar.local_date}T12:00:00Z`), 'UTC')}
-      authorName={data.author.display_name}
-      tz={data.jar.tz}
+      heading={heading}
+      story={{
+        cardRef,
+        card,
+        moment,
+        includeCaption,
+        format,
+        background,
+        lidColor: data.author.lid_color ?? null,
+        title,
+        date,
+        authorName: data.author.display_name,
+        tz: data.jar.tz,
+        accessibilityLabel: moment
+          ? t('share.cardMoment', { name: data.author.display_name, slot: t(`slots.${moment.slot}`), date })
+          : t('share.card', { title, date, count: card.moments.length, max: slots.length }),
+      }}
+      onFormat={setFormat}
+      onBackground={setBackground}
       includeCaption={includeCaption}
       notice={notice}
       busy={busy}
@@ -95,7 +118,7 @@ export function ShareCardScreen({ jarId }: { jarId: string | undefined }) {
       onAction={onAction}
       onShareTo={() =>
         void run(async () => {
-          await shareImage(await renderCardImage(cardRef, data.jar.id), t('share.title'));
+          await shareImage(await renderCardImage(cardRef, fileName), heading);
           track('share_card_exported', { destination: 'share' });
           return null;
         })

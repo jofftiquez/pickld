@@ -22,6 +22,7 @@ import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarge
 import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
 import { firstName } from '@/features/jar/shareJar';
+import { onCard } from '@/features/share/shareCard';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, slots, space } from '@/theme/tokens';
@@ -41,7 +42,8 @@ export type MomentDetailViewProps = {
   onOpenComments?: () => void;
   /** Likes or unlikes the moment on screen (FR-SOC-05). */
   onToggleLike?: (target: LikeTarget) => void;
-  onShare: () => void;
+  /** Opens Share for the moment on screen (only offered for a live, non-private moment). */
+  onShare: (momentId: string) => void;
   /** More options on someone else's moment: Report (M3-21). Not shown to the owner. */
   onMore?: (momentId: string) => void;
   onRetry: () => void;
@@ -249,13 +251,16 @@ export function MomentDetailView({
             testID="moment-comments"
           />
           <View style={styles.flex} />
-          <RoundIconButton
-            icon="share"
-            accessibilityLabel={t('moment.detail.share')}
-            accessibilityHint={t('jarPage.shareHint')}
-            onPress={onShare}
-            testID="moment-share"
-          />
+          {/* Only a live, non-private moment can leave its owner (rule 9). */}
+          {onCard(moment) ? (
+            <RoundIconButton
+              icon="share"
+              accessibilityLabel={t('moment.detail.share')}
+              accessibilityHint={t('moment.detail.shareHint')}
+              onPress={() => onShare(moment.id)}
+              testID="moment-share"
+            />
+          ) : null}
         </View>
       </View>
     </View>

@@ -47,8 +47,9 @@ export default function MomentScreen() {
         onOpenComments={() => {
           if (page.data) router.push({ pathname: '/comments/[jarId]', params: { jarId: page.data.jar.id } });
         }}
-        onShare={() => {
-          if (page.data) router.push({ pathname: '/share/[jarId]', params: { jarId: page.data.jar.id } });
+        onShare={(momentId) => {
+          if (page.data)
+            router.push({ pathname: '/share/[jarId]', params: { jarId: page.data.jar.id, moment: momentId } });
         }}
         onMore={setReporting}
         onRetry={() => void page.refresh()}
