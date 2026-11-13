@@ -10,6 +10,8 @@ import { after, before, test } from 'node:test';
 import { createClient } from '@supabase/supabase-js';
 import { chromium } from 'playwright';
 
+import { signInWithCode } from './signIn.mjs';
+
 const here = path.dirname(new URL(import.meta.url).pathname);
 const PORT = 3292;
 const base = `http://127.0.0.1:${PORT}`;
@@ -106,9 +108,8 @@ before(async () => {
     }
   }
   browser = await chromium.launch();
-  const link = must(await admin.auth.admin.generateLink({ type: 'magiclink', email: moderator.email }));
   page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
-  await page.goto(`${base}/auth/confirm?token_hash=${link.properties.hashed_token}&type=magiclink`);
+  await signInWithCode(page, { base, admin, email: moderator.email });
 });
 
 after(async () => {
