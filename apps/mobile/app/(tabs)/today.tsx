@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt';
+import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
 import { retryUpload } from '@/features/jar/retryUpload';
@@ -149,6 +150,7 @@ export default function TodayScreen() {
         }
         onRetry={(queueId) => void retryUpload(queueId)}
         zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}
+        suspension={me?.suspendedUntil !== undefined ? <SuspensionBanner until={me.suspendedUntil} tz={tz} /> : null}
         zoneBanner={
           zone.show && zone.zones ? (
             <TimeZoneBanner from={zone.zones.from} to={zone.zones.to} onDismiss={zone.acknowledge} />

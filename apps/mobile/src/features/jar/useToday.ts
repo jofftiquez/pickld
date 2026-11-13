@@ -51,6 +51,11 @@ export type Me = {
   lidColor: string;
   /** Publish review's preselected visibility (FR-PUB-01); optional in caches persisted before M3-01. */
   defaultVisibility?: Visibility;
+  /**
+   * Set while the account is suspended (FR-SAF-06, D-11): the end of the suspension as an ISO time, or null
+   * when it has no end date (a child-safety match). Undefined when the account is active.
+   */
+  suspendedUntil?: string | null;
 };
 
 const photoUrlsResponse = z.object({
@@ -130,10 +135,17 @@ export async function fetchMe(userId: string): Promise<Me> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('profiles')
-    .select('username, display_name, avatar_path, reader_count, lid_color, default_visibility')
+    .select('username, display_name, avatar_path, reader_count, lid_color, default_visibility, status')
     .eq('id', userId)
     .single();
   if (error) throw new Error(error.message);
+  // suspended_until is only readable through my_profile() (column grants), so it is asked for only when needed.
+  let suspendedUntil: string | null | undefined;
+  if (data.status === 'suspended') {
+    const own = await supabase.rpc('my_profile').select('suspended_until').maybeSingle();
+    if (own.error) throw new Error(own.error.message);
+    suspendedUntil = own.data?.suspended_until ?? null;
+  }
   // TODO(M3-13): avatar photo URLs; until then the avatar shows initials.
   return {
     displayName: data.display_name,
@@ -142,6 +154,7 @@ export async function fetchMe(userId: string): Promise<Me> {
     readerCount: data.reader_count,
     lidColor: data.lid_color,
     defaultVisibility: data.default_visibility,
+    ...(suspendedUntil !== undefined ? { suspendedUntil } : {}),
   };
 }
 

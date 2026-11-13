@@ -18,6 +18,9 @@ const USER = '6f1c1f7e-8a43-4c1e-9d0b-3c0f5d1e2a10';
 type Row = Record<string, unknown>;
 const mockBackend = {
   offline: false,
+  /** profiles.status and, through my_profile(), suspended_until (FR-SAF-06). */
+  profileStatus: 'active',
+  suspendedUntil: null as string | null,
   jars: [] as Row[],
   moments: [] as Row[],
   queue: [] as Partial<QueueItem>[],
@@ -44,7 +47,13 @@ jest.mock('@/lib/supabase', () => {
       : {
           data:
             table === 'profiles'
-              ? { display_name: 'Dale Cruz', avatar_path: null, reader_count: 312, lid_color: 'brand' }
+              ? {
+                  display_name: 'Dale Cruz',
+                  avatar_path: null,
+                  reader_count: 312,
+                  lid_color: 'brand',
+                  status: mockBackend.profileStatus,
+                }
               : table === 'jars'
                 ? mockBackend.jars
                 : mockBackend.moments,
@@ -73,6 +82,14 @@ jest.mock('@/lib/supabase', () => {
   };
   const client = {
     from: query,
+    rpc: (name: string) => {
+      if (name !== 'my_profile') throw new Error(`unexpected rpc ${name}`);
+      const builder = {
+        select: () => builder,
+        maybeSingle: async () => ({ data: { suspended_until: mockBackend.suspendedUntil }, error: null }),
+      };
+      return builder;
+    },
     functions: { invoke: async () => ({ data: { data: { moments: [] } }, error: null }) },
   };
   return { getSupabase: () => client };
@@ -143,6 +160,8 @@ async function renderScreen(client: QueryClient) {
 
 beforeEach(() => {
   mockBackend.offline = false;
+  mockBackend.profileStatus = 'active';
+  mockBackend.suspendedUntil = null;
   mockBackend.jars = [];
   mockBackend.moments = [];
   mockBackend.queue = [];
@@ -283,6 +302,36 @@ describe('Today screen', () => {
     await renderScreen(newClient());
     await waitFor(() => expect(screen.getByText('Uploading')).toBeTruthy());
     expect(screen.queryByTestId('offline-banner')).toBeNull();
+  });
+
+  it('a suspended account sees the notice with the end date, and its own jar (FR-SAF-06)', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];
+    mockBackend.moments = [liveMoment('whereami')];
+    mockBackend.profileStatus = 'suspended';
+    // 16:30 UTC is already Nov 17 in Manila, the phone's zone.
+    mockBackend.suspendedUntil = '2026-11-16T16:30:00Z';
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByTestId('suspension-banner')).toBeTruthy());
+    expect(screen.getByText('Your account is suspended until Tue, Nov 17.')).toBeTruthy();
+    expect(screen.getByLabelText(/You can still look at your own days\.$/)).toBeTruthy();
+  });
+
+  it('a suspension with no end date says so', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];
+    mockBackend.profileStatus = 'suspended';
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('Your account is suspended.')).toBeTruthy());
+  });
+
+  it('an active account sees no suspension notice', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];
+    mockBackend.suspendedUntil = '2026-11-16T16:30:00Z';
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText(/Dale/)).toBeTruthy());
+    expect(screen.queryByTestId('suspension-banner')).toBeNull();
   });
 
   it('a checking tile and a removed tile open /moment/<id>; the removed slot can be captured again (M2-21)', async () => {
