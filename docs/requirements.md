@@ -92,7 +92,7 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 | FR-SOC-07 | Follow (read) | Read and Read back follow an author; Reading unfollows; owner can remove a reader; counts update on both profiles | P0 | Profiles, Readers & authors |
 | FR-SOC-08 | Profiles | Cover, avatar, name, @username, bio (up to 120 characters), Readers · Authors · Jars counts, Jars and Moments tabs; “Reads you” tag on other profiles | P0 | My profile, Other profile |
 | FR-SOC-09 | Readers and authors lists | Switch between the two lists; search by name or username; Reading / Read back buttons | P0 | Readers & authors |
-| FR-SOC-10 | Share jar card | 9:16 image with author, date, 8 moments, optional last caption, Pickld logo and pickld.me/username; Save image, Copy link, Message, Share to…; private moments never included | P0 | Share jar card |
+| FR-SOC-10 | Share jar card | 9:16 image with author, date, the shown moments in a layout the user picks (layouts follow the moment count, first one by default; D-62), optional last caption, Pickld logo and pickld.me/username; Save image, Copy link, Message, Share to…; private moments never included | P0 | Share jar card |
 | FR-SOC-11 | Edit profile | Change cover, avatar, name, username (availability check), bio with counter, jar lid | P0 | Edit profile |
 
 ## My days, memories, explore and notifications
