@@ -40,6 +40,8 @@ export const jarMomentRow = z.object({
   added_at: z.string(),
   edits: z.unknown(),
   like_count: z.number(),
+  /** The moment's own thread (0068, D-51). Optional: jar pages cached before it was selected lack it. */
+  comment_count: z.number().optional(),
 });
 export type JarMomentRow = z.infer<typeof jarMomentRow>;
 

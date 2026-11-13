@@ -11,6 +11,7 @@ import { LogBox } from 'react-native';
 
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ToastHost } from '@/components/ToastHost';
+import { usePushTaps } from '@/features/notifications/usePushTaps';
 import { startAuth } from '@/lib/authBootstrap';
 import { useAuthStore } from '@/lib/authStore';
 import { createQueryClient, persistOptions } from '@/lib/queryClient';
@@ -42,6 +43,8 @@ export default function RootLayout() {
   useEffect(() => startTelemetry(), []);
   useEffect(() => startAuth(getSupabase), []);
   useEffect(() => startUploadRunner(getSupabase, { network: deviceNetwork }), []);
+  // After the stack has mounted (fonts loaded) and only signed in.
+  usePushTaps(loaded && signedIn);
 
   useEffect(() => {
     if (loaded) void SplashScreen.hideAsync();

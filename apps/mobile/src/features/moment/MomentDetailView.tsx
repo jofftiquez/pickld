@@ -38,8 +38,8 @@ export type MomentDetailViewProps = {
   momentId: string;
   insets: EdgeInsets;
   onClose: () => void;
-  /** Opens the jar's Comments. */
-  onOpenComments?: () => void;
+  /** Opens the comments of the moment on screen: its own thread (D-51). */
+  onOpenComments?: (momentId: string) => void;
   /** Likes or unlikes the moment on screen (FR-SOC-05). */
   onToggleLike?: (target: LikeTarget) => void;
   /** Opens Share for the moment on screen (only offered for a live, non-private moment). */
@@ -258,9 +258,9 @@ export function MomentDetailView({
             testID="moment-likes"
           />
           <CommentsButton
-            count={data.jar.comment_count}
+            count={moment.comment_count ?? 0}
             height={sizes.momentAction}
-            onPress={() => onOpenComments?.()}
+            onPress={() => onOpenComments?.(moment.id)}
             testID="moment-comments"
           />
           <View style={styles.flex} />

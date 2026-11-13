@@ -45,8 +45,8 @@ export default function MomentScreen() {
         insets={insets}
         onClose={close}
         onToggleLike={like.toggle}
-        onOpenComments={() => {
-          if (page.data) router.push({ pathname: '/comments/[jarId]', params: { jarId: page.data.jar.id } });
+        onOpenComments={(momentId) => {
+          if (page.data) router.push({ pathname: '/comments/[jarId]', params: { jarId: page.data.jar.id, momentId } });
         }}
         onShare={(momentId) => {
           if (page.data)

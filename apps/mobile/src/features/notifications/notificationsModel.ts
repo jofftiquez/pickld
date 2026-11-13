@@ -124,7 +124,7 @@ export type NotificationTarget =
   | { pathname: '/u/[username]'; params: { username: string } }
   | { pathname: '/jar/[id]'; params: { id: string } }
   | { pathname: '/moment/[id]'; params: { id: string } }
-  | { pathname: '/comments/[jarId]'; params: { jarId: string } };
+  | { pathname: '/comments/[jarId]'; params: { jarId: string; momentId?: string } };
 
 export function targetOf(entry: NotificationEntry): NotificationTarget | null {
   switch (entry.type) {
@@ -135,7 +135,11 @@ export function targetOf(entry: NotificationEntry): NotificationTarget | null {
     }
     case 'comment':
     case 'reply':
-      return entry.jarId ? { pathname: '/comments/[jarId]', params: { jarId: entry.jarId } } : null;
+      // A comment or reply in a moment's own thread opens that thread (0068, D-51).
+      if (!entry.jarId) return null;
+      return entry.momentId
+        ? { pathname: '/comments/[jarId]', params: { jarId: entry.jarId, momentId: entry.momentId } }
+        : { pathname: '/comments/[jarId]', params: { jarId: entry.jarId } };
     case 'like':
     case 'removed':
     case 'appeal_decided':
@@ -144,6 +148,39 @@ export function targetOf(entry: NotificationEntry): NotificationTarget | null {
     case 'full_jar':
       return entry.jarId ? { pathname: '/jar/[id]', params: { id: entry.jarId } } : null;
   }
+}
+
+/** What fn:send-push puts in a push's data (supabase/functions/send-push/messages.ts). Reminders have none of it. */
+const pushData = z.object({
+  type: notificationType,
+  jarId: z.string().optional(),
+  momentId: z.string().optional(),
+  commentId: z.string().optional(),
+});
+
+/**
+ * Where tapping a server push goes: the same screen as its Notifications row (a comment on a moment opens
+ * that moment's thread, 0068), else the Notifications screen. Null for anything that isn't a server push
+ * (a slot reminder opens the app where it is).
+ */
+export function pushTarget(data: unknown): NotificationTarget | { pathname: '/notifications' } | null {
+  const parsed = pushData.safeParse(data);
+  if (!parsed.success) return null;
+  const { type, jarId, momentId, commentId } = parsed.data;
+  const entry: NotificationEntry = {
+    key: '',
+    type,
+    ids: [],
+    createdAt: '',
+    actors: [],
+    jarId: jarId ?? null,
+    momentId: momentId ?? null,
+    commentId: commentId ?? null,
+    jarDate: null,
+    commentBody: null,
+    unread: false,
+  };
+  return targetOf(entry) ?? { pathname: '/notifications' };
 }
 
 /** Short age beside an entry: "now", "12m", "1h" today; the weekday this week; a date before that. */
