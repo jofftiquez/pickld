@@ -692,6 +692,30 @@
       "saveFailed": "Couldn’t save the new crop. Check your connection and try again."
     }
   },
+  "preview": {
+    "title": "Moment preview",
+    "openHint": "Opens the moment preview",
+    "pagerHint": "Swipe up or down with one finger to see another of today’s moments",
+    "edit": "Edit",
+    "editHint": "Opens the editor for this moment",
+    "share": "Share",
+    "shareHint": "Opens Share for this moment",
+    "shareOnlyMe": "Only you can see this moment, so it can’t be shared",
+    "visibility": "Visibility",
+    "visibilityValue": "Visibility: {{value}}",
+    "visibilityHint": "Choose who can see this moment",
+    "more": "More",
+    "moreHint": "Re-crop, move or delete this moment",
+    "delete": "Delete",
+    "deleteHint": "Deletes this photo from your phone",
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "comments_one": "{{count}} comment",
+    "comments_other": "{{count}} comments",
+    "queued": "Saved on your phone and not uploaded yet. You can edit or delete it until it’s up.",
+    "uploading": "Uploading… You can change it once it’s up.",
+    "notAvailable": "This moment isn’t in today’s jar any more."
+  },
   "momentOptions": {
     "title": "Moment options",
     "openHint": "Opens moment options",

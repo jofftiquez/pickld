@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { MomentTile } from '@/components/MomentTile';
 import { MomentCover } from '@/features/moment/MomentCover';
+import { opensPreview } from '@/features/moment/momentPreview';
 import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
@@ -45,8 +46,8 @@ export type TodayViewProps = {
   suspension?: ReactNode;
   /** A checking or removed server moment: opens /moment/[id] (M2-21). */
   onOpenMoment?: (momentId: string) => void;
-  /** A live moment, or a queued photo that is waiting or failed: opens Moment options (M2-23). */
-  onOpenOptions?: (tile: GridTile) => void;
+  /** A live moment, or a queued photo that is waiting or failed: opens the moment preview (QA item 3, D-54). */
+  onOpenPreview?: (tile: GridTile) => void;
   /** Opens Publish review (M3-01); null or missing disables the jar card's Publish. */
   onPublish?: (() => void) | null;
   /** A published jar (M3-02, TodayPublished): the card's Published chip, likes and "Published 10:10 PM · Readers". */
@@ -54,12 +55,6 @@ export type TodayViewProps = {
   /** The Published chip and line: open the jar's visibility menu. */
   onOpenVisibility?: () => void;
 };
-
-/** Tiles that open Moment options: the owner's live moments and queued photos not uploading right now. */
-export function hasOptions(tile: Pick<GridTile, 'state' | 'momentId' | 'queueId'>): boolean {
-  if (tile.queueId !== null) return tile.state === 'waiting' || tile.state === 'failed';
-  return tile.state === 'filled' && tile.momentId !== null;
-}
 
 /** Today (design: Main; first day: EmptyToday). Presentational; app/(tabs)/today.tsx loads the data. */
 export function TodayView({
@@ -81,7 +76,7 @@ export function TodayView({
   zoneBanner = null,
   suspension = null,
   onOpenMoment,
-  onOpenOptions,
+  onOpenPreview,
   onPublish = null,
   published = null,
   onOpenVisibility,
@@ -164,17 +159,16 @@ export function TodayView({
                     time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
                     visibility={tile.visibility}
                     addedLater={tile.addedLater}
-                    // TODO(M3-08): Moment detail on filled tiles, with Moment options under its More button.
                     onPress={
                       capturable
                         ? () => onCapture(tile.slot)
                         : openable && momentId !== null && onOpenMoment
                           ? () => onOpenMoment(momentId)
-                          : hasOptions(tile) && onOpenOptions
-                            ? () => onOpenOptions(tile)
+                          : opensPreview(tile) && onOpenPreview
+                            ? () => onOpenPreview(tile)
                             : undefined
                     }
-                    accessibilityHint={hasOptions(tile) && onOpenOptions ? t('momentOptions.openHint') : undefined}
+                    accessibilityHint={opensPreview(tile) && onOpenPreview ? t('preview.openHint') : undefined}
                     onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}
                     testID={`tile-${tile.slot}`}
                   />

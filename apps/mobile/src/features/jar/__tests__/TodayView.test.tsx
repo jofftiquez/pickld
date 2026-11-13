@@ -278,7 +278,7 @@ describe('TodayView', () => {
   });
 });
 
-describe('TodayView: Moment options (M2-23)', () => {
+describe('TodayView: tiles open the moment preview (QA item 3, D-54)', () => {
   const queued = (id: number, slot: ServerMoment['slot'], state: 'queued' | 'uploading' | 'failed' | 'uploaded') => ({
     id,
     slot,
@@ -290,11 +290,11 @@ describe('TodayView: Moment options (M2-23)', () => {
     visibility: 'readers' as const,
   });
 
-  it('live moments and waiting or failed photos open options; uploading, checking, removed and empty tiles do not', async () => {
-    const onOpenOptions = jest.fn();
+  it('live moments and waiting or failed photos open the preview; uploading, checking, removed and empty tiles do not', async () => {
+    const onOpenPreview = jest.fn();
     const { onOpenMoment, onCapture } = await renderToday({
       hasAnyJar: true,
-      onOpenOptions,
+      onOpenPreview,
       tiles: buildTodayGrid({
         localDate: '2026-11-10',
         moments: [
@@ -315,12 +315,12 @@ describe('TodayView: Moment options (M2-23)', () => {
     await fireEvent.press(screen.getByTestId('tile-whereami'));
     await fireEvent.press(screen.getByTestId('tile-whoamiwith'));
     await fireEvent.press(screen.getByTestId('tile-morning'));
-    expect(onOpenOptions.mock.calls.map(([tile]) => [tile.slot, tile.momentId, tile.queueId])).toEqual([
+    expect(onOpenPreview.mock.calls.map(([tile]) => [tile.slot, tile.momentId, tile.queueId])).toEqual([
       ['whereami', 'm-whereami', null],
       ['whoamiwith', null, 21],
       ['morning', null, 23],
     ]);
-    expect(screen.getByTestId('tile-whereami').props.accessibilityHint).toBe('Opens moment options');
+    expect(screen.getByTestId('tile-whereami').props.accessibilityHint).toBe('Opens the moment preview');
 
     // Uploading right now (changing it would race the upload) and uploaded-but-not-loaded: not pressable.
     expect(screen.getByTestId('tile-selfie')).toBeDisabled();
@@ -331,7 +331,7 @@ describe('TodayView: Moment options (M2-23)', () => {
     await fireEvent.press(screen.getByTestId('tile-evening'));
     expect(onOpenMoment.mock.calls).toEqual([['m-checking'], ['m-removed']]);
     expect(onCapture.mock.calls).toEqual([['evening']]);
-    expect(onOpenOptions).toHaveBeenCalledTimes(3);
+    expect(onOpenPreview).toHaveBeenCalledTimes(3);
   });
 });
 

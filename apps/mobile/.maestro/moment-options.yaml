@@ -1,6 +1,7 @@
-# M2-23 (FR-CAP-10): Moment options on a live moment. Tap a filled Today tile → the sheet (design:
-# MomentOptions) → Move page → Delete asks first (Cancel keeps it) → Re-crop opens Crop on the saved photo
-# (Cancel changes nothing) → Edit caption opens the editor with the caption focused (Close changes nothing).
+# M2-23 (FR-CAP-10) and QA item 3 (D-54, FR-JAR-02): a filled Today tile opens the moment preview (design:
+# MomentPreview) → Visibility opens the Visibility page → More opens Moment options without the bar's actions
+# (design: MomentOptions) → Move page → Delete asks first (Cancel keeps it) → Re-crop opens Crop on the saved
+# photo (Cancel returns to the preview) → Edit opens the editor (Close changes nothing).
 # Nothing is changed on the server. Run on the iOS Simulator with a dev build, signed in as a user whose
 # open jar has SLOT filled with a live moment (the seeded dale@pickld.test has #whereami):
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/moment-options.yaml
@@ -22,14 +23,41 @@ appId: me.pickld.app
     id: tile-${output.slot}
 - extendedWaitUntil:
     visible:
+      id: moment-preview
+    timeout: 10000
+- assertVisible: '#${output.slot}'
+- assertVisible:
+    id: preview-edit
+- assertVisible:
+    id: preview-share
+- assertVisible:
+    id: preview-visibility-action
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: MomentPreview-ios
+
+# Visibility opens straight on the Visibility page; Cancel closes it.
+- tapOn:
+    id: preview-visibility-action
+- extendedWaitUntil:
+    visible: Who can see this moment
+    timeout: 5000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: MomentPreview-visibility-ios
+- tapOn:
+    id: moment-options-cancel
+
+# More: Re-crop, Move and Delete; Edit and Visibility are on the bar.
+- tapOn:
+    id: preview-more
+- extendedWaitUntil:
+    visible:
       id: moment-options-delete
     timeout: 5000
-- assertVisible: '#${output.slot}'
-- assertVisible: Edit caption
-- assertVisible: Edit stickers and filters
 - assertVisible: Re-crop
-- assertVisible: Visibility
 - assertVisible: Move to another moment
+- assertNotVisible: Edit caption
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: MomentOptions-ios
@@ -78,23 +106,16 @@ appId: me.pickld.app
     id: crop-cancel
 - extendedWaitUntil:
     visible:
-      id: tile-${output.slot}
+      id: moment-preview
     timeout: 10000
 
-# Edit caption opens the editor on the uploaded moment, caption focused.
+# Edit opens the editor on the uploaded moment.
 - tapOn:
-    id: tile-${output.slot}
-- extendedWaitUntil:
-    visible:
-      id: moment-options-caption
-    timeout: 5000
-- tapOn:
-    id: moment-options-caption
+    id: preview-edit
 - extendedWaitUntil:
     visible:
       id: editor-caption
     timeout: 15000
-- assertVisible: Done
 - waitForAnimationToEnd:
     timeout: 3000
-- takeScreenshot: MomentOptions-caption-ios
+- takeScreenshot: MomentPreview-edit-ios
