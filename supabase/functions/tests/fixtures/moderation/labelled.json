@@ -1,0 +1,239 @@
+{
+  "about": "Hand-labelled moderation scores for the threshold replay test (M5-05). Scores only, never photos or captions. human is the moderator's verdict (keep or remove); expect is what the current thresholds must decide. Items with source beta come from scripts/moderation-labels.sql; the starting set is synthetic, written from the guidelines before beta data existed.",
+  "items": [
+    {
+      "id": "photo-coffee",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "sexual": 0.01, "violence": 0.01, "harassment": 0.02 },
+      "note": "ordinary coffee photo"
+    },
+    {
+      "id": "photo-beach",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "sexual": 0.22, "sexual/minors": 0.01 },
+      "note": "swimwear at a beach is allowed"
+    },
+    {
+      "id": "photo-gym-selfie",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "sexual": 0.31, "violence": 0.04 },
+      "note": "gym selfie, below review"
+    },
+    {
+      "id": "photo-boxing",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "violence": 0.38, "violence/graphic": 0.05 },
+      "note": "boxing class, sport"
+    },
+    {
+      "id": "photo-family-kids",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "sexual/minors": 0.01, "sexual": 0.02 },
+      "note": "family lunch with children"
+    },
+    {
+      "id": "photo-suggestive",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "review",
+      "scores": { "sexual": 0.55 },
+      "note": "borderline pose: a human decides, kept"
+    },
+    {
+      "id": "photo-lingerie",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "sexual": 0.78 },
+      "note": "sexually suggestive, queued and removed by a moderator"
+    },
+    {
+      "id": "photo-nudity",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "remove",
+      "scores": { "sexual": 0.97 },
+      "note": "explicit nudity, removed automatically"
+    },
+    {
+      "id": "photo-nudity-edge",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "remove",
+      "scores": { "sexual": 0.9 },
+      "note": "exactly at the remove threshold"
+    },
+    {
+      "id": "photo-minor-low",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "review",
+      "scores": { "sexual/minors": 0.06, "sexual": 0.08 },
+      "note": "child at a pool, queued because a miss is the costliest mistake"
+    },
+    {
+      "id": "photo-minor-high",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "remove",
+      "scores": { "sexual/minors": 0.95, "sexual": 0.96 },
+      "note": "never auto-removed under sexual/minors alone; sexual removes it, reason sexual"
+    },
+    {
+      "id": "photo-gore",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "remove",
+      "scores": { "violence/graphic": 0.94, "violence": 0.8 },
+      "note": "graphic injury"
+    },
+    {
+      "id": "photo-scraped-knee",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "review",
+      "scores": { "violence/graphic": 0.45 },
+      "note": "minor injury, queued and kept"
+    },
+    {
+      "id": "photo-self-harm",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "self-harm": 0.85, "self-harm/intent": 0.7 },
+      "note": "self-harm is never auto-removed; a human handles it with care"
+    },
+    {
+      "id": "photo-hate-symbol",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "hate": 0.81 },
+      "note": "hate symbol on a sign"
+    },
+    {
+      "id": "photo-museum-symbol",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "review",
+      "scores": { "hate": 0.52 },
+      "note": "history museum exhibit, kept with a note"
+    },
+    {
+      "id": "photo-mocking-caption",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "harassment": 0.83 },
+      "note": "photo of a classmate with a mocking caption"
+    },
+    {
+      "id": "photo-threat",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "harassment/threatening": 0.72, "violence": 0.4 },
+      "note": "threatening caption"
+    },
+    {
+      "id": "photo-knife-cooking",
+      "source": "synthetic",
+      "kind": "photo",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "violence": 0.2, "illicit/violent": 0.1 },
+      "note": "cooking with a knife"
+    },
+    {
+      "id": "text-friendly",
+      "source": "synthetic",
+      "kind": "text",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "harassment": 0.08 },
+      "note": "nice jar!"
+    },
+    {
+      "id": "text-teasing",
+      "source": "synthetic",
+      "kind": "text",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "harassment": 0.41 },
+      "note": "friendly teasing"
+    },
+    {
+      "id": "text-insult",
+      "source": "synthetic",
+      "kind": "text",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "harassment": 0.91 },
+      "note": "insult: text is never auto-removed"
+    },
+    {
+      "id": "text-slur",
+      "source": "synthetic",
+      "kind": "text",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "hate": 0.97 },
+      "note": "slur, queued"
+    },
+    {
+      "id": "text-self-harm",
+      "source": "synthetic",
+      "kind": "text",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "self-harm/intent": 0.66 },
+      "note": "statement of intent"
+    },
+    {
+      "id": "text-sexual",
+      "source": "synthetic",
+      "kind": "text",
+      "human": "remove",
+      "expect": "review",
+      "scores": { "sexual": 0.88 },
+      "note": "sexual comment"
+    },
+    {
+      "id": "text-flirty",
+      "source": "synthetic",
+      "kind": "text",
+      "human": "keep",
+      "expect": "approve",
+      "scores": { "sexual": 0.35 },
+      "note": "mild compliment"
+    }
+  ]
+}
