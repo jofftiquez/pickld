@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { usePendingCrop } from '@/features/capture/pendingCrop';
+import { jarPageQueryKeys } from '@/features/jar/useJarPage';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import type { GridTile } from '@/features/jar/todayGrid';
 import { formatShortDate, formatTime } from '@/lib/format';
@@ -17,6 +18,7 @@ import {
   deleteMoment,
   MomentOptionError,
   moveMoment,
+  setJarCover,
   setMomentVisibility,
   type MomentTarget,
   type OptionError,
@@ -24,7 +26,12 @@ import {
 import { MomentOptionsSheet, type MomentOptionsMode } from './MomentOptionsSheet';
 import { openRecrop } from './recrop';
 
-export type MomentOptionsSelection = { tile: GridTile; target: MomentTarget };
+export type MomentOptionsSelection = {
+  tile: GridTile;
+  target: MomentTarget;
+  /** Offer Set as cover (D-56): an uploaded live moment that isn't already the owner's pick. */
+  canSetCover?: boolean;
+};
 
 export type MomentOptionsProps = {
   visible: boolean;
@@ -47,7 +54,8 @@ function editHref(target: MomentTarget, focusCaption: boolean): string {
 }
 
 /**
- * Moment options (M2-23, FR-CAP-10), opened from the moment preview (QA item 3). Visibility, Move and Delete apply here and Today refreshes
+ * Moment options (M2-23, FR-CAP-10), opened from the moment preview (QA item 3). Visibility, Move, Set as
+ * cover (D-56) and Delete apply here and Today refreshes
  * underneath; Edit caption and Edit stickers and filters open the editor, Re-crop the Crop screen. See
  * momentActions.ts for what each does to a queued or an uploaded moment.
  */
@@ -134,6 +142,19 @@ export function MomentOptions({ visible, mode, selection, userId, freeSlots, tz,
           showToast('momentMoved', { slot: t(`slots.${slot}`) });
         });
       }}
+      onSetCover={
+        selection.canSetCover && target.kind === 'server'
+          ? () => {
+              void run(() => setJarCover(getSupabase(), target.jarId, target.momentId)).then((ok) => {
+                if (!ok) return;
+                void queryClient.invalidateQueries({ queryKey: jarPageQueryKeys.jar(userId, target.jarId) });
+                void queryClient.invalidateQueries({ queryKey: ['profile'] });
+                onClose();
+                showToast('coverSet');
+              });
+            }
+          : undefined
+      }
       onDelete={() => {
         void run(() => deleteMoment(getSupabase(), target)).then((ok) => {
           if (!ok) return;

@@ -155,14 +155,14 @@ These screens cover reading other people’s jars, reacting, and managing who re
 The third tab, showing jars from authors the user reads.
 
 - Avatar row of authors with green rings for new jars.
-- Jar cards: avatar, name, “Updated 2h ago”, a jar count pill (for example 6/8), a photo mosaic (one large, three small, and a “+2” tile), reactions, comments and the last caption.
+- Jar cards: avatar, name, “Updated 2h ago”, a jar count pill (for example 6/8), a photo mosaic (the jar’s cover large, three small, and a “+2” tile), reactions, comments and the last caption.
 - Bell with an unread dot.
 
 Goes to: card or “+2” → Jar page · avatar → Other profile · bell → Notifications.
 
 ### Jar page — “Jar”
 
-One person’s full jar for one day. A cover photo carries the author, “Dale’s Sunday”, the date, the moment count and a “Full jar” tag when complete.
+One person’s full jar for one day. A cover photo carries the author, “Dale’s Sunday”, the date, the moment count and a “Full jar” tag when complete. The owner picks the cover with **Set as cover** (D-56); without a pick, or for someone who can’t see the picked moment, it is the moment with the newest caption, else the first in slot order (D-75). The same cover leads the feed card, the share card and the web page.
 
 - A highlighted caption, then a 3-column grid of moments in 3:4 with hashtag labels and an “Added later” badge where relevant, ending with an 8/8 tile.
 - Floating action bar: like count, comment count, **Share jar**.
@@ -261,8 +261,8 @@ These screens fill the gaps that shape the architecture: offline saving, the upl
 | Screen (artboard) | What it shows | Leads to |
 | --- | --- | --- |
 | Camera | Live 3:4 viewfinder with grid, slot tag and time, flash, moment switcher, shutter, gallery and flip | Shutter → Capture · gallery → Crop |
-| Moment preview | Full-screen preview of your own moment from Today or a past day’s page (D-54, D-71, D-74): photo with edits, slot, time, visibility, caption, likes and comments; swipe through that day’s moments; bar with Edit, Share, Visibility and More (only Edit and Delete for a photo not uploaded yet) | Edit → Capture · Share → Share card · Visibility and More → Moment options |
-| Moment options | Sheet on a moment: edit caption, edit stickers and filters, re-crop, visibility, move to another moment, delete. From the moment preview, More shows only re-crop, move and delete, and Visibility opens its page directly | Re-crop → Crop |
+| Moment preview | Full-screen preview of your own moment from Today or a past day’s page (D-54, D-71, D-74): photo with edits, slot, time, visibility, a “Cover” label on the jar’s cover, caption, likes and comments; swipe through that day’s moments; bar with Edit, Share, Visibility and More (only Edit and Delete for a photo not uploaded yet) | Edit → Capture · Share → Share card · Visibility and More → Moment options |
+| Moment options | Sheet on a moment: edit caption, edit stickers and filters, re-crop, visibility, move to another moment, set as cover (D-56), delete. From the moment preview, More shows only re-crop, move, set as cover and delete, and Visibility opens its page directly. Set as cover is hidden on the current cover and on photos not uploaded yet | Re-crop → Crop |
 | Today, published | Today after publishing: “Published” chip, likes count, and a note that new moments today go out automatically | — |
 | Full jar | Celebration when a jar reaches 8 of 8, with the jar number | Publish jar → Publish review · Share jar card |
 | Time zone banner | “You’re in Tokyo time”: today’s jar stays on Manila time until it closes; the next jar follows local time | Got it dismisses |

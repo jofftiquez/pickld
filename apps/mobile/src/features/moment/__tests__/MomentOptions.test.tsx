@@ -7,7 +7,7 @@ import { buildTodayGrid, type GridTile } from '@/features/jar/todayGrid';
 import { useToastStore } from '@/lib/toast';
 
 import { MomentOptions, type MomentOptionsProps } from '../MomentOptions';
-import { deleteMoment, MomentOptionError, moveMoment, setMomentVisibility } from '../momentActions';
+import { deleteMoment, MomentOptionError, moveMoment, setJarCover, setMomentVisibility } from '../momentActions';
 import { openRecrop } from '../recrop';
 
 // Moment options (M2-23, FR-CAP-10) on Today: the real sheet and confirm dialog; what each option does to
@@ -49,6 +49,7 @@ jest.mock('../momentActions', () => {
     setMomentVisibility: jest.fn(async () => undefined),
     moveMoment: jest.fn(async () => undefined),
     deleteMoment: jest.fn(async () => undefined),
+    setJarCover: jest.fn(async () => undefined),
   };
 });
 jest.mock('../recrop', () => ({ openRecrop: jest.fn() }));
@@ -140,6 +141,29 @@ describe('Moment options', () => {
       .map((b) => b.props.accessibilityLabel as string)
       .filter((l) => l !== 'Close');
     expect(labels).toEqual(['Re-crop', 'Move to another moment', 'Delete moment', 'Cancel']);
+  });
+
+  it('offers Set as cover for a moment that is not the cover yet (D-56), in More too, and shows a toast', async () => {
+    const { onClose } = await renderOptions({ mode: 'more', selection: { ...server, canSetCover: true } });
+    const labels = screen
+      .getAllByRole(/button|switch/)
+      .map((b) => b.props.accessibilityLabel as string)
+      .filter((l) => l !== 'Close');
+    expect(labels).toEqual(['Re-crop', 'Move to another moment', 'Set as cover', 'Delete moment', 'Cancel']);
+    await fireEvent.press(row('Set as cover'));
+    expect(setJarCover).toHaveBeenCalledWith(mockClient, JAR, MOMENT);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['jarPage', USER, JAR] });
+    expect(useToastStore.getState().current?.key).toBe('coverSet');
+  });
+
+  it('keeps the sheet open and says why when Set as cover is refused', async () => {
+    jest.mocked(setJarCover).mockRejectedValueOnce(new MomentOptionError('refused'));
+    const { onClose } = await renderOptions({ selection: { ...server, canSetCover: true } });
+    await fireEvent.press(row('Set as cover'));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByTestId('moment-options-error')).toBeTruthy();
+    expect(useToastStore.getState().current).toBeNull();
   });
 
   it('as the preview’s Visibility action, opens on the Visibility page with no Back', async () => {

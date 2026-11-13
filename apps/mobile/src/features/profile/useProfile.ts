@@ -81,7 +81,7 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
       ),
     supabase
       .from('jars')
-      .select('id, user_id, local_date, tz, moment_count, visible_count, like_count, comment_count')
+      .select('id, user_id, local_date, tz, moment_count, visible_count, like_count, comment_count, resolved_cover_id')
       .eq('user_id', profile.id)
       .gt('moment_count', 0)
       .order('local_date', { ascending: false })

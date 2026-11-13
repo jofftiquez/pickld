@@ -13,5 +13,12 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   if (!jar) notFound();
   return jar.readers_only
     ? ogImage({ kind: 'readers', author: jar.author, localDate: jar.local_date })
-    : ogImage({ kind: 'jar', author: jar.author, localDate: jar.local_date, count: jar.visible_count, moments: jar.moments ?? [] });
+    : ogImage({
+        kind: 'jar',
+        author: jar.author,
+        localDate: jar.local_date,
+        count: jar.visible_count,
+        moments: jar.moments ?? [],
+        coverId: jar.cover_moment_id,
+      });
 }

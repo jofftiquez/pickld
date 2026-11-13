@@ -195,6 +195,16 @@ export function MomentPreviewView({
                 <Text style={[textStyle('caption'), { color: colors.inkSoft }]}>{t('tile.addedLater')}</Text>
               </View>
             ) : null}
+            {item.isCover ? (
+              <View
+                style={styles.addedLater}
+                accessible
+                accessibilityLabel={t('preview.coverLabel')}
+                testID="preview-cover"
+              >
+                <Text style={[textStyle('caption'), { color: colors.inkSoft }]}>{t('preview.cover')}</Text>
+              </View>
+            ) : null}
           </View>
           <View
             style={styles.visibilityRow}

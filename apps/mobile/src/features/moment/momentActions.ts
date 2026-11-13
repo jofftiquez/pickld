@@ -31,6 +31,8 @@ export type MomentTarget =
 
 export type MomentsClient = Pick<SupabaseClient<Database>, 'from' | 'functions'>;
 
+const CHECK_VIOLATION = '23514';
+
 /**
  * Why an option didn't apply. `slotTaken`: the slot filled up meanwhile (moments_slot_holder_key).
  * `busy`: a queued photo is uploading right now. `refused`: the server said no (a moment being replaced
@@ -119,6 +121,19 @@ export async function deleteMoment(client: MomentsClient, target: MomentTarget):
     return;
   }
   const { data, error } = await client.from('moments').delete().eq('id', target.momentId).select('id');
+  const failure = fromPostgres(error);
+  if (failure) throw failure;
+  if (!data || data.length === 0) throw new MomentOptionError('refused');
+}
+
+/**
+ * Set as cover (QA item 11, D-56): the moment becomes its jar's cover. A guarded update of the owner's jar
+ * (jars_update RLS; the jars_cover_check trigger, 0069, allows only a live moment of that jar). Readers who
+ * can't see the moment keep the fallback cover. Only for an uploaded moment.
+ */
+export async function setJarCover(client: MomentsClient, jarId: string, momentId: string): Promise<void> {
+  const { data, error } = await client.from('jars').update({ cover_moment_id: momentId }).eq('id', jarId).select('id');
+  if (error?.code === CHECK_VIOLATION) throw new MomentOptionError('refused', error);
   const failure = fromPostgres(error);
   if (failure) throw failure;
   if (!data || data.length === 0) throw new MomentOptionError('refused');

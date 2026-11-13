@@ -1,7 +1,7 @@
 import type { JarMoment, JarPageData } from '@/features/jar/jarPage';
 import { buildTodayGrid, type QueuedMoment, type ServerMoment } from '@/features/jar/todayGrid';
 
-import { buildPreviewItems, canShare, previewActions, resolveIndex } from '../momentPreview';
+import { buildPreviewItems, canSetCover, canShare, previewActions, resolveIndex } from '../momentPreview';
 
 const live = (slot: ServerMoment['slot'], over: Partial<ServerMoment> = {}): ServerMoment => ({
   id: `m-${slot}`,
@@ -108,6 +108,36 @@ describe('buildPreviewItems', () => {
     });
     // Not in the page yet (or the page hasn't loaded): the thumbnail, and no counts.
     expect(second).toMatchObject({ uri: 'https://photos.test/ootd-thumb.webp', likeCount: null, commentCount: null });
+  });
+
+  it('marks the cover the jar page shows (D-56), and nothing before the page has loaded', () => {
+    const page: JarPageData = {
+      jar: {
+        id: 'jar-10',
+        user_id: 'me',
+        local_date: '2026-11-10',
+        tz: 'Asia/Manila',
+        moment_count: 3,
+        visible_count: 2,
+        like_count: 0,
+        comment_count: 0,
+        resolved_cover_id: 'm-evening',
+      },
+      author: { username: 'dale', display_name: 'Dale' },
+      moments: [pageMoment('whereami', { caption: 'Home' }), pageMoment('evening')],
+      viewerId: 'me',
+    };
+    const items = buildPreviewItems({ tiles, queue, jarId: 'jar-10', page });
+    expect(items.filter((i) => i.isCover).map((i) => i.key)).toEqual(['m-evening']);
+    expect(buildPreviewItems({ tiles, queue, jarId: 'jar-10' }).some((i) => i.isCover)).toBe(false);
+  });
+});
+
+describe('canSetCover', () => {
+  it('offers Set as cover on a live moment that is not the cover yet', () => {
+    expect(canSetCover({ kind: 'live', isCover: false })).toBe(true);
+    expect(canSetCover({ kind: 'live', isCover: true })).toBe(false);
+    expect(canSetCover({ kind: 'queued', isCover: false })).toBe(false);
   });
 });
 

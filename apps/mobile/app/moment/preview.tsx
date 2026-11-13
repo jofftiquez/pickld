@@ -17,7 +17,7 @@ import { MomentOptions, type MomentOptionsSelection } from '@/features/moment/Mo
 import type { MomentOptionsMode } from '@/features/moment/MomentOptionsSheet';
 import { MomentPreviewView } from '@/features/moment/MomentPreviewView';
 import { deleteMoment, MomentOptionError, type OptionError } from '@/features/moment/momentActions';
-import { buildPreviewItems, type PreviewItem } from '@/features/moment/momentPreview';
+import { buildPreviewItems, canSetCover, type PreviewItem } from '@/features/moment/momentPreview';
 import { currentSlot } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
@@ -98,7 +98,12 @@ export default function MomentPreviewScreen() {
     n: number;
   } | null>(null);
   const openOptions = (item: PreviewItem, mode: MomentOptionsMode) =>
-    setOptions((o) => ({ selection: { tile: item.tile, target: item.target }, mode, open: true, n: (o?.n ?? 0) + 1 }));
+    setOptions((o) => ({
+      selection: { tile: item.tile, target: item.target, canSetCover: canSetCover(item) },
+      mode,
+      open: true,
+      n: (o?.n ?? 0) + 1,
+    }));
 
   // Delete on a photo still on the phone (a live moment's Delete is under More).
   const [confirmDelete, setConfirmDelete] = useState<PreviewItem | null>(null);

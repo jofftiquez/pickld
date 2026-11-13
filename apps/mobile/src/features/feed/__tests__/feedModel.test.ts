@@ -53,6 +53,16 @@ describe('buildMosaic', () => {
     expect(capped.small).toHaveLength(3);
     expect(capped.more).toBe(1);
   });
+  it('puts the cover large even when an older cache lists it later (D-56)', () => {
+    const m = buildMosaic({
+      preview_moment_ids: ids,
+      previewUrls: ['u1', 'u2', 'u3', 'u4'],
+      visible_count: 4,
+      cover_moment_id: 'm3',
+    });
+    expect(m.large).toEqual({ momentId: 'm3', url: 'u3' });
+    expect(m.small.map((p) => p.momentId)).toEqual(['m1', 'm2', 'm4']);
+  });
   it('has no large photo when there are no previews', () => {
     expect(buildMosaic({ preview_moment_ids: [], previewUrls: [], visible_count: 2 })).toEqual({
       large: null,

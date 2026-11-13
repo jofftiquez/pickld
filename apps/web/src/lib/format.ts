@@ -17,7 +17,24 @@ export const longDate = (localDate: string) =>
 export const bySlot = (moments: PublicMoment[]) =>
   [...moments].sort((a, b) => slots.indexOf(a.slot) - slots.indexOf(b.slot));
 
-/** The newest caption, as on the app's Jar page and share card. */
+/** The cover first (D-56; `public_jar` resolves it over the Everyone moments), then slot order. */
+export function coverFirst(moments: PublicMoment[], coverId: string | null | undefined): PublicMoment[] {
+  const sorted = bySlot(moments);
+  const cover = sorted.find((m) => m.id === coverId);
+  return cover ? [cover, ...sorted.filter((m) => m !== cover)] : sorted;
+}
+
+/**
+ * The caption under the photos, as on the app's Jar page: the cover's when there is a cover, else the newest
+ * caption (a page from before 0069 has no cover).
+ */
+export function jarCaption(moments: PublicMoment[], coverId: string | null | undefined): string | null {
+  const cover = moments.find((m) => m.id === coverId);
+  if (cover) return cover.caption?.trim() ? cover.caption.trim() : null;
+  return newestCaption(moments);
+}
+
+/** The newest caption, as on the app's share card. */
 export function newestCaption(moments: PublicMoment[]): string | null {
   const captioned = moments.filter((m) => (m.caption ?? '').trim() !== '');
   captioned.sort((a, b) => b.added_at.localeCompare(a.added_at) || slots.indexOf(b.slot) - slots.indexOf(a.slot));

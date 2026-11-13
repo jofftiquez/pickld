@@ -101,6 +101,26 @@ describe('buildJarPage', () => {
     expect(page.grid.map((m) => m.id)).toEqual(['evening']);
   });
 
+  it("covers with the owner's pick (D-56) when it is shown, and not when it isn't", () => {
+    const moments = [
+      moment({ id: 'morning', slot: 'morning', caption: 'Newest', added_at: '2026-11-08T12:00:00Z' }),
+      moment({ id: 'whereami', slot: 'whereami' }),
+      moment({ id: 'secret', slot: 'ootd', visibility: 'only_me' }),
+    ];
+    const picked = (id: string, viewer: string) => {
+      const d = data(moments, viewer);
+      return buildJarPage({ ...d, jar: { ...d.jar, resolved_cover_id: id } });
+    };
+    const page = picked('whereami', READER);
+    expect(page.cover?.id).toBe('whereami');
+    expect(page.grid.map((m) => m.id)).toEqual(['morning']);
+    // A stale pick of an Only me moment never reaches a reader; the owner still sees theirs.
+    expect(picked('secret', READER).cover?.id).toBe('morning');
+    expect(picked('secret', OWNER).cover?.id).toBe('secret');
+    // A pick that isn't on the page (deleted since) falls back.
+    expect(picked('gone', READER).cover?.id).toBe('morning');
+  });
+
   it('has no cover for a jar with nothing to show', () => {
     const page = buildJarPage(data([moment({ id: 'p', slot: 'ootd', visibility: 'only_me' })], READER));
     expect(page).toMatchObject({ cover: null, grid: [] });
