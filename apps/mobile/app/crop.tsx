@@ -19,7 +19,7 @@ import {
 } from '@/features/capture/cropMath';
 import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { saveGalleryPhoto } from '@/features/capture/saveCapture';
-import { todayQueryKeys } from '@/features/jar/useToday';
+import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
@@ -103,6 +103,8 @@ export default function CropScreen() {
         userId: pending.userId,
         target: pending.target,
         crop: { crop: rect, cropBasis: image, rotate: state.rotation, flip: state.flip },
+        // D-48: a new moment starts at the owner's default (Today's cached profile); null lets the server decide.
+        visibility: queryClient.getQueryData<Me>(todayQueryKeys.me(pending.userId))?.defaultVisibility ?? null,
       });
       queuedId = item.id;
     } catch (error) {

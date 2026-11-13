@@ -123,7 +123,7 @@ function liveMoment(slot: string): Row {
     id: `m-${slot}`,
     slot,
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     captured_at: '2026-11-10T00:30:00Z',
     added_at: '2026-11-10T00:31:00Z',
@@ -139,7 +139,7 @@ function queued(id: number, slot: QueueItem['slot'], state: QueueItem['state']):
     photoUri: `file:///q/${slot}.webp`,
     thumbUri: null,
     capturedAt: '2026-11-10T04:30:00Z',
-    isPrivate: false,
+    visibility: 'readers',
   };
 }
 
@@ -287,7 +287,7 @@ describe('Today screen', () => {
     );
     expect(screen.getByText('3 of 8 moments')).toBeTruthy();
     expect(screen.getByText('in today’s jar · 312 readers')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^#ootd, .*, added$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^#ootd, .*, readers can see it$/ })).toBeTruthy();
     expect(screen.getByText('Waiting for connection')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Retry #morning' }));
@@ -365,8 +365,8 @@ describe('Today screen', () => {
 
     await waitFor(() => expect(screen.getByRole('header', { name: 'Replace your #ootd photo?' })).toBeTruthy());
     // The old photos hold their slots: the conflict's local photo and the server's pending replacement don't show.
-    expect(screen.getByRole('button', { name: /^#ootd, .*, added$/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^#selfie, .*, added$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^#ootd, .*, readers can see it$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^#selfie, .*, readers can see it$/ })).toBeTruthy();
     expect(screen.getByText('2 of 8 moments')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Replace' }));

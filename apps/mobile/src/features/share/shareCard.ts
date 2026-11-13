@@ -1,7 +1,7 @@
 // The Share jar card (FR-SOC-10, FR-PUB-05; design: ShareCard). What the 9:16 image shows is decided here,
-// so the rule lives in one tested place: only live, non-private moments, even when the owner shares their
-// own jar (rule 9: private moments never leave their owner, not even on a card they post themselves). The
-// count and the caption come from those moments only, so the card can't hint that a private one exists.
+// so the rule lives in one tested place: only live moments that aren't Only me, even when the owner shares
+// their own jar (rule 9: Only me moments never leave their owner, not even on a card they post themselves).
+// The count and the caption come from those moments only, so the card can't hint that a private one exists.
 import { newestCaptioned, type JarMoment, type JarPageData } from '@/features/jar/jarPage';
 import { profileUrl } from '@/lib/links';
 import { slots } from '@/theme/tokens';
@@ -17,8 +17,9 @@ export type ShareCard = {
   profileUrl: string;
 };
 
-export function onCard(moment: Pick<JarMoment, 'status' | 'is_private'>): boolean {
-  return moment.status === 'live' && !moment.is_private;
+/** Whether a moment may go on a card: live and not Only me (D-48). An Only me moment can't be shared. */
+export function onCard(moment: Pick<JarMoment, 'status' | 'visibility'>): boolean {
+  return moment.status === 'live' && moment.visibility !== 'only_me';
 }
 
 export function buildShareCard(

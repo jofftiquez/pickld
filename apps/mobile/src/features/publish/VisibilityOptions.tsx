@@ -2,9 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { RadioRow } from '@/components/RadioRow';
 
-import { VISIBILITIES, type Visibility } from './publishJar';
-
-const VISIBILITY_KEY = { readers: 'readers', everyone: 'everyone', only_me: 'onlyMe' } as const;
+import { VISIBILITIES, VISIBILITY_KEY, type Visibility } from '@/lib/visibility';
 
 export type VisibilityOptionsProps = {
   visibility: Visibility;

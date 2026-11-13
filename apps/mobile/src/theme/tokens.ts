@@ -280,7 +280,7 @@ export const sizes = {
   tilePlus: 28, // + circle on empty tiles
   uploadRing: 34, // progress ring on an uploading tile
   tileBorder: 1.5, // dashed border on empty tiles
-  lockBadge: 22, // round lock badge on private tiles
+  lockBadge: 22, // round visibility badge on moment tiles (lock, globe, people)
   radio: 22, // radio circle on a choice row (Publish)
   radioDot: 12, // its selected dot
   radioRing: 2, // its outline

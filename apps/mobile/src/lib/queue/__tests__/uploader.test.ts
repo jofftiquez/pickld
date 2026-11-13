@@ -30,7 +30,7 @@ async function queueMoment(overrides: Partial<EnqueueInput> = {}) {
     tz: 'Asia/Manila',
     capturedAt: '2026-11-11T08:15:00+08:00',
     caption: 'new shoes',
-    isPrivate: true,
+    visibility: 'only_me',
     edits: { filter: 'warm' },
     ...overrides,
   });
@@ -85,7 +85,7 @@ describe('uploadItem', () => {
         thumb_path: expect.stringMatching(/\/thumb\.jpg$/),
         caption: 'new shoes',
         captured_at: '2026-11-11T08:15:00+08:00',
-        is_private: true,
+        visibility: 'only_me',
         edits: { filter: 'warm' },
         status: 'checking',
         replaces: null,
@@ -307,7 +307,7 @@ describe('drainQueue', () => {
 
 describe('drainQueue and the editor (M2-12)', () => {
   it('holds a photo that is still in the editor, then uploads it with the saved caption, privacy and edits', async () => {
-    const item = await queueMoment({ caption: null, isPrivate: false, edits: {}, editing: true });
+    const item = await queueMoment({ caption: null, visibility: 'readers', edits: {}, editing: true });
     clock = (item.editingSince ?? 0) + 1000;
     log.length = 0;
 
@@ -316,20 +316,20 @@ describe('drainQueue and the editor (M2-12)', () => {
     expect(await getItem(item.id)).toMatchObject({ state: 'queued', attempts: 0 });
 
     const edits = { v: 1, filter: 'dusk', overlays: [] };
-    await saveEdits(item.id, { caption: 'Lunch break, finally!', isPrivate: true, edits });
+    await saveEdits(item.id, { caption: 'Lunch break, finally!', visibility: 'only_me', edits });
     expect(await drainQueue(USER, deps())).toEqual([{ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID }]);
     expect(backend.inserts).toEqual([
-      expect.objectContaining({ caption: 'Lunch break, finally!', is_private: true, edits, status: 'checking' }),
+      expect.objectContaining({ caption: 'Lunch break, finally!', visibility: 'only_me', edits, status: 'checking' }),
     ]);
   });
 
   it('uploads a photo closed without saving, as it was queued', async () => {
-    const item = await queueMoment({ caption: null, isPrivate: false, edits: {}, editing: true });
+    const item = await queueMoment({ caption: null, visibility: 'readers', edits: {}, editing: true });
     clock = (item.editingSince ?? 0) + 1000;
     expect(await drainQueue(USER, deps())).toEqual([]);
     await releaseEditing(item.id);
     expect(await drainQueue(USER, deps())).toEqual([expect.objectContaining({ kind: 'uploaded' })]);
-    expect(backend.moments).toEqual([expect.objectContaining({ caption: null, is_private: false, edits: {} })]);
+    expect(backend.moments).toEqual([expect.objectContaining({ caption: null, visibility: 'readers', edits: {} })]);
   });
 
   it('uploads a stale editing item once the hold lapses', async () => {

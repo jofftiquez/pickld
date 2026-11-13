@@ -6,19 +6,20 @@ import type { StampMoment } from '@/features/edit/stickers/stamps';
 import type { DaySlot } from '@/lib/jars';
 import type { Tables } from '@/lib/database.types';
 import type { QueueItem } from '@/lib/queue/store';
+import type { Visibility } from '@/lib/visibility';
 import { slots, type Slot } from '@/theme/tokens';
 
 /** The moment fields the grid reads, plus a signed thumbnail URL from `fn:photo-urls` (null until known). */
 export type ServerMoment = Pick<
   Tables<'moments'>,
-  'id' | 'slot' | 'status' | 'is_private' | 'is_backfilled' | 'captured_at' | 'added_at'
+  'id' | 'slot' | 'status' | 'visibility' | 'is_backfilled' | 'captured_at' | 'added_at'
 > &
   // `edits` is optional: caches persisted before M2-18 lack it; `replaces` (0013): caches from before M2-22.
   Partial<Pick<Tables<'moments'>, 'edits' | 'replaces'>> & { thumbUrl: string | null };
 
 export type QueuedMoment = Pick<
   QueueItem,
-  'id' | 'slot' | 'state' | 'localDate' | 'photoUri' | 'thumbUri' | 'capturedAt' | 'isPrivate'
+  'id' | 'slot' | 'state' | 'localDate' | 'photoUri' | 'thumbUri' | 'capturedAt' | 'visibility'
 > &
   // What the tile needs to draw the edits (M2-18); optional so callers that don't draw them can leave them out.
   Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits' | 'replace'>>;
@@ -29,7 +30,8 @@ export type GridTile = {
   uri: string | null;
   /** ISO capture time (or server `added_at`), null for empty and Now tiles. */
   time: string | null;
-  isPrivate: boolean;
+  /** Who can see the moment (D-48); null for empty and Now tiles, and for a queued photo left at the owner's default. */
+  visibility: Visibility | null;
   addedLater: boolean;
   /** Set when the tile shows a server moment. */
   momentId: string | null;
@@ -66,7 +68,7 @@ function emptyTile(slot: Slot, isNow: boolean): GridTile {
     state: isNow ? 'now' : 'empty',
     uri: null,
     time: null,
-    isPrivate: false,
+    visibility: null,
     addedLater: false,
     momentId: null,
     queueId: null,
@@ -118,7 +120,7 @@ export function buildTodayGrid(input: {
         state: queueTileState[queued.state],
         uri: queued.thumbUri ?? queued.photoUri,
         time: queued.capturedAt,
-        isPrivate: queued.isPrivate,
+        visibility: queued.visibility,
         addedLater: false,
         momentId: null,
         queueId: queued.id,
@@ -134,7 +136,7 @@ export function buildTodayGrid(input: {
         state: moment.status === 'live' ? 'filled' : 'checking',
         uri: moment.thumbUrl,
         time: moment.captured_at ?? moment.added_at,
-        isPrivate: moment.is_private,
+        visibility: moment.visibility,
         addedLater: moment.is_backfilled,
         momentId: moment.id,
         queueId: null,

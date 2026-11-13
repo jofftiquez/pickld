@@ -6,7 +6,7 @@ import {
   moveMoment,
   saveMomentEdits,
   saveRecrop,
-  setMomentPrivate,
+  setMomentVisibility,
   type MomentsClient,
   type MomentTarget,
 } from '../momentActions';
@@ -93,10 +93,10 @@ describe('uploaded moments', () => {
     expect(await answer({ data: null, error: { message: 'Network request failed' } })).toBe('failed');
   });
 
-  it('Make private is a plain update and needs no moderation', async () => {
+  it('Visibility is a plain update and needs no moderation', async () => {
     const { client, calls, updates } = fakeClient();
-    await setMomentPrivate(client, server, true);
-    expect(updates).toEqual([{ is_private: true }]);
+    await setMomentVisibility(client, server, 'only_me');
+    expect(updates).toEqual([{ visibility: 'only_me' }]);
     expect(calls).not.toContain('invoke:moderate');
   });
 
@@ -110,13 +110,13 @@ describe('uploaded moments', () => {
   it('saving edits proposes caption and edits, then asks fn:moderate to swap them in', async () => {
     const { client, calls, updates, bodies } = fakeClient();
     const edits = { v: 1, filter: 'mono', overlays: [] };
-    await saveMomentEdits(client, server, { caption: 'hi', isPrivate: false, edits });
+    await saveMomentEdits(client, server, { caption: 'hi', visibility: 'readers', edits });
     expect(calls).toEqual(['update:moments', `eq:id=${MOMENT}`, 'invoke:moderate']);
-    expect(updates).toEqual([{ caption: 'hi', edits, is_private: false }]);
+    expect(updates).toEqual([{ caption: 'hi', edits, visibility: 'readers' }]);
     expect(bodies.moderate).toEqual({ momentId: MOMENT });
 
     const lost = fakeClient({ invoke: { moderate: { data: null, error: { message: 'timeout' } } } });
-    expect(await reason(saveMomentEdits(lost.client, server, { caption: null, isPrivate: false, edits }))).toBe(
+    expect(await reason(saveMomentEdits(lost.client, server, { caption: null, visibility: 'readers', edits }))).toBe(
       'failed',
     );
   });
@@ -187,16 +187,16 @@ describe('uploaded moments', () => {
 describe('queued moments', () => {
   it('change the queue and never call the server', async () => {
     const { client, calls } = fakeClient();
-    await setMomentPrivate(client, queued, true);
+    await setMomentVisibility(client, queued, 'only_me');
     await moveMoment(client, queued, 'selfie');
     await deleteMoment(client, queued);
-    await saveMomentEdits(client, queued, { caption: 'x', isPrivate: true, edits: {} });
+    await saveMomentEdits(client, queued, { caption: 'x', visibility: 'only_me', edits: {} });
     await saveRecrop(client, queued, { photoUri: 'file:///c/a.webp', thumbUri: 'file:///c/b.webp' });
     expect(calls).toEqual([]);
-    expect(saveOptions).toHaveBeenNthCalledWith(1, 21, { isPrivate: true });
+    expect(saveOptions).toHaveBeenNthCalledWith(1, 21, { visibility: 'only_me' });
     expect(saveOptions).toHaveBeenNthCalledWith(2, 21, { slot: 'selfie' });
     expect(discardItem).toHaveBeenCalledWith(21);
-    expect(saveEdits).toHaveBeenCalledWith(21, { caption: 'x', isPrivate: true, edits: {} });
+    expect(saveEdits).toHaveBeenCalledWith(21, { caption: 'x', visibility: 'only_me', edits: {} });
     expect(saveRecropped).toHaveBeenCalledWith(21, { photoUri: 'file:///c/a.webp', thumbUri: 'file:///c/b.webp' });
   });
 

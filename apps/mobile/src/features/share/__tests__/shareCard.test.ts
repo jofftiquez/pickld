@@ -6,7 +6,7 @@ const moment = (over: Partial<JarMoment>): JarMoment => ({
   id: over.slot ?? 'm',
   slot: 'morning',
   status: 'live',
-  is_private: false,
+  visibility: 'readers',
   is_backfilled: false,
   caption: null,
   captured_at: null,
@@ -27,7 +27,7 @@ describe('Share jar card (FR-SOC-10, FR-PUB-05)', () => {
         author,
         moments: [
           moment({ slot: 'evening', caption: 'Early night.', added_at: '2026-11-08T12:00:00Z' }),
-          moment({ slot: 'selfie', is_private: true, caption: 'Secret', added_at: '2026-11-08T13:00:00Z' }),
+          moment({ slot: 'selfie', visibility: 'only_me', caption: 'Secret', added_at: '2026-11-08T13:00:00Z' }),
           moment({ slot: 'whereami' }),
           moment({ slot: 'ootd', status: 'checking', caption: 'Not checked yet', added_at: '2026-11-08T14:00:00Z' }),
         ],

@@ -4,12 +4,14 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, type Accessibilit
 import Svg, { Circle } from 'react-native-svg';
 
 import { hitSlopFor } from '@/lib/hitSlop';
+import { VISIBILITY_KEY, type Visibility } from '@/lib/visibility';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space, type Slot } from '@/theme/tokens';
 
 import { PRESSED_OPACITY } from './BaseButton';
 import { Icon } from './Icon';
 import { PhotoTile } from './PhotoTile';
+import { VisibilityBadge } from './VisibilityBadge';
 
 export type MomentTileState = 'filled' | 'empty' | 'now' | 'waiting' | 'uploading' | 'failed' | 'checking' | 'removed';
 
@@ -33,7 +35,8 @@ export type MomentTileProps = {
   photoView?: ReactNode;
   /** Capture time, already formatted for the user's locale (e.g. "7:30 AM"). */
   time?: string;
-  isPrivate?: boolean;
+  /** Who can see the moment (D-48): drawn as a badge and spoken in the label. Null or left out: no badge. */
+  visibility?: Visibility | null;
   /** Backfilled moment (server sets `is_backfilled`); shows the "Added later" badge. */
   addedLater?: boolean;
   /** Upload progress 0–1 for the `uploading` state; leave it out when unknown to show an indeterminate spinner. */
@@ -62,7 +65,7 @@ export function MomentTile({
   uri = null,
   photoView,
   time,
-  isPrivate = false,
+  visibility = null,
   addedLater = false,
   progress,
   onPress,
@@ -81,9 +84,10 @@ export function MomentTile({
 
   // "#slot, time, state": every state is spoken, never conveyed by color alone.
   const flags = hasPhoto
-    ? [isPrivate ? t('tile.a11y.private') : null, addedLater ? t('tile.a11y.addedLater') : null].filter(
-        (f): f is string => f !== null,
-      )
+    ? [
+        visibility ? t(`tile.a11y.visibility.${VISIBILITY_KEY[visibility]}`) : null,
+        addedLater ? t('tile.a11y.addedLater') : null,
+      ].filter((f): f is string => f !== null)
     : [];
   const stateWords: Record<MomentTileState, string[]> = {
     filled: flags.length > 0 ? flags : [t('tile.a11y.added')],
@@ -174,13 +178,14 @@ export function MomentTile({
           overlayColor={state === 'failed' ? 'failedOverlay' : state === 'filled' ? undefined : 'glass'}
           topLeft={time ? <Pill text={time} /> : null}
           topRight={
-            isPrivate || addedLater ? (
+            visibility || addedLater ? (
               <>
                 {addedLater ? <Pill text={t('tile.addedLater')} tone="badge" testID="tile-added-later" /> : null}
-                {isPrivate ? (
-                  <View style={styles.lock} testID="tile-lock">
-                    <Icon name="lock" color="surface" size={14} strokeWidth={2} />
-                  </View>
+                {visibility ? (
+                  <VisibilityBadge
+                    visibility={visibility}
+                    testID={visibility === 'only_me' ? 'tile-lock' : `tile-visibility-${visibility}`}
+                  />
                 ) : null}
               </>
             ) : null
@@ -348,14 +353,6 @@ const styles = StyleSheet.create({
     paddingVertical: sizes.pillPaddingY,
     paddingHorizontal: space.sm,
     flexShrink: 1,
-  },
-  lock: {
-    width: sizes.lockBadge,
-    height: sizes.lockBadge,
-    borderRadius: radius.pill,
-    backgroundColor: colors.glass,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   overlayText: { color: colors.surface, textAlign: 'center' },
   retry: {

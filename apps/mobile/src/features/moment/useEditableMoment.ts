@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
+import { visibilitySchema, type Visibility } from '@/lib/visibility';
 import { slots, type Slot } from '@/theme/tokens';
 
 import { photoUrls } from './useOwnMoment';
@@ -17,7 +18,7 @@ export type EditableMoment = {
   /** The live caption and edits: a proposal still waiting for fn:moderate isn't shown (pending_* is the server's). */
   caption: string | null;
   edits: unknown;
-  isPrivate: boolean;
+  visibility: Visibility;
   /** ISO capture time (or server added_at). A string, as the query cache is persisted as JSON. */
   shotAt: string;
   /** The jar's IANA zone, for the time label and auto stamps. */
@@ -32,7 +33,7 @@ const row = z.object({
   status: z.enum(['uploading', 'checking', 'live', 'removed']),
   caption: z.string().nullable(),
   edits: z.unknown(),
-  is_private: z.boolean(),
+  visibility: visibilitySchema,
   captured_at: z.string().nullable(),
   added_at: z.string(),
   jars: z.object({ tz: z.string() }),
@@ -43,7 +44,7 @@ export const editableMomentQueryKey = (userId: string, momentId: string) => ['ed
 async function fetchEditableMoment(userId: string, momentId: string): Promise<EditableMoment | null> {
   const { data, error } = await getSupabase()
     .from('moments')
-    .select('id, jar_id, slot, status, caption, edits, is_private, captured_at, added_at, jars(tz)')
+    .select('id, jar_id, slot, status, caption, edits, visibility, captured_at, added_at, jars(tz)')
     .eq('id', momentId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -59,7 +60,7 @@ async function fetchEditableMoment(userId: string, momentId: string): Promise<Ed
     slot: m.slot,
     caption: m.caption,
     edits: m.edits,
-    isPrivate: m.is_private,
+    visibility: m.visibility,
     shotAt: m.captured_at ?? m.added_at,
     tz: m.jars.tz,
     photoUrl: full,

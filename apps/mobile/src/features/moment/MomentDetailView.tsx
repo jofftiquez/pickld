@@ -232,7 +232,7 @@ export function MomentDetailView({
               <Text style={[textStyle('caption'), { color: colors.inkSoft }]}>{t('tile.addedLater')}</Text>
             </View>
           ) : null}
-          {moment.is_private ? (
+          {moment.visibility === 'only_me' ? (
             <View accessible accessibilityLabel={t('tile.a11y.private')} testID="moment-private">
               <Icon name="lock" color="muted" size={16} strokeWidth={2} />
             </View>
@@ -264,7 +264,7 @@ export function MomentDetailView({
             testID="moment-comments"
           />
           <View style={styles.flex} />
-          {/* Only a live, non-private moment can leave its owner (rule 9). */}
+          {/* Only a live moment that isn't Only me can leave its owner (rule 9, D-48). */}
           {onCard(moment) ? (
             <RoundIconButton
               icon="share"

@@ -315,6 +315,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
       userId,
       target: expect.objectContaining({ localDate: '2026-11-11', tz: 'Asia/Manila' }),
       crop: null,
+      visibility: null,
     });
     expect(screen).toHavePathname('/edit/4');
     expect(saveCapture).not.toHaveBeenCalled();
@@ -388,7 +389,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
       photoUri: `file:///q/${id}.webp`,
       thumbUri: null,
       capturedAt: null,
-      isPrivate: false,
+      visibility: 'readers',
     });
     mockToday.queue = [queued('afternoon', 1), queued('whereami', 2)];
     await openCamera('/camera');
@@ -404,7 +405,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
       photoUri: 'file:///q/1.webp',
       thumbUri: null,
       capturedAt: null,
-      isPrivate: false,
+      visibility: 'readers',
     });
 
     it('Replace takes the photo and queues it as a replacement', async () => {
@@ -640,7 +641,7 @@ describe('Fill this jar (?date=, FR-DAY-02)', () => {
     id: `m-${slot}`,
     slot,
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     captured_at: null,
     added_at: '2026-11-08T01:00:00Z',
@@ -654,7 +655,7 @@ describe('Fill this jar (?date=, FR-DAY-02)', () => {
     photoUri: 'file:///q/x.webp',
     thumbUri: null,
     capturedAt: null,
-    isPrivate: false,
+    visibility: 'readers',
   });
 
   beforeEach(() => {

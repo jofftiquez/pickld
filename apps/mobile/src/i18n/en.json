@@ -261,7 +261,12 @@
       "failed": "didn’t upload",
       "checking": "checking",
       "private": "private",
-      "addedLater": "added later"
+      "addedLater": "added later",
+      "visibility": {
+        "readers": "readers can see it",
+        "everyone": "everyone can see it",
+        "onlyMe": "private"
+      }
     }
   },
   "edit": {
@@ -291,8 +296,7 @@
     "momentNotFound": "Couldn’t open this moment. Check your connection and try again.",
     "caption": "Caption",
     "captionPlaceholder": "Say something about this moment",
-    "private": "Keep this moment private",
-    "privateHint": "Only you will see it",
+    "visibility": "Who can see this moment",
     "undo": "Undo",
     "undoHint": "Takes back your last change to the photo",
     "addToSlot": "Add to {{slot}}",
@@ -462,6 +466,8 @@
     "slots": "Your 8 moments",
     "slotEmpty": "{{slot}}, empty",
     "slotPrivate": "{{slot}}, private",
+    "slotReaders": "{{slot}}, readers",
+    "slotEveryone": "{{slot}}, everyone",
     "visibilityTitle": "Who can see this jar",
     "readers": "Readers",
     "readersBody_one": "{{count}} person who reads your days",
@@ -676,8 +682,11 @@
     "editMoment": "Edit stickers and filters",
     "recrop": "Re-crop",
     "recropHint": "Crops the saved photo again. You can zoom in, but not back out past the last crop.",
-    "private": "Make private",
-    "privateHint": "Only you will see this moment",
+    "visibility": "Visibility",
+    "visibilityValue": "Visibility: {{value}}",
+    "visibilityHint": "Choose who can see this moment",
+    "visibilityTitle": "Who can see this moment",
+    "visibilitySubtitle": "It applies right away, whether or not the jar is published",
     "move": "Move to another moment",
     "moveTitle": "Move to another moment",
     "moveSubtitle": "Pick an empty moment in this jar for your {{slot}} photo",
@@ -1466,5 +1475,13 @@
     "full": "Your jar is full",
     "capture": "Capture a moment",
     "friendEmpty": "Moments from people you read show up here."
+  },
+  "visibility": {
+    "readers": "Readers",
+    "everyone": "Everyone",
+    "onlyMe": "Only me",
+    "readersBody": "People who read your days",
+    "everyoneBody": "Anyone on Pickld",
+    "onlyMeBody": "Only you will see this moment"
   }
 }

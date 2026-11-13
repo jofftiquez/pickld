@@ -11,7 +11,7 @@ const READER = 'reader-id';
 function moment(over: Partial<JarMoment> & Pick<JarMoment, 'id' | 'slot'>): JarMoment {
   return {
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     caption: null,
     captured_at: '2026-11-08T23:30:00Z', // 7:30 AM on Mon, Nov 9 in Manila
@@ -40,7 +40,7 @@ const jar: JarPageData = {
   moments: [
     moment({ id: 'evening', slot: 'evening' }),
     moment({ id: 'ootd', slot: 'ootd', caption: 'Green shirt day.', like_count: 12, is_backfilled: true }),
-    moment({ id: 'private', slot: 'selfie', is_private: true }),
+    moment({ id: 'private', slot: 'selfie', visibility: 'only_me' }),
     moment({ id: 'checking', slot: 'morning', status: 'checking' }),
     moment({ id: 'removed', slot: 'afternoon', status: 'removed' }),
     moment({ id: 'whereami', slot: 'whereami' }),

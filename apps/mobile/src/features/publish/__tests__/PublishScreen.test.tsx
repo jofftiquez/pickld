@@ -111,7 +111,7 @@ function moment(slot: string, over: Row = {}): Row {
     id: `m-${slot}`,
     slot,
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     captured_at: '2026-11-10T00:30:00Z',
     added_at: '2026-11-10T00:31:00Z',
@@ -153,10 +153,10 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
     mockBackend.defaultVisibility = 'everyone';
     mockBackend.moments = [
       moment('whereami'),
-      moment('selfie', { is_private: true }),
+      moment('selfie', { visibility: 'only_me' }),
       moment('mebusywith', { status: 'checking' }),
       // Removed: its slot is free again (D-27), so it is missing, not private, even though it was private.
-      moment('ootd', { status: 'removed', is_private: true }),
+      moment('ootd', { status: 'removed', visibility: 'only_me' }),
     ];
     // A private photo still in the offline queue is one of the jar's moments too.
     mockBackend.queue = [
@@ -168,7 +168,7 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
         photoUri: 'file:///q/morning.webp',
         thumbUri: null,
         capturedAt: '2026-11-10T00:10:00Z',
-        isPrivate: true,
+        visibility: 'only_me',
       },
     ];
     await renderScreen();
@@ -183,7 +183,11 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
     expect(screen.getByLabelText('#selfie, private')).toBeTruthy();
     expect(screen.getByLabelText('#morning, private')).toBeTruthy();
     expect(screen.getByLabelText('#ootd, empty')).toBeTruthy();
-    expect(screen.getByLabelText('#whereami')).toBeTruthy();
+    // Each moment keeps its own visibility badge; publishing doesn't change it (D-48, D-50).
+    expect(screen.getByLabelText('#whereami, readers')).toBeTruthy();
+    // The badge is drawn only; the slot's label says it (rule 11).
+    expect(screen.getByTestId('publish-slot-whereami-readers', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByTestId('publish-slot-selfie-lock', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('Readers unless changed, with the reader count; a full jar with nothing private has no note', async () => {

@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
+import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
 import { releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import type { Visibility } from '@/lib/visibility';
 
 import { EditSession } from './EditSession';
 
@@ -27,14 +29,19 @@ export type QueuedEditSessionProps = {
 export function QueuedEditSession({ item, focusCaption, insets, onLeave }: QueuedEditSessionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  // A photo queued before the profile loaded has no visibility yet: it would go up at the owner's default
+  // (D-48), so the editor starts there. Unknown here too: Readers, the narrower of the two shared choices.
+  const [ownerDefault] = useState(
+    () => queryClient.getQueryData<Me>(todayQueryKeys.me(item.userId))?.defaultVisibility ?? null,
+  );
   // A photo just taken is held for the editor; one that is already waiting is being edited again.
   const [isNew] = useState(item.editingSince !== null);
   // A photo just taken becomes a moment when this editor is left, saved or not: its analytics go once, then.
   const notAdded = useRef(isNew ? item : null);
-  const added = (isPrivate: boolean) => {
+  const added = (visibility: Visibility) => {
     const moment = notAdded.current;
     notAdded.current = null;
-    if (moment) void trackMomentAdded(moment, isPrivate);
+    if (moment) void trackMomentAdded(moment, visibility);
   };
 
   // Closing without saving (Close, back gesture) keeps the photo queued as it is, and lets it upload.
@@ -44,12 +51,12 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave }: Queue
     return () => {
       const moment = pending.current;
       pending.current = null;
-      if (moment) void trackMomentAdded(moment, moment.isPrivate);
+      if (moment) void trackMomentAdded(moment, moment.visibility ?? ownerDefault);
       void releaseEditing(id)
         .catch((error: unknown) => captureError(error, { area: 'edit' }))
         .finally(() => void requestUploads());
     };
-  }, [item.id]);
+  }, [item.id, ownerDefault]);
 
   return (
     <EditSession
@@ -57,14 +64,14 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave }: Queue
       slot={item.slot}
       shotAt={new Date(item.capturedAt ?? item.createdAt)}
       tz={item.tz}
-      initial={item}
+      initial={{ ...item, visibility: item.visibility ?? ownerDefault ?? 'readers' }}
       saveLabel={isNew ? t('edit.addToSlot', { slot: t(`slots.${item.slot}`) }) : t('edit.done')}
       focusCaption={focusCaption}
       insets={insets}
       onLeave={onLeave}
       onSave={async (input) => {
         const saved = await saveEdits(item.id, input);
-        added(input.isPrivate);
+        added(input.visibility);
         // Reopening the editor starts from what was saved, not a cached copy from before.
         queryClient.setQueryData(queueItemQueryKey(item.id), saved);
         void requestUploads();

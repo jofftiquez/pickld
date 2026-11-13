@@ -46,7 +46,7 @@ beforeEach(() => {
 
 describe('trackMomentAdded', () => {
   it('the account’s very first moment sends first_moment and moment_added once; the next only moment_added', async () => {
-    await trackMomentAdded(moment(), false, NOW);
+    await trackMomentAdded(moment(), 'readers', NOW);
     const props = { slot: 'afternoon', is_private: false, backfilled: false };
     expect(jest.mocked(track).mock.calls).toEqual([
       ['first_moment', props],
@@ -55,19 +55,19 @@ describe('trackMomentAdded', () => {
 
     jest.mocked(track).mockClear();
     mockServer.count = 1;
-    await trackMomentAdded(moment({ id: 8, slot: 'evening' }), false, NOW);
+    await trackMomentAdded(moment({ id: 8, slot: 'evening' }), 'readers', NOW);
     expect(jest.mocked(track).mock.calls).toEqual([
       ['moment_added', { slot: 'evening', is_private: false, backfilled: false }],
     ]);
   });
 
   it('a private moment sends nothing, and the public one after it is not the first', async () => {
-    await trackMomentAdded(moment(), true, NOW);
+    await trackMomentAdded(moment(), 'only_me', NOW);
     expect(track).not.toHaveBeenCalled();
 
     // Still uploading: the server has none yet, but the queue holds the private one.
     mockQueue.items = [{ id: 7 }, { id: 8 }];
-    await trackMomentAdded(moment({ id: 8 }), false, NOW);
+    await trackMomentAdded(moment({ id: 8 }), 'readers', NOW);
     expect(jest.mocked(track).mock.calls).toEqual([
       ['moment_added', { slot: 'afternoon', is_private: false, backfilled: false }],
     ]);
@@ -75,14 +75,23 @@ describe('trackMomentAdded', () => {
 
   it('a moment for a past date is backfilled; a user who already has moments gets no first_moment', async () => {
     mockServer.count = 12;
-    await trackMomentAdded(moment({ localDate: '2026-11-10' }), false, NOW);
+    await trackMomentAdded(moment({ localDate: '2026-11-10' }), 'readers', NOW);
     expect(jest.mocked(track).mock.calls).toEqual([
       ['moment_added', { slot: 'afternoon', is_private: false, backfilled: true }],
     ]);
   });
 
+  it('an Everyone moment is tracked like a Readers one; an unknown visibility sends nothing', async () => {
+    mockServer.count = 3;
+    await trackMomentAdded(moment(), 'everyone', NOW);
+    await trackMomentAdded(moment({ id: 9 }), null, NOW);
+    expect(jest.mocked(track).mock.calls).toEqual([
+      ['moment_added', { slot: 'afternoon', is_private: false, backfilled: false }],
+    ]);
+  });
+
   it('a Replace is not a new moment', async () => {
-    await trackMomentAdded(moment({ replace: true }), false, NOW);
+    await trackMomentAdded(moment({ replace: true }), 'readers', NOW);
     expect(track).not.toHaveBeenCalled();
   });
 });

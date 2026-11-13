@@ -15,7 +15,7 @@ function moment(slot: Slot, extra: Partial<ServerMoment> = {}): ServerMoment {
     id: `m-${slot}`,
     slot,
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     captured_at: `${DATE}T08:00:00+08:00`,
     added_at: `${DATE}T00:05:00Z`,
@@ -107,7 +107,7 @@ describe('SelectedDayCard', () => {
       photoUri: 'file:///q/3.jpg',
       thumbUri: null,
       capturedAt: null,
-      isPrivate: false,
+      visibility: 'readers',
     };
     await renderCard({ queue: [queued] });
     expect(screen.getByTestId('selected-day-thumb-selfie')).toBeTruthy();

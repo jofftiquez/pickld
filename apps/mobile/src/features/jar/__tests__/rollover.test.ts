@@ -60,7 +60,7 @@ describe('openTodayJar', () => {
         id: 'm-1',
         slot: 'ootd',
         status: 'live',
-        is_private: false,
+        visibility: 'readers',
         is_backfilled: false,
         captured_at: null,
         added_at: '2026-11-10T00:00:00Z',
