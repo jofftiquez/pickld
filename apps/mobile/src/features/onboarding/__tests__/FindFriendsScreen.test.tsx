@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
+import { useToastStore } from '@/lib/toast';
 
 import type { FriendMatch } from '../findFriends';
 import { FindFriendsScreen, type FindFriendsDeps } from '../FindFriendsScreen';
@@ -36,6 +37,8 @@ jest.mock('@/features/jar/useToday', () => ({
 }));
 const mockSetReading = jest.fn(async (..._a: unknown[]) => undefined);
 jest.mock('@/features/profile/useFollow', () => ({ setReading: (...a: unknown[]) => mockSetReading(...a) }));
+const mockCopyLink = jest.fn(async (_url: string) => undefined);
+jest.mock('@/features/share/shareActions', () => ({ copyLink: (url: string) => mockCopyLink(url) }));
 
 const mika: FriendMatch = { id: 'u-2', username: 'mika', displayName: 'Mika Reyes', avatarUrl: null, reading: false };
 
@@ -65,6 +68,15 @@ describe('Find friends (FR-ONB-06)', () => {
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/promise');
     expect(mockPush).toHaveBeenCalledWith('/setup/promise');
     expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'friends' }]]);
+  });
+
+  it('Copy link copies the invite link and confirms with a toast', async () => {
+    useToastStore.setState({ current: null });
+    await renderScreen({ hashAddressBook: jest.fn(), matchContacts: jest.fn() });
+    await waitFor(() => expect(screen.getByTestId('friends-link').props.children).toBe('pickld.me/dale'));
+    await act(async () => fireEvent.press(screen.getByTestId('friends-invite')));
+    expect(mockCopyLink).toHaveBeenCalledWith('https://pickld.me/dale');
+    expect(useToastStore.getState().current?.key).toBe('linkCopied');
   });
 
   it('Find sends only the hashes to matching and lists the matches; Read follows', async () => {

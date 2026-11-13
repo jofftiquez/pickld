@@ -21,6 +21,7 @@ import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextField } from '@/components/TextField';
 import { Toggle } from '@/components/Toggle';
+import { showToast } from '@/lib/toast';
 import { textStyle } from '@/theme/text';
 import { colors, lidColors, space } from '@/theme/tokens';
 
@@ -112,6 +113,7 @@ export function Gallery() {
         <View style={row}>
           <PillButton label="Open bottom sheet" variant="subtle" onPress={() => setSheet(true)} />
           <PillButton label="Open dialog" variant="subtle" onPress={() => setDialog(true)} />
+          <PillButton label="Show toast" variant="subtle" onPress={() => showToast('changesSaved')} />
         </View>
       </GallerySection>
 

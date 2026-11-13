@@ -9,6 +9,7 @@ import { photoUrls } from '@/features/moment/useOwnMoment';
 import { useAuthStore } from '@/lib/authStore';
 import { getStore } from '@/lib/store/store';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 
 import { shopQueryKey } from './useShop';
 
@@ -64,6 +65,7 @@ export function useBuyPack() {
     },
     onSuccess: async (outcome) => {
       if (outcome !== 'bought' || !userId) return;
+      showToast('packAdded');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: shopQueryKey(userId) }),
         queryClient.invalidateQueries({ queryKey: stickerCatalogQueryKey(userId) }),

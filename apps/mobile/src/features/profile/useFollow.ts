@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { track } from '@/lib/analytics';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 
 import { withReading } from './profileModel';
 import type { FollowListRow } from './useFollowList';
@@ -64,6 +65,7 @@ export function useFollow(viewerId: string | null) {
       if (context?.before !== undefined) queryClient.setQueryData(context.key, context.before);
       for (const [listKey, rows] of context?.lists ?? []) queryClient.setQueryData(listKey, rows);
     },
+    onSuccess: (_data, { username, reading }) => showToast(reading ? 'following' : 'unfollowed', { username }),
     onSettled: refetch,
   });
 

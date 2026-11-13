@@ -19,6 +19,7 @@ import { useUsernameAvailability } from '@/features/profile/useUsernameAvailabil
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 import { colors } from '@/theme/tokens';
 
 type Kind = 'avatar' | 'cover';
@@ -95,6 +96,9 @@ export default function EditProfileScreen() {
       queryClient.invalidateQueries({ queryKey: ['feed'] }),
       queryClient.invalidateQueries({ queryKey: ['jarPage'] }),
     ]);
+    showToast(
+      Object.keys(update).every((k) => k === 'avatar_path' || k === 'cover_path') ? 'photoUpdated' : 'profileUpdated',
+    );
     // A new username moves My profile to its new address.
     if (update.username) router.dismissTo({ pathname: '/u/[username]', params: { username: update.username } });
     else if (router.canGoBack()) router.back();

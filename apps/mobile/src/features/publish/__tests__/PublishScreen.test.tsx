@@ -5,6 +5,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import type { QueueItem } from '@/lib/queue/store';
+import { useToastStore } from '@/lib/toast';
 
 import PublishScreen from '../../../../app/publish';
 
@@ -140,6 +141,7 @@ beforeEach(() => {
   mockBackend.defaultVisibility = 'readers';
   mockBackend.updates = [];
   mockBackend.updateError = null;
+  useToastStore.setState({ current: null });
   useAuthStore.setState({ status: 'signedIn', session: { user: { id: USER } } as Session, error: null });
 });
 
@@ -217,6 +219,7 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
       { table: 'jars', patch: { visibility: 'only_me', published_at: expect.any(String) }, filters: { id: 'jar-10' } },
     ]);
     expect(track).toHaveBeenCalledWith('jar_published', { visibility: 'only_me' });
+    expect(useToastStore.getState().current?.key).toBe('jarPublished');
   });
 
   it('a failed publish stays on the screen with a message and can be tried again', async () => {
@@ -235,6 +238,7 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
     );
     expect(mockRouter.back).not.toHaveBeenCalled();
     expect(track).not.toHaveBeenCalled();
+    expect(useToastStore.getState().current).toBeNull();
 
     mockBackend.updateError = null;
     await fireEvent.press(screen.getByRole('button', { name: 'Publish jar' }));

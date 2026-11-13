@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { LogBox } from 'react-native';
 
 import { SplashOverlay } from '@/components/SplashOverlay';
+import { ToastHost } from '@/components/ToastHost';
 import { startAuth } from '@/lib/authBootstrap';
 import { useAuthStore } from '@/lib/authStore';
 import { createQueryClient, persistOptions } from '@/lib/queryClient';
@@ -94,6 +95,7 @@ export default function RootLayout() {
         <Stack.Screen name="full-jar" options={{ presentation: 'transparentModal', animation: 'fade' }} />
         <Stack.Screen name="sticker-unlocked" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
       </Stack>
+      <ToastHost />
       {splashVisible ? <SplashOverlay ready onHidden={hideSplash} /> : null}
     </PersistQueryClientProvider>
   );

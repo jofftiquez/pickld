@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { useAuthStore } from '@/lib/authStore';
 import { setStoreForTesting, type Store } from '@/lib/store/store';
+import { useToastStore } from '@/lib/toast';
 
 import { useBuyPack } from '../usePackPreview';
 
@@ -34,6 +35,7 @@ async function buy(productId: string) {
 
 beforeEach(() => {
   mockInvoke.mockReset();
+  useToastStore.setState({ current: null });
   useAuthStore.setState({ session: { user: { id: 'u1' } } as never, status: 'signedIn' });
 });
 afterEach(() => setStoreForTesting(undefined));
@@ -45,6 +47,7 @@ it('syncs after a store purchase, passing the dev product id only when the dev s
   expect(await buy('me.pickld.pack.pinoy_life')).toBe('bought');
   expect(real.purchase).toHaveBeenCalledWith('me.pickld.pack.pinoy_life', 'u1');
   expect(mockInvoke).toHaveBeenLastCalledWith('store-sync', { body: {} });
+  expect(useToastStore.getState().current?.key).toBe('packAdded');
 
   setStoreForTesting(store({ status: 'bought', devProductId: 'me.pickld.pack.barkada' }));
   await buy('me.pickld.pack.barkada');
@@ -59,4 +62,5 @@ it('does nothing on the server when the user cancels, and fails when the sync fa
   setStoreForTesting(store({ status: 'bought' }));
   mockInvoke.mockResolvedValue({ data: null, error: new Error('offline') });
   expect(await buy('me.pickld.pack.pinoy_life')).toBe('error: offline');
+  expect(useToastStore.getState().current).toBeNull();
 });

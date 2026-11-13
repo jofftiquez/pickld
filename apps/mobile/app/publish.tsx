@@ -11,6 +11,7 @@ import { PublishReviewView } from '@/features/publish/PublishReviewView';
 import { track } from '@/lib/analytics';
 import { currentSlot } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 
 // /publish (M3-01; FR-PUB-01, FR-PUB-03): review today's open jar and publish it. The choice starts on
 // the profile's default visibility (Readers unless changed). Publishing needs a connection; on failure the
@@ -39,6 +40,7 @@ export default function PublishScreen() {
       track('jar_published', { visibility: input.visibility });
       if (userId !== null) void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
       close();
+      showToast('jarPublished');
     },
   });
 
