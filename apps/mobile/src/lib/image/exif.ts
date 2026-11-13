@@ -146,6 +146,32 @@ function readXmp(text: string, out: Fields): void {
   for (const match of text.matchAll(XMP_LOCATION)) out.locationTags.push(`XMP ${match[1]}`);
 }
 
+const IRB_IPTC = 0x0404;
+
+/** APP13 holds Photoshop image resource blocks. Only the IPTC record (0x0404) can carry location
+ * (City, Sublocation, Country…). iOS `jpegData` always writes an empty one, so only a non-empty record
+ * counts; anything that doesn't parse as resource blocks still counts, so the check fails closed. */
+function readApp13(bytes: Uint8Array, start: number, end: number, out: Fields): void {
+  const header = 'Photoshop 3.0\0';
+  if (!startsWith(bytes, start, header)) {
+    out.locationTags.push('IPTC');
+    return;
+  }
+  const r = new Reader(bytes.subarray(0, end));
+  let at = start + header.length;
+  while (at < end) {
+    if (!startsWith(bytes, at, '8BIM')) throw new RangeError('Malformed Photoshop resource block');
+    const id = r.u16(at + 4);
+    const nameLength = bytes[at + 6] ?? 0;
+    const sizeAt = at + 6 + nameLength + 1 + ((nameLength + 1) % 2); // Pascal name, padded to even
+    const size = r.u32(sizeAt);
+    const dataEnd = sizeAt + 4 + size;
+    if (dataEnd > end) throw new RangeError('Malformed Photoshop resource block');
+    if (id === IRB_IPTC && size > 0) out.locationTags.push('IPTC');
+    at = dataEnd + (size % 2);
+  }
+}
+
 function readJpeg(bytes: Uint8Array, out: Fields): void {
   const r = new Reader(bytes);
   let at = 2;
@@ -168,7 +194,7 @@ function readJpeg(bytes: Uint8Array, out: Fields): void {
     if (marker === 0xe1 && startsWith(bytes, start, 'Exif\0\0')) readTiff(bytes.subarray(start + 6, end), out);
     else if (marker === 0xe1 && startsWith(bytes, start, 'http://ns.adobe.com/'))
       readXmp(latin1(bytes, start, end), out);
-    else if (marker === 0xed) out.locationTags.push('IPTC'); // Photoshop IRB may hold City/Sublocation
+    else if (marker === 0xed) readApp13(bytes, start, end, out);
     at = end;
   }
 }
