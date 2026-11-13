@@ -30,7 +30,7 @@ export type PreviewItem = {
   visibility: Visibility;
   caption: string | null;
   addedLater: boolean;
-  /** Like and comment counts of a live moment once the jar page has loaded; null otherwise. */
+  /** Like and comment counts of a live moment (its own thread, D-69) once the jar page has loaded; null otherwise. */
   likeCount: number | null;
   liked: boolean;
   commentCount: number | null;
@@ -96,7 +96,7 @@ export function buildPreviewItems(input: {
         caption: loaded?.caption?.trim() ? loaded.caption.trim() : null,
         likeCount: loaded ? loaded.like_count : null,
         liked: page && loaded ? isLiked(page, { kind: 'moment', id: momentId }) : false,
-        commentCount: page && loaded ? page.jar.comment_count : null,
+        commentCount: loaded ? (loaded.comment_count ?? 0) : null,
       });
     }
   }

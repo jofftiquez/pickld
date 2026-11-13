@@ -93,7 +93,7 @@ describe('buildPreviewItems', () => {
         comment_count: 4,
       },
       author: { username: 'dale', display_name: 'Dale' },
-      moments: [pageMoment('whereami', { caption: 'Home', like_count: 7 })],
+      moments: [pageMoment('whereami', { caption: 'Home', like_count: 7, comment_count: 2 })],
       viewerId: 'me',
       liked: { jar: false, moments: ['m-whereami'] },
     };
@@ -103,7 +103,7 @@ describe('buildPreviewItems', () => {
       caption: 'Home',
       likeCount: 7,
       liked: true,
-      commentCount: 4,
+      commentCount: 2,
       target: { kind: 'server', momentId: 'm-whereami', jarId: 'jar-10' },
     });
     // Not in the page yet (or the page hasn't loaded): the thumbnail, and no counts.
