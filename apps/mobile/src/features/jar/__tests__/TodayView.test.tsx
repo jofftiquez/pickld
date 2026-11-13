@@ -101,7 +101,7 @@ describe('TodayView', () => {
     expect(screen.getByText('1 of 8 moments')).toBeTruthy();
   });
 
-  it('published, Only me: the note says only the owner sees it, 1 like reads singular, no promise of sharing', async () => {
+  it('published, Only me: the card says when and who in one line, 1 like reads singular, no promise of sharing', async () => {
     const onOpenVisibility = jest.fn();
     await renderToday({
       hasAnyJar: true,
@@ -109,11 +109,14 @@ describe('TodayView', () => {
       published: { visibility: 'only_me', publishedAt: '2026-11-09T23:05:00Z', likeCount: 1 },
       onOpenVisibility,
     });
-    expect(screen.getByText('Published at 7:05 AM. Only you can see this jar.')).toBeTruthy();
+    // Inside the jar card, not a banner above it.
+    expect(within(screen.getByTestId('jar-card')).getByText('Published 7:05 AM · Only me')).toBeTruthy();
     expect(screen.queryByText(/go out automatically/)).toBeNull();
     expect(screen.getByText('Only you · 1 like')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Published, Only you' }));
     expect(onOpenVisibility).toHaveBeenCalledTimes(1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Published 7:05 AM · Only me' }));
+    expect(onOpenVisibility).toHaveBeenCalledTimes(2);
   });
 
   it('normal day: count, readers, a disabled Publish, and the 8 tiles in order', async () => {

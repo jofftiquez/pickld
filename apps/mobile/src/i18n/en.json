@@ -44,8 +44,7 @@
     "published": "Published",
     "publishedLabel": "Published, {{shared}}",
     "publishedHint": "Changes who can see this jar",
-    "publishedNote": "Published at {{time}}. New moments you add today go out automatically.",
-    "publishedNoteOnlyMe": "Published at {{time}}. Only you can see this jar.",
+    "publishedLine": "Published {{time}} · {{visibility}}",
     "shared": {
       "readers": "Shared with readers",
       "everyone": "Shared with everyone",
