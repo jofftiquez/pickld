@@ -1,4 +1,4 @@
-import { defaultCameraSlot, parseSlotParam, switchSlot } from '../cameraSlot';
+import { defaultCameraSlot, parseSlotParam } from '../cameraSlot';
 import type { Slot } from '@/theme/tokens';
 
 const none = new Set<Slot>();
@@ -56,19 +56,5 @@ describe('defaultCameraSlot', () => {
     ]);
     expect(defaultCameraSlot({ param: null, nowSlot: 'afternoon', taken: all })).toBe('afternoon');
     expect(defaultCameraSlot({ param: null, nowSlot: null, taken: all })).toBe('whereami');
-  });
-});
-
-describe('switchSlot', () => {
-  it('changes the target to an open slot', () => {
-    expect(switchSlot('afternoon', 'selfie', none)).toBe('selfie');
-  });
-
-  it('keeps the current slot when the picked one is taken', () => {
-    expect(switchSlot('afternoon', 'selfie', new Set(['selfie']))).toBe('afternoon');
-  });
-
-  it('allows re-picking the current slot even if it is taken', () => {
-    expect(switchSlot('ootd', 'ootd', new Set(['ootd']))).toBe('ootd');
   });
 });

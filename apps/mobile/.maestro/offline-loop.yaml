@@ -43,37 +43,18 @@ appId: me.pickld.app
     timeout: 10000
 
 # Capture SLOT with the mock camera (the steps of camera.yaml).
+# The camera opens from the slot's tile on Today; the slot is fixed (no switcher).
+- scrollUntilVisible:
+    element:
+      id: tile-${output.slot}
+    direction: DOWN
+    timeout: 10000
 - tapOn:
-    id: tab-capture
+    id: tile-${output.slot}
 - extendedWaitUntil:
     visible:
       id: camera-mock-preview
     timeout: 10000
-- waitForAnimationToEnd:
-    timeout: 3000
-- repeat:
-    times: 2
-    commands:
-      - swipe:
-          from:
-            id: camera-slot-switcher
-          direction: RIGHT
-- runFlow:
-    when:
-      notVisible:
-        id: camera-slot-${output.slot}
-    commands:
-      - repeat:
-          times: 2
-          commands:
-            - swipe:
-                from:
-                  id: camera-slot-switcher
-                direction: LEFT
-- waitForAnimationToEnd:
-    timeout: 3000
-- tapOn:
-    id: camera-slot-${output.slot}
 - tapOn:
     id: camera-shutter
 # The shutter opens the editor on the queued photo (M2-12); Add to #slot saves it.

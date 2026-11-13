@@ -23,9 +23,13 @@ appId: me.pickld.app
     timeout: 30000
 - takeScreenshot: large-jars
 - tapOn:
-    id: tab-my-days
+    id: tab-today
+- tapOn:
+    id: today-my-days
 - waitForAnimationToEnd
 - takeScreenshot: large-my-days
+- tapOn:
+    id: my-days-back
 - openLink: pickld://jar/b0000000-0000-4000-8000-000000000102
 - runFlow:
     when:

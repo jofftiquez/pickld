@@ -26,8 +26,3 @@ export function defaultCameraSlot(input: { param: Slot | null; nowSlot: Slot | n
   if (nowSlot && !taken.has(nowSlot)) return nowSlot;
   return slots.find((slot) => !taken.has(slot)) ?? nowSlot ?? slots[0];
 }
-
-/** The slot switcher: picking a taken slot keeps the current one (replacing a moment is M2-22). */
-export function switchSlot(current: Slot, next: Slot, taken: ReadonlySet<Slot>): Slot {
-  return taken.has(next) && next !== current ? current : next;
-}

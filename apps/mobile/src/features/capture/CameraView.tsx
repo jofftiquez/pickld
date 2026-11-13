@@ -10,15 +10,14 @@ import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 import { CameraSideButton } from './CameraSideButton';
 import type { FlashSetting } from './CameraPreview';
 import { ShutterButton } from './ShutterButton';
-import { SlotSwitcher } from './SlotSwitcher';
 import { SlotTag } from './SlotTag';
 import { ViewfinderGrid } from './ViewfinderGrid';
 
 export type CameraViewProps = {
   /** The live preview (vision-camera) or the dev mock; fills the 3:4 viewfinder. */
   preview: ReactNode;
+  /** The slot the photo is added to; shown read only in the slot tag (the tile that opened the camera). */
   slot: Slot;
-  taken: ReadonlySet<Slot>;
   /** Current time, formatted for the slot tag. */
   time: string;
   /** Fill this jar: the past day being filled, formatted for the slot tag. */
@@ -26,39 +25,34 @@ export type CameraViewProps = {
   flash: FlashSetting;
   flashSupported: boolean;
   shutterDisabled: boolean;
-  reduceMotion: boolean;
   insets: EdgeInsets;
   onClose: () => void;
   onToggleFlash: () => void;
   onFlip: () => void;
   onGallery: () => void;
   onShutter: () => void;
-  onSelectSlot: (slot: Slot) => void;
   /** Rendered over the screen, e.g. the Replace dialog (M2-22). */
   overlay?: ReactNode;
 };
 
-// Room below the viewfinder for the moment tabs and the shutter row on short phones.
-const CONTROLS_MIN_HEIGHT = 190;
+// Room below the viewfinder for the shutter row on short phones.
+const CONTROLS_MIN_HEIGHT = 140;
 
-/** The Camera screen layout (design: Camera): 3:4 viewfinder with grid and controls, moment tabs, shutter row. */
+/** The Camera screen layout (design: Camera): 3:4 viewfinder with grid, controls and slot tag, then the shutter row. */
 export function CameraView({
   preview,
   slot,
-  taken,
   time,
   date,
   flash,
   flashSupported,
   shutterDisabled,
-  reduceMotion,
   insets,
   onClose,
   onToggleFlash,
   onFlip,
   onGallery,
   onShutter,
-  onSelectSlot,
   overlay,
 }: CameraViewProps) {
   const { t } = useTranslation();
@@ -95,8 +89,6 @@ export function CameraView({
           <Text style={[textStyle('caption'), { color: colors.surface }]}>{t('camera.aspect')}</Text>
         </View>
       </View>
-
-      <SlotSwitcher selected={slot} taken={taken} onSelect={onSelectSlot} reduceMotion={reduceMotion} />
 
       <View style={[styles.shutterRow, { paddingBottom: insets.bottom + space.md }]}>
         <CameraSideButton

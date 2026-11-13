@@ -14,7 +14,7 @@ appId: me.pickld.app
       id: splash-overlay
     timeout: 10000
 - tapOn:
-    id: tab-my-days
+    id: today-my-days
 - assertVisible:
     id: screen-title
     text: My days

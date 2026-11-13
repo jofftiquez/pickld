@@ -8,12 +8,14 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 import type { IconName } from './icons';
 import { TabBarButton } from './TabBarButton';
 
-/** The four main tabs, keyed by route name under `app/(tabs)/`. */
+/**
+ * The main tabs, keyed by route name under `app/(tabs)/` (D-52): Today | Jars; only the selected tab is highlighted.
+ * Routes not listed here (the hidden Capture route) get no tab. The Moments tab (QA round 1, piece 5)
+ * goes between Today and Jars.
+ */
 export const mainTabs = {
   today: { icon: 'today', label: 'tabs.today' },
-  capture: { icon: 'capture', label: 'tabs.capture' },
   jars: { icon: 'jars', label: 'tabs.jars' },
-  'my-days': { icon: 'myDays', label: 'tabs.myDays' },
 } as const satisfies Record<string, { icon: IconName; label: `tabs.${string}` }>;
 
 type MainTab = keyof typeof mainTabs;

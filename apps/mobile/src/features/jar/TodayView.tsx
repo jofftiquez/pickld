@@ -13,7 +13,6 @@ import type { Visibility } from '@/features/publish/publishJar';
 
 import { JarCard } from './JarCard';
 import { OfflineBanner } from './OfflineBanner';
-import { PublishedNote } from './PublishedNote';
 import { TodayHeader } from './TodayHeader';
 import { greetingFor, momentCount, type GridTile } from './todayGrid';
 
@@ -50,9 +49,9 @@ export type TodayViewProps = {
   onOpenOptions?: (tile: GridTile) => void;
   /** Opens Publish review (M3-01); null or missing disables the jar card's Publish. */
   onPublish?: (() => void) | null;
-  /** A published jar (M3-02, TodayPublished): the Published note above the card, its chip and likes. */
+  /** A published jar (M3-02, TodayPublished): the card's Published chip, likes and "Published 10:10 PM · Readers". */
   published?: { visibility: Visibility; publishedAt: string; likeCount: number } | null;
-  /** The Published chip: opens the jar's visibility menu. */
+  /** The Published chip and line: open the jar's visibility menu. */
   onOpenVisibility?: () => void;
 };
 
@@ -119,21 +118,22 @@ export function TodayView({
           <OfflineBanner count={offlineCount} />
         </View>
       ) : null}
-      {published ? (
-        <View style={suspension || offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.banner}>
-          <PublishedNote time={formatTime(new Date(published.publishedAt), tz)} visibility={published.visibility} />
-        </View>
-      ) : null}
-      <View
-        style={suspension || offlineCount !== null || zoneBanner || published ? styles.cardUnderBanner : styles.card}
-      >
+      <View style={suspension || offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.card}>
         <JarCard
           count={count}
           readerCount={readerCount}
           lidColor={lidColor}
           firstDay={hasAnyJar === false && count === 0}
           onPublish={onPublish}
-          published={published}
+          published={
+            published
+              ? {
+                  visibility: published.visibility,
+                  likeCount: published.likeCount,
+                  time: formatTime(new Date(published.publishedAt), tz),
+                }
+              : null
+          }
           onOpenVisibility={onOpenVisibility}
         />
       </View>

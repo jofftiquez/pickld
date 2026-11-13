@@ -5,8 +5,8 @@ import { View } from 'react-native';
 import { parseSlotParam } from '@/features/capture/cameraSlot';
 
 // Capture tab (M2-07; FR-CAP-01). The camera is a full-screen route (`/camera`) above the tabs, so
-// this tab only opens it: the Capture tab and Today's tiles (`/capture?slot=…`) both land here.
-// Coming back from the camera (Close, Back or after the shutter) goes to Today.
+// this tab only opens it. Hidden from the bar since D-52 (`href: null`); Today's tiles push `/camera`
+// directly. Kept so the tab can come back. Coming back from the camera goes to Today.
 export default function CaptureScreen() {
   const router = useRouter();
   const navigation = useNavigation<{ setParams(params: { slot?: string }): void }>();

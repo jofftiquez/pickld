@@ -4,7 +4,7 @@ import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-librar
 import type { ReactNode } from 'react';
 import { Pressable, Text } from 'react-native';
 
-import MyDaysScreen from '../../../../app/(tabs)/my-days';
+import MyDaysScreen from '../../../../app/my-days';
 import type { ServerMoment } from '@/features/jar/todayGrid';
 
 import type { DayJar } from '../useDayJar';
@@ -55,6 +55,7 @@ function CameraStub() {
 
 const routes = {
   _layout: () => <Stack screenOptions={{ headerShown: false }} />,
+  '(tabs)/today': () => <Text>Today stub</Text>,
   'my-days': MyDaysScreen,
   camera: CameraStub,
 };
@@ -99,5 +100,26 @@ describe('My days selected day', () => {
     await fireEvent.press(screen.getByTestId('day-2026-11-11'));
     expect(screen.getByTestId('selected-day-card')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Fill this jar' })).toBeNull();
+  });
+});
+
+// My days is a stack screen opened from Today's calendar button, not a tab (D-52).
+describe('My days back button', () => {
+  it('goes back to where it was opened from', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await act(async () => {
+      const { router } = jest.requireActual<typeof import('expo-router')>('expo-router');
+      router.push('/my-days');
+    });
+    expect(screen).toHavePathname('/my-days');
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('opened on its own (no history), lands on Today', async () => {
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(screen).toHavePathname('/today');
+    expect(screen.getByText('Today stub')).toBeTruthy();
   });
 });

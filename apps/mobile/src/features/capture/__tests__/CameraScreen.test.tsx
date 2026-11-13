@@ -15,7 +15,7 @@ import type { DayJar } from '@/features/days/useDayJar';
 import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
 
 // Camera screen wiring (FR-CAP-01, FR-CAP-11): permission branch and Camera access off, dev mock camera,
-// slot switcher, flash and flip, and the shutter path. vision-camera's native module and the save path
+// the read-only slot tag, flash and flip, and the shutter path. vision-camera's native module and the save path
 // are mocked; its permission hook is the real one (it re-reads the status when the app becomes active).
 // saveCapture has its own test.
 
@@ -241,11 +241,10 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(screen).toHavePathname('/edit/1');
   });
 
-  it('switching the slot changes the target, and the shutter queues the mock photo there and returns', async () => {
-    await openCamera();
-    await fireEvent.press(screen.getByTestId('camera-slot-selfie'));
+  it('the tile’s slot is fixed: no slot switcher, and the shutter queues the mock photo there and returns', async () => {
+    await openCamera('/camera?slot=selfie');
     expect(tagText()).toMatch(/^#selfie,/);
-    expect(screen.getByRole('tab', { name: '#selfie', selected: true })).toBeTruthy();
+    expect(screen.queryByRole('tab')).toBeNull();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
     await act(async () => {});
@@ -284,8 +283,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
       height: 3024,
       exif: { DateTimeOriginal: '2026:11:08 19:30:00', OffsetTimeOriginal: '+08:00' },
     });
-    await openCamera();
-    await fireEvent.press(screen.getByTestId('camera-slot-selfie'));
+    await openCamera('/camera?slot=selfie');
     await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
     await act(async () => {});
     expect(screen).toHavePathname('/crop');
@@ -357,24 +355,23 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(takeMockPhoto).toHaveBeenCalledWith('front');
   });
 
-  it('taken slots are listed but cannot be picked', async () => {
-    mockToday.queue = [
-      {
-        id: 1,
-        slot: 'selfie',
-        state: 'queued',
-        localDate: '2026-11-11',
-        photoUri: 'file:///q/1.webp',
-        thumbUri: null,
-        capturedAt: null,
-        isPrivate: false,
-      },
-    ];
-    await openCamera();
-    const selfie = screen.getByRole('tab', { name: '#selfie, already added' });
-    expect(selfie.props.accessibilityState).toEqual({ selected: false, disabled: true });
-    await fireEvent.press(selfie);
+  it('without a slot (the hidden Capture route) it opens on the Now slot, else the first empty slot', async () => {
+    await openCamera('/camera');
     expect(tagText()).toMatch(/^#afternoon,/);
+
+    const queued = (slot: QueuedMoment['slot'], id: number): QueuedMoment => ({
+      id,
+      slot,
+      state: 'queued',
+      localDate: '2026-11-11',
+      photoUri: `file:///q/${id}.webp`,
+      thumbUri: null,
+      capturedAt: null,
+      isPrivate: false,
+    });
+    mockToday.queue = [queued('afternoon', 1), queued('whereami', 2)];
+    await openCamera('/camera');
+    expect(tagText()).toMatch(/^#mebusywith,/);
   });
 
   describe('a filled slot asks to Replace first (M2-22)', () => {
@@ -663,16 +660,14 @@ describe('Fill this jar (?date=, FR-DAY-02)', () => {
     expect(screen).toHavePathname('/edit/1');
   });
 
-  it('only the day’s missing slots are selectable; today’s jar doesn’t count', async () => {
-    // Today's jar has #selfie queued; the day being filled doesn't.
+  it('only the day’s own moments count as filled; today’s jar doesn’t', async () => {
+    // Today's jar has #selfie queued; the day being filled doesn't, so #selfie opens as asked.
     mockToday.queue = [queued('selfie', '2026-11-11'), queued('ootd', '2026-11-08')];
     await openCamera('/camera?date=2026-11-08&slot=selfie');
-    for (const name of ['#whereami, already added', '#morning, already added', '#ootd, already added']) {
-      expect(screen.getByRole('tab', { name }).props.accessibilityState).toEqual({ selected: false, disabled: true });
-    }
-    await fireEvent.press(screen.getByRole('tab', { name: '#morning, already added' }));
-    expect(tagText()).toMatch(/^#selfie,/);
-    expect(screen.getByRole('tab', { name: '#selfie', selected: true })).toBeTruthy();
+    expect(tagText()).toMatch(/^#selfie, for /);
+    // #ootd is queued for that day, so it is filled there: the first missing slot is used instead.
+    await openCamera('/camera?date=2026-11-08&slot=ootd');
+    expect(tagText()).toMatch(/^#mebusywith, for /);
   });
 
   it('a slot param that is already filled opens on the first missing slot instead', async () => {

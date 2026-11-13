@@ -19,7 +19,7 @@ appId: me.pickld.app
       id: splash-overlay
     timeout: 10000
 - tapOn:
-    id: tab-my-days
+    id: today-my-days
 - assertVisible:
     id: my-days-calendar
 # Early in the month, three days ago is in the previous month.

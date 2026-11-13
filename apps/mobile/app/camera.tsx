@@ -12,7 +12,7 @@ import {
   type FlashSetting,
 } from '@/features/capture/CameraPreview';
 import { CameraView } from '@/features/capture/CameraView';
-import { defaultCameraSlot, parseSlotParam, switchSlot } from '@/features/capture/cameraSlot';
+import { defaultCameraSlot, parseSlotParam } from '@/features/capture/cameraSlot';
 import { fillCameraSlot } from '@/features/capture/fillTarget';
 import { MockCameraPreview } from '@/features/capture/MockCameraPreview';
 import { isThreeByFour } from '@/features/capture/cropMath';
@@ -28,7 +28,6 @@ import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday
 import { formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
-import { useReduceMotion } from '@/lib/useReduceMotion';
 import { slots, type Slot } from '@/theme/tokens';
 
 const MINUTE = 60_000;
@@ -39,7 +38,6 @@ export default function CameraScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const reduceMotion = useReduceMotion();
   const params = useLocalSearchParams<{ slot?: string; date?: string; mockAccess?: string; devPhoto?: string }>();
   const cameraAccess = useCameraAccess();
   const access = parseMockAccessParam(params.mockAccess, __DEV__) ?? cameraAccess;
@@ -74,11 +72,12 @@ export default function CameraScreen() {
         .filter(holdsSlot)
         .map((tile) => tile.slot),
     );
-  const [picked, setPicked] = useState<Slot | null>(null);
+  // The tile that opened the camera picks the slot; there is no switcher (QA item 5). Without a slot param
+  // (the hidden Capture route) it is the Now slot, else the first empty one.
   const fillSlot = fill ? fillCameraSlot({ param: parseSlotParam(params.slot), taken }) : null;
-  const slot =
-    picked ??
-    (fill ? (fillSlot ?? slots[0]) : defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken }));
+  const slot = fill
+    ? (fillSlot ?? slots[0])
+    : defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken });
   // A full past jar has nothing to fill.
   const fillFull = fill !== null && fillSlot === null;
 
@@ -188,20 +187,17 @@ export default function CameraScreen() {
     <CameraView
       preview={preview}
       slot={slot}
-      taken={taken}
       time={formatTime(now, tz)}
       date={fill?.dateLabel}
       flash={flash}
       flashSupported={access === 'mock' || flashSupported}
       shutterDisabled={busy || userId === null || fillFull || (access !== 'mock' && access !== 'granted')}
-      reduceMotion={reduceMotion}
       insets={insets}
       onClose={leave}
       onToggleFlash={() => setFlash((f) => (f === 'on' ? 'off' : 'on'))}
       onFlip={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
       onGallery={() => void onGallery()}
       onShutter={() => void onShutter()}
-      onSelectSlot={(next) => setPicked(switchSlot(slot, next, taken))}
       overlay={replaceConfirm.dialog}
     />
   );
