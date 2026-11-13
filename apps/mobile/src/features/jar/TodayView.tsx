@@ -42,6 +42,8 @@ export type TodayViewProps = {
   zoneTag?: string | null;
   /** The Time zone banner, shown under the header. */
   zoneBanner?: ReactNode;
+  /** The suspension notice (FR-SAF-06), shown first under the header. */
+  suspension?: ReactNode;
   /** A checking or removed server moment: opens /moment/[id] (M2-21). */
   onOpenMoment?: (momentId: string) => void;
   /** A live moment, or a queued photo that is waiting or failed: opens Moment options (M2-23). */
@@ -78,6 +80,7 @@ export function TodayView({
   onRetry,
   zoneTag = null,
   zoneBanner = null,
+  suspension = null,
   onOpenMoment,
   onOpenOptions,
   onPublish = null,
@@ -109,18 +112,21 @@ export function TodayView({
         onOpenProfile={onOpenProfile}
         zoneTag={zoneTag}
       />
-      {zoneBanner ? <View style={styles.banner}>{zoneBanner}</View> : null}
+      {suspension ? <View style={styles.banner}>{suspension}</View> : null}
+      {zoneBanner ? <View style={suspension ? styles.cardUnderBanner : styles.banner}>{zoneBanner}</View> : null}
       {offlineCount !== null ? (
-        <View style={zoneBanner ? styles.cardUnderBanner : styles.banner}>
+        <View style={suspension || zoneBanner ? styles.cardUnderBanner : styles.banner}>
           <OfflineBanner count={offlineCount} />
         </View>
       ) : null}
       {published ? (
-        <View style={offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.banner}>
+        <View style={suspension || offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.banner}>
           <PublishedNote time={formatTime(new Date(published.publishedAt), tz)} visibility={published.visibility} />
         </View>
       ) : null}
-      <View style={offlineCount !== null || zoneBanner || published ? styles.cardUnderBanner : styles.card}>
+      <View
+        style={suspension || offlineCount !== null || zoneBanner || published ? styles.cardUnderBanner : styles.card}
+      >
         <JarCard
           count={count}
           readerCount={readerCount}

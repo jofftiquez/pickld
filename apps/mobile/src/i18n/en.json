@@ -55,7 +55,12 @@
     "unlikeHint": "Removes your like",
     "likes_one": "{{count}} like",
     "likes_other": "{{count}} likes",
-    "sharedLikes": "{{shared}} · {{likes}}"
+    "sharedLikes": "{{shared}} · {{likes}}",
+    "suspended": {
+      "title": "Your account is suspended until {{date}}.",
+      "titleNoDate": "Your account is suspended.",
+      "body": "Some of your moments broke our community guidelines. Until then, others can’t see your jars and you can’t add or share anything. You can still look at your own days."
+    }
   },
   "jarVisibility": {
     "title": "Who can see this jar",
@@ -386,6 +391,26 @@
       "bodyGuideline": "It didn’t follow our community guidelines on <bold>{{guideline}}</bold>. Your other moments and your account aren’t affected.",
       "body": "It didn’t follow our community guidelines. Your other moments and your account aren’t affected.",
       "ok": "OK"
+    },
+    "review": {
+      "available": {
+        "title": "Think we got it wrong?",
+        "body": "Ask for a review and a person will look at it again.",
+        "action": "Request a review"
+      },
+      "sent": {
+        "title": "Review requested",
+        "body": "A person will look at your moment again. We’ll let you know what they decide."
+      },
+      "upheld": {
+        "title": "We looked again",
+        "body": "A person reviewed your moment and the removal stands. Each removal can be reviewed once."
+      },
+      "message": "Tell us why (optional)",
+      "messagePlaceholder": "Anything that helps us see it your way",
+      "send": "Send request",
+      "cancel": "Cancel",
+      "failed": "Couldn’t send your request. Check your connection and try again."
     },
     "guideline": {
       "sexual": "nudity or sexual content",

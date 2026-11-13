@@ -26,14 +26,19 @@ export type OwnMoment = {
   localDate: string;
   photoUrl: string | null;
   thumbUrl: string | null;
-  /**
-   * The guideline a removed moment broke, or null to say only "our community guidelines".
-   * TODO(M3-23): always null for now. The reason is moderation_items.decision_reason, which only
-   * moderators can read (RLS), and fn:moderate's auto-approve never removes. mod-action (M3-23) has to
-   * expose the owner's own removal reason before this can be filled in.
-   */
+  /** The guideline a removed moment broke (from `my_removal`), or null to say only "our community guidelines". */
   guideline: GuidelineKey | null;
+  /** What Request a review can do for a removed moment (M3-24); `none` when nothing can be asked. */
+  review: ReviewState;
+  /** The removal decision to appeal, or null when there is none to appeal. */
+  removalItemId: string | null;
 };
+
+/**
+ * `available`: no appeal yet and one is allowed. `sent`: an appeal is waiting for a person. `upheld`: a person
+ * looked again and kept the removal. `none`: no appeal is possible (an appeal decision, or no removal row).
+ */
+export type ReviewState = 'available' | 'sent' | 'upheld' | 'none';
 
 export type OwnMomentResult =
   { kind: 'loading' } | { kind: 'notFound' } | { kind: 'error' } | { kind: 'found'; moment: OwnMoment };
@@ -45,6 +50,60 @@ const momentRow = z.object({
   jar_id: z.string(),
   jars: z.object({ local_date: z.string() }),
 });
+
+const guidelineKeys = [
+  'sexual',
+  'harassment',
+  'violence',
+  'hate',
+  'spam',
+  'under_13',
+] as const satisfies readonly GuidelineKey[];
+const removalRow = z.object({
+  item_id: z.string(),
+  guideline: z.enum(guidelineKeys).nullable().catch(null),
+  can_appeal: z.boolean(),
+  appeal_status: z.string().nullable(),
+});
+
+type Removal = { itemId: string | null; guideline: GuidelineKey | null; review: ReviewState };
+
+/** The owner's own removal reason and appeal state (`my_removal`, M3-23). Nothing found means no appeal. */
+async function fetchRemoval(momentId: string): Promise<Removal> {
+  const { data, error } = await getSupabase().rpc('my_removal', { p_moment: momentId });
+  if (error) throw new Error(error.message);
+  const row = z.array(removalRow).safeParse(data);
+  const first = row.success ? row.data[0] : undefined;
+  if (!first) return { itemId: null, guideline: null, review: 'none' };
+  const review: ReviewState =
+    first.appeal_status === 'open'
+      ? 'sent'
+      : first.appeal_status === 'upheld'
+        ? 'upheld'
+        : first.can_appeal
+          ? 'available'
+          : 'none';
+  return { itemId: first.item_id, guideline: first.guideline, review };
+}
+
+export type RequestReviewResult = 'sent' | 'alreadySent' | 'error';
+
+/**
+ * Request a review (FR-SAF-05): one appeal per removal. The database refuses a second one (unique item and
+ * the can_appeal policy); that is reported as `alreadySent`.
+ */
+export async function requestReview(userId: string, itemId: string, message: string): Promise<RequestReviewResult> {
+  const trimmed = message.trim();
+  const { error } = await getSupabase()
+    .from('appeals')
+    .insert({ moderation_item_id: itemId, user_id: userId, message: trimmed === '' ? null : trimmed });
+  if (!error) return 'sent';
+  // 23505: an appeal for this removal exists. 42501: RLS refused it (no longer appealable).
+  return error.code === '23505' || error.code === '42501' ? 'alreadySent' : 'error';
+}
+
+/** Longest appeal message (appeals.message check). */
+export const APPEAL_MAX = 500;
 
 const photoUrlsResponse = z.object({
   data: z.object({
@@ -72,16 +131,24 @@ async function fetchOwnMoment(userId: string, momentId: string): Promise<OwnMome
   if (error) throw new Error(error.message);
   const row = momentRow.safeParse(data);
   if (!row.success) return null;
-  const { full, thumb } = await photoUrls(momentId);
+  const status = row.data.status === 'uploading' ? 'checking' : row.data.status;
+  const [{ full, thumb }, removal] = await Promise.all([
+    photoUrls(momentId),
+    status === 'removed'
+      ? fetchRemoval(momentId)
+      : Promise.resolve<Removal>({ itemId: null, guideline: null, review: 'none' }),
+  ]);
   return {
     id: row.data.id,
     slot: row.data.slot,
-    status: row.data.status === 'uploading' ? 'checking' : row.data.status,
+    status,
     jarId: row.data.jar_id,
     localDate: row.data.jars.local_date,
     photoUrl: full,
     thumbUrl: thumb,
-    guideline: null,
+    guideline: removal.guideline,
+    review: removal.review,
+    removalItemId: removal.itemId,
   };
 }
 
