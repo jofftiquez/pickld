@@ -52,6 +52,7 @@ jest.mock('@/lib/supabase', () => {
       const builder = {
         select: () => builder,
         eq: () => builder,
+        is: () => builder,
         maybeSingle: async () => answer(table),
         then: (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
           Promise.resolve(answer(table)).then(resolve, reject),

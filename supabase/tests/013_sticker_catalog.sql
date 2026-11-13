@@ -38,18 +38,18 @@ select ok(pg_get_function_result('public.public_sticker_catalog()'::regprocedure
           'the anon catalog has no ownership, store, artist or milestone columns');
 
 -- ---------------------------------------------------------------- launch catalog (FR-STK-01)
-select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id where p.tier in ('free', 'earned')), 50,
-          'about 50 stickers: exactly 50 in the launch packs (paid packs: 029)');
+select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id where p.tier in ('free', 'earned')), 76,
+          '76 rows in the launch packs: the 50 launch stickers and 26 pictures (0032; paid packs: 029)');
 select results_eq(
   $$ select p.slug, p.tier::text, count(s.id)::int from public.sticker_packs p left join public.stickers s on s.pack_id = p.id
      where p.tier in ('free', 'earned') group by p.slug, p.tier, p.sort order by p.sort $$,
-  $$ values ('everyday', 'free', 15), ('the-eight', 'free', 24), ('stamps', 'free', 6), ('milestones', 'earned', 5) $$,
-  'stickers per pack: Everyday 15, The Eight 24, Stamps 6, Milestones 5');
+  $$ values ('everyday', 'free', 25), ('the-eight', 'free', 40), ('stamps', 'free', 6), ('milestones', 'earned', 5) $$,
+  'rows per pack, retired ones included (0032): Everyday 25, The Eight 40, Stamps 6, Milestones 5');
 select results_eq(
   $$ select s.slot_hint::text, count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id
      where p.slug = 'the-eight' group by s.slot_hint order by s.slot_hint $$,
-  $$ select v::text, 3 from unnest(enum_range(null::slot)) with ordinality u(v, n) order by n $$,
-  'The Eight: three stickers for each of the 8 slots, each hinted with its slot');
+  $$ select v::text, 5 from unnest(enum_range(null::slot)) with ordinality u(v, n) order by n $$,
+  'The Eight: five rows for each of the 8 slots (three offered, 0032), each hinted with its slot');
 select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id
            where p.slug = 'the-eight' and s.slot_hint is null), 0, 'every The Eight sticker has a slot hint');
 select is((select array_agg(s.stamp::text order by s.sort) from public.stickers s join public.sticker_packs p on p.id = s.pack_id
@@ -72,15 +72,15 @@ select throws_ok($$ insert into public.stickers (pack_id, label, asset_path) sel
 
 -- ---------------------------------------------------------------- signed-in reads (owner, reader, outsider, blocked, blocker)
 select tests.act_as('owner');
-select is(pg_temp.seen(), '9 packs/126 stickers', 'owner reads the whole catalog');
+select is(pg_temp.seen(), '9 packs/190 stickers', 'owner reads the whole catalog');
 select tests.act_as('reader');
-select is(pg_temp.seen(), '9 packs/126 stickers', 'reader reads the whole catalog');
+select is(pg_temp.seen(), '9 packs/190 stickers', 'reader reads the whole catalog');
 select tests.act_as('outsider');
-select is(pg_temp.seen(), '9 packs/126 stickers', 'outsider reads the whole catalog');
+select is(pg_temp.seen(), '9 packs/190 stickers', 'outsider reads the whole catalog');
 select tests.act_as('blocked');
-select is(pg_temp.seen(), '9 packs/126 stickers', 'a blocked user reads the whole catalog (it is nobody''s content)');
+select is(pg_temp.seen(), '9 packs/190 stickers', 'a blocked user reads the whole catalog (it is nobody''s content)');
 select tests.act_as('blocker');
-select is(pg_temp.seen(), '9 packs/126 stickers', 'a user who blocked someone reads the whole catalog');
+select is(pg_temp.seen(), '9 packs/190 stickers', 'a user who blocked someone reads the whole catalog');
 select throws_ok($$ insert into public.stickers (pack_id, label, asset_path) select id, 'mine', 'stickers/everyday/mine.png' from public.sticker_packs limit 1 $$,
                  '42501', null, 'a signed-in user cannot add a sticker');
 select throws_ok($$ update public.sticker_packs set tier = 'free' where slug = 'milestones' $$,
@@ -93,10 +93,10 @@ select throws_ok($$ select * from public.sticker_packs $$, '42501', null, 'anon 
 select throws_ok($$ select * from public.owned_packs $$, '42501', null, 'anon cannot read owned_packs');
 select throws_ok($$ select public.pack_usable(p) from (select null::public.sticker_packs p) x $$, '42501', null,
                  'anon cannot call pack_usable');
-select is((select count(*)::int from public.public_sticker_catalog()), 126, 'anon reads all 126 stickers through the RPC (launch and paid)');
+select is((select count(*)::int from public.public_sticker_catalog()), 190, 'anon reads all 190 stickers through the RPC (launch, paid and retired)');
 select results_eq($$ select pack_slug, count(*)::int from public.public_sticker_catalog() group by pack_slug, pack_sort order by pack_sort $$,
-                  $$ values ('everyday', 15), ('the-eight', 24), ('stamps', 6), ('milestones', 5), ('christmas-2026', 12),
-                           ('pinoy-life', 18), ('barkada', 16), ('work-from-wherever', 16), ('pet-parent', 14) $$,
+                  $$ values ('everyday', 25), ('the-eight', 40), ('stamps', 6), ('milestones', 5), ('christmas-2026', 18),
+                           ('pinoy-life', 26), ('barkada', 25), ('work-from-wherever', 24), ('pet-parent', 21) $$,
                   'with every pack, earned and paid ones included (viewers never pay, FR-STK-04)');
 select is((select array_agg(distinct slot_hint::text order by slot_hint::text) from public.public_sticker_catalog() where pack_slug = 'the-eight'),
           (select array_agg(v::text order by v::text) from unnest(enum_range(null::slot)) v), 'and the slot hints');
@@ -105,7 +105,7 @@ select is((select array_agg(distinct slot_hint::text order by slot_hint::text) f
 select tests.act_as('owner');
 select is(pg_temp.usable_packs(), array['everyday', 'the-eight', 'stamps'], 'a new user may use the three free packs');
 select is((select count(*)::int from public.owned_packs), 0, 'without any owned_packs row');
-select is((select count(*)::int from public.stickers s where s.sticker_usable), 45, '45 usable stickers: everything but Milestones');
+select is((select count(*)::int from public.stickers s where s.sticker_usable), 71, '71 usable stickers: everything free but Milestones');
 select is(pg_temp.usable_milestone_stickers(), '{}'::text[], 'no Milestones sticker before a milestone');
 select tests.act_as('blocked');
 select is(pg_temp.usable_packs(), array['everyday', 'the-eight', 'stamps'], 'free packs are usable by every user, blocked ones too');
@@ -116,7 +116,7 @@ select tests.make_moment(j, s, 'checking') from tests.make_jar('owner') j, unnes
 select tests.act_as('owner');
 select is(pg_temp.usable_packs(), array['everyday', 'the-eight', 'stamps', 'milestones'], 'the first full jar unlocks the Milestones pack');
 select is(pg_temp.usable_milestone_stickers(), array['first_full_jar'], 'but only the sticker of the milestone reached');
-select is((select count(*)::int from public.stickers s where s.sticker_usable), 46, '46 usable stickers');
+select is((select count(*)::int from public.stickers s where s.sticker_usable), 72, '72 usable stickers');
 select tests.act_as('reader');
 select is(pg_temp.usable_packs(), array['everyday', 'the-eight', 'stamps'], 'the owner''s milestone unlocks nothing for the reader');
 select is((select count(*)::int from public.owned_packs), 0, 'and the reader cannot see the owner''s owned_packs');
@@ -133,7 +133,7 @@ update public.sticker_packs set available_from = now() + interval '7 days' where
 insert into public.stickers (pack_id, label, asset_path, tags)
 select id, 'Bago', 'stickers/' || slug || '/bago.png', '{new}' from public.sticker_packs where slug in ('test-free', 'test-soon');
 select tests.act_as('outsider');
-select is(pg_temp.seen(), '11 packs/128 stickers', 'a new pack and sticker are readable as soon as the rows exist');
+select is(pg_temp.seen(), '11 packs/192 stickers', 'a new pack and sticker are readable as soon as the rows exist');
 select ok('test-free' = any (pg_temp.usable_packs()), 'a new free pack is usable at once, with no backfill');
 select tests.act_as_anon();
 select ok(exists (select 1 from public.public_sticker_catalog() where pack_slug = 'test-free' and label = 'Bago'),
