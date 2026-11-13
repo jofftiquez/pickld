@@ -3,19 +3,19 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
-import { PrimaryButton } from '@/components/PrimaryButton';
-import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextField } from '@/components/TextField';
 import { Toggle } from '@/components/Toggle';
-import { SlotTag } from '@/features/capture/SlotTag';
+import { useReduceMotion } from '@/lib/useReduceMotion';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import { BubblePanel } from './bubble/BubblePanel';
+import { EditorToolbar } from './EditorToolbar';
 import type { Overlay } from './edits';
 import { FilteredPhoto } from './FilteredPhoto';
 import { filterIdSchema, filterMatrices, type FilterId } from './filters';
@@ -70,9 +70,17 @@ export type EditorViewProps = {
 
 export const CAPTION_MAX = 150;
 
-// Room below the photo for the tools, caption, privacy switch and save button; the photo shrinks on
-// short phones so they fit. With large text the whole screen scrolls.
-const PANEL_MIN_HEIGHT = 330;
+// Room below the photo for the tools, caption and privacy switch (Save is in the toolbar, D-59); the
+// photo shrinks on short phones so they fit. Taller tools (Stickers) and large text scroll the screen.
+const PANEL_MIN_HEIGHT = 260;
+
+// Parallax (item 14): while the panel scrolls up over it, the photo moves up at 40% of the scroll speed
+// and shrinks to 92%, so its top stays in view under the toolbar.
+const PHOTO_SCROLL_SPEED = 0.4;
+const PHOTO_MIN_SCALE = 0.92;
+// The panel can scroll up until this much of the photo's height is left showing between the toolbar and
+// the panel; the panel is at least tall enough to allow it.
+const PHOTO_PEEK = 0.25;
 
 /** The editor layout (design: Capture): the 3:4 photo with the filter applied, tool tabs, the tool's panel. */
 export function EditorView({
@@ -108,25 +116,58 @@ export function EditorView({
 }: EditorViewProps) {
   const { t } = useTranslation();
   const window = useWindowDimensions();
-  const available = window.height - insets.top - PANEL_MIN_HEIGHT;
+  const reduceMotion = useReduceMotion();
+  // The toolbar's height until it has been measured: the safe area, a round button and its padding.
+  const [toolbarHeight, setToolbarHeight] = useState(insets.top + sizes.roundButton + 2 * space.sm);
+  const available = window.height - toolbarHeight - PANEL_MIN_HEIGHT;
   const width = Math.min(window.width, Math.max(0, available) * photo.aspect);
   const height = width / photo.aspect;
+  const panelMinHeight = Math.max(PANEL_MIN_HEIGHT, window.height - toolbarHeight - Math.round(height * PHOTO_PEEK));
   // The screen stops scrolling while a finger moves an overlay.
   const [overlayGesture, setOverlayGesture] = useState(false);
   const selectedText = overlays.find((o): o is TextOverlay => o.type === 'text' && o.id === selectedOverlayId) ?? null;
 
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.set(event.contentOffset.y);
+  });
+  // The photo scrolls with the content, so it is pushed back down by the part of the scroll it skips.
+  // Pulling down past the top (bounce) moves it with the content. Reduce Motion: a plain scroll.
+  const photoMotion = useAnimatedStyle(() => {
+    if (reduceMotion || height <= 0) return { transform: [{ translateY: 0 }, { scale: 1 }] };
+    const scrolled = Math.max(0, scrollY.get());
+    const progress = Math.min(1, scrolled / height);
+    return {
+      transform: [{ translateY: scrolled * (1 - PHOTO_SCROLL_SPEED) }, { scale: 1 - (1 - PHOTO_MIN_SCALE) * progress }],
+    };
+  });
+
   return (
     // The app has no gesture root, so the editor brings its own for the overlay gestures.
     <GestureHandlerRootView style={styles.root}>
-      <ScrollView
+      {/* First, so screen readers start with Close and Save; zIndex keeps it over the scrolling photo. */}
+      <EditorToolbar
+        topInset={insets.top}
+        slot={t(`slots.${slot}`)}
+        time={time}
+        saveLabel={saveLabel}
+        saving={saving}
+        onClose={onClose}
+        onSave={onSave}
+        onHeight={(h) => setToolbarHeight(Math.round(h))}
+      />
+      <Animated.ScrollView
         style={styles.root}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top }]}
+        contentContainerStyle={[styles.content, { paddingTop: toolbarHeight }]}
+        scrollIndicatorInsets={{ top: toolbarHeight }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
         scrollEnabled={!overlayGesture}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         testID="editor-screen"
       >
-        <View style={[styles.photo, { width, height }]}>
+        <Animated.View style={[styles.photo, { width, height }, photoMotion]}>
           <View
             accessible
             accessibilityRole="image"
@@ -152,21 +193,10 @@ export function EditorView({
             onDelete={onDeleteOverlay}
             onGestureActiveChange={setOverlayGesture}
           />
-        </View>
-        {/* Outside the accessible photo group so VoiceOver can reach the buttons. */}
-        <View style={[styles.topRow, { top: insets.top + space.xxl }]}>
-          <RoundIconButton
-            icon="close"
-            variant="glass"
-            accessibilityLabel={t('common.close')}
-            onPress={onClose}
-            testID="editor-close"
-          />
-          <SlotTag slot={t(`slots.${slot}`)} time={time} />
-          <View style={styles.topRowSpacer} />
-        </View>
+        </Animated.View>
 
-        <View style={[styles.panel, { paddingBottom: insets.bottom + space.xxl }]}>
+        {/* After the photo, so it draws over it (and takes the taps) as it slides up. */}
+        <View style={[styles.panel, { minHeight: panelMinHeight, paddingBottom: insets.bottom + space.xxl }]}>
           <SegmentedControl
             segments={editorTools.map((key) => ({ key, label: t(`edit.tool.${key}`) }))}
             selected={tool}
@@ -239,7 +269,6 @@ export function EditorView({
               testID="editor-private"
             />
           </View>
-          <View style={styles.spacer} />
           {saveFailed ? (
             <Text
               style={[textStyle('bodySmall'), styles.error]}
@@ -249,24 +278,19 @@ export function EditorView({
               {t('edit.saveFailed')}
             </Text>
           ) : null}
-          <View style={styles.actions}>
-            {canUndo ? (
-              <View>
-                <SecondaryButton
-                  variant="outline"
-                  label={t('edit.undo')}
-                  accessibilityHint={t('edit.undoHint')}
-                  onPress={onUndo}
-                  testID="editor-undo"
-                />
-              </View>
-            ) : null}
-            <View style={styles.save}>
-              <PrimaryButton label={saveLabel} onPress={onSave} disabled={saving} testID="editor-save" />
+          {canUndo ? (
+            <View style={styles.actions}>
+              <SecondaryButton
+                variant="outline"
+                label={t('edit.undo')}
+                accessibilityHint={t('edit.undoHint')}
+                onPress={onUndo}
+                testID="editor-undo"
+              />
             </View>
-          </View>
+          ) : null}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </GestureHandlerRootView>
   );
 }
@@ -276,21 +300,13 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1 },
   photo: {
     alignSelf: 'center',
+    // The parallax shrinks it toward its top edge, which stays under the toolbar.
+    transformOrigin: 'top',
     overflow: 'hidden',
     backgroundColor: colors.editorPhoto,
     borderBottomLeftRadius: radius.editorPhoto,
     borderBottomRightRadius: radius.editorPhoto,
   },
-  topRow: {
-    position: 'absolute',
-    left: space.lg,
-    right: space.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space.sm,
-  },
-  topRowSpacer: { width: sizes.roundButton },
   panel: {
     flex: 1,
     marginTop: -sizes.editorPanelOverlap,
@@ -314,8 +330,6 @@ const styles = StyleSheet.create({
   privateText: { flex: 1 },
   privateLabel: { color: colors.ink },
   privateHint: { color: colors.muted },
-  spacer: { flexGrow: 1 },
   error: { color: colors.danger },
-  actions: { flexDirection: 'row', gap: space.md - 2 },
-  save: { flex: 1 },
+  actions: { flexDirection: 'row' },
 });
