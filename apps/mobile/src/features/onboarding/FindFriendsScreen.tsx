@@ -11,6 +11,7 @@ import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { profileUrl } from '@/lib/links';
 import { resetTo } from '@/lib/navigation';
+import { showToast } from '@/lib/toast';
 
 import { hashAddressBook, matchContacts, type FriendMatch } from './findFriends';
 import { FindFriendsView, type FindState } from './FindFriendsView';
@@ -39,7 +40,6 @@ export function FindFriendsScreen({ deps = defaultDeps }: { deps?: FindFriendsDe
   });
   const [state, setState] = useState<FindState>('idle');
   const [matches, setMatches] = useState<FriendMatch[]>([]);
-  const [copied, setCopied] = useState(false);
 
   const username = me.data?.username;
   const url = username ? profileUrl(username) : '';
@@ -92,9 +92,8 @@ export function FindFriendsScreen({ deps = defaultDeps }: { deps?: FindFriendsDe
       matches={matches}
       onFind={() => void onFind()}
       onOpenSettings={() => void Linking.openSettings()}
-      copied={copied}
       onInvite={() => {
-        if (url) void copyLink(url).then(() => setCopied(true));
+        if (url) void copyLink(url).then(() => showToast('linkCopied'));
       }}
       onRead={(m) => void onRead(m)}
       onContinue={() => void finish()}

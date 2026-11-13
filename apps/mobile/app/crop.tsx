@@ -23,6 +23,7 @@ import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 
 // Crop (M2-10; FR-CAP-02, FR-CAP-03; design: Crop). The camera opens it on a gallery photo that isn't 3:4.
 // Done queues the raw photo with the chosen frame, rotation and flip (preparation applies them and writes
@@ -84,6 +85,7 @@ export default function CropScreen() {
       return;
     }
     void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(recrop.userId) });
+    showToast('changesSaved');
     void queryClient.invalidateQueries({ queryKey: ['jar', recrop.userId] });
     setPending(null);
     leave();

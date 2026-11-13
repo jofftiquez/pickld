@@ -26,8 +26,6 @@ export type FindFriendsViewProps = {
   /** "pickld.me/dale", shown and shared. */
   link: string;
   state: FindState;
-  /** The invite link was just copied. */
-  copied: boolean;
   matches: readonly FriendMatch[];
   onFind: () => void;
   onOpenSettings: () => void;
@@ -43,7 +41,6 @@ export function FindFriendsView({
   insets,
   link,
   state,
-  copied,
   matches,
   onFind,
   onOpenSettings,
@@ -113,15 +110,6 @@ export function FindFriendsView({
             <Text style={[textStyle('bodySmall'), { color: colors.inkSoft }]} testID="friends-link">
               {link}
             </Text>
-            {copied ? (
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[textStyle('bodySmall', '600'), { color: colors.brandLink }]}
-                testID="friends-copied"
-              >
-                {t('setup.friends.copied')}
-              </Text>
-            ) : null}
           </View>
           <PillButton
             variant="subtle"
