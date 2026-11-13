@@ -1,6 +1,7 @@
 // The camera's save path: the raw photo is queued first (so it survives a kill right after the shutter),
 // then prepared in the background, then the upload worker is asked to run. Queue, preparation and worker
 // are mocked; what's checked is the order and that saveCapture never waits for preparation.
+import { flipPhoto } from '@/lib/image/pipeline';
 import { captureError } from '@/lib/monitoring';
 import { prepareItem } from '@/lib/queue/prepare';
 import { requestUploads } from '@/lib/queue/runner';
@@ -56,6 +57,13 @@ jest.mock('@/lib/queue/runner', () => ({
 
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 
+jest.mock('@/lib/image/pipeline', () => ({
+  flipPhoto: jest.fn(async (uri: string) => {
+    mockLog.push(`flip ${uri}`);
+    return 'file:///cache/flipped.jpg';
+  }),
+}));
+
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
 // 2026-11-11 14:14:05 in Manila (+08:00).
 const shotAt = new Date('2026-11-11T06:14:05Z');
@@ -78,6 +86,7 @@ beforeEach(() => {
   jest.mocked(prepareItem).mockClear();
   jest.mocked(requestUploads).mockClear();
   jest.mocked(captureError).mockClear();
+  jest.mocked(flipPhoto).mockClear();
 });
 
 describe('saveCapture', () => {
@@ -101,6 +110,35 @@ describe('saveCapture', () => {
     // The camera file goes only after the queue holds its own copy; preparation is still running.
     expect(mockLog).toEqual(['enqueue', 'delete file:///tmp/camera-shot.jpg', 'prepare']);
     expect(requestUploads).not.toHaveBeenCalled();
+  });
+
+  it('without flip queues the camera file as it is', async () => {
+    await saveCapture({ ...input, flip: false });
+    expect(flipPhoto).not.toHaveBeenCalled();
+    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ photoUri: 'file:///tmp/camera-shot.jpg' }));
+  });
+
+  it('with flip (Mirror selfies off, D-66) queues the flipped copy before anything else and drops both files', async () => {
+    await saveCapture({ ...input, flip: true });
+    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ photoUri: 'file:///cache/flipped.jpg' }));
+    // Flipped first, so the queued photo, the editor and the upload agree; the camera file goes once the
+    // copy exists, and the copy once the queue holds its own.
+    expect(mockLog).toEqual([
+      'flip file:///tmp/camera-shot.jpg',
+      'delete file:///tmp/camera-shot.jpg',
+      'enqueue',
+      'delete file:///cache/flipped.jpg',
+      'prepare',
+    ]);
+  });
+
+  it('when flipping fails, still queues the photo as taken (rule 3) and reports it', async () => {
+    jest.mocked(flipPhoto).mockRejectedValueOnce(new Error('decode failed'));
+    await saveCapture({ ...input, flip: true });
+    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ photoUri: 'file:///tmp/camera-shot.jpg' }));
+    expect(captureError).toHaveBeenCalledWith(expect.objectContaining({ message: 'decode failed' }), {
+      area: 'capture',
+    });
   });
 
   it('queues a photo for a filled slot as a replacement when the user chose Replace (M2-22)', async () => {
@@ -290,6 +328,8 @@ describe('saveGalleryPhoto', () => {
       replace: false,
     });
     expect(mockLog).toEqual(['enqueue', 'delete file:///picker/IMG_0042.jpg', 'prepare']);
+    // Mirror selfies is about the camera: gallery photos are never flipped by it (D-66).
+    expect(flipPhoto).not.toHaveBeenCalled();
     expect(requestUploads).not.toHaveBeenCalled();
     mockFinishPrepare?.();
     await flush();

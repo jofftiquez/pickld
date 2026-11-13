@@ -70,11 +70,7 @@ appId: me.pickld.app
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: Recrop-ios
-# The button sits below the fold on a 6.3" phone (Crop's layout follows the 844 pt design without the
-# safe areas); swipe the tool sheet itself, since a swipe over the photo pans it.
-- swipe:
-    start: 50%, 95%
-    end: 50%, 80%
+# The main button is the green pill at the header's top right (D-65); no scrolling needed.
 - assertVisible:
     id: crop-done
     text: Save crop

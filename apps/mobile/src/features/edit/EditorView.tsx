@@ -18,6 +18,7 @@ import { BubblePanel } from './bubble/BubblePanel';
 import { EditorToolbar } from './EditorToolbar';
 import type { Overlay } from './edits';
 import { FilteredPhoto } from './FilteredPhoto';
+import { FILTER_GAP, FILTER_LEAD, filterThumbSize } from './filterRow';
 import { filterIdSchema, filterMatrices, type FilterId } from './filters';
 import { FilterThumbnail } from './FilterThumbnail';
 import { OverlayLayer } from './overlays/OverlayLayer';
@@ -122,6 +123,7 @@ export function EditorView({
   const available = window.height - toolbarHeight - PANEL_MIN_HEIGHT;
   const width = Math.min(window.width, Math.max(0, available) * photo.aspect);
   const height = width / photo.aspect;
+  const filterThumb = filterThumbSize(window.width);
   const panelMinHeight = Math.max(PANEL_MIN_HEIGHT, window.height - toolbarHeight - Math.round(height * PHOTO_PEEK));
   // The screen stops scrolling while a finger moves an overlay.
   const [overlayGesture, setOverlayGesture] = useState(false);
@@ -210,6 +212,7 @@ export function EditorView({
               horizontal
               showsHorizontalScrollIndicator={false}
               accessibilityLabel={t('edit.filters')}
+              style={styles.filterRow}
               contentContainerStyle={styles.filters}
               testID="editor-filters"
             >
@@ -221,6 +224,7 @@ export function EditorView({
                   matrix={filterMatrices[id]}
                   selected={id === filter}
                   onPress={() => onSelectFilter(id)}
+                  size={filterThumb}
                   testID={`editor-filter-${id}`}
                 />
               ))}
@@ -317,8 +321,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xl,
     gap: space.md + 2,
   },
+  // The row runs to both screen edges, so the last thumbnail in view is cut by the edge (filterRow.ts).
+  filterRow: { marginHorizontal: -space.xl },
   // 12 px between thumbnails, as designed: each thumbnail already reserves its ring and white gap.
-  filters: { gap: space.md - 2 * (sizes.filterRing + sizes.filterRingGap) },
+  filters: { gap: FILTER_GAP, paddingHorizontal: FILTER_LEAD },
   emptyPanel: { minHeight: sizes.filterThumb },
   privateRow: {
     flexDirection: 'row',

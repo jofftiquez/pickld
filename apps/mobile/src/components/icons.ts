@@ -77,6 +77,7 @@ export const icons = {
   rotate: [p('M3 12a9 9 0 1 0 3-6.7L3 8'), p('M3 3v5h5')],
   mirror: [p('M12 3v18M8 7l-5 5 5 5M16 7l5 5-5 5')],
   fit: [p('M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5')],
+  reset: [p('M9 14 4 9l5-5'), p('M4 9h10.5a5.5 5.5 0 0 1 0 11H11')],
   zoomOut: [c(11, 11, 7), p('m20 20-4-4M8 11h6')],
   zoomIn: [c(11, 11, 7), p('m20 20-4-4M8 11h6M11 8v6')],
   alignLeft: [p('M4 6h16M4 12h10M4 18h13')],

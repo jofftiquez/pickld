@@ -6,7 +6,7 @@
 // always fills the frame. `cropRectFor` turns that into the frame's rectangle in the turned photo's
 // pixels, which is what the image pipeline crops after turning the photo the same way.
 import { cropRect34, rotatedSize, type CropRect, type Rotation, type Size } from '@/lib/image/crop';
-import { crop } from '@/theme/tokens';
+import { crop, sizes, space } from '@/theme/tokens';
 
 export type Point = { x: number; y: number };
 
@@ -17,10 +17,24 @@ export const MAX_ZOOM = 3;
 
 export const initialCrop: CropState = { rotation: 0, flip: false, zoom: MIN_ZOOM, pan: { x: 0, y: 0 } };
 
-/** The 3:4 frame on a screen of `window` size: as wide as the insets allow, but short enough that the
- * tool sheet still fits (`crop.frameShare`). */
-export function cropFrame(window: Size): Size {
-  const width = Math.max(1, Math.min(window.width - crop.frameInsetX * 2, (window.height * crop.frameShare * 3) / 4));
+/** Crop's header at normal text sizes: the padding under the safe area, the 44-point row of Cancel, the
+ * title and the main button, its bottom padding and the gap above the photo (CropView). */
+export const CROP_HEADER_HEIGHT = crop.headerPaddingTop + sizes.minTap + space.sm + space.sm;
+
+/** The tool sheet at normal text sizes, without the bottom safe area: its top padding, the zoom slider,
+ * the tools row, the note and the bottom padding, with the gaps between them (CropView). */
+export const CROP_SHEET_HEIGHT =
+  crop.sheetPaddingTop + sizes.minTap + space.lg + crop.toolButton + space.lg + crop.noteHeight + space.xxl;
+
+/**
+ * The 3:4 frame on a screen of `window` size with these safe areas (D-65): as wide as the side insets
+ * allow, but short enough that the header, the photo area (the frame plus `crop.frameInsetY` above and
+ * below) and the tool sheet fit on screen together, so the sheet doesn't scroll at normal text sizes.
+ */
+export function cropFrame(window: Size, insets: { top: number; bottom: number }): Size {
+  const area = window.height - insets.top - CROP_HEADER_HEIGHT - CROP_SHEET_HEIGHT - insets.bottom;
+  const tallest = area - crop.frameInsetY * 2;
+  const width = Math.max(1, Math.min(window.width - crop.frameInsetX * 2, (tallest * 3) / 4));
   return { width, height: (width * 4) / 3 };
 }
 

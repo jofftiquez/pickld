@@ -11,7 +11,8 @@ export type ShutterButtonProps = {
   disabled?: boolean;
 };
 
-/** The camera shutter: a white ring around a white disc (Camera). 84 px, so no hitSlop needed. */
+/** The camera shutter: a white ring around a brand-green disc (Camera, QA item 26). 84 px, so no hitSlop
+ * needed. */
 export function ShutterButton({
   accessibilityLabel,
   accessibilityHint,
@@ -32,7 +33,10 @@ export function ShutterButton({
       testID="camera-shutter"
       style={[styles.ring, disabled ? { opacity: DISABLED_OPACITY } : null]}
     >
-      <View style={[styles.disc, pressed && !disabled ? { opacity: PRESSED_OPACITY } : null]} />
+      <View
+        testID="camera-shutter-disc"
+        style={[styles.disc, pressed && !disabled ? { opacity: PRESSED_OPACITY } : null]}
+      />
     </Pressable>
   );
 }
@@ -51,6 +55,6 @@ const styles = StyleSheet.create({
     width: sizes.shutterInner,
     height: sizes.shutterInner,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.brand,
   },
 });

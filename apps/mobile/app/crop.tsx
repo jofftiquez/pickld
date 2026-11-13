@@ -57,7 +57,7 @@ export default function CropScreen() {
   const { photo } = pending;
   const image = { width: photo.width, height: photo.height };
   // The same frame CropView draws, so the rectangle matches what the user sees.
-  const frame = cropFrame(window);
+  const frame = cropFrame(window, insets);
 
   const onCancel = () => {
     discardRecropPhoto(pending);

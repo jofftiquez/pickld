@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { LocationMetadataError } from '../exif';
-import { preparePhoto } from '../pipeline';
+import { flipPhoto, preparePhoto } from '../pipeline';
 
 type Op = [string, unknown];
 
@@ -33,7 +33,7 @@ jest.mock('expo-image-manipulator', () => {
     },
   });
   return {
-    SaveFormat: { WEBP: 'webp' },
+    SaveFormat: { WEBP: 'webp', JPEG: 'jpeg' },
     ImageManipulator: {
       manipulate: (source: unknown) => {
         const ops: Op[] = [];
@@ -181,5 +181,16 @@ describe('preparePhoto', () => {
     const read = (name: string) => readFileSync(join(__dirname, '__fixtures__', name)).toString('latin1');
     expect(read('gps.webp')).toContain('EXIF');
     expect(read('clean.webp')).not.toContain('EXIF');
+  });
+});
+
+describe('flipPhoto (Mirror selfies off, D-66)', () => {
+  it('writes a copy mirrored left to right, keeps the size, leaves the source and releases what it made', async () => {
+    const uri = await flipPhoto('file:///camera/selfie.jpg');
+    expect(mockState.ops).toEqual([[['flip', 'horizontal']]]);
+    expect(mockState.saves).toEqual([{ width: 4032, height: 3024, options: { format: 'jpeg', compress: 0.95 } }]);
+    expect(uri).toBe('file:///cache/out-0.webp');
+    expect(mockState.deleted).toEqual([]);
+    expect(mockState.released).toBe(2);
   });
 });

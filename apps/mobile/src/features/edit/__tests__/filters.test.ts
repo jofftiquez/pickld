@@ -22,8 +22,20 @@ const samples: Rgba[] = [black, white, grey, [0.8, 0.4, 0.2, 1], [0.1, 0.6, 0.9,
 const ids = filterIdSchema.options;
 
 describe('filter list', () => {
-  it('is exactly Original, Kalamansi, Merienda, Mono and Dusk, in that order', () => {
-    expect(ids).toEqual(['original', 'kalamansi', 'merienda', 'mono', 'dusk']);
+  it('is Original first, the first five in their old order, then the six added in QA item 23', () => {
+    expect(ids).toEqual([
+      'original',
+      'kalamansi',
+      'merienda',
+      'mono',
+      'dusk',
+      'kape',
+      'ube',
+      'sampaguita',
+      'gabi',
+      'luma',
+      'ulan',
+    ]);
     expect(Object.keys(filterMatrices).sort()).toEqual([...ids].sort());
   });
 
@@ -108,5 +120,73 @@ describe('looks match their names', () => {
     expect(b).toBeGreaterThan(r);
     expect(r).toBeGreaterThan(g);
     for (const channel of apply(filterMatrices.dusk, black).slice(0, 3)) expect(channel).toBeGreaterThan(0.03);
+  });
+
+  it('Kape: warm faded brown (red > green > blue, lifted shadows, dimmed whites)', () => {
+    const [r, g, b] = apply(filterMatrices.kape, grey);
+    expect(r).toBeGreaterThan(g);
+    expect(g - b).toBeGreaterThan(0.05);
+    expect(apply(filterMatrices.kape, black)[0]).toBeGreaterThan(0.03);
+    expect(apply(filterMatrices.kape, white)[2]).toBeLessThan(0.75);
+  });
+
+  it('Ube: soft lavender pastel (blue highest, red above green, lifted shadows)', () => {
+    const [r, g, b] = apply(filterMatrices.ube, grey);
+    expect(b).toBeGreaterThan(r);
+    expect(r).toBeGreaterThan(g);
+    for (const channel of apply(filterMatrices.ube, black).slice(0, 3)) expect(channel).toBeGreaterThan(0.07);
+  });
+
+  it('Sampaguita: bright and clean, slightly cool (brighter grey, blue ≥ green ≥ red, all close)', () => {
+    const [r, g, b] = apply(filterMatrices.sampaguita, grey);
+    expect(Math.min(r, g, b)).toBeGreaterThan(0.5);
+    expect(b).toBeGreaterThanOrEqual(g);
+    expect(g).toBeGreaterThanOrEqual(r);
+    expect(b - r).toBeLessThan(0.05);
+  });
+
+  it('Gabi: cool night with deep blacks (blue highest, red lowest, darker grey)', () => {
+    const [r, g, b] = apply(filterMatrices.gabi, grey);
+    expect(b).toBeGreaterThan(g);
+    expect(g).toBeGreaterThan(r);
+    expect(r).toBeLessThan(0.45);
+    for (const channel of apply(filterMatrices.gabi, black).slice(0, 3)) expect(channel).toBeLessThanOrEqual(0.02);
+  });
+
+  it('Luma: faded sepia (low saturation, warm, the most lifted blacks)', () => {
+    const orange = apply(filterMatrices.luma, [0.8, 0.4, 0.2, 1]);
+    expect(orange[0] - orange[2]).toBeLessThan(0.4); // the original spread is 0.6
+    const [r, g, b] = apply(filterMatrices.luma, grey);
+    expect(r).toBeGreaterThan(g);
+    expect(g).toBeGreaterThan(b);
+    expect(apply(filterMatrices.luma, black)[0]).toBeGreaterThanOrEqual(0.1);
+  });
+
+  it('Ulan: muted blue-green (green and blue above red, low saturation)', () => {
+    const [r, g, b] = apply(filterMatrices.ulan, grey);
+    expect(g).toBeGreaterThan(r);
+    expect(b).toBeGreaterThan(r);
+    const orange = apply(filterMatrices.ulan, [0.8, 0.4, 0.2, 1]);
+    expect(orange[0] - orange[2]).toBeLessThan(0.3);
+  });
+});
+
+describe('the looks are distinct', () => {
+  it('no two filters turn a test color into nearly the same color', () => {
+    const probes: Rgba[] = [grey, [0.8, 0.4, 0.2, 1], [0.2, 0.5, 0.8, 1], [0.3, 0.7, 0.3, 1]];
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        let distance = 0;
+        for (const probe of probes) {
+          const a = apply(filterMatrices[ids[i]!], probe);
+          const b = apply(filterMatrices[ids[j]!], probe);
+          distance += Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
+        }
+        expect({ pair: `${ids[i]}/${ids[j]}`, far: distance > 0.15 }).toEqual({
+          pair: `${ids[i]}/${ids[j]}`,
+          far: true,
+        });
+      }
+    }
   });
 });

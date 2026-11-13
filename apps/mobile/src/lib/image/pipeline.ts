@@ -72,3 +72,26 @@ export async function preparePhoto(uri: string, options: PrepareOptions = {}): P
     for (const ref of refs) ref.release();
   }
 }
+
+const FLIPPED_QUALITY = 0.95;
+
+/**
+ * Writes a copy of `uri` mirrored left to right, as JPEG in the cache directory, and returns its URI
+ * (Mirror selfies off, D-66: a front-camera photo is flipped back before it is queued). The source file is
+ * left alone. Like every manipulator output, the copy carries no metadata from the source; the capture
+ * time travels separately.
+ */
+export async function flipPhoto(uri: string): Promise<string> {
+  const context = ImageManipulator.manipulate(uri);
+  let image: Releasable | null = null;
+  try {
+    context.flip('horizontal');
+    const rendered = await context.renderAsync();
+    image = rendered;
+    const out = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: FLIPPED_QUALITY });
+    return out.uri;
+  } finally {
+    image?.release();
+    context.release();
+  }
+}

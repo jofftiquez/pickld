@@ -5,6 +5,7 @@ import { AppState, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CameraAccessOff } from '@/features/capture/CameraAccessOff';
+import { getMirrorSelfies } from '@/features/capture/cameraPrefs';
 import {
   CameraPreview,
   type CameraFacing,
@@ -127,8 +128,12 @@ export default function CameraScreen() {
     const openJar = jar?.jar ?? null;
     let queuedId: number | null = null;
     try {
-      queuedId = (await saveCapture({ uri, slot, userId, tz, shotAt, openJar, fill: fill?.target ?? null, replace }))
-        .id;
+      // Mirror selfies off (D-66): a front-camera photo is flipped back to how the scene really looks. A
+      // store that can't be read keeps the default (on), so the photo is still queued.
+      const flip = facing === 'front' && !(await getMirrorSelfies().catch(() => true));
+      queuedId = (
+        await saveCapture({ uri, slot, userId, tz, shotAt, openJar, fill: fill?.target ?? null, replace, flip })
+      ).id;
     } catch (error) {
       captureError(error, { area: 'capture' });
     }

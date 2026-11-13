@@ -8,20 +8,18 @@ export type CropHeaderActionProps = {
   label: string;
   hint: string;
   onPress: () => void;
-  /** Right-aligned (Reset) instead of left (Cancel). */
-  end?: boolean;
   testID?: string;
 };
 
-/** Cancel or Reset in the Crop header: a text button at least 64 × 44 points. */
-export function CropHeaderAction({ label, hint, onPress, end = false, testID }: CropHeaderActionProps) {
+/** Cancel in the Crop header: a text button at least 64 × 44 points. */
+export function CropHeaderAction({ label, hint, onPress, testID }: CropHeaderActionProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={hint}
       onPress={onPress}
-      style={[styles.root, end && styles.end]}
+      style={styles.root}
       testID={testID}
     >
       <Text style={[textStyle('body', '600'), styles.text]}>{label}</Text>
@@ -31,6 +29,5 @@ export function CropHeaderAction({ label, hint, onPress, end = false, testID }: 
 
 const styles = StyleSheet.create({
   root: { minWidth: crop.headerAction, minHeight: sizes.minTap, justifyContent: 'center' },
-  end: { alignItems: 'flex-end' },
   text: { color: colors.cropAction },
 });

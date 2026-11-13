@@ -8,7 +8,7 @@ import { Text, View } from 'react-native';
 
 import EditScreen from '../../../../app/edit/[momentId]';
 import { editsSchema } from '../edits';
-import { filterMatrices } from '../filters';
+import { filterIdSchema, filterMatrices } from '../filters';
 import { kape } from './stickerFixture';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
@@ -173,15 +173,15 @@ describe('Editor', () => {
     expect(screen.getByTestId('camera-slot-tag').props.accessibilityLabel).toBe('#afternoon, today at 2:14 PM');
   });
 
-  it('shows five thumbnails, each previewing the real photo through its own filter', async () => {
+  it('shows eleven thumbnails, each previewing the real photo through its own filter', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
-    for (const id of ['original', 'kalamansi', 'merienda', 'mono', 'dusk'] as const) {
+    for (const id of filterIdSchema.options) {
       const thumb = screen.getByTestId(`editor-filter-${id}`);
       expect(within(thumb).getByTestId('skia-image').props.accessibilityHint).toBe(item.photoUri);
       expect(matrixIn(`editor-filter-${id}`)).toEqual(filterMatrices[id]);
     }
-    expect(within(screen.getByTestId('editor-filters')).getAllByRole('button')).toHaveLength(5);
+    expect(within(screen.getByTestId('editor-filters')).getAllByRole('button')).toHaveLength(11);
   });
 
   it('selecting a filter marks it selected and draws the photo with its matrix right away', async () => {

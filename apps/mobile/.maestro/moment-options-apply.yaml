@@ -104,9 +104,6 @@ appId: me.pickld.app
     timeout: 15000
 - tapOn:
     id: crop-flip
-- swipe:
-    start: 50%, 95%
-    end: 50%, 80%
 - tapOn:
     id: crop-done
 - extendedWaitUntil:
