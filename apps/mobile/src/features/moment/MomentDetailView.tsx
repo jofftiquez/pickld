@@ -25,7 +25,7 @@ import { firstName } from '@/features/jar/shareJar';
 import { onCard } from '@/features/share/shareCard';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
-import { colors, photo, radius, sizes, slots, space } from '@/theme/tokens';
+import { colors, photo, radius, sizes, space } from '@/theme/tokens';
 
 import { MomentView } from './MomentView';
 
@@ -51,8 +51,8 @@ export type MomentDetailViewProps = {
 };
 
 /**
- * One moment full screen (Moment detail; FR-SOC-04): the 3:4 photo with its edits under eight progress
- * bars, swiped left and right through the jar's shown moments only (the same list as the Jar page, so
+ * One moment full screen (Moment detail; FR-SOC-04): the 3:4 photo with its edits under one progress bar
+ * per shown moment, swiped left and right through the jar's shown moments only (the same list as the Jar page, so
  * private and unchecked moments are never reachable by others), and a sheet with the #slot, time, caption,
  * likes, comments and share.
  */
@@ -157,21 +157,34 @@ export function MomentDetailView({
             testID="moment-pager"
           />
         </View>
-        <View
-          style={[styles.progress, { top: insets.top + space.md + 2 }]}
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          testID="moment-progress"
-        >
-          {Array.from({ length: slots.length }, (_, i) => (
-            <View
-              key={i}
-              style={[styles.bar, { backgroundColor: i <= current ? colors.surface : colors.progressTrack }]}
-              testID={i <= current ? 'moment-progress-done' : 'moment-progress-todo'}
-            />
-          ))}
-        </View>
+        {/* One bar per moment the viewer can swipe to; a single moment needs none (QA item 12). */}
+        {moments.length > 1 ? (
+          <View
+            style={[styles.progress, { top: insets.top + space.md + 2 }]}
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            testID="moment-progress"
+          >
+            {moments.map((m, i) => (
+              <View
+                key={m.id}
+                style={[
+                  styles.bar,
+                  { backgroundColor: i <= current ? colors.surface : colors.progressTrack },
+                  i === current ? styles.barCurrent : null,
+                ]}
+                testID={
+                  i === current
+                    ? 'moment-progress-current'
+                    : i < current
+                      ? 'moment-progress-done'
+                      : 'moment-progress-todo'
+                }
+              />
+            ))}
+          </View>
+        ) : null}
         <View
           style={[styles.topRow, { top: insets.top + sizes.momentProgress + space.xxl - 1 }]}
           pointerEvents="box-none"
@@ -292,9 +305,12 @@ const styles = StyleSheet.create({
     left: space.md,
     right: space.md,
     flexDirection: 'row',
+    alignItems: 'center',
     gap: space.xs,
   },
   bar: { flex: 1, height: sizes.momentProgress, borderRadius: radius.fillBar },
+  // The moment on screen: a thicker bar, so it stands out from the ones already seen.
+  barCurrent: { height: sizes.momentProgressCurrent },
   topRow: {
     position: 'absolute',
     left: space.lg,

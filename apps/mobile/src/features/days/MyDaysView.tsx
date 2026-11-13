@@ -16,8 +16,10 @@ export type MyDaysViewProps = {
   momentCount: number;
   nav: MonthNav;
   selectedDate: string | null;
-  /** Safe-area insets; the bottom one is where the floating tab bar sits. */
+  /** Safe-area insets. */
   insets: { top: number; bottom: number };
+  /** Back to where My days was opened from (Today's calendar button). */
+  onBack?: () => void;
   onPrevious: () => void;
   onNext: () => void;
   onSelectDay: (date: string) => void;
@@ -48,13 +50,14 @@ function weekdayLetter(weekday: number, locale: string): string {
   );
 }
 
-/** My days (design: Calendar). Presentational; app/(tabs)/my-days.tsx loads the data. */
+/** My days (design: Calendar). Presentational; app/my-days.tsx loads the data. */
 export function MyDaysView({
   grid,
   momentCount,
   nav,
   selectedDate,
   insets,
+  onBack,
   onPrevious,
   onNext,
   onSelectDay,
@@ -64,7 +67,8 @@ export function MyDaysView({
 }: MyDaysViewProps) {
   const { t } = useTranslation();
   const month = monthLabel(grid.month, locale);
-  const bottomPadding = Math.max(insets.bottom, space.lg) + sizes.tabBar + space.lg;
+  // A stack screen since D-52: no floating tab bar to clear at the bottom.
+  const bottomPadding = Math.max(insets.bottom, space.lg) + space.lg;
 
   const labelFor = (cell: DayCell) => {
     const date = dayLabel(cell.date, locale);
@@ -79,6 +83,11 @@ export function MyDaysView({
       contentContainerStyle={{ paddingTop: insets.top + sizes.headerTop, paddingBottom: bottomPadding }}
       testID="my-days-scroll"
     >
+      {onBack ? (
+        <View style={styles.topBar}>
+          <RoundIconButton icon="back" accessibilityLabel={t('myDays.back')} onPress={onBack} testID="my-days-back" />
+        </View>
+      ) : null}
       <View style={styles.header}>
         <View style={styles.titles}>
           <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]} testID="my-days-subtitle">
@@ -155,6 +164,7 @@ export function MyDaysView({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  topBar: { flexDirection: 'row', paddingHorizontal: space.xl, paddingBottom: space.sm },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

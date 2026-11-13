@@ -9,9 +9,7 @@
   "tabs": {
     "label": "Main",
     "today": "Today",
-    "capture": "Capture",
-    "jars": "Jars",
-    "myDays": "My days"
+    "jars": "Jars"
   },
   "today": {
     "title": "Today",
@@ -44,8 +42,7 @@
     "published": "Published",
     "publishedLabel": "Published, {{shared}}",
     "publishedHint": "Changes who can see this jar",
-    "publishedNote": "Published at {{time}}. New moments you add today go out automatically.",
-    "publishedNoteOnlyMe": "Published at {{time}}. Only you can see this jar.",
+    "publishedLine": "Published {{time}} · {{visibility}}",
     "shared": {
       "readers": "Shared with readers",
       "everyone": "Shared with everyone",
@@ -92,8 +89,6 @@
     "gallery": "Choose from gallery",
     "shutter": "Take photo",
     "shutterHint": "Adds the photo to {{slot}}",
-    "moment": "Moment",
-    "slotAdded": "{{slot}}, already added",
     "mockPreview": "Simulator camera preview",
     "permissionDescription": "Pickld uses the camera to take the photos for your daily jar."
   },
@@ -199,6 +194,7 @@
     "reportLabel": "Report {{name}}’s comment"
   },
   "myDays": {
+    "back": "Back",
     "title": "My days",
     "subtitle_one": "{{month}} · {{count}} moment",
     "subtitle_other": "{{month}} · {{count}} moments",

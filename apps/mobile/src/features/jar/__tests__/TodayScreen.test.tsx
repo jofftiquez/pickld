@@ -196,7 +196,7 @@ describe('Today screen', () => {
     expect(mockPush).toHaveBeenCalledWith('/publish');
   });
 
-  it('a published jar: the Published note, likes and chip; the chip changes who can see it (M3-02)', async () => {
+  it('a published jar: the Published line, likes and chip; the chip changes who can see it (M3-02)', async () => {
     jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
     mockBackend.moments = [liveMoment('ootd')];
     mockBackend.jars = [
@@ -213,7 +213,7 @@ describe('Today screen', () => {
     await renderScreen(newClient());
     await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
     // 05:30 UTC is 1:30 PM in Manila, the phone's zone.
-    expect(screen.getByText('Published at 1:30 PM. New moments you add today go out automatically.')).toBeTruthy();
+    expect(screen.getByText('Published 1:30 PM · Readers')).toBeTruthy();
     expect(screen.getByText('Shared with readers · 21 likes')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull();
     expect(mockSheet.props?.visible).toBe(false);

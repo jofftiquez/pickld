@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { PillButton } from '@/components/PillButton';
 import type { Visibility } from '@/features/publish/publishJar';
+import { hitSlopFor } from '@/lib/hitSlop';
+import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
@@ -17,14 +19,16 @@ export type JarCardProps = {
   firstDay: boolean;
   /** Opens Publish review; null disables Publish (no jar yet). */
   onPublish: (() => void) | null;
-  /** The jar is published (TodayPublished): who sees it and its likes replace the readers line, and the
-   * Published chip replaces Publish. */
-  published?: { visibility: Visibility; likeCount: number } | null;
-  /** The Published chip: opens the jar's visibility menu (FR-PUB-03). */
+  /** The jar is published (TodayPublished): who sees it and its likes replace the readers line, the
+   * Published chip replaces Publish, and "Published 10:10 PM · Readers" sits under them. `time` is
+   * already formatted in the phone's zone. */
+  published?: { visibility: Visibility; likeCount: number; time: string } | null;
+  /** The Published chip and line: open the jar's visibility menu (FR-PUB-03). */
   onOpenVisibility?: () => void;
 };
 
-/** The dark card above the grid: the jar filled to today's count, readers and Publish (Main, EmptyToday). */
+/** The dark card above the grid: the jar filled to today's count, readers and Publish (Main, EmptyToday,
+ * TodayPublished). */
 export function JarCard({
   count,
   readerCount,
@@ -47,6 +51,9 @@ export function JarCard({
       : readerCount === null
         ? t('today.inTodaysJar')
         : t('today.inTodaysJarReaders', { count: readerCount });
+  const publishedLine = published
+    ? t('today.publishedLine', { time: published.time, visibility: t(`settings.visibility.${published.visibility}`) })
+    : null;
   return (
     <View style={styles.card} testID={firstDay ? 'jar-card-first-day' : 'jar-card'}>
       <View style={[styles.row, large ? styles.rowWrap : null]}>
@@ -77,9 +84,25 @@ export function JarCard({
           />
         )}
       </View>
+      {publishedLine !== null ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={publishedLine}
+          accessibilityHint={t('today.publishedHint')}
+          onPress={() => onOpenVisibility?.()}
+          hitSlop={hitSlopFor(undefined, LINE_HEIGHT)}
+          style={({ pressed }) => [styles.line, pressed ? { opacity: PRESSED_OPACITY } : null]}
+          testID="today-published-line"
+        >
+          <Text style={[textStyle('label', '600'), { color: colors.onDarkMuted }]}>{publishedLine}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
+
+// The published line's text height at the default size; hitSlop brings it to the 44 pt minimum.
+const LINE_HEIGHT = 20;
 
 const styles = StyleSheet.create({
   card: {
@@ -89,6 +112,7 @@ const styles = StyleSheet.create({
     paddingRight: space.lg,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: sizes.cardPadding },
+  line: { alignSelf: 'flex-start', marginTop: space.md },
   text: { flex: 1, gap: space.xs },
   // Large text: Publish wraps below, so the count keeps the card's width instead of breaking mid-word.
   rowWrap: { flexWrap: 'wrap', rowGap: space.md },

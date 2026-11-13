@@ -1,4 +1,4 @@
-# M2-07, M2-12: Capture tab → Camera (dev mock camera) → switch slot → shutter → editor (caption) →
+# M2-07, M2-12: Today tile → Camera (dev mock camera) on that slot → shutter → editor (caption) →
 # Add to #slot → Today shows the photo queued.
 # Run on the iOS Simulator with a dev build (no camera there, so the mock preview is used), signed in as
 # a user whose open jar has SLOT empty:
@@ -18,40 +18,18 @@ appId: me.pickld.app
       id: splash-overlay
     timeout: 10000
 
+# The camera opens from the slot's tile on Today (the Capture tab is hidden, D-52); the slot is fixed.
+- scrollUntilVisible:
+    element:
+      id: tile-${output.slot}
+    direction: DOWN
+    timeout: 10000
 - tapOn:
-    id: tab-capture
+    id: tile-${output.slot}
 - extendedWaitUntil:
     visible:
       id: camera-mock-preview
     timeout: 10000
-
-# The moment tabs scroll sideways and start centred on the default slot; a tab cut off at the edge
-# doesn't take taps. Swipe the strip back to the first slots, then forward if SLOT is further along.
-- waitForAnimationToEnd:
-    timeout: 3000
-- repeat:
-    times: 2
-    commands:
-      - swipe:
-          from:
-            id: camera-slot-switcher
-          direction: RIGHT
-- runFlow:
-    when:
-      notVisible:
-        id: camera-slot-${output.slot}
-    commands:
-      - repeat:
-          times: 2
-          commands:
-            - swipe:
-                from:
-                  id: camera-slot-switcher
-                direction: LEFT
-- waitForAnimationToEnd:
-    timeout: 3000
-- tapOn:
-    id: camera-slot-${output.slot}
 - assertVisible:
     id: camera-slot-tag
     text: '#${output.slot}, today at .*'

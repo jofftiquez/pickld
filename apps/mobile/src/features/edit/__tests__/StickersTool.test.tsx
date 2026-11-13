@@ -185,6 +185,20 @@ describe('Stickers tool', () => {
     expect(await screen.findByText('Shop stub')).toBeTruthy();
   });
 
+  it('fades the grid’s bottom edge while more rows remain below, and drops the fade at the end', async () => {
+    await openStickers();
+    await screen.findByTestId('stickers-panel');
+    await fireEvent.press(screen.getByRole('tab', { name: 'Everyday' }));
+    const grid = screen.getByTestId('stickers-grid');
+    const fade = () => screen.queryByTestId('stickers-grid-fade', { includeHiddenElements: true });
+    // Five rows of 58 behind a 145-tall window (two and a half rows).
+    await fireEvent(grid, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 320, height: 145 } } });
+    await fireEvent(grid, 'contentSizeChange', 320, 282);
+    expect(fade()).toBeTruthy();
+    await fireEvent.scroll(grid, { nativeEvent: { contentOffset: { x: 0, y: 137 } } });
+    expect(fade()).toBeNull();
+  });
+
   it('shows the Milestones pack with only the stickers earned', async () => {
     mockBackend.viewer = { earned: ['first_full_jar'] };
     await openStickers();

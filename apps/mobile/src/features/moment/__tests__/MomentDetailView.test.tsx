@@ -71,19 +71,32 @@ describe('MomentDetailView', () => {
     expect(screen.getByText('Dale')).toBeTruthy();
   });
 
-  it('swipes through visible moments only, with the progress bars following', async () => {
+  it('swipes through visible moments only, with one progress bar per shown moment following', async () => {
     await setup();
-    expect(screen.getAllByTestId('moment-progress-done', { includeHiddenElements: true })).toHaveLength(2);
+    const bars = (id: string) => screen.queryAllByTestId(id, { includeHiddenElements: true });
+    // Three shown moments, three bars (not one per slot); the second is the current one.
+    expect(bars('moment-progress-done')).toHaveLength(1);
+    expect(bars('moment-progress-current')).toHaveLength(1);
+    expect(bars('moment-progress-todo')).toHaveLength(1);
     // The reader's pages are whereami, ootd, evening: the private, checking and removed ones aren't there.
     expect(screen.queryByTestId('moment-page-selfie')).toBeNull();
     expect(screen.queryByTestId('moment-page-morning')).toBeNull();
     await swipeTo(2);
     expect(screen.getByTestId('moment-position')).toHaveTextContent('Moment 3 of 3');
     expect(screen.queryByTestId('moment-caption')).toBeNull();
-    expect(screen.getAllByTestId('moment-progress-done', { includeHiddenElements: true })).toHaveLength(3);
-    expect(screen.getAllByTestId('moment-progress-todo', { includeHiddenElements: true })).toHaveLength(5);
+    expect(bars('moment-progress-done')).toHaveLength(2);
+    expect(bars('moment-progress-current')).toHaveLength(1);
+    expect(bars('moment-progress-todo')).toHaveLength(0);
     await swipeTo(0);
     expect(screen.getByTestId('moment-position')).toHaveTextContent('Moment 1 of 3 · swipe for the next');
+    expect(bars('moment-progress-current')).toHaveLength(1);
+    expect(bars('moment-progress-todo')).toHaveLength(2);
+  });
+
+  it('a single shown moment draws no progress bars', async () => {
+    await setup({ data: { ...jar, moments: [moment({ id: 'ootd', slot: 'ootd' })] } });
+    expect(screen.getByTestId('moment-position')).toHaveTextContent('Moment 1 of 1');
+    expect(screen.queryByTestId('moment-progress', { includeHiddenElements: true })).toBeNull();
   });
 
   it('moves between moments with screen reader adjust actions', async () => {

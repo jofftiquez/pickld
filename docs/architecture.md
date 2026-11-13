@@ -261,7 +261,7 @@ One Expo app for iOS and Android, built with Expo Router, NativeWind (styling fr
 | Group | Routes (screens) |
 | --- | --- |
 | Onboarding | `/welcome`, `/intro/[step]`, `/sign-up`, `/sign-in`, `/check-email`, `/setup/about`, `/setup/day`, `/setup/people`, `/setup/jar-lid`, `/setup/permissions`, `/setup/friends`, `/setup/promise` |
-| Tabs | `/(tabs)/today`, `/(tabs)/capture`, `/(tabs)/jars`, `/(tabs)/my-days` |
+| Tabs | `/(tabs)/today`, `/(tabs)/jars` (D-52; `/(tabs)/capture` is hidden from the bar), `/my-days` (stack screen opened from Today) |
 | Capture flow (modal) | `/camera`, `/crop`, `/edit/[momentId]` (Filters, Stickers, Bubble, Text tabs), `/publish` |
 | Jars and people | `/jar/[id]`, `/moment/[id]`, `/comments/[jarId]`, `/share/[jarId]`, `/u/[username]`, `/u/[username]/readers`, `/notifications`, `/explore`, `/memories` |
 | Stickers | `/stickers/shop`, `/stickers/pack/[slug]`, `/stickers/mine` |

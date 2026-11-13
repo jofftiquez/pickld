@@ -143,7 +143,7 @@ export default function TodayScreen() {
         lidColor={me?.lidColor}
         insets={insets}
         offlineCount={offlineBannerCount(queue, offline)}
-        onCapture={(slot) => router.push({ pathname: '/capture', params: { slot } })}
+        onCapture={(slot) => router.push({ pathname: '/camera', params: { slot } })}
         onOpenMyDays={() => router.push('/my-days')}
         onOpenProfile={
           me ? () => router.push({ pathname: '/u/[username]', params: { username: me.username } }) : undefined
@@ -205,7 +205,7 @@ export default function TodayScreen() {
         onClosed={() => {
           if (!takeAfterTip.current) return;
           takeAfterTip.current = false;
-          router.push({ pathname: '/capture', params: nowSlot ? { slot: nowSlot } : {} });
+          router.push(nowSlot ? { pathname: '/camera', params: { slot: nowSlot } } : '/camera');
         }}
       />
       {/* An upload whose slot was taken asks whether to Replace (M2-22). */}

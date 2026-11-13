@@ -7,7 +7,6 @@ import { Pressable, Text } from 'react-native';
 import TabsLayout from '../../../../app/(tabs)/_layout';
 import CaptureScreen from '../../../../app/(tabs)/capture';
 import JarsScreen from '../../../../app/(tabs)/jars';
-import MyDaysScreen from '../../../../app/(tabs)/my-days';
 import TodayScreen from '../../../../app/(tabs)/today';
 import Index from '../../../../app/index';
 
@@ -47,7 +46,6 @@ const routes = {
   '(tabs)/today': TodayScreen,
   '(tabs)/capture': CaptureScreen,
   '(tabs)/jars': JarsScreen,
-  '(tabs)/my-days': MyDaysScreen,
   camera: CameraStub,
 };
 
@@ -56,23 +54,16 @@ async function closeCamera() {
   await act(async () => {});
 }
 
-describe('Capture tab', () => {
-  it('opens the camera, and closing it lands on Today', async () => {
+// The Capture tab is hidden (D-52, `href: null`); its route file stays. Today's tiles open /camera directly.
+describe('Capture from Today', () => {
+  it('has no Capture tab in the bar', async () => {
     await renderRouter(routes, { initialUrl: '/today', wrapper });
-    await fireEvent.press(screen.getByRole('tab', { name: 'Capture' }));
-    expect(screen).toHavePathname('/camera');
-    expect(screen.getByText('camera slot: none')).toBeTruthy();
-
-    await closeCamera();
-    expect(screen).toHavePathname('/today');
-    expect(screen.getByRole('tab', { name: 'Today', selected: true })).toBeTruthy();
-
-    // And it opens again on the next tap.
-    await fireEvent.press(screen.getByRole('tab', { name: 'Capture' }));
-    expect(screen).toHavePathname('/camera');
+    expect(screen.queryByRole('tab', { name: 'Capture' })).toBeNull();
+    expect(screen.queryByTestId('tab-capture')).toBeNull();
+    expect(screen.getAllByRole('tab')).toHaveLength(2);
   });
 
-  it('passes the slot of a Today tile to the camera, and forgets it afterwards', async () => {
+  it("opens the camera with the tile's slot, and closing it lands on Today", async () => {
     await renderRouter(routes, { initialUrl: '/today', wrapper });
     await fireEvent.press(screen.getByTestId('tile-ootd'));
     expect(screen).toHavePathname('/camera');
@@ -80,19 +71,11 @@ describe('Capture tab', () => {
 
     await closeCamera();
     expect(screen).toHavePathname('/today');
+    expect(screen.getByRole('tab', { name: 'Today', selected: true })).toBeTruthy();
 
-    await fireEvent.press(screen.getByRole('tab', { name: 'Capture' }));
+    // And another tile opens it again with its own slot.
+    await fireEvent.press(screen.getByTestId('tile-selfie'));
     expect(screen).toHavePathname('/camera');
-    expect(screen.getByText('camera slot: none')).toBeTruthy();
-  });
-
-  it('ignores a slot param that is not a slot', async () => {
-    await renderRouter(routes, { initialUrl: '/today', wrapper });
-    await act(async () => {
-      const { router } = jest.requireActual<typeof import('expo-router')>('expo-router');
-      router.push('/capture?slot=sunrise');
-    });
-    expect(screen).toHavePathname('/camera');
-    expect(screen.getByText('camera slot: none')).toBeTruthy();
+    expect(screen.getByText('camera slot: selfie')).toBeTruthy();
   });
 });

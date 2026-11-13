@@ -55,7 +55,7 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 
 | ID | Requirement | Acceptance criteria | P | Screens |
 | --- | --- | --- | --- | --- |
-| FR-CAP-01 | Camera | Live 3:4 preview with grid, slot tag and time, flash, front/back flip, gallery shortcut; slot switcher changes the target slot; shutter goes to the editor in under 1 second | P0 | Camera |
+| FR-CAP-01 | Camera | Live 3:4 preview with grid, slot tag and time, flash, front/back flip, gallery shortcut; the slot comes from the tile that opened it (read-only tag, no switcher; without one, the Now slot, else the first empty); shutter goes to the editor in under 1 second | P0 | Camera |
 | FR-CAP-02 | Gallery import | Any gallery photo can be chosen; photos that aren’t 3:4 open Crop first; photos taken on a past date go into that date’s jar and get Added later | P0 | Camera, Crop |
 | FR-CAP-03 | Crop | Fixed 3:4 frame; drag, pinch and slider zoom; Rotate 90°, Flip, Fit, Reset, Cancel; result is 1440 × 1920 | P0 | Crop |
 | FR-CAP-04 | Color filters | Original, Kalamansi, Merienda, Mono and Dusk preview on the actual photo in real time; no beauty or face-retouch filters ever | P0 | Capture |
@@ -86,7 +86,7 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 | FR-SOC-01 | Jars feed | Shows published jars from authors the user reads, newest update first; 20 per page with infinite scroll; pull to refresh; avatar row marks authors with new jars since last visit | P0 | Jars |
 | FR-SOC-02 | Empty feed | With no authors, show Jars, empty with Find people, Invite friends and suggestions | P0 | Jars, empty |
 | FR-SOC-03 | Jar page | Cover, author, date, count, Full jar tag at 8/8; grid of visible moments with Added later badges; like, comment and Share jar | P0 | Jar |
-| FR-SOC-04 | Moment detail | Full-screen 3:4 moment with 8 progress bars; swipe left and right through the jar; hashtag, time, caption, likes, comments | P0 | Moment detail |
+| FR-SOC-04 | Moment detail | Full-screen 3:4 moment with one progress bar per shown moment, the current one highlighted (none for a single moment); swipe left and right through the jar's shown moments; hashtag, time, caption, likes, comments | P0 | Moment detail |
 | FR-SOC-05 | Likes | One like per user per jar or moment; tapping again removes it; counts update immediately and are public | P0 | Jar, Moment detail |
 | FR-SOC-06 | Comments | Up to 300 characters; one level of replies; author or jar owner can delete; text passes the safety check before others see it | P0 | Comments |
 | FR-SOC-07 | Follow (read) | Read and Read back follow an author; Reading unfollows; owner can remove a reader; counts update on both profiles | P0 | Profiles, Readers & authors |

@@ -60,7 +60,7 @@ export default function NotificationsScreen() {
         setPulling(true);
         void refresh().finally(() => setPulling(false));
       }}
-      onCapture={(s) => router.push({ pathname: '/capture', params: { slot: s } })}
+      onCapture={(s) => router.push({ pathname: '/camera', params: { slot: s } })}
       onOpen={(target) => router.push(target)}
       onFollow={(entry) => {
         const actor = entry.actors[0];
