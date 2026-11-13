@@ -115,8 +115,9 @@ select tests.reset_role();
 insert into t values ('m_mixed_ev', tests.make_moment((select id from t where k = 'j_pub'), 'ootd', 'live', p_visibility => 'everyone'));
 insert into t values ('m_mixed_om', tests.make_moment((select id from t where k = 'j_pub'), 'selfie', 'live', p_visibility => 'only_me'));
 select tests.act_as('reader');
+-- The cover leads the previews (0069): m_live has the newest caption, so it comes before the earlier slot.
 select is((select preview_moment_ids from public.feed_page() where jar_id = (select id from t where k = 'j_pub')),
-          (select array_agg(id order by slot) from public.moments where id in (select id from t where k in ('m_live', 'm_mixed_ev'))),
+          array[(select id from t where k = 'm_live'), (select id from t where k = 'm_mixed_ev')],
           'a mixed jar shows the reader its Readers and Everyone moments, not its Only me ones');
 select tests.reset_role();
 delete from public.moments where id in (select id from t where k in ('m_mixed_ev', 'm_mixed_om'));
