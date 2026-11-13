@@ -51,6 +51,7 @@ export default function ProfileScreen() {
         followBusy={follow.busy}
         onEditProfile={() => router.push('/settings/profile')}
         onSettings={() => router.push('/settings')}
+        onOpenStickers={() => router.push('/stickers')}
         onOpenList={(list) => {
           if (data) {
             router.push({ pathname: '/u/[username]/readers', params: { username: data.profile.username, list } });

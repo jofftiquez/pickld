@@ -34,6 +34,8 @@ export type TodayViewProps = {
   offlineCount?: number | null;
   onCapture: (slot: Slot) => void;
   onOpenMyDays: () => void;
+  /** Opens the Stickers page from the header's stickers button (D-61). */
+  onOpenStickers?: () => void;
   /** Opens My profile from the header avatar. */
   onOpenProfile?: () => void;
   /** Retry on a failed tile, with the tile's queue item id. */
@@ -70,6 +72,7 @@ export function TodayView({
   offlineCount = null,
   onCapture,
   onOpenMyDays,
+  onOpenStickers,
   onOpenProfile,
   onRetry,
   zoneTag = null,
@@ -103,6 +106,7 @@ export function TodayView({
         displayName={displayName}
         avatarUrl={avatarUrl}
         onOpenMyDays={onOpenMyDays}
+        onOpenStickers={onOpenStickers}
         onOpenProfile={onOpenProfile}
         zoneTag={zoneTag}
       />

@@ -195,6 +195,13 @@ describe('Today screen', () => {
     expect(mockPush).toHaveBeenCalledWith('/publish');
   });
 
+  it('the header’s stickers button opens the Stickers page (D-61)', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    await renderScreen(newClient());
+    await fireEvent.press(await screen.findByRole('button', { name: 'Stickers' }));
+    expect(mockPush).toHaveBeenCalledWith('/stickers');
+  });
+
   it('a published jar: the Published line, likes and chip; the chip changes who can see it (M3-02)', async () => {
     jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
     mockBackend.moments = [liveMoment('ootd')];

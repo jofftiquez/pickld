@@ -226,7 +226,7 @@ export function StickersPanel({ slot, onAdd }: StickersPanelProps) {
               : t('editStickers.shopMore')
           }
           accessibilityHint={t('editStickers.shopHint')}
-          onPress={() => router.push('/stickers/shop')}
+          onPress={() => router.push({ pathname: '/stickers', params: { tab: 'shop' } })}
           style={styles.shopBanner}
           testID="stickers-shop-banner"
         >

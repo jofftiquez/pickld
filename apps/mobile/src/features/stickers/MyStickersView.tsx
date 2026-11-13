@@ -7,7 +7,6 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
 import { PillButton } from '@/components/PillButton';
-import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { Toggle } from '@/components/Toggle';
 import { stickerArtFor } from '@/features/edit/stickers/stickerArt';
@@ -28,7 +27,6 @@ export type MyStickersViewProps = {
   saveFailed?: boolean;
   restore: RestoreState;
   insets: EdgeInsets;
-  onBack: () => void;
   onRetry: () => void;
   /** The whole list after a move or a switch; the screen saves it. */
   onChange: (packs: MyPack[]) => void;
@@ -39,7 +37,8 @@ export type MyStickersViewProps = {
 /**
  * My stickers (MyStickers; FR-STK-08): drag a pack's grip to reorder the Stickers tool, switch one off to
  * hide it without losing it, restore purchases from another phone, or go to the shop. Screen readers move
- * packs with the Move up / Move down actions instead of dragging.
+ * packs with the Move up / Move down actions instead of dragging. The Stickers page shows it under Mine
+ * (D-61) and draws the title above it.
  */
 export function MyStickersView({
   packs,
@@ -47,7 +46,6 @@ export function MyStickersView({
   saveFailed = false,
   restore,
   insets,
-  onBack,
   onRetry,
   onChange,
   onRestore,
@@ -69,24 +67,7 @@ export function MyStickersView({
         : null;
 
   return (
-    <GestureHandlerRootView style={[styles.screen, { paddingTop: insets.top }]} testID="my-stickers">
-      <View style={styles.header}>
-        <RoundIconButton
-          icon="back"
-          accessibilityLabel={t('myStickers.back')}
-          onPress={onBack}
-          testID="my-stickers-back"
-        />
-        <Text
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          accessibilityRole="header"
-          style={[textStyle('cropTitle'), styles.headerTitle, { color: colors.ink }]}
-        >
-          {t('myStickers.title')}
-        </Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <GestureHandlerRootView style={styles.screen} testID="my-stickers">
       <ScrollView
         scrollEnabled={drag === null}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space.xxl }]}
@@ -291,16 +272,6 @@ function PackRow({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: space.lg,
-    paddingTop: space.xxl,
-    paddingBottom: space.md,
-  },
-  headerTitle: { flexShrink: 1 },
-  headerSpacer: { width: sizes.roundButton },
   content: { paddingHorizontal: space.xl, gap: space.md },
   intro: { color: colors.muted },
   listCard: { paddingVertical: 2 },

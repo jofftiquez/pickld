@@ -134,6 +134,12 @@ describe('Settings', () => {
     expect(mockDb.writes).toEqual([]);
   });
 
+  it('My stickers opens the Stickers page on Mine (D-61)', async () => {
+    await renderScreen();
+    await act(async () => props().onMyStickers());
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/stickers', params: { tab: 'mine' } });
+  });
+
   it('a new reminder time is saved with its switch and reschedules the reminders', async () => {
     const { invalidate } = await renderScreen();
     expect(props().reminders?.find((r) => r.slot === 'evening')?.minutes).toBe(19 * 60 + 30);

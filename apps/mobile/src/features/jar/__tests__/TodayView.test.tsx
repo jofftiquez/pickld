@@ -169,6 +169,13 @@ describe('TodayView', () => {
     expect(onOpenMyDays).toHaveBeenCalledTimes(1);
   });
 
+  it('the stickers button beside the calendar opens the Stickers page (D-61)', async () => {
+    const onOpenStickers = jest.fn();
+    await renderToday({ onOpenStickers });
+    await fireEvent.press(screen.getByRole('button', { name: 'Stickers' }));
+    expect(onOpenStickers).toHaveBeenCalledTimes(1);
+  });
+
   it('offline: the banner says how many moments are saved, above the jar card (UploadStates)', async () => {
     await renderToday({ hasAnyJar: true, offlineCount: 2 });
     const banner = screen.getByTestId('offline-banner');

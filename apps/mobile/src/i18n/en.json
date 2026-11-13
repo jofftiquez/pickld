@@ -26,6 +26,7 @@
       "evening": "Good evening"
     },
     "myDays": "My days",
+    "stickers": "Stickers",
     "inTodaysJar": "in today’s jar",
     "inTodaysJarReaders_one": "in today’s jar · {{count}} reader",
     "inTodaysJarReaders_other": "in today’s jar · {{count}} readers",
@@ -575,8 +576,6 @@
     "shopHint": "Opens the sticker shop"
   },
   "stickerShop": {
-    "title": "Stickers",
-    "close": "Close",
     "search": "Search packs or words",
     "searchLabel": "Search sticker packs",
     "loading": "Loading packs…",
@@ -599,6 +598,13 @@
     "packName_other": "{{name}}, {{count}} stickers",
     "openHint": "Opens the pack preview"
   },
+  "stickersHome": {
+    "title": "Stickers",
+    "close": "Close",
+    "sections": "Sticker sections",
+    "mine": "Mine",
+    "shop": "Shop"
+  },
   "packPreview": {
     "back": "Back",
     "loading": "Loading the pack…",
@@ -618,8 +624,6 @@
     "bought": "{{name}} is yours"
   },
   "myStickers": {
-    "title": "My stickers",
-    "back": "Back",
     "intro": "Drag to reorder how packs appear in the editor. Turn one off to hide it without losing it.",
     "loading": "Loading your stickers…",
     "failed": "Your stickers didn’t load. Check your connection and try again.",
@@ -757,6 +761,8 @@
   "profile": {
     "back": "Back",
     "edit": "Edit profile",
+    "stickers": "Stickers",
+    "stickersHint": "Opens your sticker packs and the shop",
     "share": "Share profile",
     "shareHint": "Shares a link to this profile",
     "shareMessage": "{{name}} on Pickld: {{url}}",

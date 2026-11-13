@@ -101,6 +101,15 @@ describe('ProfileView', () => {
     expect(screen.getByTestId('profile-follow')).toHaveTextContent('Reading');
   });
 
+  it('has a Stickers row on your own profile only (D-61)', async () => {
+    const onOpenStickers = jest.fn();
+    await renderView({ data: page('mika-id', false), onOpenStickers });
+    await fireEvent.press(screen.getByRole('button', { name: 'Stickers' }));
+    expect(onOpenStickers).toHaveBeenCalledTimes(1);
+    await renderView({ data: page('dale-id', false), onOpenStickers });
+    expect(screen.queryByRole('button', { name: 'Stickers' })).toBeNull();
+  });
+
   it('has no follow button on your own profile', async () => {
     await renderView({ data: page('mika-id', false), onToggleReading: jest.fn() });
     expect(screen.queryByTestId('profile-follow')).toBeNull();

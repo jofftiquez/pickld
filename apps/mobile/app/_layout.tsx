@@ -85,9 +85,9 @@ export default function RootLayout() {
         <Stack.Screen name="comments/[jarId]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="notifications" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="my-days" options={{ animation: reduceMotion ? 'none' : 'default' }} />
-        {/* Over the editor (a full-screen modal), so these present as modals too. */}
+        {/* The Stickers page also opens over the editor (a full-screen modal), so these present as modals too. */}
         <Stack.Screen
-          name="stickers/shop"
+          name="stickers/index"
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
         />
         <Stack.Screen

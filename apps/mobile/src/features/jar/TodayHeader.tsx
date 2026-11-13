@@ -16,19 +16,22 @@ export type TodayHeaderProps = {
   displayName: string | null;
   avatarUrl: string | null;
   onOpenMyDays: () => void;
+  /** Opens the Stickers page (D-61); missing hides the button. */
+  onOpenStickers?: () => void;
   /** Opens My profile from the avatar. */
   onOpenProfile?: () => void;
   /** "Tokyo time" on a jar that started in a new zone; replaces the greeting (TimeZone). */
   zoneTag?: string | null;
 };
 
-/** Date, greeting and the "Today" title, with the My days shortcut and avatar (Main). */
+/** Date, greeting and the "Today" title, with the Stickers and My days shortcuts and avatar (Main). */
 export function TodayHeader({
   date,
   greeting,
   displayName,
   avatarUrl,
   onOpenMyDays,
+  onOpenStickers,
   onOpenProfile,
   zoneTag = null,
 }: TodayHeaderProps) {
@@ -56,6 +59,14 @@ export function TodayHeader({
         </Text>
       </View>
       <View style={styles.actions}>
+        {onOpenStickers ? (
+          <RoundIconButton
+            icon="stickers"
+            accessibilityLabel={t('today.stickers')}
+            onPress={onOpenStickers}
+            testID="today-stickers"
+          />
+        ) : null}
         <RoundIconButton
           icon="myDays"
           accessibilityLabel={t('today.myDays')}
