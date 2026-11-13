@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
-import { authorRow, jarMomentRow, jarRow, type JarPageData, type Liked } from './jarPage';
+import { authorRow, jarMomentRow, jarRow, type JarPageData, type JarRow, type Liked } from './jarPage';
 
 const jarId = z.uuid();
 
@@ -29,8 +29,12 @@ async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
   return new Map(parsed.data.data.moments.map((m) => [m.id, { full: m.full, thumb: m.thumb }]));
 }
 
-/** Null when the jar doesn't exist or the viewer may not see it (RLS can't tell them apart, on purpose). */
-export async function fetchJarPage(id: string, viewerId: string): Promise<JarPageData | null> {
+/**
+ * The jar row as the viewer. A jar they may not open (not yet published, D-48) still has moments they may
+ * see; `moment_jar` (0067) gives Moment detail its zone and owner then, without its counts, marked `open:
+ * false` so the Jar page never shows it (FR-PUB-02, D-67).
+ */
+async function fetchJarRow(id: string): Promise<JarRow | null> {
   const supabase = getSupabase();
   const { data: jar, error } = await supabase
     .from('jars')
@@ -38,6 +42,17 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
     .eq('id', id)
     .maybeSingle();
   if (error) throw new Error(error.message);
+  if (jar) return jarRow.parse(jar);
+  const fallback = await supabase.rpc('moment_jar', { p_jar: id });
+  if (fallback.error) throw new Error(fallback.error.message);
+  const row = z.array(jarRow).parse(fallback.data)[0];
+  return row ? { ...row, open: false } : null;
+}
+
+/** Null when the jar doesn't exist or the viewer may not see it (RLS can't tell them apart, on purpose). */
+export async function fetchJarPage(id: string, viewerId: string): Promise<JarPageData | null> {
+  const supabase = getSupabase();
+  const jar = await fetchJarRow(id);
   if (!jar) return null;
   const [author, moments] = await Promise.all([
     supabase.from('profiles').select('username, display_name, lid_color').eq('id', jar.user_id).maybeSingle(),
@@ -53,7 +68,7 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
   const rows = z.array(jarMomentRow).parse(moments.data);
   const [urls, liked] = await Promise.all([photoUrls(rows.map((m) => m.id)), fetchLiked(viewerId, id, rows)]);
   return {
-    jar: jarRow.parse(jar),
+    jar,
     author: authorRow.parse(author.data),
     moments: rows.map((m) => ({
       ...m,
@@ -87,8 +102,11 @@ export const jarPageQueryKeys = {
   jar: (viewerId: string, id: string) => ['jarPage', viewerId, id] as const,
 };
 
-/** The jar page for `id`; a malformed id is "not available" without a request. */
-export function useJarPage(id: string | undefined) {
+/**
+ * The jar page for `id`; a malformed id is "not available" without a request. Only Moment detail passes
+ * `fromMoment`: it may read a jar the viewer can't open for the moments in it they may see (D-67).
+ */
+export function useJarPage(id: string | undefined, { fromMoment = false }: { fromMoment?: boolean } = {}) {
   const viewerId = useAuthStore((s) => s.session?.user.id ?? null);
   const valid = jarId.safeParse(id).success;
   const query = useQuery({
@@ -98,7 +116,7 @@ export function useJarPage(id: string | undefined) {
   });
   return {
     /** Undefined while loading; null when the jar isn't available to this viewer. */
-    data: valid ? query.data : null,
+    data: valid ? (!fromMoment && query.data?.jar.open === false ? null : query.data) : null,
     /** The request failed and nothing is cached. */
     failed: query.isError && query.data === undefined,
     refresh: async () => {

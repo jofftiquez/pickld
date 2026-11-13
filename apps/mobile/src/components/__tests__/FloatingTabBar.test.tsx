@@ -6,8 +6,8 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 import { expectMinTapArea, flatStyle } from './testUtils';
 
 // The navigator's routes include the hidden Capture route (`href: null`); it must get no tab (D-52).
-const routes = ['today', 'capture', 'jars'].map((name) => ({ key: `${name}-key`, name }));
-const labels = ['Today', 'Jars'];
+const routes = ['today', 'moments', 'capture', 'jars'].map((name) => ({ key: `${name}-key`, name }));
+const labels = ['Today', 'Moments', 'Jars'];
 
 function setup({ index = 0, preventDefault = false, insets = { top: 0, right: 0, bottom: 0, left: 0 } } = {}) {
   const emit = jest.fn(() => ({ defaultPrevented: preventDefault }));
@@ -23,7 +23,7 @@ function setup({ index = 0, preventDefault = false, insets = { top: 0, right: 0,
 }
 
 describe('FloatingTabBar', () => {
-  it('shows Today and Jars in order with translated labels inside a named tablist, and no Capture tab', async () => {
+  it('shows Today, Moments and Jars in order with translated labels inside a named tablist, and no Capture tab', async () => {
     const { props } = setup();
     await render(<FloatingTabBar {...props} />);
     expect(screen.getByLabelText('Main').props.accessibilityRole).toBe('tablist');
@@ -34,9 +34,13 @@ describe('FloatingTabBar', () => {
   });
 
   it('announces only the focused tab as selected and highlights it per Main', async () => {
-    const { props } = setup({ index: 2 });
+    const { props } = setup({ index: 3 });
     await render(<FloatingTabBar {...props} />);
-    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityState.selected)).toEqual([false, true]);
+    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityState.selected)).toEqual([
+      false,
+      false,
+      true,
+    ]);
     expect(screen.getAllByRole('tab', { selected: true })).toHaveLength(1);
     expect(screen.getByRole('tab', { name: 'Jars', selected: true })).toBeTruthy();
 
@@ -55,7 +59,7 @@ describe('FloatingTabBar', () => {
   it('Today gets no highlight while Jars is selected, and the same tinted pill as any tab when selected', async () => {
     const icon = () => screen.getByTestId('icon-today', { includeHiddenElements: true }).props;
 
-    const other = setup({ index: 2 });
+    const other = setup({ index: 3 });
     await render(<FloatingTabBar {...other.props} />);
     expect(icon().stroke).toBe(colors.muted);
     expect(screen.getByText('Today').props.style).toEqual(expect.arrayContaining([{ color: colors.muted }]));
@@ -80,7 +84,7 @@ describe('FloatingTabBar', () => {
   });
 
   it('does not navigate when the tab is already focused or a listener prevents it', async () => {
-    const focused = setup({ index: 2 });
+    const focused = setup({ index: 3 });
     await render(<FloatingTabBar {...focused.props} />);
     await fireEvent.press(screen.getByRole('tab', { name: 'Jars' }));
     expect(focused.emit).toHaveBeenCalledWith(expect.objectContaining({ type: 'tabPress', target: 'jars-key' }));
