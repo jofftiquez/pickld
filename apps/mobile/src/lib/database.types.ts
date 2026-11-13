@@ -548,6 +548,7 @@ export type Database = {
       };
       moderation_items: {
         Row: {
+          appeal_id: string | null;
           comment_id: string | null;
           created_at: string;
           decided_at: string | null;
@@ -565,6 +566,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          appeal_id?: string | null;
           comment_id?: string | null;
           created_at?: string;
           decided_at?: string | null;
@@ -581,6 +583,7 @@ export type Database = {
           status?: Database['public']['Enums']['mod_status'];
         };
         Update: {
+          appeal_id?: string | null;
           comment_id?: string | null;
           created_at?: string;
           decided_at?: string | null;
@@ -597,6 +600,13 @@ export type Database = {
           status?: Database['public']['Enums']['mod_status'];
         };
         Relationships: [
+          {
+            foreignKeyName: 'moderation_items_appeal_id_fkey';
+            columns: ['appeal_id'];
+            isOneToOne: false;
+            referencedRelation: 'appeals';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'moderation_items_comment_id_fkey';
             columns: ['comment_id'];
@@ -1021,6 +1031,7 @@ export type Database = {
           lid_color: string;
           reader_count: number;
           status: Database['public']['Enums']['profile_status'];
+          suspended_until: string | null;
           username: string;
         };
         ComputedFields: never;
@@ -1040,6 +1051,7 @@ export type Database = {
           lid_color?: string;
           reader_count?: number;
           status?: Database['public']['Enums']['profile_status'];
+          suspended_until?: string | null;
           username: string;
         };
         Update: {
@@ -1058,6 +1070,7 @@ export type Database = {
           lid_color?: string;
           reader_count?: number;
           status?: Database['public']['Enums']['profile_status'];
+          suspended_until?: string | null;
           username?: string;
         };
         Relationships: [];
@@ -1738,6 +1751,7 @@ export type Database = {
           moment_count: number;
         }[];
       };
+      mod_decide: { Args: { p_action: string; p_guideline?: string; p_item: string; p_note?: string }; Returns: Json };
       moderation_apply: {
         Args: {
           p_decision: string;
@@ -1765,6 +1779,7 @@ export type Database = {
         };
         Returns: string;
       };
+      moderation_lift_suspensions: { Args: Record<PropertyKey, never>; Returns: number };
       moment_photo_paths: {
         Args: { ids: string[] };
         Returns: {
@@ -1819,6 +1834,7 @@ export type Database = {
           lid_color: string;
           reader_count: number;
           status: Database['public']['Enums']['profile_status'];
+          suspended_until: string | null;
           username: string;
         }[];
         SetofOptions: {
@@ -1827,6 +1843,15 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      my_removal: {
+        Args: { p_moment: string };
+        Returns: {
+          appeal_status: string;
+          can_appeal: boolean;
+          guideline: string;
+          item_id: string;
+        }[];
       };
       notify: {
         Args: {
@@ -1925,6 +1950,7 @@ export type Database = {
         Returns: boolean;
       };
       store_purchases_sync: { Args: { p_purchases: Json; p_user: string }; Returns: Json };
+      strike_count: { Args: { p_user: string }; Returns: number };
       submit_report: {
         Args: {
           note?: string;

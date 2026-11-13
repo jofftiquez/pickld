@@ -36,7 +36,7 @@ insert into public.moderation_items (id, moment_id, source, status) values
   ('a8000000-0000-4000-8000-000000000004', (select id from m where name = 'checking'), 'auto_check', 'kept');
 insert into public.appeals (moderation_item_id, user_id, status) values
   ('a8000000-0000-4000-8000-000000000002', tests.id('owner'), 'open'),
-  ('a8000000-0000-4000-8000-000000000003', tests.id('owner'), 'decided');
+  ('a8000000-0000-4000-8000-000000000003', tests.id('owner'), 'upheld');
 
 create temp table roles (role text primary key, ord int);
 insert into roles values ('owner', 1), ('reader', 2), ('outsider', 3), ('blocked', 4), ('blocker', 5), ('moderator', 6);

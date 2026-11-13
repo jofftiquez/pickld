@@ -17,8 +17,10 @@
 // A failure puts the job back for another try in 10 minutes, and fails it after the third attempt
 // (account_job_fail). Messages name only the step and a status code, never a key or personal data.
 //
+// Each run also ends strike suspensions whose 7 days are over (moderation_lift_suspensions, 0041; D-11).
+//
 // POST {}  (x-jobs-secret: …)
-//   → { data: { claimed, done, failed } }
+//   → { data: { claimed, done, failed, lifted } }
 //   → { error: { code, message } }   401 wrong secret, 405 method
 import type { SupabaseClient } from '../_shared/deps.ts';
 import { deletePrefix, getObject, MultipartUpload } from '../_shared/bucket.ts';
@@ -75,6 +77,8 @@ export interface JobsStore {
   getObject(key: string): Promise<Uint8Array | null>;
   deletePrefix(prefix: string): Promise<number>;
   startUpload(key: string, contentType: string): Promise<UploadSink>;
+  /** moderation_lift_suspensions() (0041): ends strike suspensions whose 7 days are over. */
+  liftSuspensions(): Promise<number>;
 }
 
 export interface AccountJobsDeps {
@@ -146,6 +150,7 @@ export async function handleAccountJobs(req: Request, deps: AccountJobsDeps): Pr
   if (secret.length < 32 || !sameSecret(given, secret)) return fail(401, 'unauthorized', 'Not allowed.');
 
   const store = deps.store();
+  const lifted = await store.liftSuspensions();
   const jobs = await store.claim(BATCH);
   let done = 0;
   let failed = 0;
@@ -159,7 +164,7 @@ export async function handleAccountJobs(req: Request, deps: AccountJobsDeps): Pr
       await store.fail(job.id, e instanceof Error ? e.message : 'failed');
     }
   }
-  return ok({ claimed: jobs.length, done, failed });
+  return ok({ claimed: jobs.length, done, failed, lifted });
 }
 
 const PAGE = 1000;
@@ -217,6 +222,11 @@ export function serviceStore(db: SupabaseClient, s3: S3Config, partSize?: number
       const { data, error } = await db.rpc('account_delete_purge', { p_user: userId });
       if (error) throw new Error(`account_delete_purge: ${error.code}`);
       return data === true;
+    },
+    async liftSuspensions() {
+      const { data, error } = await db.rpc('moderation_lift_suspensions');
+      if (error) throw new Error(`moderation_lift_suspensions: ${error.code}`);
+      return Number(data ?? 0);
     },
     getObject: (key) => getObject(s3, key),
     deletePrefix: (prefix) => deletePrefix(s3, prefix),
