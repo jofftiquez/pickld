@@ -117,7 +117,7 @@ A moment is visible to others only when its jar is visible, it is not private, a
 
 ### Roles and keys
 
-- **Users** sign in with Supabase Auth (Apple, Google or email link). Their token carries no extra powers.
+- **Users** sign in with Supabase Auth (Apple, Google or a 6-digit email code). Their token carries no extra powers.
 - **Moderators** get a `moderator` role claim, checked by the console and by policies on safety tables.
 - **Server functions** use the service key, which never ships in the app or the web pages.
 

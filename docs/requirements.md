@@ -23,8 +23,8 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 
 | ID | Requirement | Acceptance criteria | P | Screens |
 | --- | --- | --- | --- | --- |
-| FR-ACC-01 | Sign up with Apple, Google or an email link | Each method creates an account and lands on About you; no passwords exist anywhere | P0 | Sign up |
-| FR-ACC-02 | Sign in for returning users | Apple and Google sign in directly; email sends a one-tap link and shows Check your email with a 60-second resend timer; the link opens Today | P0 | Sign in, Check your email |
+| FR-ACC-01 | Sign up with Apple, Google or an email code | Each method creates an account and lands on About you; no passwords exist anywhere | P0 | Sign up |
+| FR-ACC-02 | Sign in for returning users | Apple and Google sign in directly; email sends a 6-digit code (valid 10 minutes) and shows Check your email with the code field and a 60-second resend timer; the code opens Today | P0 | Sign in, Check your email |
 | FR-ACC-03 | Unique username | 3–20 characters, letters, numbers, dot and underscore; case-insensitive unique; availability shown live within 500 ms of typing stopping | P0 | About you, Edit profile |
 | FR-ACC-04 | Minimum age 13 | Birthday required; under 13 shows Under 13 and deletes everything entered, including the auth record | P0 | About you, Under 13 |
 | FR-ACC-05 | Profile basics at sign-up | Photo (optional), name (1–40 characters), username, birthday saved before Continue | P0 | About you |
