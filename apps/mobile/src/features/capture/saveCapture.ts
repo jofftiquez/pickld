@@ -6,6 +6,7 @@ import { File } from 'expo-file-system';
 
 import { captureInfo } from '@/lib/image/captureTime';
 import type { CropSpec } from '@/lib/image/crop';
+import { flipPhoto } from '@/lib/image/pipeline';
 import { chooseJar, localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { prepareItem } from '@/lib/queue/prepare';
@@ -32,6 +33,8 @@ export type SaveCaptureInput = {
   fill?: FillTarget | null;
   /** The slot is filled and the user chose Replace (M2-22): upload as a replacement of its moment. */
   replace?: boolean;
+  /** Mirror selfies is off and this is a front-camera photo (D-66): flip it left to right first. */
+  flip?: boolean;
 };
 
 function deleteQuietly(uri: string): void {
@@ -131,14 +134,30 @@ async function queueRaw(
   return item;
 }
 
+/** The photo flipped left to right, the original deleted; if flipping fails, the original as it is, so the
+ * photo is still queued (rule 3). */
+async function flippedOrOriginal(uri: string): Promise<string> {
+  try {
+    const flipped = await flipPhoto(uri);
+    deleteQuietly(uri);
+    return flipped;
+  } catch (error) {
+    captureError(error, { area: 'capture' });
+    return uri;
+  }
+}
+
 /**
  * Queues the raw camera photo at once (a file copy and one SQLite row, so a photo is never lost if the app
  * is killed right after the shutter: rule 3), then prepares it in the background and kicks the upload
  * worker. Resolves as soon as the raw photo is queued; never waits for preparation or the network. If the
  * background preparation is interrupted, the upload worker prepares the item before uploading it.
+ * With `flip`, the file is mirrored before it is queued, so the queued photo, the editor, the upload and an
+ * offline retry all see the same picture.
  */
 export async function saveCapture(input: SaveCaptureInput): Promise<QueueItem> {
-  return queueRaw(input.uri, {
+  const uri = input.flip ? await flippedOrOriginal(input.uri) : input.uri;
+  return queueRaw(uri, {
     userId: input.userId,
     slot: input.slot,
     target: queueTarget(input),

@@ -44,6 +44,9 @@ export type SettingsViewProps = {
   onEditProfile: () => void;
   onReminder: (slot: DaySlot, change: { minutes?: number; enabled?: boolean }) => void;
   onPref: (key: PrefKey, value: boolean) => void;
+  /** Saved on this phone only (D-66). */
+  mirrorSelfies: boolean;
+  onMirrorSelfies: (on: boolean) => void;
   onVisibility: (visibility: Visibility) => void;
   onBlocked: () => void;
   onMyStickers: () => void;
@@ -197,6 +200,24 @@ export function SettingsView(props: SettingsViewProps) {
                 onValueChange={(v) => props.onPref('quiet_hours', v)}
                 accessibilityLabel={t('settings.quietHours')}
                 testID="settings-quiet-hours"
+              />
+            </View>
+          </Card>
+
+          <Text accessibilityRole="header" style={[textStyle('bodySmall', '700'), styles.section]}>
+            {t('settings.camera')}
+          </Text>
+          <Card style={styles.listCard}>
+            <View style={styles.switchRow}>
+              <View style={styles.rowLabel} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+                <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.mirrorSelfies')}</Text>
+                <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>{t('settings.mirrorSelfiesBody')}</Text>
+              </View>
+              <Toggle
+                value={props.mirrorSelfies}
+                onValueChange={props.onMirrorSelfies}
+                accessibilityLabel={`${t('settings.mirrorSelfies')}. ${t('settings.mirrorSelfiesBody')}`}
+                testID="settings-mirror-selfies"
               />
             </View>
           </Card>

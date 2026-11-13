@@ -74,6 +74,8 @@ jest.mock('../saveCapture', () => ({
   saveGalleryPhoto: jest.fn(),
 }));
 jest.mock('../pickFromGallery', () => ({ pickFromGallery: jest.fn() }));
+const mockMirror = { on: true };
+jest.mock('../cameraPrefs', () => ({ getMirrorSelfies: async () => mockMirror.on }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 // The Replace dialog (kit Dialog) reads Reduce Motion from Reanimated. expo-router's testing library mocks
 // Reanimated with `react-native-reanimated/mock`, which can't load here; give it the one hook it needs.
@@ -353,6 +355,25 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
     await act(async () => {});
     expect(takeMockPhoto).toHaveBeenCalledWith('front');
+  });
+
+  describe('Mirror selfies (D-66)', () => {
+    afterEach(() => {
+      mockMirror.on = true;
+    });
+
+    it.each<[string, boolean, boolean, boolean]>([
+      ['front, switch on (default): kept as previewed', true, true, false],
+      ['front, switch off: flipped back', true, false, true],
+      ['back, switch off: never flipped', false, false, false],
+    ])('%s', async (_name, front, on, flipped) => {
+      mockMirror.on = on;
+      await openCamera();
+      if (front) await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+      await act(async () => {});
+      expect(saveCapture).toHaveBeenCalledWith(expect.objectContaining({ flip: flipped }));
+    });
   });
 
   it('without a slot (the hidden Capture route) it opens on the Now slot, else the first empty slot', async () => {

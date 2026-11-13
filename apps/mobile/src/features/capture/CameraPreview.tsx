@@ -64,6 +64,10 @@ export function CameraPreview({ facing, isActive, onFlashSupport, ref }: CameraP
       constraints={constraints}
       isActive={isActive}
       resizeMode="cover"
+      // 'auto' mirrors the front camera's preview and its photo alike, so a selfie is saved the way it was
+      // seen (Mirror selfies on, the default). With the switch off, the photo is flipped back after it is
+      // taken (saveCapture), and the preview stays mirrored, as in the iPhone Camera (D-66).
+      mirrorMode="auto"
     />
   );
 }
