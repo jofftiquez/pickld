@@ -28,30 +28,18 @@ appId: me.pickld.app
     id: full-jar
 
 # Capture #evening with the mock camera (the steps of camera.yaml with SLOT=evening).
+# The camera opens from the #evening tile on Today; the slot is fixed (no switcher).
+- scrollUntilVisible:
+    element:
+      id: tile-evening
+    direction: DOWN
+    timeout: 10000
 - tapOn:
-    id: tab-capture
+    id: tile-evening
 - extendedWaitUntil:
     visible:
       id: camera-mock-preview
     timeout: 10000
-- waitForAnimationToEnd:
-    timeout: 3000
-- runFlow:
-    when:
-      notVisible:
-        id: camera-slot-evening
-    commands:
-      - repeat:
-          times: 3
-          commands:
-            - swipe:
-                from:
-                  id: camera-slot-switcher
-                direction: LEFT
-- waitForAnimationToEnd:
-    timeout: 3000
-- tapOn:
-    id: camera-slot-evening
 - tapOn:
     id: camera-shutter
 # The editor opens on the queued photo (M2-12); the upload waits for Add to #evening.

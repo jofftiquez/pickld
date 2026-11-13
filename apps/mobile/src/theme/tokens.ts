@@ -48,7 +48,6 @@ export const colors = {
   fillTrack: 'rgba(255,255,255,0.35)', // unfilled part of a day's fill bar (Calendar)
   camera: '#000000', // Camera screen background
   cameraGrid: 'rgba(255,255,255,0.35)', // rule-of-thirds lines over the viewfinder (Camera)
-  onDarkFaint: 'rgba(255,255,255,0.55)', // unselected moment tabs on the camera (6:1 on black)
   onDarkControl: 'rgba(255,255,255,0.14)', // flip button fill on the camera
   cameraPanel: '#1a1c16', // top panel of Camera access off (CameraDenied)
   onDarkWell: 'rgba(255,255,255,0.1)', // icon square on Camera access off
@@ -349,7 +348,6 @@ export const sizes = {
   shutterInner: 68,
   shutterRing: 4,
   cameraSideButton: 52, // gallery shortcut and flip button beside the shutter
-  cameraTabUnderline: 2, // selected moment tab on the camera
   accessOffIconWell: 72, // camera-off icon square (CameraDenied)
   accessOffPanel: 520 / 844, // top panel's share of the screen height (CameraDenied)
   filterThumb: 58, // filter thumbnail square (Capture)

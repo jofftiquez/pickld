@@ -55,7 +55,7 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 
 | ID | Requirement | Acceptance criteria | P | Screens |
 | --- | --- | --- | --- | --- |
-| FR-CAP-01 | Camera | Live 3:4 preview with grid, slot tag and time, flash, front/back flip, gallery shortcut; slot switcher changes the target slot; shutter goes to the editor in under 1 second | P0 | Camera |
+| FR-CAP-01 | Camera | Live 3:4 preview with grid, slot tag and time, flash, front/back flip, gallery shortcut; the slot comes from the tile that opened it (read-only tag, no switcher; without one, the Now slot, else the first empty); shutter goes to the editor in under 1 second | P0 | Camera |
 | FR-CAP-02 | Gallery import | Any gallery photo can be chosen; photos that aren’t 3:4 open Crop first; photos taken on a past date go into that date’s jar and get Added later | P0 | Camera, Crop |
 | FR-CAP-03 | Crop | Fixed 3:4 frame; drag, pinch and slider zoom; Rotate 90°, Flip, Fit, Reset, Cancel; result is 1440 × 1920 | P0 | Crop |
 | FR-CAP-04 | Color filters | Original, Kalamansi, Merienda, Mono and Dusk preview on the actual photo in real time; no beauty or face-retouch filters ever | P0 | Capture |

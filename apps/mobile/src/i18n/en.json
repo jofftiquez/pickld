@@ -91,8 +91,6 @@
     "gallery": "Choose from gallery",
     "shutter": "Take photo",
     "shutterHint": "Adds the photo to {{slot}}",
-    "moment": "Moment",
-    "slotAdded": "{{slot}}, already added",
     "mockPreview": "Simulator camera preview",
     "permissionDescription": "Pickld uses the camera to take the photos for your daily jar."
   },
