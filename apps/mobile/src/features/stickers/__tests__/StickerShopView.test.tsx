@@ -23,7 +23,6 @@ async function setup(over: Partial<StickerShopViewProps> = {}) {
     query: '',
     onQuery: jest.fn(),
     insets,
-    onClose: jest.fn(),
     onOpenPack: jest.fn(),
     onRetry: jest.fn(),
     locale: 'en-US',

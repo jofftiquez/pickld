@@ -1,15 +1,18 @@
-import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { EdgeInsets } from 'react-native-safe-area-context';
 
-import { buildShop } from './shop';
+import { buildShop, type ShopPack } from './shop';
 import { StickerShopView } from './StickerShopView';
 import { usePrices, useShopRows } from './useShop';
 
-/** /stickers/shop (FR-STK-06): opened from the editor's Stickers tool banner. */
-export function StickerShopScreen() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
+export type StickerShopPaneProps = {
+  insets: EdgeInsets;
+  /** Opens Pack preview. */
+  onOpenPack: (pack: ShopPack) => void;
+};
+
+/** Shop on the Stickers page (FR-STK-06, D-61): loads the packs and store prices for StickerShopView. */
+export function StickerShopPane({ insets, onOpenPack }: StickerShopPaneProps) {
   const rows = useShopRows();
   const [query, setQuery] = useState('');
   const shop = useMemo(
@@ -33,8 +36,7 @@ export function StickerShopScreen() {
       query={query}
       onQuery={setQuery}
       insets={insets}
-      onClose={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
-      onOpenPack={(pack) => router.push(`/stickers/pack/${pack.slug}`)}
+      onOpenPack={onOpenPack}
       onRetry={() => void rows.refetch()}
     />
   );

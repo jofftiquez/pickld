@@ -131,6 +131,7 @@ export default function TodayScreen() {
         offlineCount={offlineBannerCount(queue, offline)}
         onCapture={(slot) => router.push({ pathname: '/camera', params: { slot } })}
         onOpenMyDays={() => router.push('/my-days')}
+        onOpenStickers={() => router.push('/stickers')}
         onOpenProfile={
           me ? () => router.push({ pathname: '/u/[username]', params: { username: me.username } }) : undefined
         }

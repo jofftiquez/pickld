@@ -1,4 +1,6 @@
-import { MyStickersScreen } from '@/features/stickers/MyStickersScreen';
+import { Redirect } from 'expo-router';
 
-// /stickers/mine (M6-04; FR-STK-08): My stickers.
-export default MyStickersScreen;
+// /stickers/mine (FR-STK-08): kept for old links; My stickers is now Mine on the Stickers page (D-61).
+export default function MyStickersRedirect() {
+  return <Redirect href={{ pathname: '/stickers', params: { tab: 'mine' } }} />;
+}

@@ -57,7 +57,7 @@ export function SettingsScreen() {
       onMirrorSelfies={setMirrorSelfies}
       onVisibility={(v) => saveVisibility.mutate(v, onSaved)}
       onBlocked={() => router.push('/settings/blocked')}
-      onMyStickers={() => router.push('/stickers/mine')}
+      onMyStickers={() => router.push({ pathname: '/stickers', params: { tab: 'mine' } })}
       onHelp={() => router.push('/settings/help')}
       onLegal={() => openLegal('terms')}
       onSignOut={() => void signOut()}

@@ -6,6 +6,8 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
 import { BaseButton } from '@/components/BaseButton';
+import { Card } from '@/components/Card';
+import { ListRow } from '@/components/ListRow';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -34,6 +36,8 @@ export type ProfileViewProps = {
   onEditProfile?: () => void;
   /** Your own profile only: the gear opening Settings (design: Profile). */
   onSettings?: () => void;
+  /** Your own profile only: the Stickers row opening the Stickers page (D-61). */
+  onOpenStickers?: () => void;
   /** Other profile only: Read / Read back starts reading, Reading stops (FR-SOC-07). */
   onToggleReading?: () => void;
   /** A follow request is in flight. */
@@ -71,6 +75,7 @@ export function ProfileView({
   onOpenMoment,
   onEditProfile,
   onSettings,
+  onOpenStickers,
   onToggleReading,
   followBusy = false,
   onOpenList,
@@ -262,6 +267,17 @@ export function ProfileView({
               );
             })}
           </View>
+          {isOwner && onOpenStickers ? (
+            <Card style={styles.rowCard}>
+              <ListRow
+                label={t('profile.stickers')}
+                accessibilityHint={t('profile.stickersHint')}
+                onPress={onOpenStickers}
+                divider={false}
+                testID="profile-stickers"
+              />
+            </Card>
+          ) : null}
           <SegmentedControl
             segments={[
               { key: 'jars', label: t('profile.tabJars') },
@@ -364,6 +380,7 @@ const styles = StyleSheet.create({
   bio: { color: colors.inkSoft, lineHeight: 20 },
   counts: { flexDirection: 'row', gap: space.xl },
   count: { minHeight: sizes.minTap, justifyContent: 'center' },
+  rowCard: { paddingVertical: 2 },
   empty: { color: colors.muted, textAlign: 'center', paddingVertical: space.xxl },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
 });

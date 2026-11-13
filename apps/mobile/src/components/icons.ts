@@ -59,6 +59,12 @@ export const icons = {
     p('M4.5 13.5h15'),
   ],
   myDays: [r(3.5, 5, 17, 15, 3), p('M3.5 10h17M8 3v4M16 3v4')],
+  // A square sticker with a peeled corner and a smile: the Stickers page (D-61).
+  stickers: [
+    p('M15 3.5H6A2.5 2.5 0 0 0 3.5 6v12A2.5 2.5 0 0 0 6 20.5h12a2.5 2.5 0 0 0 2.5-2.5V9z'),
+    p('M15 3.5V7a2 2 0 0 0 2 2h3.5'),
+    p('M9 14.5s1 1.5 3 1.5 3-1.5 3-1.5'),
+  ],
   // Moment slots
   whereami: [p('M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z'), c(12, 10, 2.3)],
   mebusywith: [

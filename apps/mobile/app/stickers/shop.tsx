@@ -1,4 +1,6 @@
-import { StickerShopScreen } from '@/features/stickers/StickerShopScreen';
+import { Redirect } from 'expo-router';
 
-// /stickers/shop (M6-02; FR-STK-06): the Sticker shop.
-export default StickerShopScreen;
+// /stickers/shop (FR-STK-06): kept for old links; the Sticker shop is now Shop on the Stickers page (D-61).
+export default function StickerShopRedirect() {
+  return <Redirect href={{ pathname: '/stickers', params: { tab: 'shop' } }} />;
+}
