@@ -20,7 +20,7 @@ function moment(slot: ServerMoment['slot'], over: Partial<ServerMoment> = {}): S
     id: `m-${slot}`,
     slot,
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     captured_at: '2026-11-09T04:30:00Z',
     added_at: '2026-11-09T04:31:00Z',
@@ -39,7 +39,7 @@ function queued(slot: QueuedMoment['slot'], over: Partial<QueuedMoment> = {}): Q
     photoUri: `file:///queue/${slot}.webp`,
     thumbUri: `file:///queue/${slot}-thumb.webp`,
     capturedAt: '2026-11-09T05:00:00Z',
-    isPrivate: false,
+    visibility: 'readers',
     ...over,
   };
 }
@@ -94,13 +94,13 @@ describe('buildTodayGrid: merging server moments with the queue', () => {
   });
 
   it('a removed server moment shows as removed with its id and thumbnail, so it can open the notice', () => {
-    const tiles = grid({ moments: [moment('ootd', { status: 'removed', is_private: true })] });
+    const tiles = grid({ moments: [moment('ootd', { status: 'removed', visibility: 'only_me' })] });
     expect(tiles[3]).toEqual({
       slot: 'ootd',
       state: 'removed',
       uri: 'https://photos.test/ootd.webp',
       time: null,
-      isPrivate: false,
+      visibility: null,
       addedLater: false,
       momentId: 'm-ootd',
       queueId: null,
@@ -201,11 +201,11 @@ describe('buildTodayGrid: merging server moments with the queue', () => {
 
   it('keeps the private and Added later flags', () => {
     const tiles = grid({
-      moments: [moment('whereami', { is_private: true, is_backfilled: true })],
-      queue: [queued('evening', { isPrivate: true })],
+      moments: [moment('whereami', { visibility: 'only_me', is_backfilled: true })],
+      queue: [queued('evening', { visibility: 'only_me' })],
     });
-    expect(tiles[0]).toMatchObject({ isPrivate: true, addedLater: true });
-    expect(tiles[7]).toMatchObject({ isPrivate: true, addedLater: false });
+    expect(tiles[0]).toMatchObject({ visibility: 'only_me', addedLater: true });
+    expect(tiles[7]).toMatchObject({ visibility: 'only_me', addedLater: false });
   });
 
   it('uses added_at when the moment has no capture time', () => {

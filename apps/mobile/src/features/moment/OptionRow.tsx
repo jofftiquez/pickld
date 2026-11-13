@@ -11,12 +11,14 @@ export type OptionRowProps = {
   icon: IconName;
   /** Already translated. */
   label: string;
+  /** What a screen reader says instead of `label`, e.g. with the current value. Already translated. */
+  accessibilityLabel?: string;
   onPress: () => void;
   /** Red label and icon well, for Delete moment. */
   tone?: 'default' | 'danger';
-  /** What sits at the end: a switch drawing (Make private) or a chevron (Move). Hidden from screen readers. */
+  /** What sits at the end: a switch drawing, a chevron (Move) or a value and chevron (Visibility). Hidden from screen readers. */
   trailing?: ReactNode;
-  /** `switch` for Make private: the whole row is the switch, read with its state. */
+  /** `switch` for an on/off row: the whole row is the switch, read with its state. */
   accessibilityRole?: 'button' | 'switch';
   checked?: boolean;
   accessibilityHint?: string;
@@ -30,6 +32,7 @@ export type OptionRowProps = {
 export function OptionRow({
   icon,
   label,
+  accessibilityLabel,
   onPress,
   tone = 'default',
   trailing,
@@ -45,7 +48,7 @@ export function OptionRow({
   return (
     <Pressable
       accessibilityRole={accessibilityRole}
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled, ...(accessibilityRole === 'switch' ? { checked: checked ?? false } : null) }}
       disabled={disabled}

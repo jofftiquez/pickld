@@ -20,7 +20,7 @@ import { useAuthStore } from '@/lib/authStore';
 import type { Session } from '@supabase/supabase-js';
 
 // Editor (FR-CAP-04, FR-CAP-08, FR-CAP-09): loads the queued photo, draws it with the selected filter's
-// matrix, switches tools, and saves the caption, privacy and edits into the queue item. Skia's native
+// matrix, switches tools, and saves the caption, visibility and edits into the queue item. Skia's native
 // canvas is replaced by plain views that expose what would be drawn. The queue is an in-memory fake
 // with the store's save semantics (the store's own test runs them on real SQLite).
 
@@ -86,7 +86,7 @@ const item: QueueItem = {
   tz: 'Asia/Manila',
   capturedAt: '2026-11-11T06:14:00.000Z',
   caption: null,
-  isPrivate: false,
+  visibility: 'readers',
   edits: {},
   createdAt: Date.parse('2026-11-11T06:14:00.000Z'),
   jarId: null,
@@ -234,7 +234,7 @@ describe('Editor', () => {
     );
     expect(rows.get(7)).toMatchObject({ caption: null, edits: {}, editingSince: null });
     // Closed as it is, the photo is still added: public, as queued (NFR-ANL-01).
-    expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), false]]);
+    expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), 'readers']]);
   });
 
   it.each(['/edit/abc', '/edit/0', '/edit/1.5'])(
@@ -256,17 +256,23 @@ describe('Editor', () => {
 });
 
 const saveButton = () => screen.getByTestId('editor-save');
-const privateSwitch = () => screen.getByRole('switch', { name: 'Keep this moment private. Only you will see it' });
+const visibilityTab = (name: 'Readers' | 'Everyone' | 'Only me') => screen.getByRole('tab', { name });
+const selectedVisibility = () =>
+  (['Readers', 'Everyone', 'Only me'] as const).filter(
+    (name) => visibilityTab(name).props.accessibilityState?.selected,
+  );
 
-describe('Caption, privacy, Undo and save (M2-12)', () => {
-  it('shows the empty caption with its counter, privacy off, no Undo, and "Add to #slot" for a photo just taken', async () => {
+describe('Caption, visibility, Undo and save (M2-12)', () => {
+  it('shows the empty caption with its counter, the default visibility, no Undo, and "Add to #slot" for a photo just taken', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     const field = screen.getByLabelText('Caption');
     expect(field.props.value).toBe('');
     expect(field.props.maxLength).toBe(150);
     expect(screen.getByText('0 / 150')).toBeTruthy();
-    expect(privateSwitch().props.accessibilityState).toMatchObject({ checked: false });
+    // Starts at the queued visibility (the owner's default, D-48).
+    expect(screen.getByTestId('editor-visibility').props.accessibilityLabel).toBe('Who can see this moment');
+    expect(selectedVisibility()).toEqual(['Readers']);
     expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
     expect(saveButton().props.accessibilityLabel).toBe('Add to #afternoon');
   });
@@ -293,13 +299,13 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
   });
 
-  it('Add to #slot saves caption, privacy and edits (as data) into the queue item, returns to Today and wakes the uploader', async () => {
+  it('Add to #slot saves caption, visibility and edits (as data) into the queue item, returns to Today and wakes the uploader', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Kalamansi'));
     await fireEvent.changeText(screen.getByLabelText('Caption'), '  Lunch break, finally!  ');
-    await fireEvent.press(privateSwitch());
-    expect(privateSwitch().props.accessibilityState).toMatchObject({ checked: true });
+    await fireEvent.press(visibilityTab('Only me'));
+    expect(selectedVisibility()).toEqual(['Only me']);
 
     await fireEvent.press(saveButton());
     await act(async () => {});
@@ -308,7 +314,7 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     // The photo file is not part of the save: the filter is stored as data, never applied to the file.
     expect(saveEdits).toHaveBeenCalledWith(7, {
       caption: 'Lunch break, finally!',
-      isPrivate: true,
+      visibility: 'only_me',
       edits: { v: 1, filter: 'kalamansi', overlays: [] },
     });
     expect(rows.get(7)?.photoUri).toBe(item.photoUri);
@@ -317,8 +323,8 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     expect(jest.mocked(saveEdits).mock.invocationCallOrder[0]).toBeLessThan(
       jest.mocked(requestUploads).mock.invocationCallOrder[0] ?? 0,
     );
-    // Added once, with the privacy chosen here (leaving the editor afterwards adds nothing more).
-    expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), true]]);
+    // Added once, with the visibility chosen here (leaving the editor afterwards adds nothing more).
+    expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), 'only_me']]);
   });
 
   it('saves an empty or blank caption as no caption', async () => {
@@ -327,7 +333,7 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     await fireEvent.changeText(screen.getByLabelText('Caption'), '   ');
     await fireEvent.press(saveButton());
     await act(async () => {});
-    expect(saveEdits).toHaveBeenCalledWith(7, expect.objectContaining({ caption: null, isPrivate: false }));
+    expect(saveEdits).toHaveBeenCalledWith(7, expect.objectContaining({ caption: null, visibility: 'readers' }));
   });
 
   it('a failed save stays in the editor with the edits intact and says so', async () => {
@@ -351,12 +357,12 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     expect(rows.get(7)).toMatchObject({ caption: 'keep me', edits: { v: 1, filter: 'mono', overlays: [] } });
   });
 
-  it('reopening restores the saved filter, caption and privacy, and offers Done', async () => {
+  it('reopening restores the saved filter, caption and visibility, and offers Done', async () => {
     rows.set(7, {
       ...item,
       editingSince: null,
       caption: 'Sinigang at the office pantry',
-      isPrivate: true,
+      visibility: 'only_me',
       edits: { v: 1, filter: 'merienda', overlays: [] },
     });
     await openEditor('/edit/7');
@@ -364,7 +370,7 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.merienda);
     expect(filterButton('Merienda').props.accessibilityState).toMatchObject({ selected: true });
     expect(screen.getByLabelText('Caption').props.value).toBe('Sinigang at the office pantry');
-    expect(privateSwitch().props.accessibilityState).toMatchObject({ checked: true });
+    expect(selectedVisibility()).toEqual(['Only me']);
     expect(saveButton().props.accessibilityLabel).toBe('Done');
     expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
   });
@@ -374,7 +380,7 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Dusk'));
     await fireEvent.changeText(screen.getByLabelText('Caption'), 'evening walk');
-    await fireEvent.press(privateSwitch());
+    await fireEvent.press(visibilityTab('Only me'));
     await fireEvent.press(saveButton());
     await act(async () => {});
     expect(screen).toHavePathname('/today');
@@ -383,7 +389,7 @@ describe('Caption, privacy, Undo and save (M2-12)', () => {
     await screen.findByTestId('editor-screen');
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.dusk);
     expect(screen.getByLabelText('Caption').props.value).toBe('evening walk');
-    expect(privateSwitch().props.accessibilityState).toMatchObject({ checked: true });
+    expect(selectedVisibility()).toEqual(['Only me']);
     expect(saveButton().props.accessibilityLabel).toBe('Done');
     // Editing it again is not another added moment.
     await fireEvent.press(saveButton());
@@ -564,7 +570,7 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
     status: 'live',
     caption: 'fresh from the server',
     edits: { v: 1, filter: 'mono', overlays: [] },
-    is_private: false,
+    visibility: 'readers',
     captured_at: '2026-11-08T23:30:00Z', // 7:30 AM in Manila
     added_at: '2026-11-08T23:31:00Z',
     jars: { tz: 'Asia/Manila' },
@@ -585,7 +591,7 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
       slot: 'ootd',
       caption: 'before the last edit',
       edits: {},
-      isPrivate: false,
+      visibility: 'readers',
       shotAt: '2026-11-08T23:30:00.000Z',
       tz: 'Asia/Manila',
       photoUrl: 'https://photos.test/expired.webp',
@@ -608,7 +614,7 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
     expect(saveMomentEdits).toHaveBeenCalledWith(
       expect.anything(),
       { kind: 'server', momentId: MOMENT, jarId: JAR },
-      { caption: 'Green shirt day', isPrivate: false, edits: { v: 1, filter: 'mono', overlays: [] } },
+      { caption: 'Green shirt day', visibility: 'readers', edits: { v: 1, filter: 'mono', overlays: [] } },
     );
     expect(screen).toHavePathname('/today');
     // A queued photo's hold and upload are not involved.

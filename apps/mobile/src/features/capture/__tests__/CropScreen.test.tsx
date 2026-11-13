@@ -148,6 +148,8 @@ describe('Crop screen', () => {
       userId,
       target: pending.target,
       crop: { crop: cropRectFor(initialCrop, image, frame()), cropBasis: image, rotate: 0, flip: false },
+      // No profile cached here: the moment takes the owner's default on the server (D-48).
+      visibility: null,
     });
     expect(queuedCrop()?.crop).toMatchObject({ originY: 0, height: 2000, width: 1500, originX: 1250 });
     expect(screen).toHavePathname('/edit/9');

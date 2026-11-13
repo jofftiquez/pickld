@@ -162,7 +162,7 @@ export function TodayView({
                       ) : undefined
                     }
                     time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
-                    isPrivate={tile.isPrivate}
+                    visibility={tile.visibility}
                     addedLater={tile.addedLater}
                     // TODO(M3-08): Moment detail on filled tiles, with Moment options under its More button.
                     onPress={

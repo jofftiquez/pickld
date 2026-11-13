@@ -80,12 +80,14 @@ insert into public.jars (id, user_id, local_date, tz, visibility, published_at) 
 alter table public.moments disable trigger moments_bi;
 
 with j as (
-  select id, user_id, tz, local_date, ((local_date)::timestamp at time zone tz) as day_start from public.jars
+  select id, user_id, tz, local_date, visibility, ((local_date)::timestamp at time zone tz) as day_start from public.jars
 )
-insert into public.moments (jar_id, user_id, slot, photo_path, thumb_path, caption, captured_at, added_at, is_backfilled, is_private, status)
+-- Each moment has its own visibility (0066): Only me for the private ones, else its jar's (a moment in an
+-- unpublished jar is already visible to whoever its visibility allows).
+insert into public.moments (jar_id, user_id, slot, photo_path, thumb_path, caption, captured_at, added_at, is_backfilled, visibility, status)
 select j.id, j.user_id, m.slot::slot,
        'seed/photos/' || m.img || '.jpg', 'seed/thumbs/' || m.img || '.jpg',
-       m.caption, least(j.day_start + m.at, now() - interval '2 minutes'), least(j.day_start + m.added, now() - interval '1 minute'), m.backfilled, m.private, m.status::moment_status
+       m.caption, least(j.day_start + m.at, now() - interval '2 minutes'), least(j.day_start + m.added, now() - interval '1 minute'), m.backfilled, case when m.private then 'only_me'::jar_visibility else j.visibility end, m.status::moment_status
 from j join (values
   -- dale, 3 days ago: 4 moments, the evening one added two days later ("Added later")
   ('b0000000-0000-4000-8000-000000000101'::uuid, 'whereami',   'whereami',   'new café on Maginhawa', interval '8 hours',  interval '8 hours 5 minutes',  false, false, 'live'),

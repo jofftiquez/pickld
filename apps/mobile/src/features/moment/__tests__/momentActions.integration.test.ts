@@ -16,7 +16,7 @@ import {
   moveMoment,
   saveMomentEdits,
   saveRecrop,
-  setMomentPrivate,
+  setMomentVisibility,
   type MomentTarget,
 } from '../momentActions';
 
@@ -107,7 +107,7 @@ describeLocal('Moment options against local Supabase', () => {
     (
       await admin
         .from('moments')
-        .select('slot, status, caption, edits, is_private, photo_path, thumb_path, pending_since')
+        .select('slot, status, caption, edits, visibility, photo_path, thumb_path, pending_since')
         .eq('id', id)
         .maybeSingle()
     ).data;
@@ -145,15 +145,15 @@ describeLocal('Moment options against local Supabase', () => {
     expect(await read(ids.selfie ?? '')).toMatchObject({ slot: 'selfie' });
   }, 60_000);
 
-  it('Make private hides it from the jar’s visible count at once; Delete removes it and recounts', async () => {
+  it('Only me hides it from the jar’s visible count at once; Delete removes it and recounts', async () => {
     const owner = await signedInUser('hider');
     const { jarId, ids } = await jarWith(owner, ['morning', 'afternoon']);
     const counts = async () =>
       (await admin.from('jars').select('moment_count, visible_count').eq('id', jarId).single()).data;
     expect(await counts()).toEqual({ moment_count: 2, visible_count: 2 });
 
-    await setMomentPrivate(owner.client, { kind: 'server', momentId: ids.morning ?? '', jarId }, true);
-    expect(await read(ids.morning ?? '')).toMatchObject({ is_private: true, status: 'live', pending_since: null });
+    await setMomentVisibility(owner.client, { kind: 'server', momentId: ids.morning ?? '', jarId }, 'only_me');
+    expect(await read(ids.morning ?? '')).toMatchObject({ visibility: 'only_me', status: 'live', pending_since: null });
     expect(await counts()).toEqual({ moment_count: 2, visible_count: 1 });
 
     const afternoon: MomentTarget = { kind: 'server', momentId: ids.afternoon ?? '', jarId };
@@ -171,12 +171,12 @@ describeLocal('Moment options against local Supabase', () => {
     const target: MomentTarget = { kind: 'server', momentId: ids.whereami ?? '', jarId };
 
     expect(await reason(moveMoment(outsider.client, target, 'evening'))).toBe('refused');
-    expect(await reason(setMomentPrivate(outsider.client, target, true))).toBe('refused');
+    expect(await reason(setMomentVisibility(outsider.client, target, 'only_me'))).toBe('refused');
     expect(await reason(deleteMoment(outsider.client, target))).toBe('refused');
-    expect(await read(ids.whereami ?? '')).toMatchObject({ slot: 'whereami', is_private: false, status: 'live' });
+    expect(await read(ids.whereami ?? '')).toMatchObject({ slot: 'whereami', visibility: 'readers', status: 'live' });
   }, 60_000);
 
-  it('Edit caption, stickers and filters: the proposal goes live through fn:moderate, privacy at once', async () => {
+  it('Edit caption, stickers and filters: the proposal goes live through fn:moderate, visibility at once', async () => {
     const owner = await signedInUser('editor');
     const { jarId, ids } = await jarWith(owner, ['mebusywith']);
     const edits = { v: 1, filter: 'mono', overlays: [] };
@@ -186,14 +186,14 @@ describeLocal('Moment options against local Supabase', () => {
       { kind: 'server', momentId: ids.mebusywith ?? '', jarId },
       {
         caption: 'new caption',
-        isPrivate: true,
+        visibility: 'only_me',
         edits,
       },
     );
     expect(await read(ids.mebusywith ?? '')).toMatchObject({
       caption: 'new caption',
       edits,
-      is_private: true,
+      visibility: 'only_me',
       status: 'live',
       pending_since: null,
       photo_path: 'seed/photos/mebusywith.jpg',

@@ -62,7 +62,7 @@ export default function CameraScreen() {
 
   // Slots already taken in the open jar (server moments and queued photos), from Today's queries.
   const tz = phoneTimeZone();
-  const { userId, localDate, jar, queue } = useToday(now);
+  const { userId, localDate, jar, queue, me } = useToday(now);
   const nowSlot = currentSlot(now, tz);
   // Fill this jar (`?date=` a past day, M2-26): that day's jar and its missing slots instead of the open jar.
   const fill = useFillCapture(params.date, localDate, tz);
@@ -131,8 +131,20 @@ export default function CameraScreen() {
       // Mirror selfies off (D-66): a front-camera photo is flipped back to how the scene really looks. A
       // store that can't be read keeps the default (on), so the photo is still queued.
       const flip = facing === 'front' && !(await getMirrorSelfies().catch(() => true));
+      const visibility = me?.defaultVisibility ?? null; // D-48: a new moment starts at the owner's default
       queuedId = (
-        await saveCapture({ uri, slot, userId, tz, shotAt, openJar, fill: fill?.target ?? null, replace, flip })
+        await saveCapture({
+          uri,
+          slot,
+          userId,
+          tz,
+          shotAt,
+          openJar,
+          fill: fill?.target ?? null,
+          replace,
+          flip,
+          visibility,
+        })
       ).id;
     } catch (error) {
       captureError(error, { area: 'capture' });
@@ -158,7 +170,8 @@ export default function CameraScreen() {
         router.push('/crop');
         return;
       }
-      const item = await saveGalleryPhoto({ uri: photo.uri, slot, userId, target, crop: null });
+      const visibility = me?.defaultVisibility ?? null;
+      const item = await saveGalleryPhoto({ uri: photo.uri, slot, userId, target, crop: null, visibility });
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
       router.replace(`/edit/${item.id}`);
     } catch (error) {

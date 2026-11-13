@@ -6,6 +6,7 @@ import { formatTime } from '@/lib/format';
 import { captureError } from '@/lib/monitoring';
 import { newMomentId } from '@/lib/queue/uploader';
 import type { SaveEditsInput } from '@/lib/queue/store';
+import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
 import { parseEdits } from './edits';
@@ -27,8 +28,8 @@ export type EditSessionProps = {
   /** When the photo was taken, shown in its jar's zone. */
   shotAt: Date;
   tz: string;
-  /** Read once: the saved edits, caption and privacy are the starting point. */
-  initial: { caption: string | null; isPrivate: boolean; edits: unknown };
+  /** Read once: the saved edits, caption and visibility are the starting point. */
+  initial: { caption: string | null; visibility: Visibility; edits: unknown };
   /** "Add to #slot" for a photo just taken, "Done" when editing it again. Already translated. */
   saveLabel: string;
   /** Moment options' Edit caption opens the editor with the caption field focused (M2-23). */
@@ -42,7 +43,7 @@ export type EditSessionProps = {
 
 /**
  * One editing session on a moment (FR-CAP-04, FR-CAP-05, FR-CAP-08, FR-CAP-09): the filter and overlays
- * with Undo, the caption and the privacy switch, saved through `onSave` by Add to #slot / Done. Edits are
+ * with Undo, the caption and the visibility choice (D-48), saved through `onSave` by Add to #slot / Done. Edits are
  * data; the photo is never changed.
  */
 export function EditSession({
@@ -61,7 +62,7 @@ export function EditSession({
   const editor = useEditorState(parseEdits(initial.edits));
   const [tool, setTool] = useState<EditorTool>('filters');
   const [caption, setCaption] = useState(initial.caption ?? '');
-  const [isPrivate, setIsPrivate] = useState(initial.isPrivate);
+  const [visibility, setVisibility] = useState(initial.visibility);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
 
@@ -71,7 +72,7 @@ export function EditSession({
     setSaveFailed(false);
     try {
       const trimmed = caption.trim();
-      await onSave({ caption: trimmed === '' ? null : trimmed, isPrivate, edits: editor.edits });
+      await onSave({ caption: trimmed === '' ? null : trimmed, visibility, edits: editor.edits });
     } catch (error) {
       captureError(error, { area: 'edit' });
       setSaving(false);
@@ -104,8 +105,8 @@ export function EditSession({
       caption={caption}
       onChangeCaption={setCaption}
       focusCaption={focusCaption}
-      isPrivate={isPrivate}
-      onChangePrivate={setIsPrivate}
+      visibility={visibility}
+      onChangeVisibility={setVisibility}
       canUndo={editor.canUndo}
       onUndo={editor.undo}
       saveLabel={saveLabel}

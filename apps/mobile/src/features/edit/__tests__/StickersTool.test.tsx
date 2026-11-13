@@ -75,7 +75,7 @@ const item: QueueItem = {
   tz: 'Asia/Manila',
   capturedAt: '2026-11-11T06:14:00.000Z',
   caption: null,
-  isPrivate: false,
+  visibility: 'readers',
   edits: {},
   createdAt: Date.parse('2026-11-11T06:14:00.000Z'),
   jarId: null,

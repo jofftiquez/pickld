@@ -21,6 +21,7 @@ import {
   type SaveEditsInput,
 } from '@/lib/queue/store';
 import { putWithUploadTask, type PutFile } from '@/lib/queue/uploader';
+import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
 export type MomentTarget =
@@ -84,13 +85,21 @@ async function moderate(client: MomentsClient, momentId: string): Promise<void> 
   if (error) throw new MomentOptionError('failed', error);
 }
 
-/** Make private / public (FR-CAP-09). Readers stop seeing a private moment at once (rule 9). */
-export async function setMomentPrivate(client: MomentsClient, target: MomentTarget, isPrivate: boolean): Promise<void> {
+/**
+ * Visibility (FR-CAP-09, D-48): Readers, Everyone or Only me. It applies at once: others stop seeing an
+ * Only me moment straight away (rule 9). The server derives is_private and copies the change to a pending
+ * replacement (0066).
+ */
+export async function setMomentVisibility(
+  client: MomentsClient,
+  target: MomentTarget,
+  visibility: Visibility,
+): Promise<void> {
   if (target.kind === 'queued') {
-    await onQueue(() => saveOptions(target.queueId, { isPrivate }));
+    await onQueue(() => saveOptions(target.queueId, { visibility }));
     return;
   }
-  await updateMoment(client, target.momentId, { is_private: isPrivate });
+  await updateMoment(client, target.momentId, { visibility });
 }
 
 /** Move to another empty slot in the same jar (FR-CAP-10, D-3). The server refuses a filled slot. */
@@ -118,7 +127,7 @@ export async function deleteMoment(client: MomentsClient, target: MomentTarget):
 /**
  * The editor's Done on a moment (Edit caption, Edit stickers and filters). Edits are data, never burned
  * into the photo (FR-CAP-08). On the server the caption and edits become a proposal that fn:moderate swaps
- * in; privacy changes at once.
+ * in; visibility changes at once.
  */
 export async function saveMomentEdits(
   client: MomentsClient,
@@ -133,7 +142,7 @@ export async function saveMomentEdits(
   await updateMoment(client, target.momentId, {
     caption: input.caption,
     edits: input.edits as NonNullable<Json>, // an object (saveEditsInputSchema)
-    is_private: input.isPrivate,
+    visibility: input.visibility,
   });
   await moderate(client, target.momentId);
 }

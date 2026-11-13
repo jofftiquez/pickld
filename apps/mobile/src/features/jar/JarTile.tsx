@@ -28,7 +28,8 @@ export function JarTile({ moment, width, stamp, onPress }: JarTileProps) {
   const [pressed, setPressed] = useState(false);
   const edits = parseEdits(moment.edits);
   const slot = t(`slots.${moment.slot}`);
-  const labelKey = moment.is_private
+  const onlyMe = moment.visibility === 'only_me';
+  const labelKey = onlyMe
     ? moment.is_backfilled
       ? 'jarPage.tilePrivateAddedLater'
       : 'jarPage.tilePrivate'
@@ -60,7 +61,7 @@ export function JarTile({ moment, width, stamp, onPress }: JarTileProps) {
         label={slot}
         labelVariant="caption"
         topRight={
-          moment.is_backfilled || moment.is_private ? (
+          moment.is_backfilled || onlyMe ? (
             <>
               {moment.is_backfilled ? (
                 <View style={styles.badge} testID={`jar-tile-${moment.slot}-added-later`}>
@@ -73,7 +74,7 @@ export function JarTile({ moment, width, stamp, onPress }: JarTileProps) {
                   </Text>
                 </View>
               ) : null}
-              {moment.is_private ? (
+              {onlyMe ? (
                 <View style={styles.lock} testID={`jar-tile-${moment.slot}-lock`}>
                   <Icon name="lock" color="surface" size={12} strokeWidth={2} />
                 </View>

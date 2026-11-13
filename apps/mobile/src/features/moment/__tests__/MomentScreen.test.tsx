@@ -374,7 +374,7 @@ describe('/moment/[id]: live', () => {
       id,
       slot,
       status: 'live',
-      is_private: false,
+      visibility: 'readers',
       is_backfilled: false,
       caption,
       captured_at: '2026-11-07T11:20:00Z',

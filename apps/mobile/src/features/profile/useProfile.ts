@@ -96,7 +96,7 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
       : await supabase
           .from('moments')
           .select(
-            'id, jar_id, slot, status, is_private, is_backfilled, caption, captured_at, added_at, edits, like_count',
+            'id, jar_id, slot, status, visibility, is_backfilled, caption, captured_at, added_at, edits, like_count',
           )
           .in(
             'jar_id',

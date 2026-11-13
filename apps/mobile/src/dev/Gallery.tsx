@@ -46,7 +46,11 @@ export function Gallery() {
     <ScrollView
       testID="gallery-scroll"
       style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + 120, paddingHorizontal: space.xl }}
+      contentContainerStyle={{
+        paddingTop: insets.top + space.lg,
+        paddingBottom: insets.bottom + 120,
+        paddingHorizontal: space.xl,
+      }}
     >
       <Text style={[textStyle('screenTitle'), { color: colors.ink }]}>Component gallery</Text>
 
@@ -139,22 +143,50 @@ export function Gallery() {
             <MomentTile slot="whoamiwith" state="empty" onPress={noop} />
           </View>
           <View style={tileCell}>
-            <MomentTile slot="ootd" state="filled" uri={devPhotos.ootd} time="7:30 AM" isPrivate onPress={noop} />
+            <MomentTile
+              slot="ootd"
+              state="filled"
+              uri={devPhotos.ootd}
+              time="7:30 AM"
+              visibility="only_me"
+              onPress={noop}
+            />
           </View>
           <View style={tileCell}>
             <MomentTile slot="afternoon" state="now" onPress={noop} />
           </View>
           <View style={tileCell}>
-            <MomentTile slot="morning" state="filled" uri={devPhotos.morning} time="6:48 AM" addedLater onPress={noop} />
+            <MomentTile
+              slot="morning"
+              state="filled"
+              uri={devPhotos.morning}
+              time="6:48 AM"
+              addedLater
+              onPress={noop}
+            />
           </View>
           <View style={tileCell}>
             <MomentTile slot="whereami" state="waiting" uri={devPhotos.whereami} time="12:30 PM" onPress={noop} />
           </View>
           <View style={tileCell}>
-            <MomentTile slot="selfie" state="uploading" uri={devPhotos.selfie} time="11:05 AM" progress={0.6} onPress={noop} />
+            <MomentTile
+              slot="selfie"
+              state="uploading"
+              uri={devPhotos.selfie}
+              time="11:05 AM"
+              progress={0.6}
+              onPress={noop}
+            />
           </View>
           <View style={tileCell}>
-            <MomentTile slot="morning" state="failed" uri={devPhotos.morning} time="6:48 AM" onPress={noop} onRetry={noop} />
+            <MomentTile
+              slot="morning"
+              state="failed"
+              uri={devPhotos.morning}
+              time="6:48 AM"
+              onPress={noop}
+              onRetry={noop}
+            />
           </View>
           <View style={tileCell}>
             <MomentTile slot="ootd" state="checking" uri={devPhotos.ootd} time="7:30 AM" onPress={noop} />
@@ -167,7 +199,7 @@ export function Gallery() {
 
       <BottomSheet visible={sheet} onClose={() => setSheet(false)} accessibilityLabel="Moment options">
         <ListRow label="Edit caption" onPress={noop} divider />
-        <ListRow label="Make private" onPress={noop} divider />
+        <ListRow label="Visibility" onPress={noop} divider />
         <ListRow label="Delete moment" tone="danger" onPress={() => setSheet(false)} />
       </BottomSheet>
       <Dialog

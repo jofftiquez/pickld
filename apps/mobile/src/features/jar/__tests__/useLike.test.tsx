@@ -65,7 +65,7 @@ function page(): JarPageData {
         id: 'm1',
         slot: 'ootd',
         status: 'live',
-        is_private: false,
+        visibility: 'readers',
         is_backfilled: false,
         caption: null,
         captured_at: null,

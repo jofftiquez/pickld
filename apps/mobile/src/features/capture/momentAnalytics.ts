@@ -1,13 +1,15 @@
 // `moment_added` and `first_moment` (NFR-ANL-01; AGENTS rules 9 and 10). A new moment is added when the
-// editor that opens after capture is left (Add to #slot, or closed as it is): only then is its privacy
-// known. Private moments send nothing at all; a Replace is not a new moment. Slot, privacy and the
-// backfill flag are the only properties: never the photo, caption, ids or dates.
+// editor that opens after capture is left (Add to #slot, or closed as it is): only then is its visibility
+// known (D-48). Only me moments, and moments whose visibility isn't known, send nothing at all; a Replace
+// is not a new moment. Slot, privacy and the backfill flag are the only properties: never the photo,
+// caption, ids or dates.
 import Storage from 'expo-sqlite/kv-store';
 
 import { track } from '@/lib/analytics';
 import { localDateIn } from '@/lib/jars';
 import { listQueue, type QueueItem } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
+import type { Visibility } from '@/lib/visibility';
 
 type AddedItem = Pick<QueueItem, 'id' | 'userId' | 'slot' | 'localDate' | 'tz' | 'replace'>;
 
@@ -31,12 +33,19 @@ async function isFirstMoment(item: AddedItem): Promise<boolean> {
   return !othersQueued && count === 0;
 }
 
-/** Sends the events for a moment the user just added. Never throws: analytics can't break capture. */
-export async function trackMomentAdded(item: AddedItem, isPrivate: boolean, now: Date = new Date()): Promise<void> {
+/**
+ * Sends the events for a moment the user just added. `visibility` is null when it isn't known (left at an
+ * owner default the phone hasn't loaded), which is treated as Only me. Never throws: analytics can't break capture.
+ */
+export async function trackMomentAdded(
+  item: AddedItem,
+  visibility: Visibility | null,
+  now: Date = new Date(),
+): Promise<void> {
   if (item.replace) return;
   // Decided for private moments too, so a public second moment isn't taken for the first.
   const first = await isFirstMoment(item).catch(() => false);
-  if (isPrivate) return;
+  if (visibility === null || visibility === 'only_me') return;
   // The server sets is_backfilled; a moment queued under a date already past in its zone is one.
   const props = { slot: item.slot, is_private: false, backfilled: item.localDate < localDateIn(now, item.tz) } as const;
   if (first) track('first_moment', props);

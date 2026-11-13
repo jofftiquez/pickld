@@ -119,7 +119,7 @@ function moments(n: number, status = 'live'): Row[] {
     id: `m-${slot}`,
     slot,
     status,
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     captured_at: '2026-11-10T00:30:00Z',
     added_at: '2026-11-10T00:31:00Z',

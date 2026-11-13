@@ -50,14 +50,14 @@ Deno.test('setup', async () => {
   const onlyMeJar = await jar('only_me', 3);
 
   /** Inserted as checking (the insert trigger's rule), then moved to its status as the server would. */
-  async function moment(jarId: string, slot: string, status: string, isPrivate = false) {
+  async function moment(jarId: string, slot: string, status: string, visibility: string) {
     const base = `moments/${owner.id}/${crypto.randomUUID()}`;
     const m = await insert<{ id: string }>('moments', {
       jar_id: jarId,
       user_id: owner.id,
       slot,
       status: 'checking',
-      is_private: isPrivate,
+      visibility,
       photo_path: `${base}/full.jpg`,
       thumb_path: `${base}/thumb.jpg`,
     });
@@ -75,13 +75,14 @@ Deno.test('setup', async () => {
     return { id: m.id, full: `${base}/full.jpg`, thumb: `${base}/thumb.jpg` };
   }
 
-  live = await moment(readersJar.id, 'morning', 'live');
-  livePublic = await moment(everyoneJar.id, 'morning', 'live');
-  priv = await moment(everyoneJar.id, 'evening', 'live', true);
-  checking = await moment(everyoneJar.id, 'afternoon', 'checking');
-  removed = await moment(everyoneJar.id, 'ootd', 'removed');
-  onlyMe = await moment(onlyMeJar.id, 'morning', 'live');
-  queued = await moment(readersJar.id, 'afternoon', 'checking');
+  // Each moment has its own visibility (0066): here the one the backfill gives a moment of its jar.
+  live = await moment(readersJar.id, 'morning', 'live', 'readers');
+  livePublic = await moment(everyoneJar.id, 'morning', 'live', 'everyone');
+  priv = await moment(everyoneJar.id, 'evening', 'live', 'only_me');
+  checking = await moment(everyoneJar.id, 'afternoon', 'checking', 'everyone');
+  removed = await moment(everyoneJar.id, 'ootd', 'removed', 'everyone');
+  onlyMe = await moment(onlyMeJar.id, 'morning', 'live', 'only_me');
+  queued = await moment(readersJar.id, 'afternoon', 'checking', 'readers');
   await insert('moderation_items', { moment_id: queued.id, source: 'auto_check', status: 'pending' });
 
   all = [live, livePublic, priv, checking, removed, onlyMe, queued];

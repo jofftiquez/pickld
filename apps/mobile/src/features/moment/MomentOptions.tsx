@@ -4,18 +4,19 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { usePendingCrop } from '@/features/capture/pendingCrop';
-import { todayQueryKeys } from '@/features/jar/useToday';
+import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import type { GridTile } from '@/features/jar/todayGrid';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
+import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
 import {
   deleteMoment,
   MomentOptionError,
   moveMoment,
-  setMomentPrivate,
+  setMomentVisibility,
   type MomentTarget,
   type OptionError,
 } from './momentActions';
@@ -43,7 +44,7 @@ function editHref(target: MomentTarget, focusCaption: boolean): string {
 }
 
 /**
- * Moment options on Today (M2-23, FR-CAP-10). Make private, Move and Delete apply here and Today refreshes
+ * Moment options on Today (M2-23, FR-CAP-10). Visibility, Move and Delete apply here and Today refreshes
  * underneath; Edit caption and Edit stickers and filters open the editor, Re-crop the Crop screen. See
  * momentActions.ts for what each does to a queued or an uploaded moment.
  */
@@ -53,7 +54,10 @@ export function MomentOptions({ visible, selection, userId, freeSlots, tz, onClo
   const queryClient = useQueryClient();
   const setPendingCrop = usePendingCrop((s) => s.setPending);
   const { tile, target } = selection;
-  const [isPrivate, setIsPrivate] = useState(tile.isPrivate);
+  // A queued photo left at the owner's default shows that default; Readers until the profile has loaded.
+  const [visibility, setVisibility] = useState<Visibility>(
+    () => tile.visibility ?? queryClient.getQueryData<Me>(todayQueryKeys.me(userId))?.defaultVisibility ?? 'readers',
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<OptionError | null>(null);
 
@@ -94,7 +98,7 @@ export function MomentOptions({ visible, selection, userId, freeSlots, tz, onClo
       }
       thumbUri={tile.uri}
       edits={tile.edits}
-      isPrivate={isPrivate}
+      visibility={visibility}
       freeSlots={freeSlots}
       busy={busy}
       error={error}
@@ -109,10 +113,10 @@ export function MomentOptions({ visible, selection, userId, freeSlots, tz, onClo
           router.push('/crop');
         });
       }}
-      onChangePrivate={(next) => {
-        void run(() => setMomentPrivate(getSupabase(), target, next)).then((ok) => {
+      onChangeVisibility={(next) => {
+        void run(() => setMomentVisibility(getSupabase(), target, next)).then((ok) => {
           if (!ok) return;
-          setIsPrivate(next);
+          setVisibility(next);
           refreshToday();
         });
       }}

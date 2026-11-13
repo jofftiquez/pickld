@@ -10,7 +10,7 @@ const insets = { top: 0, right: 0, bottom: 0, left: 0 };
 function moment(over: Partial<ProfileMoment> & Pick<ProfileMoment, 'id' | 'jar_id' | 'slot'>): ProfileMoment {
   return {
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     caption: null,
     captured_at: null,
@@ -66,7 +66,8 @@ describe('ProfileView', () => {
     expect(screen.getByTestId('profile-reads-you')).toHaveTextContent('Reads you');
     expect(screen.getByTestId('profile-count-readers')).toHaveTextContent('1.2kReaders');
     expect(screen.getByLabelText('1234 readers')).toBeTruthy();
-    expect(screen.getByTestId('profile-jar-2026-11-08')).toHaveTextContent('Nov 87/8');
+    // Another viewer's count is the moments they are shown (D-50), here the one evening moment.
+    expect(screen.getByTestId('profile-jar-2026-11-08')).toHaveTextContent('Nov 81/8');
     expect(screen.queryByTestId('profile-edit')).toBeNull();
   });
 

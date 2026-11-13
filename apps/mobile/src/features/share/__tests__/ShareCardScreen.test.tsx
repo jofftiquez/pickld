@@ -26,7 +26,7 @@ jest.mock('../shareActions', () => ({
 }));
 jest.mock('../shareCard', () => ({
   buildShareCard: () => ({ moments: [] }),
-  onCard: (m: { status: string; is_private: boolean }) => m.status === 'live' && !m.is_private,
+  onCard: (m: { status: string; visibility: string }) => m.status === 'live' && m.visibility !== 'only_me',
 }));
 jest.mock('@/features/jar/shareJar', () => ({ jarTitle: () => 'Tuesday' }));
 jest.mock('@/features/jar/useJarPage', () => ({
@@ -35,8 +35,8 @@ jest.mock('@/features/jar/useJarPage', () => ({
       jar: { id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila' },
       author: { display_name: 'Dale Cruz' },
       moments: [
-        { id: 'ootd', slot: 'ootd', status: 'live', is_private: false },
-        { id: 'selfie', slot: 'selfie', status: 'live', is_private: true },
+        { id: 'ootd', slot: 'ootd', status: 'live', visibility: 'readers' },
+        { id: 'selfie', slot: 'selfie', status: 'live', visibility: 'only_me' },
       ],
     },
   }),

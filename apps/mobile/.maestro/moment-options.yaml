@@ -28,7 +28,7 @@ appId: me.pickld.app
 - assertVisible: Edit caption
 - assertVisible: Edit stickers and filters
 - assertVisible: Re-crop
-- assertVisible: Make private
+- assertVisible: Visibility
 - assertVisible: Move to another moment
 - waitForAnimationToEnd:
     timeout: 3000

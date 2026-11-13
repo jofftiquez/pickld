@@ -3,6 +3,7 @@ import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import { z } from 'zod';
 
 import { cropSpecSchema, type CropSpec } from '@/lib/image/crop';
+import { visibilitySchema, type Visibility } from '@/lib/visibility';
 import { slots } from '@/theme/tokens';
 
 import { INITIAL_STATUS, queueStateSchema, replace, retry, type UploadStatus } from './machine';
@@ -54,6 +55,11 @@ export const MIGRATIONS: readonly string[] = [
   // M2-22: 1 = the user chose Replace for this photo's slot. The uploader inserts it as a replacement of
   // the moment holding the slot (0013): the old photo stays visible until fn:moderate approves the new one.
   `ALTER TABLE queue_items ADD COLUMN replace INTEGER NOT NULL DEFAULT 0;`,
+  // D-48: each moment has its own visibility (readers, everyone, only_me). NULL = the owner's default,
+  // which the server fills in on insert (0066). A private row becomes Only me; is_private is kept in step
+  // (is_private = visibility is only_me) but no longer sent: the server derives it.
+  `ALTER TABLE queue_items ADD COLUMN visibility TEXT;
+   UPDATE queue_items SET visibility = 'only_me' WHERE is_private = 1;`,
 ];
 
 /** After this long an editing hold no longer stops the upload (see MIGRATIONS[3]). */
@@ -84,7 +90,8 @@ export const enqueueInputSchema = z.object({
   tz: ianaTimeZone,
   capturedAt: z.iso.datetime({ offset: true }).nullable().default(null),
   caption: z.string().max(150).nullable().default(null),
-  isPrivate: z.boolean().default(false),
+  /** Who can see it (D-48); null leaves it at the owner's default, filled in by the server (MIGRATIONS[6]). */
+  visibility: visibilitySchema.nullable().default(null),
   edits: editsSchema.default({}),
   /** False for a raw camera photo that still needs the image pipeline (see MIGRATIONS[2]). */
   prepared: z.boolean().default(true),
@@ -107,7 +114,8 @@ export interface QueueItem extends UploadStatus {
   tz: string;
   capturedAt: string | null;
   caption: string | null;
-  isPrivate: boolean;
+  /** Who can see it (D-48), or null for the owner's default (MIGRATIONS[6]). */
+  visibility: Visibility | null;
   edits: Record<string, unknown>;
   createdAt: number;
   /** Set by the uploader once `ensure_jar` answered; a `conflict` item's slot is taken in this jar. */
@@ -136,7 +144,7 @@ const rowSchema = z.object({
   tz: ianaTimeZone,
   captured_at: z.string().nullable(),
   caption: z.string().nullable(),
-  is_private: z.union([z.literal(0), z.literal(1)]),
+  visibility: visibilitySchema.nullable(),
   edits: z
     .string()
     .transform((s) => JSON.parse(s) as unknown)
@@ -175,7 +183,7 @@ function toItem(raw: unknown): QueueItem {
     tz: row.tz,
     capturedAt: row.captured_at,
     caption: row.caption,
-    isPrivate: row.is_private === 1,
+    visibility: row.visibility,
     edits: row.edits,
     createdAt: row.created_at,
     jarId: row.jar_id,
@@ -268,8 +276,9 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
     if (thumb) copies.push(thumb);
     const { lastInsertRowId } = await db.runAsync(
       `INSERT INTO queue_items (user_id, photo_file, thumb_file, slot, local_date, tz, captured_at, caption,
-         is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared, editing_since, crop, replace)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         visibility, is_private, edits, state, attempts, next_attempt_at, last_error, created_at, prepared, editing_since,
+         crop, replace)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       moment.userId,
       photo.name,
       thumb?.name ?? null,
@@ -278,7 +287,8 @@ export async function enqueue(input: EnqueueInput): Promise<QueueItem> {
       moment.tz,
       moment.capturedAt,
       moment.caption,
-      moment.isPrivate ? 1 : 0,
+      moment.visibility,
+      moment.visibility === 'only_me' ? 1 : 0,
       JSON.stringify(moment.edits),
       INITIAL_STATUS.state,
       INITIAL_STATUS.attempts,
@@ -379,22 +389,23 @@ export function isHeldForEditing(item: Pick<QueueItem, 'editingSince'>, now: num
 
 export const saveEditsInputSchema = z.object({
   caption: z.string().max(150).nullable(),
-  isPrivate: z.boolean(),
+  visibility: visibilitySchema,
   edits: editsSchema,
 });
 export type SaveEditsInput = z.infer<typeof saveEditsInputSchema>;
 
 /**
- * The editor's Add to #slot / Done: stores the caption, privacy and edits on the queued moment and ends
+ * The editor's Add to #slot / Done: stores the caption, visibility and edits on the queued moment and ends
  * its editing hold, so the uploader sends them with it. The photo file is not touched (FR-CAP-08).
  */
 export async function saveEdits(id: number, input: SaveEditsInput): Promise<QueueItem> {
   const edit = saveEditsInputSchema.parse(input);
   const db = await openQueue();
   const { changes } = await db.runAsync(
-    'UPDATE queue_items SET caption = ?, is_private = ?, edits = ?, editing_since = NULL WHERE id = ?',
+    'UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, editing_since = NULL WHERE id = ?',
     edit.caption,
-    edit.isPrivate ? 1 : 0,
+    edit.visibility,
+    edit.visibility === 'only_me' ? 1 : 0,
     JSON.stringify(edit.edits),
     id,
   );
@@ -457,27 +468,29 @@ export class QueueItemBusyError extends Error {
 }
 
 /**
- * Moment options on a queued moment (M2-23, FR-CAP-10): Make private, or Move to another moment. A move
+ * Moment options on a queued moment (M2-23, FR-CAP-10): Visibility (D-48), or Move to another moment. A move
  * starts the upload again from attempt 0 for a photo that had stopped (a conflict on its old slot, or a
  * failure), and drops a Replace choice made for the old slot. Throws QueueItemBusyError while uploading.
  */
 export async function saveOptions(
   id: number,
-  patch: { slot?: (typeof slots)[number]; isPrivate?: boolean },
+  patch: { slot?: (typeof slots)[number]; visibility?: Visibility },
 ): Promise<QueueItem> {
   const before = await getItem(id);
   if (!before) throw new QueueItemBusyError(id);
   const slot = patch.slot === undefined ? before.slot : z.enum(slots).parse(patch.slot);
   const moved = slot !== before.slot;
+  const visibility = patch.visibility === undefined ? before.visibility : visibilitySchema.parse(patch.visibility);
   const next: UploadStatus =
     moved && (before.state === 'conflict' || before.state === 'failed') ? INITIAL_STATUS : before;
   const db = await openQueue();
   const { changes } = await db.runAsync(
-    `UPDATE queue_items SET slot = ?, is_private = ?, replace = ?, state = ?, attempts = ?, next_attempt_at = ?,
-       last_error = ?
+    `UPDATE queue_items SET slot = ?, visibility = ?, is_private = ?, replace = ?, state = ?, attempts = ?,
+       next_attempt_at = ?, last_error = ?
      WHERE id = ? AND state NOT IN ('uploading', 'uploaded')`,
     slot,
-    (patch.isPrivate ?? before.isPrivate) ? 1 : 0,
+    visibility,
+    visibility === 'only_me' ? 1 : 0,
     before.replace && !moved ? 1 : 0,
     next.state,
     next.attempts,

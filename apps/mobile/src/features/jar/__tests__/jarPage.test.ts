@@ -6,7 +6,7 @@ const READER = 'reader-id';
 function moment(over: Partial<JarMoment> & Pick<JarMoment, 'id' | 'slot'>): JarMoment {
   return {
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     caption: null,
     captured_at: null,
@@ -38,10 +38,10 @@ function data(moments: JarMoment[], viewerId: string, counts = { moment_count: 0
 
 const mixed = [
   moment({ id: 'live', slot: 'whereami' }),
-  moment({ id: 'private', slot: 'mebusywith', is_private: true }),
+  moment({ id: 'private', slot: 'mebusywith', visibility: 'only_me' }),
   moment({ id: 'checking', slot: 'whoamiwith', status: 'checking' }),
   moment({ id: 'removed', slot: 'ootd', status: 'removed' }),
-  moment({ id: 'private-checking', slot: 'selfie', status: 'checking', is_private: true }),
+  moment({ id: 'private-checking', slot: 'selfie', status: 'checking', visibility: 'only_me' }),
   moment({ id: 'evening', slot: 'evening' }),
 ];
 
@@ -60,9 +60,11 @@ describe('buildJarPage', () => {
     expect(shownIds(page).sort()).toEqual(['evening', 'live', 'private']);
   });
 
-  it('counts visible moments for others and every moment for the owner (D-9)', () => {
+  it('counts the moments shown for others and every moment for the owner (D-9, D-50)', () => {
+    // visible_count counts every moment that isn't Only me, but a reader may not see an Everyone
+    // moment's neighbours or vice versa, so others count what they are shown.
     const counts = { moment_count: 8, visible_count: 6 };
-    expect(buildJarPage(data(mixed, READER, counts))).toMatchObject({ count: 6, isFull: false });
+    expect(buildJarPage(data(mixed, READER, counts))).toMatchObject({ count: 2, isFull: false });
     expect(buildJarPage(data(mixed, OWNER, counts))).toMatchObject({ count: 8, isFull: true });
   });
 
@@ -78,7 +80,13 @@ describe('buildJarPage', () => {
       moment({ id: 'selfie', slot: 'selfie', caption: '   ', added_at: '2026-11-08T13:00:00Z' }),
       moment({ id: 'whereami', slot: 'whereami' }),
       // A newer caption on a private moment must not become the reader's cover.
-      moment({ id: 'secret', slot: 'ootd', is_private: true, caption: 'Secret', added_at: '2026-11-08T14:00:00Z' }),
+      moment({
+        id: 'secret',
+        slot: 'ootd',
+        visibility: 'only_me',
+        caption: 'Secret',
+        added_at: '2026-11-08T14:00:00Z',
+      }),
     ];
     const page = buildJarPage(data(moments, READER));
     expect(page.cover?.id).toBe('morning');
@@ -94,7 +102,7 @@ describe('buildJarPage', () => {
   });
 
   it('has no cover for a jar with nothing to show', () => {
-    const page = buildJarPage(data([moment({ id: 'p', slot: 'ootd', is_private: true })], READER));
+    const page = buildJarPage(data([moment({ id: 'p', slot: 'ootd', visibility: 'only_me' })], READER));
     expect(page).toMatchObject({ cover: null, grid: [] });
   });
 });

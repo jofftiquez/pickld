@@ -12,6 +12,7 @@ import { captureError } from '@/lib/monitoring';
 import { prepareItem } from '@/lib/queue/prepare';
 import { requestUploads } from '@/lib/queue/runner';
 import { enqueue, type QueueItem } from '@/lib/queue/store';
+import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
 import type { FillTarget } from './fillTarget';
@@ -35,6 +36,8 @@ export type SaveCaptureInput = {
   replace?: boolean;
   /** Mirror selfies is off and this is a front-camera photo (D-66): flip it left to right first. */
   flip?: boolean;
+  /** The owner's default visibility (D-48), if known; null leaves it to the server, which uses the same default. */
+  visibility?: Visibility | null;
 };
 
 function deleteQuietly(uri: string): void {
@@ -113,7 +116,14 @@ export function galleryTarget(input: {
  * background and wakes the upload worker. */
 async function queueRaw(
   uri: string,
-  row: { userId: string; slot: Slot; target: QueueTarget; crop: CropSpec | null; replace?: boolean },
+  row: {
+    userId: string;
+    slot: Slot;
+    target: QueueTarget;
+    crop: CropSpec | null;
+    replace?: boolean;
+    visibility?: Visibility | null;
+  },
 ): Promise<QueueItem> {
   const item = await enqueue({
     userId: row.userId,
@@ -125,6 +135,7 @@ async function queueRaw(
     editing: true,
     ...(row.crop ? { crop: row.crop } : null),
     replace: row.replace ?? false,
+    visibility: row.visibility ?? null,
   });
   // The queue holds its own copy now.
   deleteQuietly(uri);
@@ -163,6 +174,7 @@ export async function saveCapture(input: SaveCaptureInput): Promise<QueueItem> {
     target: queueTarget(input),
     crop: null,
     replace: input.replace,
+    visibility: input.visibility,
   });
 }
 
@@ -175,6 +187,8 @@ export type SaveGalleryPhotoInput = {
   target: QueueTarget;
   /** The Crop screen's choices; null for an exactly 3:4 photo that skipped it. */
   crop: CropSpec | null;
+  /** The owner's default visibility (D-48), if known; null leaves it to the server. */
+  visibility?: Visibility | null;
 };
 
 /**

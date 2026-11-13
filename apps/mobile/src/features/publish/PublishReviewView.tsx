@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon';
 import { MAX_LAYERS } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
+import { VisibilityBadge } from '@/components/VisibilityBadge';
 import { holdsSlot, momentCount, type GridTile } from '@/features/jar/todayGrid';
 import { MomentCover } from '@/features/moment/MomentCover';
 import { hasVisibleEdits } from '@/features/moment/momentRender';
@@ -149,15 +150,24 @@ export function PublishReviewView({
   );
 }
 
-/** One of the 8 slots: the photo (with a lock when private) or a dashed outline, and its tag below. */
+const SLOT_LABEL = {
+  readers: 'publish.slotReaders',
+  everyone: 'publish.slotEveryone',
+  only_me: 'publish.slotPrivate',
+} as const;
+
+/**
+ * One of the 8 slots: the photo with its visibility badge (D-48: people, globe or lock) or a dashed
+ * outline, and its tag below. Publishing doesn't change any moment's visibility (D-50).
+ */
 function ReviewSlot({ tile }: { tile: GridTile }) {
   const { t } = useTranslation();
   const tag = t(`slots.${tile.slot}`);
   const held = holdsSlot(tile);
   const label = !held
     ? t('publish.slotEmpty', { slot: tag })
-    : tile.isPrivate
-      ? t('publish.slotPrivate', { slot: tag })
+    : tile.visibility
+      ? t(SLOT_LABEL[tile.visibility], { slot: tag })
       : tag;
   return (
     <View accessible accessibilityLabel={label} style={styles.slot} testID={`publish-slot-${tile.slot}`}>
@@ -168,9 +178,18 @@ function ReviewSlot({ tile }: { tile: GridTile }) {
           ) : tile.uri ? (
             <Image source={{ uri: tile.uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
           ) : null}
-          {tile.isPrivate ? (
-            <View style={styles.lock} testID={`publish-slot-${tile.slot}-lock`}>
-              <Icon name="lock" color="surface" size={12} strokeWidth={2.4} />
+          {tile.visibility ? (
+            <View style={styles.badge}>
+              <VisibilityBadge
+                visibility={tile.visibility}
+                tone="badge"
+                iconSize={12}
+                testID={
+                  tile.visibility === 'only_me'
+                    ? `publish-slot-${tile.slot}-lock`
+                    : `publish-slot-${tile.slot}-${tile.visibility}`
+                }
+              />
             </View>
           ) : null}
         </View>
@@ -217,17 +236,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderColor: colors.dashed,
   },
-  lock: {
-    position: 'absolute',
-    top: space.xs + 1,
-    right: space.xs + 1,
-    width: sizes.lockBadge,
-    height: sizes.lockBadge,
-    borderRadius: radius.pill,
-    backgroundColor: colors.badge,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  badge: { position: 'absolute', top: space.xs + 1, right: space.xs + 1 },
   tag: { marginTop: 3, textAlign: 'center' },
   choices: { paddingHorizontal: space.lg, paddingBottom: space.xs },
   choicesTitle: { color: colors.ink, marginBottom: 2 },

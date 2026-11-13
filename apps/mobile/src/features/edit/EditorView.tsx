@@ -9,8 +9,8 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextField } from '@/components/TextField';
-import { Toggle } from '@/components/Toggle';
 import { useReduceMotion } from '@/lib/useReduceMotion';
+import { VISIBILITIES, VISIBILITY_KEY, type Visibility } from '@/lib/visibility';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
@@ -58,8 +58,9 @@ export type EditorViewProps = {
   onChangeCaption: (caption: string) => void;
   /** Opened from Moment options' Edit caption (M2-23): the caption field starts focused. */
   focusCaption?: boolean;
-  isPrivate: boolean;
-  onChangePrivate: (isPrivate: boolean) => void;
+  /** Who can see the moment (D-48): Readers, Everyone or Only me, starting at the owner's default. */
+  visibility: Visibility;
+  onChangeVisibility: (visibility: Visibility) => void;
   canUndo: boolean;
   onUndo: () => void;
   /** "Add to #slot" for a photo just taken, "Done" when editing it again. Already translated. */
@@ -71,7 +72,7 @@ export type EditorViewProps = {
 
 export const CAPTION_MAX = 150;
 
-// Room below the photo for the tools, caption and privacy switch (Save is in the toolbar, D-59); the
+// Room below the photo for the tools, caption and visibility choice (Save is in the toolbar, D-59); the
 // photo shrinks on short phones so they fit. Taller tools (Stickers) and large text scroll the screen.
 const PANEL_MIN_HEIGHT = 260;
 
@@ -106,8 +107,8 @@ export function EditorView({
   caption,
   onChangeCaption,
   focusCaption = false,
-  isPrivate,
-  onChangePrivate,
+  visibility,
+  onChangeVisibility,
   canUndo,
   onUndo,
   saveLabel,
@@ -257,20 +258,20 @@ export function EditorView({
             autoFocus={focusCaption}
             testID="editor-caption"
           />
-          <View style={styles.privateRow}>
-            <View
-              style={styles.privateText}
-              importantForAccessibility="no-hide-descendants"
-              accessibilityElementsHidden
-            >
-              <Text style={[textStyle('bodyMedium', '600'), styles.privateLabel]}>{t('edit.private')}</Text>
-              <Text style={[textStyle('label', '500'), styles.privateHint]}>{t('edit.privateHint')}</Text>
+          <View style={styles.visibility}>
+            <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <Text style={[textStyle('bodyMedium', '600'), styles.visibilityLabel]}>{t('edit.visibility')}</Text>
+              <Text style={[textStyle('label', '500'), styles.visibilityHint]}>
+                {t(`visibility.${VISIBILITY_KEY[visibility]}Body`)}
+              </Text>
             </View>
-            <Toggle
-              value={isPrivate}
-              onValueChange={onChangePrivate}
-              accessibilityLabel={`${t('edit.private')}. ${t('edit.privateHint')}`}
-              testID="editor-private"
+            <SegmentedControl
+              variant="dark"
+              segments={VISIBILITIES.map((key) => ({ key, label: t(`visibility.${VISIBILITY_KEY[key]}`) }))}
+              selected={visibility}
+              onSelect={onChangeVisibility}
+              accessibilityLabel={t('edit.visibility')}
+              testID="editor-visibility"
             />
           </View>
           {saveFailed ? (
@@ -326,16 +327,9 @@ const styles = StyleSheet.create({
   // 12 px between thumbnails, as designed: each thumbnail already reserves its ring and white gap.
   filters: { gap: FILTER_GAP, paddingHorizontal: FILTER_LEAD },
   emptyPanel: { minHeight: sizes.filterThumb },
-  privateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space.md,
-    minHeight: sizes.minTap,
-  },
-  privateText: { flex: 1 },
-  privateLabel: { color: colors.ink },
-  privateHint: { color: colors.muted },
+  visibility: { gap: space.sm },
+  visibilityLabel: { color: colors.ink },
+  visibilityHint: { color: colors.muted },
   error: { color: colors.danger },
   actions: { flexDirection: 'row' },
 });
