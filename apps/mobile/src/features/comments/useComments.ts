@@ -1,7 +1,8 @@
-// Data for /comments/[jarId] (M3-11; FR-SOC-06): the jar's comments read as the viewer (RLS decides),
-// adding a comment or reply, and deleting one. A new comment is inserted hidden, then fn:moderate's text
-// path shows it (M3-10; D-22 auto-pass); until then only its author sees it. If that call is lost, the
-// comment stays with its author as "Checking" and the next send or refresh asks again.
+// Data for /comments/[jarId] (M3-11; FR-SOC-06): one thread read as the viewer (RLS decides), adding a
+// comment or reply, and deleting one. The thread is the jar's own, or one moment's (`momentId`, 0068;
+// D-51): a moment comment keeps its jar in jar_id. A new comment is inserted hidden, then fn:moderate's
+// text path shows it (M3-10; D-22 auto-pass); until then only its author sees it. If that call is lost,
+// the comment stays with its author as "Checking" and the next send or refresh asks again.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
@@ -11,14 +12,17 @@ import { getSupabase } from '@/lib/supabase';
 
 import { commentRow, type CommentRow } from './commentsModel';
 
-const jarIdParam = z.uuid();
+const idParam = z.uuid();
 
-export async function fetchComments(jarId: string): Promise<CommentRow[]> {
-  const { data, error } = await getSupabase()
+/** The thread's comments: the jar's own (no moment), or one moment's. */
+export async function fetchComments(jarId: string, momentId: string | null = null): Promise<CommentRow[]> {
+  const query = getSupabase()
     .from('comments')
     .select('id, jar_id, user_id, parent_id, body, is_hidden, created_at, author:profiles(display_name, username)')
-    .eq('jar_id', jarId)
-    .order('created_at', { ascending: true });
+    .eq('jar_id', jarId);
+  const { data, error } = await (
+    momentId === null ? query.is('moment_id', null) : query.eq('moment_id', momentId)
+  ).order('created_at', { ascending: true });
   if (error) throw new Error(error.message);
   return z.array(commentRow).parse(data);
 }
@@ -32,11 +36,12 @@ export async function postComment(
   userId: string,
   body: string,
   parentId: string | null,
+  momentId: string | null = null,
 ): Promise<string> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('comments')
-    .insert({ jar_id: jarId, user_id: userId, body, parent_id: parentId })
+    .insert({ jar_id: jarId, moment_id: momentId, user_id: userId, body, parent_id: parentId })
     .select('id')
     .single();
   if (error) throw new Error(error.message);
@@ -51,30 +56,37 @@ export async function deleteComment(commentId: string): Promise<void> {
 }
 
 export const commentsQueryKeys = {
-  /** ['comments', viewerId, jarId] */
+  /** ['comments', viewerId, jarId]: every thread of the jar. */
   jar: (viewerId: string, jarId: string) => ['comments', viewerId, jarId] as const,
+  /** ['comments', viewerId, jarId, momentId | null]: one thread (null is the jar's own). */
+  thread: (viewerId: string, jarId: string, momentId: string | null) =>
+    ['comments', viewerId, jarId, momentId] as const,
 };
 
-export function useComments(jarId: string | undefined) {
+/** The thread of `jarId`, or of its moment `momentId` when given. */
+export function useComments(jarId: string | undefined, momentId?: string) {
   const viewerId = useAuthStore((s) => s.session?.user.id ?? null);
-  const valid = jarIdParam.safeParse(jarId).success;
+  const moment = momentId ?? null;
+  const valid = idParam.safeParse(jarId).success && (moment === null || idParam.safeParse(moment).success);
   const queryClient = useQueryClient();
-  const key = commentsQueryKeys.jar(viewerId ?? '', jarId ?? '');
+  const key = commentsQueryKeys.thread(viewerId ?? '', jarId ?? '', moment);
   const query = useQuery({
     queryKey: key,
-    queryFn: () => fetchComments(jarId ?? ''),
+    queryFn: () => fetchComments(jarId ?? '', moment),
     enabled: viewerId !== null && valid,
   });
   const refresh = () => {
+    // Also the moment header's count (useCommentMoment), whose key starts with the thread's.
     void queryClient.invalidateQueries({ queryKey: key });
-    // The jar's comment_count (Jar page, Moment detail, feed) follows the visible comments.
+    // The jar's and moments' comment_count (Jar page, Moment detail, feed) follow the visible comments.
     void queryClient.invalidateQueries({ queryKey: jarPageQueryKeys.jar(viewerId ?? '', jarId ?? '') });
     void queryClient.invalidateQueries({ queryKey: ['feed', viewerId ?? ''] });
+    void queryClient.invalidateQueries({ queryKey: ['momentsFeed', viewerId ?? ''] });
   };
 
   const add = useMutation({
     mutationFn: ({ body, parentId }: { body: string; parentId: string | null }) =>
-      postComment(jarId ?? '', viewerId ?? '', body, parentId),
+      postComment(jarId ?? '', viewerId ?? '', body, parentId, moment),
     onSettled: refresh,
   });
   const remove = useMutation({

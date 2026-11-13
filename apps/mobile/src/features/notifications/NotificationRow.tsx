@@ -35,6 +35,8 @@ type SentenceKey =
   | 'notifications.likeTwo'
   | 'notifications.comment'
   | 'notifications.commentPlain'
+  | 'notifications.commentMoment'
+  | 'notifications.commentMomentPlain'
   | 'notifications.reply'
   | 'notifications.replyPlain'
   | 'notifications.fullJar'
@@ -70,6 +72,12 @@ function sentence(
     case 'comment':
     case 'reply': {
       const comment = entry.type === 'comment';
+      // A comment in a moment's own thread (0068, D-51).
+      if (comment && entry.momentId) {
+        return entry.commentBody
+          ? { key: 'notifications.commentMoment', values: { name, body: entry.commentBody } }
+          : { key: 'notifications.commentMomentPlain', values: { name } };
+      }
       if (entry.commentBody) {
         return {
           key: comment ? 'notifications.comment' : 'notifications.reply',

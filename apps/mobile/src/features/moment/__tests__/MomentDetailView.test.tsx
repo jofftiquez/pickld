@@ -39,7 +39,14 @@ const jar: JarPageData = {
   author: { username: 'dale', display_name: 'Dale Santos' },
   moments: [
     moment({ id: 'evening', slot: 'evening' }),
-    moment({ id: 'ootd', slot: 'ootd', caption: 'Green shirt day.', like_count: 12, is_backfilled: true }),
+    moment({
+      id: 'ootd',
+      slot: 'ootd',
+      caption: 'Green shirt day.',
+      like_count: 12,
+      comment_count: 2,
+      is_backfilled: true,
+    }),
     moment({ id: 'private', slot: 'selfie', visibility: 'only_me' }),
     moment({ id: 'checking', slot: 'morning', status: 'checking' }),
     moment({ id: 'removed', slot: 'afternoon', status: 'removed' }),
@@ -66,9 +73,17 @@ describe('MomentDetailView', () => {
     expect(screen.getByTestId('moment-caption')).toHaveTextContent('Green shirt day.');
     expect(screen.getByTestId('moment-added-later')).toHaveTextContent('Added later');
     expect(screen.getByLabelText('12 likes')).toBeTruthy();
-    expect(screen.getByLabelText('3 comments')).toBeTruthy();
+    // The moment's own thread, not the jar's 3 (D-51).
+    expect(screen.getByLabelText('2 comments')).toBeTruthy();
     expect(screen.getByTestId('moment-position')).toHaveTextContent('Moment 2 of 3 · swipe for the next');
     expect(screen.getByText('Dale')).toBeTruthy();
+  });
+
+  it('opens the comments of the moment on screen', async () => {
+    const onOpenComments = jest.fn();
+    await setup({ onOpenComments });
+    await fireEvent.press(screen.getByTestId('moment-comments'));
+    expect(onOpenComments).toHaveBeenCalledWith('ootd');
   });
 
   it('swipes through visible moments only, with one progress bar per shown moment following', async () => {

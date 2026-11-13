@@ -65,8 +65,18 @@ function one(n: DueNotification): Push | null {
   switch (n.type) {
     case 'new_reader':
       return { ...base, title: actor, body: 'started reading your days. Read back?', data };
-    case 'comment':
-      return { ...base, title: actor, body: n.comment_body ? `commented: ${quote(n.comment_body)}` : 'commented on your jar.', data };
+    case 'comment': {
+      // A comment in a moment's own thread carries the moment (0068, D-51).
+      const said = n.comment_body ? quote(n.comment_body) : null;
+      const body = n.moment_id
+        ? said
+          ? `commented on your moment: ${said}`
+          : 'commented on your moment.'
+        : said
+          ? `commented: ${said}`
+          : 'commented on your jar.';
+      return { ...base, title: actor, body, data };
+    }
     case 'reply':
       return { ...base, title: actor, body: n.comment_body ? `replied: ${quote(n.comment_body)}` : 'replied to your comment.', data };
     case 'removed':

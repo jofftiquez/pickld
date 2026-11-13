@@ -6,22 +6,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { buildThread, type ThreadComment } from '@/features/comments/commentsModel';
 import { CommentsView } from '@/features/comments/CommentsView';
+import { useCommentMoment } from '@/features/comments/useCommentMoment';
 import { useComments } from '@/features/comments/useComments';
-import { jarTitle } from '@/features/jar/shareJar';
+import { firstName, jarTitle } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { ReportSheet } from '@/features/safety/ReportSheet';
 import { useBlockFlow } from '@/features/safety/useBlockFlow';
 
-// /comments/[jarId] (M3-11; FR-SOC-06): the jar's thread, from the comment pill on the Jar page or Moment
-// detail. The jar comes from the jar page query (title, owner, count); RLS decides what both return.
+// /comments/[jarId] (M3-11; FR-SOC-06): the jar's thread, from the comment pill on the Jar page.
+// /comments/[jarId]?momentId=… (0068; D-51): that moment's own thread, from Moment detail or a
+// notification, under a small header with the moment. The jar thread reads the jar page query (title,
+// owner, count); a moment thread reads only the moment, which a reader may see before its jar is
+// published (D-48). RLS decides what each returns.
 export default function CommentsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { jarId } = useLocalSearchParams<{ jarId: string }>();
-  const page = useJarPage(jarId);
-  const comments = useComments(jarId);
+  const { jarId, momentId } = useLocalSearchParams<{ jarId: string; momentId?: string }>();
+  const page = useJarPage(momentId ? undefined : jarId);
+  const moment = useCommentMoment(jarId, momentId);
+  const comments = useComments(jarId, momentId);
   const { viewerId } = comments;
   const me = useQuery({
     queryKey: todayQueryKeys.me(viewerId ?? ''),
@@ -29,22 +34,35 @@ export default function CommentsScreen() {
     enabled: viewerId !== null,
   });
   const jar = page.data;
+  const m = moment.data;
   const [reporting, setReporting] = useState<ThreadComment | null>(null);
   // Their comments drop out when the thread is read again.
   const blockFlow = useBlockFlow();
 
+  const ownerId = momentId ? m?.user_id : jar?.jar.user_id;
+  const slot = m ? t(`slots.${m.slot}`) : null;
+
   return (
     <>
       <CommentsView
-        jarTitle={jar ? jarTitle(jar, t) : null}
-        count={jar?.jar.comment_count ?? null}
+        jarTitle={
+          momentId
+            ? m && slot
+              ? t('comments.momentTitle', { name: firstName(m.author?.display_name ?? t('comments.someone')), slot })
+              : null
+            : jar
+              ? jarTitle(jar, t)
+              : null
+        }
+        count={momentId ? (m?.comment_count ?? null) : (jar?.jar.comment_count ?? null)}
+        moment={m && slot ? { thumbUrl: m.thumbUrl, slot, caption: m.caption?.trim() || null } : null}
         thread={
-          jar && comments.comments && viewerId !== null
-            ? buildThread(comments.comments, viewerId, jar.jar.user_id)
+          ownerId !== undefined && comments.comments && viewerId !== null
+            ? buildThread(comments.comments, viewerId, ownerId)
             : undefined
         }
-        failed={comments.failed || page.failed}
-        unavailable={jar === null}
+        failed={comments.failed || (momentId ? moment.failed : page.failed)}
+        unavailable={momentId ? m === null : jar === null}
         myName={me.data?.displayName ?? null}
         now={new Date()}
         insets={insets}
@@ -53,7 +71,7 @@ export default function CommentsScreen() {
         onBack={() => (router.canGoBack() ? router.back() : router.replace('/jars'))}
         onRetry={() => {
           void comments.refresh();
-          void page.refresh();
+          void (momentId ? moment.refresh() : page.refresh());
         }}
         onSend={comments.add}
         onDelete={comments.remove}

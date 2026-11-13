@@ -23,7 +23,7 @@ export const momentsFeedRow = z.object({
   edits: z.unknown(),
   like_count: z.number(),
   liked: z.boolean(),
-  /** The jar's thread for now, and 0 unless `jar_visible` (moment threads come with piece 6). */
+  /** The moment's own thread (0068). */
   comment_count: z.number(),
   jar_tz: z.string(),
   jar_local_date: z.string(),

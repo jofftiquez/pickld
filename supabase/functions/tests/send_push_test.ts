@@ -112,6 +112,16 @@ Deno.test('comments and replies quote the text, trimmed; types that are not push
   assertEquals([rm?.title, rm?.data.momentId], ['We removed one of your moments', 'm9']);
 });
 
+Deno.test('a comment in a moment thread says it is on your moment and carries the moment (0068)', () => {
+  const [quoted, plain] = composePushes([
+    row({ id: 'c', type: 'comment', actor_name: 'Jun', moment_id: 'm1', comment_id: 'cm1', comment_body: 'Love the light' }),
+    row({ id: 'p', type: 'comment', actor_name: 'Jun', moment_id: 'm1', comment_id: 'cm2' }),
+  ]);
+  assertEquals(quoted?.body, 'commented on your moment: “Love the light”');
+  assertEquals([quoted?.data.momentId, quoted?.data.commentId], ['m1', 'cm1']);
+  assertEquals(plain?.body, 'commented on your moment.');
+});
+
 // ---------------------------------------------------------------- the handler
 Deno.test('refuses a missing or wrong secret, and a server with a short one', async () => {
   const { store } = fakeStore([]);

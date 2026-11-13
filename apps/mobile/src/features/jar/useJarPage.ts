@@ -58,7 +58,9 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
     supabase.from('profiles').select('username, display_name, lid_color').eq('id', jar.user_id).maybeSingle(),
     supabase
       .from('moments')
-      .select('id, slot, status, visibility, is_backfilled, caption, captured_at, added_at, edits, like_count')
+      .select(
+        'id, slot, status, visibility, is_backfilled, caption, captured_at, added_at, edits, like_count, comment_count',
+      )
       .eq('jar_id', id)
       .eq('status', 'live'),
   ]);
