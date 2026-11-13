@@ -12,9 +12,9 @@ select results_eq(
      from public.sticker_packs p join public.stickers s on s.pack_id = p.id group by p.slug, p.sort order by p.sort $$,
   $$ values ('everyday', 17, 8), ('the-eight', 24, 16), ('stamps', 10, 0), ('milestones', 10, 0), ('christmas-2026', 12, 6),
             ('pinoy-life', 25, 9), ('barkada', 17, 8), ('work-from-wherever', 16, 8), ('pet-parent', 14, 7),
-            ('olivia', 16, 0), ('fish-moods', 16, 0), ('corporate', 12, 0), ('gen-z', 12, 0), ('trentahin', 12, 0), ('pride', 12, 0),
-            ('cyclists', 12, 0) $$,
-  'offered and retired stickers per pack (0060 adds stamps, milestones, Pinoy Life pictures and seven packs)');
+            ('olivia', 16, 0), ('fish-moods', 16, 0), ('corporate', 12, 12), ('gen-z', 12, 12), ('trentahin', 12, 12), ('pride', 12, 12),
+            ('cyclists', 12, 12), ('hashtags', 16, 0) $$,
+  'offered and retired stickers per pack (0060 adds stamps, milestones, Pinoy Life pictures and seven packs; 0065 restyles word art, adds Hashtags)');
 select is((select count(*)::int from public.stickers where retired_at is not null and asset_path ~ '/(cat|dog|bunny|mango|heart|jeepney|pizza|bone)\.png$'),
           0, 'no new picture is retired');
 select results_eq(
@@ -36,8 +36,9 @@ select results_eq($$ select slug, tier::text, store_product_id from public.stick
             ('pet-parent', 'premium', 'me.pickld.pack.pet_parent'), ('olivia', 'premium', 'me.pickld.pack.olivia'),
             ('fish-moods', 'premium', 'me.pickld.pack.fish_moods'), ('corporate', 'premium', 'me.pickld.pack.corporate'),
             ('gen-z', 'premium', 'me.pickld.pack.gen_z'), ('trentahin', 'premium', 'me.pickld.pack.trentahin'),
-            ('pride', 'premium', 'me.pickld.pack.pride'), ('cyclists', 'premium', 'me.pickld.pack.cyclists') $$,
-  'tiers, store products and free packs are unchanged (0060 only adds premium packs)');
+            ('pride', 'premium', 'me.pickld.pack.pride'), ('cyclists', 'premium', 'me.pickld.pack.cyclists'),
+            ('hashtags', 'premium', 'me.pickld.pack.hashtags') $$,
+  'tiers, store products and free packs are unchanged (0060 and 0065 only add premium packs)');
 
 -- ---------------------------------------------------------------- retired stickers still draw
 select tests.act_as('owner');
@@ -45,7 +46,7 @@ select ok((select s.sticker_usable from public.stickers s where asset_path = 'st
           'a retired free sticker stays usable, so re-saving an old moment that has it works');
 select is((select retired_at is not null from public.stickers where asset_path = 'stickers/everyday/kain-tayo.png'), true,
           'and the app can see it is retired');
-select is((select count(*)::int from public.stickers where retired_at is null), 237, 'the app offers 237 stickers across all packs');
+select is((select count(*)::int from public.stickers where retired_at is null), 253, 'the app offers 253 stickers across all packs');
 select throws_ok($$ update public.stickers set retired_at = null where asset_path = 'stickers/everyday/kain-tayo.png' $$,
                  '42501', null, 'a signed-in user cannot bring a retired sticker back');
 select tests.act_as_anon();
