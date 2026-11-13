@@ -16,19 +16,15 @@ import { Confetti } from './Confetti';
 // The Milestones pack art (0012: stickers/milestones/<name>.png), bundled so it shows offline.
 const stickerArt: Record<MilestoneKey, number> = {
   first_full_jar: require('../../../../../assets/stickers/milestones/first-full-jar.png'),
+  jars_7: require('../../../../../assets/stickers/milestones/jars-7.png'),
   full_jars_7: require('../../../../../assets/stickers/milestones/full-jars-7.png'),
   jars_30: require('../../../../../assets/stickers/milestones/jars-30.png'),
+  full_jars_30: require('../../../../../assets/stickers/milestones/full-jars-30.png'),
+  jars_50: require('../../../../../assets/stickers/milestones/jars-50.png'),
   jars_100: require('../../../../../assets/stickers/milestones/jars-100.png'),
+  full_jars_100: require('../../../../../assets/stickers/milestones/full-jars-100.png'),
+  jars_200: require('../../../../../assets/stickers/milestones/jars-200.png'),
   one_year: require('../../../../../assets/stickers/milestones/one-year.png'),
-};
-
-// The milestone the screen suggests next ("Next up: 7 full jars"); none after a year.
-const nextUp: Record<MilestoneKey, MilestoneKey | null> = {
-  first_full_jar: 'full_jars_7',
-  full_jars_7: 'jars_30',
-  jars_30: 'jars_100',
-  jars_100: 'one_year',
-  one_year: null,
 };
 
 // The art is about 3:1 (753 × 252 for First full jar); contain keeps each one whole.
@@ -36,7 +32,7 @@ const ART_ASPECT = 3;
 
 export type StickerUnlockedViewProps = {
   milestone: MilestoneKey;
-  /** Milestones the user has earned, including this one, for "1 of 5 earned". */
+  /** Milestones the user has earned, including this one, for "1 of 10 earned". */
   earned: number;
   /** Confetti, or only a fade with Reduce Motion (NFR-A11Y-02). */
   reduceMotion: boolean;
@@ -50,7 +46,8 @@ export function StickerUnlockedView({ milestone, earned, reduceMotion, insets, o
   const name = t(`stickerUnlocked.names.${milestone}`);
   const total = milestoneKeys.length;
   const count = Math.max(1, Math.min(total, earned));
-  const next = nextUp[milestone];
+  // The milestone the screen suggests next ("Next up: 7 jars"): the one after it in order; none after a year.
+  const next = milestoneKeys[milestoneKeys.indexOf(milestone) + 1] ?? null;
   const body = [
     t(`stickerUnlocked.leads.${milestone}`),
     t('stickerUnlocked.earnedLine', { name }),

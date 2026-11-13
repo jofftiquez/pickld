@@ -14,7 +14,7 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012, 0029 and 0032 seed, and nothing else', () => {
+  it('has a PNG for every sticker 0012, 0029, 0032 and 0060 seed, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
     const assetsIn = (migration: string, from = 'insert into') =>
       [
@@ -29,11 +29,16 @@ describe('bundled art', () => {
     // 0032 retires word stickers by asset path first; its insert adds the picture stickers.
     const pictures = assetsIn('0032_picture_stickers.sql');
     expect(pictures).toHaveLength(64);
-    const words = [...seededStickers.map((s) => s.asset), ...paid];
-    expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures].sort());
+    // 0060 adds picture packs (Olivia, Fish Moods, more Pinoy Life) and word packs, stamps and milestones.
+    const added = assetsIn('0060_sticker_packs.sql');
+    expect(added).toHaveLength(109);
+    const addedPictures = added.filter((a) => /^stickers\/(olivia|fish-moods|pinoy-life)\//.test(a));
+    expect(addedPictures).toHaveLength(40);
+    const words = [...seededStickers.map((s) => s.asset), ...paid, ...added.filter((a) => !addedPictures.includes(a))];
+    expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures, ...addedPictures].sort());
     // Word stickers are wide labels; picture stickers fit a near-square box.
     for (const asset of words) expect(stickerArt[asset]!.width).toBeGreaterThan(stickerArt[asset]!.height);
-    for (const asset of pictures) {
+    for (const asset of [...pictures, ...addedPictures]) {
       const art = stickerArt[asset]!;
       expect(Math.max(art.width, art.height)).toBeLessThanOrEqual(360);
     }

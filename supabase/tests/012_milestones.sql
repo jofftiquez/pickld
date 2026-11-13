@@ -80,11 +80,11 @@ select is(pg_temp.full_notes((select id from t where k = 'with_removed')), 0, 's
 
 -- ---------------------------------------------------------------- 7 full jars
 select pg_temp.jars('owner', 2, 5, 8);  -- 6 full jars now
-select is(pg_temp.keys('owner'), array['first_full_jar'], '6 full jars: no full_jars_7 yet');
+select is(pg_temp.keys('owner'), array['first_full_jar', 'jars_7'], '6 full jars: no full_jars_7 yet (7 jars with moments: jars_7, 0060)');
 delete from public.moments where jar_id = (select id from t where k = 'with_removed') and slot = 'afternoon';  -- frees the slot
 select tests.make_moment((select id from t where k = 'with_removed'), 'afternoon', 'live');
 select is((select moment_count::int from public.jars where id = (select id from t where k = 'with_removed')), 8, 'the 7th jar fills');
-select is(pg_temp.keys('owner'), array['first_full_jar', 'full_jars_7'], '7 full jars grants full_jars_7');
+select is(pg_temp.keys('owner'), array['first_full_jar', 'full_jars_7', 'jars_7'], '7 full jars grants full_jars_7');
 select is((select count(*)::int from public.notifications where user_id = tests.id('owner') and type = 'full_jar'), 7,
           'one full_jar notification per full jar');
 
@@ -107,8 +107,8 @@ select ok('jars_100' = any (pg_temp.keys('owner')), '100 jars grants jars_100');
 select pg_temp.jars('owner', 170, 264, 1); -- 364
 select ok(not ('one_year' = any (pg_temp.keys('owner'))), '364 jars: no one_year');
 select pg_temp.jars('owner', 434, 1, 1);   -- 365
-select is(pg_temp.keys('owner'), array['first_full_jar', 'full_jars_7', 'jars_100', 'jars_30', 'one_year'],
-          '365 jars grants one_year: all five milestones, each once');
+select is(pg_temp.keys('owner'), array['first_full_jar', 'full_jars_7', 'jars_100', 'jars_200', 'jars_30', 'jars_50', 'jars_7', 'one_year'],
+          '365 jars grants one_year: every jar-count milestone (0060 adds jars_7, jars_50, jars_200), each once');
 
 -- ---------------------------------------------------------------- others
 -- The reader fills their own jar: their milestone, not the owner's, and the owner's rows stay hidden.
@@ -132,7 +132,7 @@ select is((select count(*)::int from public.milestones) + (select count(*)::int 
 select throws_ok($$select public.grant_milestones(auth.uid())$$, '42501', null, 'the blocked user cannot call grant_milestones');
 select tests.act_as('owner');
 select is((select array_agg(key order by key) from public.milestones),
-          array['first_full_jar', 'full_jars_7', 'jars_100', 'jars_30', 'one_year'], 'the owner reads their own milestones');
+          array['first_full_jar', 'full_jars_7', 'jars_100', 'jars_200', 'jars_30', 'jars_50', 'jars_7', 'one_year'], 'the owner reads their own milestones');
 
 select * from finish();
 rollback;

@@ -96,9 +96,9 @@ describe('StickerUnlockedView', () => {
     expect(art.props.accessibilityLabel).toBe('First full jar sticker');
     expect(screen.getByRole('header', { name: 'Your first full jar!' })).toBeTruthy();
     expect(
-      screen.getByText('All 8 moments, one real day. You earned the “First full jar” sticker. Next up: 7 full jars.'),
+      screen.getByText('All 8 moments, one real day. You earned the “First full jar” sticker. Next up: 7 jars.'),
     ).toBeTruthy();
-    expect(screen.getByText('1 of 5 earned')).toBeTruthy();
+    expect(screen.getByText('1 of 10 earned')).toBeTruthy();
     expect(screen.getAllByTestId('confetti-piece', { includeHiddenElements: true })).toHaveLength(8);
     expectMinTapArea(screen.getByRole('button', { name: 'Close' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
@@ -112,10 +112,10 @@ describe('StickerUnlockedView', () => {
     );
     const firstSource: unknown = screen.getByTestId('sticker-unlocked-art').props.source;
     await view.rerender(
-      <StickerUnlockedView milestone="one_year" earned={5} reduceMotion insets={insets} onClose={jest.fn()} />,
+      <StickerUnlockedView milestone="one_year" earned={10} reduceMotion insets={insets} onClose={jest.fn()} />,
     );
     expect(screen.getByTestId('sticker-unlocked-art').props.source).not.toEqual(firstSource);
-    expect(screen.getByText('5 of 5 earned')).toBeTruthy();
+    expect(screen.getByText('10 of 10 earned')).toBeTruthy();
     expect(screen.getByText('A whole year of real days. You earned the “1 year of jars” sticker.')).toBeTruthy();
   });
 
