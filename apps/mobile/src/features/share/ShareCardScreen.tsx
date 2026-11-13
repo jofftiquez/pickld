@@ -12,10 +12,18 @@ import { jarUrl } from '@/lib/links';
 import { textStyle } from '@/theme/text';
 import { colors, slots, space } from '@/theme/tokens';
 
-import { type CardRef, copyLink, messageLink, renderCardImage, saveImage, shareImage, shareLink } from './shareActions';
+import { type CardRef, copyLink, messageLink, renderCardImage, saveImage, shareImage } from './shareActions';
 import { buildShareCard } from './shareCard';
 import { ShareCardView, type ShareAction } from './ShareCardView';
-import { shareableMoment, type StoryBackground, type StoryFormat } from './storyLayout';
+import {
+  cardCaption,
+  layoutsFor,
+  paletteFor,
+  shareableMoment,
+  type StoryBackground,
+  type StoryFormat,
+  type StoryLayoutId,
+} from './storyLayout';
 
 /**
  * Share a jar, or one moment of it when `momentId` is set (FR-SOC-10, T-509). Reads the jar as the viewer,
@@ -30,6 +38,8 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
   const [includeCaption, setIncludeCaption] = useState(true);
   const [format, setFormat] = useState<StoryFormat>('story');
   const [background, setBackground] = useState<StoryBackground>('blur');
+  // The picked layout, for the number of moments it was picked for: a new count starts on its default.
+  const [picked, setPicked] = useState<{ count: number; id: StoryLayoutId } | null>(null);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -54,6 +64,13 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
   const heading = t(moment ? 'share.titleMoment' : 'share.title');
   const fileName = moment ? `pickld-moment-${moment.id}` : `pickld-jar-${data.jar.id}`;
   const date = formatDate(new Date(`${data.jar.local_date}T12:00:00Z`), 'UTC');
+  // One moment alone always uses the single full layout.
+  const count = moment ? 1 : card.moments.length;
+  const layouts = layoutsFor(count, format, {
+    framed: paletteFor(background, data.author.lid_color).card !== null,
+    caption: cardCaption(card, moment, includeCaption) !== null,
+  });
+  const layout = layouts.find((l) => picked?.count === count && l.id === picked.id) ?? layouts[0]!;
 
   type Notice = { text: string; error: boolean } | null;
   const run = async (work: () => Promise<Notice>) => {
@@ -83,9 +100,6 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
         case 'message':
           await messageLink(linkText);
           return null;
-        case 'more':
-          await shareLink(linkText);
-          return null;
       }
     });
 
@@ -100,6 +114,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
         includeCaption,
         format,
         background,
+        layout,
         lidColor: data.author.lid_color ?? null,
         title,
         date,
@@ -109,6 +124,8 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
           ? t('share.cardMoment', { name: data.author.display_name, slot: t(`slots.${moment.slot}`), date })
           : t('share.card', { title, date, count: card.moments.length, max: slots.length }),
       }}
+      layouts={layouts}
+      onLayout={(id) => setPicked({ count, id })}
       onFormat={setFormat}
       onBackground={setBackground}
       includeCaption={includeCaption}
