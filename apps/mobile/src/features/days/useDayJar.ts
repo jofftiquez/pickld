@@ -1,11 +1,12 @@
-// One day's jar for the selected-day card and Fill this jar (FR-DAY-02): the jar (id, zone) and its moments
-// with thumbnail URLs, read as the owner so RLS decides, plus the offline queue so photos waiting to upload
+// One day's jar for the selected-day card and the day page (FR-DAY-02, D-55): the jar (id, zone, published
+// state) and its moments with thumbnail URLs, read as the owner so RLS decides, plus the offline queue so photos waiting to upload
 // show in the card at once (rule 3). React Query, so the persisted cache keeps it readable offline.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { z } from 'zod';
 
 import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
+import type { Visibility } from '@/features/publish/publishJar';
 import { todayQueryKeys } from '@/features/jar/useToday';
 import { useAuthStore } from '@/lib/authStore';
 import { listQueue, subscribeQueue } from '@/lib/queue/store';
@@ -13,7 +14,15 @@ import { getSupabase } from '@/lib/supabase';
 
 export type DayJar = {
   /** Null when the user has no jar for the date (Fill this jar creates it). */
-  jar: { id: string; localDate: string; tz: string } | null;
+  jar: {
+    id: string;
+    localDate: string;
+    tz: string;
+    /** Optional because caches persisted before the day page lack them; a missing `publishedAt` reads as unpublished. */
+    visibility?: Visibility;
+    publishedAt?: string | null;
+    likeCount?: number;
+  } | null;
   moments: ServerMoment[];
 };
 
@@ -34,7 +43,7 @@ async function fetchDayJar(userId: string, localDate: string): Promise<DayJar> {
   const supabase = getSupabase();
   const { data: jar, error } = await supabase
     .from('jars')
-    .select('id, local_date, tz')
+    .select('id, local_date, tz, visibility, published_at, like_count')
     .eq('user_id', userId)
     .eq('local_date', localDate)
     .maybeSingle();
@@ -42,12 +51,19 @@ async function fetchDayJar(userId: string, localDate: string): Promise<DayJar> {
   if (!jar) return { jar: null, moments: [] };
   const { data: rows, error: momentsError } = await supabase
     .from('moments')
-    .select('id, slot, status, visibility, is_backfilled, captured_at, added_at, replaces')
+    .select('id, slot, status, visibility, is_backfilled, captured_at, added_at, edits, replaces')
     .eq('jar_id', jar.id);
   if (momentsError) throw new Error(momentsError.message);
   const urls = await thumbUrls(rows.map((m) => m.id));
   return {
-    jar: { id: jar.id, localDate: jar.local_date, tz: jar.tz },
+    jar: {
+      id: jar.id,
+      localDate: jar.local_date,
+      tz: jar.tz,
+      visibility: jar.visibility,
+      publishedAt: jar.published_at,
+      likeCount: jar.like_count,
+    },
     moments: rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null })),
   };
 }

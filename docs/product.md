@@ -62,7 +62,7 @@ The floating tab bar (Today · Capture · Jars · My days) is the spine; every o
 
 &#91;embedded content: Navigation map · onboarding, tab bar and the screens under each tab\]
 
-Indented boxes open from the box above them. Two shortcuts cross tabs: Today’s moment tiles and My days’ **Fill this jar** both open Capture, and the empty Jars state opens Explore.
+Indented boxes open from the box above them. Two shortcuts cross tabs: Today’s moment tiles and the day page’s empty tiles (from My days’ **Fill this jar**) both open Capture, and the empty Jars state opens Explore.
 
 ## Onboarding
 
@@ -210,7 +210,13 @@ The fourth tab: a month calendar of the user’s own jars and the entry point fo
 
 - Each past day shows that day’s cover photo and a thin green bar for how full its jar is; today is outlined in green; future days are disabled.
 - The selected day card shows a small jar graphic, the moment count, the captured moments, dashed slots for missing ones, and “+ #hashtag” chips.
-- **Fill this jar** → Capture for that past day (moments get “Added later”) · **View jar** → Jar page.
+- **Fill this jar** → that day’s page (D-55) · **View jar** → Jar page.
+
+### Day page — “Day”
+
+A past day’s page (`/day/[date]`, D-55), opened by **Fill this jar** on My days. It works like Today for that date: Back and the date instead of the greeting, the same dark jar card and 8 tiles, no Now tile, and a note that moments added now show “Added later”.
+
+- Empty tile → Capture for that day and slot (the server marks it “Added later”) · filled tile → Moment preview of that day’s moments · **Publish** → Publish review for that day’s jar while it isn’t published · the Published chip → who can see the jar.
 
 ### Memories — “Memories”
 
@@ -255,7 +261,7 @@ These screens fill the gaps that shape the architecture: offline saving, the upl
 | Screen (artboard) | What it shows | Leads to |
 | --- | --- | --- |
 | Camera | Live 3:4 viewfinder with grid, slot tag and time, flash, moment switcher, shutter, gallery and flip | Shutter → Capture · gallery → Crop |
-| Moment preview | Full-screen preview of your own moment from Today (D-54, D-71): photo with edits, slot, time, visibility, caption, likes and comments; swipe through today’s moments; bar with Edit, Share, Visibility and More (only Edit and Delete for a photo not uploaded yet) | Edit → Capture · Share → Share card · Visibility and More → Moment options |
+| Moment preview | Full-screen preview of your own moment from Today or a past day’s page (D-54, D-71, D-74): photo with edits, slot, time, visibility, caption, likes and comments; swipe through that day’s moments; bar with Edit, Share, Visibility and More (only Edit and Delete for a photo not uploaded yet) | Edit → Capture · Share → Share card · Visibility and More → Moment options |
 | Moment options | Sheet on a moment: edit caption, edit stickers and filters, re-crop, visibility, move to another moment, delete. From the moment preview, More shows only re-crop, move and delete, and Visibility opens its page directly | Re-crop → Crop |
 | Today, published | Today after publishing: “Published” chip, likes count, and a note that new moments today go out automatically | — |
 | Full jar | Celebration when a jar reaches 8 of 8, with the jar number | Publish jar → Publish review · Share jar card |

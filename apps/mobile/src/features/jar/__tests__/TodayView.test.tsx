@@ -435,3 +435,74 @@ describe('TodayView: tiles draw moments with their edits (M2-18)', () => {
     expect(within(screen.getByTestId('tile-selfie')).queryByTestId('moment-overlay-s1', hidden)).toBeNull();
   });
 });
+
+// The day page (D-55, FR-DAY-02): the same view for a past date.
+describe('TodayView for a past day', () => {
+  const pastTiles = () =>
+    buildTodayGrid({
+      localDate: '2026-11-08',
+      moments: [live('whereami'), { ...live('evening'), is_backfilled: true }],
+      queue: [],
+      nowSlot: null,
+    });
+
+  it('shows the date and Back instead of the greeting, calendar and avatar', async () => {
+    const onBack = jest.fn();
+    await renderToday({ hasAnyJar: true, tiles: pastTiles(), day: { date: '2026-11-08', onBack } });
+    expect(screen.getByTestId('screen-title')).toHaveTextContent('Sunday');
+    expect(screen.getByRole('header', { name: 'Sunday, Nov 8, 2026' })).toBeTruthy();
+    expect(screen.getByTestId('day-subtitle')).toHaveTextContent('Nov 8, 2026');
+    expect(screen.queryByText(/Good morning/)).toBeNull();
+    expect(screen.queryByTestId('today-my-days')).toBeNull();
+    expect(screen.queryByTestId('today-avatar')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('has no Now tile: every empty slot opens Capture, filled ones the preview', async () => {
+    const onOpenPreview = jest.fn();
+    const { onCapture } = await renderToday({
+      hasAnyJar: true,
+      tiles: pastTiles(),
+      onOpenPreview,
+      day: { date: '2026-11-08', onBack: jest.fn() },
+    });
+    expect(screen.queryByText('Tap to capture')).toBeNull();
+    expect(screen.getAllByRole('button', { name: /, empty$/ })).toHaveLength(6);
+    await fireEvent.press(screen.getByRole('button', { name: '#morning, empty' }));
+    await fireEvent.press(screen.getByRole('button', { name: '#ootd, empty' }));
+    expect(onCapture.mock.calls).toEqual([['morning'], ['ootd']]);
+    await fireEvent.press(screen.getByTestId('tile-evening'));
+    expect(onOpenPreview.mock.calls.map(([tile]) => tile.slot)).toEqual(['evening']);
+    expect(screen.getByLabelText('This day’s moments')).toBeTruthy();
+  });
+
+  it('says "in this jar", never shows the first-day card, and notes "Added later" while slots are empty', async () => {
+    await renderToday({
+      hasAnyJar: false,
+      readerCount: 12,
+      tiles: buildTodayGrid({ localDate: '2026-11-08', moments: [], queue: [], nowSlot: null }),
+      day: { date: '2026-11-08', onBack: jest.fn() },
+    });
+    expect(screen.queryByText('Your first jar')).toBeNull();
+    expect(screen.getByText('0 of 8 moments')).toBeTruthy();
+    expect(screen.getByText('in this jar · 12 readers')).toBeTruthy();
+    expect(screen.getByTestId('day-added-later-note')).toHaveTextContent(
+      'Moments added now show an “Added later” badge.',
+    );
+  });
+
+  it('offers Publish only when given one, and pads the bottom without the tab bar', async () => {
+    const onPublish = jest.fn();
+    await renderToday({
+      hasAnyJar: true,
+      tiles: pastTiles(),
+      onPublish,
+      day: { date: '2026-11-08', onBack: jest.fn() },
+    });
+    await fireEvent.press(screen.getByRole('button', { name: 'Publish' }));
+    expect(onPublish).toHaveBeenCalledTimes(1);
+    const style = screen.getByTestId('day-scroll').props.contentContainerStyle as object[];
+    expect((Object.assign({}, ...style) as { paddingBottom: number }).paddingBottom).toBe(34);
+  });
+});

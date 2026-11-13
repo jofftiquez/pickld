@@ -71,7 +71,7 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 
 | ID | Requirement | Acceptance criteria | P | Screens |
 | --- | --- | --- | --- | --- |
-| FR-PUB-01 | Publish review | Shows all 8 slots (empty dashed; each moment with its visibility badge: readers, globe or lock) and a visibility choice for the jar; default is the user’s default visibility (Readers unless changed). Publishing never changes a moment’s visibility (D-50) | P0 | Publish review |
+| FR-PUB-01 | Publish review | Shows all 8 slots (empty dashed; each moment with its visibility badge: readers, globe or lock) and a visibility choice for the jar; default is the user’s default visibility (Readers unless changed). Publishing never changes a moment’s visibility (D-50). Opened from Today for today’s open jar, or from a past day’s page for that day’s jar while it isn’t published (D-55) | P0 | Publish review |
 | FR-PUB-02 | Jars hidden until published | Nobody but the owner can see a jar before Publish jar; moments follow their own visibility (Readers, Everyone or Only me, default from the profile), published jar or not (D-48); a published jar shows each viewer only the moments they may see (D-50); verified by database tests as owner, reader, outsider and blocked user | P0 | All |
 | FR-PUB-03 | Visibility levels | Readers: only users who read the author. Everyone: any signed-in user and the shared-link page. Only me: owner only. Changeable after publishing from the jar’s menu | P0 | Publish review, Jar |
 | FR-PUB-04 | Auto-share after publishing | Today shows the Published state and note; moments added later the same day join the published jar. Who sees a moment is its own visibility, not publishing (D-48), so this no longer shares moments by itself | P0 | Today, published |
@@ -100,7 +100,7 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 | ID | Requirement | Acceptance criteria | P | Screens |
 | --- | --- | --- | --- | --- |
 | FR-DAY-01 | Calendar of jars | Month view; past days show the jar’s cover photo and a fill bar for its count; today outlined; future days disabled; previous months reachable back to the first jar | P0 | My days |
-| FR-DAY-02 | Fill in a past day | Selecting a past day shows its moments, missing slots and Fill this jar; capturing there adds to that jar with Added later | P0 | My days |
+| FR-DAY-02 | Fill in a past day | Selecting a past day shows its moments, missing slots and Fill this jar. Fill this jar opens that day’s page (D-55): Today’s jar card and 8 tiles for that date, without a Now tile; an empty tile opens the camera for that day and slot, and capturing there adds to that jar with Added later; a filled tile opens the moment preview for that day (D-74); Publish reviews that day’s jar while it isn’t published | P0 | My days, Day |
 | FR-DAY-03 | Memories | “On this day” card from the same date in earlier years, monthly recap (moments, full jars, top hashtag, photo strip), year summary | P1 | Memories |
 | FR-EXP-01 | Search people | Search by name or @username, results within 1 second; blocked users never appear | P1 | Explore |
 | FR-EXP-02 | Suggestions | Suggested authors from contacts and friends of friends; Full jars today from Everyone jars | P1 | Explore |
