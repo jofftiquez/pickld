@@ -18,6 +18,19 @@
 //                 graphic-violence scores; queue anything moderately likely in any category; never
 //                 auto-remove sexual/minors, self-harm or text-only categories, a human decides those;
 //                 queue sexual/minors at a very low score because a miss is the costliest mistake.
+//   2026-11-13    No value change, version unchanged. Replay test added over 26 hand-labelled items (no beta
+//                 data yet). Rationale for each value, to revisit with beta decisions:
+//                 - sexual 0.9 / violence/graphic 0.9 remove: the only categories where a confident score
+//                   is reliably right for photos; at 0.9 a borderline pose still reaches a human.
+//                 - sexual 0.4 photo review: swimwear and gym photos (assumed 0.2–0.35, unmeasured) must go live.
+//                 - violence 0.5, violence/graphic 0.4: sport and minor injuries stay below or reach a human.
+//                 - self-harm family 0.3 and never auto-removed: a person may need help, not a strike.
+//                 - harassment 0.6, hate 0.5, threatening 0.4–0.5: captions carry these; friendly teasing (assumed ~0.4) stays live.
+//                 - text: nothing auto-removed, review a little higher than photos for sexual and violence.
+//                 To re-tune: export labels with scripts/moderation-labels.sql, add them to the fixture,
+//                 change values, bump the version, add a line here, and keep the replay test green.
+//                 The model is pinned below; fn:moderate reports to Sentry when OpenAI answers with another
+//                 model under omni-moderation-latest (index.ts), which is the signal to re-run the replay.
 
 /** OpenAI omni-moderation categories (category_scores keys). */
 export const CATEGORIES = [
