@@ -264,9 +264,10 @@ select tests.act_as('moderator');
 select ok((select count(*) from public.reports) >= 10, 'a moderator reads reports');
 
 -- ---------------------------------------------------------------- a moderator keeps it
-select lives_ok($$update public.moderation_items set status = 'kept', decided_at = now()
-                  where moment_id = (select id from t where k = 'm1') and source = 'report'$$,
-                'a moderator keeps the moment');
+select is((public.mod_decide((select id from public.moderation_items
+                               where moment_id = (select id from t where k = 'm1') and source = 'report'
+                                 and status = 'pending'), 'keep') ->> 'result'),
+          'kept', 'a moderator keeps the moment (mod_decide, 0041)');
 select tests.reset_role();
 select ok(not pg_temp.hidden('m1'), 'kept: the moment is no longer hidden');
 select tests.act_as('reader');
