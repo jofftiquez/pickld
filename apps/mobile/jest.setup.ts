@@ -39,3 +39,17 @@ jest.mock('@/features/widgets/widgets', () => ({
   FriendWidget: { updateTimeline: jest.fn(), updateSnapshot: jest.fn() },
   widgetColors: {},
 }));
+
+// Liquid Glass (D-57) is native and iOS 26 only. Tests run the blur look by default; GlassView is a plain view
+// that keeps its props, so a test that turns glass on (GlassSurface.test) can check what would be drawn.
+jest.mock('expo-glass-effect', () => {
+  const { createElement } = jest.requireActual<typeof import('react')>('react');
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  const glass = (props: import('react-native').ViewProps) => createElement(View, props);
+  return {
+    GlassView: glass,
+    GlassContainer: glass,
+    isLiquidGlassAvailable: jest.fn(() => false),
+    isGlassEffectAPIAvailable: jest.fn(() => false),
+  };
+});

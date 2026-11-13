@@ -30,6 +30,9 @@ export const colors = {
   likeText: '#a01d14',
   scrim: 'rgba(10,12,8,0.55)',
   glass: 'rgba(10,12,8,0.45)', // controls over photos (with blur)
+  // Liquid Glass tint for dark glass that carries text (iOS 26, D-76): white text stays above 4.5:1 even
+  // over a white photo, as glass is more see-through than the blur.
+  glassStrong: 'rgba(10,12,8,0.6)',
   tabBarGlass: 'rgba(255,255,255,0.86)',
   tabBarBorder: 'rgba(17,20,13,0.05)', // 1 px ring around the floating tab bar (Main)
   onDarkMuted: '#c9cec2',

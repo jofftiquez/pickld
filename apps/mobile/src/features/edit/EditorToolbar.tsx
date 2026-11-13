@@ -1,7 +1,7 @@
-import { BlurView } from 'expo-blur';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { GlassSurface } from '@/components/GlassSurface';
 import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SlotTag } from '@/features/capture/SlotTag';
@@ -26,7 +26,7 @@ export type EditorToolbarProps = {
 
 /**
  * The editor's fixed top bar (D-59, design: Capture): Close, the slot tag and Save. The photo scrolls
- * under its dark frosted surface. The right side has room for more actions later (Undo, for example).
+ * under its dark surface: Liquid Glass on iOS 26, a frosted blur below that or with Reduce Transparency on (D-57). The right side has room for more actions later (Undo, for example).
  * From 1.5× text the slot tag moves to its own row under the buttons (D-37).
  */
 export function EditorToolbar({
@@ -49,10 +49,14 @@ export function EditorToolbar({
       onLayout={(e) => onHeight(e.nativeEvent.layout.height)}
       testID="editor-toolbar"
     >
-      {/* The toolbar's surface, kept in this one place: Liquid Glass replaces it on iOS 26 (item 17). */}
-      <View style={[StyleSheet.absoluteFill, styles.surface]} pointerEvents="none">
-        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-      </View>
+      <GlassSurface
+        tone="dark"
+        tint={colors.glass}
+        fallbackColor={colors.glass}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+        testID="editor-toolbar-surface"
+      />
       <View style={styles.row}>
         <RoundIconButton
           icon="close"
@@ -82,7 +86,6 @@ const styles = StyleSheet.create({
     paddingBottom: space.sm,
     gap: space.sm,
   },
-  surface: { overflow: 'hidden', backgroundColor: colors.glass },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   middle: { flex: 1, alignItems: 'center' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 1 },
