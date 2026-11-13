@@ -1,7 +1,8 @@
-// fn:moderate (M2-19, M3-10; FR-SAF-03, FR-PUB-07, FR-JAR-03, FR-SOC-06; D-22). Checks what a moment
-// would show and applies the verdict: checking → live, a replacement photo or edit swapped in, queued, or
-// removed. The database lets only moderation_apply() (0011) set live or removed, and only this function
-// calls it. Comments take the text path: a new comment is hidden until moderation_apply_comment() (0016)
+// fn:moderate (M2-19, M2-20, M3-10; FR-SAF-03, FR-SAF-04, FR-PUB-07, FR-JAR-03, FR-SOC-06). Checks what a
+// moment would show and applies the verdict: checking → live, a replacement photo or edit swapped in,
+// queued, removed, or blocked (a child-safety match: moderation_csam_block(), 0040, never queued). The
+// database lets only moderation_apply() (0011) and moderation_csam_block() set live or removed, and only
+// this function calls them. A block is answered as 'removed', so the uploader learns nothing more. Comments take the text path: a new comment is hidden until moderation_apply_comment() (0016)
 // shows it, queues it or refuses it.
 //
 // Triggered by the app right after it inserts a moment (status `checking`) or changes one (the update
@@ -16,6 +17,7 @@
 //   → { error: { code, message } }
 import { type SupabaseClient, z } from '../_shared/deps.ts';
 import { bearerToken, fail, ok, readJson } from '../_shared/http.ts';
+import { MissingObjectError } from './pipeline.ts';
 import type { ModerationContent, ModerationProvider } from './provider.ts';
 
 export const ModerateInput = z.union([
@@ -27,7 +29,15 @@ export const ModerateInput = z.union([
 export type CommentOutcome = 'visible' | 'queued' | 'removed' | 'nothing_to_check' | 'not_found';
 
 /** What moderation_apply() did; see 0011_moderate.sql. 'stale' never escapes moderateMoment(). */
-export type Outcome = 'live' | 'swapped' | 'queued' | 'removed' | 'discarded' | 'nothing_to_check' | 'not_found';
+export type Outcome =
+  | 'live'
+  | 'swapped'
+  | 'queued'
+  | 'removed'
+  | 'discarded'
+  | 'blocked'
+  | 'nothing_to_check'
+  | 'not_found';
 type ApplyResult = Outcome | 'stale';
 
 /** A proposal that keeps changing while it is checked is checked again, up to this many times. */
@@ -90,16 +100,27 @@ export async function moderateMoment(
       return { outcome: 'nothing_to_check', status: m.status };
     }
 
-    const verdict = await provider.check(contentOf(m));
-    const { data, error } = await db.rpc('moderation_apply', {
-      p_moment_id: m.id,
-      p_pending_since: m.pending_since,
-      p_decision: verdict.decision,
-      p_provider: provider.name,
-      p_scores: verdict.scores ?? {},
-      p_reason: verdict.decision === 'approve' ? null : verdict.reason,
-    });
-    if (error) throw new Error(`moderation_apply: ${error.message}`);
+    const content = contentOf(m);
+    const verdict = await provider.check(content);
+    const { data, error } = verdict.decision === 'block'
+      ? await db.rpc('moderation_csam_block', {
+        p_moment_id: m.id,
+        p_pending_since: m.pending_since,
+        p_matcher: verdict.matcher,
+        p_match: verdict.match,
+        p_photo_path: content.photoPath,
+        p_thumb_path: content.thumbPath,
+      })
+      : await db.rpc('moderation_apply', {
+        p_moment_id: m.id,
+        p_pending_since: m.pending_since,
+        p_decision: verdict.decision,
+        p_provider: provider.name,
+        p_scores: verdict.scores ?? {},
+        p_reason: verdict.decision === 'approve' ? null : verdict.reason,
+        p_second_opinion: verdict.decision === 'approve' ? null : verdict.secondOpinion ?? null,
+      });
+    if (error) throw new Error(`moderation (${verdict.decision}): ${error.message}`);
     const result = data as ApplyResult;
     if (result === 'stale') continue; // the owner changed it meanwhile: check the new version
 
@@ -164,8 +185,16 @@ export async function handleModerate(req: Request, deps: ModerateDeps): Promise<
   }
   const { momentId } = parsed.data;
 
-  const result = await moderateMoment(deps.serviceClient(), deps.provider, momentId, userId);
+  let result;
+  try {
+    result = await moderateMoment(deps.serviceClient(), deps.provider, momentId, userId);
+  } catch (error) {
+    // The photo isn't in the bucket (yet): the moment stays in Checking and the app's retry calls again.
+    if (error instanceof MissingObjectError) return fail(409, 'not_ready', 'The photo is not uploaded yet.');
+    throw error;
+  }
   if (!result) return fail(409, 'changed', 'The moment changed while it was checked. Try again.');
   if (result.outcome === 'not_found') return fail(404, 'not_found', 'Moment not found.');
-  return ok({ momentId, outcome: result.outcome, status: result.status });
+  const outcome = result.outcome === 'blocked' ? 'removed' : result.outcome;
+  return ok({ momentId, outcome, status: result.status });
 }
