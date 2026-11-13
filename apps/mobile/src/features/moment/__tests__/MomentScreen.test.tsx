@@ -34,6 +34,11 @@ const mockBackend = {
   photoCalls: 0,
   /** What the jar page reads for a live moment (Moment detail, M3-08). */
   jarMoments: [] as Record<string, unknown>[],
+  /** my_removal rows for the removed moment (M3-23). */
+  removal: [] as Record<string, unknown>[],
+  /** Appeals sent (M3-24) and the error the next insert returns. */
+  appeals: [] as Record<string, unknown>[],
+  appealError: null as { code: string; message: string } | null,
 };
 
 jest.mock('@/lib/supabase', () => {
@@ -48,6 +53,14 @@ jest.mock('@/lib/supabase', () => {
         },
         // The jar page's moment list and the viewer's likes (awaited without maybeSingle).
         in: () => builder,
+        insert: async (values: Record<string, unknown>) => {
+          if (table !== 'appeals') throw new Error(`unexpected insert into ${table}`);
+          if (mockBackend.appealError) return { data: null, error: mockBackend.appealError };
+          mockBackend.appeals.push(values);
+          // Like the database: the removal now has an open appeal.
+          mockBackend.removal = mockBackend.removal.map((r) => ({ ...r, can_appeal: false, appeal_status: 'open' }));
+          return { data: null, error: null };
+        },
         then: (resolve: (r: { data: unknown; error: null }) => void) =>
           resolve({ data: table === 'reactions' ? [] : mockBackend.jarMoments, error: null }),
         maybeSingle: async () => {
@@ -77,6 +90,10 @@ jest.mock('@/lib/supabase', () => {
         },
       };
       return builder;
+    },
+    rpc: async (name: string, args: { p_moment: string }) => {
+      if (name !== 'my_removal') throw new Error(`unexpected rpc ${name}`);
+      return { data: args.p_moment === REMOVED_ID ? mockBackend.removal : [], error: null };
     },
     functions: {
       invoke: async (_name: string, { body }: { body: { momentIds: string[] } }) => {
@@ -137,6 +154,9 @@ beforeEach(() => {
   mockBackend.fail = false;
   mockBackend.queries = [];
   mockBackend.photoCalls = 0;
+  mockBackend.removal = [];
+  mockBackend.appeals = [];
+  mockBackend.appealError = null;
   useAuthStore.setState({ status: 'signedIn', session: { user: { id: USER } } as Session, error: null });
 });
 
@@ -190,13 +210,14 @@ describe('/moment/[id]: Moment removed (FR-PUB-07)', () => {
     expect(screen.getByText('Moment removed')).toBeTruthy();
     expect(screen.getByText('#evening · Sat, Nov 7')).toBeTruthy();
     expect(screen.getByText('We removed one of your moments')).toBeTruthy();
-    // No guideline is readable by the owner yet (TODO(M3-23)): the general reason.
+    // No removal decision to read: the general reason and no Request a review.
     expect(screen.getByTestId('moment-removed-reason')).toHaveTextContent(
       'It didn’t follow our community guidelines. Your other moments and your account aren’t affected.',
     );
     const thumb = screen.getByRole('image', { name: '#evening photo, removed' });
     expect(thumb.props.blurRadius).toBe(photo.checkingBlur);
     expect(thumb.props.source).toEqual([{ uri: `https://photos.test/${REMOVED_ID}-thumb.webp` }]);
+    expect(screen.queryByText('Think we got it wrong?')).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'OK' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(mockRouter.back).toHaveBeenCalledTimes(2);
@@ -209,6 +230,8 @@ describe('/moment/[id]: Moment removed (FR-PUB-07)', () => {
         localDate="2026-11-07"
         thumbUrl={null}
         guideline="violence"
+        review="none"
+        onRequestReview={jest.fn()}
         insets={{ top: 0, bottom: 0 }}
         onClose={jest.fn()}
       />,
@@ -217,6 +240,96 @@ describe('/moment/[id]: Moment removed (FR-PUB-07)', () => {
       'It didn’t follow our community guidelines on violence or dangerous acts. Your other moments and your account aren’t affected.',
     );
     expect(screen.getByText('violence or dangerous acts')).toBeTruthy();
+  });
+});
+
+const ITEM_ID = 'c1c1c1c1-0000-4000-8000-000000000001';
+function removal(over: Record<string, unknown> = {}) {
+  return { item_id: ITEM_ID, guideline: 'violence', can_appeal: true, appeal_status: null, ...over };
+}
+
+describe('/moment/[id]: Request a review (FR-SAF-05)', () => {
+  it('names the guideline from the decision and sends one appeal with the message', async () => {
+    mockBackend.removal = [removal()];
+    await renderRoute(REMOVED_ID);
+    await waitFor(() => expect(screen.getByTestId('moment-review-available')).toBeTruthy());
+    expect(screen.getByTestId('moment-removed-reason')).toHaveTextContent(
+      'It didn’t follow our community guidelines on violence or dangerous acts. Your other moments and your account aren’t affected.',
+    );
+    expect(screen.getByText('Ask for a review and a person will look at it again.')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Request a review' }));
+    await fireEvent.changeText(screen.getByTestId('moment-review-message'), '  It was a stage combat class.  ');
+    await fireEvent.press(screen.getByRole('button', { name: 'Send request' }));
+    await waitFor(() => expect(screen.getByTestId('moment-review-sent')).toBeTruthy());
+    expect(screen.getByText('Review requested')).toBeTruthy();
+    expect(mockBackend.appeals).toEqual([
+      { moderation_item_id: ITEM_ID, user_id: USER, message: 'It was a stage combat class.' },
+    ]);
+    // One request per removal: nothing left to press.
+    expect(screen.queryByRole('button', { name: 'Request a review' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send request' })).toBeNull();
+  });
+
+  it('an empty message sends the appeal without one', async () => {
+    mockBackend.removal = [removal()];
+    await renderRoute(REMOVED_ID);
+    await waitFor(() => expect(screen.getByTestId('moment-review-available')).toBeTruthy());
+    await fireEvent.press(screen.getByRole('button', { name: 'Request a review' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Send request' }));
+    await waitFor(() => expect(screen.getByTestId('moment-review-sent')).toBeTruthy());
+    expect(mockBackend.appeals).toEqual([{ moderation_item_id: ITEM_ID, user_id: USER, message: null }]);
+  });
+
+  it('a second appeal is refused: an open appeal offers no new request', async () => {
+    mockBackend.removal = [removal({ can_appeal: false, appeal_status: 'open' })];
+    await renderRoute(REMOVED_ID);
+    await waitFor(() => expect(screen.getByTestId('moment-review-sent')).toBeTruthy());
+    expect(screen.queryByRole('button', { name: 'Request a review' })).toBeNull();
+  });
+
+  it('a second appeal the database refuses (sent from another phone) shows the sent state', async () => {
+    mockBackend.removal = [removal()];
+    mockBackend.appealError = { code: '23505', message: 'duplicate key value violates unique constraint' };
+    await renderRoute(REMOVED_ID);
+    await waitFor(() => expect(screen.getByTestId('moment-review-available')).toBeTruthy());
+    await fireEvent.press(screen.getByRole('button', { name: 'Request a review' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Send request' }));
+    await waitFor(() => expect(screen.getByTestId('moment-review-sent')).toBeTruthy());
+    expect(mockBackend.appeals).toEqual([]);
+  });
+
+  it('a failed send keeps the message and says so', async () => {
+    mockBackend.removal = [removal()];
+    mockBackend.appealError = { code: 'PGRST000', message: 'TypeError: Network request failed' };
+    await renderRoute(REMOVED_ID);
+    await waitFor(() => expect(screen.getByTestId('moment-review-available')).toBeTruthy());
+    await fireEvent.press(screen.getByRole('button', { name: 'Request a review' }));
+    await fireEvent.changeText(screen.getByTestId('moment-review-message'), 'Please look again');
+    await fireEvent.press(screen.getByRole('button', { name: 'Send request' }));
+    await waitFor(() =>
+      expect(screen.getByText('Couldn’t send your request. Check your connection and try again.')).toBeTruthy(),
+    );
+    expect(screen.getByTestId('moment-review-message').props.value).toBe('Please look again');
+    expect(screen.getByRole('button', { name: 'Send request' })).toBeTruthy();
+  });
+
+  it('a removal kept after review says so and offers no new request', async () => {
+    mockBackend.removal = [removal({ can_appeal: false, appeal_status: 'upheld' })];
+    await renderRoute(REMOVED_ID);
+    await waitFor(() => expect(screen.getByTestId('moment-review-upheld')).toBeTruthy());
+    expect(screen.getByText('We looked again')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Request a review' })).toBeNull();
+  });
+
+  it('a removal that can no longer be appealed shows no card', async () => {
+    mockBackend.removal = [removal({ can_appeal: false, guideline: 'other' })];
+    await renderRoute(REMOVED_ID);
+    await waitFor(() => expect(screen.getByTestId('moment-removed')).toBeTruthy());
+    // "other" is not a guideline name: the general reason.
+    expect(screen.getByTestId('moment-removed-reason')).toHaveTextContent(
+      'It didn’t follow our community guidelines. Your other moments and your account aren’t affected.',
+    );
+    expect(screen.queryByText('Think we got it wrong?')).toBeNull();
   });
 });
 

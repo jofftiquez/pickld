@@ -4,8 +4,9 @@ import { BaseButton, type ButtonProps } from './BaseButton';
 
 export type PillButtonProps = ButtonProps & {
   /** `primary` for the main action in a row (Read, Read back, Allow); `subtle` otherwise (Reading, Copy);
-   * `onDark` on the dark jar card (the Published chip, TodayPublished). */
-  variant?: 'primary' | 'subtle' | 'onDark';
+   * `onDark` on the dark jar card (the Published chip, TodayPublished); `dark` for an ink pill on a white
+   * card (Request a review, Removed). */
+  variant?: 'primary' | 'subtle' | 'onDark' | 'dark';
 };
 
 /** Compact 36 px pill that hugs its label; its tap area is extended to 44 px. */
@@ -14,7 +15,14 @@ export function PillButton({ variant = 'primary', ...props }: PillButtonProps) {
     <BaseButton
       {...props}
       tone={{
-        background: variant === 'primary' ? 'brand' : variant === 'onDark' ? 'onDarkControl' : 'subtle',
+        background:
+          variant === 'primary'
+            ? 'brand'
+            : variant === 'onDark'
+              ? 'onDarkControl'
+              : variant === 'dark'
+                ? 'ink'
+                : 'subtle',
         text: variant === 'subtle' ? 'ink' : 'surface',
         height: sizes.pillButton,
         textVariant: 'bodySmall',

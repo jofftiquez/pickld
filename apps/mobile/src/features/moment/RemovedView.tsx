@@ -8,7 +8,8 @@ import { formatShortDate } from '@/lib/format';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
-import type { GuidelineKey } from './useOwnMoment';
+import { ReviewCard } from './ReviewCard';
+import type { GuidelineKey, RequestReviewResult, ReviewState } from './useOwnMoment';
 
 export type RemovedViewProps = {
   slot: Slot;
@@ -18,6 +19,9 @@ export type RemovedViewProps = {
   thumbUrl: string | null;
   /** The guideline the moment broke; null says only "our community guidelines". */
   guideline: GuidelineKey | null;
+  /** Request a review state (M3-24). */
+  review: ReviewState;
+  onRequestReview: (message: string) => Promise<RequestReviewResult>;
   insets: { top: number; bottom: number };
   onClose: () => void;
 };
@@ -29,10 +33,18 @@ function jarDate(localDate: string): string {
 
 /**
  * Moment removed notice (design: Removed; FR-PUB-07, FR-SAF-05). Only the owner reaches it.
- * TODO(M3-24): the Request a review card (appeals). TODO(M4-17): the "Read the community guidelines" link
- * (Help).
+ * TODO(M4-17): the "Read the community guidelines" link (Help).
  */
-export function RemovedView({ slot, localDate, thumbUrl, guideline, insets, onClose }: RemovedViewProps) {
+export function RemovedView({
+  slot,
+  localDate,
+  thumbUrl,
+  guideline,
+  review,
+  onRequestReview,
+  insets,
+  onClose,
+}: RemovedViewProps) {
   const { t } = useTranslation();
   const tag = t(`slots.${slot}`);
   const bodyStyle = [textStyle('body'), styles.body];
@@ -45,7 +57,11 @@ export function RemovedView({ slot, localDate, thumbUrl, guideline, insets, onCl
         </Text>
         <View style={styles.headerSide} />
       </View>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, space.xxl) }]}>
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, space.xxl) }]}
+      >
         <View style={styles.summary}>
           <View style={styles.thumb}>
             {thumbUrl ? (
@@ -89,6 +105,7 @@ export function RemovedView({ slot, localDate, thumbUrl, guideline, insets, onCl
             {t('moment.removed.body')}
           </Text>
         )}
+        <ReviewCard review={review} onRequestReview={onRequestReview} />
         <View style={styles.spacer} />
         <PrimaryButton label={t('moment.removed.ok')} onPress={onClose} testID="moment-removed-ok" />
       </ScrollView>

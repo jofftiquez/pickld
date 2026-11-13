@@ -1,13 +1,15 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { SecondaryButton } from '@/components/SecondaryButton';
+import { useAuthStore } from '@/lib/authStore';
 import { textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
 
 import { CheckingView } from './CheckingView';
 import { RemovedView } from './RemovedView';
-import type { OwnMomentResult } from './useOwnMoment';
+import { requestReview, type OwnMomentResult } from './useOwnMoment';
 
 export type OwnMomentViewProps = {
   result: OwnMomentResult;
@@ -21,6 +23,8 @@ export type OwnMomentViewProps = {
  */
 export function OwnMomentView({ result, insets, onClose }: OwnMomentViewProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const userId = useAuthStore((s) => s.session?.user.id ?? null);
 
   if (result.kind === 'found') {
     const { moment } = result;
@@ -34,6 +38,13 @@ export function OwnMomentView({ result, insets, onClose }: OwnMomentViewProps) {
           localDate={moment.localDate}
           thumbUrl={moment.thumbUrl}
           guideline={moment.guideline}
+          review={moment.review}
+          onRequestReview={async (message) => {
+            if (!userId || !moment.removalItemId) return 'error';
+            const sent = await requestReview(userId, moment.removalItemId, message);
+            if (sent !== 'error') void queryClient.invalidateQueries({ queryKey: ['moment', userId, moment.id] });
+            return sent;
+          }}
           insets={insets}
           onClose={onClose}
         />
