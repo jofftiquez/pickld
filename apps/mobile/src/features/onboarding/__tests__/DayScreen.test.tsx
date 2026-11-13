@@ -20,7 +20,14 @@ jest.mock('../DayView', () => ({
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace, push: mockPush, canGoBack: () => false, back: jest.fn() }),
+  useRouter: () => ({
+    canDismiss: () => false,
+    dismissAll: jest.fn(),
+    replace: mockReplace,
+    push: mockPush,
+    canGoBack: () => false,
+    back: jest.fn(),
+  }),
 }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),

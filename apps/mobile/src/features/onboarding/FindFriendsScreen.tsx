@@ -10,6 +10,7 @@ import { copyLink } from '@/features/share/shareActions';
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { profileUrl } from '@/lib/links';
+import { resetTo } from '@/lib/navigation';
 
 import { hashAddressBook, matchContacts, type FriendMatch } from './findFriends';
 import { FindFriendsView, type FindState } from './FindFriendsView';
@@ -80,7 +81,7 @@ export function FindFriendsScreen({ deps = defaultDeps }: { deps?: FindFriendsDe
     const next = nextSetupRoute('/setup/friends');
     await saveSetupStep(userId, next);
     if (next) router.push(next);
-    else router.replace('/');
+    else resetTo(router, '/');
   };
 
   return (

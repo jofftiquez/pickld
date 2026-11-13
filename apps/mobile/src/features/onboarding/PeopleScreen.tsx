@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
+import { resetTo } from '@/lib/navigation';
 import { getSupabase } from '@/lib/supabase';
 
 import { emptyPeople, toggleAnswer, type PeopleAnswers } from './peopleModel';
@@ -25,7 +26,7 @@ export function PeopleScreen() {
     const next = nextSetupRoute('/setup/people');
     await saveSetupStep(userId, next);
     if (next) router.push(next);
-    else router.replace('/');
+    else resetTo(router, '/');
   };
 
   const onContinue = async () => {

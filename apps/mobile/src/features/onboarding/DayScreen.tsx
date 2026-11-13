@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { reminderQueryKeys } from '@/features/reminders/useReminderSync';
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
+import { resetTo } from '@/lib/navigation';
 import { getSupabase } from '@/lib/supabase';
 
 import { DAY_PRESETS, toLocalTime, type DayTimes, type DayType } from './dayPresets';
@@ -46,7 +47,7 @@ export function DayScreen() {
       const next = nextSetupRoute('/setup/day');
       await saveSetupStep(userId, next);
       if (next) router.push(next);
-      else router.replace('/');
+      else resetTo(router, '/');
     } catch {
       setFailed(true);
     } finally {

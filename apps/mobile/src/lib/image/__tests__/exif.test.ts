@@ -62,6 +62,53 @@ describe('assertNoLocationMetadata', () => {
     expect(() => assertNoLocationMetadata(fixture(name))).not.toThrow();
   });
 
+  describe('APP13 (Photoshop / IPTC)', () => {
+    const ascii = (text: string) => Array.from(text, (c) => c.charCodeAt(0));
+    const u16 = (n: number) => [n >> 8, n & 0xff];
+    const u32 = (n: number) => [n >>> 24, (n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+    const block = (id: number, data: number[], name: number[] = [0, 0]) => [
+      ...ascii('8BIM'),
+      ...u16(id),
+      ...name,
+      ...u32(data.length),
+      ...data,
+      ...(data.length % 2 ? [0] : []),
+    ];
+    const withApp13 = (payload: number[]) => {
+      const clean = fixture('clean.jpg');
+      const segment = [0xff, 0xed, ...u16(payload.length + 2), ...payload];
+      return new Uint8Array([...clean.subarray(0, 2), ...segment, ...clean.subarray(2)]);
+    };
+    const photoshop = (...blocks: number[][]) => [...ascii('Photoshop 3.0\0'), ...blocks.flat()];
+    // MD5 of nothing: the digest iOS writes for its empty IPTC record.
+    const emptyDigest = [
+      0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04, 0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e,
+    ];
+
+    it('accepts the empty IPTC record iOS writes on every JPEG', () => {
+      const ios = withApp13(photoshop(block(0x0404, []), block(0x0425, emptyDigest)));
+      expect(() => assertNoLocationMetadata(ios)).not.toThrow();
+    });
+
+    it('refuses an IPTC record with a city', () => {
+      const city = [0x1c, 2, 90, ...u16(6), ...ascii('Manila')]; // IPTC-IIM dataset 2:90 City
+      const file = withApp13(photoshop(block(0x0425, emptyDigest), block(0x0404, city, [3, ...ascii('abc')])));
+      expect(readImageMetadata(file).locationTags).toEqual(['IPTC']);
+      expect(() => assertNoLocationMetadata(file)).toThrow(LocationMetadataError);
+    });
+
+    it.each([
+      ['an unknown APP13 payload', ascii('Adobe_CM')],
+      ['a resource block cut short', [...photoshop(block(0x0404, [])), ...ascii('8BIM'), 0x04]],
+      [
+        'a resource size past the segment',
+        [...ascii('Photoshop 3.0\0'), ...ascii('8BIM'), ...u16(0x0404), 0, 0, ...u32(99)],
+      ],
+    ])('refuses %s', (_, payload) => {
+      expect(() => assertNoLocationMetadata(withApp13(payload))).toThrow(LocationMetadataError);
+    });
+  });
+
   it('fails closed on unreadable files', () => {
     const truncated = fixture('gps-offset.jpg').subarray(0, 60); // Exif segment cut short
     expect(() => assertNoLocationMetadata(truncated)).toThrow(LocationMetadataError);
