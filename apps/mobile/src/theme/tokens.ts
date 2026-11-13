@@ -62,6 +62,9 @@ export const colors = {
   textOverlayShadow: 'rgba(0,0,0,0.45)', // soft shadow under light text on photos (Text)
   textOverlayShadowOnDark: 'rgba(255,255,255,0.6)', // light glow under ink text, so it reads on dark photos
   cropScrim: 'rgba(11,13,9,0.66)', // dims the photo outside the crop frame (Crop)
+  appealTint: '#efe8fb', // Appeal badge in the moderation console (ModConsole)
+  appealText: '#4b2f86', // its text; 8.9:1 on appealTint
+  rowSelected: '#f3f8ea', // the selected queue row (ModConsole)
   cropOutline: 'rgba(255,255,255,0.9)', // crop frame outline
   storyRingNew: '#d9e88a', // light end of the green ring around an author with a new jar (Feed); starts at brand
   storyRingSeen: '#d9dcd3', // grey ring around an author with nothing new (Feed)

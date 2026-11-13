@@ -1752,6 +1752,42 @@ export type Database = {
         }[];
       };
       mod_decide: { Args: { p_action: string; p_guideline?: string; p_item: string; p_note?: string }; Returns: Json };
+      mod_queue: {
+        Args: { p_filter?: string; p_limit?: number };
+        Returns: {
+          appeal_message: string;
+          caption: string;
+          comment_body: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          local_date: string;
+          moment_id: string;
+          owner_id: string;
+          owner_joined: string;
+          prior_removals: number;
+          reason: string;
+          report_count: number;
+          score: number;
+          slot: string;
+          source: Database['public']['Enums']['mod_source'];
+          status: Database['public']['Enums']['mod_status'];
+          username: string;
+          visible: boolean;
+        }[];
+      };
+      mod_queue_stats: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          all_open: number;
+          auto_check: number;
+          escalated: number;
+          median_wait_seconds: number;
+          open_appeals: number;
+          pending: number;
+          report: number;
+        }[];
+      };
       moderation_apply: {
         Args: {
           p_decision: string;

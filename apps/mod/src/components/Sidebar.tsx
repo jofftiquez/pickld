@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 import { colors, radius } from '@/theme/tokens';
 
@@ -11,11 +11,14 @@ import { t } from '~/i18n/t';
 export interface NavItem {
   href: string;
   label: string;
+  count?: number;
 }
 
 /** The dark left rail (design: ModConsole): name, sections, and who is signed in. */
 export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
   const path = usePathname();
+  const filter = useSearchParams().get('filter');
+  const here = filter && filter !== 'all' ? `${path}?filter=${filter}` : path;
   return (
     <aside
       style={{
@@ -38,7 +41,8 @@ export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
       </p>
       <nav aria-label={t('nav.label')} style={{ display: 'grid', gap: 4 }}>
         {items.map((item) => {
-          const active = item.href === '/' ? path === '/' : path.startsWith(item.href);
+          const active =
+            item.href.startsWith('/?') || item.href === '/' ? here === item.href : path.startsWith(item.href);
           return (
             <Link
               key={item.href}
@@ -52,9 +56,30 @@ export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
                 fontWeight: active ? 800 : 600,
                 fontSize: 15,
                 textDecoration: 'none',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
               }}
             >
               {item.label}
+              {item.count !== undefined ? (
+                <span
+                  aria-label={t('nav.count', { count: item.count })}
+                  style={{
+                    minWidth: 22,
+                    padding: '2px 7px',
+                    borderRadius: radius.pill,
+                    background: active ? colors.ink : colors.onDarkControl,
+                    color: colors.surface,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {item.count}
+                </span>
+              ) : null}
             </Link>
           );
         })}
