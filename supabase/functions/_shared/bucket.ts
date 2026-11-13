@@ -48,6 +48,27 @@ export async function listKeys(s3: S3Config, prefix: string): Promise<string[]> 
   return [...xml.matchAll(/<Key>([^<]*)<\/Key>/g)].map((m) => xmlText(m[1])).filter((k) => k.startsWith(prefix));
 }
 
+/** Every key under `prefix`, following the listing's continuation tokens. */
+export async function listAllKeys(s3: S3Config, prefix: string): Promise<string[]> {
+  const out: string[] = [];
+  let token: string | null = null;
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const url = `${s3.endpoint.replace(/\/+$/, '')}/${s3.bucket}?list-type=2&max-keys=1000&prefix=${
+      encodeURIComponent(prefix)
+    }${token ? `&continuation-token=${encodeURIComponent(token)}` : ''}`;
+    const res = await fetch(await presignUrl(url, s3, { method: 'GET', expiresIn: URL_TTL_SECONDS }));
+    const xml = await res.text();
+    if (!res.ok) throw new Error(`list objects: ${res.status}`);
+    out.push(
+      ...[...xml.matchAll(/<Key>([^<]*)<\/Key>/g)].map((m) => xmlText(m[1])).filter((k) => k.startsWith(prefix)),
+    );
+    const next = /<NextContinuationToken>([^<]+)<\/NextContinuationToken>/.exec(xml)?.[1];
+    if (!xml.includes('<IsTruncated>true</IsTruncated>') || !next) return out;
+    token = xmlText(next);
+  }
+  throw new Error('list objects: too many pages');
+}
+
 /** An object's bytes, or null when it doesn't exist. */
 export async function getObject(s3: S3Config, key: string): Promise<Uint8Array | null> {
   const res = await fetch(await presignObject(s3, key, { method: 'GET', expiresIn: URL_TTL_SECONDS }));
@@ -62,6 +83,18 @@ export async function getObject(s3: S3Config, key: string): Promise<Uint8Array |
     throw new Error(`get object: ${res.status}`);
   }
   return new Uint8Array(await res.arrayBuffer());
+}
+
+/** Writes one object (small files; large ones go through MultipartUpload). */
+export async function putObject(s3: S3Config, key: string, data: Uint8Array, contentType: string): Promise<void> {
+  const headers = { 'content-type': contentType };
+  const res = await fetch(await presignObject(s3, key, { method: 'PUT', expiresIn: URL_TTL_SECONDS, headers }), {
+    method: 'PUT',
+    headers,
+    body: data as Uint8Array<ArrayBuffer>,
+  });
+  await res.body?.cancel();
+  if (!res.ok) throw new Error(`put object: ${res.status}`);
 }
 
 /** Default part size: R2 needs every part but the last to be the same size, S3 at least 5 MiB. */

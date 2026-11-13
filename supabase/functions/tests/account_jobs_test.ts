@@ -2,9 +2,12 @@
 // stack, handlers in-process. Delete hides the profile at once; the export zip holds exactly the person's
 // moments (private ones too) with byte-equal photos; the purge removes the auth user, every object under
 // their prefixes and the export, and nothing of anyone else's (similar keys, seed/ keys); the purge waits
-// for an export; only the cron secret runs jobs.
+// for an export; only the cron secret runs jobs. Edited moments also get a finished copy (T-508): drawn with
+// their filter and stickers, the retired sticker and the one from a pack the owner doesn't own included,
+// over several runs when the drawing budget runs out.
 import { assert, assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import { deletePrefix, listKeys } from '../_shared/bucket.ts';
+import { skia } from '../_shared/moment_render.ts';
 import { userClient } from '../_shared/env.ts';
 import { userPrefixes } from '../_shared/object_keys.ts';
 import { presignObject } from '../_shared/sigv4.ts';
@@ -50,7 +53,9 @@ const deleteCall = async (jwt: string | undefined, method = 'POST') =>
 
 const store = async (): Promise<JobsStore> => serviceStore(await admin(), await localS3());
 
-const jobsCall = async (opts: { secret?: string | null; method?: string; store?: JobsStore } = {}) => {
+const jobsCall = async (
+  opts: { secret?: string | null; method?: string; store?: JobsStore; renderBudgetMs?: number } = {},
+) => {
   const st = opts.store ?? await store();
   const headers: Record<string, string> = {};
   if (opts.secret !== null) headers['x-jobs-secret'] = opts.secret ?? SECRET;
@@ -58,6 +63,7 @@ const jobsCall = async (opts: { secret?: string | null; method?: string; store?:
     await handleAccountJobs(new Request('http://fn.local/account-jobs', { method: opts.method ?? 'POST', headers }), {
       store: () => st,
       secret: () => SECRET,
+      renderBudgetMs: opts.renderBudgetMs,
     }),
   );
 };
@@ -120,14 +126,54 @@ interface Seeded {
   key: string;
 }
 const seeded: Seeded[] = [];
+/** Moments with edits: slot → what their finished copy must show. */
+const edited = new Map<string, { date: string; key: string }>();
+
+/** A solid PNG of w×h in one color. */
+async function solid(w: number, h: number, rgb: [number, number, number]): Promise<Uint8Array<ArrayBuffer>> {
+  const { ck } = await skia();
+  const surface = ck.MakeSurface(w, h)!;
+  surface.getCanvas().clear(ck.Color(rgb[0], rgb[1], rgb[2], 1));
+  const img = surface.makeImageSnapshot();
+  const out = img.encodeToBytes(ck.ImageFormat.PNG, 100)!;
+  img.delete();
+  surface.delete();
+  return new Uint8Array(out);
+}
+
+/** The pixel at (x, y) of an encoded image, and its size. */
+async function pixelAt(bytes: Uint8Array, x: number, y: number) {
+  const { ck } = await skia();
+  const img = ck.MakeImageFromEncoded(bytes)!;
+  const px = img.readPixels(x, y, {
+    width: 1,
+    height: 1,
+    colorType: ck.ColorType.RGBA_8888,
+    alphaType: ck.AlphaType.Unpremul,
+    colorSpace: ck.ColorSpace.SRGB,
+  }) as Uint8Array;
+  const size = [img.width(), img.height()];
+  img.delete();
+  return { rgb: [px[0], px[1], px[2]], size };
+}
+
+const near = (got: number[], want: number[], msg: string, tol = 8) =>
+  assert(got.every((v, i) => Math.abs(v - want[i]) <= tol), `${msg}: got ${got}, want ${want}`);
+
+// A premium pack of the test's own, never owned by anyone, with one retired sticker and one on offer.
+const PACK = `t508-${crypto.randomUUID().slice(0, 8)}`;
+const RETIRED_ART = `stickers/${PACK}/retired.png`;
+const UNOWNED_ART = `stickers/${PACK}/unowned.png`;
 
 async function moment(user: TestUser, jarId: string, date: string, visibility: string, slot: string, o: {
   caption?: string;
   isPrivate?: boolean;
   status?: 'live' | 'removed';
+  photo?: Uint8Array<ArrayBuffer>;
+  edits?: unknown;
 } = {}) {
   const key = `moments/${user.id}/${crypto.randomUUID()}/full.jpg`;
-  const bytes = crypto.getRandomValues(new Uint8Array(2000 + Math.floor(Math.random() * 3000)));
+  const bytes = o.photo ?? crypto.getRandomValues(new Uint8Array(2000 + Math.floor(Math.random() * 3000)));
   await put(key, bytes);
   await put(key.replace('full.jpg', 'thumb.jpg'), bytes.slice(0, 100));
   const m = await insert<{ id: string }>('moments', {
@@ -140,6 +186,7 @@ async function moment(user: TestUser, jarId: string, date: string, visibility: s
     captured_at: '2026-11-01T01:02:03Z',
     photo_path: key,
     thumb_path: key.replace('full.jpg', 'thumb.jpg'),
+    ...(o.edits === undefined ? {} : { edits: o.edits }),
   });
   const { error } = await (await admin()).rpc('moderation_apply', {
     p_moment_id: m.id,
@@ -152,6 +199,7 @@ async function moment(user: TestUser, jarId: string, date: string, visibility: s
   photos.set(key, bytes);
   if (user === owner && o.status !== 'removed') {
     seeded.push({ date, slot, caption: o.caption ?? null, is_private: o.isPrivate ?? false, visibility, key });
+    if (o.edits !== undefined) edited.set(slot, { date, key });
   }
 }
 
@@ -181,8 +229,43 @@ Deno.test('setup', async () => {
   };
   const a = await jar(owner, 1, 'everyone');
   const b = await jar(owner, 2, 'readers');
-  await moment(owner, a.id, a.date, a.visibility, 'morning', { caption: 'coffee ☕' });
-  await moment(owner, a.id, a.date, a.visibility, 'selfie', { caption: 'just me', isPrivate: true });
+  // Sticker art in the bucket, and catalog rows: one retired (0032), both in a pack the owner doesn't own.
+  await put(RETIRED_ART, await solid(100, 100, [230, 20, 20]));
+  await put(UNOWNED_ART, await solid(100, 100, [20, 40, 230]));
+  strays.push(RETIRED_ART, UNOWNED_ART);
+  const pack = await insert<{ id: string }>('sticker_packs', { slug: PACK, name: 'T-508 test', tier: 'premium' });
+  await insert('stickers', {
+    pack_id: pack.id,
+    label: 'retired',
+    asset_path: RETIRED_ART,
+    retired_at: new Date().toISOString(),
+  });
+  await insert('stickers', { pack_id: pack.id, label: 'unowned', asset_path: UNOWNED_ART });
+  const sticker = (id: string, asset: string, x: number, y: number) => ({
+    id,
+    type: 'sticker',
+    x,
+    y,
+    scale: 0.3,
+    rotation: 0,
+    asset,
+  });
+
+  await moment(owner, a.id, a.date, a.visibility, 'morning', {
+    caption: 'coffee ☕',
+    photo: await solid(300, 400, [200, 40, 120]),
+    edits: {
+      v: 1,
+      filter: 'mono',
+      overlays: [sticker('r', RETIRED_ART, 0.25, 0.25), sticker('u', UNOWNED_ART, 0.75, 0.75)],
+    },
+  });
+  await moment(owner, a.id, a.date, a.visibility, 'selfie', {
+    caption: 'just me',
+    isPrivate: true,
+    photo: await solid(300, 400, [40, 160, 90]),
+    edits: { v: 1, filter: 'original', overlays: [sticker('u', UNOWNED_ART, 0.5, 0.5)] },
+  });
   await moment(owner, a.id, a.date, a.visibility, 'evening', { caption: 'removed one', status: 'removed' });
   await moment(owner, b.id, b.date, b.visibility, 'whereami');
 
@@ -223,8 +306,17 @@ Deno.test('data-export: nothing yet, then a pending job, then a zip of exactly t
     'asking again: same job',
   );
 
+  // A run whose drawing budget is spent draws one finished copy and hands the job back unharmed.
+  const first = await jobsCall({ renderBudgetMs: 0 });
+  assert(first.json.data.waiting >= 1, JSON.stringify(first.json));
+  const waiting = await job(owner.id, 'export');
+  assertEquals([waiting.status, waiting.attempts], ['pending', 0], 'handed back without using an attempt');
+  assertEquals((await listKeys(s3, `exports/${owner.id}/${waiting.id}/`)).length, 1, 'one copy drawn');
+
   const j = await runUntilSettled(owner.id, 'export');
   assertEquals(j.status, 'done', j.error ?? '');
+  assertEquals(j.attempts, 1, 'the finishing run is the only attempt');
+  assertEquals(await listKeys(s3, `exports/${owner.id}/${j.id}/`), [], 'the drawn copies are cleaned up');
   assertEquals(j.result_key, `exports/${owner.id}/${j.id}.zip`);
 
   const got = await exportCall(owner.jwt, 'GET');
@@ -246,19 +338,44 @@ Deno.test('data-export: nothing yet, then a pending job, then a zip of exactly t
   const [newer, older] = [localDate('Asia/Manila', 1), localDate('Asia/Manila', 2)];
   const at = '2026-11-01T01:02:03+00:00';
   assertEquals(
-    moments.map((m: Json) => [m.date, m.slot, m.caption, m.is_private, m.visibility, m.photo, m.captured_at]),
+    moments.map((
+      m: Json,
+    ) => [m.date, m.slot, m.caption, m.is_private, m.visibility, m.photo, m.finished, m.captured_at]),
     [
-      [older, 'whereami', null, false, 'readers', `photos/${older}/whereami.jpg`, at],
-      [newer, 'selfie', 'just me', true, 'everyone', `photos/${newer}/selfie.jpg`, at],
-      [newer, 'morning', 'coffee ☕', false, 'everyone', `photos/${newer}/morning.jpg`, at],
+      [older, 'whereami', null, false, 'readers', `photos/${older}/whereami.jpg`, `finished/${older}/whereami.jpg`, at],
+      [newer, 'selfie', 'just me', true, 'everyone', `photos/${newer}/selfie.jpg`, `finished/${newer}/selfie.jpg`, at],
+      [
+        newer,
+        'morning',
+        'coffee ☕',
+        false,
+        'everyone',
+        `photos/${newer}/morning.jpg`,
+        `finished/${newer}/morning.jpg`,
+        at,
+      ],
     ],
     'every moment but the removed one, private included, by date and slot',
   );
   assert(moments.every((m: Json) => typeof m.added_at === 'string'));
 
-  // Photos byte-equal to the uploads; nothing else in the archive.
-  for (const s of seeded) assertEquals(files.get(`photos/${s.date}/${s.slot}.jpg`), photos.get(s.key), s.slot);
-  assertEquals(files.size, 2 + seeded.length);
+  // Photos byte-equal to the uploads; a moment without edits has the same bytes as its finished copy.
+  for (const s of seeded) {
+    assertEquals(files.get(`photos/${s.date}/${s.slot}.jpg`), photos.get(s.key), s.slot);
+    if (!edited.has(s.slot)) assertEquals(files.get(`finished/${s.date}/${s.slot}.jpg`), photos.get(s.key), s.slot);
+  }
+  assertEquals(files.size, 2 + 2 * seeded.length, 'nothing else in the archive');
+
+  // Finished copies as the app shows them. Mono of (200, 40, 120) is Rec. 709 luma 0.2126·200 +
+  // 0.7152·40 + 0.0722·120 ≈ 80; each sticker is 0.3 of the 300-wide photo (90 px) around its point.
+  const morning = files.get(`finished/${newer}/morning.jpg`)!;
+  assertEquals((await pixelAt(morning, 150, 200)).size, [300, 400]);
+  near((await pixelAt(morning, 150, 200)).rgb, [80, 80, 80], 'mono filter');
+  near((await pixelAt(morning, 75, 100)).rgb, [230, 20, 20], 'the retired sticker');
+  near((await pixelAt(morning, 225, 300)).rgb, [20, 40, 230], 'the sticker from a pack they do not own');
+  const selfie = files.get(`finished/${newer}/selfie.jpg`)!;
+  near((await pixelAt(selfie, 150, 200)).rgb, [20, 40, 230], 'the private moment, drawn for its owner');
+  near((await pixelAt(selfie, 20, 20)).rgb, [40, 160, 90], 'no filter: the photo as it was');
 
   // One a day: asking again returns the done export and its link.
   const again = await exportCall(owner.jwt);
@@ -443,5 +560,8 @@ Deno.test('cleanup', async () => {
     await res.body?.cancel();
   }
   for (const id of swept) for (const p of [...userPrefixes(id), `exports/${id}/`]) await deletePrefix(s3, p);
+  // The test pack would break the catalog checks in supabase/tests (its stickers cascade).
+  const { error } = await (await admin()).from('sticker_packs').delete().eq('slug', PACK);
+  if (error) throw new Error(`delete test pack: ${error.message}`);
   await cleanup();
 });

@@ -1538,6 +1538,28 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      account_job_yield: {
+        Args: { p_id: string };
+        Returns: {
+          attempts: number;
+          completed_at: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          kind: Database['public']['Enums']['account_job_kind'];
+          result_key: string | null;
+          run_after: string;
+          status: Database['public']['Enums']['account_job_status'];
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'account_jobs';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       account_jobs_claim: {
         Args: { p_limit?: number };
         Returns: {
