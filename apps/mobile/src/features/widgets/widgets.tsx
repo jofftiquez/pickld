@@ -3,6 +3,8 @@
 // Each 'widget' function is turned into source text and runs in the widget extension on its own: it can use
 // only its props and the @expo/ui SwiftUI components and modifiers (globals there, so keep their names), never
 // anything else from this file. Colours therefore come in through props, from tokens.ts.
+// Each layout's root sets containerBackground for the widget (iOS 17+ shows "Please adopt containerBackground API"
+// instead of a widget without one) and keeps background for iOS 16.
 import {
   Circle,
   HStack,
@@ -19,6 +21,7 @@ import {
   accessibilityLabel,
   background,
   clipShape,
+  containerBackground,
   font,
   foregroundStyle,
   frame,
@@ -58,7 +61,10 @@ function TodayLayout(props: TodayProps) {
   const body = { width: 50, height: 52 };
   const fill = Math.max(props.fill > 0 ? 6 : 0, body.height * props.fill);
   return (
-    <HStack spacing={14} modifiers={[background(c.surface), widgetURL(props.url)]}>
+    <HStack
+      spacing={14}
+      modifiers={[background(c.surface), containerBackground(c.surface, 'widget'), widgetURL(props.url)]}
+    >
       <VStack spacing={0} modifiers={[accessibilityLabel(props.headline)]}>
         <RoundedRectangle cornerRadius={3} modifiers={[foregroundStyle(c.brand), frame({ width: 38, height: 9 })]} />
         <RoundedRectangle
@@ -117,7 +123,10 @@ function FriendLayout(props: FriendProps) {
   'widget';
   const c = props.colors;
   return (
-    <ZStack alignment="bottomLeading" modifiers={[background(c.placeholder), widgetURL(props.url)]}>
+    <ZStack
+      alignment="bottomLeading"
+      modifiers={[background(c.placeholder), containerBackground(c.placeholder, 'widget'), widgetURL(props.url)]}
+    >
       {props.imageUri ? (
         <Image uiImage={props.imageUri} modifiers={[resizable(), frame({ maxWidth: 10000, maxHeight: 10000 })]} />
       ) : (
