@@ -16,7 +16,7 @@ const moment = (i: number, over: Partial<JarMoment> = {}): JarMoment => ({
   id: `m${i}`,
   slot: slots[i]!,
   status: 'live',
-  is_private: false,
+  visibility: 'readers',
   is_backfilled: false,
   caption: null,
   captured_at: null,
@@ -116,7 +116,7 @@ describe('Share jar layouts (D-62)', () => {
   });
 
   it('counts only the moments on the card: a private one changes nothing', async () => {
-    setMoments(2, [moment(5, { is_private: true })]);
+    setMoments(2, [moment(5, { visibility: 'only_me' })]);
     await render(<ShareCardScreen jarId="jar-10" />);
     expect(layoutNames()).toEqual(['Layout: Side by side', 'Layout: Stacked']);
     expect(screen.queryByTestId(`share-card-${slots[5]}`)).toBeNull();
