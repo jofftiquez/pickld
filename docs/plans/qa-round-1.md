@@ -1,6 +1,6 @@
 # Plan — QA round 1 (iPhone test, Nov 13)
 
-Nov 13, 2026. Planning only: nothing here is built yet. The product owner tested "Pickld Local" on his iPhone against the Mac's local Supabase and sent 18 items, then added item 19 (email sign-in with a code) and items 20–22 (a Stickers page, the share card layout and success toasts). Each item below says what happens today and why, the proposed change, what it touches, which design screens change, the risks and a rough size. The work is grouped into pieces that ship separately, in order, with the pieces that can run at the same time marked. Open decisions are at the end, each with a recommendation.
+Nov 13, 2026. Planning only: nothing here is built yet. The product owner tested "Pickld Local" on his iPhone against the Mac's local Supabase and sent 18 items, then added item 19 (email sign-in with a code), items 20–22 (a Stickers page, the share card layout and success toasts) and items 23–26 (more filters, the crop page's Save button, a selfie mirror setting and a green shutter). Each item below says what happens today and why, the proposed change, what it touches, which design screens change, the risks and a rough size. The work is grouped into pieces that ship separately, in order, with the pieces that can run at the same time marked. Open decisions are at the end, each with a recommendation.
 
 Sizes: **S** is under half a day, **M** is 1–2 days, **L** is 3–5 days. iOS only.
 
@@ -23,6 +23,11 @@ Sizes: **S** is under half a day, **M** is 1–2 days, **L** is 3–5 days. iOS 
   - A Stickers page that joins the existing My stickers and Shop screens.
   - A share card where the picture is the main view and the layout follows the number of moments.
   - One shared toast for success messages.
+- **Items 23–26 are capture polish, no schema:**
+  - More color filters (23).
+  - **Crop's Save button is off screen (24):** the photo frame is sized from the screen height without counting the header, so the sheet below it is too short for its own button.
+  - A Mirror selfies setting (25).
+  - A green shutter (26).
 
 ## Root causes of the two bugs
 
@@ -140,7 +145,7 @@ Sizes: **S** is under half a day, **M** is 1–2 days, **L** is 3–5 days. iOS 
 
 **Change:**
 
-- Three tabs in the order he wrote them: **Today | Moments | Jars**. Today stands out: a filled green pill with a larger icon whether or not it is selected.
+- Three tabs in the order he wrote them: **Today | Moments | Jars**. Only the selected tab is highlighted, the same way for every tab, as before. (A permanent green pill for Today was tried in piece 2 and dropped on Nov 13: keeping Today green meant outlining the whole button to show it was selected. D-52 is updated.)
 - Capture is hidden with `href: null`; the route and the camera stay, so it can come back.
 - My days leaves the tab bar and becomes a normal stack screen at `/my-days`, opened from the calendar button. Memories already links back to it.
 - D-17 ("keep 'My days' as the tab name") no longer applies: the screen keeps its name but isn't a tab.
@@ -368,7 +373,7 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
   - the moment preview's action bar (3);
   - Moment detail's top buttons.
 - One small `GlassSurface` component chooses `GlassView` when `isLiquidGlassAvailable() && isGlassEffectAPIAvailable()` and Reduce Transparency is off, and the current `BlurView` look otherwise.
-- Keep the custom tab bar rather than native tabs, so the Today emphasis (item 4) stays.
+- Keep the custom tab bar rather than native tabs, so the bar keeps its look and its large-text rules (D-37).
 
 **Touches:** `package.json` (one free Expo module), `FloatingTabBar`, `RoundIconButton`, a new `GlassSurface`, the editor and preview bars.
 
@@ -531,6 +536,93 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 
 **Size:** M.
 
+### 23. More filters
+
+**Today:** Five color filters: Original, Kalamansi, Merienda, Mono and Dusk (FR-CAP-04). Each is a 4×5 Skia color matrix in `filters.ts`; the list of ids is `filters` in `tokens.ts`. The editor shows them in a horizontal row that already scrolls, but all five fit on screen. A moment stores only the filter id in `moments.edits` (FR-CAP-08), so there is no database constraint on the names.
+
+**Change (decision D17):**
+
+- Add six color-only looks (rule 8: no beauty or face filters), named in the same spirit as Kalamansi and Merienda. Each is built from saturation, tint, lift and contrast, which a color matrix can do:
+  - **Kape**: warm, faded brown.
+  - **Ube**: soft lavender pastel.
+  - **Sampaguita**: bright and clean, slightly cool.
+  - **Gabi**: cool night look with more contrast.
+  - **Luma**: vintage, faded and a little sepia.
+  - **Ulan**: rainy, muted blue-green.
+- Original stays first and the old five keep their order, so nothing moves under the thumb.
+- With 11 thumbnails the row scrolls. Size it so the last visible thumbnail is cut in half, the same hint as the sticker grid (item 15).
+- **Where the list lives:**
+  - The app: `tokens.ts`, `filters.ts` and `en.json` (`edit.filter.*`).
+  - The web page reuses the app's `filterMatrices` through its `@/` path, so it follows automatically.
+  - The data export draws finished photos from copies of the matrices in `supabase/functions/_shared/moment_layout.ts`, with an id list in `moment_render.ts`. Both get the new entries, and `exportRenderSpec.test.ts` already fails if the copies differ.
+- **Older builds** parse the filter with a fallback to Original (`edits.ts`, `moment_render.ts`), so a moment with a new filter shows unfiltered there instead of failing. Only test builds exist, so that is acceptable.
+
+**Touches:** `tokens.ts`, `filters.ts`, `en.json`, `EditorView` (row sizing), `moment_layout.ts`, `moment_render.ts`, and the `filters` and `exportRenderSpec` tests. No migration.
+
+**Design:** **Capture** (the filter row).
+
+**Risks:** Each matrix must keep black and white from clipping. `filters.test.ts` checks the existing ones that way; extend it to the new ones. Judge the looks on real photos on his iPhone before merging.
+
+**Size:** S–M.
+
+### 24. Crop: "Save crop" is hard to reach
+
+**Today:** Crop (`CropView`) stacks the header, the photo area and a white sheet. The sheet is a `ScrollView` holding the zoom slider, Rotate/Flip/Fit, a note, and at the bottom the main button ("Next: edit" from the gallery, "Save crop" for Re-crop).
+
+**Why it's hidden:** `cropFrame` limits the frame's height to 400/844 of the **window** height, and the photo area adds 60 pt above and below the frame. The header and the top safe area aren't counted.
+
+- On an iPhone 17 Pro (874 pt tall), the header uses about 150 pt and the photo area about 534 pt, which leaves the sheet about 190 pt.
+- The sheet's contents need about 310 pt, so the button starts below the screen and you have to scroll a short sheet to find it.
+- These numbers are worked out from the code. Confirm them with a capture on his iPhone when building.
+
+**Change (decision D18):**
+
+- Move the main button into the header's right side as a green pill, like the editor's Save (D-59): **Cancel | Crop · #slot | Next: edit / Save crop**.
+- Reset leaves the header and joins Rotate, Flip and Fit as a fourth tool.
+- Size the frame from the space actually left after the header and the sheet, so the sheet always fits without scrolling. The sheet keeps scrolling only at large text sizes (D-37).
+- The button is disabled while saving, as now, and the error line stays above the tools.
+
+**Touches:** `CropView`, `CropHeaderAction` (or the editor's `PillButton`), `cropMath.ts` (`cropFrame`), `tokens.ts` (`crop`), the `CropScreen` tests and the Maestro flows that scroll to and tap `crop-done`.
+
+**Design:** **Crop**.
+
+**Risks:** Reset next to the tools must not be mistaken for an action that saves. Keep its "Reset" label and accessibility hint.
+
+**Size:** S–M.
+
+### 25. A setting to mirror selfies or not
+
+**Today:** The camera uses VisionCamera's default `mirrorMode: 'auto'`. That mirrors front-camera **outputs**, the saved photo as well as the preview, so a selfie is saved the way you saw it in the viewfinder, mirrored. There is no setting.
+
+- This is from the library's code and docs. The Simulator has no camera, so confirm it on his iPhone.
+
+**Change (decision D19):**
+
+- A new **Camera** section in Settings with one switch, **Mirror selfies**. It is on by default, which keeps today's behavior and matches the iPhone Camera app's default.
+- Keep the preview mirrored either way, as the iPhone Camera does. When the switch is off, flip front-camera photos left to right in the existing image pipeline (`pipeline.ts` already supports `flip`) before they are queued. This is simpler and safer than a separate camera mirror setting per output.
+- The setting is saved on this phone only, in the local key-value store the app already uses (`expo-sqlite/kv-store`), and not sent to the server. It affects new photos only. Gallery imports and photos already taken don't change.
+- Crop's Flip still lets you mirror any single photo.
+
+**Touches:** `SettingsView` and `useSettings` (new section and switch), a small `cameraPrefs` module, `app/camera.tsx` (pass the facing and the setting to the pipeline), `pipeline.ts` or `saveCapture`, `en.json`, tests for the setting and for the flip of front-camera photos.
+
+**Design:** **Settings** (new Camera section).
+
+**Risks:** The flip must happen before the photo is queued, so the queued file, the upload and the edits all agree, and an offline capture keeps the setting it was taken with.
+
+**Size:** S.
+
+### 26. The shutter button in primary green
+
+**Today:** `ShutterButton` is a white ring around a white disc.
+
+**Change:** The disc becomes brand green (`colors.brand`, #7fad33), inside the same white ring. Pressed and disabled keep their opacity changes. There's no text on it, so rule 12's white-text rule isn't affected, and the green disc stands out against the black camera background.
+
+**Touches:** `ShutterButton`, its test, `tokens.ts` if a named color is added.
+
+**Design:** **Camera**.
+
+**Size:** S.
+
 ## Pieces, order and what runs in parallel
 
 | #   | Piece                       | Items                                      | Schema | Size | Depends on                            |
@@ -550,10 +642,12 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 | 13  | Success toasts              | 22                                         | —      | M    | —                                     |
 | 14  | Stickers page               | 20                                         | —      | S–M  | 2 (Today header)                      |
 | 15  | Share card layouts          | 21                                         | —      | M–L  | —                                     |
+| 16  | Capture polish              | 23, 24, 25, 26                             | —      | M    | 3 (editor panel), D17–D19             |
 
 - **Pieces 1, 2 and 3 run in parallel now.** They touch different files and none needs a decision except D5 (tab bar) and D12 (Save in the toolbar).
 - **Piece 12 runs alongside 2 and 3** once piece 1 has merged (both touch the onboarding navigation). It ships together with the template change from the other thread.
 - **Piece 13 (toasts) runs early, in parallel with 1–3,** so the later pieces can call it. **Pieces 14 and 15 are independent** and can run alongside anything; 14 waits for piece 2's header change.
+- **Piece 16 (capture polish) runs alongside anything** once piece 3 has merged, since the filter row sits in the editor panel that piece 3 changed. The crop, mirror and shutter parts don't need piece 3 and can be split off if a decision holds up the filters.
 - **Piece 4 is the gate** for the rule changes. After it, **5, 6 and 7 run in parallel**, and **8** can run alongside.
 - **9, 10 and 11 come last.** They build on the preview, the new bars and the jar card.
 - Each piece is one PR (or two for the large ones: schema first, then the app). Each waits for a green `ci` and its pgTAP tests, and each new rule is recorded as a D-number in `docs/decisions.md`. After each piece the local stack and his phone build are refreshed so he can check it on the iPhone.
@@ -567,6 +661,7 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 - **D-9:** `visible_count` stays "live and not Only me"; per-viewer counts come from the RPCs.
 - **D-12:** photo tokens follow the new `can_view_moment` automatically.
 - **D-17:** superseded. My days isn't a tab any more; the screen keeps its name.
+- **D-52:** updated Nov 13. Only the selected tab is highlighted; Today has no permanent green pill.
 - **D-18:** Explore shows Everyone jars with only their Everyone moments.
 - **D-22 / D-41:** unchanged. Moments still become visible only after `fn:moderate` sets `live`, which now matters sooner because nothing waits for Publish.
 - **D-29:** unchanged (no likes on comments).
@@ -578,6 +673,8 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 - **D-33:** the sign-in email sentence is replaced (item 19); universal links and `/auth/callback` stay for Apple and Google.
 - **FR-SOC-10:** "8 moments" becomes "the shown moments in a layout the user picks"; private moments are still never included.
 - **FR-STK-06:** the Sticker shop is reached from the new Stickers page as well as the editor.
+- **FR-CAP-04:** the filter list grows from five to eleven (item 23). **FR-CAP-03:** the crop's main button moves to the header and Reset joins the tools (item 24). **FR-CAP-01:** the shutter is green, and front-camera photos follow the Mirror selfies setting (items 25 and 26).
+- **D-59:** item 24 reuses the editor's toolbar pattern on Crop.
 
 ## Open decisions
 
@@ -599,3 +696,9 @@ Each has a recommendation; "yes" accepts it. **Accepted Nov 13:** the product ow
 14. **D14 Stickers page:** one Stickers page with Mine | Shop, opened from a stickers button in Today's header and a row on your profile, not a tab.
 15. **D15 Share card:** the picture takes about two thirds of the screen, layout thumbnails and backgrounds sit in the bottom third, and Format and Include captions move to an Options button. The layouts are those in the item 21 table, with the first as the default.
 16. **D16 Toasts:** one in-house toast near the top for success messages only, with no new library. Errors stay as they are.
+
+Added Nov 13 with items 23–26 (asked one at a time; item 26 needs no decision):
+
+17. **D17 Filters:** add six color-only filters (Kape, Ube, Sampaguita, Gabi, Luma, Ulan), for eleven in all. Original stays first and the old five keep their order.
+18. **D18 Crop button:** "Next: edit" / "Save crop" moves to the top right of the Crop header as a green pill, like the editor's Save. Reset joins the tools row, and the frame is sized so the sheet fits without scrolling.
+19. **D19 Mirror selfies:** a Mirror selfies switch in a new Camera section of Settings, on by default (as today and like the iPhone Camera), saved on this phone only. When it's off, new front-camera photos are flipped back; the preview stays mirrored.
