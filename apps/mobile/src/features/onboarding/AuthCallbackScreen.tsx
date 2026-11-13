@@ -10,7 +10,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
 
-/** pickld://auth/callback?code=…: the email link (or a provider) coming back. Exchanges the code, then the
+/** pickld://auth/callback?code=…: Apple or Google (or an older email link) coming back. Exchanges the code, then the
  * index sends a new account to About you and everyone else to Today. */
 export function AuthCallbackScreen() {
   const { t } = useTranslation();

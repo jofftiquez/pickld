@@ -1001,17 +1001,19 @@
       "body": "Your jars are right where you left them.",
       "apple": "Sign in with Apple",
       "google": "Sign in with Google",
-      "hint": "We’ll email you a one-tap sign-in link. No password needed.",
-      "send": "Send sign-in link",
+      "hint": "We’ll email you a 6-digit code. No password needed.",
+      "send": "Send sign-in code",
       "newHere": "New here? Create an account"
     },
     "checkEmail": {
       "title": "Check your email",
-      "sentTo": "We sent a sign-in link to",
-      "tapIt": ". Tap it on this phone to jump straight in.",
+      "sentTo": "We sent a 6-digit code to",
+      "enterIt": ". Enter it below.",
+      "codeLabel": "6-digit code",
+      "checking": "Checking your code…",
       "openApp": "Open email app",
       "resendIn": "Didn’t get it? Resend in {{time}}",
-      "resend": "Didn’t get it? Resend link",
+      "resend": "Didn’t get it? Resend code",
       "resent": "Sent again. Check your inbox.",
       "different": "Use a different email"
     },
@@ -1023,6 +1025,8 @@
     "errors": {
       "invalidEmail": "Enter a valid email address.",
       "noAccount": "No account uses that email yet. Create one instead?",
+      "wrongCode": "That code isn’t right.",
+      "codeExpired": "That code has expired. Send a new one.",
       "rateLimited": "Too many tries. Wait a minute and try again.",
       "cancelled": "Sign in was cancelled.",
       "failed": "Something went wrong. Check your connection and try again."

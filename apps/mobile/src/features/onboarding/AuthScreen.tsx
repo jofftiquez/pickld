@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { track } from '@/lib/analytics';
-import { AuthFlowError, openLegal, sendEmailLink, signInWithProvider } from '@/lib/auth';
+import { AuthFlowError, openLegal, sendEmailCode, signInWithProvider } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
 
 import { AuthView, type AuthMode } from './AuthView';
 
-/** Sign up / Sign in routes. Once a session exists (Apple, Google, or the email link) the app's index decides
+/** Sign up / Sign in routes. Once a session exists (Apple, Google, or the emailed code) the app's index decides
  * where to go: About you for a new account, Today otherwise. */
 export function AuthScreen({ mode }: { mode: AuthMode }) {
   const { t } = useTranslation();
@@ -27,7 +27,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
     setError(null);
     try {
       await work();
-      // Sign up is done once a provider signed in or the email link went out.
+      // Sign up is done once a provider signed in or the email code went out.
       if (mode === 'signUp') track('signup_step_completed', { step: 'sign_up' });
     } catch (e) {
       const kind = e instanceof AuthFlowError ? e.kind : 'failed';
@@ -52,7 +52,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
       onProvider={(provider) => void run(() => signInWithProvider(provider))}
       onSubmitEmail={() =>
         void run(async () => {
-          const sent = await sendEmailLink(email, mode);
+          const sent = await sendEmailCode(email, mode);
           router.push({ pathname: '/check-email', params: { email: sent, mode } });
         })
       }

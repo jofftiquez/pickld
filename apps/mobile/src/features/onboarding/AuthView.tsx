@@ -48,7 +48,7 @@ export type AuthViewProps = {
   onLegal: (page: 'terms' | 'privacy') => void;
 };
 
-/** Sign up and Sign in (FR-ACC-01, FR-ACC-02, FR-PRV-04): Apple, Google, or a one-tap email link. */
+/** Sign up and Sign in (FR-ACC-01, FR-ACC-02, FR-PRV-04): Apple, Google, or a 6-digit email code. */
 export function AuthView({
   mode,
   insets,
