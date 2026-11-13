@@ -76,6 +76,7 @@ export const colors = {
   coverFadeTop: 'rgba(10,12,8,0.35)', // top of the dark fade over the Jar page cover, behind Back (Story)
   coverFadeBottom: 'rgba(10,12,8,0.75)', // bottom of that fade, behind the author and title
   coverSubtitle: '#eef0ea', // date and count under the title on the cover (Story)
+  surfaceClear: 'rgba(255,255,255,0)', // transparent end of fades into surface (the sticker grid's bottom edge)
   progressTrack: 'rgba(255,255,255,0.4)', // moments not reached yet in Moment detail's progress bars (Moment)
 } as const;
 
