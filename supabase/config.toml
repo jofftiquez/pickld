@@ -251,8 +251,21 @@ otp_expiry = 600
 # sender_name = "Admin"
 
 # Pickld's branded auth emails. The same files go to every environment (`supabase config push` for cloud
-# projects); a local change shows after the local stack restarts. Sign-in, sign-up and password reset
-# still use Supabase's default link emails until the app takes codes (QA round 1, piece 12).
+# projects); a local change shows after the local stack restarts. Sign-in, sign-up and reset emails carry
+# only the code ({{ .Token }}), so they ship with the app's code entry (QA round 1, piece 12).
+[auth.email.template.magic_link]
+subject = "{{ .Token }} is your Pickld code"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "{{ .Token }} is your Pickld code"
+content_path = "./supabase/templates/confirmation.html"
+
+# Pickld has no passwords, so a reset request gets a sign-in code instead.
+[auth.email.template.recovery]
+subject = "{{ .Token }} is your Pickld code"
+content_path = "./supabase/templates/recovery.html"
+
 [auth.email.template.email_change]
 subject = "Confirm your new Pickld email"
 content_path = "./supabase/templates/email_change.html"
