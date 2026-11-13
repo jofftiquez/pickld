@@ -1,6 +1,6 @@
 # Plan — QA round 1 (iPhone test, Nov 13)
 
-Nov 13, 2026. Planning only: nothing here is built yet. The product owner tested "Pickld Local" on his iPhone against the Mac's local Supabase and sent 18 items, then added item 19 (email sign-in with a code). Each item below says what happens today and why, the proposed change, what it touches, which design screens change, the risks and a rough size. The work is grouped into pieces that ship separately, in order, with the pieces that can run at the same time marked. Open decisions are at the end, each with a recommendation.
+Nov 13, 2026. Planning only: nothing here is built yet. The product owner tested "Pickld Local" on his iPhone against the Mac's local Supabase and sent 18 items, then added item 19 (email sign-in with a code) and items 20–22 (a Stickers page, the share card layout and success toasts). Each item below says what happens today and why, the proposed change, what it touches, which design screens change, the risks and a rough size. The work is grouped into pieces that ship separately, in order, with the pieces that can run at the same time marked. Open decisions are at the end, each with a recommendation.
 
 Sizes: **S** is under half a day, **M** is 1–2 days, **L** is 3–5 days. iOS only.
 
@@ -19,6 +19,10 @@ Sizes: **S** is under half a day, **M** is 1–2 days, **L** is 3–5 days. iOS 
 - **Item 8 needs no change:** the Jars timeline already shows only published jars.
 - **The rest is UI work:** navigation, the editor, the camera, the day page, the cover photo, Liquid Glass and animations.
 - **Email sign-in switches from a link to a 6-digit code (19).** No schema change. The app, the moderation console, the dev sign-in script and the Mac's sign-in helper page must switch in the same release as the email templates, because the templates are shared.
+- **Items 20–22 are app-only, no schema:**
+  - A Stickers page that joins the existing My stickers and Shop screens.
+  - A share card where the picture is the main view and the layout follows the number of moments.
+  - One shared toast for success messages.
 
 ## Root causes of the two bugs
 
@@ -444,6 +448,89 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 
 **Size:** M.
 
+### 20. A dedicated Stickers page
+
+**Today:**
+
+- The sticker screens already exist: **My stickers** (`/stickers/mine`, owned and earned packs), the **Sticker shop** (`/stickers/shop`) and **Pack preview** (`/stickers/pack/[slug]`).
+- The only ways in are Settings → My stickers and the Shop button in the editor's Stickers panel. Nothing on Today, the tabs or the profile leads there, which is why stickers seem to exist only in edit mode.
+
+**Change:**
+
+- One **Stickers** page at `/stickers` with a Mine | Shop switch at the top, built from the two existing views. Tapping a pack opens Pack preview as now.
+- Entry point: a stickers button in Today's header next to the calendar (decision D14). It is not a tab, because item 4 keeps three tabs. Your own profile gets a "Stickers" row too.
+- `/stickers/mine` and `/stickers/shop` redirect to `/stickers?tab=…`, so Settings, My stickers' Shop button and the editor's Shop button keep working.
+- When user-made packs arrive (`docs/plans/user-sticker-packs.md`), they appear as a section of Shop.
+
+**Touches:** new `app/stickers/index.tsx` and a small `StickersHome` that hosts `MyStickersView` and `StickerShopView`, `TodayView` header, own profile, `SettingsScreen`, i18n. No schema change; it uses the same `useMyStickers` and `useShop` queries.
+
+**Design:** new **Stickers home** (from MyStickers and StickerShop), **Main** (header button).
+
+**Size:** S–M.
+
+### 21. Share jar: a bigger picture and layouts that follow the moment count
+
+**Today:**
+
+- The Share page (`ShareCardView`, design **ShareCard**) has a header, the card preview in the middle, and a white panel below with Format (Story 9:16 or Post 4:5), five backgrounds, Include captions, four actions (Save image, Copy link, Message, Share to…) and the Share to button.
+- On his phone that panel takes about half the screen, so the preview is small.
+- The card always lays the jar out as **2 rows of 4** (`StoryCard`, `card.moments.slice(0, 4)` and `slice(4, 8)`). A jar with 3 moments shows 3 small tiles and empty space. Private moments are already left out (FR-SOC-10).
+
+**Change:**
+
+- **Picture first,** like sharing a Spotify song to Instagram Stories: the card fills about two thirds of the screen, and the controls fit in a bottom panel of about one third. The panel holds:
+  - a row of layout thumbnails;
+  - a row of background swatches;
+  - the four actions.
+- Format (Story or Post) and Include captions move to an Options button in the header (decision D15). At 200% text the panel scrolls rather than shrinking the card (D-37).
+- **Layouts by moment count** (the moments shown on the card). The first one listed is the default:
+
+| Moments | Layouts                                                |
+| ------- | ------------------------------------------------------ |
+| 1       | Full: the photo fills the template                     |
+| 2       | Side by side; stacked top and bottom                   |
+| 3       | One large and two small; three stacked; three in a row |
+| 4       | 2×2 grid; one large and three small                    |
+| 5–6     | 2×3 grid; one large and a strip below                  |
+| 7–8     | 2×4 grid (today's); 4×2 grid; film strip               |
+
+- Sharing one moment keeps the single full layout.
+- Layouts are data: `storyLayout.ts` gets `layoutsFor(count, format)`, which returns each photo's rectangle inside the safe area, and `StoryCard` draws the photos into those rectangles. The exported 1080-pixel image uses the same rectangles, so the preview and the shared file match.
+
+**Touches:** `ShareCardView`, `StoryCard`, `storyLayout.ts` and its tests (every rectangle inside the safe area, no overlaps, a layout for every count 1–8 and both formats), `ShareCardScreen` (selected layout), i18n. No schema change.
+
+**Design:** **ShareCard** (new proportions, the layout row, the Options menu), plus a thumbnail for each layout.
+
+**Risks:** Photos are 3:4. Tall or wide cells crop them, centered, so a face near the edge can be cut off. The layout row has to stay readable at 200% text.
+
+**Size:** M–L.
+
+### 22. Success toasts
+
+**Today:** The app has no toast. Success is shown inline when it is shown at all, such as "Sent again" on Check your email or a notice on the Share page. Many actions give no confirmation; errors use inline messages and alerts.
+
+**Change:**
+
+- One shared **Toast**: a short pill near the top, under the status bar, with an icon and one line of text. It disappears after about 2.5 seconds and can be swiped away. It leaves room for an Undo button later.
+- Built in the repo with Reanimated and a small Zustand store (`showToast('momentSaved')`), styled from `tokens.ts`. No new library (decision D16). On iOS 26 it uses the glass surface from item 17.
+- VoiceOver reads it aloud (`AccessibilityInfo.announceForAccessibility`). With Reduce Motion it fades instead of sliding. The text comes from `en.json`. It never shows a photo or caption.
+- Errors keep today's inline messages and alerts.
+- Actions that get a toast:
+  - Moment added to #slot, or saved to upload later when offline;
+  - Changes saved, Moment moved, Moment deleted, Visibility changed, Cover set;
+  - Jar published;
+  - Link copied, Image saved to Photos;
+  - Profile updated, Photo updated;
+  - Following someone, Unfollowed, Blocked, Unblocked, Report sent;
+  - Pack added.
+- Pieces built after this one add toasts for their own actions.
+
+**Touches:** new `src/components/Toast.tsx` and a host in `app/_layout.tsx`, `src/lib/toast.ts`, and the call sites: `momentActions`, the edit sessions, `/publish`, `shareActions`, the profile settings, the follow, block and report actions, the sticker shop. Tests, i18n `toast.*`.
+
+**Design:** a new **Toast** component in the component kit, shown on **Main** and **ShareCard**.
+
+**Size:** M.
+
 ## Pieces, order and what runs in parallel
 
 | #   | Piece                       | Items                                      | Schema | Size | Depends on                            |
@@ -460,9 +547,13 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 | 10  | Liquid Glass                | 17                                         | —      | M    | 2, 3, 7                               |
 | 11  | Animations                  | 18                                         | —      | M    | 2, 7                                  |
 | 12  | Email code sign-in          | 19                                         | —      | M    | 1 (route guard), D13, template thread |
+| 13  | Success toasts              | 22                                         | —      | M    | —                                     |
+| 14  | Stickers page               | 20                                         | —      | S–M  | 2 (Today header)                      |
+| 15  | Share card layouts          | 21                                         | —      | M–L  | —                                     |
 
 - **Pieces 1, 2 and 3 run in parallel now.** They touch different files and none needs a decision except D5 (tab bar) and D12 (Save in the toolbar).
 - **Piece 12 runs alongside 2 and 3** once piece 1 has merged (both touch the onboarding navigation). It ships together with the template change from the other thread.
+- **Piece 13 (toasts) runs early, in parallel with 1–3,** so the later pieces can call it. **Pieces 14 and 15 are independent** and can run alongside anything; 14 waits for piece 2's header change.
 - **Piece 4 is the gate** for the rule changes. After it, **5, 6 and 7 run in parallel**, and **8** can run alongside.
 - **9, 10 and 11 come last.** They build on the preview, the new bars and the jar card.
 - Each piece is one PR (or two for the large ones: schema first, then the app). Each waits for a green `ci` and its pgTAP tests, and each new rule is recorded as a D-number in `docs/decisions.md`. After each piece the local stack and his phone build are refreshed so he can check it on the iPhone.
@@ -485,6 +576,8 @@ Liquid Glass needs **iOS 26 or later**, and the app must be built with the iOS 2
 - **D-3, D-27:** unchanged. Moves stay within a jar; a removed slot can still be filled again.
 - **FR-ACC-01/02:** "email link" becomes "email code": email sends a 6-digit code, Check your email takes it, and the 60-second resend stays.
 - **D-33:** the sign-in email sentence is replaced (item 19); universal links and `/auth/callback` stay for Apple and Google.
+- **FR-SOC-10:** "8 moments" becomes "the shown moments in a layout the user picks"; private moments are still never included.
+- **FR-STK-06:** the Sticker shop is reached from the new Stickers page as well as the editor.
 
 ## Open decisions
 
@@ -503,3 +596,6 @@ Each has a recommendation; "yes" accepts it.
 11. **D11 Animations:** add `expo-haptics` (free) for light taps on publish, fill and like. Confetti on publishing, a pop when a slot fills, and the Promise stays plain.
 12. **D12 Editor Save:** Save moves to the new top toolbar and the bottom button goes away.
 13. **D13 Email code:** sign-in emails carry only a 6-digit code (no link), valid for 10 minutes, for both the app and the moderation console. `pickld://auth/callback` stays only for Apple and Google.
+14. **D14 Stickers page:** one Stickers page with Mine | Shop, opened from a stickers button in Today's header and a row on your profile, not a tab.
+15. **D15 Share card:** the picture takes about two thirds of the screen, layout thumbnails and backgrounds sit in the bottom third, and Format and Include captions move to an Options button. The layouts are those in the item 21 table, with the first as the default.
+16. **D16 Toasts:** one in-house toast near the top for success messages only, with no new library. Errors stay as they are.
