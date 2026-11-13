@@ -423,7 +423,19 @@ export const slotWindows = {
   evening: [18, 24],
 } as const;
 
-export const filters = ['original', 'kalamansi', 'merienda', 'mono', 'dusk'] as const;
+export const filters = [
+  'original',
+  'kalamansi',
+  'merienda',
+  'mono',
+  'dusk',
+  'kape',
+  'ube',
+  'sampaguita',
+  'gabi',
+  'luma',
+  'ulan',
+] as const;
 
 export const motion = {
   fast: 150,

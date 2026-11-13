@@ -65,6 +65,10 @@ Deno.test('readEdits: lenient like the app; hasVisibleEdits', () => {
   assertEquals(hasVisibleEdits(null), false);
   assertEquals(hasVisibleEdits({ filter: 'original', overlays: [] }), false);
   assertEquals(hasVisibleEdits({ filter: 'mono', overlays: [] }), true);
+  // The six filters added in QA item 23 are known, not read as Original.
+  for (const filter of ['kape', 'ube', 'sampaguita', 'gabi', 'luma', 'ulan']) {
+    assertEquals(readEdits({ filter, overlays: [] }).filter, filter);
+  }
   assertEquals(hasVisibleEdits({ filter: 'original', overlays: [{ id: 'x', type: 'nope' }] }), false);
 });
 
