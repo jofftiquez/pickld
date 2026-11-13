@@ -1,0 +1,27 @@
+{
+  "site": { "name": "Pickld Mod", "description": "Pickld moderation console" },
+  "signIn": {
+    "title": "Moderator sign in",
+    "body": "We'll email you a sign-in link. Only moderator accounts can open the console.",
+    "email": "Email",
+    "send": "Email me a link",
+    "sent": "If that address belongs to a Pickld account, a sign-in link is on its way. It works once.",
+    "badLink": "That link has expired or was already used. Ask for a new one.",
+    "invalid": "Enter a valid email address."
+  },
+  "denied": {
+    "title": "Moderators only",
+    "body": "You're signed in as {{email}}, which isn't a moderator account. Ask a founder to add the moderator role if you should have access.",
+    "signOut": "Sign out"
+  },
+  "nav": {
+    "label": "Console",
+    "queue": "Queue",
+    "reports": "Reports",
+    "appeals": "Appeals",
+    "audit": "Audit log",
+    "role": "{{name}} (moderator)",
+    "signOut": "Sign out"
+  },
+  "queue": { "title": "Review queue", "subtitle": "Oldest first · photos blurred until you choose to view" }
+}

@@ -42,8 +42,10 @@ jobs:
         run: pnpm db:test
       - name: Edge Function tests (against local Supabase)
         run: pnpm fn:test
+      - name: Moderation console tests (Chromium, against local Supabase)
+        run: pnpm --filter @pickld/mod test:e2e
       - name: Secret scan (source and exported bundle)
         run: |
           pnpm --filter @pickld/mobile scan:secrets
           pnpm --filter @pickld/mobile scan:bundle
-          node apps/mobile/scripts/scan-secrets.mjs apps/web/src apps/web/.env.example apps/web/.next/static
+          node apps/mobile/scripts/scan-secrets.mjs apps/web/src apps/web/.env.example apps/web/.next/static apps/mod/src apps/mod/.env.example apps/mod/.next/static
