@@ -334,6 +334,68 @@ export type Database = {
           },
         ];
       };
+      csam_incidents: {
+        Row: {
+          created_at: string;
+          id: string;
+          match: NonNullable<Json>;
+          matcher: string;
+          moment_id: string | null;
+          photo_path: string | null;
+          reported_at: string | null;
+          status: string;
+          thumb_path: string | null;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          match?: NonNullable<Json>;
+          matcher: string;
+          moment_id?: string | null;
+          photo_path?: string | null;
+          reported_at?: string | null;
+          status?: string;
+          thumb_path?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          match?: NonNullable<Json>;
+          matcher?: string;
+          moment_id?: string | null;
+          photo_path?: string | null;
+          reported_at?: string | null;
+          status?: string;
+          thumb_path?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'csam_incidents_moment_id_fkey';
+            columns: ['moment_id'];
+            isOneToOne: false;
+            referencedRelation: 'moments';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'csam_incidents_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'csam_incidents_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       follows: {
         Row: {
           author_id: string;
@@ -1681,11 +1743,23 @@ export type Database = {
           p_provider: string;
           p_reason?: string;
           p_scores?: Json;
+          p_second_opinion?: Json;
         };
         Returns: string;
       };
       moderation_apply_comment: {
         Args: { p_comment_id: string; p_decision: string; p_provider: string; p_reason?: string; p_scores?: Json };
+        Returns: string;
+      };
+      moderation_csam_block: {
+        Args: {
+          p_match: Json;
+          p_matcher: string;
+          p_moment_id: string;
+          p_pending_since: string;
+          p_photo_path: string;
+          p_thumb_path: string;
+        };
         Returns: string;
       };
       moment_photo_paths: {
