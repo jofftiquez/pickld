@@ -44,12 +44,10 @@ row in a new migration, reset, render, upload. For staging or production, run `d
 `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` set to an R2 token with write
 access to that bucket.
 
-## Staging and production (needs M1-01 and M1-28)
+## Staging and production
 
-1. Create R2 buckets `pickld-photos-staging` and `pickld-photos-production` (not public).
-2. `wrangler secret put PHOTO_TOKEN_SECRET --env staging` (and `--env production`), and set the same value
-   in Supabase: `supabase secrets set PHOTO_TOKEN_SECRET=…`.
-3. Create an R2 API token for `fn:upload-url` (object write on that bucket only) and set `S3_ENDPOINT`,
-   `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` as Supabase secrets.
-4. `wrangler deploy --env staging`; the routes in `wrangler.toml` expect `photos-staging.pickld.me` and
-   `photos.pickld.me` on the Cloudflare zone.
+Staging deploys from GitHub Actions after `ci` passes on main: `scripts/deploy/deploy.sh` creates the private
+bucket `pickld-photos-staging`, deploys this Worker (`wrangler deploy --env staging`, on workers.dev until pickld.me's
+DNS moves to Cloudflare) and uploads the sticker art; `scripts/deploy/configure.sh` sets `PHOTO_TOKEN_SECRET` to the
+same value on the Worker and in Supabase, and the `S3_*` secrets for `fn:upload-url`. Setup and checks:
+`docs/runbooks/staging.md`. Production (`photos.pickld.me`, bucket `pickld-photos-production`) reuses the scripts.
