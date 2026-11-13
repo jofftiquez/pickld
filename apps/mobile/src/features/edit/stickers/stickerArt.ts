@@ -1,4 +1,4 @@
-// Bundled art for every catalog sticker (0012 launch packs, 0029 paid packs, 0032 picture stickers, 0060 new packs: one PNG per sticker at repo-root assets/stickers/<pack>/<name>.png,
+// Bundled art for every catalog sticker (0012 launch packs, 0029 paid packs, 0032 picture stickers, 0060 new packs, 0065 restyled word art and Hashtags: one PNG per sticker at repo-root assets/stickers/<pack>/<name>.png,
 // the same files the photo worker serves), keyed by the catalog's asset_path. Bundled so the Stickers tool and
 // every moment's stickers draw offline and from the first use (FR-STK-02 cached art). Width and height are the
 // PNG's pixels: the overlay's box takes the art's aspect.
@@ -222,120 +222,240 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 747,
     height: 234,
   },
+  'stickers/corporate/action-items-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/action-items-v2.png'),
+    width: 792,
+    height: 236,
+  },
   'stickers/corporate/action-items.png': {
     source: require('../../../../../../assets/stickers/corporate/action-items.png'),
     width: 693,
     height: 234,
+  },
+  'stickers/corporate/blocked-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/blocked-v2.png'),
+    width: 582,
+    height: 236,
   },
   'stickers/corporate/blocked.png': {
     source: require('../../../../../../assets/stickers/corporate/blocked.png'),
     width: 522,
     height: 234,
   },
+  'stickers/corporate/circle-back-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/circle-back-v2.png'),
+    width: 724,
+    height: 322,
+  },
   'stickers/corporate/circle-back.png': {
     source: require('../../../../../../assets/stickers/corporate/circle-back.png'),
     width: 843,
     height: 234,
+  },
+  'stickers/corporate/eod-na-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/eod-na-v2.png'),
+    width: 562,
+    height: 236,
   },
   'stickers/corporate/eod-na.png': {
     source: require('../../../../../../assets/stickers/corporate/eod-na.png'),
     width: 480,
     height: 234,
   },
+  'stickers/corporate/kpi-hit-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/kpi-hit-v2.png'),
+    width: 538,
+    height: 236,
+  },
   'stickers/corporate/kpi-hit.png': {
     source: require('../../../../../../assets/stickers/corporate/kpi-hit.png'),
     width: 444,
     height: 234,
+  },
+  'stickers/corporate/leave-approved-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/leave-approved-v2.png'),
+    width: 632,
+    height: 322,
   },
   'stickers/corporate/leave-approved.png': {
     source: require('../../../../../../assets/stickers/corporate/leave-approved.png'),
     width: 831,
     height: 234,
   },
+  'stickers/corporate/noted-with-thanks-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/noted-with-thanks-v2.png'),
+    width: 718,
+    height: 322,
+  },
   'stickers/corporate/noted-with-thanks.png': {
     source: require('../../../../../../assets/stickers/corporate/noted-with-thanks.png'),
     width: 918,
     height: 234,
+  },
+  'stickers/corporate/pa-sign-po-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/pa-sign-po-v2.png'),
+    width: 690,
+    height: 236,
   },
   'stickers/corporate/pa-sign-po.png': {
     source: require('../../../../../../assets/stickers/corporate/pa-sign-po.png'),
     width: 627,
     height: 234,
   },
+  'stickers/corporate/ping-me-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/ping-me-v2.png'),
+    width: 592,
+    height: 236,
+  },
   'stickers/corporate/ping-me.png': {
     source: require('../../../../../../assets/stickers/corporate/ping-me.png'),
     width: 507,
     height: 234,
+  },
+  'stickers/corporate/q4-grind-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/q4-grind-v2.png'),
+    width: 610,
+    height: 236,
   },
   'stickers/corporate/q4-grind.png': {
     source: require('../../../../../../assets/stickers/corporate/q4-grind.png'),
     width: 540,
     height: 234,
   },
+  'stickers/corporate/quick-sync-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/quick-sync-v2.png'),
+    width: 770,
+    height: 236,
+  },
   'stickers/corporate/quick-sync.png': {
     source: require('../../../../../../assets/stickers/corporate/quick-sync.png'),
     width: 681,
     height: 234,
+  },
+  'stickers/corporate/take-this-offline-v2.png': {
+    source: require('../../../../../../assets/stickers/corporate/take-this-offline-v2.png'),
+    width: 706,
+    height: 322,
   },
   'stickers/corporate/take-this-offline.png': {
     source: require('../../../../../../assets/stickers/corporate/take-this-offline.png'),
     width: 1020,
     height: 234,
   },
+  'stickers/cyclists/100-km-done-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/100-km-done-v2.png'),
+    width: 838,
+    height: 208,
+  },
   'stickers/cyclists/100-km-done.png': {
     source: require('../../../../../../assets/stickers/cyclists/100-km-done.png'),
     width: 696,
     height: 234,
+  },
+  'stickers/cyclists/ahon-pa-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/ahon-pa-v2.png'),
+    width: 636,
+    height: 208,
   },
   'stickers/cyclists/ahon-pa.png': {
     source: require('../../../../../../assets/stickers/cyclists/ahon-pa.png'),
     width: 519,
     height: 234,
   },
+  'stickers/cyclists/bike-to-work-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/bike-to-work-v2.png'),
+    width: 878,
+    height: 208,
+  },
   'stickers/cyclists/bike-to-work.png': {
     source: require('../../../../../../assets/stickers/cyclists/bike-to-work.png'),
     width: 687,
     height: 234,
+  },
+  'stickers/cyclists/clipped-in-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/clipped-in-v2.png'),
+    width: 730,
+    height: 208,
   },
   'stickers/cyclists/clipped-in.png': {
     source: require('../../../../../../assets/stickers/cyclists/clipped-in.png'),
     width: 597,
     height: 234,
   },
+  'stickers/cyclists/coffee-ride-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/coffee-ride-v2.png'),
+    width: 790,
+    height: 208,
+  },
   'stickers/cyclists/coffee-ride.png': {
     source: require('../../../../../../assets/stickers/cyclists/coffee-ride.png'),
     width: 642,
     height: 234,
+  },
+  'stickers/cyclists/long-ride-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/long-ride-v2.png'),
+    width: 708,
+    height: 208,
   },
   'stickers/cyclists/long-ride.png': {
     source: require('../../../../../../assets/stickers/cyclists/long-ride.png'),
     width: 564,
     height: 234,
   },
+  'stickers/cyclists/padyak-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/padyak-v2.png'),
+    width: 586,
+    height: 208,
+  },
   'stickers/cyclists/padyak.png': {
     source: require('../../../../../../assets/stickers/cyclists/padyak.png'),
     width: 486,
     height: 234,
+  },
+  'stickers/cyclists/pedal-power-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/pedal-power-v2.png'),
+    width: 854,
+    height: 208,
   },
   'stickers/cyclists/pedal-power.png': {
     source: require('../../../../../../assets/stickers/cyclists/pedal-power.png'),
     width: 690,
     height: 234,
   },
+  'stickers/cyclists/rest-stop-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/rest-stop-v2.png'),
+    width: 716,
+    height: 208,
+  },
   'stickers/cyclists/rest-stop.png': {
     source: require('../../../../../../assets/stickers/cyclists/rest-stop.png'),
     width: 567,
     height: 234,
+  },
+  'stickers/cyclists/ride-on-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/ride-on-v2.png'),
+    width: 608,
+    height: 208,
   },
   'stickers/cyclists/ride-on.png': {
     source: require('../../../../../../assets/stickers/cyclists/ride-on.png'),
     width: 489,
     height: 234,
   },
+  'stickers/cyclists/sunday-ride-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/sunday-ride-v2.png'),
+    width: 816,
+    height: 208,
+  },
   'stickers/cyclists/sunday-ride.png': {
     source: require('../../../../../../assets/stickers/cyclists/sunday-ride.png'),
     width: 663,
     height: 234,
+  },
+  'stickers/cyclists/uphill-grind-v2.png': {
+    source: require('../../../../../../assets/stickers/cyclists/uphill-grind-v2.png'),
+    width: 848,
+    height: 208,
   },
   'stickers/cyclists/uphill-grind.png': {
     source: require('../../../../../../assets/stickers/cyclists/uphill-grind.png'),
@@ -547,65 +667,205 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 360,
     height: 334,
   },
+  'stickers/gen-z/ate-that-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/ate-that-v2.png'),
+    width: 620,
+    height: 244,
+  },
   'stickers/gen-z/ate-that.png': {
     source: require('../../../../../../assets/stickers/gen-z/ate-that.png'),
     width: 513,
     height: 234,
+  },
+  'stickers/gen-z/bet-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/bet-v2.png'),
+    width: 384,
+    height: 244,
   },
   'stickers/gen-z/bet.png': {
     source: require('../../../../../../assets/stickers/gen-z/bet.png'),
     width: 333,
     height: 234,
   },
+  'stickers/gen-z/delulu-era-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/delulu-era-v2.png'),
+    width: 716,
+    height: 244,
+  },
   'stickers/gen-z/delulu-era.png': {
     source: require('../../../../../../assets/stickers/gen-z/delulu-era.png'),
     width: 585,
     height: 234,
+  },
+  'stickers/gen-z/iconic-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/iconic-v2.png'),
+    width: 508,
+    height: 244,
   },
   'stickers/gen-z/iconic.png': {
     source: require('../../../../../../assets/stickers/gen-z/iconic.png'),
     width: 438,
     height: 234,
   },
+  'stickers/gen-z/its-giving-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/its-giving-v2.png'),
+    width: 704,
+    height: 244,
+  },
   'stickers/gen-z/its-giving.png': {
     source: require('../../../../../../assets/stickers/gen-z/its-giving.png'),
     width: 579,
     height: 234,
+  },
+  'stickers/gen-z/lowkey-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/lowkey-v2.png'),
+    width: 572,
+    height: 244,
   },
   'stickers/gen-z/lowkey.png': {
     source: require('../../../../../../assets/stickers/gen-z/lowkey.png'),
     width: 507,
     height: 234,
   },
+  'stickers/gen-z/main-character-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/main-character-v2.png'),
+    width: 704,
+    height: 340,
+  },
   'stickers/gen-z/main-character.png': {
     source: require('../../../../../../assets/stickers/gen-z/main-character.png'),
     width: 786,
     height: 234,
+  },
+  'stickers/gen-z/no-cap-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/no-cap-v2.png'),
+    width: 546,
+    height: 244,
   },
   'stickers/gen-z/no-cap.png': {
     source: require('../../../../../../assets/stickers/gen-z/no-cap.png'),
     width: 471,
     height: 234,
   },
+  'stickers/gen-z/rent-free-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/rent-free-v2.png'),
+    width: 666,
+    height: 244,
+  },
   'stickers/gen-z/rent-free.png': {
     source: require('../../../../../../assets/stickers/gen-z/rent-free.png'),
     width: 555,
     height: 234,
+  },
+  'stickers/gen-z/slay-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/slay-v2.png'),
+    width: 434,
+    height: 244,
   },
   'stickers/gen-z/slay.png': {
     source: require('../../../../../../assets/stickers/gen-z/slay.png'),
     width: 363,
     height: 234,
   },
+  'stickers/gen-z/understood-the-assignment-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/understood-the-assignment-v2.png'),
+    width: 954,
+    height: 340,
+  },
   'stickers/gen-z/understood-the-assignment.png': {
     source: require('../../../../../../assets/stickers/gen-z/understood-the-assignment.png'),
     width: 1290,
     height: 234,
   },
+  'stickers/gen-z/vibe-check-v2.png': {
+    source: require('../../../../../../assets/stickers/gen-z/vibe-check-v2.png'),
+    width: 698,
+    height: 244,
+  },
   'stickers/gen-z/vibe-check.png': {
     source: require('../../../../../../assets/stickers/gen-z/vibe-check.png'),
     width: 636,
     height: 234,
+  },
+  'stickers/hashtags/beach-pa.png': {
+    source: require('../../../../../../assets/stickers/hashtags/beach-pa.png'),
+    width: 538,
+    height: 340,
+  },
+  'stickers/hashtags/exam-na.png': {
+    source: require('../../../../../../assets/stickers/hashtags/exam-na.png'),
+    width: 600,
+    height: 450,
+  },
+  'stickers/hashtags/gala.png': {
+    source: require('../../../../../../assets/stickers/hashtags/gala.png'),
+    width: 374,
+    height: 340,
+  },
+  'stickers/hashtags/happy-weekend.png': {
+    source: require('../../../../../../assets/stickers/hashtags/happy-weekend.png'),
+    width: 712,
+    height: 362,
+  },
+  'stickers/hashtags/kain-tayo.png': {
+    source: require('../../../../../../assets/stickers/hashtags/kain-tayo.png'),
+    width: 564,
+    height: 342,
+  },
+  'stickers/hashtags/lodi.png': {
+    source: require('../../../../../../assets/stickers/hashtags/lodi.png'),
+    width: 444,
+    height: 444,
+  },
+  'stickers/hashtags/lunes-na-naman.png': {
+    source: require('../../../../../../assets/stickers/hashtags/lunes-na-naman.png'),
+    width: 728,
+    height: 358,
+  },
+  'stickers/hashtags/petsa-de-peligro.png': {
+    source: require('../../../../../../assets/stickers/hashtags/petsa-de-peligro.png'),
+    width: 822,
+    height: 444,
+  },
+  'stickers/hashtags/puyat.png': {
+    source: require('../../../../../../assets/stickers/hashtags/puyat.png'),
+    width: 500,
+    height: 414,
+  },
+  'stickers/hashtags/sahod.png': {
+    source: require('../../../../../../assets/stickers/hashtags/sahod.png'),
+    width: 424,
+    height: 342,
+  },
+  'stickers/hashtags/sana-all.png': {
+    source: require('../../../../../../assets/stickers/hashtags/sana-all.png'),
+    width: 474,
+    height: 342,
+  },
+  'stickers/hashtags/tag-ulan.png': {
+    source: require('../../../../../../assets/stickers/hashtags/tag-ulan.png'),
+    width: 614,
+    height: 456,
+  },
+  'stickers/hashtags/tgif.png': {
+    source: require('../../../../../../assets/stickers/hashtags/tgif.png'),
+    width: 450,
+    height: 406,
+  },
+  'stickers/hashtags/throwback.png': {
+    source: require('../../../../../../assets/stickers/hashtags/throwback.png'),
+    width: 660,
+    height: 428,
+  },
+  'stickers/hashtags/traffic.png': {
+    source: require('../../../../../../assets/stickers/hashtags/traffic.png'),
+    width: 486,
+    height: 334,
+  },
+  'stickers/hashtags/walang-pasok.png': {
+    source: require('../../../../../../assets/stickers/hashtags/walang-pasok.png'),
+    width: 660,
+    height: 354,
   },
   'stickers/milestones/first-full-jar.png': {
     source: require('../../../../../../assets/stickers/milestones/first-full-jar.png'),
@@ -1012,60 +1272,120 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 268,
     height: 360,
   },
+  'stickers/pride/be-yourself-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/be-yourself-v2.png'),
+    width: 798,
+    height: 232,
+  },
   'stickers/pride/be-yourself.png': {
     source: require('../../../../../../assets/stickers/pride/be-yourself.png'),
     width: 639,
     height: 234,
+  },
+  'stickers/pride/chosen-family-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/chosen-family-v2.png'),
+    width: 904,
+    height: 232,
   },
   'stickers/pride/chosen-family.png': {
     source: require('../../../../../../assets/stickers/pride/chosen-family.png'),
     width: 759,
     height: 234,
   },
+  'stickers/pride/ganda-mo-mars-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/ganda-mo-mars-v2.png'),
+    width: 644,
+    height: 314,
+  },
   'stickers/pride/ganda-mo-mars.png': {
     source: require('../../../../../../assets/stickers/pride/ganda-mo-mars.png'),
     width: 837,
     height: 234,
+  },
+  'stickers/pride/happy-pride-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/happy-pride-v2.png'),
+    width: 802,
+    height: 232,
   },
   'stickers/pride/happy-pride.png': {
     source: require('../../../../../../assets/stickers/pride/happy-pride.png'),
     width: 681,
     height: 234,
   },
+  'stickers/pride/love-is-love-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/love-is-love-v2.png'),
+    width: 822,
+    height: 232,
+  },
   'stickers/pride/love-is-love.png': {
     source: require('../../../../../../assets/stickers/pride/love-is-love.png'),
     width: 648,
     height: 234,
+  },
+  'stickers/pride/love-wins-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/love-wins-v2.png'),
+    width: 700,
+    height: 232,
   },
   'stickers/pride/love-wins.png': {
     source: require('../../../../../../assets/stickers/pride/love-wins.png'),
     width: 585,
     height: 234,
   },
+  'stickers/pride/out-and-proud-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/out-and-proud-v2.png'),
+    width: 908,
+    height: 232,
+  },
   'stickers/pride/out-and-proud.png': {
     source: require('../../../../../../assets/stickers/pride/out-and-proud.png'),
     width: 768,
     height: 234,
+  },
+  'stickers/pride/pride-march-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/pride-march-v2.png'),
+    width: 814,
+    height: 232,
   },
   'stickers/pride/pride-march.png': {
     source: require('../../../../../../assets/stickers/pride/pride-march.png'),
     width: 669,
     height: 234,
   },
+  'stickers/pride/proud-ally-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/proud-ally-v2.png'),
+    width: 758,
+    height: 232,
+  },
   'stickers/pride/proud-ally.png': {
     source: require('../../../../../../assets/stickers/pride/proud-ally.png'),
     width: 588,
     height: 234,
+  },
+  'stickers/pride/queer-joy-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/queer-joy-v2.png'),
+    width: 700,
+    height: 232,
   },
   'stickers/pride/queer-joy.png': {
     source: require('../../../../../../assets/stickers/pride/queer-joy.png'),
     width: 579,
     height: 234,
   },
+  'stickers/pride/rainbow-vibes-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/rainbow-vibes-v2.png'),
+    width: 918,
+    height: 232,
+  },
   'stickers/pride/rainbow-vibes.png': {
     source: require('../../../../../../assets/stickers/pride/rainbow-vibes.png'),
     width: 771,
     height: 234,
+  },
+  'stickers/pride/safe-space-v2.png': {
+    source: require('../../../../../../assets/stickers/pride/safe-space-v2.png'),
+    width: 726,
+    height: 232,
   },
   'stickers/pride/safe-space.png': {
     source: require('../../../../../../assets/stickers/pride/safe-space.png'),
@@ -1322,60 +1642,120 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 702,
     height: 234,
   },
+  'stickers/trentahin/adulting-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/adulting-v2.png'),
+    width: 546,
+    height: 262,
+  },
   'stickers/trentahin/adulting.png': {
     source: require('../../../../../../assets/stickers/trentahin/adulting.png'),
     width: 531,
     height: 234,
+  },
+  'stickers/trentahin/bawal-na-mapuyat-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/bawal-na-mapuyat-v2.png'),
+    width: 912,
+    height: 262,
   },
   'stickers/trentahin/bawal-na-mapuyat.png': {
     source: require('../../../../../../assets/stickers/trentahin/bawal-na-mapuyat.png'),
     width: 912,
     height: 234,
   },
+  'stickers/trentahin/bills-paid-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/bills-paid-v2.png'),
+    width: 588,
+    height: 262,
+  },
   'stickers/trentahin/bills-paid.png': {
     source: require('../../../../../../assets/stickers/trentahin/bills-paid.png'),
     width: 549,
     height: 234,
+  },
+  'stickers/trentahin/early-dinner-club-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/early-dinner-club-v2.png'),
+    width: 628,
+    height: 376,
   },
   'stickers/trentahin/early-dinner-club.png': {
     source: require('../../../../../../assets/stickers/trentahin/early-dinner-club.png'),
     width: 849,
     height: 234,
   },
+  'stickers/trentahin/healing-era-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/healing-era-v2.png'),
+    width: 662,
+    height: 262,
+  },
   'stickers/trentahin/healing-era.png': {
     source: require('../../../../../../assets/stickers/trentahin/healing-era.png'),
     width: 636,
     height: 234,
+  },
+  'stickers/trentahin/ipon-mode-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/ipon-mode-v2.png'),
+    width: 608,
+    height: 262,
   },
   'stickers/trentahin/ipon-mode.png': {
     source: require('../../../../../../assets/stickers/trentahin/ipon-mode.png'),
     width: 618,
     height: 234,
   },
+  'stickers/trentahin/kape-muna-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/kape-muna-v2.png'),
+    width: 642,
+    height: 262,
+  },
   'stickers/trentahin/kape-muna.png': {
     source: require('../../../../../../assets/stickers/trentahin/kape-muna.png'),
     width: 630,
     height: 234,
+  },
+  'stickers/trentahin/likod-check-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/likod-check-v2.png'),
+    width: 650,
+    height: 262,
   },
   'stickers/trentahin/likod-check.png': {
     source: require('../../../../../../assets/stickers/trentahin/likod-check.png'),
     width: 672,
     height: 234,
   },
+  'stickers/trentahin/may-pasok-bukas-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/may-pasok-bukas-v2.png'),
+    width: 874,
+    height: 262,
+  },
   'stickers/trentahin/may-pasok-bukas.png': {
     source: require('../../../../../../assets/stickers/trentahin/may-pasok-bukas.png'),
     width: 873,
     height: 234,
+  },
+  'stickers/trentahin/pahinga-is-productive-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/pahinga-is-productive-v2.png'),
+    width: 606,
+    height: 376,
   },
   'stickers/trentahin/pahinga-is-productive.png': {
     source: require('../../../../../../assets/stickers/trentahin/pahinga-is-productive.png'),
     width: 1044,
     height: 234,
   },
+  'stickers/trentahin/salonpas-gang-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/salonpas-gang-v2.png'),
+    width: 746,
+    height: 262,
+  },
   'stickers/trentahin/salonpas-gang.png': {
     source: require('../../../../../../assets/stickers/trentahin/salonpas-gang.png'),
     width: 774,
     height: 234,
+  },
+  'stickers/trentahin/tulog-by-9-v2.png': {
+    source: require('../../../../../../assets/stickers/trentahin/tulog-by-9-v2.png'),
+    width: 622,
+    height: 262,
   },
   'stickers/trentahin/tulog-by-9.png': {
     source: require('../../../../../../assets/stickers/trentahin/tulog-by-9.png'),

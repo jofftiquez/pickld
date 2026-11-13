@@ -14,7 +14,7 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012, 0029, 0032 and 0060 seed, and nothing else', () => {
+  it('has a PNG for every sticker 0012, 0029, 0032, 0060 and 0065 seed, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
     const assetsIn = (migration: string, from = 'insert into') =>
       [
@@ -34,10 +34,23 @@ describe('bundled art', () => {
     expect(added).toHaveLength(109);
     const addedPictures = added.filter((a) => /^stickers\/(olivia|fish-moods|pinoy-life)\//.test(a));
     expect(addedPictures).toHaveLength(40);
-    const words = [...seededStickers.map((s) => s.asset), ...paid, ...added.filter((a) => !addedPictures.includes(a))];
+    // 0065 restyles the five word-art packs under -v2 names (old rows retired, art kept) and adds Hashtags.
+    const wordArt = added.filter((a) => /^stickers\/(corporate|gen-z|trentahin|pride|cyclists)\//.test(a));
+    expect(wordArt).toHaveLength(60);
+    const restyled = wordArt.map((a) => a.replace('.png', '-v2.png'));
+    const hashtags = assetsIn('0065_word_art_restyle.sql');
+    expect(hashtags).toHaveLength(16);
+    const words = [
+      ...seededStickers.map((s) => s.asset),
+      ...paid,
+      ...added.filter((a) => !addedPictures.includes(a)),
+      ...restyled,
+      ...hashtags,
+    ];
     expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures, ...addedPictures].sort());
-    // Word stickers are wide labels; picture stickers fit a near-square box.
-    for (const asset of words) expect(stickerArt[asset]!.width).toBeGreaterThan(stickerArt[asset]!.height);
+    // Word stickers are wide labels (hashtag bubbles can be near square); picture stickers fit a near-square box.
+    for (const asset of words.filter((a) => !hashtags.includes(a)))
+      expect(stickerArt[asset]!.width).toBeGreaterThan(stickerArt[asset]!.height);
     for (const asset of [...pictures, ...addedPictures]) {
       const art = stickerArt[asset]!;
       expect(Math.max(art.width, art.height)).toBeLessThanOrEqual(360);
