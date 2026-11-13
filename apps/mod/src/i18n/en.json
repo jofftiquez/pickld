@@ -23,6 +23,7 @@
     "reports": "Reports",
     "appeals": "Appeals",
     "audit": "Audit log",
+    "help": "Help",
     "role": "{{name}} (moderator)",
     "signOut": "Sign out",
     "count": "{{count}} open"
@@ -178,5 +179,12 @@
       "appeal_overturned": "Appeal overturned"
     },
     "strikes": "Strikes: {{count}}"
+  },
+  "help": {
+    "title": "Help",
+    "subtitle": "How to decide · drafts for founder review",
+    "playbook": "Moderator playbook",
+    "guidelines": "Community Guidelines",
+    "missing": "This document isn’t written yet."
   }
 }

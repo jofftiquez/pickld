@@ -38,6 +38,7 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
     { href: '/?filter=report', label: t('nav.reports'), count: stats.report },
     { href: '/?filter=appeal', label: t('nav.appeals'), count: stats.open_appeals },
     { href: '/audit', label: t('nav.audit') },
+    { href: '/help', label: t('nav.help') },
   ];
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
