@@ -104,13 +104,13 @@ The daily loop is Today → Capture (or Crop for gallery photos) → edit tools 
 
 ### Today — “Today”
 
-The home screen and the first tab. The header shows the date, a greeting by time of day, a My days shortcut and the user’s avatar.
+The home screen and the first tab. The header shows the date, a greeting by time of day, a Stickers shortcut, a My days shortcut and the user’s avatar.
 
 - **Jar card (dark):** a jar graphic filled to the number of moments, “5 of 8 moments in today’s jar · 312 readers”, and the **Publish** button.
 - **Moment grid (2 columns, 8 tiles):** filled tiles show the photo, capture time and hashtag; empty tiles are dashed with a “+”; the current time slot is a dark “Now · Tap to capture” tile.
 - Floating tab bar: Today · Capture · Jars · My days.
 
-Goes to: tile → Capture (that slot) or Moment detail if filled · Publish → Publish review · avatar → My profile · calendar icon → My days.
+Goes to: tile → Capture (that slot) or Moment detail if filled · Publish → Publish review · avatar → My profile · stickers icon → Stickers · calendar icon → My days.
 
 ### Capture — “Capture”
 
@@ -188,10 +188,10 @@ Previews the 9:16 image exported for other apps: author, day title, all 8 moment
 
 Both share one layout: cover photo, large avatar, name, @username, bio, Readers · Authors · Jars counts, a Jars / Moments switch, and a 3-column grid of past jars labelled with date and count.
 
-- **My profile:** Edit profile, Share profile and Settings.
+- **My profile:** Edit profile, Share profile, Settings and a **Stickers** row (D-61).
 - **Other profile:** **Read her days** (follow), a “Reads you” tag, and a menu for Report and Block.
 
-Goes to: counts → Readers & authors · jar → Jar page · settings → Settings · menu → Report.
+Goes to: counts → Readers & authors · jar → Jar page · settings → Settings · Stickers → Stickers · menu → Report.
 
 ### Readers & authors — “Readers & authors”
 
@@ -233,7 +233,7 @@ Report, block and account deletion are required by both app stores for apps with
 
 - Account card: avatar, name, @username, email, **Edit**.
 - **Reminders:** Morning, Afternoon and Evening, each with an editable time and an on/off switch.
-- **Privacy:** Default visibility (Readers), Blocked accounts, My stickers. Data download lives on the Delete account screen
+- **Privacy:** Default visibility (Readers), Blocked accounts, My stickers (opens Stickers on Mine). Data download lives on the Delete account screen
 - **Account:** Help & feedback, Terms & privacy policy, Sign out, Delete account (both in red).
 
 ### Report — “Report”
@@ -433,7 +433,7 @@ Stickers launch free with a generous core set, then premium packs become Pickld�
 - **Ownership:** an `owned_packs` table, with purchases verified on the server. A service such as RevenueCat simplifies receipts and subscriptions across iOS and Android.
 - **Rendering:** stickers are SVG or PNG drawn with Skia. Each moment saves sticker id, position, scale and rotation, so jars and the jar card can be re-rendered at any size.
 - **In the Stickers tool:** the slot’s Moment stickers appear first, owned packs next, and locked premium packs show a small lock that opens a pack preview.
-- **Screens (Sticker module row on the canvas):** Stickers tool (pack tabs led by stickers suggested for the current slot, plus a shop banner), Sticker shop (seasonal banner, “For you” from the onboarding answers, owned and earned packs), Pack preview (the pack shown on the user’s own photo, all stickers, “Get Pinoy Life · ₱49”), Sticker unlocked (earned-sticker celebration with milestone progress), and My stickers (reorder or hide packs, restore purchases; opened from Settings)
+- **Screens (Sticker module row on the canvas):** Stickers tool (pack tabs led by stickers suggested for the current slot, plus a shop banner), Stickers (one page with a Mine | Shop switch, D-61; opened from Today’s header, My profile, Settings and the Stickers tool’s shop banner), whose Shop is the Sticker shop (seasonal banner, “For you” from the onboarding answers, owned and earned packs) and whose Mine is My stickers (reorder or hide packs, restore purchases), Pack preview (the pack shown on the user’s own photo, all stickers, “Get Pinoy Life · ₱49”), and Sticker unlocked (earned-sticker celebration with milestone progress)
 
 ### What to measure
 

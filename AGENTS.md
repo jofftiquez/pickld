@@ -96,7 +96,7 @@ design/
 /camera  /crop  /edit/[momentId]  /publish
 /jar/[id]  /moment/[id]  /comments/[jarId]  /share/[jarId]
 /u/[username]  /u/[username]/readers  /notifications  /explore  /memories
-/stickers/shop  /stickers/pack/[slug]  /stickers/mine
+/stickers  /stickers/shop  /stickers/pack/[slug]  /stickers/mine
 /settings  /settings/profile  /settings/blocked  /settings/help  /settings/delete
 ```
 
