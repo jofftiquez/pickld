@@ -27,6 +27,8 @@ export type JarCardProps = {
   onOpenVisibility?: () => void;
   /** A past day's jar on the day page (D-55): "in this jar" instead of "in today’s jar". */
   pastDay?: boolean;
+  /** Just published (D-58): the jar's lid closes. */
+  closeLid?: boolean;
 };
 
 /** The dark card above the grid: the jar filled to today's count, readers and Publish (Main, EmptyToday,
@@ -40,6 +42,7 @@ export function JarCard({
   published = null,
   onOpenVisibility,
   pastDay = false,
+  closeLid = false,
 }: JarCardProps) {
   const { t } = useTranslation();
   const large = useLargeText();
@@ -60,7 +63,7 @@ export function JarCard({
   return (
     <View style={styles.card} testID={firstDay ? 'jar-card-first-day' : 'jar-card'}>
       <View style={[styles.row, large ? styles.rowWrap : null]}>
-        <JarGraphic count={count} lidColor={lidColor} onDark decorative />
+        <JarGraphic count={count} lidColor={lidColor} onDark decorative closeLid={closeLid} />
         <View accessible style={[styles.text, large ? styles.textLarge : null]}>
           <Text style={[textStyle('jarCardTitle'), { color: colors.surface }]}>{title}</Text>
           <Text style={[textStyle(firstDay ? 'bodySmall' : 'label', '500'), { color: colors.onDarkMuted }]}>

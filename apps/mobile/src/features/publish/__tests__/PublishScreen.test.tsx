@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import * as Haptics from 'expo-haptics';
 
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
@@ -141,6 +142,7 @@ async function renderScreen() {
 const radio = (name: RegExp) => screen.getByRole('radio', { name });
 
 beforeEach(() => {
+  jest.mocked(Haptics.notificationAsync).mockClear();
   jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00'), doNotFake: ['nextTick', 'setImmediate'] });
   mockBackend.jars = [JAR];
   mockBackend.moments = [];
@@ -228,6 +230,9 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
     ]);
     expect(track).toHaveBeenCalledWith('jar_published', { visibility: 'only_me' });
     expect(useToastStore.getState().current?.key).toBe('jarPublished');
+    // A success haptic as it publishes (D-58); Today then celebrates (TodayCelebrations.test).
+    expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.notificationAsync).toHaveBeenCalledWith(Haptics.NotificationFeedbackType.Success);
   });
 
   it('a failed publish stays on the screen with a message and can be tried again', async () => {
@@ -247,6 +252,7 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
     expect(mockRouter.back).not.toHaveBeenCalled();
     expect(track).not.toHaveBeenCalled();
     expect(useToastStore.getState().current).toBeNull();
+    expect(Haptics.notificationAsync).not.toHaveBeenCalled();
 
     mockBackend.updateError = null;
     await fireEvent.press(screen.getByRole('button', { name: 'Publish jar' }));

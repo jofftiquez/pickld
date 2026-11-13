@@ -3,25 +3,6 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { JarMoment, JarPageData } from '../jarPage';
 import { JarPageView, type JarPageViewProps } from '../JarPageView';
 
-// Reanimated needs native worklets; JarGraphic only uses it to animate a new layer.
-jest.mock('react-native-reanimated', () => {
-  const { createElement } = jest.requireActual<typeof import('react')>('react');
-  return {
-    __esModule: true,
-    default: {
-      createAnimatedComponent:
-        (C: React.ComponentType<Record<string, unknown>>) =>
-        ({ animatedProps, ...rest }: { animatedProps: object }) =>
-          createElement(C, { ...rest, ...animatedProps }),
-    },
-    Easing: { out: () => 'easeOut', cubic: 'cubic' },
-    useReducedMotion: () => false,
-    useSharedValue: (value: number) => ({ value }),
-    useAnimatedProps: (fn: () => object) => fn(),
-    withTiming: (to: number) => to,
-  };
-});
-
 const insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
 function moment(over: Partial<JarMoment> & Pick<JarMoment, 'id' | 'slot'>): JarMoment {

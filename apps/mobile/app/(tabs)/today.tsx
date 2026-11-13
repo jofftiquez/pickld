@@ -12,6 +12,7 @@ import { retryUpload } from '@/features/jar/retryUpload';
 import { openTodayJar, useRollover } from '@/features/jar/rollover';
 import { buildTodayGrid, holdsSlot, offlineBannerCount } from '@/features/jar/todayGrid';
 import { useCelebrations } from '@/features/jar/useCelebrations';
+import { useFillPops } from '@/features/jar/useFillPops';
 import { DAY_SLOTS } from '@/features/reminders/reminderPlan';
 import { useReminderSync } from '@/features/reminders/useReminderSync';
 import { useWidgetSync } from '@/features/widgets/useWidgetSync';
@@ -20,6 +21,7 @@ import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday
 import { FirstMomentTip } from '@/features/onboarding/FirstMomentTip';
 import { useFirstMomentTip } from '@/features/onboarding/useFirstMomentTip';
 import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
+import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
 import { currentSlot } from '@/lib/jars';
@@ -40,7 +42,7 @@ export default function TodayScreen() {
     return () => clearInterval(id);
   }, []);
 
-  const { userId, localDate, jar: jarData, me, queue } = useToday(now);
+  const { userId, localDate, jar: jarData, me, queue, queueLoaded } = useToday(now);
   const tz = phoneTimeZone();
   // Offline the persisted cache answers; a cached jar whose day has ended shows as the new, empty day.
   const jar = openTodayJar(jarData, now);
@@ -79,6 +81,12 @@ export default function TodayScreen() {
     nowSlot: currentSlot(now, tz),
     jarTz: jar?.jar?.tz ?? null,
   });
+  // A slot filled since the last look pops in with a light haptic (D-58); the 8th keeps only the Full jar
+  // celebration. Nothing pops until the jar and the queue have loaded.
+  const loadedDate = jarData !== undefined && queueLoaded ? (jar?.jar?.localDate ?? localDate) : null;
+  const poppingSlots = useFillPops(tiles, loadedDate, { skipFull: true });
+  // Back from Publish: confetti and the lid closing, once (D-58).
+  const celebratePublish = usePublishCelebration(jar?.jar?.id ?? null);
   // Slot reminders and the push token (M3-18): a filled day slot cancels today's reminder for it.
   useReminderSync(
     userId,
@@ -152,6 +160,8 @@ export default function TodayScreen() {
           changeVisibility.reset();
           setVisibilityOpen(true);
         }}
+        poppingSlots={poppingSlots}
+        celebratePublish={celebratePublish}
       />
       {published && openJar ? (
         <JarVisibilitySheet
