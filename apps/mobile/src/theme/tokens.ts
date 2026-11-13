@@ -161,6 +161,8 @@ export const radius = {
   shareCard: 24, // the Share jar card (ShareCard)
   shareTile: 8, // photos on the card
   shareAction: 18, // action wells on Share jar
+  shareLayout: 6, // layout thumbnails on Share jar (D-62)
+  shareLayoutCell: 2, // the photo blocks inside a layout thumbnail
   tile: 22,
   jarTile: 18, // moments in the Jar page grid (Story)
   introTile: 18, // the eight slot tiles on Intro1
@@ -334,6 +336,8 @@ export const sizes = {
   tipJar: 40, // jar beside the First moment tip title (Coach)
   shareSwatch: 44, // background swatches on Share (T-509)
   shareAction: 54, // round action wells on Share jar
+  shareLayoutThumb: 52, // height of a layout thumbnail on Share jar (D-62); its width follows the format
+  sharePanel: 0.4, // the Share jar panel's largest share of the screen height; past it the panel scrolls (D-62)
   lidStage: 200, // tinted circle behind the jar (JarLid)
   lidJarLarge: 124, // jar on Pick your jar
   lidSwatch: 44, // colour squares on Pick your jar

@@ -1245,12 +1245,32 @@
     "title": "Share jar",
     "titleMoment": "Share moment",
     "back": "Back",
+    "options": {
+      "title": "Options"
+    },
     "card": "Share card: {{title}}, {{date}}, {{count}} of {{max}} moments",
     "cardMoment": "Share card: {{name}}’s {{slot}}, {{date}}",
     "format": {
       "label": "Image size",
       "story": "Story 9:16",
       "feed": "Post 4:5"
+    },
+    "layout": {
+      "label": "Layout",
+      "option": "Layout: {{name}}",
+      "full": "Full",
+      "sideBySide": "Side by side",
+      "stacked": "Stacked",
+      "oneLargeTwo": "One large and two small",
+      "threeStacked": "Three stacked",
+      "threeRow": "Three in a row",
+      "grid2x2": "2 by 2 grid",
+      "oneLargeThree": "One large and three small",
+      "grid2x3": "2 by 3 grid",
+      "oneLargeStrip": "One large and a strip below",
+      "grid2x4": "2 by 4 grid",
+      "grid4x2": "4 by 2 grid",
+      "filmStrip": "Film strip"
     },
     "background": {
       "label": "Background",
@@ -1272,7 +1292,6 @@
     "copy": "Copy link",
     "copied": "Link copied",
     "message": "Message",
-    "more": "More",
     "shareTo": "Share to…",
     "failed": "Couldn’t share the card. Try again.",
     "unavailable": "This jar isn’t available to share.",

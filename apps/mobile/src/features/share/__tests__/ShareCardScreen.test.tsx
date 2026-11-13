@@ -75,7 +75,7 @@ describe('Share jar card analytics', () => {
   it('the link actions are not card exports', async () => {
     await render(<ShareCardScreen jarId="jar-10" />);
     await act(async () => props().onAction('copy'));
-    await act(async () => props().onAction('more'));
+    await act(async () => props().onAction('message'));
     expect(track).not.toHaveBeenCalled();
   });
 });
