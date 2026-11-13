@@ -1845,6 +1845,19 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Database['public']['Enums']['jar_visibility'];
       };
+      moment_jar: {
+        Args: { p_jar: string };
+        Returns: {
+          comment_count: number;
+          id: string;
+          like_count: number;
+          local_date: string;
+          moment_count: number;
+          tz: string;
+          user_id: string;
+          visible_count: number;
+        }[];
+      };
       moment_photo_paths: {
         Args: { ids: string[] };
         Returns: {
@@ -1853,6 +1866,30 @@ export type Database = {
           pending_thumb_path: string;
           photo_path: string;
           thumb_path: string;
+        }[];
+      };
+      moments_feed_page: {
+        Args: { cursor_at?: string; cursor_id?: string };
+        Returns: {
+          added_at: string;
+          author_avatar_path: string;
+          author_display_name: string;
+          author_id: string;
+          author_username: string;
+          caption: string;
+          captured_at: string;
+          comment_count: number;
+          edits: Json;
+          is_backfilled: boolean;
+          jar_id: string;
+          jar_local_date: string;
+          jar_tz: string;
+          jar_visible: boolean;
+          like_count: number;
+          liked: boolean;
+          moment_id: string;
+          slot: Database['public']['Enums']['slot'];
+          visibility: Database['public']['Enums']['jar_visibility'];
         }[];
       };
       month_jars: {
