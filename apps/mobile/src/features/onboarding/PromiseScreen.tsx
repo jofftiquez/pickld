@@ -7,6 +7,7 @@ import { fetchMe, phoneTimeZone, todayQueryKeys } from '@/features/jar/useToday'
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { formatDate } from '@/lib/format';
+import { resetTo } from '@/lib/navigation';
 import { getSupabase } from '@/lib/supabase';
 
 import { PromiseView } from './PromiseView';
@@ -33,7 +34,7 @@ export function PromiseScreen() {
     if (!userId) return;
     track('signup_step_completed', { step: 'promise' });
     await saveSetupStep(userId, null);
-    router.replace('/');
+    resetTo(router, '/');
   };
 
   const accept = async (): Promise<boolean> => {

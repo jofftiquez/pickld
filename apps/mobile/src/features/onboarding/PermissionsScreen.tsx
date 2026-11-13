@@ -9,6 +9,7 @@ import { fetchReminderSettings, reminderQueryKeys } from '@/features/reminders/u
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { formatTime } from '@/lib/format';
+import { resetTo } from '@/lib/navigation';
 
 import {
   expoPermissionApi,
@@ -79,7 +80,7 @@ export function PermissionsScreen({ api = expoPermissionApi }: { api?: Permissio
     const next = nextSetupRoute('/setup/permissions');
     await saveSetupStep(userId, next);
     if (next) router.push(next);
-    else router.replace('/');
+    else resetTo(router, '/');
   };
 
   return (

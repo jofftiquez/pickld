@@ -17,7 +17,9 @@ jest.mock('../AboutView', () => ({
   },
 }));
 const mockReplace = jest.fn();
-jest.mock('expo-router', () => ({ useRouter: () => ({ replace: mockReplace, canGoBack: () => false }) }));
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ canDismiss: () => false, dismissAll: jest.fn(), replace: mockReplace, canGoBack: () => false }),
+}));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));

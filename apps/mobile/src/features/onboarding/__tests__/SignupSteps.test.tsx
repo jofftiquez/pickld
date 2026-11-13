@@ -41,7 +41,14 @@ jest.mock('../PromiseView', () => ({
 jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: jest.fn(), canGoBack: () => false, back: jest.fn() }),
+  useRouter: () => ({
+    canDismiss: () => false,
+    dismissAll: jest.fn(),
+    push: mockPush,
+    replace: jest.fn(),
+    canGoBack: () => false,
+    back: jest.fn(),
+  }),
   Redirect: () => null,
 }));
 jest.mock('react-native-safe-area-context', () => ({

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBlockedAccounts } from '@/features/safety/block';
 import { openLegal } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
+import { resetTo } from '@/lib/navigation';
 
 import { SettingsView } from './SettingsView';
 import { signOutHere } from './signOut';
@@ -26,7 +27,7 @@ export function SettingsScreen() {
 
   async function signOut() {
     await signOutHere(queryClient);
-    router.replace('/welcome');
+    resetTo(router, '/welcome');
   }
 
   return (

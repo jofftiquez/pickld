@@ -10,6 +10,7 @@ import { useUsernameAvailability } from '@/features/profile/useUsernameAvailabil
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { localDateIn } from '@/lib/jars';
+import { resetTo } from '@/lib/navigation';
 import { getSupabase } from '@/lib/supabase';
 
 import { aboutProblems, completeBirthday, emptyAbout, isoDate, isUnder13, type AboutForm } from './aboutModel';
@@ -138,7 +139,7 @@ export function AboutScreen() {
       onBack={() =>
         void getSupabase()
           .auth.signOut({ scope: 'local' })
-          .finally(() => router.replace('/welcome'))
+          .finally(() => resetTo(router, '/welcome'))
       }
     />
   );

@@ -17,9 +17,17 @@ jest.mock('../SettingsView', () => ({
   },
 }));
 const mockReplace = jest.fn();
+const mockDismissAll = jest.fn();
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace, push: mockPush, canGoBack: () => false, back: jest.fn() }),
+  useRouter: () => ({
+    canDismiss: () => true,
+    dismissAll: mockDismissAll,
+    replace: mockReplace,
+    push: mockPush,
+    canGoBack: () => false,
+    back: jest.fn(),
+  }),
 }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -143,10 +151,12 @@ describe('Settings', () => {
     expect(props().prefs?.like).toBe(true);
   });
 
-  it('sign out cancels reminders and the push token before signing out', async () => {
+  it('sign out cancels reminders and the push token, then starts the stack over at Welcome', async () => {
     await renderScreen();
     await act(async () => props().onSignOut());
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/welcome'));
+    // The screens behind Settings go too, so a back swipe from Welcome can't reopen the signed-in app.
+    expect(mockDismissAll.mock.invocationCallOrder[0]).toBeLessThan(mockReplace.mock.invocationCallOrder[0]!);
     expect(mockCancelAll).toHaveBeenCalled();
     expect(mockRemoveToken).toHaveBeenCalled();
     expect(mockSignOut).toHaveBeenCalledWith({ scope: 'local' });
