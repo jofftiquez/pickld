@@ -6,6 +6,7 @@ import { colors } from '@/theme/tokens';
 import { CenterCard } from '~/components/CenterCard';
 import { Sidebar } from '~/components/Sidebar';
 import { t } from '~/i18n/t';
+import { loadStats } from '~/lib/queue';
 import { secondaryButton } from '~/lib/styles';
 import { isModerator, supabase } from '~/lib/supabase';
 
@@ -31,9 +32,15 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
       </CenterCard>
     );
   }
+  const stats = await loadStats(await supabase());
+  const items = [
+    { href: '/', label: t('nav.queue'), count: stats.all_open },
+    { href: '/?filter=report', label: t('nav.reports'), count: stats.report },
+    { href: '/?filter=appeal', label: t('nav.appeals'), count: stats.open_appeals },
+  ];
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar items={[{ href: '/', label: t('nav.queue') }]} name={email.split('@')[0] ?? email} />
+      <Sidebar items={items} name={email.split('@')[0] ?? email} />
       <main style={{ flex: 1, padding: '28px 24px', minWidth: 0 }}>{children}</main>
     </div>
   );
