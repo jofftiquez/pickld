@@ -1,5 +1,8 @@
 {
-  "site": { "name": "Pickld Mod", "description": "Pickld moderation console" },
+  "site": {
+    "name": "Pickld Mod",
+    "description": "Pickld moderation console"
+  },
   "signIn": {
     "title": "Moderator sign in",
     "body": "We'll email you a sign-in link. Only moderator accounts can open the console.",
@@ -21,7 +24,90 @@
     "appeals": "Appeals",
     "audit": "Audit log",
     "role": "{{name}} (moderator)",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "count": "{{count}} open"
   },
-  "queue": { "title": "Review queue", "subtitle": "Oldest first · photos blurred until you choose to view" }
+  "queue": {
+    "title": "Review queue",
+    "subtitle": "Oldest first · photos blurred until you choose to view",
+    "stats": {
+      "label": "Queue summary",
+      "pending": "Pending",
+      "wait": "Median wait",
+      "appeals": "Appeals"
+    },
+    "filters": {
+      "label": "Filter the queue",
+      "all": "All",
+      "auto_check": "Auto-check",
+      "report": "Reports",
+      "appeal": "Appeals",
+      "escalated": "Escalated"
+    },
+    "columns": {
+      "item": "Item",
+      "source": "Source",
+      "reason": "Reason",
+      "user": "User",
+      "waiting": "Waiting"
+    },
+    "rowLabel": "{{reason}} from @{{user}}, waiting {{wait}}",
+    "empty": "Nothing waiting here. New items show up as they come in.",
+    "emptyDetail": "Pick an item to review it.",
+    "noUser": "deleted account"
+  },
+  "source": {
+    "auto_check": "Auto-check",
+    "report_one": "Report ×{{count}}",
+    "report_other": "Report ×{{count}}",
+    "appeal": "Appeal",
+    "escalated": "Escalated"
+  },
+  "reason": {
+    "sexual": "Nudity or sexual content",
+    "sexual_minors": "Sexual content involving a minor",
+    "harassment": "Harassment or bullying",
+    "violence": "Violence or dangerous acts",
+    "hate": "Hate speech or symbols",
+    "spam": "Spam or scam",
+    "under_13": "Involves someone under 13",
+    "other": "Something else",
+    "self_harm": "Self-harm",
+    "illicit": "Illegal goods or acts",
+    "unknown": "No reason given",
+    "removed": "Removed: {{reason}}"
+  },
+  "wait": {
+    "minutes": "{{n}}m",
+    "hours": "{{n}}h",
+    "days": "{{n}}d"
+  },
+  "detail": {
+    "label": "Item details",
+    "title": "#{{slot}} · {{date}}",
+    "comment": "Comment",
+    "jar": "Reported jar",
+    "profile": "Reported profile",
+    "show": "Show photo",
+    "hide": "Hide photo",
+    "blurred": "Photo, blurred",
+    "photo": "#{{slot}} photo",
+    "noPhoto": "Photo unavailable",
+    "flag": "Flag",
+    "flagScore": "{{reason}} (score {{score}})",
+    "flagReports_other": "{{reason}} ({{count}} reports)",
+    "flagReports_one": "{{reason}} (1 report)",
+    "caption": "Caption",
+    "captionValue": "“{{caption}}”",
+    "noCaption": "No caption",
+    "appeal": "Appeal",
+    "noMessage": "No message",
+    "user": "User",
+    "userValue_other": "@{{user}} · joined {{month}} · {{count}} prior removals",
+    "userValue_one": "@{{user}} · joined {{month}} · 1 prior removal",
+    "visibility": "Visibility",
+    "hidden": "Hidden from readers until decided",
+    "visible": "Still visible to readers",
+    "notApplicable": "—"
+  }
 }
