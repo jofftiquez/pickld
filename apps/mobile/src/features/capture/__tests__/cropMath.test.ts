@@ -1,10 +1,13 @@
 // Crop screen geometry (FR-CAP-03): photo size + rotation + flip + zoom + pan → the frame's rectangle in the
 // turned photo's pixels, always exactly 3:4 and inside the photo. Asymmetric sizes catch swapped axes.
 import type { CropRect, Rotation, Size } from '@/lib/image/crop';
+import { crop } from '@/theme/tokens';
 
 import {
   clampCrop,
   coverScale,
+  CROP_HEADER_HEIGHT,
+  CROP_SHEET_HEIGHT,
   cropFrame,
   cropRectFor,
   fitCrop,
@@ -49,14 +52,41 @@ describe('isThreeByFour', () => {
 });
 
 describe('cropFrame', () => {
-  it('is 3:4, inset from the sides on a phone', () => {
-    expect(cropFrame({ width: 390, height: 844 })).toEqual({ width: 300, height: 400 });
+  // D-65: the frame takes what's left after the safe areas, the header and the tool sheet, so the sheet
+  // fits without scrolling.
+  it('on an iPhone 17 Pro (402 × 874, safe areas 62 and 34) is the designed 300 × 400', () => {
+    expect(CROP_HEADER_HEIGHT).toBe(68);
+    expect(CROP_SHEET_HEIGHT).toBe(214);
+    expect(cropFrame({ width: 402, height: 874 }, { top: 62, bottom: 34 })).toEqual({ width: 300, height: 400 });
   });
 
-  it('gets shorter on a short, wide screen so the tool sheet still fits', () => {
-    const f = cropFrame({ width: 390, height: 600 });
-    expect(f.height).toBeCloseTo((600 * 400) / 844, 6);
-    expect(f.width * 4).toBeCloseTo(f.height * 3, 6);
+  it('leaves room for the header, the photo area and the sheet together', () => {
+    for (const [window, insets] of [
+      [
+        { width: 375, height: 667 },
+        { top: 20, bottom: 0 },
+      ],
+      [
+        { width: 390, height: 844 },
+        { top: 47, bottom: 34 },
+      ],
+      [
+        { width: 440, height: 956 },
+        { top: 62, bottom: 34 },
+      ],
+    ] as const) {
+      const f = cropFrame(window, insets);
+      expect(f.width * 4).toBeCloseTo(f.height * 3, 6);
+      const used =
+        insets.top + CROP_HEADER_HEIGHT + f.height + 2 * crop.frameInsetY + CROP_SHEET_HEIGHT + insets.bottom;
+      expect(used).toBeLessThanOrEqual(window.height + 1e-6);
+      expect(f.width).toBeLessThanOrEqual(window.width - 2 * crop.frameInsetX);
+    }
+  });
+
+  it('keeps the side insets on a tall, narrow screen', () => {
+    const f = cropFrame({ width: 320, height: 2000 }, { top: 0, bottom: 0 });
+    expect(f.width).toBe(320 - 2 * crop.frameInsetX);
   });
 });
 

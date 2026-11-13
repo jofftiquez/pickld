@@ -539,8 +539,9 @@ export const myStickers = {
 // above it and the gesture hint below; the white tool sheet holds the zoom slider and tool buttons.
 export const crop = {
   frameInsetX: 45, // at least this much dark photo beside the frame
-  frameInsetY: 60,
-  frameShare: 400 / 844, // the frame's height is at most this share of the screen, so the sheet fits
+  frameInsetY: 48, // dark photo above and below the frame, room for the 3:4 chip and the hint
+  headerPaddingTop: 8, // under the safe area, as the editor's toolbar (D-65)
+  noteHeight: 32, // two lines of the note under the tools, so the sheet fits on narrow phones
   titleGap: 1,
   sheetPaddingTop: 18,
   frameOutline: 1.5,
@@ -554,8 +555,8 @@ export const crop = {
   chipIcon: 12,
   chipGap: 5,
   hintBottom: 22,
-  headerAction: 64, // Cancel and Reset minimum width
-  toolButton: 64, // Rotate, Flip, Fit (grows with large text)
+  headerAction: 64, // Cancel minimum width
+  toolButton: 64, // Rotate, Flip, Fit, Reset (grows with large text)
   toolRadius: 18,
   zoomIcon: 18,
 } as const;
