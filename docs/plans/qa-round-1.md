@@ -697,7 +697,7 @@ Each has a recommendation; "yes" accepts it. **Accepted Nov 13:** the product ow
 15. **D15 Share card:** the picture takes about two thirds of the screen, layout thumbnails and backgrounds sit in the bottom third, and Format and Include captions move to an Options button. The layouts are those in the item 21 table, with the first as the default.
 16. **D16 Toasts:** one in-house toast near the top for success messages only, with no new library. Errors stay as they are.
 
-Added Nov 13 with items 23–26 (asked one at a time; item 26 needs no decision):
+Added Nov 13 with items 23–26 (asked one at a time; item 26 needs no decision). **Auto-approved Nov 13:** the product owner auto-approved D17–D19 as recommended; they are recorded as D-64 to D-66 in `docs/decisions.md`.
 
 17. **D17 Filters:** add six color-only filters (Kape, Ube, Sampaguita, Gabi, Luma, Ulan), for eleven in all. Original stays first and the old five keep their order.
 18. **D18 Crop button:** "Next: edit" / "Save crop" moves to the top right of the Crop header as a green pill, like the editor's Save. Reset joins the tools row, and the frame is sized so the sheet fits without scrolling.
