@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { useAuthStore } from '@/lib/authStore';
+import { resetTo } from '@/lib/navigation';
 import { getSupabase } from '@/lib/supabase';
 
 import { DeleteAccountView } from './DeleteAccountView';
@@ -63,7 +64,7 @@ export function DeleteAccountScreen() {
     },
     onSuccess: async () => {
       await signOutHere(queryClient);
-      router.replace('/welcome');
+      resetTo(router, '/welcome');
     },
   });
 

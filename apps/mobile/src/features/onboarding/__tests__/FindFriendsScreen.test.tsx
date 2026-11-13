@@ -12,7 +12,14 @@ jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, canGoBack: () => false, back: jest.fn() }),
+  useRouter: () => ({
+    canDismiss: () => false,
+    dismissAll: jest.fn(),
+    push: mockPush,
+    replace: mockReplace,
+    canGoBack: () => false,
+    back: jest.fn(),
+  }),
 }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),

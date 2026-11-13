@@ -11,6 +11,7 @@ import { LogBox } from 'react-native';
 
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { startAuth } from '@/lib/authBootstrap';
+import { useAuthStore } from '@/lib/authStore';
 import { createQueryClient, persistOptions } from '@/lib/queryClient';
 import { deviceNetwork } from '@/lib/network';
 import { startUploadRunner } from '@/lib/queue/runner';
@@ -35,6 +36,7 @@ export default function RootLayout() {
   const hideSplash = useCallback(() => setSplashVisible(false), []);
   const [queryClient] = useState(createQueryClient);
   const reduceMotion = useReduceMotion();
+  const signedIn = useAuthStore((s) => s.status === 'signedIn');
 
   useEffect(() => startTelemetry(), []);
   useEffect(() => startAuth(getSupabase), []);
@@ -48,6 +50,14 @@ export default function RootLayout() {
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <Stack screenOptions={{ headerShown: false }}>
+        {/* Signed-out screens. Signing in drops them from the history, so a back swipe can't return to them. */}
+        <Stack.Protected guard={!signedIn}>
+          <Stack.Screen name="welcome" />
+          <Stack.Screen name="intro/[step]" />
+          <Stack.Screen name="sign-up" />
+          <Stack.Screen name="sign-in" />
+          <Stack.Screen name="check-email" />
+        </Stack.Protected>
         {/* The camera covers the tabs; Reduce Motion swaps the slide for no animation (rule 11). */}
         <Stack.Screen
           name="camera"

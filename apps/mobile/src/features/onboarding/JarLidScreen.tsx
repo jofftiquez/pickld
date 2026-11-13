@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
+import { resetTo } from '@/lib/navigation';
 import { getSupabase } from '@/lib/supabase';
 import { lidColors } from '@/theme/tokens';
 
@@ -33,7 +34,7 @@ export function JarLidScreen() {
       const next = nextSetupRoute('/setup/jar-lid');
       await saveSetupStep(userId, next);
       if (next) router.push(next);
-      else router.replace('/');
+      else resetTo(router, '/');
     } catch {
       setFailed(true);
     } finally {
