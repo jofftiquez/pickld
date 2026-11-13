@@ -37,7 +37,8 @@ export async function fetchFeedPage(cursor: FeedCursor | null): Promise<FeedPage
   };
 }
 
-async function fetchFeedAuthors() {
+/** The avatar row; the Moments timeline also reads it to know whether the user reads anybody. */
+export async function fetchFeedAuthors() {
   const { data, error } = await getSupabase().rpc('feed_authors');
   if (error) throw new Error(error.message);
   return z.array(feedAuthorRow).parse(data);

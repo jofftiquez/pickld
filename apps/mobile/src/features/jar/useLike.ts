@@ -16,10 +16,11 @@ type Vars = { target: LikeTarget; liked: boolean };
 const chains = new Map<string, Promise<unknown>>();
 const inFlight = new Map<string, number>();
 
-const keyOf = (jarId: string, target: LikeTarget) => (target.kind === 'jar' ? `jar:${jarId}` : `moment:${target.id}`);
+export const keyOf = (jarId: string, target: LikeTarget) =>
+  target.kind === 'jar' ? `jar:${jarId}` : `moment:${target.id}`;
 
-/** Runs `run` after every earlier request for the same key has settled. */
-function serialize<T>(key: string, run: () => Promise<T>): Promise<T> {
+/** Runs `run` after every earlier request for the same key has settled. Shared with the Moments timeline's likes. */
+export function serialize<T>(key: string, run: () => Promise<T>): Promise<T> {
   const next = (chains.get(key) ?? Promise.resolve()).catch(() => undefined).then(run);
   chains.set(key, next);
   return next;
@@ -69,6 +70,8 @@ export function useLike(viewerId: string | null, jarId: string | null) {
       inFlight.delete(key);
       void queryClient.invalidateQueries({ queryKey });
       void queryClient.invalidateQueries({ queryKey: ['feed', viewerId ?? ''] });
+      if (vars.target.kind === 'moment')
+        void queryClient.invalidateQueries({ queryKey: ['momentsFeed', viewerId ?? ''] });
     },
   });
 

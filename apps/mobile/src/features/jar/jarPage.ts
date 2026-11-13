@@ -16,6 +16,8 @@ export const jarRow = z.object({
   visible_count: z.number(),
   like_count: z.number(),
   comment_count: z.number(),
+  /** False when read through `moment_jar` (0067): the viewer sees moments in it but can't open the jar. */
+  open: z.boolean().optional(),
 });
 export type JarRow = z.infer<typeof jarRow>;
 

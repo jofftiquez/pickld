@@ -12,7 +12,8 @@ import { useBlockFlow } from '@/features/safety/useBlockFlow';
 
 // /moment/[id]: Moment detail (M3-08; FR-SOC-04) when opened from a jar (`jar` param) or for the owner's
 // own live moment, swiping through that jar's shown moments. The owner's checking or removed moment
-// shows its own screen (M2-21; FR-PUB-07, FR-SAF-03). Ids are validated with Zod in the hooks; a bad id
+// shows its own screen (M2-21; FR-PUB-07, FR-SAF-03). From the Moments timeline the `jar` param may be a
+// jar the viewer can't open yet; its moments they may see still open here (D-67). Ids are validated with Zod in the hooks; a bad id
 // is "not available".
 export default function MomentScreen() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function MomentScreen() {
   const own = useOwnMoment(jar ? undefined : id);
   const ownLiveJar = own.kind === 'found' && own.moment.status === 'live' ? own.moment.jarId : undefined;
   const jarId = jar ?? ownLiveJar;
-  const page = useJarPage(jarId);
+  const page = useJarPage(jarId, { fromMoment: true });
   const like = useLike(page.data?.viewerId ?? null, page.data?.jar.id ?? null);
   const [reporting, setReporting] = useState<string | null>(null);
   const blockFlow = useBlockFlow(() => router.replace('/jars'));
