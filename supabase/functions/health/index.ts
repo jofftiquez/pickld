@@ -1,11 +1,14 @@
 import { s3ServerConfigFromEnv, serviceClient } from '../_shared/env.ts';
 import { withSentry } from '../_shared/sentry.ts';
-import { dbCheck, handleHealth, storageCheck } from './handler.ts';
+import { dbCheck, handleHealth, queueAgeCheck, storageCheck } from './handler.ts';
 
 Deno.serve(
   withSentry('health', (req) =>
     handleHealth(req, {
-      checks: { db: dbCheck(serviceClient()), storage: storageCheck(s3ServerConfigFromEnv()) },
+      // /health/queue is the moderation queue-age monitor; /health is uptime (Postgres and the bucket).
+      checks: new URL(req.url).pathname.endsWith('/queue')
+        ? { queue: queueAgeCheck(serviceClient()) }
+        : { db: dbCheck(serviceClient()), storage: storageCheck(s3ServerConfigFromEnv()) },
       report: (name, error) => console.error(`health: ${name} failed`, error instanceof Error ? error.message : ''),
     })),
 );
