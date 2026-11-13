@@ -264,14 +264,15 @@ content_path = "./supabase/templates/reauthentication.html"
 subject = "You’re invited to Pickld"
 content_path = "./supabase/templates/invite.html"
 
-# Security notices after an account change. Branded but off until we decide to send them.
+# Security notices after an account change. On for the changes that can happen in Pickld (email, Apple or
+# Google sign-in); Pickld has no passwords, phone numbers or extra sign-in checks, so those stay off.
 [auth.email.notification.password_changed]
 enabled = false
 subject = "Your Pickld password changed"
 content_path = "./supabase/templates/password_changed_notification.html"
 
 [auth.email.notification.email_changed]
-enabled = false
+enabled = true
 subject = "Your Pickld email changed"
 content_path = "./supabase/templates/email_changed_notification.html"
 
@@ -281,12 +282,12 @@ subject = "Your Pickld phone number changed"
 content_path = "./supabase/templates/phone_changed_notification.html"
 
 [auth.email.notification.identity_linked]
-enabled = false
+enabled = true
 subject = "New sign-in method on Pickld"
 content_path = "./supabase/templates/identity_linked_notification.html"
 
 [auth.email.notification.identity_unlinked]
-enabled = false
+enabled = true
 subject = "Sign-in method removed from Pickld"
 content_path = "./supabase/templates/identity_unlinked_notification.html"
 
