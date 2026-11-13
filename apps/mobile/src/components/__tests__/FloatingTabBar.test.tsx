@@ -52,24 +52,22 @@ describe('FloatingTabBar', () => {
     expect(icon('jars').strokeWidth).toBe(2);
   });
 
-  it('Today is a green pill with a larger white icon and label, selected or not; selected adds a ring', async () => {
-    const pill = (id: string) => flatStyle(screen.getByTestId(id));
+  it('Today gets no highlight while Jars is selected, and the same tinted pill as any tab when selected', async () => {
     const icon = () => screen.getByTestId('icon-today', { includeHiddenElements: true }).props;
 
     const other = setup({ index: 2 });
     await render(<FloatingTabBar {...other.props} />);
-    expect(pill('tab-emphasis-pill')).toMatchObject({ backgroundColor: colors.brand, borderColor: colors.brand });
-    expect(icon()).toMatchObject({ stroke: colors.surface, width: sizes.tabIconEmphasized });
-    expect(screen.getByText('Today').props.style).toEqual(expect.arrayContaining([{ color: colors.surface }]));
+    expect(icon().stroke).toBe(colors.muted);
+    expect(screen.getByText('Today').props.style).toEqual(expect.arrayContaining([{ color: colors.muted }]));
     expect(screen.getByRole('tab', { name: 'Today' }).props.accessibilityState).toEqual({ selected: false });
 
     const today = setup({ index: 0 });
     await render(<FloatingTabBar {...today.props} />);
-    expect(screen.queryByTestId('tab-emphasis-pill')).toBeNull();
-    expect(pill('tab-active-pill')).toMatchObject({ backgroundColor: colors.brand, borderColor: colors.brandText });
-    expect(icon()).toMatchObject({ stroke: colors.surface, width: sizes.tabIconEmphasized });
+    expect(screen.getAllByTestId('tab-active-pill')).toHaveLength(1);
+    expect(flatStyle(screen.getByTestId('tab-active-pill'))).toMatchObject({ backgroundColor: colors.brandTint });
+    expect(flatStyle(screen.getByTestId('tab-active-pill')).borderWidth).toBeUndefined();
+    expect(icon().stroke).toBe(colors.brandText);
     expect(screen.getByRole('tab', { name: 'Today', selected: true })).toBeTruthy();
-    expect(screen.getAllByRole('tab', { selected: true })).toHaveLength(1);
   });
 
   it('pressing an unfocused tab emits tabPress and navigates to that route', async () => {
