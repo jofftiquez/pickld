@@ -15,7 +15,8 @@ export type TodayHeaderProps = {
   /** Null while signed out or loading; the greeting then has no name. */
   displayName: string | null;
   avatarUrl: string | null;
-  onOpenMyDays: () => void;
+  /** Left out, the calendar button is hidden. */
+  onOpenMyDays?: () => void;
   /** Opens the Stickers page (D-61); missing hides the button. */
   onOpenStickers?: () => void;
   /** Opens My profile from the avatar. */
@@ -67,12 +68,14 @@ export function TodayHeader({
             testID="today-stickers"
           />
         ) : null}
-        <RoundIconButton
-          icon="myDays"
-          accessibilityLabel={t('today.myDays')}
-          onPress={onOpenMyDays}
-          testID="today-my-days"
-        />
+        {onOpenMyDays ? (
+          <RoundIconButton
+            icon="myDays"
+            accessibilityLabel={t('today.myDays')}
+            onPress={onOpenMyDays}
+            testID="today-my-days"
+          />
+        ) : null}
         {displayName && onOpenProfile ? (
           <Pressable
             accessibilityRole="button"

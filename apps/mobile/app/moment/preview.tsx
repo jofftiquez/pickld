@@ -7,6 +7,8 @@ import { z } from 'zod';
 
 import { DangerButton } from '@/components/DangerButton';
 import { Dialog } from '@/components/Dialog';
+import { parseFillDateParam } from '@/features/capture/fillTarget';
+import { useDayJar } from '@/features/days/useDayJar';
 import { openTodayJar } from '@/features/jar/rollover';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { jarPageQueryKeys, useJarPage } from '@/features/jar/useJarPage';
@@ -28,18 +30,24 @@ const slotParam = z.enum(slots);
 // Today. It reads Today's own data (the open jar, the offline queue) so photos still on the phone can be
 // previewed too, and today's jar page for the full photos, captions, likes and comments. A separate route
 // rather than /moment/[id], which takes server moment ids and shows others' moments as well.
+// `&date=YYYY-MM-DD` (a past day) previews that day's jar instead, from the day page (D-55): the same model
+// built from that day's jar (`useDayJar`) and the queue.
 export default function MomentPreviewScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const params = useLocalSearchParams<{ slot?: string }>();
+  const params = useLocalSearchParams<{ slot?: string; date?: string }>();
   const startSlot = slotParam.catch('whereami').parse(params.slot);
   const [now] = useState(() => new Date());
   const tz = phoneTimeZone();
   const { userId, localDate, jar: jarData, me, queue } = useToday(now);
+  // Deep links are untrusted: only a real past date picks a past jar; anything else is Today's.
+  const pastDate = parseFillDateParam(params.date, localDate);
+  const { day } = useDayJar(pastDate);
   const today = useMemo(() => openTodayJar(jarData, now), [jarData, now]);
-  const jarId = today?.jar?.id ?? null;
+  const shown = pastDate ? day : today;
+  const jarId = shown?.jar?.id ?? null;
   const page = useJarPage(jarId ?? undefined);
 
   // Back from the editor or Share: re-read the jar page too, for a new caption.
@@ -56,23 +64,23 @@ export default function MomentPreviewScreen() {
   );
 
   const tiles = buildTodayGrid({
-    localDate: today?.jar?.localDate ?? localDate,
-    moments: today?.moments ?? [],
+    localDate: shown?.jar?.localDate ?? pastDate ?? localDate,
+    moments: shown?.moments ?? [],
     queue,
-    nowSlot: currentSlot(now, tz),
-    jarTz: today?.jar?.tz ?? null,
+    nowSlot: pastDate ? null : currentSlot(now, tz),
+    jarTz: shown?.jar?.tz ?? null,
   });
   const items =
-    jarData === undefined
+    (pastDate ? day : jarData) === undefined
       ? undefined
       : buildPreviewItems({ tiles, queue, jarId, page: page.data, defaultVisibility: me?.defaultVisibility });
 
   const close = useCallback(() => {
     if (router.canGoBack()) router.back();
-    else router.replace('/today');
-  }, [router]);
+    else router.replace(pastDate ? `/day/${pastDate}` : '/today');
+  }, [router, pastDate]);
 
-  // The last moment deleted or moved away: nothing is left to preview, so go back to Today.
+  // The last moment deleted or moved away: nothing is left to preview, so go back (to Today or the day page).
   const hadItems = useRef(false);
   const itemCount = items?.length;
   useEffect(() => {
@@ -111,6 +119,7 @@ export default function MomentPreviewScreen() {
     if (userId !== null) {
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
       void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['day', userId] });
     }
     showToast('momentDeleted');
   };
@@ -125,7 +134,7 @@ export default function MomentPreviewScreen() {
       <MomentPreviewView
         items={items}
         startSlot={startSlot}
-        tz={today?.jar?.tz ?? tz}
+        tz={shown?.jar?.tz ?? tz}
         insets={insets}
         busy={busy}
         error={error}
@@ -153,7 +162,7 @@ export default function MomentPreviewScreen() {
           selection={options.selection}
           userId={userId}
           freeSlots={tiles.filter((tile) => !holdsSlot(tile)).map((tile) => tile.slot)}
-          tz={today?.jar?.tz ?? tz}
+          tz={shown?.jar?.tz ?? tz}
           onClose={() => setOptions((o) => (o ? { ...o, open: false } : o))}
         />
       ) : null}

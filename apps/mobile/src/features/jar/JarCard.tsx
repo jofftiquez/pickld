@@ -25,6 +25,8 @@ export type JarCardProps = {
   published?: { visibility: Visibility; likeCount: number; time: string } | null;
   /** The Published chip and line: open the jar's visibility menu (FR-PUB-03). */
   onOpenVisibility?: () => void;
+  /** A past day's jar on the day page (D-55): "in this jar" instead of "in today’s jar". */
+  pastDay?: boolean;
 };
 
 /** The dark card above the grid: the jar filled to today's count, readers and Publish (Main, EmptyToday,
@@ -37,6 +39,7 @@ export function JarCard({
   onPublish,
   published = null,
   onOpenVisibility,
+  pastDay = false,
 }: JarCardProps) {
   const { t } = useTranslation();
   const large = useLargeText();
@@ -49,8 +52,8 @@ export function JarCard({
           likes: t('today.likes', { count: published.likeCount }),
         })
       : readerCount === null
-        ? t('today.inTodaysJar')
-        : t('today.inTodaysJarReaders', { count: readerCount });
+        ? t(pastDay ? 'day.inJar' : 'today.inTodaysJar')
+        : t(pastDay ? 'day.inJarReaders' : 'today.inTodaysJarReaders', { count: readerCount });
   const publishedLine = published
     ? t('today.publishedLine', { time: published.time, visibility: t(`settings.visibility.${published.visibility}`) })
     : null;
@@ -77,7 +80,9 @@ export function JarCard({
         ) : (
           <PillButton
             label={t('today.publish')}
-            accessibilityHint={onPublish ? t('today.publishHint') : t('today.publishDisabledHint')}
+            accessibilityHint={
+              onPublish ? t(pastDay ? 'day.publishHint' : 'today.publishHint') : t('today.publishDisabledHint')
+            }
             onPress={() => onPublish?.()}
             disabled={onPublish === null}
             testID="today-publish"

@@ -119,7 +119,8 @@ export default function CropScreen() {
       return;
     }
     setPending(null);
-    router.replace(`/edit/${queuedId}`);
+    // The editor knows the camera is below it, so leaving goes back past it.
+    router.replace({ pathname: '/edit/[momentId]', params: { momentId: String(queuedId), via: 'crop' } });
   };
 
   return (

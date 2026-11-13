@@ -18,6 +18,8 @@ export type JarVisibilitySheetProps = {
   /** A different choice was tapped; the owner applies it and closes the sheet on success. */
   onChange: (visibility: Visibility) => void;
   onClose: () => void;
+  /** A past day's jar (the day page, D-55): the line about moments added today doesn't apply, so it is left out. */
+  pastDay?: boolean;
 };
 
 /**
@@ -32,6 +34,7 @@ export function JarVisibilitySheet({
   error,
   onChange,
   onClose,
+  pastDay = false,
 }: JarVisibilitySheetProps) {
   const { t } = useTranslation();
   return (
@@ -44,7 +47,7 @@ export function JarVisibilitySheet({
       <Text accessibilityRole="header" style={[textStyle('body', '700'), styles.title]}>
         {t('jarVisibility.title')}
       </Text>
-      <Text style={[textStyle('label', '500'), styles.body]}>{t('jarVisibility.body')}</Text>
+      {pastDay ? null : <Text style={[textStyle('label', '500'), styles.body]}>{t('jarVisibility.body')}</Text>}
       <View accessibilityRole="radiogroup">
         <VisibilityOptions
           visibility={visibility}

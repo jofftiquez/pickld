@@ -39,6 +39,7 @@ export function MomentEditSession({ moment, userId, focusCaption, insets, onLeav
       onSave={async (input) => {
         await saveMomentEdits(getSupabase(), { kind: 'server', momentId: moment.id, jarId: moment.jarId }, input);
         void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+        void queryClient.invalidateQueries({ queryKey: ['day', userId] });
         showToast('changesSaved');
       }}
     />

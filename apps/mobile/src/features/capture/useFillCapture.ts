@@ -1,4 +1,5 @@
-// The camera's Fill this jar mode (FR-DAY-02): opened as `/camera?date=YYYY-MM-DD&slot=…` from My days.
+// The camera's Fill this jar mode (FR-DAY-02): opened as `/camera?date=YYYY-MM-DD&slot=…` from an empty tile
+// on a past day's page (`/day/[date]`, D-55), which My days' Fill this jar opens.
 // Null for a normal capture (no date, or one that isn't in the past), which keeps the open-jar path and
 // the travel rule untouched.
 import { useDayJar } from '@/features/days/useDayJar';

@@ -66,6 +66,8 @@ export function MomentOptions({ visible, mode, selection, userId, freeSlots, tz,
 
   const refreshToday = () => {
     void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+    // The day page and its preview (D-55) read a past day through ['day', userId, date].
+    void queryClient.invalidateQueries({ queryKey: ['day', userId] });
     void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
   };
 

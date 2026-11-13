@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MomentTile } from '@/components/MomentTile';
 import { MomentCover } from '@/features/moment/MomentCover';
@@ -8,10 +8,12 @@ import { opensPreview } from '@/features/moment/momentPreview';
 import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
+import { textStyle } from '@/theme/text';
 import { colors, sizes, space, type Slot } from '@/theme/tokens';
 
 import type { Visibility } from '@/features/publish/publishJar';
 
+import { DayHeader } from './DayHeader';
 import { JarCard } from './JarCard';
 import { OfflineBanner } from './OfflineBanner';
 import { TodayHeader } from './TodayHeader';
@@ -33,8 +35,9 @@ export type TodayViewProps = {
   /** Offline banner count from `offlineBannerCount`; null hides the banner. */
   offlineCount?: number | null;
   onCapture: (slot: Slot) => void;
-  onOpenMyDays: () => void;
-  /** Opens the Stickers page from the header's stickers button (D-61). */
+  /** Today's calendar button; left out on the day page. */
+  onOpenMyDays?: () => void;
+  /** Opens the Stickers page from the header's stickers button (D-61); left out on the day page. */
   onOpenStickers?: () => void;
   /** Opens My profile from the header avatar. */
   onOpenProfile?: () => void;
@@ -56,9 +59,15 @@ export type TodayViewProps = {
   published?: { visibility: Visibility; publishedAt: string; likeCount: number } | null;
   /** The Published chip and line: open the jar's visibility menu. */
   onOpenVisibility?: () => void;
+  /**
+   * A past day instead of today: the day page (D-55, FR-DAY-02; app/day/[date].tsx). The header shows that
+   * date and Back instead of the greeting, nothing is the Now tile, and the page sits above the tab bar.
+   */
+  day?: { date: string; onBack: () => void } | null;
 };
 
-/** Today (design: Main; first day: EmptyToday). Presentational; app/(tabs)/today.tsx loads the data. */
+/** Today (design: Main; first day: EmptyToday), or a past day's page (Day). Presentational; app/(tabs)/today.tsx
+ * and app/day/[date].tsx load the data. */
 export function TodayView({
   now,
   tz,
@@ -83,13 +92,16 @@ export function TodayView({
   onPublish = null,
   published = null,
   onOpenVisibility,
+  day = null,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
   const rows: GridTile[][] = [];
   for (let i = 0; i < tiles.length; i += 2) rows.push(tiles.slice(i, i + 2));
-  // Content scrolls under the floating tab bar; this keeps the last row clear of it.
-  const bottomPadding = Math.max(insets.bottom, space.lg) + sizes.tabBar + space.lg;
+  // Content scrolls under the floating tab bar; this keeps the last row clear of it. The day page is a stack
+  // screen without the tab bar.
+  const bottomPadding = Math.max(insets.bottom, space.lg) + (day ? 0 : sizes.tabBar + space.lg);
+  const missing = tiles.some((tile) => tile.state === 'empty');
 
   return (
     <ScrollView
@@ -98,18 +110,22 @@ export function TodayView({
         styles.content,
         { paddingTop: insets.top + sizes.headerTop, paddingBottom: bottomPadding },
       ]}
-      testID="today-scroll"
+      testID={day ? 'day-scroll' : 'today-scroll'}
     >
-      <TodayHeader
-        date={formatShortDate(now, tz)}
-        greeting={greetingFor(currentSlot(now, tz))}
-        displayName={displayName}
-        avatarUrl={avatarUrl}
-        onOpenMyDays={onOpenMyDays}
-        onOpenStickers={onOpenStickers}
-        onOpenProfile={onOpenProfile}
-        zoneTag={zoneTag}
-      />
+      {day ? (
+        <DayHeader date={day.date} onBack={day.onBack} />
+      ) : (
+        <TodayHeader
+          date={formatShortDate(now, tz)}
+          greeting={greetingFor(currentSlot(now, tz))}
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          onOpenMyDays={onOpenMyDays}
+          onOpenStickers={onOpenStickers}
+          onOpenProfile={onOpenProfile}
+          zoneTag={zoneTag}
+        />
+      )}
       {suspension ? <View style={styles.banner}>{suspension}</View> : null}
       {zoneBanner ? <View style={suspension ? styles.cardUnderBanner : styles.banner}>{zoneBanner}</View> : null}
       {offlineCount !== null ? (
@@ -122,7 +138,8 @@ export function TodayView({
           count={count}
           readerCount={readerCount}
           lidColor={lidColor}
-          firstDay={hasAnyJar === false && count === 0}
+          firstDay={!day && hasAnyJar === false && count === 0}
+          pastDay={day !== null}
           onPublish={onPublish}
           published={
             published
@@ -136,7 +153,7 @@ export function TodayView({
           onOpenVisibility={onOpenVisibility}
         />
       </View>
-      <View accessibilityLabel={t('today.grid')} style={styles.grid}>
+      <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
         {rows.map((row) => (
           <View key={row[0]?.slot} style={styles.gridRow}>
             {row.map((tile) => {
@@ -182,6 +199,11 @@ export function TodayView({
           </View>
         ))}
       </View>
+      {day && missing ? (
+        <Text style={[textStyle('bodySmall'), styles.note]} testID="day-added-later-note">
+          {t('day.addedLaterNote')}
+        </Text>
+      ) : null}
     </ScrollView>
   );
 }
@@ -195,4 +217,5 @@ const styles = StyleSheet.create({
   grid: { marginTop: space.lg, gap: space.md },
   gridRow: { flexDirection: 'row', gap: space.md },
   cell: { flex: 1 },
+  note: { marginTop: space.lg, color: colors.muted },
 });
