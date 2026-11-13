@@ -68,11 +68,6 @@ appId: me.pickld.app
     visible:
       id: editor-screen
     timeout: 10000
-- scrollUntilVisible:
-    element:
-      id: editor-save
-    direction: DOWN
-    timeout: 10000
 - tapOn:
     id: editor-save
 # Back on My days, the photo holds its slot in the card at once (queued, then uploaded).
