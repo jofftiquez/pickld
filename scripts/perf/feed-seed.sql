@@ -14,10 +14,10 @@ ins as (
   on conflict (user_id, local_date) do nothing
   returning id, user_id, tz, local_date
 )
-insert into public.moments (jar_id, user_id, slot, photo_path, thumb_path, caption, captured_at, added_at, is_backfilled, is_private, status)
+insert into public.moments (jar_id, user_id, slot, photo_path, thumb_path, caption, captured_at, added_at, is_backfilled, visibility, status)
 select ins.id, ins.user_id, s.slot::slot, 'seed/photos/' || s.img || '.jpg', 'seed/thumbs/' || s.img || '.jpg',
        null, (ins.local_date::timestamp at time zone ins.tz) + s.at, (ins.local_date::timestamp at time zone ins.tz) + s.at + interval '1 minute',
-       false, false, 'live'
+       false, 'everyone', 'live'
 from ins cross join (values
   ('whereami', 'whereami', interval '8 hours'), ('mebusywith', 'busy', interval '10 hours'),
   ('whoamiwith', 'whoamiwith', interval '12 hours'), ('ootd', 'ootd', interval '9 hours'),

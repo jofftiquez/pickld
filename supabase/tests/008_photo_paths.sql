@@ -2,7 +2,7 @@
 -- moments for moderators (NFR-SEC-02, FR-PUB-05, FR-MOD-03).
 begin;
 \ir _helpers.psql
-select plan(68);
+select plan(80);
 
 select tests.world();
 create temp table m (name text primary key, id uuid not null, sees text[] not null);
@@ -23,7 +23,10 @@ insert into m values
   ('checking',                tests.make_moment(pg_temp.j('everyone'), 'afternoon', 'checking'),             '{owner}'),
   ('removed',                 tests.make_moment(pg_temp.j('everyone'), 'ootd', 'removed'),                   '{owner}'),
   ('live in only_me',         tests.make_moment(pg_temp.j('only_me'), 'morning', 'live'),                    '{owner}'),
-  ('live in unpublished',     tests.make_moment(pg_temp.j('unpublished'), 'morning', 'live'),                '{owner}'),
+  -- 0066 (D-48): a live moment follows its own visibility, published jar or not.
+  ('live in unpublished',     tests.make_moment(pg_temp.j('unpublished'), 'morning', 'live'),                '{owner,reader,outsider,moderator}'),
+  ('only_me in unpublished',  tests.make_moment(pg_temp.j('unpublished'), 'evening', 'live', p_visibility => 'only_me'), '{owner}'),
+  ('readers in everyone',     tests.make_moment(pg_temp.j('everyone'), 'whereami', 'live', p_visibility => 'readers'), '{owner,reader}'),
   -- queued for moderation: the moderator sees these too
   ('checking, queued',        tests.make_moment(pg_temp.j('readers'), 'afternoon', 'checking'),              '{owner,moderator}'),
   ('removed, open appeal',    tests.make_moment(pg_temp.j('readers'), 'ootd', 'removed'),                    '{owner,moderator}'),
@@ -63,8 +66,8 @@ select tests.reset_role();
 
 -- a batch returns only the visible ones
 select tests.act_as('reader');
-select is((select count(*) from public.moment_photo_paths(array(select id from m))), 2::bigint,
-          'a batch with every moment returns only the two the reader can view');
+select is((select count(*) from public.moment_photo_paths(array(select id from m))), 4::bigint,
+          'a batch with every moment returns only the four the reader can view');
 select tests.reset_role();
 
 -- pending paths: an edit awaiting moderation goes to the owner and moderators only
