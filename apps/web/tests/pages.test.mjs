@@ -16,6 +16,7 @@ const images = path.join(here, '../../../design/images');
 const ANON = 'stub-anon-key-0123456789abcdef';
 const EVERYONE = '11111111-1111-4111-8111-111111111111';
 const READERS = '22222222-2222-4222-8222-222222222222';
+const COVERED = '66666666-6666-4666-8666-666666666666';
 
 let stub, stubUrl, web, base, browser;
 const SITE = 'https://pickld.test';
@@ -58,14 +59,53 @@ function pages(url) {
   ];
   return {
     jars: {
-      [EVERYONE]: { kind: 'jar', assetBase: url, id: EVERYONE, local_date: '2026-11-08', visibility: 'everyone',
-        readers_only: false, published_at: '2026-11-08T14:00:00Z', visible_count: 3, author: author(url), moments },
-      [READERS]: { kind: 'jar', assetBase: url, id: READERS, local_date: '2026-11-07', visibility: 'readers',
-        readers_only: true, published_at: '2026-11-07T14:00:00Z', visible_count: 8, author: author(url) },
+      [EVERYONE]: {
+        kind: 'jar',
+        assetBase: url,
+        id: EVERYONE,
+        local_date: '2026-11-08',
+        visibility: 'everyone',
+        readers_only: false,
+        published_at: '2026-11-08T14:00:00Z',
+        visible_count: 3,
+        author: author(url),
+        moments,
+      },
+      // The owner picked the morning moment as the cover (0069, D-56).
+      [COVERED]: {
+        kind: 'jar',
+        assetBase: url,
+        id: COVERED,
+        local_date: '2026-11-08',
+        visibility: 'everyone',
+        readers_only: false,
+        published_at: '2026-11-08T14:00:00Z',
+        visible_count: 3,
+        author: author(url),
+        moments,
+        cover_moment_id: moments[1].id,
+      },
+      [READERS]: {
+        kind: 'jar',
+        assetBase: url,
+        id: READERS,
+        local_date: '2026-11-07',
+        visibility: 'readers',
+        readers_only: true,
+        published_at: '2026-11-07T14:00:00Z',
+        visible_count: 8,
+        author: author(url),
+      },
     },
     profiles: {
-      dale: { kind: 'profile', assetBase: url, profile: author(url),
-        jars: [{ id: EVERYONE, local_date: '2026-11-08', published_at: '2026-11-08T14:00:00Z', visible_count: 3, moments }] },
+      dale: {
+        kind: 'profile',
+        assetBase: url,
+        profile: author(url),
+        jars: [
+          { id: EVERYONE, local_date: '2026-11-08', published_at: '2026-11-08T14:00:00Z', visible_count: 3, moments },
+        ],
+      },
     },
   };
 }
@@ -97,7 +137,14 @@ before(async () => {
   const nextBin = createRequire(import.meta.url).resolve('next/dist/bin/next');
   web = spawn(process.execPath, [nextBin, 'start', '-p', String(port), '-H', '127.0.0.1'], {
     cwd: path.join(here, '..'),
-    env: { ...process.env, SUPABASE_URL: stubUrl, SUPABASE_ANON_KEY: ANON, SITE_URL: SITE, APPLE_TEAM_ID: TEAM, ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} ` },
+    env: {
+      ...process.env,
+      SUPABASE_URL: stubUrl,
+      SUPABASE_ANON_KEY: ANON,
+      SITE_URL: SITE,
+      APPLE_TEAM_ID: TEAM,
+      ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} `,
+    },
     stdio: ['ignore', 'ignore', 'inherit'],
   });
   for (let i = 0; i < 100; i++) {
@@ -139,10 +186,23 @@ test('an Everyone jar shows its moments in slot order with the newest caption', 
   assert.equal(await page.getByText('older caption').count(), 0);
   // The morning moment's Mono filter is drawn, not baked in.
   assert.match(await page.locator('img[alt="Dale’s #morning moment"]').getAttribute('style'), /filter-mono/);
-  assert.equal(await page.getByRole('link', { name: 'Open in the app' }).getAttribute('href'), `pickld://jar/${EVERYONE}`);
+  assert.equal(
+    await page.getByRole('link', { name: 'Open in the app' }).getAttribute('href'),
+    `pickld://jar/${EVERYONE}`,
+  );
   assert.ok(await page.getByRole('link', { name: 'Google Play' }).isVisible());
   assert.ok(await noSideScroll(page));
   assert.ok(!(await page.content()).includes(ANON), 'the anon key stays on the server');
+  await page.close();
+});
+
+test('a jar with a cover shows it first, then slot order, with the cover’s caption (D-56)', async () => {
+  const { page, status } = await open(`/j/${COVERED}`);
+  assert.equal(status, 200);
+  const alts = await page.locator('section img').evaluateAll((els) => els.map((e) => e.getAttribute('alt')));
+  assert.deepEqual(alts, ['Dale’s #morning moment', 'Dale’s #whereami moment', 'Dale’s #evening moment']);
+  assert.ok(await page.getByText('“older caption”').isVisible());
+  assert.equal(await page.getByText('Early night. Ordinary and good.').count(), 0);
   await page.close();
 });
 
@@ -183,7 +243,11 @@ test('anything not public is a 404', async () => {
 
 test('legal pages are reachable from the footer', async () => {
   const { page } = await open(`/j/${EVERYONE}`);
-  for (const [name, route] of [['Terms', '/terms'], ['Privacy Policy', '/privacy'], ['Community Guidelines', '/guidelines']]) {
+  for (const [name, route] of [
+    ['Terms', '/terms'],
+    ['Privacy Policy', '/privacy'],
+    ['Community Guidelines', '/guidelines'],
+  ]) {
     await page.getByRole('link', { name }).click();
     await page.waitForURL(base + route);
     assert.equal(await page.locator('h1').textContent(), name);
@@ -197,7 +261,8 @@ test('legal pages are reachable from the footer', async () => {
 async function meta(route) {
   const html = await (await fetch(base + route)).text();
   const tags = {};
-  for (const m of html.matchAll(/<meta (?:property|name)="((?:og|twitter):[^"]+)" content="([^"]*)"/g)) tags[m[1]] ??= m[2];
+  for (const m of html.matchAll(/<meta (?:property|name)="((?:og|twitter):[^"]+)" content="([^"]*)"/g))
+    tags[m[1]] ??= m[2];
   return tags;
 }
 
@@ -247,23 +312,29 @@ test('the jar preview matches its snapshot', async () => {
   if (process.env.UPDATE_SNAPSHOTS || !existsSync(ref)) writeFileSync(ref, png);
   const page = await browser.newPage();
   // Share of pixels whose channels differ by more than 32 of 255 (font hinting stays well under that).
-  const diff = await page.evaluate(async ([a, b]) => {
-    const load = async (src) => {
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      const c = new OffscreenCanvas(img.width, img.height);
-      const ctx = c.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      return ctx.getImageData(0, 0, img.width, img.height).data;
-    };
-    const [x, y] = await Promise.all([load(a), load(b)]);
-    let off = 0;
-    for (let i = 0; i < x.length; i += 4) {
-      if (Math.max(Math.abs(x[i] - y[i]), Math.abs(x[i + 1] - y[i + 1]), Math.abs(x[i + 2] - y[i + 2])) > 32) off++;
-    }
-    return off / (x.length / 4);
-  }, [`data:image/png;base64,${png.toString('base64')}`, `data:image/png;base64,${readFileSync(ref).toString('base64')}`]);
+  const diff = await page.evaluate(
+    async ([a, b]) => {
+      const load = async (src) => {
+        const img = new Image();
+        img.src = src;
+        await img.decode();
+        const c = new OffscreenCanvas(img.width, img.height);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return ctx.getImageData(0, 0, img.width, img.height).data;
+      };
+      const [x, y] = await Promise.all([load(a), load(b)]);
+      let off = 0;
+      for (let i = 0; i < x.length; i += 4) {
+        if (Math.max(Math.abs(x[i] - y[i]), Math.abs(x[i + 1] - y[i + 1]), Math.abs(x[i + 2] - y[i + 2])) > 32) off++;
+      }
+      return off / (x.length / 4);
+    },
+    [
+      `data:image/png;base64,${png.toString('base64')}`,
+      `data:image/png;base64,${readFileSync(ref).toString('base64')}`,
+    ],
+  );
   await page.close();
   assert.ok(diff < 0.001, `${(diff * 100).toFixed(2)}% of pixels differ from tests/snapshots/og-jar.png`);
 });
@@ -288,5 +359,9 @@ test('assetlinks.json names the app and its normalised signing certificate', asy
   assert.equal(res.status, 200);
   const [link] = await res.json();
   assert.deepEqual(link.relation, ['delegate_permission/common.handle_all_urls']);
-  assert.deepEqual(link.target, { namespace: 'android_app', package_name: 'me.pickld.app', sha256_cert_fingerprints: [CERT] });
+  assert.deepEqual(link.target, {
+    namespace: 'android_app',
+    package_name: 'me.pickld.app',
+    sha256_cert_fingerprints: [CERT],
+  });
 });

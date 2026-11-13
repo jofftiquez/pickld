@@ -59,7 +59,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
     );
   }
 
-  const card = buildShareCard(data, { includeCaption });
+  const card = buildShareCard({ ...data, coverId: data.jar.resolved_cover_id }, { includeCaption });
   const title = jarTitle(data, t);
   const linkText = t('share.linkMessage', { title, url: jarUrl(data.jar.id) });
   const heading = t(moment ? 'share.titleMoment' : 'share.title');

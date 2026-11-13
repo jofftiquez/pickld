@@ -219,7 +219,7 @@ describeLocal('upload worker against local Supabase', () => {
     if (uploaded?.kind !== 'uploaded') return;
     const { data: moment, error } = await client
       .from('moments')
-      .select('slot, is_backfilled, jars(local_date, tz)')
+      .select('slot, is_backfilled, jars!moments_jar_id_fkey(local_date, tz)')
       .eq('id', uploaded.momentId)
       .single();
     expect(error).toBeNull();

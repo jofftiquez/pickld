@@ -3,7 +3,7 @@
 // each one offers.
 import type { Edits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
-import { isLiked, type JarPageData } from '@/features/jar/jarPage';
+import { buildJarPage, isLiked, type JarPageData } from '@/features/jar/jarPage';
 import type { GridTile, QueuedMoment } from '@/features/jar/todayGrid';
 import type { Visibility } from '@/lib/visibility';
 import { slots, type Slot } from '@/theme/tokens';
@@ -34,6 +34,8 @@ export type PreviewItem = {
   likeCount: number | null;
   liked: boolean;
   commentCount: number | null;
+  /** The jar's cover as the jar page shows it (D-56); false until the jar page has loaded. */
+  isCover: boolean;
 };
 
 /** Tiles the preview opens on and swipes through: the owner's live moments and photos still on the phone. */
@@ -58,6 +60,7 @@ export function buildPreviewItems(input: {
 }): PreviewItem[] {
   const { tiles, queue, jarId, page = null, defaultVisibility = 'readers' } = input;
   const items: PreviewItem[] = [];
+  const coverId = page ? (buildJarPage(page).cover?.id ?? null) : null;
   for (const tile of tiles) {
     const base = {
       slot: tile.slot,
@@ -82,6 +85,7 @@ export function buildPreviewItems(input: {
         likeCount: null,
         liked: false,
         commentCount: null,
+        isCover: false,
       });
     } else if (tile.momentId !== null && jarId !== null && opensPreview(tile)) {
       const momentId = tile.momentId;
@@ -97,6 +101,7 @@ export function buildPreviewItems(input: {
         likeCount: loaded ? loaded.like_count : null,
         liked: page && loaded ? isLiked(page, { kind: 'moment', id: momentId }) : false,
         commentCount: loaded ? (loaded.comment_count ?? 0) : null,
+        isCover: momentId === coverId,
       });
     }
   }
@@ -105,8 +110,14 @@ export function buildPreviewItems(input: {
 
 export type PreviewAction = 'edit' | 'share' | 'visibility' | 'more' | 'delete';
 
+/** Set as cover (D-56) is under More for a live moment that isn't the cover already. */
+export function canSetCover(item: Pick<PreviewItem, 'kind' | 'isCover'>): boolean {
+  return item.kind === 'live' && !item.isCover;
+}
+
 /**
- * The action bar (D-54): a live moment has Edit, Share, Visibility and More (Re-crop, Move, Delete). A photo
+ * The action bar (D-54): a live moment has Edit, Share, Visibility and More (Re-crop, Move, Set as cover,
+ * Delete). A photo
  * still on the phone has only Edit and Delete; while it uploads it has none.
  */
 export function previewActions(item: Pick<PreviewItem, 'kind' | 'uploading'>): PreviewAction[] {

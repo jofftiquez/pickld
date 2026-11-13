@@ -124,7 +124,7 @@ export async function photoUrls(momentId: string): Promise<{ full: string | null
 async function fetchOwnMoment(userId: string, momentId: string): Promise<OwnMoment | null> {
   const { data, error } = await getSupabase()
     .from('moments')
-    .select('id, slot, status, jar_id, jars(local_date)')
+    .select('id, slot, status, jar_id, jars!moments_jar_id_fkey(local_date)')
     .eq('id', momentId)
     .eq('user_id', userId)
     .maybeSingle();
