@@ -14,6 +14,7 @@ import {
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
+import { GlassSurface } from '@/components/GlassSurface';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -196,12 +197,21 @@ export function MomentDetailView({
             onPress={onClose}
             testID="moment-close"
           />
-          <View style={styles.author} testID="moment-author">
+          {/* White text on glass: the stronger tint keeps it AA over a bright photo on iOS 26 (D-76). */}
+          <GlassSurface
+            tone="dark"
+            radius={radius.pill}
+            tint={colors.glassStrong}
+            fallback="none"
+            fallbackColor={colors.glass}
+            style={styles.author}
+            testID="moment-author"
+          >
             <Avatar name={data.author.display_name} uri={null} size="sm" decorative />
             <Text style={[textStyle('bodySmall', '700'), { color: colors.surface }]} numberOfLines={1}>
               {firstName(data.author.display_name)}
             </Text>
-          </View>
+          </GlassSurface>
           {onMore && data.jar.user_id !== data.viewerId ? (
             <RoundIconButton
               icon="more"
@@ -327,8 +337,6 @@ const styles = StyleSheet.create({
     paddingVertical: space.xs,
     paddingLeft: space.xs,
     paddingRight: space.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.glass,
     flexShrink: 1,
   },
   sheet: {

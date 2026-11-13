@@ -114,7 +114,7 @@ Goes to: tile → Capture (that slot) or Moment detail if filled · Publish → 
 
 ### Capture — “Capture”
 
-The photo editor for one moment. A dark frosted toolbar at the top holds Close, the slot tag with time, and Save (D-59). The photo sits below it; stickers and speech bubbles sit on the photo.
+The photo editor for one moment. A dark frosted toolbar at the top holds Close, the slot tag with time, and Save (D-59); iOS 26 and later draw it as Liquid Glass (D-57). The photo sits below it; stickers and speech bubbles sit on the photo.
 
 - Bottom sheet: tool tabs (Filters · Stickers · Bubble · Text), filter thumbnails (Original, Kalamansi, Merienda, Mono, Dusk) previewing the actual photo, caption field, **Keep this moment private** switch, Undo. Swiping up slides the sheet over the photo, which moves up more slowly and shrinks a little (off with Reduce Motion).
 - **Add to #afternoon** in the toolbar saves the moment into today’s jar (**Done** when editing it again).
@@ -356,7 +356,7 @@ Plus Jakarta Sans throughout. Screen titles 32/800 with –0.03em tracking; sect
 
 - Radii: 10–14 small thumbnails, 16–22 tiles, 24 cards, 26 tab bar, 30 sheets, full pills for buttons and chips.
 - Shadows: soft card (0 2 10, 6% ink) and floating (0 8 28, 14% ink) for the tab bar and action bars.
-- Frosted glass on controls over photos and on the tab bar.
+- Frosted glass on controls over photos and on the tab bar. On iOS 26 and later these draw as Apple's Liquid Glass: the tab bar, round glass buttons, the editor toolbar, the moment preview's action bar and Moment detail's top buttons (D-57, D-76). Below iOS 26, or with Reduce Transparency on, they keep the frosted blur.
 
 ### Photos
 
@@ -460,7 +460,7 @@ The app is built with React Native (Expo) on Supabase. Build the component kit f
 | Design element | React Native approach |
 | --- | --- |
 | Styling and tokens | NativeWind with the theme above |
-| Navigation and floating tab bar | Expo Router tabs with a custom tab bar; `expo-blur` for frosted glass |
+| Navigation and floating tab bar | Expo Router tabs with a custom tab bar; `GlassSurface`: `expo-glass-effect` Liquid Glass on iOS 26+, `expo-blur` below that or with Reduce Transparency on (D-57) |
 | Photos | `expo-image`, fixed 3:4 |
 | Photo fades | `expo-linear-gradient` |
 | Camera | `react-native-vision-camera`, 4:3 format so output is 3:4 |
