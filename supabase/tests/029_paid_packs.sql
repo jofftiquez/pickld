@@ -14,13 +14,17 @@ grant execute on all functions in schema pg_temp to anon, authenticated, service
 select results_eq(
   $$ select p.slug, p.tier::text, p.store_product_id, count(s.id)::int from public.sticker_packs p join public.stickers s on s.pack_id = p.id
      where p.tier in ('premium', 'seasonal') group by p.slug, p.tier, p.store_product_id, p.sort order by p.sort $$,
-  $$ values ('christmas-2026', 'seasonal', 'me.pickld.pack.christmas_2026', 18), ('pinoy-life', 'premium', 'me.pickld.pack.pinoy_life', 26),
+  $$ values ('christmas-2026', 'seasonal', 'me.pickld.pack.christmas_2026', 18), ('pinoy-life', 'premium', 'me.pickld.pack.pinoy_life', 34),
             ('barkada', 'premium', 'me.pickld.pack.barkada', 25), ('work-from-wherever', 'premium', 'me.pickld.pack.work_from_wherever', 24),
-            ('pet-parent', 'premium', 'me.pickld.pack.pet_parent', 21) $$,
-  'five paid packs, each with its store product and stickers');
+            ('pet-parent', 'premium', 'me.pickld.pack.pet_parent', 21),
+            ('olivia', 'premium', 'me.pickld.pack.olivia', 16), ('fish-moods', 'premium', 'me.pickld.pack.fish_moods', 16),
+            ('corporate', 'premium', 'me.pickld.pack.corporate', 12), ('gen-z', 'premium', 'me.pickld.pack.gen_z', 12),
+            ('trentahin', 'premium', 'me.pickld.pack.trentahin', 12), ('pride', 'premium', 'me.pickld.pack.pride', 12),
+            ('cyclists', 'premium', 'me.pickld.pack.cyclists', 12) $$,
+  'twelve paid packs (seven added in 0060), each with its store product and stickers');
 select is((select count(*)::int from public.sticker_packs where tier in ('premium', 'seasonal') and (description is null or store_product_id is null)), 0,
           'every paid pack has a description and a store product');
-select is((select count(distinct store_product_id)::int from public.sticker_packs where store_product_id is not null), 5,
+select is((select count(distinct store_product_id)::int from public.sticker_packs where store_product_id is not null), 12,
           'store products are distinct');
 select is((select available_from || ' – ' || available_to from public.sticker_packs where slug = 'christmas-2026'),
           '2026-08-31 16:00:00+00 – 2026-12-31 16:00:00+00', 'the Christmas pack sells Sep 1 – Dec 31, Manila time');

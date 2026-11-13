@@ -51,6 +51,42 @@ const CHRISTMAS = [
   { bg: '#f2bd2e', fg: '#11140d' },
   { bg: '#9e1b14', fg: '#ffffff' },
 ];
+// Word-art packs with their own colours (T-507): each pill takes the next colour in its pack's list.
+const PACK_PALETTES = {
+  corporate: [
+    { bg: '#1f3a5f', fg: '#ffffff' },
+    { bg: '#ffffff', fg: '#1f3a5f' },
+    { bg: '#dbe8f3', fg: '#11140d' },
+    { bg: '#11140d', fg: '#ffffff' },
+  ],
+  'gen-z': [
+    { bg: '#c6f432', fg: '#11140d' },
+    { bg: '#ff5fa2', fg: '#11140d' },
+    { bg: '#7b3fe4', fg: '#ffffff' },
+    { bg: '#11140d', fg: '#c6f432' },
+  ],
+  trentahin: [
+    { bg: '#f4e3c3', fg: '#11140d' },
+    { bg: '#8a5a2b', fg: '#ffffff' },
+    { bg: '#e8a33d', fg: '#11140d' },
+    { bg: '#ffffff', fg: '#8a5a2b' },
+  ],
+  // Rainbow order: red, orange, yellow, green, blue, violet (text 4.5:1 or better on each).
+  pride: [
+    { bg: '#d62b2b', fg: '#ffffff' },
+    { bg: '#f28c28', fg: '#11140d' },
+    { bg: '#ffd93b', fg: '#11140d' },
+    { bg: '#2e9b4f', fg: '#ffffff' },
+    { bg: '#2f62b8', fg: '#ffffff' },
+    { bg: '#7a3fa8', fg: '#ffffff' },
+  ],
+  cyclists: [
+    { bg: '#ff6b1a', fg: '#11140d' },
+    { bg: '#11140d', fg: '#ff6b1a' },
+    { bg: '#7fad33', fg: '#11140d' },
+    { bg: '#ffffff', fg: '#11140d' },
+  ],
+};
 const TILT = [-3, 3, -2, 2, 0, -1, 1];
 // Auto stamps: the editor draws the live value; the art is a sample in the stamp's frame.
 const STAMP_SAMPLE = { time: '2:14 PM', date: 'NOV 11', weekday: 'WEDNESDAY', jar_number: 'JAR #42' };
@@ -65,6 +101,8 @@ function style(s) {
     return { text: s.label, kind: 'word', tilt: TILT[i], ...CHRISTMAS[s.sort % CHRISTMAS.length] };
   }
   if (s.pack_slug === 'milestones') return { text: `★ ${s.label}`, kind: 'earned', tilt: TILT[i], ...PALETTE[4] };
+  const own = PACK_PALETTES[s.pack_slug];
+  if (own) return { text: s.label, kind: 'word', tilt: TILT[i], ...own[(s.sort - 1) % own.length] };
   return { text: s.label, kind: 'word', tilt: TILT[i], ...PALETTE[i] };
 }
 

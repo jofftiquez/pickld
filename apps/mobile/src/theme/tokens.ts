@@ -454,6 +454,13 @@ export const stickerTool = {
     'work-from-wherever': '#dbe8f3',
     'pet-parent': '#e6f1d3',
     'christmas-2026': '#f6dcd9',
+    olivia: '#fbe3ea',
+    'fish-moods': '#dbe8f3',
+    corporate: '#dbe8f3',
+    'gen-z': '#efe8fb',
+    trentahin: '#fbeccd',
+    pride: '#f6dcd9',
+    cyclists: '#e6f1d3',
   } as Record<string, string>,
   packTintDefault: '#f0f2ec',
   // "New: Christmas pack · ₱49 · Shop" under the grid (FR-STK-06): ink text, "Shop" in brown (8:1 on it).
