@@ -8,8 +8,10 @@ import { Dialog } from '@/components/Dialog';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
-import { Toggle } from '@/components/Toggle';
+import { RadioRow } from '@/components/RadioRow';
+import { VISIBILITY_ICON } from '@/components/VisibilityBadge';
 import type { Edits } from '@/features/edit/edits';
+import { VISIBILITIES, VISIBILITY_KEY, type Visibility } from '@/lib/visibility';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space, type Slot } from '@/theme/tokens';
 
@@ -24,7 +26,8 @@ export type MomentOptionsSheetProps = {
   when: string;
   thumbUri: string | null;
   edits: Edits;
-  isPrivate: boolean;
+  /** Who can see the moment (D-48). */
+  visibility: Visibility;
   /** Empty slots in the same jar a move can go to (D-3), in slot order. */
   freeSlots: readonly Slot[];
   /** An option is running: rows are disabled until it finishes. */
@@ -33,7 +36,7 @@ export type MomentOptionsSheetProps = {
   onEditCaption: () => void;
   onEditMoment: () => void;
   onRecrop: () => void;
-  onChangePrivate: (isPrivate: boolean) => void;
+  onChangeVisibility: (visibility: Visibility) => void;
   onMove: (slot: Slot) => void;
   /** Delete moment after the user confirmed it in the dialog. */
   onDelete: () => void;
@@ -42,13 +45,15 @@ export type MomentOptionsSheetProps = {
 
 /**
  * Moment options (FR-CAP-10; design: MomentOptions): the moment's photo, slot and time, then Edit caption,
- * Edit stickers and filters, Re-crop, Make private, Move to another moment (a second page listing the
- * jar's empty slots) and Delete moment, which asks for confirmation first. Cancel closes it.
+ * Edit stickers and filters, Re-crop, Visibility (a second page with Readers, Everyone and Only me; D-48),
+ * Move to another moment (a second page listing the jar's empty slots) and Delete moment, which asks for
+ * confirmation first. Cancel closes it.
  */
 export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
-  const { slot, freeSlots, busy, error, isPrivate } = props;
+  const { slot, freeSlots, busy, error, visibility } = props;
   const { t } = useTranslation();
-  const [page, setPage] = useState<'options' | 'move'>('options');
+  const [page, setPage] = useState<'options' | 'move' | 'visibility'>('options');
+  const visibilityLabel = t(`visibility.${VISIBILITY_KEY[visibility]}`);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const slotLabel = t(`slots.${slot}`);
 
@@ -101,21 +106,19 @@ export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
             testID="moment-options-recrop"
           />
           <OptionRow
-            icon="lock"
-            label={t('momentOptions.private')}
-            accessibilityRole="switch"
-            checked={isPrivate}
-            accessibilityHint={t('momentOptions.privateHint')}
-            onPress={() => props.onChangePrivate(!isPrivate)}
+            icon={VISIBILITY_ICON[visibility]}
+            label={t('momentOptions.visibility')}
+            accessibilityLabel={t('momentOptions.visibilityValue', { value: visibilityLabel })}
+            accessibilityHint={t('momentOptions.visibilityHint')}
+            onPress={() => setPage('visibility')}
             trailing={
-              <Toggle
-                value={isPrivate}
-                onValueChange={() => undefined}
-                accessibilityLabel={t('momentOptions.private')}
-              />
+              <View style={styles.trailingValue}>
+                <Text style={[textStyle('bodyMedium', '500'), styles.muted]}>{visibilityLabel}</Text>
+                <Icon name="chevronRight" color="chevron" size={18} strokeWidth={2} />
+              </View>
             }
             disabled={busy}
-            testID="moment-options-private"
+            testID="moment-options-visibility"
           />
           <OptionRow
             icon="grid"
@@ -134,6 +137,38 @@ export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
             disabled={busy}
             testID="moment-options-delete"
           />
+        </View>
+      ) : page === 'visibility' ? (
+        <View>
+          <View style={styles.moveHeader}>
+            <RoundIconButton
+              icon="back"
+              accessibilityLabel={t('momentOptions.backToOptions')}
+              onPress={() => setPage('options')}
+              testID="moment-options-visibility-back"
+            />
+            <View style={styles.headerText}>
+              <Text accessibilityRole="header" style={[textStyle('body', '700'), styles.slot]}>
+                {t('momentOptions.visibilityTitle')}
+              </Text>
+              <Text style={[textStyle('label', '500'), styles.muted]}>{t('momentOptions.visibilitySubtitle')}</Text>
+            </View>
+          </View>
+          <View accessibilityRole="radiogroup" accessibilityLabel={t('momentOptions.visibilityTitle')}>
+            {VISIBILITIES.map((option, i) => (
+              <RadioRow
+                key={option}
+                label={t(`visibility.${VISIBILITY_KEY[option]}`)}
+                description={t(`visibility.${VISIBILITY_KEY[option]}Body`)}
+                selected={visibility === option}
+                onSelect={() => {
+                  if (!busy && option !== visibility) props.onChangeVisibility(option);
+                }}
+                divider={i < VISIBILITIES.length - 1}
+                testID={`moment-options-visibility-${option}`}
+              />
+            ))}
+          </View>
         </View>
       ) : (
         <View>
@@ -212,6 +247,7 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   slot: { color: colors.ink },
   muted: { color: colors.muted },
+  trailingValue: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   moveHeader: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingBottom: space.md },
   noSlots: { paddingVertical: space.lg },
   error: { color: colors.danger, marginTop: space.md },

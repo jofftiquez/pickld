@@ -37,7 +37,11 @@ function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }
 
-/** The Jars tab (design: Feed): title and bell, followed authors' avatars, then their published jars. */
+/**
+ * The Jars tab (design: Feed): title and bell, followed authors' avatars, then published jars: theirs and
+ * the user's own (D-53). Reading nobody, the user's own jars sit under a Find people card, and Jars, empty
+ * shows only when there is nothing at all.
+ */
 export function FeedView({
   jars,
   authors,
@@ -61,6 +65,7 @@ export function FeedView({
   const bottomPadding = Math.max(insets.bottom, space.lg) + sizes.tabBar + space.lg;
   // Jars, empty: only once we know the user reads nobody (FR-SOC-02), never while the authors load.
   const readsNobody = authors !== undefined && authors.length === 0;
+  const hasJars = jars !== undefined && jars.length > 0;
 
   const header = (
     <View>
@@ -83,6 +88,11 @@ export function FeedView({
           {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="feed-notifications-dot" /> : null}
         </View>
       </View>
+      {readsNobody && hasJars ? (
+        <View style={[styles.cardWrap, styles.findPeople]}>
+          <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} aboveOwnJars />
+        </View>
+      ) : null}
       {readsNobody ? null : (
         <ScrollView
           horizontal
@@ -133,7 +143,7 @@ export function FeedView({
       ItemSeparatorComponent={Separator}
       ListHeaderComponent={header}
       ListEmptyComponent={
-        readsNobody ? (
+        readsNobody && !isLoading ? (
           <View style={styles.cardWrap}>
             <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} />
           </View>
@@ -191,5 +201,6 @@ const styles = StyleSheet.create({
   stories: { gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.xs, paddingBottom: space.md + 2 },
   cardWrap: { paddingHorizontal: space.xl },
   separator: { height: space.md },
+  findPeople: { paddingBottom: space.md },
   loading: { marginTop: space.xxl },
 });

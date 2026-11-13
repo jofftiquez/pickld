@@ -28,5 +28,5 @@ export const queryPersister = createAsyncStoragePersister({
 export const persistOptions: Omit<PersistQueryClientOptions, 'queryClient'> = {
   persister: queryPersister,
   maxAge: CACHE_MAX_AGE,
-  buster: '1',
+  buster: '2', // 2: moments carry visibility instead of is_private (D-48)
 };

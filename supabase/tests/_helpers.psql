@@ -127,13 +127,16 @@ end $$;
 
 -- A moment in p_status. Inserted through the normal trigger path, then moved to the
 -- requested status as the moderation role (fn:moderate through moderation_apply, 0011) would do it.
+-- Its visibility (0066) is p_visibility, else only_me when p_private, else the jar's visibility (what
+-- the 0066 backfill gives a moment of a published jar).
 create function tests.make_moment(p_jar uuid, p_slot slot, p_status moment_status default 'live',
-                                  p_private boolean default false)
+                                  p_private boolean default false, p_visibility jar_visibility default null)
 returns uuid language plpgsql as $$
 declare mid uuid;
 begin
-  insert into public.moments (jar_id, user_id, slot, photo_path, thumb_path, is_private, status)
-  select p_jar, j.user_id, p_slot, 'p/' || gen_random_uuid(), 't/' || gen_random_uuid(), p_private, 'checking'
+  insert into public.moments (jar_id, user_id, slot, photo_path, thumb_path, visibility, status)
+  select p_jar, j.user_id, p_slot, 'p/' || gen_random_uuid(), 't/' || gen_random_uuid(),
+         coalesce(p_visibility, case when p_private then 'only_me'::jar_visibility else j.visibility end), 'checking'
   from public.jars j where j.id = p_jar
   returning id into mid;
   if p_status <> 'checking' then

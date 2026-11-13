@@ -27,7 +27,7 @@ function jar(id: string, local_date: string, over: Partial<JarRow> = {}): JarRow
 function moment(over: Partial<ProfileMoment> & Pick<ProfileMoment, 'id' | 'jar_id' | 'slot'>): ProfileMoment {
   return {
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     caption: null,
     captured_at: null,
@@ -47,7 +47,7 @@ describe('buildProfileJars', () => {
     moment({ id: 'b', jar_id: 'j-old', slot: 'whereami' }),
     moment({ id: 'c', jar_id: 'j-new', slot: 'ootd', caption: 'New shoes' }),
     moment({ id: 'd', jar_id: 'j-new', slot: 'whereami' }),
-    moment({ id: 'e', jar_id: 'j-private', slot: 'selfie', is_private: true }),
+    moment({ id: 'e', jar_id: 'j-private', slot: 'selfie', visibility: 'only_me' }),
   ];
 
   it('lists jars newest first with the Jar page cover', () => {

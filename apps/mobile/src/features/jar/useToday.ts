@@ -49,7 +49,7 @@ export type Me = {
   avatarUrl: string | null;
   readerCount: number;
   lidColor: string;
-  /** Publish review's preselected visibility (FR-PUB-01); optional in caches persisted before M3-01. */
+  /** A new moment's visibility (D-48) and Publish review's preselected one (FR-PUB-01); optional in caches persisted before M3-01. */
   defaultVisibility?: Visibility;
   /**
    * Set while the account is suspended (FR-SAF-06, D-11): the end of the suspension as an ISO time, or null
@@ -89,7 +89,7 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
 
   const { data: rows, error: momentsError } = await supabase
     .from('moments')
-    .select('id, slot, status, is_private, is_backfilled, captured_at, added_at, edits, replaces')
+    .select('id, slot, status, visibility, is_backfilled, captured_at, added_at, edits, replaces')
     .eq('jar_id', open.id);
   if (momentsError) throw new Error(momentsError.message);
   // Removed moments too: their tile shows the owner's photo blurred (FR-PUB-07).

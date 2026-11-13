@@ -19,6 +19,7 @@ const call = async (body: unknown, method = 'POST'): Promise<{ status: number; j
 let owner: TestUser, username: string;
 let everyoneJar: string, readersJar: string, onlyMeJar: string, draftJar: string;
 let livePublic: string, livePublic2: string, priv: string, checking: string, readersMoment: string;
+let readersInEveryone: string;
 let avatarKey: string;
 
 Deno.test('setup', async () => {
@@ -45,14 +46,15 @@ Deno.test('setup', async () => {
   onlyMeJar = await jar('only_me', 3);
   draftJar = await jar('everyone', 4, false);
 
-  async function moment(jarId: string, slot: string, live: boolean, isPrivate = false) {
+  // Each moment has its own visibility (0066); the web page shows only Everyone moments (D-32).
+  async function moment(jarId: string, slot: string, live: boolean, visibility: string) {
     const base = `moments/${owner.id}/${crypto.randomUUID()}`;
     const m = await insert<{ id: string }>('moments', {
       jar_id: jarId,
       user_id: owner.id,
       slot,
       status: 'checking',
-      is_private: isPrivate,
+      visibility,
       photo_path: `${base}/full.jpg`,
       thumb_path: `${base}/thumb.jpg`,
     });
@@ -68,13 +70,14 @@ Deno.test('setup', async () => {
     }
     return m.id;
   }
-  livePublic = await moment(everyoneJar, 'evening', true);
-  livePublic2 = await moment(everyoneJar, 'whereami', true);
-  priv = await moment(everyoneJar, 'selfie', true, true);
-  checking = await moment(everyoneJar, 'morning', false);
-  readersMoment = await moment(readersJar, 'morning', true);
-  await moment(onlyMeJar, 'morning', true);
-  await moment(draftJar, 'morning', true);
+  livePublic = await moment(everyoneJar, 'evening', true, 'everyone');
+  livePublic2 = await moment(everyoneJar, 'whereami', true, 'everyone');
+  priv = await moment(everyoneJar, 'selfie', true, 'only_me');
+  checking = await moment(everyoneJar, 'morning', false, 'everyone');
+  readersInEveryone = await moment(everyoneJar, 'ootd', true, 'readers');
+  readersMoment = await moment(readersJar, 'morning', true, 'readers');
+  await moment(onlyMeJar, 'morning', true, 'everyone');
+  await moment(draftJar, 'morning', true, 'everyone');
 });
 
 /** A signed URL is for exactly this key and opens through the photo Worker. */
@@ -86,7 +89,7 @@ async function opens(url: string, key: string) {
   assertEquals(await res.text(), key);
 }
 
-Deno.test('an Everyone jar shows only live, non-private moments, in slot order, with working URLs', async () => {
+Deno.test('an Everyone jar shows only live Everyone moments, in slot order, with working URLs', async () => {
   const { status, json } = await call({ jarId: everyoneJar });
   assertEquals(status, 200);
   const d = json.data;
@@ -103,7 +106,7 @@ Deno.test('an Everyone jar shows only live, non-private moments, in slot order, 
     await opens(m.thumb, key.replace('/full.jpg', '/thumb.jpg'));
   }
   const text = JSON.stringify(json);
-  for (const hidden of [priv, checking]) assert(!text.includes(hidden));
+  for (const hidden of [priv, checking, readersInEveryone]) assert(!text.includes(hidden));
   assertEquals(d.author.username, username);
   await opens(d.author.avatar, avatarKey);
   assertEquals(d.author.cover, null);
@@ -133,7 +136,7 @@ Deno.test('a profile lists only its public jars, ignoring username case', async 
   assertEquals(json.data.kind, 'profile');
   assertEquals(json.data.jars.map((j: { id: string }) => j.id), [everyoneJar]);
   assertEquals(json.data.profile.cover, null);
-  assert(!JSON.stringify(json).includes(priv));
+  for (const hidden of [priv, readersInEveryone]) assert(!JSON.stringify(json).includes(hidden));
   assertEquals((await call({ username: 'nobody_here_x' })).status, 404);
 });
 

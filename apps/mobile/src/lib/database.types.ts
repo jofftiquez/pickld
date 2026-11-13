@@ -688,6 +688,7 @@ export type Database = {
           status: Database['public']['Enums']['moment_status'];
           thumb_path: string | null;
           user_id: string;
+          visibility: Database['public']['Enums']['jar_visibility'];
         };
         ComputedFields: never;
         Insert: {
@@ -712,6 +713,7 @@ export type Database = {
           status?: Database['public']['Enums']['moment_status'];
           thumb_path?: string | null;
           user_id: string;
+          visibility?: Database['public']['Enums']['jar_visibility'];
         };
         Update: {
           added_at?: string;
@@ -735,6 +737,7 @@ export type Database = {
           status?: Database['public']['Enums']['moment_status'];
           thumb_path?: string | null;
           user_id?: string;
+          visibility?: Database['public']['Enums']['jar_visibility'];
         };
         Relationships: [
           {
@@ -1838,6 +1841,10 @@ export type Database = {
         Returns: string;
       };
       moderation_lift_suspensions: { Args: Record<PropertyKey, never>; Returns: number };
+      moment_default_visibility: {
+        Args: Record<PropertyKey, never>;
+        Returns: Database['public']['Enums']['jar_visibility'];
+      };
       moment_photo_paths: {
         Args: { ids: string[] };
         Returns: {

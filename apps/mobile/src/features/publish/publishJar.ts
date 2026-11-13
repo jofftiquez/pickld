@@ -6,11 +6,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { holdsSlot, type GridTile } from '@/features/jar/todayGrid';
 import type { Database } from '@/lib/database.types';
+import type { Visibility } from '@/lib/visibility';
+
+export { VISIBILITIES, type Visibility } from '@/lib/visibility';
 
 export type JarsClient = Pick<SupabaseClient<Database>, 'from'>;
-export type Visibility = Database['public']['Enums']['jar_visibility'];
-/** In the order Publish review lists them. */
-export const VISIBILITIES: readonly Visibility[] = ['readers', 'everyone', 'only_me'];
 
 /** `refused`: not the caller's jar, or the server said no. `failed`: anything else, usually no connection. */
 export class PublishError extends Error {
@@ -40,15 +40,15 @@ export async function publishJar(client: JarsClient, jarId: string, visibility: 
 }
 
 /**
- * The note under the visibility choice: private moments that won't be shared and empty slots that can
+ * The note under the visibility choice: Only me moments that stay with the owner and empty slots that can
  * still be filled today. Removed moments leave their slot free (D-27), so they count as missing.
  */
-export function publishNote(tiles: readonly Pick<GridTile, 'state' | 'isPrivate'>[]): {
+export function publishNote(tiles: readonly Pick<GridTile, 'state' | 'visibility'>[]): {
   privateCount: number;
   missingCount: number;
 } {
   return {
-    privateCount: tiles.filter((tile) => tile.isPrivate).length,
+    privateCount: tiles.filter((tile) => holdsSlot(tile) && tile.visibility === 'only_me').length,
     missingCount: tiles.filter((tile) => !holdsSlot(tile)).length,
   };
 }

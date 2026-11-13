@@ -1,9 +1,11 @@
 -- 0014 (M3-03; FR-SOC-01): feed_page, feed_authors, mark_feed_seen and feed_seen_at.
 -- The feed never returns a jar the caller can't view; tried as owner, reader, outsider, blocked user,
 -- blocker and anon. Pagination with the (feed_at, jar_id) cursor stays stable when a newer jar arrives.
+-- 0066: the caller's own published jars are in the feed too (D-53, QA item 9), never new, and each jar
+-- shows the caller only the moments they may see (D-50).
 begin;
 \ir _helpers.psql
-select plan(53);
+select plan(56);
 
 select tests.world();
 select tests.create_user('author2');  -- reader follows: 25 jars for pagination
@@ -91,8 +93,8 @@ select is((select count(*) from public.feed_page() where jar_id = (select id fro
           'reader does not see a readers jar of an author they don''t read');
 select is((select count(*) from public.feed_page() where jar_id = (select id from t where k = 's_everyone')), 0::bigint,
           'reader does not see an everyone jar of an author they don''t read');
-select is((select count(*) from public.feed_page() where author_id = tests.id('reader')), 0::bigint,
-          'reader does not see their own jar');
+select is((select count(*) from public.feed_page() where jar_id = (select id from t where k = 'r_own') and not is_new), 1::bigint,
+          'reader sees their own published jar, never marked new');
 select is((select preview_thumb_paths from public.feed_page() where jar_id = (select id from t where k = 'j_pub')),
           (select array[thumb_path] from public.moments where id = (select id from t where k = 'm_live')),
           'previews hold only live, non-private thumbnails');
@@ -108,6 +110,17 @@ select is((select visibility::text || '/' || local_date::text from public.feed_p
            where jar_id = (select id from t where k = 'j_everyone')),
           'everyone/' || ((now() at time zone 'Asia/Manila')::date - 1)::text, 'visibility and local date come along');
 select is((select count(*) from public.feed_page()), 20::bigint, 'a page holds 20 jars');
+-- A mixed jar (D-50): an Everyone moment in the Readers jar shows; an Only me one doesn't.
+select tests.reset_role();
+insert into t values ('m_mixed_ev', tests.make_moment((select id from t where k = 'j_pub'), 'ootd', 'live', p_visibility => 'everyone'));
+insert into t values ('m_mixed_om', tests.make_moment((select id from t where k = 'j_pub'), 'selfie', 'live', p_visibility => 'only_me'));
+select tests.act_as('reader');
+select is((select preview_moment_ids from public.feed_page() where jar_id = (select id from t where k = 'j_pub')),
+          (select array_agg(id order by slot) from public.moments where id in (select id from t where k in ('m_live', 'm_mixed_ev'))),
+          'a mixed jar shows the reader its Readers and Everyone moments, not its Only me ones');
+select tests.reset_role();
+delete from public.moments where id in (select id from t where k in ('m_mixed_ev', 'm_mixed_om'));
+select tests.act_as('reader');
 
 -- ---------------------------------------------------------------- others
 select tests.act_as('outsider');
@@ -125,10 +138,15 @@ select is((select count(*) from public.feed_authors() where author_id = tests.id
           'blocker never sees the owner in the avatar row');
 select tests.act_as('owner');
 select ok((select count(*) from public.feed_page()) > 0, 'owner sees the jars of authors they read');
-select is((select count(*) from public.feed_page() where author_id = tests.id('owner')), 0::bigint,
-          'owner never sees their own jars in the feed');
-select is((select count(*) from public.feed_page() where author_id <> tests.id('author2')), 0::bigint,
-          'owner sees only the authors they read');
+select is((select array_agg(jar_id order by jar_id) from public.feed_page() where author_id = tests.id('owner')),
+          (select array_agg(id order by id) from t where k in ('j_pub', 'j_everyone', 'j_onlyme', 'j_hidden')),
+          'owner sees every own published jar with a live moment, Only me jars included, and not the unpublished one');
+select is((select visible_count from public.feed_page() where jar_id = (select id from t where k = 'j_pub')), 2,
+          'the owner''s own jar counts their Only me moment too');
+select is((select count(*) from public.feed_page() where author_id = tests.id('owner') and is_new), 0::bigint,
+          'own jars are never new');
+select is((select count(*) from public.feed_page() where author_id not in (tests.id('author2'), tests.id('owner'))), 0::bigint,
+          'otherwise owner sees only the authors they read');
 
 -- ---------------------------------------------------------------- pagination
 select tests.act_as('reader');
@@ -138,11 +156,11 @@ select is((select count(*) from pg where page = 1), 20::bigint, 'page 1 has 20 j
 select ok((select bool_and(ok) from (
              select (feed_at, jar_id) < lag((feed_at, jar_id)) over (order by pos) as ok from pg where page = 1) x),
           'page 1 is ordered by feed_at desc, then jar id desc');
-select is((select array_agg(jar_id order by jar_id) from pg where page = 1 and pos <= 2),
-          (select array_agg(id order by id) from t where k in ('j_pub', 'j_everyone')),
-          'the newest updates come first');
-select is((select array_agg(jar_id order by pos) from pg where page = 1 and pos between 3 and 20),
-          (select array_agg(id order by substr(k, 4)::int) from t where k like 'a2\_%' and substr(k, 4)::int <= 18),
+select is((select array_agg(jar_id order by jar_id) from pg where page = 1 and pos <= 3),
+          (select array_agg(id order by id) from t where k in ('j_pub', 'j_everyone', 'r_own')),
+          'the newest updates come first, the reader''s own jar among them');
+select is((select array_agg(jar_id order by pos) from pg where page = 1 and pos between 4 and 20),
+          (select array_agg(id order by substr(k, 4)::int) from t where k like 'a2\_%' and substr(k, 4)::int <= 17),
           'then older updates in order');
 
 -- A newer jar arrives between pages.
@@ -153,22 +171,22 @@ select tests.act_as('reader');
 insert into pg select 2, f.ordinality, f.jar_id, f.feed_at
   from pg last, public.feed_page(last.feed_at, last.jar_id) with ordinality f
   where last.page = 1 and last.pos = 20;
-select is((select count(*) from pg where page = 2), 8::bigint, 'page 2 has the remaining 8 jars');
+select is((select count(*) from pg where page = 2), 9::bigint, 'page 2 has the remaining 9 jars');
 select is((select count(*) from pg a join pg b on a.jar_id = b.jar_id where a.page = 1 and b.page = 2), 0::bigint,
           'no jar repeats across pages');
 select is((select array_agg(jar_id order by jar_id) from pg),
-          (select array_agg(id order by id) from t where k in ('j_pub', 'j_everyone', 'a3') or k ~ '^a2_[0-9]+$'),
+          (select array_agg(id order by id) from t where k in ('j_pub', 'j_everyone', 'r_own', 'a3') or k ~ '^a2_[0-9]+$'),
           'together the pages hold every feed jar, none skipped');
 select is((select count(*) from pg where jar_id = (select id from t where k = 'a2_new')), 0::bigint,
           'the newer jar does not shift into later pages');
-select is((select count(*) from pg last, public.feed_page(last.feed_at, last.jar_id) where last.page = 2 and last.pos = 8),
+select is((select count(*) from pg last, public.feed_page(last.feed_at, last.jar_id) where last.page = 2 and last.pos = 9),
           0::bigint, 'the page after the last is empty');
 select is((select count(*) from public.feed_page() where jar_id = (select id from t where k = 'a2_new')), 1::bigint,
           'a fresh first page shows the newer jar');
 
 -- ---------------------------------------------------------------- feed_seen_at and new flags
-select is((select count(*) from public.feed_page() where not is_new), 0::bigint,
-          'before the feed was ever opened every jar is new');
+select is((select count(*) from public.feed_page() where not is_new and author_id <> tests.id('reader')), 0::bigint,
+          'before the feed was ever opened every other author''s jar is new');
 select is((select string_agg(u.name || ':' || f.has_new, ',' order by u.name)
            from public.feed_authors() f join tests.users u on u.id = f.author_id),
           'author2:true,author3:true,author4:false,owner:true',

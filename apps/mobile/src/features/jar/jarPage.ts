@@ -1,9 +1,10 @@
 // The Jar page (FR-SOC-03, FR-JAR-06; design: Story): one person's jar for one day. Rows are read as the
-// viewer, so RLS decides what comes back (moments_others_select: others get live, non-private moments of
-// a jar they may view). The model filters again so a stale cache or an owner-only row can never reach
-// another viewer's screen (rule 9).
+// viewer, so RLS decides what comes back (moments_others_select, 0066: others get the live moments whose
+// own visibility lets them see it, D-48 and D-50). The model filters again so a stale cache or an
+// owner-only row can never reach another viewer's screen (rule 9).
 import { z } from 'zod';
 
+import { visibilitySchema } from '@/lib/visibility';
 import { slots, type Slot } from '@/theme/tokens';
 
 export const jarRow = z.object({
@@ -30,7 +31,7 @@ export const jarMomentRow = z.object({
   id: z.string(),
   slot: z.enum(slots),
   status: z.string(),
-  is_private: z.boolean(),
+  visibility: visibilitySchema,
   is_backfilled: z.boolean(),
   caption: z.string().nullable(),
   captured_at: z.string().nullable(),
@@ -47,7 +48,7 @@ export type JarPageData = {
   jar: JarRow;
   author: AuthorRow;
   moments: JarMoment[];
-  /** The signed-in viewer; the owner also sees their private moments. */
+  /** The signed-in viewer; the owner also sees their Only me moments. */
   viewerId: string;
   /** What the viewer has liked on this page (FR-SOC-05). Optional: caches from before M3-09 lack it. */
   liked?: Liked;
@@ -89,7 +90,7 @@ export function withLike(data: JarPageData, target: LikeTarget, liked: boolean):
 
 export type JarPage = {
   isOwner: boolean;
-  /** The count the viewer is allowed to know (D-9): every moment that isn't removed for the owner, else visible moments. */
+  /** The count the viewer is allowed to know (D-9, D-50): every moment that isn't removed for the owner, else the moments shown to them. */
   count: number;
   isFull: boolean;
   /** The cover photo: the moment with the newest caption, else the first in slot order. Null for an empty jar. */
@@ -100,9 +101,12 @@ export type JarPage = {
   moments: JarMoment[];
 };
 
-/** Whether `viewerId` may see the moment on this page: live, and private ones only by their owner. */
-export function isShown(moment: Pick<JarMomentRow, 'status' | 'is_private'>, isOwner: boolean): boolean {
-  return moment.status === 'live' && (isOwner || !moment.is_private);
+/**
+ * Whether the viewer may see the moment on this page: live, and Only me ones only by their owner. Whether
+ * a Readers moment reaches someone who doesn't read the owner is RLS's call (0066); this is the backstop.
+ */
+export function isShown(moment: Pick<JarMomentRow, 'status' | 'visibility'>, isOwner: boolean): boolean {
+  return moment.status === 'live' && (isOwner || moment.visibility !== 'only_me');
 }
 
 const slotIndex = (slot: Slot) => slots.indexOf(slot);
@@ -118,7 +122,8 @@ export function buildJarPage({ jar, moments, viewerId }: JarPageData): JarPage {
   const isOwner = jar.user_id === viewerId;
   const shown = moments.filter((m) => isShown(m, isOwner)).sort((a, b) => slotIndex(a.slot) - slotIndex(b.slot));
   const cover = newestCaptioned(shown) ?? shown[0] ?? null;
-  const count = isOwner ? jar.moment_count : jar.visible_count;
+  // A mixed jar shows each viewer only what they may see (D-50), so others count what they are shown.
+  const count = isOwner ? jar.moment_count : shown.length;
   return {
     isOwner,
     count,

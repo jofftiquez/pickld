@@ -63,19 +63,19 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 | FR-CAP-06 | Speech bubbles | Speech, Thought, Shout and Whisper shapes; 6 colors; editable text up to 60 characters | P0 | Bubble tool |
 | FR-CAP-07 | Text | Clean, Bold, Type and Serif fonts; 6 colors; size slider; left or center alignment; up to 80 characters | P0 | Text tool |
 | FR-CAP-08 | Edits stored as data | Stickers, bubbles, text and filter are saved as data with position, scale and rotation, not burned into the photo; reopening the editor restores them | P0 | Editor |
-| FR-CAP-09 | Caption and privacy | Caption up to 150 characters; Keep this moment private switch; Undo; Done or Add to #slot saves | P0 | Capture |
-| FR-CAP-10 | Moment options | Edit caption, edit stickers and filters, re-crop, make private, move to another empty slot in the same jar, delete (with confirmation) | P0 | Moment options |
+| FR-CAP-09 | Caption and visibility | Caption up to 150 characters; a Readers, Everyone or Only me choice for the moment, starting at the user’s default visibility (D-48); Undo; Done or Add to #slot saves | P0 | Capture |
+| FR-CAP-10 | Moment options | Edit caption, edit stickers and filters, re-crop, change visibility (Readers, Everyone, Only me; D-48), move to another empty slot in the same jar, delete (with confirmation) | P0 | Moment options |
 | FR-CAP-11 | Camera permission off | Shows Camera access off with Open Settings and Choose from gallery instead | P0 | Camera access off |
 
 ## Publishing and visibility
 
 | ID | Requirement | Acceptance criteria | P | Screens |
 | --- | --- | --- | --- | --- |
-| FR-PUB-01 | Publish review | Shows all 8 slots (empty dashed, private locked) and a visibility choice; default is the user’s default visibility (Readers unless changed) | P0 | Publish review |
-| FR-PUB-02 | Jars hidden until published | Nobody but the owner can see a jar or its moments before Publish jar; verified by a database test as another user | P0 | All |
+| FR-PUB-01 | Publish review | Shows all 8 slots (empty dashed; each moment with its visibility badge: readers, globe or lock) and a visibility choice for the jar; default is the user’s default visibility (Readers unless changed). Publishing never changes a moment’s visibility (D-50) | P0 | Publish review |
+| FR-PUB-02 | Jars hidden until published | Nobody but the owner can see a jar before Publish jar; moments follow their own visibility (Readers, Everyone or Only me, default from the profile), published jar or not (D-48); a published jar shows each viewer only the moments they may see (D-50); verified by database tests as owner, reader, outsider and blocked user | P0 | All |
 | FR-PUB-03 | Visibility levels | Readers: only users who read the author. Everyone: any signed-in user and the shared-link page. Only me: owner only. Changeable after publishing from the jar’s menu | P0 | Publish review, Jar |
-| FR-PUB-04 | Auto-share after publishing | Live moments added later the same day go out automatically; Today shows the Published state and note | P0 | Today, published |
-| FR-PUB-05 | Private moments | A private moment is never visible to anyone but the owner, in any jar, feed, card or web page | P0 | All |
+| FR-PUB-04 | Auto-share after publishing | Today shows the Published state and note; moments added later the same day join the published jar. Who sees a moment is its own visibility, not publishing (D-48), so this no longer shares moments by itself | P0 | Today, published |
+| FR-PUB-05 | Only me moments | An Only me moment is never visible to anyone but the owner, in any jar, feed, card or web page, and can’t be shared (D-48). Moments that were private, or in a jar that wasn’t published, became Only me (D-49) | P0 | All |
 | FR-PUB-06 | Blocks hide everything | If either user blocked the other, neither sees the other’s jars, moments, comments, profile or search result | P0 | All |
 | FR-PUB-07 | Safety hold | Moments in Checking or Removed status are visible only to the owner (Removed shows the notice) | P0 | Checking photo, Moment removed |
 
@@ -83,8 +83,8 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 
 | ID | Requirement | Acceptance criteria | P | Screens |
 | --- | --- | --- | --- | --- |
-| FR-SOC-01 | Jars feed | Shows published jars from authors the user reads, newest update first; 20 per page with infinite scroll; pull to refresh; avatar row marks authors with new jars since last visit | P0 | Jars |
-| FR-SOC-02 | Empty feed | With no authors, show Jars, empty with Find people, Invite friends and suggestions | P0 | Jars, empty |
+| FR-SOC-01 | Jars feed | Shows published jars from authors the user reads and the user’s own published jars (D-53), newest update first; 20 per page with infinite scroll; pull to refresh; avatar row marks authors with new jars since last visit | P0 | Jars |
+| FR-SOC-02 | Empty feed | With no authors, the user’s own published jars sit under a Find people card (D-53); Jars, empty with Find people, Invite friends and suggestions shows only when there is nothing at all | P0 | Jars, empty |
 | FR-SOC-03 | Jar page | Cover, author, date, count, Full jar tag at 8/8; grid of visible moments with Added later badges; like, comment and Share jar | P0 | Jar |
 | FR-SOC-04 | Moment detail | Full-screen 3:4 moment with one progress bar per shown moment, the current one highlighted (none for a single moment); swipe left and right through the jar's shown moments; hashtag, time, caption, likes, comments | P0 | Moment detail |
 | FR-SOC-05 | Likes | One like per user per jar or moment; tapping again removes it; counts update immediately and are public | P0 | Jar, Moment detail |
@@ -148,7 +148,7 @@ This is the checklist of what Pickld 2.0 must do. Each requirement has an ID, a 
 | FR-MOD-03 | Blurred by default | Every photo is blurred until the moderator presses Show photo | P0 | Moderation console |
 | FR-MOD-04 | Decisions | Keep (K), Remove (R), Remove and warn, Escalate (E); the owner’s moment and notification update within a minute | P0 | Moderation console |
 | FR-MOD-05 | Audit log | Every moderator action recorded with who, what, when and reason; cannot be edited or deleted | P0 | Moderation console |
-| FR-WEB-01 | Shared-link page | pickld.me/username and jar links show Everyone jars and public profiles; Readers-only jars show a teaser; private moments never shown | P0 | Shared link web page |
+| FR-WEB-01 | Shared-link page | pickld.me/username and jar links show Everyone jars and public profiles, with only their Everyone moments (D-50); Readers-only jars show a teaser; Only me moments never shown | P0 | Shared link web page |
 | FR-WEB-02 | Link previews | Shared links show a preview image of the jar card in Messenger, Facebook, X and iMessage | P0 | Shared link web page |
 | FR-WEB-03 | Open in app | With the app installed, links open the matching screen; otherwise the page shows App Store and Google Play buttons | P0 | Shared link web page |
 | FR-WID-01 | Home screen widgets | Medium widget: today’s jar and capture button. Small widget: a friend’s latest moment. Update at least every 30 minutes and after each capture | P1 | Home screen widgets |

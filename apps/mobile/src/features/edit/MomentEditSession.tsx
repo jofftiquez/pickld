@@ -18,7 +18,7 @@ export type MomentEditSessionProps = {
 
 /**
  * The editor on an uploaded moment (M2-23, FR-CAP-10): Done saves the caption and edits as a proposal that
- * fn:moderate swaps in, and privacy at once (`saveMomentEdits`), then refreshes Today. Needs a connection;
+ * fn:moderate swaps in, and visibility at once (`saveMomentEdits`), then refreshes Today. Needs a connection;
  * if the save fails the editor stays open and the moment keeps its old version.
  */
 export function MomentEditSession({ moment, userId, focusCaption, insets, onLeave }: MomentEditSessionProps) {

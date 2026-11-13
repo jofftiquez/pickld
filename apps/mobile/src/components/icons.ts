@@ -32,6 +32,9 @@ export const icons = {
     p('M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'),
   ],
   lock: [r(5, 11, 14, 10, 2), p('M8 11V7a4 4 0 0 1 8 0v4')],
+  // Moment visibility (D-48): Everyone is a globe, Readers two people; Only me is the lock.
+  globe: [c(12, 12, 9), p('M3 12h18'), p('M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18')],
+  readers: [c(9, 8, 3), c(17, 9, 2.5), p('M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15.2A4.5 4.5 0 0 1 21 19')],
   warning: [p('M12 3 2 20h20z'), p('M12 10v4M12 17v.5')],
   retry: [p('M3 12a9 9 0 1 0 3-6.7L3 8'), p('M3 3v5h5')],
   clock: [p('M12 6v6l4 2'), c(12, 12, 9)],

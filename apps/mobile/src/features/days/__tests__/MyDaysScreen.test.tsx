@@ -26,7 +26,7 @@ const moment = (slot: ServerMoment['slot'], extra: Partial<ServerMoment> = {}): 
   id: `m-${slot}`,
   slot,
   status: 'live',
-  is_private: false,
+  visibility: 'readers',
   is_backfilled: false,
   captured_at: null,
   added_at: '2026-11-08T01:00:00Z',

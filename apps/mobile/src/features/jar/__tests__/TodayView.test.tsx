@@ -33,7 +33,7 @@ function live(slot: ServerMoment['slot']): ServerMoment {
     id: `m-${slot}`,
     slot,
     status: 'live',
-    is_private: false,
+    visibility: 'readers' as const,
     is_backfilled: false,
     captured_at: '2026-11-09T23:30:00Z',
     added_at: '2026-11-09T23:31:00Z',
@@ -92,7 +92,7 @@ describe('TodayView', () => {
             photoUri: 'file:///q/ootd.webp',
             thumbUri: null,
             capturedAt: null,
-            isPrivate: false,
+            visibility: 'readers' as const,
           },
         ],
       }),
@@ -203,7 +203,7 @@ describe('TodayView', () => {
       photoUri: `file:///q/${slot}.webp`,
       thumbUri: null,
       capturedAt: null,
-      isPrivate: false,
+      visibility: 'readers' as const,
     });
     const { onRetry, onCapture } = await renderToday({
       hasAnyJar: true,
@@ -255,7 +255,7 @@ describe('TodayView', () => {
             photoUri: 'file:///q/selfie.webp',
             thumbUri: null,
             capturedAt: '2026-11-10T00:10:00Z',
-            isPrivate: false,
+            visibility: 'readers' as const,
           },
         ],
         nowSlot: 'morning',
@@ -287,7 +287,7 @@ describe('TodayView: Moment options (M2-23)', () => {
     photoUri: `file:///q/${slot}.webp`,
     thumbUri: null,
     capturedAt: '2026-11-10T00:10:00Z',
-    isPrivate: false,
+    visibility: 'readers' as const,
   });
 
   it('live moments and waiting or failed photos open options; uploading, checking, removed and empty tiles do not', async () => {
@@ -372,7 +372,7 @@ describe('TodayView: tiles draw moments with their edits (M2-18)', () => {
             photoUri: 'file:///q/morning.webp',
             thumbUri: 'file:///q/morning-thumb.webp',
             capturedAt: '2026-11-10T00:05:00Z',
-            isPrivate: false,
+            visibility: 'readers' as const,
             tz: TZ,
             createdAt: Date.parse('2026-11-10T00:05:00Z'),
             edits: {
@@ -409,7 +409,7 @@ describe('TodayView: tiles draw moments with their edits (M2-18)', () => {
     expect(within(screen.getByTestId('tile-ootd')).queryByTestId('photo-tile-image', hidden)).toBeNull();
     expect(within(screen.getByTestId('tile-whereami')).getByTestId('photo-tile-image', hidden)).toBeTruthy();
     // The tile still speaks for itself; the picture adds no extra stops.
-    expect(screen.getByRole('image', { name: '#ootd, 7:30 AM, added' })).toBeTruthy();
+    expect(screen.getByRole('image', { name: '#ootd, 7:30 AM, readers can see it' })).toBeTruthy();
   });
 
   it('a queued moment shows the edits saved on the phone', async () => {

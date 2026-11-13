@@ -6,7 +6,7 @@ import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { buildTodayGrid, type GridTile } from '@/features/jar/todayGrid';
 
 import { MomentOptions, type MomentOptionsProps } from '../MomentOptions';
-import { deleteMoment, MomentOptionError, moveMoment, setMomentPrivate } from '../momentActions';
+import { deleteMoment, MomentOptionError, moveMoment, setMomentVisibility } from '../momentActions';
 import { openRecrop } from '../recrop';
 
 // Moment options (M2-23, FR-CAP-10) on Today: the real sheet and confirm dialog; what each option does to
@@ -45,7 +45,7 @@ jest.mock('../momentActions', () => {
   const actual = jest.requireActual<typeof import('../momentActions')>('../momentActions');
   return {
     MomentOptionError: actual.MomentOptionError,
-    setMomentPrivate: jest.fn(async () => undefined),
+    setMomentVisibility: jest.fn(async () => undefined),
     moveMoment: jest.fn(async () => undefined),
     deleteMoment: jest.fn(async () => undefined),
   };
@@ -69,7 +69,7 @@ const tiles = buildTodayGrid({
       id: MOMENT,
       slot: 'ootd',
       status: 'live',
-      is_private: false,
+      visibility: 'readers',
       is_backfilled: false,
       captured_at: '2026-11-08T23:30:00Z', // 7:30 AM in Manila, Mon Nov 9
       added_at: '2026-11-08T23:31:00Z',
@@ -124,7 +124,7 @@ describe('Moment options', () => {
       'Edit caption',
       'Edit stickers and filters',
       'Re-crop',
-      'Make private',
+      'Visibility: Readers',
       'Move to another moment',
       'Delete moment',
       'Cancel',
@@ -151,25 +151,32 @@ describe('Moment options', () => {
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['queue', USER] });
   });
 
-  it('Make private flips the switch and keeps the sheet open; a failure leaves it as it was', async () => {
+  it('Visibility opens Readers, Everyone and Only me; a choice applies at once, a failure keeps the old one', async () => {
     const { onClose } = await renderOptions();
-    const toggle = screen.getByRole('switch', { name: 'Make private' });
-    expect(toggle.props.accessibilityState).toMatchObject({ checked: false });
-    await fireEvent.press(toggle);
-    expect(setMomentPrivate).toHaveBeenCalledWith(mockClient, server.target, true);
-    expect(screen.getByRole('switch', { name: 'Make private' }).props.accessibilityState).toMatchObject({
-      checked: true,
-    });
+    await fireEvent.press(row('Visibility: Readers'));
+    const choice = (name: RegExp) => screen.getByRole('radio', { name });
+    expect(screen.getAllByRole('radio').map((r) => r.props.accessibilityLabel)).toEqual([
+      'Readers, People who read your days',
+      'Everyone, Anyone on Pickld',
+      'Only me, Only you will see this moment',
+    ]);
+    expect(choice(/^Readers/).props.accessibilityState).toMatchObject({ checked: true });
 
-    jest.mocked(setMomentPrivate).mockRejectedValueOnce(new Error('Network request failed'));
-    await fireEvent.press(screen.getByRole('switch', { name: 'Make private' }));
-    expect(setMomentPrivate).toHaveBeenLastCalledWith(mockClient, server.target, false);
-    expect(screen.getByRole('switch', { name: 'Make private' }).props.accessibilityState).toMatchObject({
-      checked: true,
-    });
+    await fireEvent.press(choice(/^Only me/));
+    expect(setMomentVisibility).toHaveBeenCalledWith(mockClient, server.target, 'only_me');
+    expect(choice(/^Only me/).props.accessibilityState).toMatchObject({ checked: true });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['jar', USER] });
+
+    jest.mocked(setMomentVisibility).mockRejectedValueOnce(new Error('Network request failed'));
+    await fireEvent.press(choice(/^Everyone/));
+    expect(setMomentVisibility).toHaveBeenLastCalledWith(mockClient, server.target, 'everyone');
+    expect(choice(/^Only me/).props.accessibilityState).toMatchObject({ checked: true });
     expect(screen.getByTestId('moment-options-error')).toHaveTextContent(
       'Couldn’t change this moment. Check your connection and try again.',
     );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Back to moment options' }));
+    expect(row('Visibility: Only me')).toBeTruthy();
     expect(onClose).not.toHaveBeenCalled();
   });
 

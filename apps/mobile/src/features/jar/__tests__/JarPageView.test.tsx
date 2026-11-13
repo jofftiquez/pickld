@@ -27,7 +27,7 @@ const insets = { top: 0, right: 0, bottom: 0, left: 0 };
 function moment(over: Partial<JarMoment> & Pick<JarMoment, 'id' | 'slot'>): JarMoment {
   return {
     status: 'live',
-    is_private: false,
+    visibility: 'readers',
     is_backfilled: false,
     caption: null,
     captured_at: null,
@@ -56,7 +56,7 @@ const daleJar: JarPageData = {
     moment({ id: 'm-morning', slot: 'morning', caption: 'Rain again. Coffee first.' }),
     moment({ id: 'm-where', slot: 'whereami', is_backfilled: true }),
     moment({ id: 'm-busy', slot: 'mebusywith' }),
-    moment({ id: 'm-private', slot: 'ootd', is_private: true }),
+    moment({ id: 'm-private', slot: 'ootd', visibility: 'only_me' }),
   ],
   viewerId: 'reader-id',
 };
@@ -69,7 +69,8 @@ async function setup(props: Partial<JarPageViewProps> = {}) {
 
 describe('JarPageView', () => {
   it('shows the cover title, date, count, Full jar tag and the cover caption with its slot and time', async () => {
-    await setup();
+    // The owner's count is every moment (D-9), so their full jar says so.
+    await setup({ data: { ...daleJar, viewerId: 'dale-id' } });
     expect(screen.getByRole('header', { name: 'Dale’s Sunday' })).toBeTruthy();
     expect(screen.getByTestId('jar-subtitle')).toHaveTextContent('Nov 8, 2026 · 8 of 8 moments');
     expect(screen.getByTestId('jar-full-tag')).toHaveTextContent('Full jar');
@@ -103,10 +104,10 @@ describe('JarPageView', () => {
     expect(screen.getByTestId('jar-tile-ootd-lock')).toBeTruthy();
   });
 
-  it('leaves out the Full jar tag below 8 and shows the reader count', async () => {
-    await setup({ data: { ...daleJar, jar: { ...daleJar.jar, visible_count: 5 } } });
+  it('leaves out the Full jar tag below 8 and counts only the moments the reader is shown (D-50)', async () => {
+    await setup();
     expect(screen.queryByTestId('jar-full-tag')).toBeNull();
-    expect(screen.getByTestId('jar-subtitle')).toHaveTextContent('Nov 8, 2026 · 5 of 8 moments');
+    expect(screen.getByTestId('jar-subtitle')).toHaveTextContent('Nov 8, 2026 · 3 of 8 moments');
   });
 
   it('shows likes and comments and shares the jar', async () => {

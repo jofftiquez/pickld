@@ -15,7 +15,7 @@ const moment = (over: Partial<JarMoment>): JarMoment => ({
   id: 'm',
   slot: 'ootd',
   status: 'live',
-  is_private: false,
+  visibility: 'readers',
   is_backfilled: false,
   caption: null,
   captured_at: null,
@@ -57,7 +57,7 @@ describe('Share to Stories layout (T-509)', () => {
   it('shares a moment on its own only when it is live and not private, even for its owner', () => {
     const moments = [
       moment({ id: 'live' }),
-      moment({ id: 'private', is_private: true }),
+      moment({ id: 'private', visibility: 'only_me' }),
       moment({ id: 'checking', status: 'checking' }),
       moment({ id: 'removed', status: 'removed' }),
     ];

@@ -7,7 +7,7 @@
 -- and profile are tried again (D-11: only the owner still sees them).
 begin;
 \ir _helpers.psql
-select plan(345);
+select plan(415);
 
 select tests.world();
 
@@ -72,7 +72,13 @@ insert into obj values
   ('moment checking',            'moment', tests.make_moment(pg_temp.o('jar readers'), 'afternoon', 'checking'),                 '{owner}'),
   ('moment removed',             'moment', tests.make_moment(pg_temp.o('jar readers'), 'ootd', 'removed'),                       '{owner}'),
   ('moment uploading',           'moment', tests.make_moment(pg_temp.o('jar readers'), 'selfie', 'uploading'),                   '{owner}'),
-  ('live moment in unpublished', 'moment', tests.make_moment(pg_temp.o('jar unpublished'), 'morning', 'live'),                   '{owner}'),
+  -- 0066 (D-48): a moment follows its own visibility, published jar or not, and a jar can mix them (D-50).
+  ('live moment in unpublished', 'moment', tests.make_moment(pg_temp.o('jar unpublished'), 'morning', 'live'),                   '{owner,reader}'),
+  ('everyone moment in unpublished', 'moment', tests.make_moment(pg_temp.o('jar unpublished'), 'afternoon', 'live', p_visibility => 'everyone'), '{owner,reader,outsider,moderator}'),
+  ('only_me moment in unpublished', 'moment', tests.make_moment(pg_temp.o('jar unpublished'), 'evening', 'live', p_visibility => 'only_me'), '{owner}'),
+  ('everyone moment in readers', 'moment', tests.make_moment(pg_temp.o('jar readers'), 'whereami', 'live', p_visibility => 'everyone'), '{owner,reader,outsider,moderator}'),
+  ('readers moment in everyone', 'moment', tests.make_moment(pg_temp.o('jar everyone'), 'whereami', 'live', p_visibility => 'readers'), '{owner,reader}'),
+  ('everyone moment in only_me', 'moment', tests.make_moment(pg_temp.o('jar only_me'), 'afternoon', 'live', p_visibility => 'everyone'), '{owner,reader,outsider,moderator}'),
   ('live moment in everyone',    'moment', tests.make_moment(pg_temp.o('jar everyone'), 'morning', 'live'),                      '{owner,reader,outsider,moderator}'),
   ('private moment in everyone', 'moment', tests.make_moment(pg_temp.o('jar everyone'), 'evening', 'live', p_private => true),   '{owner}'),
   ('checking moment in everyone','moment', tests.make_moment(pg_temp.o('jar everyone'), 'afternoon', 'checking'),                '{owner}'),

@@ -105,7 +105,7 @@ const input: EnqueueInput = {
   tz: 'Asia/Manila',
   capturedAt: '2026-11-11T08:15:00+08:00',
   caption: 'new shoes',
-  isPrivate: true,
+  visibility: 'only_me',
   edits: { filter: 'warm' },
 };
 
@@ -157,7 +157,7 @@ describe('enqueue', () => {
       tz: 'Asia/Manila',
       capturedAt: '2026-11-11T08:15:00+08:00',
       caption: 'new shoes',
-      isPrivate: true,
+      visibility: 'only_me',
       edits: { filter: 'warm' },
       state: 'queued',
       attempts: 0,
@@ -410,40 +410,48 @@ describe('editing hold and saved edits (M2-12)', () => {
 
   it('saveEdits stores caption, privacy and edits, ends the hold, and survives a restart', async () => {
     let store = loadStore();
-    const item = await store.enqueue({ ...input, caption: null, isPrivate: false, edits: {}, editing: true });
+    const item = await store.enqueue({ ...input, caption: null, visibility: 'readers', edits: {}, editing: true });
     const filesBefore = new Map(mockFs);
 
-    const saved = await store.saveEdits(item.id, { caption: 'Lunch break, finally!', isPrivate: true, edits });
-    expect(saved).toMatchObject({ caption: 'Lunch break, finally!', isPrivate: true, edits, editingSince: null });
+    const saved = await store.saveEdits(item.id, { caption: 'Lunch break, finally!', visibility: 'only_me', edits });
+    expect(saved).toMatchObject({ caption: 'Lunch break, finally!', visibility: 'only_me', edits, editingSince: null });
     // Data only: the photo and thumbnail files and their paths are untouched (FR-CAP-08).
     expect(new Map(mockFs)).toEqual(filesBefore);
     expect(saved.photoUri).toBe(item.photoUri);
     expect(saved.thumbUri).toBe(item.thumbUri);
 
     store = loadStore();
-    expect(await store.getItem(item.id)).toMatchObject({ caption: 'Lunch break, finally!', isPrivate: true, edits });
+    expect(await store.getItem(item.id)).toMatchObject({
+      caption: 'Lunch break, finally!',
+      visibility: 'only_me',
+      edits,
+    });
   });
 
   it('saveEdits can clear a caption and turn privacy back off', async () => {
     const store = loadStore();
     const item = await store.enqueue(input); // caption 'new shoes', private
-    expect(await store.saveEdits(item.id, { caption: null, isPrivate: false, edits })).toMatchObject({
+    expect(await store.saveEdits(item.id, { caption: null, visibility: 'readers', edits })).toMatchObject({
       caption: null,
-      isPrivate: false,
+      visibility: 'readers',
     });
   });
 
   it('saveEdits refuses a caption over 150 characters (moments.caption limit), changing nothing', async () => {
     const store = loadStore();
     const item = await store.enqueue({ ...input, editing: true });
-    await expect(store.saveEdits(item.id, { caption: 'x'.repeat(151), isPrivate: false, edits })).rejects.toThrow();
+    await expect(
+      store.saveEdits(item.id, { caption: 'x'.repeat(151), visibility: 'readers', edits }),
+    ).rejects.toThrow();
     expect(await store.getItem(item.id)).toMatchObject({ caption: 'new shoes', edits: input.edits });
     expect((await store.getItem(item.id))?.editingSince).not.toBeNull();
-    await expect(store.saveEdits(item.id, { caption: 'x'.repeat(150), isPrivate: false, edits })).resolves.toBeTruthy();
+    await expect(
+      store.saveEdits(item.id, { caption: 'x'.repeat(150), visibility: 'readers', edits }),
+    ).resolves.toBeTruthy();
   });
 
   it('saveEdits on a moment that left the queue throws instead of pretending', async () => {
-    await expect(loadStore().saveEdits(999, { caption: null, isPrivate: false, edits })).rejects.toThrow(/999/);
+    await expect(loadStore().saveEdits(999, { caption: null, visibility: 'readers', edits })).rejects.toThrow(/999/);
   });
 
   it('saveEdits tells Today the item changed', async () => {
@@ -451,7 +459,7 @@ describe('editing hold and saved edits (M2-12)', () => {
     const item = await store.enqueue(input);
     const changes: string[] = [];
     const unsubscribe = store.subscribeQueue((change) => changes.push(change));
-    await store.saveEdits(item.id, { caption: null, isPrivate: false, edits });
+    await store.saveEdits(item.id, { caption: null, visibility: 'readers', edits });
     unsubscribe();
     expect(changes).toEqual(['status']);
   });
@@ -526,7 +534,44 @@ describe('Crop screen choices on a raw gallery photo (M2-10)', () => {
       .run(USER);
     const [old] = await store.listQueue(USER);
     expect(old).toMatchObject({ slot: 'selfie', prepared: false, crop: null });
-    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 6 }));
+    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(
+      expect.objectContaining({ user_version: store.MIGRATIONS.length }),
+    );
+  });
+});
+
+describe('Moment visibility (D-48)', () => {
+  it('upgrades a version 6 queue: a private moment becomes Only me, the others keep the owner default', async () => {
+    const store = loadStore();
+    store.MIGRATIONS.slice(0, 6).forEach((sql) => mockDisk.exec(sql));
+    mockDisk.exec('PRAGMA user_version = 6');
+    const insert = mockDisk.prepare(
+      `INSERT INTO queue_items (user_id, photo_file, slot, local_date, tz, created_at, is_private)
+       VALUES (?, ?, ?, '2026-11-10', 'Asia/Manila', 1, ?)`,
+    );
+    insert.run(USER, 'private.jpg', 'selfie', 1);
+    insert.run(USER, 'public.jpg', 'ootd', 0);
+    const [privateOne, publicOne] = await store.listQueue(USER);
+    expect(privateOne).toMatchObject({ slot: 'selfie', visibility: 'only_me' });
+    expect(publicOne).toMatchObject({ slot: 'ootd', visibility: null });
+  });
+
+  it('enqueues at the owner default (null) unless a visibility is given, and keeps is_private in step', async () => {
+    const store = loadStore();
+    const plain = await store.enqueue({ ...input, visibility: undefined });
+    expect(plain.visibility).toBeNull();
+    const everyone = await store.enqueue({ ...input, visibility: 'everyone' });
+    expect((await loadStore().getItem(everyone.id))?.visibility).toBe('everyone');
+    const rows = mockDisk.prepare('SELECT id, is_private FROM queue_items ORDER BY id').all();
+    expect(rows).toEqual([
+      { id: plain.id, is_private: 0 },
+      { id: everyone.id, is_private: 0 },
+    ]);
+    await store.saveOptions(everyone.id, { visibility: 'only_me' });
+    expect(mockDisk.prepare('SELECT is_private FROM queue_items WHERE id = ?').get(everyone.id)).toEqual({
+      is_private: 1,
+    });
+    await expect(store.saveOptions(everyone.id, { visibility: 'public' as 'readers' })).rejects.toThrow();
   });
 });
 
@@ -543,7 +588,9 @@ describe('Replace (M2-22)', () => {
       .run(USER);
     const [old] = await store.listQueue(USER);
     expect(old).toMatchObject({ slot: 'selfie', state: 'conflict', replace: false });
-    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(expect.objectContaining({ user_version: 6 }));
+    expect(mockDisk.prepare('PRAGMA user_version').get()).toEqual(
+      expect.objectContaining({ user_version: store.MIGRATIONS.length }),
+    );
   });
 
   it('enqueues a plain photo by default and a chosen replacement when asked', async () => {
@@ -591,13 +638,18 @@ describe('Replace (M2-22)', () => {
 describe('Moment options on a queued moment (M2-23)', () => {
   it('Make private and Move keep the photo, caption and edits, across a restart', async () => {
     const store = loadStore();
-    const item = await store.enqueue({ ...input, isPrivate: false });
+    const item = await store.enqueue({ ...input, visibility: 'readers' });
     const changes: string[] = [];
     const unsubscribe = store.subscribeQueue((change) => changes.push(change));
-    await store.saveOptions(item.id, { isPrivate: true });
+    await store.saveOptions(item.id, { visibility: 'only_me' });
     const moved = await store.saveOptions(item.id, { slot: 'evening' });
     unsubscribe();
-    expect(moved).toMatchObject({ slot: 'evening', isPrivate: true, caption: 'new shoes', edits: { filter: 'warm' } });
+    expect(moved).toMatchObject({
+      slot: 'evening',
+      visibility: 'only_me',
+      caption: 'new shoes',
+      edits: { filter: 'warm' },
+    });
     expect(moved.photoUri).toBe(item.photoUri);
     expect(await loadStore().getItem(item.id)).toEqual(moved);
     expect(changes).toEqual(['status', 'status']);
@@ -618,8 +670,8 @@ describe('Moment options on a queued moment (M2-23)', () => {
     let failed = { ...item };
     for (let i = 0; i < 5; i += 1) failed = { ...failed, ...fail(start(failed), 'server error', 0) };
     await store.saveStatus(failed);
-    const changed = await store.saveOptions(item.id, { isPrivate: false, slot: 'ootd' });
-    expect(changed).toMatchObject({ state: 'failed', attempts: 5, replace: true, isPrivate: false });
+    const changed = await store.saveOptions(item.id, { visibility: 'readers', slot: 'ootd' });
+    expect(changed).toMatchObject({ state: 'failed', attempts: 5, replace: true, visibility: 'readers' });
   });
 
   it('refuses every change while the photo is uploading, and changes nothing', async () => {
@@ -640,7 +692,7 @@ describe('Moment options on a queued moment (M2-23)', () => {
 
   it('refuses a moment that already left the queue', async () => {
     const store = loadStore();
-    await expect(store.saveOptions(404, { isPrivate: true })).rejects.toBeInstanceOf(store.QueueItemBusyError);
+    await expect(store.saveOptions(404, { visibility: 'only_me' })).rejects.toBeInstanceOf(store.QueueItemBusyError);
     await expect(store.discardItem(404)).rejects.toBeInstanceOf(store.QueueItemBusyError);
   });
 

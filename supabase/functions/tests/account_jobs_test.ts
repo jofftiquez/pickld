@@ -182,7 +182,8 @@ async function moment(user: TestUser, jarId: string, date: string, visibility: s
     slot,
     status: 'checking',
     caption: o.caption ?? null,
-    is_private: o.isPrivate ?? false,
+    // Its own visibility (0066): Only me when private, else the jar's; is_private follows it.
+    visibility: o.isPrivate ? 'only_me' : visibility,
     captured_at: '2026-11-01T01:02:03Z',
     photo_path: key,
     thumb_path: key.replace('full.jpg', 'thumb.jpg'),

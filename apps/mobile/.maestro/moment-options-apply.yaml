@@ -1,4 +1,5 @@
-# M2-23 (FR-CAP-10): every Moment option applied to a live moment, checking Today after each. Make private
+# M2-23 (FR-CAP-10): every Moment option applied to a live moment, checking Today after each. Visibility:
+# Only me (D-48)
 # → Edit caption (Done, then reopened to see it saved) → Edit stickers and filters (Mono) → Move to TO →
 # Re-crop (flip, Save crop) → Delete (confirmed). Changes the server: run it on local Supabase only, signed in
 # as a user whose open jar has FROM live and TO empty (the seeded dale@pickld.test: #morning and
@@ -19,14 +20,16 @@ appId: me.pickld.app
       id: splash-overlay
     timeout: 10000
 
-# Make private: the switch flips and the tile says so.
+# Visibility → Only me (D-48): the radio row is checked and the tile says so.
 - tapOn:
     id: tile-${output.from}
 - tapOn:
-    id: moment-options-private
+    id: moment-options-visibility
+- tapOn:
+    id: moment-options-visibility-only_me
 - extendedWaitUntil:
     visible:
-      id: moment-options-private
+      id: moment-options-visibility-only_me
       checked: true
     timeout: 10000
 - tapOn:

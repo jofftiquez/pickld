@@ -133,7 +133,8 @@ async function insertMoment(
     thumb_path: row.thumbKey,
     caption: item.caption,
     captured_at: item.capturedAt,
-    is_private: item.isPrivate,
+    // Null leaves it to the server: the owner's default visibility (0066). is_private is derived there.
+    ...(item.visibility === null ? {} : { visibility: item.visibility }),
     edits: item.edits as NonNullable<Json>, // an object parsed from JSON by the queue store
     status: 'checking',
     replaces,

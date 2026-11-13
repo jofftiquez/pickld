@@ -93,10 +93,21 @@ describe('MomentTile', () => {
   });
 
   it('private: shows a lock icon and says "private" (not color alone)', async () => {
-    await renderTile({ isPrivate: true });
+    await renderTile({ visibility: 'only_me' });
     expect(screen.getByRole('button', { name: '#ootd, 7:30 AM, private' })).toBeTruthy();
     expect(screen.getByTestId('tile-lock', hidden)).toBeTruthy();
     expect(screen.getByTestId('icon-lock', hidden).props.stroke).toBe(colors.surface);
+  });
+
+  it.each([
+    ['readers', 'readers can see it', 'icon-readers'],
+    ['everyone', 'everyone can see it', 'icon-globe'],
+  ] as const)('%s: shows its visibility badge and says who can see it (D-48)', async (visibility, words, icon) => {
+    await renderTile({ visibility });
+    expect(screen.getByRole('button', { name: `#ootd, 7:30 AM, ${words}` })).toBeTruthy();
+    expect(screen.getByTestId(`tile-visibility-${visibility}`, hidden)).toBeTruthy();
+    expect(screen.getByTestId(icon, hidden)).toBeTruthy();
+    expect(screen.queryByTestId('tile-lock', hidden)).toBeNull();
   });
 
   it('added later: shows the badge and says it', async () => {
@@ -107,7 +118,7 @@ describe('MomentTile', () => {
   });
 
   it('private and added later together keep both markers', async () => {
-    await renderTile({ isPrivate: true, addedLater: true });
+    await renderTile({ visibility: 'only_me', addedLater: true });
     expect(screen.getByRole('button', { name: '#ootd, 7:30 AM, private, added later' })).toBeTruthy();
     expect(screen.getByTestId('tile-lock', hidden)).toBeTruthy();
     expect(screen.getByText('Added later')).toBeTruthy();
@@ -131,7 +142,7 @@ describe('MomentTile', () => {
   });
 
   it('empty ignores private and added-later flags (nothing to mark yet)', async () => {
-    await renderTile({ state: 'empty', uri: null, time: undefined, isPrivate: true, addedLater: true });
+    await renderTile({ state: 'empty', uri: null, time: undefined, visibility: 'only_me', addedLater: true });
     expect(screen.getByRole('button', { name: '#ootd, empty' })).toBeTruthy();
     expect(screen.queryByTestId('tile-lock', hidden)).toBeNull();
   });
@@ -212,7 +223,7 @@ describe('MomentTile', () => {
   });
 
   it('checking: blurs the photo and says "Checking"', async () => {
-    await renderTile({ state: 'checking', isPrivate: true });
+    await renderTile({ state: 'checking', visibility: 'only_me' });
     expect(screen.getByRole('button', { name: '#ootd, 7:30 AM, checking, private' })).toBeTruthy();
     expect(screen.getByText('Checking')).toBeTruthy();
     expect(screen.getByTestId('photo-tile-image', hidden).props.blurRadius).toBe(photo.checkingBlur);

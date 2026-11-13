@@ -106,6 +106,8 @@ describe('saveCapture', () => {
       // Held for the editor the camera opens next: no upload before Add to #slot (M2-12).
       editing: true,
       replace: false,
+      // No visibility chosen: the moment takes the owner's default (D-48).
+      visibility: null,
     });
     // The camera file goes only after the queue holds its own copy; preparation is still running.
     expect(mockLog).toEqual(['enqueue', 'delete file:///tmp/camera-shot.jpg', 'prepare']);
@@ -326,6 +328,7 @@ describe('saveGalleryPhoto', () => {
       editing: true,
       crop,
       replace: false,
+      visibility: null,
     });
     expect(mockLog).toEqual(['enqueue', 'delete file:///picker/IMG_0042.jpg', 'prepare']);
     // Mirror selfies is about the camera: gallery photos are never flipped by it (D-66).
