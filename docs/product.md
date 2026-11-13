@@ -75,7 +75,7 @@ Onboarding is the first impression of Pickld, so it teaches the idea before aski
 | 3 | How it works 2 | “Every moment fills your jar”: the jar at 5 of 8, midnight reset, backfill | Next → How it works 3 |
 | 4 | How it works 3 | “You deserve to be you.” No beauty filters, private moments, you pick who reads | Create my account → Sign up |
 | 5 | Sign up | Apple, Google or email; link to Sign in | Continue with email → About you |
-| 6 | Sign in | Returning users: Apple, Google or a one-tap email link (no password) | Send sign-in link → Today |
+| 6 | Sign in | Returning users: Apple, Google or a 6-digit email code (no password) | Send sign-in code → Check your email |
 | 7 | About you (step 1 of 6) | Photo, name, username with availability check, birthday | Continue → Your day |
 | — | Under 13 | Shown if the birthday is under 13; nothing entered is saved | Back to start → Welcome |
 | 8 | Your day (step 2 of 6) | “What’s your day like?” Early bird, Coffee first or Night owl; the answer sets the three reminder times, shown with a Change button | Continue → Your people |
@@ -263,7 +263,7 @@ These screens fill the gaps that shape the architecture: offline saving, the upl
 | Checking photo | New photo blurred while the safety check runs; only the owner can see it meanwhile | Back to today |
 | Moment removed | Notice naming the guideline broken, with Request a review and a link to the guidelines | Help |
 | Camera access off | What Capture shows when camera permission is denied | Open Settings · Choose from gallery instead |
-| Check your email | After a sign-in link is sent: open email app, resend timer, use a different email | Today |
+| Check your email | After a sign-in code is sent: six code boxes (checked at the 6th digit), open email app, resend timer, use a different email | Today |
 | Report sent | Confirmation after a report, with an option to also block | Block · Jars feed |
 | Edit profile | Cover, avatar, name, username, bio with character count, jar lid picker | Save → My profile |
 | Blocked accounts | Blocked people with Unblock | — |

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Configures an environment after deploy.sh: Edge Function secrets, the photo Worker's token secret, the cron jobs
-# and Supabase Auth's redirect allow list. Safe to run on every deploy: random secrets are generated only when
+# and Supabase Auth's redirect allow list and email code. Safe to run on every deploy: random secrets are generated only when
 # missing, and nothing is printed. docs/runbooks/staging.md.
 #   scripts/deploy/configure.sh staging
 # shellcheck source=scripts/deploy/lib.sh
@@ -83,12 +83,13 @@ vault_set anon_key "$anon"
 run_sql "$(cat scripts/deploy/cron.sql)" >/dev/null
 run_sql "select jobname, schedule from cron.job order by jobname" | jq -r '.[] | "\(.jobname)  \(.schedule)"'
 
-echo "== Auth redirects ($env)"
-# The app's sign-in link returns to pickld://auth/callback; the console's to <MOD_URL>/auth/confirm.
-# Email is Supabase's built-in sender until an SMTP provider is chosen (runbook, "Later").
+echo "== Auth redirects and email code ($env)"
+# Apple and Google sign-in return to pickld://auth/callback. Email sign-in (the app and the console) sends a
+# 6-digit code that works for 10 minutes and no link (D-60), the same as otp_length and otp_expiry in
+# supabase/config.toml. Email is Supabase's built-in sender until an SMTP provider is chosen (runbook, "Later").
 redirects="pickld://auth/callback"
-[[ -n "${MOD_URL:-}" ]] && redirects="$redirects,${MOD_URL%/}/auth/confirm"
 site="${WEB_URL:-https://pickld.me}"
 supabase_api PATCH "/projects/$SUPABASE_PROJECT_REF/config/auth" \
-  "$(jq -n --arg site "$site" --arg list "$redirects" '{site_url: $site, uri_allow_list: $list}')" >/dev/null
-echo "site $site; redirects $redirects"
+  "$(jq -n --arg site "$site" --arg list "$redirects" \
+    '{site_url: $site, uri_allow_list: $list, mailer_otp_length: 6, mailer_otp_exp: 600}')" >/dev/null
+echo "site $site; redirects $redirects; email code 6 digits, 10 minutes"

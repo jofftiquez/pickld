@@ -1,4 +1,4 @@
-# M4-02 + M4-04: Sign up with a new email → link from Mailpit → a new account lands on About you
+# M4-02 + M4-04: Sign up with a new email → code from Mailpit → a new account lands on About you
 # (FR-ACC-01). Fill it in (captured), then a birthday under 13 → Under 13; account-purge deletes the
 # account and the phone is signed out (FR-ACC-04). Needs local Mailpit on 55424 and fn:account-purge served.
 # Ends signed out: sign dale back in afterwards (scripts/dev-sign-in.sh).
@@ -37,15 +37,13 @@ appId: me.pickld.app
       id: check-email-screen
     timeout: 15000
 - runScript:
-    file: mailpit-link.js
+    file: mailpit-code.js
     env:
       EMAIL: ${output.email}
-- openLink: ${output.link}
-- runFlow:
-    when:
-      visible: Open
-    commands:
-      - tapOn: Open
+# The code field has focus; it checks the code at the 6th digit.
+- tapOn:
+    id: check-email-code
+- inputText: ${output.code}
 - extendedWaitUntil:
     visible:
       id: about-screen

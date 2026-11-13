@@ -21,7 +21,7 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await client.auth.getUser();
-  const open = request.nextUrl.pathname.startsWith('/sign-in') || request.nextUrl.pathname.startsWith('/auth/');
+  const open = request.nextUrl.pathname.startsWith('/sign-in');
   if (!user && !open) {
     const url = request.nextUrl.clone();
     url.pathname = '/sign-in';

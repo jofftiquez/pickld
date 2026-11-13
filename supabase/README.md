@@ -19,7 +19,7 @@ dropped or renamed (docs/decisions.md C-5).
 
 ## Seed data
 
-`seed.sql` creates six accounts that sign in with an email link (`<name>@pickld.test`; open the link from Mailpit):
+`seed.sql` creates six accounts that sign in with an email code (`<name>@pickld.test`; the 6-digit code is in Mailpit, or use `scripts/dev-sign-in.sh`):
 dale, mika, aya, jun, lola and pickld.mod (moderator). It includes full and partial jars, an unpublished jar, a
 private moment, a moment in `checking`, a removed moment, a backfilled ("Added later") moment, follows, a block
 (dale blocked lola), likes and comments. Dates are relative to today, so the data always looks current. Photo

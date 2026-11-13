@@ -1,7 +1,7 @@
 -- Local development seed. Applied by `supabase db reset` after all migrations.
 -- Dates are relative to "today" in Asia/Manila so the data always looks current.
 --
--- People (all sign in with an email link; local mail is at http://127.0.0.1:55424):
+-- People (all sign in with an emailed 6-digit code; local mail is at http://127.0.0.1:55424):
 --   dale  dale@pickld.test  Asia/Manila   main demo account
 --   mika  mika@pickld.test  Asia/Manila
 --   aya   aya@pickld.test   Asia/Tokyo

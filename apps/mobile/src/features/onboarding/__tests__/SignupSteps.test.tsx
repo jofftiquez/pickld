@@ -54,10 +54,10 @@ jest.mock('expo-router', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-const mockSendEmailLink = jest.fn(async (email: string) => email);
+const mockSendEmailCode = jest.fn(async (email: string) => email);
 jest.mock('@/lib/auth', () => ({
   ...jest.requireActual('@/lib/auth'),
-  sendEmailLink: (email: string) => mockSendEmailLink(email),
+  sendEmailCode: (email: string) => mockSendEmailCode(email),
 }));
 jest.mock('../setupFlow', () => ({ saveSetupStep: async () => undefined }));
 jest.mock('@/features/jar/useToday', () => ({
@@ -78,9 +78,9 @@ describe('signup_step_completed', () => {
     expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'welcome' }]]);
   });
 
-  it('Sign up: only once the email link is sent, and never from Sign in', async () => {
+  it('Sign up: only once the email code is sent, and never from Sign in', async () => {
     useAuthStore.setState({ status: 'signedOut', session: null, error: null });
-    mockSendEmailLink.mockRejectedValueOnce(new Error('offline'));
+    mockSendEmailCode.mockRejectedValueOnce(new Error('offline'));
     await render(<AuthScreen mode="signUp" />);
     await act(async () => mockViews.auth!.onChangeEmail('dale@example.com'));
     await act(async () => mockViews.auth!.onSubmitEmail());

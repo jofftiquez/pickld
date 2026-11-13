@@ -28,7 +28,7 @@ export type IncomingLink =
  * (https://pickld.me/…) or the app's own scheme (pickld://…). Web pages map to the matching screen:
  *   /<username>, /u/<username>  → /u/<username>
  *   /j/<id>                     → /jar/<id>
- *   /auth/callback?…            → /auth/callback?… (sign-in links)
+ *   /auth/callback?…            → /auth/callback?… (Apple and Google sign-in)
  * Anything else on pickld.me is unknown; legal pages open in the browser.
  */
 export function incomingLink(raw: string): IncomingLink {

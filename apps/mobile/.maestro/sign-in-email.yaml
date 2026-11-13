@@ -1,4 +1,4 @@
-# M4-02: Sign in with an email link through local Mailpit, then land on Today (FR-ACC-02). Also captures
+# M4-02: Sign in with an email code through local Mailpit, then land on Today (FR-ACC-02). Also captures
 # Sign in and Check your email. Starts signed out; ends with dale signed in again.
 # maestro test apps/mobile/.maestro/sign-in-email.yaml
 appId: me.pickld.app
@@ -42,15 +42,13 @@ env:
     timeout: 3000
 - takeScreenshot: CheckEmail-ios
 - runScript:
-    file: mailpit-link.js
+    file: mailpit-code.js
     env:
       EMAIL: ${EMAIL}
-- openLink: ${output.link}
-- runFlow:
-    when:
-      visible: Open
-    commands:
-      - tapOn: Open
+# The code field has focus; it checks the code at the 6th digit.
+- tapOn:
+    id: check-email-code
+- inputText: ${output.code}
 - extendedWaitUntil:
     visible:
       id: tab-today

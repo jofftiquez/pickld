@@ -10,6 +10,8 @@ import { after, before, test } from 'node:test';
 import { createClient } from '@supabase/supabase-js';
 import { chromium } from 'playwright';
 
+import { signInWithCode } from './signIn.mjs';
+
 const here = path.dirname(new URL(import.meta.url).pathname);
 const PORT = 3291;
 const base = `http://127.0.0.1:${PORT}`;
@@ -33,13 +35,9 @@ async function makeUser(role) {
   return email;
 }
 
-/** Signs a fresh browser context in the way the emailed link would (token_hash form of /auth/confirm). */
+/** Signs a fresh browser context in through the sign-in form with the emailed code. */
 async function signedIn(email) {
-  const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
-  if (error) throw error;
-  const page = await (await browser.newContext()).newPage();
-  await page.goto(`${base}/auth/confirm?token_hash=${data.properties.hashed_token}&type=magiclink`);
-  return page;
+  return signInWithCode(await (await browser.newContext()).newPage(), { base, admin, email });
 }
 
 before(async () => {
@@ -112,19 +110,33 @@ test('a moderator gets the console', async () => {
   assert.equal(await page.getByText('This document isn’t written yet.').count(), 0);
 });
 
-test('an expired or reused link says so', async () => {
-  const page = await browser.newPage();
-  await page.goto(`${base}/auth/confirm?token_hash=not-a-real-token&type=magiclink`);
+test('a wrong or expired code says so and keeps the code step; Use a different email goes back', async () => {
+  const email = await makeUser(null);
+  const page = await (await browser.newContext()).newPage();
+  await page.goto(`${base}/sign-in`);
+  await page.getByLabel('Email').fill(email);
+  await page.getByRole('button', { name: 'Email me a code' }).click();
+  await page.getByLabel('Enter the 6-digit code').fill('000000');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.getByText("That code isn't right, or it has expired.").waitFor();
   assert.equal(new URL(page.url()).pathname, '/sign-in');
-  await page.getByText('That link has expired or was already used').waitFor();
-  await page.close();
+  await page.getByLabel('Enter the 6-digit code').waitFor();
+  await page.goto(`${base}/`);
+  assert.equal(new URL(page.url()).pathname, '/sign-in', 'still signed out');
+
+  await page.getByRole('button', { name: 'Use a different email' }).click();
+  await page.getByRole('button', { name: 'Email me a code' }).waitFor();
+  assert.equal(await page.getByLabel('Enter the 6-digit code').count(), 0);
+  await page.context().close();
 });
 
-test('asking for a link answers the same for an address with no account', async () => {
-  const page = await browser.newPage();
+test('asking for a code answers the same for an address with no account', async () => {
+  const page = await (await browser.newContext()).newPage();
+  const nobody = `nobody-${randomUUID().slice(0, 8)}@pickld.test`;
   await page.goto(`${base}/sign-in`);
-  await page.getByLabel('Email').fill(`nobody-${randomUUID().slice(0, 8)}@pickld.test`);
-  await page.getByRole('button', { name: 'Email me a link' }).click();
-  await page.getByText('If that address belongs to a Pickld account').waitFor();
-  await page.close();
+  await page.getByLabel('Email').fill(nobody);
+  await page.getByRole('button', { name: 'Email me a code' }).click();
+  await page.getByText(`If ${nobody} belongs to a Pickld account, a 6-digit code is on its way.`).waitFor();
+  await page.getByLabel('Enter the 6-digit code').waitFor();
+  await page.context().close();
 });

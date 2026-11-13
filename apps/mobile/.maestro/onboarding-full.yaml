@@ -1,4 +1,4 @@
-# M4-10 (FR-ONB-01 to FR-ONB-09): a new account from Welcome through its first moment. Sign up by email link,
+# M4-10 (FR-ONB-01 to FR-ONB-09): a new account from Welcome through its first moment. Sign up by email code,
 # About you, then quit mid-setup and relaunch: setup resumes at Your day (FR-ONB-09). Early bird sets
 # 7:00 AM · 12:30 PM · 7:00 PM and Change moves the evening to 7:30 PM. Your people, Pick your jar (Mango),
 # Permissions (camera preset to allowed; Notifications names the chosen times and Allow shows the prompt),
@@ -46,15 +46,13 @@ appId: me.pickld.app
       id: check-email-screen
     timeout: 15000
 - runScript:
-    file: mailpit-link.js
+    file: mailpit-code.js
     env:
       EMAIL: ${output.email}
-- openLink: ${output.link}
-- runFlow:
-    when:
-      visible: Open
-    commands:
-      - tapOn: Open
+# The code field has focus; it checks the code at the 6th digit.
+- tapOn:
+    id: check-email-code
+- inputText: ${output.code}
 - extendedWaitUntil:
     visible:
       id: about-screen

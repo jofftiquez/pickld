@@ -71,7 +71,7 @@ Plan order: M6-01 RevenueCat webhook 🔑 (#125), M6-02 Sticker shop (#126), M6-
 - **iOS Simulator only.** No Android emulator, no Android captures (D-15). `scripts/mac-setup.sh` installs JDK 17 and Maestro 2.12.1.
 - **Dev build:** `apps/mobile/ios` is generated and ignored. After a native dependency changes, run `cd apps/mobile && npx expo prebuild --platform ios --clean --no-install`, then `cd ios && LANG=en_US.UTF-8 pod install` (CocoaPods fails without UTF-8). Then `xcodebuild -workspace Pickld.xcworkspace -scheme Pickld -configuration Debug -sdk iphonesimulator -derivedDataPath build build` and `xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/Pickld.app`. Metro: `cd apps/mobile && npx expo start --port 8081`.
 - **Sign in on the Simulator:**
-  1. `bash scripts/dev-sign-in.sh dale@pickld.test` prints a `pickld://dev/sign-in?token=…` link.
+  1. `bash scripts/dev-sign-in.sh dale@pickld.test` prints a `pickld://dev/sign-in?email=dale@pickld.test&code=123456` link (the 6-digit code from Mailpit; it works once, for 10 minutes).
   2. Open it with `xcrun simctl openurl booted "<link>"` and tap Open in the dialog.
   - Seed users: dale, mika, aya, jun and lola (`@pickld.test`), plus `mod@pickld.test`.
 - **Maestro:** each flow's header says what state it needs. `docs/milestones/M5/regression.md` lists the groups and resets that make all 36 pass. Take screenshots with `scripts/capture.sh`.

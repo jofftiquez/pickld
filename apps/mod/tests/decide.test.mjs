@@ -11,6 +11,8 @@ import { after, before, test } from 'node:test';
 import { createClient } from '@supabase/supabase-js';
 import { chromium } from 'playwright';
 
+import { signInWithCode } from './signIn.mjs';
+
 const here = path.dirname(new URL(import.meta.url).pathname);
 const PORT = 3294;
 const base = `http://127.0.0.1:${PORT}`;
@@ -130,9 +132,8 @@ before(async () => {
     }
   }
   browser = await chromium.launch();
-  const link = must(await admin.auth.admin.generateLink({ type: 'magiclink', email: MOD_EMAIL }));
   page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
-  await page.goto(`${base}/auth/confirm?token_hash=${link.properties.hashed_token}&type=magiclink`);
+  await signInWithCode(page, { base, admin, email: MOD_EMAIL });
 });
 
 after(async () => {
@@ -190,7 +191,7 @@ test('the audit log lists the decisions, newest first, and cannot be changed', a
   // The same moderator, straight to the database: no update, no delete.
   const link = must(await admin.auth.admin.generateLink({ type: 'magiclink', email: MOD_EMAIL }));
   const db = createClient(status.API_URL, status.ANON_KEY, { auth: { persistSession: false } });
-  must(await db.auth.verifyOtp({ token_hash: link.properties.hashed_token, type: 'magiclink' }));
+  must(await db.auth.verifyOtp({ email: MOD_EMAIL, token: link.properties.email_otp, type: 'email' }));
   const [entry] = must(await db.from('audit_log').select('id').eq('actor_id', moderatorId).limit(1));
   const upd = await db.from('audit_log').update({ action: 'keep' }).eq('id', entry.id).select();
   assert.ok(upd.error || upd.data.length === 0, 'update refused');
