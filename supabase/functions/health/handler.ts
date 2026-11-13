@@ -7,6 +7,10 @@
 //   → 200 { data: { ok: true, checks: { db: 'ok', storage: 'ok' } } }
 //   → 503 { error: { code: 'unhealthy', message, details: { checks: { db: 'ok'|'failed', storage: … } } } }
 //   → 405 for other methods
+//
+// GET /health/queue (M4-20, NFR-REL-01): the moderation queue-age alert, a second monitor on the same
+// vendor (D-34). 200 while every open queue item (pending or escalated) is younger than 2 hours, else 503
+// naming the queue check. It answers ok/failed only: no count, age or item reaches the caller.
 import type { SupabaseClient } from '../_shared/deps.ts';
 import { listKeys } from '../_shared/bucket.ts';
 import { fail, ok } from '../_shared/http.ts';
@@ -57,5 +61,21 @@ export function dbCheck(db: SupabaseClient): Check {
 export function storageCheck(s3: S3Config): Check {
   return async () => {
     await listKeys(s3, 'health/');
+  };
+}
+
+/** Open moderation items (pending or escalated) wait less than maxAgeMs (NFR-REL-01: 2 hours). */
+export const QUEUE_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+
+export function queueAgeCheck(db: SupabaseClient, maxAgeMs = QUEUE_MAX_AGE_MS, now = () => Date.now()): Check {
+  return async () => {
+    const cutoff = new Date(now() - maxAgeMs).toISOString();
+    const { count, error } = await db
+      .from('moderation_items')
+      .select('id', { head: true, count: 'exact' })
+      .in('status', ['pending', 'escalated'])
+      .lt('created_at', cutoff);
+    if (error) throw new Error(`queue: ${error.code}`);
+    if (count) throw new Error(`queue: ${count} open item(s) older than ${Math.round(maxAgeMs / 60_000)} minutes`);
   };
 }
