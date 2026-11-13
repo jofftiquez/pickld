@@ -495,21 +495,36 @@
       "full_jars_7": "7 full jars",
       "jars_30": "30 jars",
       "jars_100": "100 jars",
-      "one_year": "1 year of jars"
+      "one_year": "1 year of jars",
+      "jars_7": "7 jars",
+      "full_jars_30": "30 full jars",
+      "jars_50": "50 jars",
+      "full_jars_100": "100 full jars",
+      "jars_200": "200 jars"
     },
     "titles": {
       "first_full_jar": "Your first full jar!",
       "full_jars_7": "7 full jars!",
       "jars_30": "30 jars!",
       "jars_100": "100 jars!",
-      "one_year": "A year of jars!"
+      "one_year": "A year of jars!",
+      "jars_7": "7 jars!",
+      "full_jars_30": "30 full jars!",
+      "jars_50": "50 jars!",
+      "full_jars_100": "100 full jars!",
+      "jars_200": "200 jars!"
     },
     "leads": {
       "first_full_jar": "All 8 moments, one real day.",
       "full_jars_7": "Seven days filled to the top.",
       "jars_30": "Thirty real days, kept.",
       "jars_100": "A hundred real days, kept.",
-      "one_year": "A whole year of real days."
+      "one_year": "A whole year of real days.",
+      "jars_7": "A whole week of real days.",
+      "full_jars_30": "Thirty days filled to the top.",
+      "jars_50": "Fifty real days, kept.",
+      "full_jars_100": "A hundred days filled to the top.",
+      "jars_200": "Two hundred real days, kept."
     },
     "nextUp": "Next up: {{name}}."
   },

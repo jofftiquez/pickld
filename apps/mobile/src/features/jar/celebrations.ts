@@ -5,8 +5,19 @@ import { slots } from '@/theme/tokens';
 
 import type { ServerMoment } from './todayGrid';
 
-/** The five milestones (0010, D-8), in the order their Sticker unlocked screens are shown. */
-export const milestoneKeys = ['first_full_jar', 'full_jars_7', 'jars_30', 'jars_100', 'one_year'] as const;
+/** The milestones (0010, D-8; five more in 0060), in the order their Sticker unlocked screens are shown. */
+export const milestoneKeys = [
+  'first_full_jar',
+  'jars_7',
+  'full_jars_7',
+  'jars_30',
+  'full_jars_30',
+  'jars_50',
+  'jars_100',
+  'full_jars_100',
+  'jars_200',
+  'one_year',
+] as const;
 export type MilestoneKey = (typeof milestoneKeys)[number];
 
 /** Jars and milestones this phone already celebrated (or found already there, see `nextCelebration`). */
