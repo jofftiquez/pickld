@@ -101,6 +101,15 @@ test('a moderator gets the console', async () => {
   await page.getByRole('heading', { name: 'Review queue' }).waitFor();
   await page.getByRole('navigation', { name: 'Console' }).waitFor();
   assert.equal(await page.getByRole('heading', { name: 'Moderators only' }).count(), 0);
+
+  // Help (M3-28): the playbook and the same guidelines file pickld.me/guidelines serves.
+  await page.getByRole('link', { name: 'Help' }).click();
+  await page.getByRole('heading', { name: 'Moderator playbook' }).waitFor();
+  await page
+    .getByRole('region', { name: 'Community Guidelines' })
+    .getByRole('heading', { name: 'Community Guidelines' })
+    .waitFor();
+  assert.equal(await page.getByText('This document isn’t written yet.').count(), 0);
 });
 
 test('an expired or reused link says so', async () => {
