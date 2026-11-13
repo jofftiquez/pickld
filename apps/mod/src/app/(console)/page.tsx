@@ -2,9 +2,11 @@ import Link from 'next/link';
 
 import { colors, radius } from '@/theme/tokens';
 
+import { Decisions } from '~/components/Decisions';
 import { DetailPanel } from '~/components/DetailPanel';
 import { QueueList } from '~/components/QueueList';
 import { t } from '~/i18n/t';
+import { defaultGuideline } from '~/lib/decide';
 import { photoUrls } from '~/lib/photos';
 import { FILTERS, FilterParam, loadQueue, loadStats, waitLabel } from '~/lib/queue';
 import { supabase } from '~/lib/supabase';
@@ -28,7 +30,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 // The review queue (FR-MOD-02, FR-MOD-03; design: ModConsole). Oldest first; ?filter= picks a source and
-// ?item= opens one in the panel. Decisions arrive with #88.
+// ?item= opens one in the panel, where Keep / Remove / Escalate (and K, R, E) decide it.
 export default async function Queue({ searchParams }: { searchParams: Promise<{ filter?: string; item?: string }> }) {
   const params = await searchParams;
   const filter = FilterParam.parse(params.filter);
@@ -89,6 +91,7 @@ export default async function Queue({ searchParams }: { searchParams: Promise<{ 
             key={selected.id}
             item={selected}
             photo={selected.moment_id ? photos.get(selected.moment_id) : undefined}
+            actions={<Decisions item={selected} filter={filter} initialGuideline={defaultGuideline(selected)} />}
           />
         ) : null}
       </div>
