@@ -114,10 +114,10 @@ Goes to: tile → Capture (that slot) or Moment detail if filled · Publish → 
 
 ### Capture — “Capture”
 
-The photo editor for one moment. The photo fills the top; floating glass controls show Close, the slot tag with time, and a gallery button. Stickers and speech bubbles sit on the photo.
+The photo editor for one moment. A dark frosted toolbar at the top holds Close, the slot tag with time, and Save (D-59). The photo sits below it; stickers and speech bubbles sit on the photo.
 
-- Bottom sheet: tool tabs (Filters · Stickers · Bubble · Text), filter thumbnails (Original, Kalamansi, Merienda, Mono, Dusk) previewing the actual photo, caption field, **Keep this moment private** switch.
-- **Add to #afternoon** saves the moment into today’s jar.
+- Bottom sheet: tool tabs (Filters · Stickers · Bubble · Text), filter thumbnails (Original, Kalamansi, Merienda, Mono, Dusk) previewing the actual photo, caption field, **Keep this moment private** switch, Undo. Swiping up slides the sheet over the photo, which moves up more slowly and shrinks a little (off with Reduce Motion).
+- **Add to #afternoon** in the toolbar saves the moment into today’s jar (**Done** when editing it again).
 
 Goes to: gallery → Crop · tool tabs → Stickers / Bubble / Text · Close or save → Today.
 
