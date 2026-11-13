@@ -457,6 +457,7 @@ export type Database = {
       jars: {
         Row: {
           comment_count: number;
+          cover_moment_id: string | null;
           created_at: string;
           ends_at: string;
           id: string;
@@ -471,10 +472,12 @@ export type Database = {
           visibility: Database['public']['Enums']['jar_visibility'];
           visible_count: number;
           jar_ends_at: string | null;
+          resolved_cover_id: string | null;
         };
-        ComputedFields: 'jar_ends_at';
+        ComputedFields: 'jar_ends_at' | 'resolved_cover_id';
         Insert: {
           comment_count?: number;
+          cover_moment_id?: string | null;
           created_at?: string;
           ends_at: string;
           id?: string;
@@ -491,6 +494,7 @@ export type Database = {
         };
         Update: {
           comment_count?: number;
+          cover_moment_id?: string | null;
           created_at?: string;
           ends_at?: string;
           id?: string;
@@ -506,6 +510,13 @@ export type Database = {
           visible_count?: number;
         };
         Relationships: [
+          {
+            foreignKeyName: 'jars_cover_moment_id_fkey';
+            columns: ['cover_moment_id'];
+            isOneToOne: false;
+            referencedRelation: 'moments';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'jars_user_id_fkey';
             columns: ['user_id'];
@@ -1678,6 +1689,7 @@ export type Database = {
         Args: { local_date: string; tz: string };
         Returns: {
           comment_count: number;
+          cover_moment_id: string | null;
           created_at: string;
           ends_at: string;
           id: string;
@@ -1718,6 +1730,7 @@ export type Database = {
           author_id: string;
           author_username: string;
           comment_count: number;
+          cover_moment_id: string;
           feed_at: string;
           is_new: boolean;
           jar_id: string;
@@ -2033,6 +2046,12 @@ export type Database = {
         }[];
       };
       push_tickets_save: { Args: { p_ticket_ids: string[]; p_tokens: string[] }; Returns: undefined };
+      resolved_cover_id: {
+        Args: {
+          j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;
+        };
+        Returns: string;
+      };
       search_follow_list: {
         Args: { lim?: number; list: string; owner: string; query?: string };
         Returns: {

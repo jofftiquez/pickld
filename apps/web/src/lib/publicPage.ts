@@ -59,6 +59,8 @@ const jarPage = z.object({
   visible_count: z.number(),
   author,
   moments: z.array(moment).optional(),
+  /** The jar's cover among its Everyone moments (0069, D-56); absent on a Readers teaser. */
+  cover_moment_id: z.uuid().nullish(),
 });
 export type JarPage = z.infer<typeof jarPage>;
 

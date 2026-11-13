@@ -16,6 +16,7 @@ import {
   moveMoment,
   saveMomentEdits,
   saveRecrop,
+  setJarCover,
   setMomentVisibility,
   type MomentTarget,
 } from '../momentActions';
@@ -174,6 +175,21 @@ describeLocal('Moment options against local Supabase', () => {
     expect(await reason(setMomentVisibility(outsider.client, target, 'only_me'))).toBe('refused');
     expect(await reason(deleteMoment(outsider.client, target))).toBe('refused');
     expect(await read(ids.whereami ?? '')).toMatchObject({ slot: 'whereami', visibility: 'readers', status: 'live' });
+  }, 60_000);
+
+  it('Set as cover: the owner picks a moment of their jar; another jar’s moment and another user are refused', async () => {
+    const owner = await signedInUser('coverer');
+    const other = await signedInUser('othercover');
+    const { jarId, ids } = await jarWith(owner, ['whereami', 'evening']);
+    const theirs = await jarWith(other, ['ootd']);
+    const cover = async () => (await admin.from('jars').select('cover_moment_id').eq('id', jarId).single()).data;
+
+    await setJarCover(owner.client, jarId, ids.evening ?? '');
+    expect(await cover()).toEqual({ cover_moment_id: ids.evening });
+
+    expect(await reason(setJarCover(owner.client, jarId, theirs.ids.ootd ?? ''))).toBe('refused');
+    expect(await reason(setJarCover(other.client, jarId, ids.whereami ?? ''))).toBe('refused');
+    expect(await cover()).toEqual({ cover_moment_id: ids.evening });
   }, 60_000);
 
   it('Edit caption, stickers and filters: the proposal goes live through fn:moderate, visibility at once', async () => {

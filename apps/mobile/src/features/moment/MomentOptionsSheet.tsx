@@ -46,6 +46,8 @@ export type MomentOptionsSheetProps = {
   onRecrop: () => void;
   onChangeVisibility: (visibility: Visibility) => void;
   onMove: (slot: Slot) => void;
+  /** Set as cover (D-56); the row is shown only when given (an uploaded moment that isn't the cover yet). */
+  onSetCover?: () => void;
   /** Delete moment after the user confirmed it in the dialog. */
   onDelete: () => void;
   onClose: () => void;
@@ -54,7 +56,7 @@ export type MomentOptionsSheetProps = {
 /**
  * Moment options (FR-CAP-10; design: MomentOptions): the moment's photo, slot and time, then Edit caption,
  * Edit stickers and filters, Re-crop, Visibility (a second page with Readers, Everyone and Only me; D-48),
- * Move to another moment (a second page listing the jar's empty slots) and Delete moment, which asks for
+ * Move to another moment (a second page listing the jar's empty slots), Set as cover (D-56) and Delete moment, which asks for
  * confirmation first. Cancel closes it.
  */
 export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
@@ -143,6 +145,16 @@ export function MomentOptionsSheet(props: MomentOptionsSheetProps) {
             disabled={busy}
             testID="moment-options-move"
           />
+          {props.onSetCover ? (
+            <OptionRow
+              icon="gallery"
+              label={t('momentOptions.setCover')}
+              accessibilityHint={t('momentOptions.setCoverHint')}
+              onPress={props.onSetCover}
+              disabled={busy}
+              testID="moment-options-cover"
+            />
+          ) : null}
           <OptionRow
             icon="close"
             tone="danger"

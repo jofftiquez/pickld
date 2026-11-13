@@ -96,7 +96,7 @@ export type StoryLayout = {
   id: StoryLayoutId;
   /** Its name, e.g. "2 by 2 grid". */
   labelKey: `share.layout.${StoryLayoutId}`;
-  /** One rectangle per photo, in slot order, in exported pixels of the whole card. */
+  /** One rectangle per photo, in the card's order (the cover first), in exported pixels of the whole card. */
   cells: Rect[];
 };
 

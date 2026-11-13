@@ -7,12 +7,13 @@ import { Avatar } from '~/components/Avatar';
 import { MomentPhoto } from '~/components/MomentPhoto';
 import { Page } from '~/components/Page';
 import { t } from '~/i18n/t';
-import { bySlot, longDate, newestCaption, weekday } from '~/lib/format';
+import { coverFirst, jarCaption, longDate, weekday } from '~/lib/format';
 import { getJar } from '~/lib/publicPage';
 import { cardShadow } from '~/lib/styles';
 
 // pickld.me/j/<id> (FR-WEB-01, C-2; design: WebShare). Everyone jars show their live, non-private
-// moments; Readers jars show a teaser with no photos. Anything else is a 404 (decided in public_jar, 0025).
+// moments, the jar's cover first (D-56); Readers jars show a teaser with no photos. Anything else is a 404
+// (decided in public_jar, 0025 and 0069).
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -40,8 +41,8 @@ export default async function JarRoute({ params }: Props) {
   if (!jar) notFound();
   const { author } = jar;
   const name = author.display_name;
-  const moments = bySlot(jar.moments ?? []);
-  const caption = newestCaption(moments);
+  const moments = coverFirst(jar.moments ?? [], jar.cover_moment_id);
+  const caption = jarCaption(moments, jar.cover_moment_id);
 
   return (
     <Page appUrl={`pickld://jar/${jar.id}`}>
@@ -62,9 +63,7 @@ export default async function JarRoute({ params }: Props) {
           </span>
         </div>
       </div>
-      <section
-        style={{ background: colors.surface, borderRadius: radius.tile, padding: 10, boxShadow: cardShadow }}
-      >
+      <section style={{ background: colors.surface, borderRadius: radius.tile, padding: 10, boxShadow: cardShadow }}>
         {jar.readers_only ? (
           <div data-testid="readers-teaser" style={{ padding: '18px 8px', textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>{t('jar.readersTitle', { name })}</p>

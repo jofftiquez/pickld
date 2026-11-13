@@ -6,6 +6,7 @@ import {
   moveMoment,
   saveMomentEdits,
   saveRecrop,
+  setJarCover,
   setMomentVisibility,
   type MomentsClient,
   type MomentTarget,
@@ -98,6 +99,18 @@ describe('uploaded moments', () => {
     await setMomentVisibility(client, server, 'only_me');
     expect(updates).toEqual([{ visibility: 'only_me' }]);
     expect(calls).not.toContain('invoke:moderate');
+  });
+
+  it('Set as cover updates only the jar’s cover_moment_id (D-56) and turns refusals into reasons', async () => {
+    const { client, calls, updates } = fakeClient();
+    await setJarCover(client, JAR, MOMENT);
+    expect(calls).toEqual(['update:jars', `eq:id=${JAR}`]);
+    expect(updates).toEqual([{ cover_moment_id: MOMENT }]);
+    const answer = (update: Result) => reason(setJarCover(fakeClient({ update }).client, JAR, MOMENT));
+    expect(await answer({ data: null, error: { code: '23514' } })).toBe('refused'); // not a moment of this jar
+    expect(await answer({ data: null, error: { code: '42501' } })).toBe('refused'); // not live (0069)
+    expect(await answer({ data: [], error: null })).toBe('refused'); // RLS: not the owner's jar
+    expect(await answer({ data: null, error: { message: 'Network request failed' } })).toBe('failed');
   });
 
   it('Delete refuses when no row was deleted', async () => {

@@ -20,6 +20,8 @@ export const feedRow = z.object({
   preview_moment_ids: z.array(z.string()),
   last_caption: z.string().nullable(),
   is_new: z.boolean(),
+  /** The jar's cover for this viewer (0069, D-56); `preview_moment_ids` already starts with it. */
+  cover_moment_id: z.string().nullish(),
 });
 export type FeedRow = z.infer<typeof feedRow>;
 
@@ -50,13 +52,18 @@ export type MosaicPhoto = { momentId: string; url: string | null };
 export type Mosaic = { large: MosaicPhoto | null; small: MosaicPhoto[]; more: number };
 
 /**
- * The first preview is the large photo and the next three fill the small grid. Visible moments beyond
- * those get a dark "+n" cell in the grid's last place (6 visible → 4 photos and "+2", as in the design).
+ * The cover is the large photo (D-56; `feed_page` sends it first, this keeps it first for an older cache)
+ * and the next three previews fill the small grid. Visible moments beyond those get a dark "+n" cell in
+ * the grid's last place (6 visible → 4 photos and "+2", as in the design).
  */
-export function buildMosaic(jar: Pick<FeedJar, 'preview_moment_ids' | 'previewUrls' | 'visible_count'>): Mosaic {
-  const photos = jar.preview_moment_ids
-    .slice(0, MOSAIC_PHOTOS)
-    .map((momentId, i): MosaicPhoto => ({ momentId, url: jar.previewUrls[i] ?? null }));
+export function buildMosaic(
+  jar: Pick<FeedJar, 'preview_moment_ids' | 'previewUrls' | 'visible_count'> &
+    Partial<Pick<FeedJar, 'cover_moment_id'>>,
+): Mosaic {
+  const all = jar.preview_moment_ids.map((momentId, i): MosaicPhoto => ({ momentId, url: jar.previewUrls[i] ?? null }));
+  const coverAt = all.findIndex((p) => p.momentId === jar.cover_moment_id);
+  if (coverAt > 0) all.unshift(...all.splice(coverAt, 1));
+  const photos = all.slice(0, MOSAIC_PHOTOS);
   const [large, ...small] = photos;
   return { large: large ?? null, small, more: Math.max(0, jar.visible_count - photos.length) };
 }

@@ -18,6 +18,11 @@ export const jarRow = z.object({
   comment_count: z.number(),
   /** False when read through `moment_jar` (0067): the viewer sees moments in it but can't open the jar. */
   open: z.boolean().optional(),
+  /**
+   * The cover this viewer may see (0069 `resolved_cover_id`, D-56): the owner's pick if they may view it,
+   * else the newest caption, else the first slot. Absent from `moment_jar` rows and older caches.
+   */
+  resolved_cover_id: z.string().nullish(),
 });
 export type JarRow = z.infer<typeof jarRow>;
 
@@ -97,7 +102,10 @@ export type JarPage = {
   /** The count the viewer is allowed to know (D-9, D-50): every moment that isn't removed for the owner, else the moments shown to them. */
   count: number;
   isFull: boolean;
-  /** The cover photo: the moment with the newest caption, else the first in slot order. Null for an empty jar. */
+  /**
+   * The cover photo (D-56): the server's resolved cover when it is among the shown moments, else the moment
+   * with the newest caption, else the first in slot order. Null for an empty jar.
+   */
   cover: JarMoment | null;
   /** The rest of the shown moments in slot order; the cover is not repeated. */
   grid: JarMoment[];
@@ -125,7 +133,8 @@ export function newestCaptioned<T extends Pick<JarMoment, 'caption' | 'added_at'
 export function buildJarPage({ jar, moments, viewerId }: JarPageData): JarPage {
   const isOwner = jar.user_id === viewerId;
   const shown = moments.filter((m) => isShown(m, isOwner)).sort((a, b) => slotIndex(a.slot) - slotIndex(b.slot));
-  const cover = newestCaptioned(shown) ?? shown[0] ?? null;
+  const picked = jar.resolved_cover_id ? shown.find((m) => m.id === jar.resolved_cover_id) : undefined;
+  const cover = picked ?? newestCaptioned(shown) ?? shown[0] ?? null;
   // A mixed jar shows each viewer only what they may see (D-50), so others count what they are shown.
   const count = isOwner ? jar.moment_count : shown.length;
   return {

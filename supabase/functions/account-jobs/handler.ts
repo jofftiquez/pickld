@@ -309,7 +309,7 @@ export function serviceStore(db: SupabaseClient, s3: S3Config, partSize?: number
       for (let from = 0;; from += PAGE) {
         const { data, error: mErr } = await db.from('moments')
           .select(
-            'id, slot, caption, captured_at, added_at, is_private, photo_path, edits, replaces, jars!inner(local_date, tz, visibility)',
+            'id, slot, caption, captured_at, added_at, is_private, photo_path, edits, replaces, jars!moments_jar_id_fkey!inner(local_date, tz, visibility)',
           )
           .eq('user_id', userId)
           .neq('status', 'removed')
