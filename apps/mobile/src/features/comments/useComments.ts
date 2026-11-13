@@ -81,6 +81,7 @@ export function useComments(jarId: string | undefined, momentId?: string) {
     // The jar's and moments' comment_count (Jar page, Moment detail, feed) follow the visible comments.
     void queryClient.invalidateQueries({ queryKey: jarPageQueryKeys.jar(viewerId ?? '', jarId ?? '') });
     void queryClient.invalidateQueries({ queryKey: ['feed', viewerId ?? ''] });
+    void queryClient.invalidateQueries({ queryKey: ['momentsFeed', viewerId ?? ''] });
   };
 
   const add = useMutation({

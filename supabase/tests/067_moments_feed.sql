@@ -93,17 +93,17 @@ select tests.act_as('owner');
 select is((select liked from public.moments_feed_page() where moment_id = (select id from mm where name = 'unpublished everyone')),
           false, 'liked is the caller''s own like, not someone else''s');
 select tests.reset_role();
-update public.jars set comment_count = 3 where id in (select id from t where k in ('jar_pub', 'jar_unpub'));
+update public.moments set comment_count = 3 where id in (select id from mm where name in ('published readers', 'unpublished readers'));
 select tests.act_as('reader');
 select is((select comment_count::text || '/' || jar_visible from public.moments_feed_page()
            where moment_id = (select id from mm where name = 'published readers')),
-          '3/true', 'a moment of a jar the reader may open carries the jar''s comment count');
+          '3/true', 'a moment carries its own comment count (0068)');
 select is((select comment_count::text || '/' || jar_visible from public.moments_feed_page()
            where moment_id = (select id from mm where name = 'unpublished readers')),
-          '0/false', 'a moment of an unpublished jar carries no count and says the jar is not open to the reader');
+          '3/false', 'a moment of an unpublished jar carries its own count; the jar is not open to the reader');
 select tests.act_as('owner');
 select is((select comment_count from public.moments_feed_page() where moment_id = (select id from mm where name = 'unpublished readers')),
-          3, 'the owner gets their own jar''s count');
+          3, 'the owner gets their moment''s count');
 
 -- changes show at once
 update public.moments set visibility = 'only_me' where id = (select id from mm where name = 'published everyone');

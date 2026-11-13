@@ -21,6 +21,9 @@
 --     moments to their owner (0066) and the push says "commented on your moment" (fn:send-push).
 --   * delete_comment (0005) is unchanged: the comment's author or the jar owner, who is the moment owner.
 --
+--   * moments_feed_page (0067) now carries each moment's own comment_count instead of its jar's: a card on
+--     the Moments tab opens that moment's thread, which follows can_view_moment like the row itself.
+--
 -- Existing data: no comment has a moment, so every existing comment stays in its jar thread, every
 -- moment's count starts at 0 (the column default), and jars' counts don't change (recounted anyway).
 
@@ -221,4 +224,72 @@ begin
     raise exception 'you can only report something you can see' using errcode = '42501';
   end if;
   return new;
+end $$;
+
+-- ---------------------------------------------------------------- moments_feed_page (0067)
+-- Same function, one change: comment_count is the moment's own thread. Every row already passed
+-- can_view_moment, which is who may read that thread (can_view_comment_thread). Grants are kept.
+create or replace function public.moments_feed_page(cursor_at timestamptz default null, cursor_id uuid default null)
+returns table (
+  moment_id uuid,
+  jar_id uuid,
+  author_id uuid,
+  author_username text,
+  author_display_name text,
+  author_avatar_path text,
+  slot slot,
+  caption text,
+  captured_at timestamptz,
+  added_at timestamptz,
+  is_backfilled boolean,
+  visibility jar_visibility,
+  edits jsonb,
+  like_count int,
+  liked boolean,
+  comment_count int,
+  jar_tz text,
+  jar_local_date date,
+  jar_visible boolean
+)
+language plpgsql stable security definer set search_path = public as $$
+#variable_conflict use_column
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'sign in to use the feed' using errcode = '42501';
+  end if;
+  if (moments_feed_page.cursor_at is null) <> (moments_feed_page.cursor_id is null) then
+    raise exception 'cursor_at and cursor_id go together' using errcode = '22023';
+  end if;
+
+  return query
+  select m.id, m.jar_id, m.user_id, p.username::text, p.display_name, p.avatar_path, m.slot, m.caption,
+         m.captured_at, m.added_at, m.is_backfilled, m.visibility, m.edits, m.like_count,
+         exists (select 1 from reactions r
+                 where r.user_id = uid and r.target = 'moment' and r.target_id = m.id),
+         m.comment_count,
+         j.tz, j.local_date, jv.ok
+  from (
+    select uid as author_id
+    union
+    select fo.author_id from follows fo where fo.reader_id = uid
+  ) a
+  cross join lateral (
+    select mm.*
+    from moments mm
+    where mm.user_id = a.author_id
+      and mm.status = 'live'
+      and mm.hidden_at is null
+      and (moments_feed_page.cursor_at is null
+           or (mm.added_at, mm.id) < (moments_feed_page.cursor_at, moments_feed_page.cursor_id))
+      and can_view_moment(uid, mm)
+    order by mm.added_at desc, mm.id desc
+    limit 20
+  ) m
+  join profiles p on p.id = m.user_id
+  join jars j on j.id = m.jar_id
+  cross join lateral (select can_view_jar(uid, j) as ok) jv
+  order by m.added_at desc, m.id desc
+  limit 20;
 end $$;
