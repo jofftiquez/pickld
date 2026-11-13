@@ -1,0 +1,87 @@
+name: deploy-staging
+
+# Deploys main to staging after `ci` passes on a push to main, or by hand (Actions → deploy-staging → Run workflow).
+# Every credential lives on the GitHub environment `staging` (secrets and variables), never in the repo.
+# Until SUPABASE_PROJECT_REF is set there, the job only leaves a notice. docs/runbooks/staging.md.
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 25
+    env:
+      # Variables (not secret)
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID_WEB: ${{ vars.VERCEL_PROJECT_ID_WEB }}
+      VERCEL_PROJECT_ID_MOD: ${{ vars.VERCEL_PROJECT_ID_MOD }}
+      WEB_URL: ${{ vars.WEB_URL }}
+      MOD_URL: ${{ vars.MOD_URL }}
+      APP_STORE_URL: ${{ vars.APP_STORE_URL }}
+      PLAY_STORE_URL: ${{ vars.PLAY_STORE_URL }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      ANDROID_CERT_SHA256: ${{ vars.ANDROID_CERT_SHA256 }}
+      OPENAI_VISION_MODEL: ${{ vars.OPENAI_VISION_MODEL }}
+      # Secrets
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
+      REVENUECAT_WEBHOOK_SECRET: ${{ secrets.REVENUECAT_WEBHOOK_SECRET }}
+      REVENUECAT_SECRET_KEY: ${{ secrets.REVENUECAT_SECRET_KEY }}
+    steps:
+      - name: Staging configured?
+        id: ready
+        run: |
+          if [ -n "$SUPABASE_PROJECT_REF" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Staging isn't set up yet (no SUPABASE_PROJECT_REF on the staging environment). Nothing deployed. See docs/runbooks/staging.md."
+          fi
+      - uses: actions/checkout@v4
+        if: steps.ready.outputs.ok == 'true'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+        if: steps.ready.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.ready.outputs.ok == 'true'
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: denoland/setup-deno@v2
+        if: steps.ready.outputs.ok == 'true'
+        with:
+          deno-version: v2.x
+      - name: Database, Edge Functions, photo Worker, sticker art
+        if: steps.ready.outputs.ok == 'true'
+        run: scripts/deploy/deploy.sh staging
+      - name: Secrets, cron jobs, auth redirects
+        if: steps.ready.outputs.ok == 'true'
+        run: scripts/deploy/configure.sh staging
+      - name: Web apps (Vercel)
+        if: steps.ready.outputs.ok == 'true'
+        run: scripts/deploy/web.sh staging
+      - name: Smoke test
+        if: steps.ready.outputs.ok == 'true'
+        run: scripts/deploy/smoke.sh staging

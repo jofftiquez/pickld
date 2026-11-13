@@ -1,15 +1,16 @@
-# Photo Worker (D-12). Deploys once the Cloudflare account exists (M1-01, M1-28):
-#   wrangler secret put PHOTO_TOKEN_SECRET --env staging   (same value as the Supabase secret)
-#   wrangler deploy --env staging
+# Photo Worker (D-12). Staging deploys from GitHub Actions (scripts/deploy/, docs/runbooks/staging.md), which also
+# sets PHOTO_TOKEN_SECRET to the same value as the Supabase secret.
 # Buckets are never public; this Worker is the only reader.
 name = "pickld-photos"
 main = "src/index.ts"
 compatibility_date = "2026-11-01"
 workers_dev = false
 
+# Staging answers on pickld-photos-staging.<account>.workers.dev: a custom domain needs the pickld.me zone on
+# Cloudflare, and its DNS is still at GoDaddy (docs/runbooks/staging.md).
 [env.staging]
 name = "pickld-photos-staging"
-routes = [{ pattern = "photos-staging.pickld.me", custom_domain = true }]
+workers_dev = true
 r2_buckets = [{ binding = "PHOTOS", bucket_name = "pickld-photos-staging" }]
 
 [env.production]
