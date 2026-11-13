@@ -9,6 +9,7 @@
   "tabs": {
     "label": "Main",
     "today": "Today",
+    "moments": "Moments",
     "jars": "Jars"
   },
   "today": {
@@ -128,6 +129,18 @@
     "caption": "“{{caption}}”",
     "cardLabel_one": "{{name}}’s jar, {{count}} of {{max}} moment. {{updated}}. {{likes}} likes, {{comments}} comments",
     "cardLabel_other": "{{name}}’s jar, {{count}} of {{max}} moments. {{updated}}. {{likes}} likes, {{comments}} comments"
+  },
+  "moments": {
+    "title": "Moments",
+    "emptyTitle": "No moments yet",
+    "emptyBody": "Read a few friends’ days and their moments will show up here as they happen.",
+    "findPeopleTitle": "Read a few friends’ days",
+    "findPeopleBody": "Their moments will show up here with yours.",
+    "meta": "{{slot}} · {{when}}",
+    "cardLabel": "{{name}}, {{slot}}, {{when}}",
+    "private": "Only you can see it",
+    "openHint": "Opens the moment",
+    "list": "Moments from people you read and you"
   },
   "jarPage": {
     "title": "{{name}}’s {{weekday}}",

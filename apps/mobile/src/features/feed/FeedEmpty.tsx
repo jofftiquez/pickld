@@ -14,6 +14,8 @@ export type FeedEmptyProps = {
   onInvite: () => void;
   /** The user's own published jars are listed below (D-53): the card leads them instead of standing alone. */
   aboveOwnJars?: boolean;
+  /** Which timeline it sits in: the copy says jars or moments (the Moments tab, D-53). */
+  timeline?: 'jars' | 'moments';
 };
 
 // The design fans out three placeholder photos; slot icons stand in until there is cleared artwork.
@@ -26,9 +28,11 @@ const tiles: { icon: IconName; rotate: string }[] = [
 /**
  * Jars, empty (design: EmptyStories), shown when the user reads nobody yet (FR-SOC-02). With nothing at all
  * it stands alone; with the user's own published jars below it, it is the Find people card on top (D-53).
+ * The Moments timeline uses it the same way with its own copy.
  */
-export function FeedEmpty({ onFindPeople, onInvite, aboveOwnJars = false }: FeedEmptyProps) {
+export function FeedEmpty({ onFindPeople, onInvite, aboveOwnJars = false, timeline = 'jars' }: FeedEmptyProps) {
   const { t } = useTranslation();
+  const copy = timeline === 'moments' ? 'moments' : 'feed';
   return (
     <Card style={styles.card} testID={aboveOwnJars ? 'feed-find-people-card' : 'feed-empty'}>
       <View style={styles.intro}>
@@ -42,10 +46,10 @@ export function FeedEmpty({ onFindPeople, onInvite, aboveOwnJars = false }: Feed
           </View>
         )}
         <Text accessibilityRole="header" style={[textStyle('sectionTitle'), styles.title]}>
-          {t(aboveOwnJars ? 'feed.findPeopleTitle' : 'feed.emptyTitle')}
+          {t(aboveOwnJars ? `${copy}.findPeopleTitle` : `${copy}.emptyTitle`)}
         </Text>
         <Text style={[textStyle('bodyMedium'), styles.body]}>
-          {t(aboveOwnJars ? 'feed.findPeopleBody' : 'feed.emptyBody')}
+          {t(aboveOwnJars ? `${copy}.findPeopleBody` : `${copy}.emptyBody`)}
         </Text>
       </View>
       <View style={styles.actions}>

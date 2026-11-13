@@ -1,4 +1,4 @@
-# M1-23, D-52: tap each main tab (Today | Jars) and check its screen title and selected state;
+# M1-23, D-52: tap each main tab (Today | Moments | Jars) and check its screen title and selected state;
 # My days opens from Today's calendar button.
 # Run on the iOS Simulator: maestro test apps/mobile/.maestro/tab-switch.yaml
 appId: me.pickld.app
@@ -20,6 +20,16 @@ appId: me.pickld.app
 # Capture is not a tab (D-52); Today's tiles open the camera (camera.yaml).
 - assertNotVisible:
     id: tab-capture
+
+- tapOn:
+    id: tab-moments
+- assertVisible:
+    id: screen-title
+    text: Moments
+- assertVisible:
+    id: tab-moments
+    selected: true
+- takeScreenshot: Moments-tabs
 
 - tapOn:
     id: tab-jars

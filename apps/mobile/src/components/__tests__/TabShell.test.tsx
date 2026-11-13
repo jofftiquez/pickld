@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 
 import TabsLayout from '../../../app/(tabs)/_layout';
 import JarsScreen from '../../../app/(tabs)/jars';
+import MomentsScreen from '../../../app/(tabs)/moments';
 import TodayScreen from '../../../app/(tabs)/today';
 import MyDaysScreen from '../../../app/my-days';
 
@@ -29,15 +30,17 @@ const routes = {
   _layout: () => <Stack screenOptions={{ headerShown: false }} />,
   '(tabs)/_layout': TabsLayout,
   '(tabs)/today': TodayScreen,
+  '(tabs)/moments': MomentsScreen,
   '(tabs)/capture': () => null,
   '(tabs)/jars': JarsScreen,
   'my-days': MyDaysScreen,
 };
 
-// D-52: Today | Jars. Capture is hidden (its route opens the camera: see
+// D-52: Today | Moments | Jars. Capture is hidden (its route opens the camera: see
 // features/capture/__tests__/captureTab.test.tsx) and My days is a stack screen opened from Today.
 const tabs = [
   { label: 'Today', path: '/today' },
+  { label: 'Moments', path: '/moments' },
   { label: 'Jars', path: '/jars' },
 ];
 
@@ -61,7 +64,7 @@ describe('tab shell', () => {
       // The screen title, not just the tab label, is on screen.
       expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(2);
     }
-    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityLabel)).toEqual(['Today', 'Jars']);
+    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityLabel)).toEqual(['Today', 'Moments', 'Jars']);
   });
 
   it('opens My days from Today’s calendar button, over the tabs, and Back returns to Today', async () => {
