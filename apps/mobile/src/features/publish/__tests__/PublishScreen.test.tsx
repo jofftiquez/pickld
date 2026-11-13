@@ -65,6 +65,11 @@ jest.mock('@/lib/supabase', () => {
       limit: () => builder,
       lt: () => builder,
       single: async () => answer(),
+      // A past day's jar (useDayJar): the one with the filtered date.
+      maybeSingle: async () => ({
+        data: mockBackend.jars.find((jar) => jar.local_date === filters.local_date) ?? null,
+        error: null,
+      }),
       // Awaitable like supabase-js's query builder.
       then: (resolve: (value: unknown) => unknown) => Promise.resolve(answer()).then(resolve),
     };
@@ -86,10 +91,12 @@ jest.mock('expo-localization', () => ({
   getCalendars: () => [{ timeZone: 'Asia/Manila' }],
 }));
 const mockRouter = { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) };
+let mockParams: { date?: string } = {};
 jest.mock('expo-router', () => {
   const { Text: MockText } = jest.requireActual('react-native');
   return {
     useRouter: () => mockRouter,
+    useLocalSearchParams: () => mockParams,
     Redirect: ({ href }: { href: string }) => <MockText>{`redirect:${href}`}</MockText>,
   };
 });
@@ -141,6 +148,7 @@ beforeEach(() => {
   mockBackend.defaultVisibility = 'readers';
   mockBackend.updates = [];
   mockBackend.updateError = null;
+  mockParams = {};
   useToastStore.setState({ current: null });
   useAuthStore.setState({ status: 'signedIn', session: { user: { id: USER } } as Session, error: null });
 });
@@ -261,5 +269,47 @@ describe('/publish: Publish review (FR-PUB-01, FR-PUB-03)', () => {
     mockBackend.jars = [];
     await renderScreen();
     await waitFor(() => expect(screen.getByText('redirect:/today')).toBeTruthy());
+  });
+});
+
+// The day page opens /publish?date=YYYY-MM-DD for a past day's jar (D-55, FR-DAY-02).
+describe('/publish?date=: a past day’s jar', () => {
+  const PAST = { ...JAR, id: 'jar-8', local_date: '2026-11-08' };
+
+  it('reviews and publishes that day’s jar, then goes back to the day page', async () => {
+    mockParams = { date: '2026-11-08' };
+    mockBackend.jars = [JAR, PAST];
+    mockBackend.moments = [moment('whereami', { is_backfilled: true })];
+    await renderScreen();
+    await waitFor(() =>
+      expect(screen.getByTestId('publish-subtitle')).toHaveTextContent('Sun, Nov 8 · 1 of 8 moments'),
+    );
+    expect(screen.getByTestId('publish-note')).toHaveTextContent(
+      'You can still add the 7 missing ones from this day’s page.',
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Publish jar' }));
+    await waitFor(() => expect(mockRouter.back).toHaveBeenCalledTimes(1));
+    expect(mockBackend.updates).toEqual([
+      { table: 'jars', patch: { visibility: 'readers', published_at: expect.any(String) }, filters: { id: 'jar-8' } },
+    ]);
+  });
+
+  it('a past day with no jar has nothing to publish: back to its day page', async () => {
+    mockParams = { date: '2026-11-08' };
+    await renderScreen();
+    await waitFor(() => expect(screen.getByText('redirect:/day/2026-11-08')).toBeTruthy());
+  });
+
+  it('today’s date (or a malformed one) reviews today’s open jar', async () => {
+    mockParams = { date: '2026-11-10' };
+    mockBackend.moments = [moment('whereami')];
+    await renderScreen();
+    await waitFor(() =>
+      expect(screen.getByTestId('publish-subtitle')).toHaveTextContent('Tue, Nov 10 · 1 of 8 moments'),
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Publish jar' }));
+    await waitFor(() => expect(mockRouter.back).toHaveBeenCalledTimes(1));
+    expect(mockBackend.updates[0]?.filters).toEqual({ id: 'jar-10' });
   });
 });

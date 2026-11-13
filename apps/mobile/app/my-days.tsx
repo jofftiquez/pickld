@@ -20,8 +20,8 @@ import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone } from '@/features/jar/useToday';
 import { localDateIn } from '@/lib/jars';
 
-// My days (M2-25, M2-26; FR-DAY-01, FR-DAY-02): the month calendar and the selected day with Fill this jar.
-// A stack screen opened from the calendar button on Today, not a tab (D-52).
+// My days (M2-25, M2-26; FR-DAY-01, FR-DAY-02): the month calendar and the selected day with Fill this jar,
+// which opens that day's page (D-55). A stack screen opened from the calendar button on Today, not a tab (D-52).
 export default function MyDaysScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -60,9 +60,8 @@ export default function MyDaysScreen() {
     ? buildTodayGrid({ localDate: selectedDate, moments: day?.moments ?? [], queue, nowSlot: null })
     : [];
   const onFill = () => {
-    const slot = tiles.find((tile) => !holdsSlot(tile))?.slot;
-    if (selectedDate === null || slot === undefined) return;
-    router.push({ pathname: '/camera', params: { date: selectedDate, slot } });
+    if (selectedDate === null || !tiles.some((tile) => !holdsSlot(tile))) return;
+    router.push({ pathname: '/day/[date]', params: { date: selectedDate } });
   };
 
   const jarId = day?.jar?.id ?? null;

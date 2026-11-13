@@ -119,6 +119,11 @@ const routes = {
       <Text>Today stub</Text>
     </View>
   ),
+  camera: () => (
+    <View>
+      <Text>Camera stub</Text>
+    </View>
+  ),
   'edit/[momentId]': EditScreen,
 };
 
@@ -237,6 +242,18 @@ describe('Editor', () => {
     expect(rows.get(7)).toMatchObject({ caption: null, edits: {}, editingSince: null });
     // Closed as it is, the photo is still added: public, as queued (NFR-ANL-01).
     expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), 'readers']]);
+  });
+
+  it('opened by Crop (`via=crop`), saving goes back past the camera below it, to where the camera was opened', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await push('/camera');
+    await push('/edit/7?via=crop');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+    expect(screen).toHavePathname('/today');
+    expect(screen.queryByText('Camera stub')).toBeNull();
   });
 
   it.each(['/edit/abc', '/edit/0', '/edit/1.5'])(

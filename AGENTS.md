@@ -92,7 +92,7 @@ design/
 ```
 /welcome  /intro/[step]  /sign-up  /sign-in  /check-email
 /setup/about  /setup/day  /setup/people  /setup/jar-lid  /setup/permissions  /setup/friends  /setup/promise
-/(tabs)/today  /(tabs)/capture  /(tabs)/jars  /(tabs)/my-days
+/(tabs)/today  /(tabs)/capture  /(tabs)/jars  /(tabs)/my-days  /day/[date]
 /camera  /crop  /edit/[momentId]  /publish
 /jar/[id]  /moment/[id]  /comments/[jarId]  /share/[jarId]
 /u/[username]  /u/[username]/readers  /notifications  /explore  /memories

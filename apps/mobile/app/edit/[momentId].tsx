@@ -15,10 +15,12 @@ import { textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
 
 // A queued photo is edited by its queue row id (it has no server id until uploaded); an uploaded moment by
-// its moment id (Moment options, M2-23). `focus=caption` is Moment options' Edit caption.
+// its moment id (Moment options, M2-23). `focus=caption` is Moment options' Edit caption. `via=crop`: Crop
+// opened it on a gallery photo, replacing itself, so the camera is still below (Camera → Crop → Editor).
 const paramsSchema = z.object({
   momentId: z.union([z.coerce.number().int().positive(), z.uuid()]),
   focus: z.literal('caption').optional(),
+  via: z.literal('crop').optional(),
 });
 
 // Editor (M2-11, M2-12, M2-23; FR-CAP-04, FR-CAP-08, FR-CAP-09, FR-CAP-10; design: Capture). The camera
@@ -41,9 +43,14 @@ export default function EditScreen() {
   });
   const server = useEditableMoment(momentId);
 
+  const viaCrop = parsed.success && parsed.data.via === 'crop';
+
+  // Back to where the camera was opened from (Today, or a past day's page): after a gallery photo through
+  // Crop, the camera is still below the editor, so it goes too, as after the shutter (which replaces itself).
   const close = () => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/today');
+    if (!router.canGoBack()) router.replace('/today');
+    else if (viaCrop) router.dismiss(2);
+    else router.back();
   };
 
   const missing =

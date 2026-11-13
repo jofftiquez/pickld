@@ -9,8 +9,8 @@ import type { ServerMoment } from '@/features/jar/todayGrid';
 
 import type { DayJar } from '../useDayJar';
 
-// My days wiring for M2-26: selecting a day shows its card, and Fill this jar opens the camera on that date
-// and its first missing slot. Data hooks are mocked; the card and the camera have their own tests.
+// My days wiring for M2-26: selecting a day shows its card, and Fill this jar opens that day's page (D-55).
+// Data hooks are mocked; the card and the day page have their own tests.
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 jest.mock('@/features/jar/useToday', () => ({ phoneTimeZone: () => 'Asia/Manila' }));
 jest.mock('../useMonthJars', () => ({
@@ -43,12 +43,12 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
 }
 
-function CameraStub() {
+function DayStub() {
   const router = useRouter();
-  const { date, slot } = useLocalSearchParams<{ date?: string; slot?: string }>();
+  const { date } = useLocalSearchParams<{ date?: string }>();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Close camera" onPress={() => router.back()}>
-      <Text>{`camera ${date ?? 'none'} ${slot ?? 'none'}`}</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel="Back from day" onPress={() => router.back()}>
+      <Text>{`day ${date ?? 'none'}`}</Text>
     </Pressable>
   );
 }
@@ -57,7 +57,7 @@ const routes = {
   _layout: () => <Stack screenOptions={{ headerShown: false }} />,
   '(tabs)/today': () => <Text>Today stub</Text>,
   'my-days': MyDaysScreen,
-  camera: CameraStub,
+  'day/[date]': DayStub,
 };
 
 beforeEach(() => {
@@ -72,27 +72,27 @@ describe('My days selected day', () => {
     expect(screen.queryByTestId('selected-day-card')).toBeNull();
   });
 
-  it('Fill this jar on a past day opens the camera on that date and its first missing slot, then comes back', async () => {
+  it('Fill this jar on a past day opens that day’s page, then comes back', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
     await fireEvent.press(screen.getByTestId('day-2026-11-08'));
     expect(screen.getByRole('header', { name: /Nov 8/ })).toBeTruthy();
     expect(screen.getByTestId('selected-day-count')).toHaveTextContent('3 of 8 moments · 1 added later');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Fill this jar' }));
-    expect(screen).toHavePathname('/camera');
-    expect(screen.getByText('camera 2026-11-08 whoamiwith')).toBeTruthy();
+    expect(screen).toHavePathname('/day/2026-11-08');
+    expect(screen.getByText('day 2026-11-08')).toBeTruthy();
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Close camera' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Back from day' }));
     await act(async () => {});
     expect(screen).toHavePathname('/my-days');
     expect(screen.getByTestId('selected-day-card')).toBeTruthy();
   });
 
-  it('a past day without a jar can be filled from its first slot', async () => {
+  it('a past day without a jar can be filled from its page', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
     await fireEvent.press(screen.getByTestId('day-2026-11-03'));
     await fireEvent.press(screen.getByRole('button', { name: 'Fill this jar' }));
-    expect(screen.getByText('camera 2026-11-03 whereami')).toBeTruthy();
+    expect(screen.getByText('day 2026-11-03')).toBeTruthy();
   });
 
   it('today shows its card without Fill this jar', async () => {

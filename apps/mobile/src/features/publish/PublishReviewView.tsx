@@ -35,6 +35,8 @@ export type PublishReviewViewProps = {
   onBack: () => void;
   onPublish: () => void;
   onNotYet: () => void;
+  /** A past day's jar, from the day page (D-55): its missing slots are filled from that page, not "later today". */
+  pastDay?: boolean;
 };
 
 /** A YYYY-MM-DD date as "Mon, Nov 9": read and printed in UTC so the day never shifts. */
@@ -55,12 +57,13 @@ export function PublishReviewView({
   onBack,
   onPublish,
   onNotYet,
+  pastDay = false,
 }: PublishReviewViewProps) {
   const { t } = useTranslation();
   const { privateCount, missingCount } = publishNote(tiles);
   const note = [
     privateCount > 0 ? t('publish.notePrivate', { count: privateCount }) : null,
-    missingCount > 0 ? t('publish.noteMissing', { count: missingCount }) : null,
+    missingCount > 0 ? t(pastDay ? 'publish.noteMissingPast' : 'publish.noteMissing', { count: missingCount }) : null,
   ]
     .filter((part) => part !== null)
     .join(' ');

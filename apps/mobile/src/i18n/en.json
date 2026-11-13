@@ -61,6 +61,16 @@
       "body": "Some of your moments broke our community guidelines. Until then, others can’t see your jars and you can’t add or share anything. You can still look at your own days."
     }
   },
+  "day": {
+    "back": "Back",
+    "titleLabel": "{{weekday}}, {{date}}",
+    "grid": "This day’s moments",
+    "inJar": "in this jar",
+    "inJarReaders_one": "in this jar · {{count}} reader",
+    "inJarReaders_other": "in this jar · {{count}} readers",
+    "publishHint": "Review this day’s jar and choose who can see it",
+    "addedLaterNote": "Moments added now show an “Added later” badge."
+  },
   "jarVisibility": {
     "title": "Who can see this jar",
     "body": "New moments you add today follow this choice.",
@@ -231,7 +241,7 @@
       "missing": "Missing: {{slots}}",
       "addSlot": "+ {{slot}}",
       "fill": "Fill this jar",
-      "fillHint": "Opens the camera to add to {{date}}",
+      "fillHint": "Opens {{date}} to add the missing moments",
       "fillNote": "Moments added now show an “Added later” badge.",
       "viewJar": "View jar",
       "viewJarHint": "Opens the jar page for {{date}}"
@@ -500,6 +510,8 @@
     "notePrivate_other": "{{count}} private moments won’t be shared.",
     "noteMissing_one": "You can still add the missing one later today.",
     "noteMissing_other": "You can still add the {{count}} missing ones later today.",
+    "noteMissingPast_one": "You can still add the missing one from this day’s page.",
+    "noteMissingPast_other": "You can still add the {{count}} missing ones from this day’s page.",
     "publish": "Publish jar",
     "publishHint": "Shares this jar with the people you chose",
     "notYet": "Not yet",
