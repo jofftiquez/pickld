@@ -36,6 +36,8 @@ export type TodayJar = {
     publishedAt?: string | null;
     /** Server-set like count (FR-SOC-05); optional because caches persisted before M3-02 lack it. */
     likeCount?: number;
+    /** The jar's cover (0069 `resolved_cover_id`, D-56), badged on its tile (D-98); optional in older caches. */
+    coverMomentId?: string | null;
   } | null;
   moments: ServerMoment[];
   /** Zone of the user's latest jar before the open one (Time zone banner, FR-JAR-05): null when there is
@@ -79,7 +81,7 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
   const supabase = getSupabase();
   const { data: jars, error } = await supabase
     .from('jars')
-    .select('id, local_date, tz, ends_at, visibility, published_at, like_count')
+    .select('id, local_date, tz, ends_at, visibility, published_at, like_count, resolved_cover_id')
     .eq('user_id', userId)
     .order('local_date', { ascending: false })
     .limit(RECENT_JARS);
@@ -105,6 +107,7 @@ async function fetchTodayJar(userId: string, now: Date): Promise<TodayJar> {
       visibility: open.visibility,
       publishedAt: open.published_at,
       likeCount: open.like_count,
+      coverMomentId: open.resolved_cover_id ?? null,
     },
     moments: rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null })),
     previousTz,

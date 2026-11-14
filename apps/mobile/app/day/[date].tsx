@@ -87,6 +87,7 @@ export default function DayScreen() {
         now={now}
         tz={tz}
         tiles={tiles}
+        coverMomentId={jar?.coverMomentId ?? null}
         hasAnyJar
         displayName={null}
         avatarUrl={null}

@@ -18,29 +18,37 @@ export type JarTileProps = {
   moment: JarMoment;
   width: number;
   stamp: StampMoment;
-  /** Opens Moment detail; without it the tile is an image. */
+  /** The jar's cover (D-56): a small "Cover" badge (D-98). */
+  isCover?: boolean;
+  /** Opens the moment (Moment detail, or the owner's preview); without it the tile is an image. */
   onPress?: () => void;
+  accessibilityHint?: string;
 };
 
-/** One moment in the Jar page grid (Story): photo with its edits, #slot, "Added later" badge, and a lock for the owner. */
-export function JarTile({ moment, width, stamp, onPress }: JarTileProps) {
+/**
+ * One moment in the Jar page's 2 by 4 grid (Story, D-97): the whole 3:4 photo with its edits, #slot,
+ * "Cover" and "Added later" badges, and a lock for the owner.
+ */
+export function JarTile({ moment, width, stamp, isCover = false, onPress, accessibilityHint }: JarTileProps) {
   const { t } = useTranslation();
   const [pressed, setPressed] = useState(false);
   const edits = parseEdits(moment.edits);
   const slot = t(`slots.${moment.slot}`);
   const onlyMe = moment.visibility === 'only_me';
-  const labelKey = onlyMe
-    ? moment.is_backfilled
-      ? 'jarPage.tilePrivateAddedLater'
-      : 'jarPage.tilePrivate'
-    : moment.is_backfilled
-      ? 'jarPage.tileAddedLater'
-      : 'jarPage.tile';
+  // "#slot, cover, private, added later": every badge is spoken.
+  const label = [
+    slot,
+    isCover ? t('tile.a11y.cover') : null,
+    onlyMe ? t('tile.a11y.private') : null,
+    moment.is_backfilled ? t('tile.a11y.addedLater') : null,
+  ]
+    .filter((part): part is string => part !== null)
+    .join(', ');
   return (
     <Pressable
       accessibilityRole={onPress ? 'button' : 'image'}
-      accessibilityLabel={t(labelKey, { slot })}
-      accessibilityHint={onPress ? t('jarPage.openMomentHint') : undefined}
+      accessibilityLabel={label}
+      accessibilityHint={onPress ? (accessibilityHint ?? t('jarPage.openMomentHint')) : undefined}
       disabled={!onPress}
       onPress={onPress}
       onPressIn={() => setPressed(true)}
@@ -48,18 +56,35 @@ export function JarTile({ moment, width, stamp, onPress }: JarTileProps) {
       style={[{ width }, pressed && onPress ? { opacity: PRESSED_OPACITY } : null]}
       testID={`jar-tile-${moment.slot}`}
     >
+      {/* No fixed height: the tile is 3:4, so the photo is never cropped (D-89, D-97). */}
       <PhotoTile
         uri={moment.thumbUrl}
         photoView={
           moment.thumbUrl !== null && hasVisibleEdits(edits) ? (
-            <MomentCover uri={moment.thumbUrl} edits={edits} stamp={stamp} accessible={false} />
+            <MomentCover
+              uri={moment.thumbUrl}
+              edits={edits}
+              stamp={stamp}
+              accessible={false}
+              testID={`jar-tile-${moment.slot}-moment`}
+            />
           ) : undefined
         }
-        height={sizes.jarTile}
-        radius={radius.jarTile}
-        fadeHeight={sizes.jarTileFade}
+        radius={radius.tile}
         label={slot}
-        labelVariant="caption"
+        topLeft={
+          isCover ? (
+            <View style={[styles.badge, styles.cover]} testID={`jar-tile-${moment.slot}-cover`}>
+              <Text
+                maxFontSizeMultiplier={maxTextScale.tile}
+                style={[textStyle('caption'), { color: colors.surface }]}
+                numberOfLines={1}
+              >
+                {t('tile.cover')}
+              </Text>
+            </View>
+          ) : null
+        }
         topRight={
           moment.is_backfilled || onlyMe ? (
             <>
@@ -95,6 +120,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.badge,
     flexShrink: 1,
   },
+  cover: { backgroundColor: colors.glass },
   lock: {
     width: sizes.lockBadge,
     height: sizes.lockBadge,

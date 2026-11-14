@@ -16,6 +16,8 @@ export type PreviewActionButtonProps = {
   /** Red icon well and label, for Delete. */
   tone?: 'default' | 'danger';
   disabled?: boolean;
+  /** A state, not an action (the moment is already the cover, D-98): green well, not pressable, not dimmed. */
+  selected?: boolean;
   /** From 200% text (D-37) the bar puts two actions per row with the label beside the icon. */
   wide?: boolean;
   testID?: string;
@@ -29,18 +31,22 @@ export function PreviewActionButton({
   accessibilityHint,
   tone = 'default',
   disabled = false,
+  selected = false,
   wide = false,
   testID,
 }: PreviewActionButtonProps) {
   const danger = tone === 'danger';
+  const off = disabled || selected;
+  const tint = danger ? colors.dangerTint : selected ? colors.brandTint : colors.tileIconWell;
+  const ink = danger ? colors.danger : selected ? colors.brandText : colors.ink;
   const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+      accessibilityState={selected ? { disabled: true, selected: true } : { disabled }}
+      disabled={off}
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
@@ -51,16 +57,10 @@ export function PreviewActionButton({
         disabled ? { opacity: DISABLED_OPACITY } : pressed ? { opacity: PRESSED_OPACITY } : null,
       ]}
     >
-      <View style={[styles.well, { backgroundColor: danger ? colors.dangerTint : colors.tileIconWell }]}>
-        <Icon name={icon} color={danger ? 'danger' : 'ink'} size={20} strokeWidth={2} />
+      <View style={[styles.well, { backgroundColor: tint }]}>
+        <Icon name={icon} color={danger ? 'danger' : selected ? 'brandText' : 'ink'} size={20} strokeWidth={2} />
       </View>
-      <Text
-        style={[
-          textStyle('label', '600'),
-          wide ? styles.labelWide : styles.labelNarrow,
-          { color: danger ? colors.danger : colors.ink },
-        ]}
-      >
+      <Text style={[textStyle('label', '600'), wide ? styles.labelWide : styles.labelNarrow, { color: ink }]}>
         {label}
       </Text>
     </Pressable>

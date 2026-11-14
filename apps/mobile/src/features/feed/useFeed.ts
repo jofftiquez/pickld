@@ -1,10 +1,12 @@
 // Data for the Jars tab (M3-04; FR-SOC-01, NFR-PERF-02, NFR-OFF-03): `feed_page` 20 jars at a time with
-// thumbnail URLs from `fn:photo-urls` (thumbnails only, never full photos), and `feed_authors` for the
+// thumbnail URLs from `fn:photo-urls` (thumbnails only, never full photos) and the previews' edits (D-96),
+// and `feed_authors` for the
 // avatar row. Both are React Query queries, so the persisted cache (src/lib/queryClient.ts) keeps the last
 // feed readable offline.
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
+import { fetchMomentRenders } from '@/features/moment/momentRenders';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
@@ -30,9 +32,20 @@ export async function fetchFeedPage(cursor: FeedCursor | null): Promise<FeedPage
   );
   if (error) throw new Error(error.message);
   const rows = z.array(feedRow).parse(data);
-  const urls = await thumbUrls(rows.flatMap((r) => r.preview_moment_ids));
+  const ids = rows.flatMap((r) => r.preview_moment_ids);
+  // The previews' edits, read per page as the viewer (D-96); a moment they can't read stays plain.
+  const [urls, renders] = await Promise.all([thumbUrls(ids), fetchMomentRenders(ids)]);
   return {
-    jars: rows.map((r) => ({ ...r, previewUrls: r.preview_moment_ids.map((id) => urls.get(id) ?? null) })),
+    jars: rows.map((r) => ({
+      ...r,
+      previewUrls: r.preview_moment_ids.map((id) => urls.get(id) ?? null),
+      previewRenders: Object.fromEntries(
+        r.preview_moment_ids.flatMap((id) => {
+          const render = renders.get(id);
+          return render ? [[id, render] as const] : [];
+        }),
+      ),
+    })),
     nextCursor: nextCursor(rows),
   };
 }

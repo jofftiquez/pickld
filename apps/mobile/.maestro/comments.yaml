@@ -55,4 +55,4 @@ appId: me.pickld.app
 - tapOn:
     id: comments-back
 - assertVisible:
-    id: jar-count-tile
+    id: jar-header

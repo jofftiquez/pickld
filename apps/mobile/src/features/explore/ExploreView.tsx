@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -17,6 +16,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
+import { MomentThumb } from '@/features/moment/MomentThumb';
+import { momentRender } from '@/features/moment/momentRenders';
 import { FollowButton } from '@/features/profile/FollowButton';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, explore as e, radius, space } from '@/theme/tokens';
@@ -227,6 +228,7 @@ function AuthorCard({
 function JarTile({ jar, width, onOpen }: { jar: FullJar; width: number; onOpen: () => void }) {
   const { t } = useTranslation();
   const name = jar.displayName.split(/\s+/)[0] ?? jar.displayName;
+  const cover = momentRender(jar.coverRender);
   return (
     <Pressable
       onPress={onOpen}
@@ -235,9 +237,13 @@ function JarTile({ jar, width, onOpen }: { jar: FullJar; width: number; onOpen: 
       accessibilityLabel={t('explore.jarLabel', { name: jar.displayName })}
       testID={`explore-jar-${jar.jarId}`}
     >
-      {jar.coverUrl ? (
-        <Image source={{ uri: jar.coverUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
-      ) : null}
+      {/* With its stickers, text and filter when it has any (D-96). */}
+      <MomentThumb
+        uri={jar.coverUrl}
+        edits={cover?.edits}
+        stamp={cover?.stamp}
+        testID={`explore-jar-${jar.jarId}-photo`}
+      />
       <View style={styles.tileName}>
         <Text style={[textStyle('label', '700'), { color: colors.surface }]} numberOfLines={1}>
           {name}

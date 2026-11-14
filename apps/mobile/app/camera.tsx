@@ -82,7 +82,10 @@ export default function CameraScreen() {
   // A full past jar has nothing to fill.
   const fillFull = fill !== null && fillSlot === null;
 
-  const [facing, setFacing] = useState<CameraFacing>('back');
+  // #selfie opens on the front lens (D-99); flip still switches. Read once, from the tile's slot param.
+  const [facing, setFacing] = useState<CameraFacing>(() =>
+    parseSlotParam(params.slot) === 'selfie' ? 'front' : 'back',
+  );
   const [flash, setFlash] = useState<FlashSetting>('off');
   const [flashSupported, setFlashSupported] = useState(false);
   const [busy, setBusy] = useState(false);

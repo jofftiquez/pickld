@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
@@ -8,10 +7,9 @@ import { BaseButton } from '@/components/BaseButton';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
-import { parseEdits } from '@/features/edit/edits';
-import { MomentCover } from '@/features/moment/MomentCover';
-import { deviceLocale, formatTime } from '@/lib/format';
-import { maxTextScale, textStyle } from '@/theme/text';
+import { deviceLocale } from '@/lib/format';
+import { hitSlopFor } from '@/lib/hitSlop';
+import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from './jarPage';
@@ -25,6 +23,8 @@ export type JarPageViewProps = {
   data: JarPageData | null | undefined;
   /** The request failed and nothing is cached. */
   failed?: boolean;
+  /** The author's signed avatar (D-93); initials without it. */
+  authorAvatarUrl?: string | null;
   insets: EdgeInsets;
   onBack: () => void;
   /** Likes or unlikes the jar (FR-SOC-05). */
@@ -43,9 +43,8 @@ export type JarPageViewProps = {
   locale?: string;
 };
 
-const GRID_COLUMNS = 3;
-const GRID_GAP = space.sm;
-const GRID_PADDING = space.lg;
+const GRID_COLUMNS = 2;
+const GRID_GAP = space.md;
 
 function formatJarDate(localDate: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(
@@ -54,13 +53,15 @@ function formatJarDate(localDate: string, locale: string): string {
 }
 
 /**
- * One person's jar for one day (Story; FR-SOC-03, FR-JAR-06): cover with author, date, count and Full jar
- * tag, the cover's caption, a 3-column grid of the other moments with "Added later" badges ending in the
- * count tile, and a floating bar with likes, comments and, on the viewer's own jar, Share jar (D-83).
+ * One person's jar for one day (Story; FR-SOC-03, FR-JAR-06): a plain header with Back, the author, the day,
+ * the count and the Full jar tag, then every shown moment in the same 2 by 4 grid as Today, in slot order,
+ * whole at 3:4, the cover badged "Cover" (D-97, D-98), and a floating bar with likes, comments and, on the
+ * viewer's own jar, Share jar (D-83).
  */
 export function JarPageView({
   data,
   failed = false,
+  authorAvatarUrl = null,
   insets,
   onBack,
   onToggleLike,
@@ -112,75 +113,55 @@ export function JarPageView({
     count: page.count,
     max: MAX_LAYERS,
   });
-  const timeOf = (m: JarMoment) => formatTime(new Date(m.captured_at ?? m.added_at), jar.tz, locale);
   const stampOf = (m: JarMoment) => ({ capturedAt: new Date(m.captured_at ?? m.added_at), tz: jar.tz });
-  const cover = page.cover;
-  const coverCaption = cover?.caption?.trim() ? cover.caption.trim() : null;
-  const tileWidth = (width - 2 * GRID_PADDING - (GRID_COLUMNS - 1) * GRID_GAP) / GRID_COLUMNS;
+  const coverId = page.cover?.id ?? null;
+  // The same 2 by 4 grid as Today (D-97): two columns, Today's padding and gaps, 3:4 tiles.
+  const tileWidth = (width - 2 * space.xl - (GRID_COLUMNS - 1) * GRID_GAP) / GRID_COLUMNS;
   const barHeight = sizes.minTap + 2 * space.sm + space.lg;
+  const avatar = (
+    <Avatar name={author.display_name} uri={authorAvatarUrl} size="header" decorative testID="jar-avatar" />
+  );
+  const name = (
+    <Text style={[textStyle('bodyMedium', '700'), styles.name]} numberOfLines={1}>
+      {author.display_name}
+    </Text>
+  );
 
   return (
     <View style={styles.screen} testID="jar-page">
-      <ScrollView contentContainerStyle={{ paddingBottom: barHeight + insets.bottom + space.lg }}>
-        <View style={[styles.cover, { height: sizes.jarCover + insets.top }]}>
-          {cover ? (
-            <MomentCover
-              uri={cover.fullUrl ?? cover.thumbUrl}
-              edits={parseEdits(cover.edits)}
-              stamp={stampOf(cover)}
-              accessible={false}
-              testID="jar-cover-photo"
-            />
-          ) : null}
-          <LinearGradient
-            colors={[colors.coverFadeTop, colors.photoFadeClear, colors.coverFadeBottom]}
-            locations={[0, 0.4, 1]}
-            pointerEvents="none"
-            style={StyleSheet.absoluteFill}
-          />
-          {cover ? (
-            <Pressable
-              accessibilityRole={onOpenMoment ? 'button' : 'image'}
-              accessibilityLabel={t(cover.is_backfilled ? 'jarPage.coverAddedLater' : 'jarPage.cover', {
-                slot: t(`slots.${cover.slot}`),
-              })}
-              accessibilityHint={onOpenMoment ? t('jarPage.openMomentHint') : undefined}
-              disabled={!onOpenMoment}
-              onPress={() => onOpenMoment?.(cover.id)}
-              style={StyleSheet.absoluteFill}
-              testID="jar-cover"
-            />
-          ) : null}
-          <View style={styles.coverFooter}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingTop: insets.top + space.md,
+          paddingBottom: barHeight + insets.bottom + space.lg,
+        }}
+      >
+        <View style={styles.header} testID="jar-header">
+          <View style={styles.headerRow}>
+            <RoundIconButton icon="back" accessibilityLabel={t('jarPage.back')} onPress={onBack} testID="jar-back" />
+            {onMore && !page.isOwner ? (
+              <RoundIconButton icon="more" accessibilityLabel={t('report.more')} onPress={onMore} testID="jar-more" />
+            ) : null}
+          </View>
+          <View style={styles.authorRow}>
             {onOpenAuthor ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={author.display_name}
                 accessibilityHint={t('jarPage.openAuthorHint')}
+                hitSlop={hitSlopFor(undefined, sizes.avatarHeader)}
                 onPress={onOpenAuthor}
+                style={styles.author}
                 testID="jar-author"
               >
-                <Avatar name={author.display_name} uri={null} size="header" ring decorative />
+                {avatar}
+                {name}
               </Pressable>
             ) : (
-              <Avatar name={author.display_name} uri={null} size="header" ring decorative />
+              <View style={styles.author}>
+                {avatar}
+                {name}
+              </View>
             )}
-            <View style={styles.coverTitles}>
-              <Text
-                accessibilityRole="header"
-                style={[textStyle('sectionTitle'), { color: colors.surface }]}
-                numberOfLines={1}
-              >
-                {title}
-              </Text>
-              <Text
-                style={[textStyle('label', '500'), { color: colors.coverSubtitle }]}
-                numberOfLines={1}
-                testID="jar-subtitle"
-              >
-                {subtitle}
-              </Text>
-            </View>
             {page.isFull ? (
               <View style={styles.fullTag} testID="jar-full-tag">
                 <JarGraphic count={MAX_LAYERS} size={sizes.countJar} decorative />
@@ -188,67 +169,30 @@ export function JarPageView({
               </View>
             ) : null}
           </View>
+          <View>
+            <Text accessibilityRole="header" style={[textStyle('sectionTitle'), { color: colors.ink }]}>
+              {title}
+            </Text>
+            <Text style={[textStyle('label', '500'), { color: colors.muted }]} testID="jar-subtitle">
+              {subtitle}
+            </Text>
+          </View>
         </View>
 
-        {cover && coverCaption ? (
-          <Text style={[textStyle('bodyMedium', '400'), styles.highlight]} testID="jar-highlight">
-            {t(cover.is_backfilled ? 'jarPage.highlightAddedLater' : 'jarPage.highlight', {
-              caption: coverCaption,
-              slot: t(`slots.${cover.slot}`),
-              time: timeOf(cover),
-            })}
-          </Text>
-        ) : (
-          <View style={styles.highlightSpacer} />
-        )}
-
-        <View style={styles.grid}>
-          {page.grid.map((m) => (
+        <View accessibilityLabel={t('jarPage.grid')} style={styles.grid}>
+          {page.moments.map((m) => (
             <JarTile
               key={m.id}
               moment={m}
               width={tileWidth}
               stamp={stampOf(m)}
+              isCover={m.id === coverId}
               onPress={onOpenMoment ? () => onOpenMoment(m.id) : undefined}
+              accessibilityHint={page.isOwner ? t('preview.openHint') : undefined}
             />
           ))}
-          <View
-            accessible
-            accessibilityLabel={t('jarPage.countA11y', { count: page.count, max: MAX_LAYERS })}
-            style={[styles.countTile, { width: tileWidth }]}
-            testID="jar-count-tile"
-          >
-            <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('countTile'), { color: colors.surface }]}>
-              {t('jarPage.count', { count: page.count, max: MAX_LAYERS })}
-            </Text>
-            <Text
-              maxFontSizeMultiplier={maxTextScale.tile}
-              style={[textStyle('caption', '500'), { color: colors.onDarkMuted }]}
-            >
-              {t('jarPage.countLabel')}
-            </Text>
-          </View>
         </View>
       </ScrollView>
-
-      <View style={[styles.topBar, { top: insets.top + space.lg }]} pointerEvents="box-none">
-        <RoundIconButton
-          icon="back"
-          variant="glass"
-          accessibilityLabel={t('jarPage.back')}
-          onPress={onBack}
-          testID="jar-back"
-        />
-        {onMore && !page.isOwner ? (
-          <RoundIconButton
-            icon="more"
-            variant="glass"
-            accessibilityLabel={t('report.more')}
-            onPress={onMore}
-            testID="jar-more"
-          />
-        ) : null}
-      </View>
 
       <View style={[styles.bar, { bottom: insets.bottom + space.lg }]} testID="jar-bar">
         <LikeButton
@@ -296,7 +240,6 @@ const styles = StyleSheet.create({
   message: { gap: space.md, paddingHorizontal: space.xxl, alignItems: 'center' },
   centerText: { textAlign: 'center' },
   flex: { flex: 1 },
-  cover: { overflow: 'hidden', backgroundColor: colors.photoPlaceholder },
   topBar: {
     position: 'absolute',
     left: space.lg,
@@ -304,16 +247,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  coverFooter: {
-    position: 'absolute',
-    left: space.xl,
-    right: space.xl,
-    bottom: space.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm + 2,
-  },
-  coverTitles: { flex: 1 },
+  header: { paddingHorizontal: space.xl, gap: space.md },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  authorRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  author: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm + 2 },
+  name: { flexShrink: 1, color: colors.ink },
   fullTag: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -324,22 +262,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.brand,
   },
-  highlight: {
-    marginTop: space.md + 2,
-    marginBottom: space.sm + 2,
-    marginHorizontal: space.xl,
-    color: colors.inkSoft,
-    lineHeight: 20,
-  },
-  highlightSpacer: { height: space.lg },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP, paddingHorizontal: GRID_PADDING },
-  countTile: {
-    minHeight: sizes.jarTile,
-    borderRadius: radius.jarTile,
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GRID_GAP,
+    paddingHorizontal: space.xl,
+    marginTop: space.lg,
   },
   bar: {
     position: 'absolute',
