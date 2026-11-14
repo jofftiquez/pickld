@@ -34,6 +34,22 @@ jobs:
         run: pnpm test
       - name: Start local Supabase
         run: pnpm db:start
+      - name: Bucket settings for the local Edge runtime
+        # The console tests upload sticker art through fn:sticker-studio, which writes to the bucket. Locally
+        # these come from the git-ignored supabase/functions/.env; the Edge runtime reads it at start, so the
+        # stack restarts once it's written.
+        run: |
+          eval "$(pnpm exec supabase status -o env 2>/dev/null | grep -E '^(STORAGE_S3_URL|S3_PROTOCOL_[A-Z_]+)=')"
+          {
+            echo "S3_ENDPOINT=$STORAGE_S3_URL"
+            echo "S3_REGION=$S3_PROTOCOL_REGION"
+            echo "S3_BUCKET=photos"
+            echo "S3_ACCESS_KEY_ID=$S3_PROTOCOL_ACCESS_KEY_ID"
+            echo "S3_SECRET_ACCESS_KEY=$S3_PROTOCOL_ACCESS_KEY_SECRET"
+            echo "S3_INTERNAL_ENDPOINT=${STORAGE_S3_URL/127.0.0.1/host.docker.internal}"
+          } > supabase/functions/.env
+          pnpm exec supabase stop
+          pnpm db:start
       - name: Apply migrations and seed
         run: pnpm db:reset
       - name: Generated database types are current

@@ -138,6 +138,12 @@ after(async () => {
 });
 
 const upload = (page_) => page_.getByRole('form', { name: /art/ });
+// The upload form's result note, worked or not, so a failure shows the console's message.
+async function uploadResult(page_) {
+  const note = upload(page_).locator('[role=status], [role=alert]');
+  await note.waitFor();
+  return note.textContent();
+}
 
 test('a moderator creates a free draft pack from the list', async () => {
   await page.goto(`${base}/stickers`);
@@ -175,14 +181,14 @@ test('art uploads add a sticker, replace it while a draft, and refuse non-PNG fi
   await form.getByLabel('PNG file').setInputFiles(path.join(dir, 'not-a-png.png'));
   await form.getByLabel('Sticker name').fill('bad');
   await form.getByRole('button', { name: 'Upload' }).click();
-  await form.getByText('That file isn’t a PNG.').waitFor();
+  assert.equal(await uploadResult(page), 'That file isn’t a PNG.');
 
   await page.reload();
   await upload(page).getByLabel('PNG file').setInputFiles(path.join(dir, 'Sun Face.png'));
   assert.equal(await upload(page).getByLabel('Sticker name').inputValue(), 'sun-face', 'name comes from the file');
   await upload(page).getByLabel('Label').fill('Sun');
   await upload(page).getByRole('button', { name: 'Upload' }).click();
-  await upload(page).getByText('Sticker added.').waitFor();
+  assert.equal(await uploadResult(page), 'Sticker added.');
   const sticker = page.getByRole('listitem', { name: 'Sun' });
   await sticker.getByText('12 × 8 px').waitFor();
   await sticker.getByText('v1').waitFor();
@@ -196,7 +202,7 @@ test('art uploads add a sticker, replace it while a draft, and refuse non-PNG fi
   await upload(page).getByLabel('PNG file').setInputFiles(path.join(dir, 'sun-big.png'));
   await upload(page).getByLabel('Sticker name').fill('sun-face');
   await upload(page).getByRole('button', { name: 'Upload' }).click();
-  await upload(page).getByText('Art replaced.', { exact: false }).waitFor();
+  assert.match(await uploadResult(page), /^Art replaced\./);
   await page.getByRole('listitem', { name: 'Sun' }).getByText('16 × 16 px').waitFor();
 
   const rows = must(
@@ -236,7 +242,7 @@ test('publishing is final: art is frozen and a sticker can be retired and restor
   await upload(page).getByLabel('PNG file').setInputFiles(path.join(dir, 'sun-big.png'));
   await upload(page).getByLabel('Sticker name').fill('sun-face');
   await upload(page).getByRole('button', { name: 'Upload' }).click();
-  await upload(page).getByText('That name is used in this published pack.', { exact: false }).waitFor();
+  assert.match(await uploadResult(page), /^That name is used in this published pack\./);
 
   const sticker = page.getByRole('listitem', { name: 'Sunny' });
   await sticker.getByRole('button', { name: 'Retire Sunny' }).click();
