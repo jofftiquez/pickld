@@ -102,6 +102,11 @@ export const css = `
 .mk-timeline li::before{content:'';position:absolute;left:-40px;top:0;width:16px;height:16px;border-radius:50%;background:${colors.brand};border:3px solid ${colors.background}}
 .mk-timeline h2{font-size:clamp(26px,5vw,34px)}
 .mk .mk-when{color:${colors.brandText};font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.mk-video{position:relative;display:block;aspect-ratio:16/9;border-radius:${radius.card}px;overflow:hidden;background:${colors.ink}}
+.mk-video img{width:100%;height:100%;object-fit:cover}
+.mk-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.mk-play{position:absolute;left:20px;bottom:20px;width:64px;height:64px;border-radius:50%;background:${colors.brand};box-shadow:0 10px 30px -8px ${colors.scrim}}
+.mk-play::after{content:'';position:absolute;left:25px;top:19px;border-style:solid;border-width:13px 0 13px 20px;border-color:transparent transparent transparent ${colors.surface}}
 .mk-status{padding:56px 0 72px;max-width:620px}
 .mk-status p{margin-top:12px}
 @media (min-width:720px){

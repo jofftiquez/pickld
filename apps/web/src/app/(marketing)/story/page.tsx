@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 
 import { Logo } from '~/components/Logo';
 import { t } from '~/i18n/t';
+import video2016 from '~/marketing/video-2016.jpg';
 import { WaitlistForm } from '~/marketing/WaitlistForm';
+import { YouTubeVideo } from '~/marketing/YouTubeVideo';
 
 export const metadata: Metadata = {
   title: t('story.metaTitle'),
@@ -12,7 +14,8 @@ export const metadata: Metadata = {
 
 const steps = ['first', 'calling', 'promise', 'now'] as const;
 
-/** Our story: the first Pickld more than ten years ago, the pivot to healthcare technology, and the return. */
+/** Our story: the first Pickld more than ten years ago, the pivot to healthcare technology, the return, and the first
+ * Pickld video (2016). */
 export default function Story() {
   return (
     <>
@@ -41,6 +44,20 @@ export default function Story() {
               </li>
             ))}
           </ol>
+        </div>
+      </section>
+      <section className="mk-section" aria-labelledby="video" style={{ paddingTop: 0 }}>
+        <div className="mk-wrap">
+          <div className="mk-head">
+            <h2 id="video">{t('story.videoTitle')}</h2>
+            <p>{t('story.videoBody')}</p>
+          </div>
+          <YouTubeVideo
+            id="ATowlE1aWV4"
+            poster={video2016}
+            label={t('story.videoPlay')}
+            title={t('story.videoFrame')}
+          />
         </div>
       </section>
       <section className="mk-section" aria-labelledby="final">

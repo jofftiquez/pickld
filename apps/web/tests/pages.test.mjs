@@ -361,6 +361,13 @@ test('Our story is linked from the home page and tells the four steps, with the 
   assert.deepEqual(steps, ['The first Pickld', 'A bigger calling', 'A promise', 'Pickld, again']);
   assert.equal(await page.getByRole('button', { name: 'Join the waitlist' }).count(), 1);
   assert.ok(await noSideScroll(page));
+  // The 2016 video is a poster linking to YouTube until it's played, then the no-cookie player.
+  const video = page.getByRole('link', { name: /You Deserve to Be You!/ });
+  assert.equal(await video.getAttribute('href'), 'https://www.youtube.com/watch?v=ATowlE1aWV4');
+  assert.equal(await page.locator('iframe').count(), 0);
+  await video.click();
+  const src = await page.locator('iframe').getAttribute('src');
+  assert.ok(src.startsWith('https://www.youtube-nocookie.com/embed/ATowlE1aWV4'), src);
   await page.close();
 });
 
