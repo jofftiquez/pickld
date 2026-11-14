@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  ReduceMotion,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -109,7 +110,11 @@ export function JarTapReaction({ count, published, lidColor, closeLid }: JarTapR
     if (reaction.overlay) setBurst({ id: taps.current, reaction });
     if (reduceMotion) {
       // Reduce Motion: a soft blink in place, no movement (NFR-A11Y-02).
-      dim.value = withSequence(timing(0.55, motion.fast), timing(1, motion.base));
+      // Reanimated skips System-mode animations under Reduce Motion, so the fade opts out to still play.
+      dim.value = withSequence(
+        withTiming(0.55, { duration: motion.fast, reduceMotion: ReduceMotion.Never }),
+        withTiming(1, { duration: motion.base, reduceMotion: ReduceMotion.Never }),
+      );
       return;
     }
     play(reaction, { lift, tilt, stretchX, stretchY });
@@ -143,20 +148,31 @@ export function JarTapReaction({ count, published, lidColor, closeLid }: JarTapR
   );
 }
 
+// Offsets from the burst's start over the jar's shoulders. They stay short so the white heart and the sparkles
+// fade out inside the dark card instead of over the light page above it.
 const SPARKS = [
-  { x: -22, y: -18 },
-  { x: 0, y: -30 },
-  { x: 22, y: -18 },
+  { x: -24, y: -10 },
+  { x: 0, y: -20 },
+  { x: 24, y: -10 },
 ];
+const HEART_RISE = -20;
+// The heart rises beside the jar, over the dark card, not over the jar's green layers.
+const HEART_SIDE = 30;
+const BURST_TOP = 20;
 
 /** Sparkles (full jar) or a heart (published) that rise from the lid and fade. With Reduce Motion they fade
  * in place without moving. Remounted per tap. */
 function Burst({ kind, variant, still }: { kind: 'sparkle' | 'heart'; variant: 0 | 1; still: boolean }) {
   const progress = useSharedValue(0);
   useEffect(() => {
-    progress.value = withTiming(1, { duration: kind === 'heart' ? 800 : 650, easing: Easing.out(Easing.quad) });
+    // A fade, so it plays under Reduce Motion too (Reanimated would otherwise skip straight to the end).
+    progress.value = withTiming(1, {
+      duration: kind === 'heart' ? 800 : 650,
+      easing: Easing.out(Easing.quad),
+      reduceMotion: ReduceMotion.Never,
+    });
   }, [kind, progress]);
-  const pieces = kind === 'heart' ? [{ x: variant === 0 ? 8 : -8, y: -34 }] : SPARKS;
+  const pieces = kind === 'heart' ? [{ x: (variant === 0 ? 1 : -1) * HEART_SIDE, y: HEART_RISE }] : SPARKS;
   return (
     <View
       pointerEvents="none"
@@ -214,7 +230,7 @@ const styles = StyleSheet.create({
   jar: { transformOrigin: 'center bottom' },
   burst: {
     position: 'absolute',
-    top: 0,
+    top: BURST_TOP,
     left: 0,
     width: sizes.jarCardGraphic,
     alignItems: 'center',
