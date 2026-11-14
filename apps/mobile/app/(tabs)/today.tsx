@@ -43,6 +43,8 @@ export default function TodayScreen() {
   }, []);
 
   const { userId, localDate, jar: jarData, me, queue, queueLoaded } = useToday(now);
+  // Missing only in caches persisted before usernames (M3-06).
+  const username = me?.username;
   const tz = phoneTimeZone();
   // Offline the persisted cache answers; a cached jar whose day has ended shows as the new, empty day.
   const jar = openTodayJar(jarData, now);
@@ -142,7 +144,7 @@ export default function TodayScreen() {
         onOpenMyDays={() => router.push('/my-days')}
         onOpenStickers={() => router.push('/stickers')}
         onOpenProfile={
-          me ? () => router.push({ pathname: '/u/[username]', params: { username: me.username } }) : undefined
+          username ? () => router.push({ pathname: '/u/[username]', params: { username } }) : undefined
         }
         onRetry={(queueId) => void retryUpload(queueId)}
         zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}

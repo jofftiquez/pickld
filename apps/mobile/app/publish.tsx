@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -38,7 +38,7 @@ export default function PublishScreen() {
   const [choice, setChoice] = useState<Visibility | null>(null);
   const visibility = choice ?? me?.defaultVisibility ?? 'readers';
 
-  const home = pastDate ? `/day/${pastDate}` : '/today';
+  const home: Href = pastDate ? `/day/${pastDate}` : '/today';
   const close = () => {
     if (router.canGoBack()) router.back();
     else router.replace(home);

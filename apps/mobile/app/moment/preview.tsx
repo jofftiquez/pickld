@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
@@ -154,7 +154,7 @@ export default function MomentPreviewScreen() {
   // the fade (D-58, D-77).
   const enter = usePop(true, PREVIEW_ENTER_FROM, true);
 
-  const editHref = (item: PreviewItem) =>
+  const editHref = (item: PreviewItem): Href =>
     item.target.kind === 'queued' ? `/edit/${item.target.queueId}` : `/edit/${item.target.momentId}`;
 
   return (

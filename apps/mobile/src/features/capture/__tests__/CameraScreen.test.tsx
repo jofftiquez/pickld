@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 import { AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'react-native';
@@ -147,7 +147,7 @@ async function setAppState(state: AppStateStatus) {
   await act(async () => appStateListeners.forEach((listener) => listener(state)));
 }
 
-async function openCamera(url = '/camera?slot=afternoon') {
+async function openCamera(url: Href = '/camera?slot=afternoon') {
   await renderRouter(routes, { initialUrl: '/today', wrapper });
   await act(async () => {
     const { router } = jest.requireActual<typeof import('expo-router')>('expo-router');
