@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 const steps = ['first', 'calling', 'promise', 'now'] as const;
 
-/** Our story: Pickld (pickled.me) more than ten years ago, the pivot to healthcare technology, and the return. */
+/** Our story: the first Pickld more than ten years ago, the pivot to healthcare technology, and the return. */
 export default function Story() {
   return (
     <>
