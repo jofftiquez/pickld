@@ -1,13 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
+import { MAX_LAYERS } from '@/components/JarGraphic';
 import { PillButton } from '@/components/PillButton';
 import type { Visibility } from '@/features/publish/publishJar';
 import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
+
+import { JarTapReaction } from './JarTapReaction';
 
 export type JarCardProps = {
   count: number;
@@ -99,7 +101,8 @@ export function JarCard({
       {/* Large text: the jar sits above the words and the pill under them, so the words get the card's
           full width and never break mid-word or run past the card (NFR-A11Y-02). */}
       <View style={large ? styles.stack : styles.row}>
-        <JarGraphic count={count} lidColor={lidColor} onDark decorative closeLid={closeLid} />
+        {/* Tap the jar for a little reaction (D-131); the words and Publish keep their own taps. */}
+        <JarTapReaction count={count} published={published !== null} lidColor={lidColor} closeLid={closeLid} />
         {published ? (
           // The words open the visibility menu too (FR-PUB-03), like the Published chip.
           <Pressable

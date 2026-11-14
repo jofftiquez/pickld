@@ -6,6 +6,8 @@ import Animated, {
   useAnimatedProps,
   useReducedMotion,
   useSharedValue,
+  withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg';
@@ -24,6 +26,9 @@ const SETTLE_DROP = 24;
 // Publishing (D-77): the lid starts this far above the jar and drops shut.
 const LID = { x: 10, y: 2, width: 28, height: 8, rx: 3 };
 const LID_LIFT = 10;
+// The easter egg's lid hop (D-131): how far the lid jumps, and the loose spring that lets it rattle shut.
+const LID_HOP = 7;
+const LID_RATTLE = { damping: 5, stiffness: 320, mass: 0.6 };
 
 export const MAX_LAYERS = slots.length;
 
@@ -44,6 +49,9 @@ export type JarGraphicProps = {
   decorative?: boolean;
   /** The day was just published (D-58): the lid drops shut, or fades in with Reduce Motion. Plays when it turns true. */
   closeLid?: boolean;
+  /** The easter egg (D-131): each time this number grows the lid hops up and rattles back. Off with Reduce
+   * Motion. */
+  lidHop?: number;
   testID?: string;
 };
 
@@ -55,6 +63,7 @@ export function JarGraphic({
   onDark = false,
   decorative = false,
   closeLid = false,
+  lidHop = 0,
   testID,
 }: JarGraphicProps) {
   const { t } = useTranslation();
@@ -90,8 +99,20 @@ export function JarGraphic({
       ? withTiming(1, { duration: motion.base })
       : withTiming(1, { duration: motion.celebrationPop, easing: Easing.out(Easing.cubic) });
   }, [closeLid, lid, reduceMotion]);
+  // 0 is at rest; 1 is the top of the easter egg's hop.
+  const hop = useSharedValue(0);
+  const lastHop = useRef(lidHop);
+  useEffect(() => {
+    if (lidHop > lastHop.current && !reduceMotion) {
+      hop.value = withSequence(
+        withTiming(1, { duration: motion.fast, easing: Easing.out(Easing.cubic) }),
+        withSpring(0, LID_RATTLE),
+      );
+    }
+    lastHop.current = lidHop;
+  }, [hop, lidHop, reduceMotion]);
   const lidProps = useAnimatedProps(() => ({
-    y: reduceMotion ? LID.y : LID.y - LID_LIFT * (1 - lid.value),
+    y: reduceMotion ? LID.y : LID.y - LID_LIFT * (1 - lid.value) - LID_HOP * hop.value,
     opacity: reduceMotion ? lid.value : 1,
   }));
 

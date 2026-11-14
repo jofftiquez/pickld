@@ -22,6 +22,7 @@ jest.mock('@/features/jar/PublishBurst', () => {
   return { PublishBurst: () => createElement(View, { testID: 'publish-burst' }) };
 });
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
+jest.mock('@/features/jar/JarTapReaction', () => ({ JarTapReaction: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
 jest.mock('@/features/jar/retryUpload', () => ({ retryUpload: jest.fn() }));
 jest.mock('@/lib/connectivity', () => ({ useIsOffline: () => false }));

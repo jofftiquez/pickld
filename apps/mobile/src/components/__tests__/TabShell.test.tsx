@@ -25,6 +25,7 @@ jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: 
 jest.mock('@/features/jar/TilePop', () => ({ TilePop: ({ children }: { children: React.ReactNode }) => children }));
 jest.mock('@/features/jar/PublishBurst', () => ({ PublishBurst: () => null }));
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
+jest.mock('@/features/jar/JarTapReaction', () => ({ JarTapReaction: () => null }));
 // Today's Retry reaches the upload worker, which reports errors through Sentry (ESM, not loadable here).
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 // Discover's suggestions check the contacts permission; the native module can't load under Jest.
