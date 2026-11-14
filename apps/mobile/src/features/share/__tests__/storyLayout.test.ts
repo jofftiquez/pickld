@@ -202,6 +202,22 @@ describe('Share card layouts (D-62, D-82)', () => {
     expect((footer.y + footer.height) / 1920).toBeLessThanOrEqual(0.82);
   });
 
+  it('keeps names and captions over the photos when the 3:4 photos are narrower than the card', () => {
+    // A full jar's default 4 by 2 grid is a block well inside the card's width on a Story.
+    const cells = layoutsFor(8, 'story')[0]!.cells;
+    const block = {
+      x: Math.min(...cells.map((c) => c.x)),
+      y: 0,
+      width: Math.max(...cells.map((c) => c.x + c.width)) - Math.min(...cells.map((c) => c.x)),
+      height: 1920,
+    };
+    expect(block.width).toBeLessThan(safeArea('story').width);
+    for (const r of Object.values(overlayRects('story', cells))) expect(inside(r, block)).toBe(true);
+    // The film strip is too narrow to hold the footer row, so the overlays keep the card's width.
+    const strip = layoutsFor(8, 'story').find((l) => l.id === 'filmStrip')!.cells;
+    expect(overlayRects('story', strip).footer.width).toBe(safeArea('story').width);
+  });
+
   it('centres the short row of the 2 by 4 grid', () => {
     const cells = layoutsFor(7, 'story').find((l) => l.id === 'grid2x4')!.cells;
     const top = new Set(cells.map((c) => Math.round(c.y)));

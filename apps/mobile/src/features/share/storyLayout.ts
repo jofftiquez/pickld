@@ -86,17 +86,35 @@ export function photoArea(format: StoryFormat, options: { framed: boolean }): Re
 /** The most room each overlay can take; each hugs its text inside its box, anchored to the box's left. */
 export type StoryOverlays = { author: Rect; caption: Rect; footer: Rect };
 
-/** The author pill at the top of the safe area; the footer row, and the caption band over it, at the bottom. */
-export function overlayRects(format: StoryFormat): StoryOverlays {
+/** Narrower than this, the photo block can't hold the footer row, so the overlays use the card's width. */
+const MIN_OVERLAY_WIDTH = 520;
+
+/**
+ * The author pill at the top of the safe area; the footer row, and the caption band over it, at the bottom.
+ * Kept 3:4, the photos often form a narrower block than the card (D-89), so the overlays keep to that
+ * block's sides, as far in from them as the safe area is from the card's edge, rather than hanging off it.
+ */
+export function overlayRects(format: StoryFormat, cells: readonly Rect[] = []): StoryOverlays {
   const m = storyMetrics;
   const safe = safeArea(format);
+  let x = safe.x;
+  let width = safe.width;
+  if (cells.length > 0) {
+    const inset = safe.x - m.margin;
+    const left = Math.max(safe.x, Math.min(...cells.map((c) => c.x)) + inset);
+    const right = Math.min(safe.x + safe.width, Math.max(...cells.map((c) => c.x + c.width)) - inset);
+    if (right - left >= MIN_OVERLAY_WIDTH) {
+      x = left;
+      width = right - left;
+    }
+  }
   const authorHeight = Math.max(m.avatar, (m.nameSize + m.dateSize) * 1.3) + 2 * m.pillPad;
   const captionHeight = m.captionLines * m.captionSize * 1.3 + 2 * m.captionPad;
   const footerY = safe.y + safe.height - m.footerHeight;
   return {
-    author: { x: safe.x, y: safe.y, width: safe.width, height: authorHeight },
-    caption: { x: safe.x, y: footerY - m.overlayGap - captionHeight, width: safe.width, height: captionHeight },
-    footer: { x: safe.x, y: footerY, width: safe.width, height: m.footerHeight },
+    author: { x, y: safe.y, width, height: authorHeight },
+    caption: { x, y: footerY - m.overlayGap - captionHeight, width, height: captionHeight },
+    footer: { x, y: footerY, width, height: m.footerHeight },
   };
 }
 
