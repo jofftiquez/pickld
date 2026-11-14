@@ -9,7 +9,7 @@ import { Icon } from '@/components/Icon';
 import { PillButton } from '@/components/PillButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { Toggle } from '@/components/Toggle';
-import { stickerArtFor } from '@/features/edit/stickers/stickerArt';
+import { stickerArtSize } from '@/features/edit/stickers/remoteStickerArt';
 import { StickerImage } from '@/features/edit/stickers/StickerImage';
 import { formatMonthDay } from '@/lib/format';
 import { useLargeText } from '@/lib/useLargeText';
@@ -216,7 +216,7 @@ function PackRow({
       : pack.kind === 'bought' && pack.boughtAt
         ? t('myStickers.bought', { date: formatMonthDay(new Date(pack.boughtAt)), count: pack.stickerCount })
         : t('myStickers.free', { count: pack.stickerCount });
-  const art = pack.sample ? stickerArtFor(pack.sample.asset) : undefined;
+  const art = pack.sample ? stickerArtSize(pack.sample.asset) : undefined;
   // The sample keeps its shape and fits inside the tile, like the design's small stickers.
   const ratio = art ? art.width / art.height : 1;
   const w = Math.min(myStickers.tileSampleHeight * ratio, myStickers.tile * myStickers.tileSampleMaxWidth);

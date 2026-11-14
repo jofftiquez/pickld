@@ -168,6 +168,7 @@ Deno.test('a suspended owner’s moments get no tokens for others', async () => 
 Deno.test('input is validated and callers must be signed in', async () => {
   for (const body of [{}, { momentIds: [] }, { momentIds: [], profileIds: [] }, { momentIds: ['nope'] },
     { profileIds: ['nope'] }, { momentIds: [live.id], extra: 1 },
+    { stickerArt: false }, { stickerArt: 'yes' },
     { momentIds: Array.from({ length: 101 }, () => crypto.randomUUID()) },
     { profileIds: Array.from({ length: 101 }, () => crypto.randomUUID()) }]) {
     const { status, json } = await call(body, reader);
@@ -217,6 +218,16 @@ Deno.test('a moments-only request still works and returns an empty profiles list
   assertEquals(status, 200);
   assertEquals(ids(json), sorted(livePublic));
   assertEquals(json.data.profiles, []);
+});
+
+// ---------------------------------------------------------------- sticker art origin (D-131)
+Deno.test('every answer names the Worker origin for sticker art, and stickerArt alone asks for just that', async () => {
+  const alone = await call({ stickerArt: true }, outsider);
+  assertEquals(alone.status, 200);
+  assertEquals(alone.json.data, { expiresAt: alone.json.data.expiresAt, moments: [], profiles: [], stickerArtBase: BASE });
+  const withMoments = await call({ momentIds: [livePublic.id] }, outsider);
+  assertEquals(withMoments.json.data.stickerArtBase, BASE);
+  assertEquals((await call({ stickerArt: true })).status, 401, 'still needs a session');
 });
 
 Deno.test({ name: 'cleanup', fn: cleanup, sanitizeResources: false, sanitizeOps: false });

@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SecondaryButton } from '@/components/SecondaryButton';
+import { parseEdits } from '@/features/edit/edits';
 import { jarTitle } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { track } from '@/lib/analytics';
@@ -83,6 +84,10 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
     caption: cardCaption(card, moment, includeCaption),
   });
   const layout = layouts.find((l) => picked?.count === count && l.id === picked.id) ?? layouts[0]!;
+  // The card waits for any sticker art still downloading (D-131) before it is drawn into the image.
+  const stickerAssets = (moment ? [moment] : card.moments).flatMap((m) =>
+    parseEdits(m.edits).overlays.flatMap((o) => (o.type === 'sticker' ? [o.asset] : [])),
+  );
 
   type Notice = { text: string; error: boolean } | null;
   const run = async (work: () => Promise<Notice>) => {
@@ -101,7 +106,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
     void run(async () => {
       switch (action) {
         case 'save': {
-          const uri = await renderCardImage(cardRef, fileName);
+          const uri = await renderCardImage(cardRef, fileName, stickerAssets);
           if ((await saveImage(uri)) === 'denied') return { text: t('share.saveDenied'), error: true };
           track('share_card_exported', { destination: 'save' });
           showToast('imageSaved');
@@ -149,7 +154,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
       onAction={onAction}
       onShareTo={() =>
         void run(async () => {
-          await shareImage(await renderCardImage(cardRef, fileName), heading);
+          await shareImage(await renderCardImage(cardRef, fileName, stickerAssets), heading);
           track('share_card_exported', { destination: 'share' });
           return null;
         })

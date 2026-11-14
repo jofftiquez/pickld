@@ -5,7 +5,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
-import { stickerArtFor } from '@/features/edit/stickers/stickerArt';
+import { stickerArtSize } from '@/features/edit/stickers/remoteStickerArt';
 import { StickerImage } from '@/features/edit/stickers/StickerImage';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, sizes, space, stickerShop, stickerTool } from '@/theme/tokens';
@@ -159,7 +159,7 @@ export function PackPreviewView({
 }
 
 function Sample({ sticker, height }: { sticker: { asset: string }; height: number }) {
-  const art = stickerArtFor(sticker.asset);
+  const art = stickerArtSize(sticker.asset);
   return (
     <View>
       <StickerImage asset={sticker.asset} width={art ? (height * art.width) / art.height : height} height={height} />

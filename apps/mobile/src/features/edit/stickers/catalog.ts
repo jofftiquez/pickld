@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Slot } from '@/theme/tokens';
 
 import { stickerStamps, type Overlay } from '../edits';
-import { stickerArtFor } from './stickerArt';
+import { hasStickerArt } from './remoteStickerArt';
 
 // The sticker catalog as the Stickers tool shows it (FR-STK-01, FR-STK-02, FR-STK-03; architecture: "the
 // current slot's suggestions first (slot_hint plus onboarding answers), then owned packs in the user's
@@ -47,6 +47,9 @@ export const stickerRowSchema = z.object({
   milestone_key: z.string().nullable(),
   sort: z.number(),
   sticker_usable: z.boolean().nullable(),
+  // The art's size once uploaded (0100, D-131); a query that doesn't select them sees null.
+  art_width: z.number().int().positive().nullable().catch(null),
+  art_height: z.number().int().positive().nullable().catch(null),
 });
 
 export const answersRowSchema = z.object({
@@ -186,9 +189,8 @@ export function buildCatalog(
       name: pack.name,
       stickers: stickers
         .filter((s) => s.pack_id === pack.id && s.sticker_usable === true)
-        // TODO(FR-STK-02 follow-up): art for packs added after this app version, from the photo worker
-        // (D-25); until then a sticker with no bundled art is not offered.
-        .filter((s) => stickerArtFor(s.asset_path) !== undefined)
+        // Bundled art, or art the catalog says is uploaded (downloaded from the photo Worker, D-131).
+        .filter(hasStickerArt)
         .sort((a, b) => a.sort - b.sort)
         .map((s) => ({
           id: s.id,
