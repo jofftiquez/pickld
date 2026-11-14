@@ -95,6 +95,8 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
     borderRadius: radius.pill,
     minWidth: sizes.minTap,
+    // Never wider than its parent: a long label ("Be a reader" at large text) wraps instead (D-86).
+    maxWidth: '100%',
   },
   label: { textAlign: 'center', flexShrink: 1 },
 });

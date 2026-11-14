@@ -7,6 +7,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { BaseButton } from '@/components/BaseButton';
 import { Card } from '@/components/Card';
+import { EmptyState } from '@/components/EmptyState';
 import { ListRow } from '@/components/ListRow';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -38,6 +39,8 @@ export type ProfileViewProps = {
   onSettings?: () => void;
   /** Your own profile only: the Stickers row opening the Stickers page (D-61). */
   onOpenStickers?: () => void;
+  /** Your own profile only: Add a moment on an empty grid opens the camera (D-87). */
+  onAddMoment?: () => void;
   /** Other profile only: Read / Read back starts reading, Reading stops (FR-SOC-07). */
   onToggleReading?: () => void;
   /** A follow request is in flight. */
@@ -76,6 +79,7 @@ export function ProfileView({
   onEditProfile,
   onSettings,
   onOpenStickers,
+  onAddMoment,
   onToggleReading,
   followBusy = false,
   onOpenList,
@@ -289,9 +293,36 @@ export function ProfileView({
             testID="profile-tabs"
           />
           {empty ? (
-            <Text style={[textStyle('body'), styles.empty]} testID="profile-empty">
-              {isOwner ? t('profile.emptyMine') : t('profile.emptyOther', { name: profile.display_name })}
-            </Text>
+            <EmptyState
+              illustration={tab === 'jars' ? 'jar' : 'photo'}
+              title={
+                !isOwner
+                  ? t('profile.emptyTitleOther')
+                  : tab === 'jars'
+                    ? t('profile.emptyJarsTitleMine')
+                    : t('profile.emptyMomentsTitleMine')
+              }
+              body={
+                isOwner
+                  ? tab === 'jars'
+                    ? t('profile.emptyMine')
+                    : t('profile.emptyMomentsMine')
+                  : tab === 'jars'
+                    ? t('profile.emptyOther', { name: profile.display_name })
+                    : t('profile.emptyMomentsOther', { name: profile.display_name })
+              }
+              action={
+                isOwner && onAddMoment
+                  ? {
+                      label: t('profile.addMoment'),
+                      accessibilityHint: t('profile.addMomentHint'),
+                      onPress: onAddMoment,
+                      testID: 'profile-add-moment',
+                    }
+                  : undefined
+              }
+              testID="profile-empty"
+            />
           ) : (
             <View style={styles.grid} testID={`profile-grid-${tab}`}>
               {tab === 'jars'
@@ -390,6 +421,5 @@ const styles = StyleSheet.create({
   counts: { flexDirection: 'row', gap: space.xl },
   count: { minHeight: sizes.minTap, justifyContent: 'center' },
   rowCard: { paddingVertical: 2 },
-  empty: { color: colors.muted, textAlign: 'center', paddingVertical: space.xxl },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
 });

@@ -77,7 +77,7 @@ Onboarding is the first impression of Pickld, so it teaches the idea before aski
 | 5 | Sign up | Apple, Google or email; link to Sign in | Continue with email → About you |
 | 6 | Sign in | Returning users: Apple, Google or a 6-digit email code (no password) | Send sign-in code → Check your email |
 | 7 | About you (step 1 of 6) | Photo, name, username with availability check, birthday | Continue → Your day |
-| — | Under 13 | Shown if the birthday is under 13; nothing entered is saved | Back to start → Welcome |
+| — | Under 13 | Shown if the birthday is under 13; nothing entered is saved | Back to start → How it works page 1 (D-85) |
 | 8 | Your day (step 2 of 6) | “What’s your day like?” Early bird, Coffee first or Night owl; the answer sets the three reminder times, shown with a Change button | Continue → Your people |
 | 9 | Your people (step 3 of 6) | One-tap chips: who’s in your #whoamiwith, what your #mebusywith is, your honest #ootd. Private; used to suggest stickers | Continue or Skip → Pick your jar |
 | 10 | Pick your jar (step 4 of 6) | Choose a jar lid color (Pickle, Mango, Ube, Sunset, Sky, Ink); shown on the profile and jar card | Continue → Permissions |
@@ -189,7 +189,7 @@ Previews the 9:16 image exported for other apps: author, day title, the moments 
 Both share one layout: cover photo, large avatar, name, @username, bio, Readers · Authors · Jars counts, a Jars / Moments switch, and a 3-column grid of past jars labelled with date and count.
 
 - **My profile:** Edit profile, Share profile, Settings and a **Stickers** row (D-61).
-- **Other profile:** **Read her days** (follow), a “Reads you” tag, and a menu for Report and Block.
+- **Other profile:** **Be a reader** (follow; D-86), a “Reads you” tag, and a menu for Report and Block.
 
 Goes to: counts → Readers & authors · jar → Jar page · settings → Settings · Stickers → Stickers · menu → Report.
 
@@ -224,12 +224,12 @@ Resurfaces past jars: an “On this day” card from one year ago, a monthly rec
 
 ### Explore — “Explore”
 
-Search by name or @username, Suggested authors with a **Read** button, and a grid of “Full jars today” from public jars.
+Search by name or @username, Suggested authors with a **Be a reader** button (D-86), and a grid of “Full jars today” from public jars.
 
 ### Empty and first-use states
 
 - **“Today, first day”:** an empty jar graphic with “Your first jar. Eight moments fill it up,” all 8 tiles empty, and the current slot (#morning) highlighted as Now. This is where onboarding ends.
-- **“Jars, empty”:** “Your feed is quiet,” **Find people** → Explore, Invite friends, and People you may know.
+- **“Jars, empty”:** “Your feed is quiet,” **Find people** → Explore, Invite friends, and People you may know, with “Pull down to refresh” under it. Every other empty list (Moments and Jars when the people you read have nothing yet, Notifications, Readers & authors, the profile grids, Blocked, Explore's sections) shows a small illustration, a title, one helpful line and an action where one exists (Find more people, Add a moment); the pull-to-refresh lists add “Pull down to refresh” (D-87).
 
 ## Settings and safety
 

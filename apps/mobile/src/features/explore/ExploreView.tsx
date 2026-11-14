@@ -13,6 +13,7 @@ import {
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
+import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -126,7 +127,13 @@ export function ExploreView({
             {t('explore.suggested')}
           </Text>
           {data.suggestions.length === 0 ? (
-            <Text style={[textStyle('bodySmall'), styles.empty]}>{t('explore.suggestedEmpty')}</Text>
+            <EmptyState
+              compact
+              illustration="readers"
+              title={t('explore.suggestedEmptyTitle')}
+              body={t('explore.suggestedEmpty')}
+              testID="explore-suggested-empty"
+            />
           ) : (
             <ScrollView
               horizontal
@@ -150,7 +157,13 @@ export function ExploreView({
             {t('explore.fullJars')}
           </Text>
           {data.fullJars.length === 0 ? (
-            <Text style={[textStyle('bodySmall'), styles.empty]}>{t('explore.fullJarsEmpty')}</Text>
+            <EmptyState
+              compact
+              illustration="jar"
+              title={t('explore.fullJarsEmptyTitle')}
+              body={t('explore.fullJarsEmpty')}
+              testID="explore-full-jars-empty"
+            />
           ) : (
             <View style={styles.grid} testID="explore-full-jars">
               {data.fullJars.map((jar) => (
@@ -257,7 +270,14 @@ function SearchResults({
     );
   }
   if (results.length === 0) {
-    return <Text style={[textStyle('body'), styles.empty]}>{t('explore.noResults')}</Text>;
+    return (
+      <EmptyState
+        illustration="search"
+        title={t('explore.noResultsTitle')}
+        body={t('explore.noResults')}
+        testID="explore-no-results"
+      />
+    );
   }
   return (
     <View style={styles.results} testID="explore-results">

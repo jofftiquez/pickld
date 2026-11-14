@@ -1,6 +1,6 @@
 # M4-02 + M4-04: Sign up with a new email → code from Mailpit → a new account lands on About you
 # (FR-ACC-01). Fill it in (captured), then a birthday under 13 → Under 13; account-purge deletes the
-# account and the phone is signed out (FR-ACC-04). Needs local Mailpit on 55424 and fn:account-purge served.
+# account and the phone is signed out (FR-ACC-04); Go back opens How it works page 1 (D-85). Needs local Mailpit on 55424 and fn:account-purge served.
 # Ends signed out: sign dale back in afterwards (scripts/dev-sign-in.sh).
 # maestro test apps/mobile/.maestro/about-under13.yaml
 appId: me.pickld.app
@@ -104,9 +104,10 @@ appId: me.pickld.app
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: Under13-ios
+# Go back starts over at the first How it works page, still signed out (D-85).
 - tapOn:
     id: under13-start
 - extendedWaitUntil:
     visible:
-      id: welcome-screen
+      id: intro-1
     timeout: 10000

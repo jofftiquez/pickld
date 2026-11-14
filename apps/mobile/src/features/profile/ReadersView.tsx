@@ -5,6 +5,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { DangerButton } from '@/components/DangerButton';
 import { Dialog } from '@/components/Dialog';
+import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -35,6 +36,8 @@ export type ReadersViewProps = {
   onOpenProfile: (username: string) => void;
   onToggleReading: (row: FollowListRow) => void;
   onRemoveReader: (row: FollowListRow) => void;
+  /** Your own empty Authors list: Find people opens Explore (D-87). */
+  onFindPeople?: () => void;
   onRetry: () => void;
   locale?: string;
 };
@@ -59,6 +62,7 @@ export function ReadersView({
   onOpenProfile,
   onToggleReading,
   onRemoveReader,
+  onFindPeople,
   onRetry,
   locale = deviceLocale(),
 }: ReadersViewProps) {
@@ -140,13 +144,41 @@ export function ReadersView({
           ) : rows === undefined ? (
             <ActivityIndicator color={colors.muted} style={styles.loading} testID="readers-loading" />
           ) : rows.length === 0 ? (
-            <Text style={[textStyle('body'), styles.centerText, styles.empty]} testID="readers-empty">
-              {query.trim() !== ''
-                ? t('readers.noMatch')
-                : list === 'readers'
-                  ? t('readers.noReaders')
-                  : t('readers.noAuthors')}
-            </Text>
+            query.trim() !== '' ? (
+              <EmptyState
+                illustration="search"
+                title={t('readers.noMatchTitle')}
+                body={t('readers.noMatch')}
+                testID="readers-empty"
+              />
+            ) : list === 'readers' ? (
+              <EmptyState
+                illustration="readers"
+                title={t('readers.noReaders')}
+                body={
+                  isOwner
+                    ? t('readers.noReadersMine')
+                    : t('readers.noReadersOther', { name: profile?.display_name ?? '' })
+                }
+                testID="readers-empty"
+              />
+            ) : (
+              <EmptyState
+                illustration="readers"
+                title={t('readers.noAuthors')}
+                body={
+                  isOwner
+                    ? t('readers.noAuthorsMine')
+                    : t('readers.noAuthorsOther', { name: profile?.display_name ?? '' })
+                }
+                action={
+                  isOwner && onFindPeople
+                    ? { label: t('readers.findPeople'), onPress: onFindPeople, testID: 'readers-find-people' }
+                    : undefined
+                }
+                testID="readers-empty"
+              />
+            )
           ) : (
             <View style={styles.card} testID={`readers-list-${list}`}>
               {rows.map((row, i) => (
@@ -225,6 +257,5 @@ const styles = StyleSheet.create({
   },
   message: { gap: space.md, alignItems: 'center', paddingVertical: space.xxl },
   centerText: { textAlign: 'center' },
-  empty: { color: colors.muted, paddingVertical: space.xxl },
   loading: { paddingVertical: space.xxl },
 });
