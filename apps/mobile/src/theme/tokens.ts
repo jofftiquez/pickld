@@ -502,15 +502,12 @@ export const stickerShop = {
   cardWidth: 150,
   cardArtHeight: 120,
   cardRadius: 18,
-  sampleHeight: 36, // sticker art on a card (the PNG's height, shadow margin included)
-  bannerSampleHeight: 42, // and on the seasonal banner
+  bannerSampleHeight: 42, // sticker art on the seasonal banner (the PNG's height, shadow margin included)
   searchHeight: 46,
   ownedTint: '#e6f1d3', // art well behind packs the user has (Yours)
-  // Pack preview (PackPreview): the tinted hero with the user's photo and two stickers on it.
+  // Pack preview (PackPreview): the tinted cover with the pack's stickers, large (D-81).
   heroRadius: 40,
   heroStageHeight: 226,
-  heroPhotoWidth: 168,
-  heroSampleHeight: 40,
   cloudSampleHeight: 36,
 } as const;
 

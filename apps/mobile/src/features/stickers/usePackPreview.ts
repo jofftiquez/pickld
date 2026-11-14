@@ -1,42 +1,16 @@
-// Data and actions for Pack preview (M6-03; FR-STK-07): the user's latest photo to preview a pack on, and
-// buying a pack. A purchase goes through the store, then fn:store-sync reads the verified receipt back from
+// Actions for Pack preview (M6-03; FR-STK-07): buying a pack. Its cover shows the pack's own stickers, not a
+// photo (D-81). A purchase goes through the store, then fn:store-sync reads the verified receipt back from
 // RevenueCat and writes owned_packs (D-40); the shop and the Stickers tool refetch so the pack unlocks.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { stickerCatalogQueryKey } from '@/features/edit/stickers/useStickerCatalog';
-import { photoUrls } from '@/features/moment/useOwnMoment';
 import { useAuthStore } from '@/lib/authStore';
 import { getStore } from '@/lib/store/store';
 import { getSupabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
 
 import { shopQueryKey } from './useShop';
-
-/** The user's most recent moment photo (private ones too: the preview never leaves the phone), or null. */
-async function latestPhoto(userId: string): Promise<string | null> {
-  const { data, error } = await getSupabase()
-    .from('moments')
-    .select('id')
-    .eq('user_id', userId)
-    .in('status', ['checking', 'live'])
-    .order('added_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error || !data) return null;
-  const urls = await photoUrls(data.id);
-  return urls.full ?? urls.thumb;
-}
-
-export function useLatestPhoto() {
-  const userId = useAuthStore((s) => s.session?.user.id ?? null);
-  return useQuery({
-    queryKey: ['latestPhoto', userId ?? ''] as const,
-    queryFn: () => latestPhoto(userId ?? ''),
-    enabled: userId !== null,
-    staleTime: 10 * 60 * 1000, // the signed URL lasts 15 minutes
-  });
-}
 
 const syncResponse = z.object({ data: z.object({ granted: z.array(z.string()), revoked: z.array(z.string()) }) });
 

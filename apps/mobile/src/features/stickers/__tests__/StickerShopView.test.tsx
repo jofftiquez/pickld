@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
-import { buildShop } from '../shop';
+import { CARD_LAYOUTS, COVER_LAYOUTS } from '../PackArt';
+import { buildShop, type ShopPack } from '../shop';
 import { StickerShopView, type StickerShopViewProps } from '../StickerShopView';
 import { answers, shopPackRows, shopStickerRows } from './shopRows';
 
@@ -15,6 +16,12 @@ const prices = new Map([
   // Work From Wherever: the store doesn't know it (yet), so no price shows.
   ['me.pickld.pack.pet_parent', '₱99'],
 ]);
+
+/** The pack with `count` made-up stickers (their art isn't bundled, so each draws as a square box). */
+function withStickers(pack: ShopPack, count: number): ShopPack {
+  const stickers = Array.from({ length: count }, (_, i) => ({ asset: `stickers/test/s${i}.png`, label: `S${i}` }));
+  return { ...pack, stickers, labels: stickers.map((s) => s.label), stickerCount: count };
+}
 
 async function setup(over: Partial<StickerShopViewProps> = {}) {
   const props: StickerShopViewProps = {
@@ -82,5 +89,32 @@ describe('StickerShopView', () => {
     const props = await setup({ shop: undefined, failed: true });
     await fireEvent.press(screen.getByText('Try again'));
     expect(props.onRetry).toHaveBeenCalled();
+  });
+
+  it("clusters as many of a pack's stickers as it has on its card, at most six (D-81)", async () => {
+    const shop = buildShop(shopPackRows(), shopStickerRows(), null, NOV);
+    const [a, b, c, d] = shop.forYou;
+    await setup({
+      shop: {
+        ...shop,
+        forYou: [withStickers(a!, 9), withStickers(b!, 6), withStickers(c!, 3), withStickers(d!, 1)],
+      },
+    });
+    const count = (pack: ShopPack) => screen.getAllByTestId(`sticker-shop-art-${pack.slug}-sticker`).length;
+    expect([a!, b!, c!, d!].map(count)).toEqual([6, 6, 3, 1]);
+  });
+
+  it('has a balanced layout for every count, each spot inside the art well', () => {
+    for (const [layouts, most] of [
+      [CARD_LAYOUTS, 6],
+      [COVER_LAYOUTS, 5],
+    ] as const) {
+      expect(layouts.map((l) => l.spots.length)).toEqual(Array.from({ length: most }, (_, i) => i + 1));
+      for (const spot of layouts.flatMap((l) => l.spots)) {
+        if (!('at' in spot)) throw new Error('cluster spots are centers');
+        expect(spot.at.every((v) => v >= 15 && v <= 85)).toBe(true);
+        expect(Math.abs(spot.rotate)).toBeLessThanOrEqual(8);
+      }
+    }
   });
 });

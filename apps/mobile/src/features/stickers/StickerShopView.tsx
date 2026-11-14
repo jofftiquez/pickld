@@ -8,7 +8,7 @@ import { deviceLocale } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, space, stickerShop, stickerTool } from '@/theme/tokens';
 
-import { BANNER_LAYOUT, CARD_LAYOUT, PackArt } from './PackArt';
+import { BANNER_LAYOUTS, CARD_LAYOUTS, PackArt } from './PackArt';
 import type { Shop, ShopPack } from './shop';
 
 export type StickerShopViewProps = {
@@ -197,7 +197,7 @@ function SeasonalBanner({
         ) : null}
       </View>
       {/* Over the text, as designed: the blurb runs under the stickers. */}
-      <PackArt samples={pack.stickers} layout={BANNER_LAYOUT} height={stickerShop.bannerSampleHeight} />
+      <PackArt samples={pack.stickers} layouts={BANNER_LAYOUTS} />
       {price ? (
         <View style={styles.bannerPrice}>
           <Text style={[textStyle('label', '800'), { color: stickerShop.seasonal }]}>{price}</Text>
@@ -244,7 +244,7 @@ function PackCard({
           },
         ]}
       >
-        <PackArt samples={pack.stickers} layout={CARD_LAYOUT} />
+        <PackArt samples={pack.stickers} layouts={CARD_LAYOUTS} testID={`sticker-shop-art-${pack.slug}`} />
       </View>
       <View style={styles.cardFoot}>
         <View style={styles.cardName}>
