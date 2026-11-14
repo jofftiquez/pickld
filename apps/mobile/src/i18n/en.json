@@ -236,6 +236,8 @@
     "title": "My days",
     "subtitle_one": "{{month}} · {{count}} moment",
     "subtitle_other": "{{month}} · {{count}} moments",
+    "momentCount_one": "{{count}} moment",
+    "momentCount_other": "{{count}} moments",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
     "monthPicker": {
@@ -243,6 +245,17 @@
       "open_other": "{{month}}, {{count}} moments",
       "openHint": "Opens the month picker",
       "title": "Choose a month"
+    },
+    "picker": {
+      "years": "Years",
+      "months": "Months"
+    },
+    "datePicker": {
+      "open": "Go to a date",
+      "openHint": "Opens the date picker, to add moments to any past day",
+      "title": "Choose a date",
+      "today": "{{date}}, today",
+      "dayHint": "Opens this day to add moments"
     },
     "calendar": "{{month}} calendar",
     "day": "{{date}}, {{count}} of {{total}} moments",

@@ -3,6 +3,7 @@ import {
   buildMonthGrid,
   daysInMonth,
   earliestMonth,
+  floorMonth,
   fillFraction,
   monthJarRow,
   monthMomentCount,
@@ -115,33 +116,26 @@ describe('buildMonthGrid', () => {
   });
 });
 
-describe('earliestMonth and monthsBetween', () => {
-  it('reaches 12 months back across a year boundary when there is no older first jar', () => {
-    expect(earliestMonth('2026-02', null)).toBe('2025-02');
-    expect(earliestMonth('2026-02', '2026-01')).toBe('2025-02');
-    expect(monthsBetween(earliestMonth('2026-02', null), '2026-02')).toEqual([
-      '2025-02',
-      '2025-03',
-      '2025-04',
-      '2025-05',
-      '2025-06',
-      '2025-07',
-      '2025-08',
-      '2025-09',
-      '2025-10',
-      '2025-11',
-      '2025-12',
-      '2026-01',
-      '2026-02',
-    ]);
+describe('floorMonth, earliestMonth and monthsBetween (D-141)', () => {
+  it('floors at January of the birth year, or January 2000 while the birthday is unknown', () => {
+    expect(floorMonth('1994-07-21')).toBe('1994-01');
+    expect(floorMonth(null)).toBe('2000-01');
+    expect(floorMonth(undefined)).toBe('2000-01');
+    expect(floorMonth('')).toBe('2000-01');
   });
 
-  it('starts at an older first jar beyond 12 months', () => {
-    expect(earliestMonth('2026-02', '2024-11')).toBe('2024-11');
-    const months = monthsBetween(earliestMonth('2026-02', '2024-11'), '2026-02');
-    expect(months).toHaveLength(16);
-    expect(months[0]).toBe('2024-11');
+  it('reaches years back, far past the old 12-month window', () => {
+    const months = monthsBetween(earliestMonth(floorMonth('2010-05-01'), null), '2026-02');
+    expect(months[0]).toBe('2010-01');
     expect(months[months.length - 1]).toBe('2026-02');
+    expect(months).toHaveLength(16 * 12 + 2);
+    // Three years back, across year boundaries, without gaps.
+    expect(months).toEqual(expect.arrayContaining(['2022-12', '2023-01', '2023-02']));
+  });
+
+  it('starts at a first jar older than the floor, so no jar is out of reach', () => {
+    expect(earliestMonth('2010-01', '2008-11')).toBe('2008-11');
+    expect(earliestMonth('2010-01', '2026-01')).toBe('2010-01');
   });
 
   it('is empty when the start is after the end', () => {
@@ -151,27 +145,15 @@ describe('earliestMonth and monthsBetween', () => {
 
 describe('monthNav', () => {
   it('stops Next at the current month', () => {
-    expect(monthNav('2026-11', '2026-11', '2026-01').canGoNext).toBe(false);
-    expect(monthNav('2026-10', '2026-11', '2026-01').canGoNext).toBe(true);
+    expect(monthNav('2026-11', '2026-11', '2000-01').canGoNext).toBe(false);
+    expect(monthNav('2026-10', '2026-11', '2000-01').canGoNext).toBe(true);
   });
 
-  it('reaches 12 months back even when the first jar is this month', () => {
-    // The QA bug: a first jar on Nov 7 stopped Previous at November.
-    expect(monthNav('2026-11', '2026-11', '2026-11').canGoPrevious).toBe(true);
-    expect(monthNav('2025-12', '2026-11', '2026-11').canGoPrevious).toBe(true);
-    expect(monthNav('2025-11', '2026-11', '2026-11').canGoPrevious).toBe(false);
-  });
-
-  it('goes back to an older first jar beyond 12 months', () => {
-    expect(monthNav('2025-11', '2026-11', '2025-03').canGoPrevious).toBe(true);
-    expect(monthNav('2025-04', '2026-11', '2025-03').canGoPrevious).toBe(true);
-    expect(monthNav('2025-03', '2026-11', '2025-03').canGoPrevious).toBe(false);
-  });
-
-  it('reaches 12 months back when there is no jar yet', () => {
-    expect(monthNav('2026-11', '2026-11', null)).toEqual({ canGoPrevious: true, canGoNext: false });
-    expect(monthNav('2026-01', '2026-02', null).canGoPrevious).toBe(true); // across a year
-    expect(monthNav('2025-02', '2026-02', null).canGoPrevious).toBe(false);
+  it('goes back to the earliest month and stops there, across a year', () => {
+    // The QA bug from D-137 stays fixed: a first jar this month doesn't stop Previous at this month.
+    expect(monthNav('2026-11', '2026-11', earliestMonth(floorMonth(null), '2026-11')).canGoPrevious).toBe(true);
+    expect(monthNav('2010-02', '2026-11', '2010-01').canGoPrevious).toBe(true);
+    expect(monthNav('2010-01', '2026-11', '2010-01')).toEqual({ canGoPrevious: false, canGoNext: true });
   });
 });
 

@@ -1,6 +1,6 @@
 // Data for My days (FR-DAY-01): one month of the user's jars from `month_jars` (0009, owner-only) with
-// cover thumbnail URLs, and the month of the first jar, which bounds "Previous month". Both are React
-// Query queries, so the persisted cache (src/lib/queryClient.ts) keeps them readable offline (NFR-OFF-03).
+// cover thumbnail URLs, plus the month of the first jar and the birthday, which bound how far back it goes
+// (D-141). All are React Query queries, so the persisted cache (src/lib/queryClient.ts) keeps them readable offline (NFR-OFF-03).
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
@@ -44,10 +44,18 @@ async function fetchFirstJarMonth(userId: string): Promise<string | null> {
   return data ? monthOf(data.local_date) : null;
 }
 
+/** The owner's birthday ("YYYY-MM-DD"), readable only through `my_profile()` (column grants). */
+async function fetchBirthday(): Promise<string | null> {
+  const { data, error } = await getSupabase().rpc('my_profile').select('birthday').maybeSingle();
+  if (error) throw new Error(error.message);
+  return z.object({ birthday: z.string() }).nullable().parse(data)?.birthday ?? null;
+}
+
 export const daysQueryKeys = {
   /** ['month', userId, 'YYYY-MM'] */
   month: (userId: string, month: string) => ['month', userId, month] as const,
   firstJarMonth: (userId: string) => ['firstJarMonth', userId] as const,
+  birthday: (userId: string) => ['birthday', userId] as const,
 };
 
 export function useMonthJars(month: string) {
@@ -63,10 +71,18 @@ export function useMonthJars(month: string) {
     queryFn: () => fetchFirstJarMonth(userId ?? ''),
     enabled,
   });
+  const birthday = useQuery({
+    queryKey: daysQueryKeys.birthday(userId ?? ''),
+    queryFn: fetchBirthday,
+    enabled,
+    staleTime: Infinity,
+  });
   return {
     userId,
     jars: jars.data,
     /** Undefined while unknown (loading, or offline with nothing cached). */
     firstJarMonth: firstJarMonth.data,
+    /** "YYYY-MM-DD"; undefined while unknown, which puts the floor at January 2000. */
+    birthday: birthday.data,
   };
 }
