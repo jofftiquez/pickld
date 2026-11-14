@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { dehydrate, hydrate, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
@@ -15,20 +15,20 @@ jest.mock('@/lib/supabase', () => ({ getSupabase: () => ({ rpc: (...a: unknown[]
 const PACK = 'a1100000-0000-4000-8000-000000000001';
 
 describe('withThumb', () => {
-  const thumbs = new Map([[PACK, { thumbs: 3, mine: false }]]);
+  const thumbs = { [PACK]: { thumbs: 3, mine: false } };
   it('adds and removes the viewer’s thumb once, never below zero', () => {
-    expect(withThumb(thumbs, PACK, true).get(PACK)).toEqual({ thumbs: 4, mine: true });
+    expect(withThumb(thumbs, PACK, true)[PACK]).toEqual({ thumbs: 4, mine: true });
     expect(withThumb(thumbs, PACK, false)).toBe(thumbs);
-    expect(withThumb(new Map([[PACK, { thumbs: 0, mine: true }]]), PACK, false).get(PACK)).toEqual({
-      thumbs: 0,
-      mine: false,
-    });
+    expect(withThumb({ [PACK]: { thumbs: 0, mine: true } }, PACK, false)[PACK]).toEqual({ thumbs: 0, mine: false });
     expect(withThumb(thumbs, 'other', true)).toBe(thumbs);
   });
 });
 
-async function setup() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+function newClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+}
+
+async function setup(client = newClient()) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
@@ -71,4 +71,17 @@ it('puts the count back when the request fails', async () => {
   await act(async () => hook.result.current.toggle(PACK));
   await waitFor(() => expect(hook.result.current.thumbs?.get(PACK)).toEqual({ thumbs: 2, mine: true }));
   expect(mockRpc).toHaveBeenCalledWith('set_pack_thumb', { p_pack: PACK, p_on: false });
+});
+
+it('still reads the counts after a restart restores the saved cache', async () => {
+  mockRpc.mockResolvedValue({ data: [{ pack_id: PACK, thumbs: 5, mine: true }], error: null });
+  const first = newClient();
+  const before = await setup(first);
+  await waitFor(() => expect(before.result.current.thumbs?.get(PACK)).toEqual({ thumbs: 5, mine: true }));
+  // The app saves queries as JSON and restores them on launch (queryClient.ts); the server is unreachable now.
+  const restored = newClient();
+  hydrate(restored, JSON.parse(JSON.stringify(dehydrate(first))));
+  mockRpc.mockReturnValue(new Promise(() => {}));
+  const after = await setup(restored);
+  expect(after.result.current.thumbs?.get(PACK)).toEqual({ thumbs: 5, mine: true });
 });
