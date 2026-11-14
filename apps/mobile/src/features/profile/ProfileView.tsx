@@ -163,7 +163,7 @@ export function ProfileView({
               decorative
               testID="profile-avatar"
             />
-            <View style={styles.actions}>
+            <View style={styles.actions} testID="profile-actions">
               {isOwner && onEditProfile ? (
                 <BaseButton
                   label={t('profile.edit')}
@@ -367,7 +367,16 @@ const styles = StyleSheet.create({
     gap: space.sm + 2,
   },
   avatarRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingBottom: space.xs },
+  // The buttons straddle the cover's bottom edge at their middle (D-79): the row starts where the avatar
+  // does, `profileAvatarOverlap` above that edge, and is twice that tall (the avatar's own height), so
+  // centring the buttons in it puts their middle on the edge without moving the name below.
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: space.sm,
+    height: sizes.profileAvatarOverlap * 2,
+  },
   names: { gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm },
   name: { flexShrink: 1 },

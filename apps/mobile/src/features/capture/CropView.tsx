@@ -14,29 +14,37 @@ import { colors, crop, radius, sizes, space } from '@/theme/tokens';
 import { CropHeaderAction } from './CropHeaderAction';
 import { CropPhoto } from './CropPhoto';
 import { CropToolButton } from './CropToolButton';
-import { cropFrame, MAX_ZOOM, MIN_ZOOM, type CropState } from './cropMath';
+import { CROP_RATIO, cropFrame, MAX_ZOOM, MIN_ZOOM, type CropState } from './cropMath';
 
 export type CropViewProps = {
   uri: string;
   image: Size;
-  /** Already translated, e.g. "#afternoon". */
+  /** Already translated, e.g. "#afternoon". Not shown for `avatar` and `cover`. */
   slotLabel: string;
   state: CropState;
   busy: boolean;
   /** Queueing the photo failed: say so above the tools. */
   failed: boolean;
-  /** `recrop`: Moment options' Re-crop on a saved moment (M2-23); the copy says Save instead of Next: edit. */
-  mode?: 'gallery' | 'recrop';
+  /**
+   * `recrop`: Moment options' Re-crop on a saved moment (M2-23); the copy says Save instead of Next: edit.
+   * `avatar` and `cover`: Edit profile's photos (D-79): a square frame under a circle guide, or the cover's
+   * 5:2 band; pan and zoom only, so Rotate, Flip and Fit are hidden (Reset stays).
+   */
+  mode?: 'gallery' | 'recrop' | 'avatar' | 'cover';
   insets: EdgeInsets;
   onChange: (state: CropState) => void;
   onZoom: (zoom: number) => void;
-  onRotate: () => void;
-  onFlip: () => void;
-  onFit: () => void;
+  /** Moments only. */
+  onRotate?: () => void;
+  onFlip?: () => void;
+  onFit?: () => void;
   onReset: () => void;
   onCancel: () => void;
   onDone: () => void;
 };
+
+/** Each mode's copy under `crop` in en.json. */
+const COPY = { gallery: 'crop', recrop: 'crop.recrop', avatar: 'crop.avatar', cover: 'crop.cover' } as const;
 
 /** The zoom slider works in percent (100–300), as the design's range input does. */
 const PERCENT = 100;
@@ -44,17 +52,21 @@ const PERCENT = 100;
 /**
  * Crop (FR-CAP-03; design: Crop): a header with Cancel, the title and the main button (Next: edit, or Save
  * crop for Re-crop) as a green pill like the editor's Save (D-59, D-65); the photo under the fixed 3:4
- * frame; a white sheet with the zoom slider and Rotate, Flip, Fit and Reset. The frame is sized so the
+ * frame (square or 5:2 for Edit profile's photos, D-79); a white sheet with the zoom slider and Rotate,
+ * Flip, Fit and Reset (only Reset for profile photos). The frame is sized so the
  * sheet fits without scrolling; it scrolls only when large text makes it taller (D-37). From 1.5× text the
  * title moves to its own row under the buttons, as in the editor's toolbar.
  */
 export function CropView(props: CropViewProps) {
   const { uri, image, slotLabel, state, busy, failed, insets, onChange, onZoom, mode = 'gallery' } = props;
   const { t } = useTranslation();
-  const copy = mode === 'recrop' ? 'crop.recrop' : 'crop';
+  const profile = mode === 'avatar' || mode === 'cover';
+  const copy = COPY[mode];
+  // The frame's shape (lock chip, note): the moment copy unless it's a profile photo.
+  const shape = profile ? COPY[mode] : 'crop';
   const window = useWindowDimensions();
   const largeText = useLargeText();
-  const frame = cropFrame(window, insets);
+  const frame = cropFrame(window, insets, CROP_RATIO[profile ? mode : 'moment']);
   const title = (
     <View style={styles.title}>
       <Text
@@ -92,15 +104,25 @@ export function CropView(props: CropViewProps) {
         </View>
         {largeText ? title : null}
       </View>
-      <CropPhoto uri={uri} image={image} frame={frame} areaWidth={window.width} state={state} onChange={onChange} />
+      <CropPhoto
+        uri={uri}
+        image={image}
+        frame={frame}
+        areaWidth={window.width}
+        state={state}
+        onChange={onChange}
+        aspect={t(`${shape}.aspect`)}
+        aspectLabel={t(`${shape}.aspectLabel`)}
+        circle={mode === 'avatar'}
+      />
       <ScrollView
         style={styles.sheet}
         contentContainerStyle={[styles.sheetContent, { paddingBottom: insets.bottom + space.xxl }]}
         bounces={false}
       >
-        {failed ? (
+        {failed && !profile ? (
           <Text accessibilityLiveRegion="polite" style={[textStyle('bodySmall'), styles.error]} testID="crop-error">
-            {t(`${copy}.saveFailed`)}
+            {t(mode === 'recrop' ? 'crop.recrop.saveFailed' : 'crop.saveFailed')}
           </Text>
         ) : null}
         <View style={styles.zoomRow}>
@@ -118,27 +140,31 @@ export function CropView(props: CropViewProps) {
           <Icon name="zoomIn" color="muted" size={crop.zoomIcon} strokeWidth={2} />
         </View>
         <View style={styles.tools} testID="crop-tools">
-          <CropToolButton
-            icon="rotate"
-            label={t('crop.rotate')}
-            accessibilityLabel={t('crop.rotateLabel')}
-            onPress={props.onRotate}
-            testID="crop-rotate"
-          />
-          <CropToolButton
-            icon="mirror"
-            label={t('crop.flip')}
-            accessibilityHint={t('crop.flipHint')}
-            onPress={props.onFlip}
-            testID="crop-flip"
-          />
-          <CropToolButton
-            icon="fit"
-            label={t('crop.fit')}
-            accessibilityHint={t('crop.fitHint')}
-            onPress={props.onFit}
-            testID="crop-fit"
-          />
+          {profile ? null : (
+            <>
+              <CropToolButton
+                icon="rotate"
+                label={t('crop.rotate')}
+                accessibilityLabel={t('crop.rotateLabel')}
+                onPress={() => props.onRotate?.()}
+                testID="crop-rotate"
+              />
+              <CropToolButton
+                icon="mirror"
+                label={t('crop.flip')}
+                accessibilityHint={t('crop.flipHint')}
+                onPress={() => props.onFlip?.()}
+                testID="crop-flip"
+              />
+              <CropToolButton
+                icon="fit"
+                label={t('crop.fit')}
+                accessibilityHint={t('crop.fitHint')}
+                onPress={() => props.onFit?.()}
+                testID="crop-fit"
+              />
+            </>
+          )}
           {/* A tool like the others: it only undoes the crop changes; the header's button saves. */}
           <CropToolButton
             icon="reset"
@@ -148,7 +174,7 @@ export function CropView(props: CropViewProps) {
             testID="crop-reset"
           />
         </View>
-        <Text style={[textStyle('label', '400'), styles.note]}>{t('crop.note')}</Text>
+        <Text style={[textStyle('label', '400'), styles.note]}>{t(`${shape}.note`)}</Text>
       </ScrollView>
     </GestureHandlerRootView>
   );

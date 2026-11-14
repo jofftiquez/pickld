@@ -123,7 +123,7 @@ Goes to: gallery → Crop · tool tabs → Stickers / Bubble / Text · Close or 
 
 ### Crop — “Crop to 3:4”
 
-Shown for gallery photos that aren’t 3:4, and when a user re-crops while editing. Camera photos are already 3:4 and skip it.
+Shown for gallery photos that aren’t 3:4, and when a user re-crops while editing. Camera photos are already 3:4 and skip it. Edit profile also opens it for a new avatar (square, circle guide) or cover (5:2), with pan, zoom and Reset only (D-79).
 
 - Fixed 3:4 frame with a lock chip, rule-of-thirds grid, corner handles and dimmed overflow.
 - Drag to reposition, pinch or slider to zoom; Rotate, Flip and Fit; Cancel and Reset in the header.
@@ -272,7 +272,7 @@ These screens fill the gaps that shape the architecture: offline saving, the upl
 | Camera access off | What Capture shows when camera permission is denied | Open Settings · Choose from gallery instead |
 | Check your email | After a sign-in code is sent: six code boxes (checked at the 6th digit), open email app, resend timer, use a different email | Today |
 | Report sent | Confirmation after a report, with an option to also block | Block · Jars feed |
-| Edit profile | Cover, avatar, name, username, bio with character count, jar lid picker | Save → My profile |
+| Edit profile | Cover, avatar, name, username, bio with character count, jar lid picker. Change photo and Change cover open Crop as a square with a circle guide or at 5:2, pan and zoom only; **Use photo** uploads that crop, Cancel changes nothing (D-79) | Save → My profile |
 | Blocked accounts | Blocked people with Unblock | — |
 | Help & feedback | Search, common questions, contact support, send feedback, community guidelines | — |
 | Shared link web page | What a non-user sees at pickld.me/dale: the shared jar, the tagline and App Store / Google Play buttons | Open in the app |

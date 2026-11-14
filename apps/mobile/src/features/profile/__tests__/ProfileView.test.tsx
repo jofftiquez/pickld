@@ -4,6 +4,7 @@ import type { ProfileMoment } from '../profileModel';
 import { buildProfileJars } from '../profileModel';
 import type { ProfilePage } from '../useProfile';
 import { ProfileView, type ProfileViewProps } from '../ProfileView';
+import { sizes } from '@/theme/tokens';
 
 const insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
@@ -76,6 +77,22 @@ describe('ProfileView', () => {
     expect(screen.queryByTestId('profile-reads-you')).toBeNull();
     expect(screen.getByTestId('profile-jar-2026-11-08')).toHaveTextContent('Nov 88/8');
     expect(screen.getByTestId('profile-edit')).toBeTruthy();
+  });
+
+  it('centres Edit profile and Share on the cover’s bottom edge without moving the name (D-79)', async () => {
+    await renderView({ data: page('mika-id', false), onEditProfile: jest.fn() });
+    const actions = screen.getByTestId('profile-actions');
+    // The body starts profileAvatarOverlap above the cover's bottom edge; the buttons are centred in a row
+    // twice that tall from the top, so their middle is on the edge. The row is no taller than the avatar,
+    // so the name below stays where it was.
+    expect(actions).toHaveStyle({
+      alignSelf: 'flex-start',
+      alignItems: 'center',
+      height: sizes.profileAvatarOverlap * 2,
+    });
+    expect(sizes.profileAvatarOverlap * 2).toBeLessThanOrEqual(sizes.avatarXl);
+    expect(screen.getByTestId('profile-edit')).toBeTruthy();
+    expect(screen.getByTestId('profile-share')).toBeTruthy();
   });
 
   it('opens a jar from the Jars tab and a moment from the Moments tab', async () => {

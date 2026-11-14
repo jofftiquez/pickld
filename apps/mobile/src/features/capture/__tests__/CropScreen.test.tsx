@@ -10,10 +10,12 @@ import { Dimensions, Text, View } from 'react-native';
 import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
 import CropScreen from '../../../../app/crop';
-import { cropFrame, cropRectFor, initialCrop } from '../cropMath';
+import { CROP_RATIO, cropFrame, cropRectFor, initialCrop } from '../cropMath';
 import { usePendingCrop, type PendingCrop } from '../pendingCrop';
 import { saveGalleryPhoto } from '../saveCapture';
 import { captureError } from '@/lib/monitoring';
+import { cropProfilePhoto, useProfileCrop } from '@/features/profile/profileCrop';
+import type { ProfileCrop } from '@/lib/image/profileImage';
 
 // Crop screen (FR-CAP-03, FR-CAP-02; design: Crop): buttons, gestures and the zoom slider change what Done
 // queues; Reset and Fit undo; Cancel returns to the camera with nothing queued; Done queues the raw photo
@@ -262,6 +264,110 @@ describe('Crop screen', () => {
   it('opened without a photo (deep link) leaves for Today', async () => {
     usePendingCrop.setState({ pending: null });
     await renderRouter(routes, { initialUrl: '/crop', wrapper });
+    await act(async () => {});
+    expect(screen).toHavePathname('/today');
+  });
+});
+
+// Edit profile's photos (D-79): /crop?mode=avatar|cover, pan and zoom only. Done hands the frame back to
+// Edit profile (which prepares and uploads it); Cancel hands back nothing.
+describe('Crop screen for profile photos', () => {
+  const photo = { uri: 'file:///picker/portrait.jpg', width: 3000, height: 4000 };
+  const profileRoutes = {
+    ...routes,
+    'settings/profile': () => (
+      <View>
+        <Text>Edit profile stub</Text>
+      </View>
+    ),
+  };
+  const shapeFrame = (kind: 'avatar' | 'cover') =>
+    cropFrame(Dimensions.get('window'), { top: 0, bottom: 0 }, CROP_RATIO[kind]);
+
+  async function openProfileCrop(kind: 'avatar' | 'cover') {
+    await renderRouter(profileRoutes, { initialUrl: '/settings/profile', wrapper });
+    let result: Promise<ProfileCrop | null> = Promise.resolve(null);
+    await act(async () => {
+      result = cropProfilePhoto(photo, kind);
+    });
+    expect(screen).toHavePathname('/crop');
+    // Wrapped, so awaiting the opening doesn't wait for the crop's answer.
+    return { result };
+  }
+
+  beforeEach(() => {
+    usePendingCrop.setState({ pending: null });
+    useProfileCrop.setState({ request: null });
+  });
+
+  it('avatar: a square frame under a circle guide, pan and zoom only', async () => {
+    await openProfileCrop('avatar');
+    expect(screen.getByText('Profile photo')).toBeTruthy();
+    expect(screen.getByLabelText('Crop locked to a square')).toBeTruthy();
+    const drawn = screen.getByTestId('crop-frame', { includeHiddenElements: true });
+    const square = shapeFrame('avatar');
+    expect(square.width).toBe(square.height);
+    expect(drawn).toHaveStyle({ width: square.width, height: square.height });
+    expect(screen.getByTestId('crop-circle', { includeHiddenElements: true })).toBeTruthy();
+    for (const name of ['Rotate 90 degrees', 'Flip', 'Fit']) expect(screen.queryByRole('button', { name })).toBeNull();
+    for (const name of ['Cancel', 'Reset', 'Use photo']) expect(screen.getByRole('button', { name })).toBeTruthy();
+    expect(screen.getByRole('adjustable', { name: 'Zoom' })).toBeTruthy();
+    expect(screen.queryByText('#afternoon · from gallery')).toBeNull();
+  });
+
+  it('cover: the 5:2 frame, no circle guide', async () => {
+    await openProfileCrop('cover');
+    expect(screen.getByText('Cover photo')).toBeTruthy();
+    expect(screen.getByLabelText('Crop locked to 5:2')).toBeTruthy();
+    const band = shapeFrame('cover');
+    expect(band.width / band.height).toBeCloseTo(2.5);
+    const drawn = screen.getByTestId('crop-frame', { includeHiddenElements: true });
+    expect(drawn).toHaveStyle({ width: band.width, height: band.height });
+    expect(screen.queryByTestId('crop-circle', { includeHiddenElements: true })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Rotate 90 degrees' })).toBeNull();
+  });
+
+  it('Done hands back the chosen square in the picker’s pixels and returns to Edit profile', async () => {
+    const { result } = await openProfileCrop('avatar');
+    const pan = createGestureController('crop-pan');
+    await act(() => {
+      pan.begin({ x: 100, y: 100, translationX: 0, translationY: 0 });
+      pan.activate({ x: 100, y: 100, translationX: 0, translationY: 0 });
+      pan.update({ x: 100, y: 5000, translationX: 0, translationY: 4900 });
+      pan.end({ x: 100, y: 5000, translationX: 0, translationY: 4900 });
+    });
+    await press('Use photo');
+    await act(async () => {});
+    // Dragged down as far as it goes: the top of the portrait photo, full width.
+    await expect(result).resolves.toEqual({
+      rect: { originX: 0, originY: 0, width: 3000, height: 3000 },
+      basis: { width: 3000, height: 4000 },
+    });
+    expect(screen).toHavePathname('/settings/profile');
+    expect(useProfileCrop.getState().request).toBeNull();
+    expect(saveGalleryPhoto).not.toHaveBeenCalled();
+  });
+
+  it('Done right away on a cover hands back the centred 5:2 band', async () => {
+    const { result } = await openProfileCrop('cover');
+    await press('Use photo');
+    await act(async () => {});
+    const band = cropRectFor(initialCrop, photo, shapeFrame('cover'), CROP_RATIO.cover);
+    expect(band).toEqual({ originX: 0, originY: 1400, width: 3000, height: 1200 });
+    await expect(result).resolves.toEqual({ rect: band, basis: { width: 3000, height: 4000 } });
+  });
+
+  it('Cancel hands back nothing and returns to Edit profile', async () => {
+    const { result } = await openProfileCrop('avatar');
+    await press('Cancel');
+    await act(async () => {});
+    await expect(result).resolves.toBeNull();
+    expect(screen).toHavePathname('/settings/profile');
+    expect(saveGalleryPhoto).not.toHaveBeenCalled();
+  });
+
+  it('opened without a photo (deep link) leaves for Today', async () => {
+    await renderRouter(profileRoutes, { initialUrl: '/crop?mode=avatar', wrapper });
     await act(async () => {});
     expect(screen).toHavePathname('/today');
   });

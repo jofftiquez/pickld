@@ -6,6 +6,7 @@ import { crop } from '@/theme/tokens';
 import {
   clampCrop,
   coverScale,
+  CROP_RATIO,
   CROP_HEADER_HEIGHT,
   CROP_SHEET_HEIGHT,
   cropFrame,
@@ -255,5 +256,43 @@ describe('state changes', () => {
   it('clampCrop leaves a valid state alone', () => {
     const s = at({ rotation: 180, flip: true, zoom: 1.5, pan: { x: -100, y: 50 } });
     expect(clampCrop(s, wide, frame)).toEqual(s);
+  });
+});
+
+describe('profile photo frames (D-79)', () => {
+  const window = { width: 402, height: 874 };
+  const insets = { top: 62, bottom: 34 };
+
+  it('the avatar frame is a square and the cover frame 5:2, as wide as the moment frame', () => {
+    const moment = cropFrame(window, insets);
+    const square = cropFrame(window, insets, CROP_RATIO.avatar);
+    const band = cropFrame(window, insets, CROP_RATIO.cover);
+    expect(square.width).toBe(square.height);
+    expect(band.width / band.height).toBeCloseTo(2.5);
+    expect(band.width).toBe(window.width - crop.frameInsetX * 2);
+    expect(square.width).toBeGreaterThanOrEqual(moment.width);
+  });
+
+  it('cropRectFor keeps each shape: a centred square or 5:2 band, moved by pan', () => {
+    const image = { width: 3000, height: 4000 };
+    const square = cropFrame(window, insets, CROP_RATIO.avatar);
+    expect(cropRectFor(initialCrop, image, square, CROP_RATIO.avatar)).toEqual({
+      originX: 0,
+      originY: 500,
+      width: 3000,
+      height: 3000,
+    });
+    const band = cropFrame(window, insets, CROP_RATIO.cover);
+    const down = panCrop(initialCrop, { x: 0, y: 1e6 }, image, band);
+    expect(cropRectFor(down, image, band, CROP_RATIO.cover)).toEqual({
+      originX: 0,
+      originY: 0,
+      width: 3000,
+      height: 1200,
+    });
+  });
+
+  it('without a ratio it is the 3:4 moment frame, as before', () => {
+    expect(cropFrame(window, insets, CROP_RATIO.moment)).toEqual(cropFrame(window, insets));
   });
 });
