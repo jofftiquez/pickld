@@ -7,8 +7,9 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
 
 import { fillFraction, type DayCell } from './monthGrid';
-import { photoSource } from '@/lib/image/photoCache';
+import { photoCacheKey, photoSource } from '@/lib/image/photoCache';
 import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
+import { usePhotoRetry } from '@/lib/image/usePhotoRetry';
 
 export type CalendarDayProps = {
   cell: DayCell;
@@ -28,6 +29,7 @@ export function CalendarDay({ cell, accessibilityLabel, selected, onPress }: Cal
   const { jar, isFuture, isToday } = cell;
   const cover = isFuture ? null : (jar?.coverUrl ?? null);
   const count = isFuture ? 0 : (jar?.moment_count ?? 0);
+  const retry = usePhotoRetry(cover ? (photoCacheKey(cover) ?? cover) : null);
   const numberColor = cover ? colors.surface : isFuture ? colors.dayFuture : colors.ink;
   return (
     <Pressable
@@ -50,8 +52,10 @@ export function CalendarDay({ cell, accessibilityLabel, selected, onPress }: Cal
       {cover ? (
         <>
           <Image
+            key={retry.attempt}
             testID="day-cover"
             source={photoSource(cover)}
+            onError={retry.onError}
             placeholder={photoPlaceholder(cover)}
             placeholderContentFit="cover"
             style={StyleSheet.absoluteFill}

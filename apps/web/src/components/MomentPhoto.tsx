@@ -7,6 +7,8 @@ import { bubbleColors, colors, radius } from '@/theme/tokens';
 import { t } from '~/i18n/t';
 import type { PublicMoment } from '~/lib/publicPage';
 
+import { LoadedPhoto } from './LoadedPhoto';
+
 // One 3:4 moment with its edits drawn over it, as the app draws them (FR-CAP-08: edits are data, never
 // burned into the photo). Overlay positions are fractions of the photo, so they scale with the tile;
 // sizes measured on the 390-point reference photo use container query units.
@@ -81,6 +83,7 @@ export function MomentPhoto({
 }) {
   const edits = parseEdits(moment.edits);
   const src = moment.thumb ?? moment.full;
+  const overlays = edits.overlays.map((o) => <OverlayView key={o.id} overlay={o} assetBase={assetBase} />);
   return (
     <div
       style={{
@@ -93,7 +96,7 @@ export function MomentPhoto({
       }}
     >
       {src ? (
-        <img
+        <LoadedPhoto
           src={src}
           alt={t('jar.photo', { name: authorName, slot: moment.slot })}
           style={{
@@ -103,11 +106,12 @@ export function MomentPhoto({
             display: 'block',
             filter: edits.filter === 'original' ? undefined : `url(#filter-${edits.filter})`,
           }}
-        />
-      ) : null}
-      {edits.overlays.map((o) => (
-        <OverlayView key={o.id} overlay={o} assetBase={assetBase} />
-      ))}
+        >
+          {overlays}
+        </LoadedPhoto>
+      ) : (
+        overlays
+      )}
     </div>
   );
 }

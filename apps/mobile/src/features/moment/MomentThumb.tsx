@@ -6,8 +6,9 @@ import type { StampMoment } from '@/features/edit/stickers/stamps';
 
 import { MomentCover } from './MomentCover';
 import { hasVisibleEdits } from './momentRender';
-import { photoSource } from '@/lib/image/photoCache';
+import { photoCacheKey, photoSource } from '@/lib/image/photoCache';
 import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
+import { usePhotoRetry } from '@/lib/image/usePhotoRetry';
 
 export type MomentThumbProps = {
   uri: string | null;
@@ -25,13 +26,16 @@ export type MomentThumbProps = {
  * filter (`MomentCover`) when it has visible edits, else the plain thumbnail. Decorative: the parent speaks.
  */
 export function MomentThumb({ uri, edits, stamp = null, recyclingKey, transition, testID }: MomentThumbProps) {
+  const retry = usePhotoRetry(uri === null ? null : (photoCacheKey(uri) ?? uri));
   if (uri === null) return null;
   if (edits && hasVisibleEdits(edits)) {
     return <MomentCover uri={uri} edits={edits} stamp={stamp} accessible={false} testID={testID} />;
   }
   return (
     <Image
+      key={retry.attempt}
       source={photoSource(uri)}
+      onError={retry.onError}
       placeholder={photoPlaceholder(uri)}
       placeholderContentFit="cover"
       style={StyleSheet.absoluteFill}
