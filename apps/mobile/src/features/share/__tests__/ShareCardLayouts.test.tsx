@@ -113,16 +113,12 @@ describe('Share jar layouts (D-62)', () => {
 
     setMoments(3);
     await view.rerender(<ShareCardScreen jarId="jar-10" />);
-    expect(layoutNames()).toEqual([
-      'Layout: One large and two small',
-      'Layout: Three stacked',
-      'Layout: Three in a row',
-    ]);
+    expect(layoutNames()).toEqual(['Layout: One large and two small', 'Layout: Two and one']);
 
     setMoments(8);
     await view.rerender(<ShareCardScreen jarId="jar-10" />);
-    expect(layoutNames()).toEqual(['Layout: 4 by 2 grid', 'Layout: 2 by 4 grid', 'Layout: Film strip']);
-    expect(checked('Layout: 4 by 2 grid')).toBe(true);
+    expect(layoutNames()).toEqual(['Layout: 3 by 3 grid', 'Layout: One large and a grid below']);
+    expect(checked('Layout: 3 by 3 grid')).toBe(true);
   });
 
   it('counts only the moments on the card: a private one changes nothing', async () => {
@@ -144,7 +140,7 @@ describe('Share jar layouts (D-62)', () => {
 
     setMoments(5);
     await view.rerender(<ShareCardScreen jarId="jar-10" />);
-    expect(checked('Layout: 2 by 3 grid')).toBe(true);
+    expect(checked('Layout: One large and a strip below')).toBe(true);
   });
 
   it('shares one moment in the single full layout', async () => {
@@ -182,33 +178,31 @@ describe('Share jar layouts (D-62)', () => {
   });
 });
 
-describe('Story card uses the space (D-82)', () => {
-  it('draws one moment whole at 3:4 across the card, less the thin margin', async () => {
+describe('Story card keeps clear of Instagram’s bars (D-90)', () => {
+  it('draws one moment whole at 3:4, centred in the part of a Story that Instagram leaves uncovered', async () => {
     setMoments(1);
     await render(<ShareCardScreen jarId="jar-10" />);
     const unit = unitOf();
+    const safe = safeArea('story');
     const cell = cellBox(slots[0]!);
-    expect(cell.left / unit).toBeCloseTo(24);
-    expect(cell.width / unit).toBeCloseTo(1032);
     expect(cell.width / cell.height).toBeCloseTo(3 / 4);
+    expect((cell.left + cell.width / 2) / unit).toBeCloseTo(540);
+    expect(cell.top / unit).toBeGreaterThanOrEqual(safe.y - 1e-6);
   });
 
-  it('puts the name, caption and link on pills inside the part of a Story that Instagram leaves uncovered', async () => {
+  it('puts the caption, title and link under the photos, inside the uncovered part', async () => {
     setMoments(3);
     mockJar.moments[0] = moment(0, { caption: 'Early night.' });
     await render(<ShareCardScreen jarId="jar-10" />);
     const unit = unitOf();
     const safe = safeArea('story');
-    const author = boxOf('share-card-author');
-    expect(author.top / unit).toBeGreaterThanOrEqual(safe.y);
-    expect(author.top / unit).toBeGreaterThanOrEqual(0.13 * 1920);
-    const footer = boxOf('share-card-footer');
-    expect((footer.top + footer.height) / unit).toBeLessThanOrEqual(safe.y + safe.height + 1e-6);
-    expect((footer.top + footer.height) / unit).toBeLessThanOrEqual(0.82 * 1920);
-    const band = boxOf('share-card-caption-band');
-    expect(1920 - band.bottom / unit).toBeLessThanOrEqual(footer.top / unit);
+    const text = boxOf('share-card-text');
+    const bottomOfPhotos = Math.max(...[0, 1, 2].map((i) => cellBox(slots[i]!)).map((c) => c.top + c.height));
+    expect(text.top).toBeGreaterThanOrEqual(bottomOfPhotos);
+    expect((text.top + text.height) / unit).toBeLessThanOrEqual(safe.y + safe.height + 1e-6);
+    expect((text.top + text.height) / unit).toBeLessThanOrEqual(1920 - 250 + 1e-6);
     expect(screen.getByText('“Early night.”')).toBeTruthy();
-    // Photos reach past the text zones, to the card's margin.
-    expect(cellBox(slots[0]!).top / unit).toBeCloseTo(24);
+    expect(screen.getByText('Dale’s Sunday')).toBeTruthy();
+    expect(screen.getByText('pickld.me/dale')).toBeTruthy();
   });
 });
