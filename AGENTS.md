@@ -8,12 +8,8 @@ A photo diary app. Each day a user fills a **jar** with up to 8 **moments** (3:4
 `whereami, mebusywith, whoamiwith, ootd, selfie, morning, afternoon, evening`.
 People who follow you are **readers**; people you follow are **authors**. A new jar starts at local midnight.
 
-Source documents (read the relevant section before each task):
+Source documents: the requirements (IDs like `FR-JAR-03`), architecture, product docs, plans, decisions and backlog are private and are not in this public repo. Ask the owner for the section you need.
 
-- Functional Requirements (IDs like `FR-JAR-03`): (private link removed)
-- Architecture Plan: (private link removed)
-- Product & Screen Documentation: (private link removed)
-- Design canvas (screens by name): (private link removed)
 - **Offline design reference:** `design/index.html` (all Hi-fi A screens) and `design/screens/<Screen>.html` — static HTML exports. Open them in a browser and inspect layout, spacing and copy; translate to React Native with the component kit and `tokens.ts`, never by copying CSS directly. Photos in `design/images/` are placeholders.
 
 ## Stack
@@ -54,7 +50,7 @@ supabase/
   functions/         Edge Functions (Deno, TypeScript)
   tests/             SQL tests for RLS (pgTAP)
 docs/
-  tasks.md           Backlog, build in order
+  runbooks/          Deploy and operations runbooks (the only tracked docs; everything else in docs/ is git-ignored)
 design/
   index.html         All screens on one page
   screens/*.html     One static HTML file per screen (Hi-fi A)
@@ -76,6 +72,7 @@ design/
 11. **Accessibility:** every pressable has `accessibilityLabel`; tap areas ≥ 44×44 via `hitSlop`; respect Reduce Motion; support 200% text.
 12. **Brand:** primary buttons are `#7fad33` with white text (deliberate). All other text meets WCAG AA.
 13. **Copy** lives in translation files (`src/i18n/en.json`), never inline.
+14. **The repo is public.** Never commit docs (plans, decisions, milestone reports, backlogs, cost reviews; only `docs/runbooks/` is tracked) or anything with pricing, costs, revenue, business model, company, partner or personal details, or internal URLs and IPs. Keep such notes in git-ignored local files.
 
 ## Conventions
 
@@ -121,4 +118,4 @@ design/
 
 ## Build order
 
-Follow `docs/tasks.md` top to bottom. Do not start P1 tasks before all P0 tasks are done unless told to.
+Follow the backlog (private, ask the owner) top to bottom. Do not start P1 tasks before all P0 tasks are done unless told to.

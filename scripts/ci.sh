@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Same steps as .github/workflows/ci.yml, for running locally before a merge
-# (used while GitHub Actions is unavailable on this account; see docs/decisions.md D-19).
+# (used while GitHub Actions is unavailable on this account; decision D-19).
 # Needs Docker for the local Supabase stack.
 set -euo pipefail
 cd "$(dirname "$0")/.."
