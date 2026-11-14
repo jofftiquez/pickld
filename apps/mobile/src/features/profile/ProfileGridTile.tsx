@@ -3,11 +3,19 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { PhotoTile } from '@/components/PhotoTile';
+import type { Edits } from '@/features/edit/edits';
+import type { StampMoment } from '@/features/edit/stickers/stamps';
+import { MomentCover } from '@/features/moment/MomentCover';
+import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 export type ProfileGridTileProps = {
   uri: string | null;
+  /** The moment's edits (D-96): drawn over the photo when it has any, else the plain thumbnail. */
+  edits?: Edits;
+  /** What its auto stamps show (capture time in the jar's zone). */
+  stamp?: StampMoment | null;
   width: number;
   /** First line over the fade, e.g. "Nov 8" or "#ootd". Already translated. */
   title: string;
@@ -20,9 +28,11 @@ export type ProfileGridTileProps = {
   testID?: string;
 };
 
-/** A 3:4 tile in a profile's Jars or Moments grid (Profile): photo, dark fade, one or two lines of white text. */
+/** A 3:4 tile in a profile's Jars or Moments grid (Profile): photo with its edits (D-96), dark fade, one or two lines of white text. */
 export function ProfileGridTile({
   uri,
+  edits,
+  stamp = null,
   width,
   title,
   detail,
@@ -44,7 +54,22 @@ export function ProfileGridTile({
       style={[{ width }, pressed && onPress ? { opacity: PRESSED_OPACITY } : null]}
       testID={testID}
     >
-      <PhotoTile uri={uri} radius={radius.thumbLg} fadeHeight={sizes.profileTileFade}>
+      <PhotoTile
+        uri={uri}
+        photoView={
+          uri !== null && edits && hasVisibleEdits(edits) ? (
+            <MomentCover
+              uri={uri}
+              edits={edits}
+              stamp={stamp}
+              accessible={false}
+              testID={`${testID ?? 'profile-tile'}-moment`}
+            />
+          ) : undefined
+        }
+        radius={radius.thumbLg}
+        fadeHeight={sizes.profileTileFade}
+      >
         <View style={styles.text} pointerEvents="none">
           <Text
             maxFontSizeMultiplier={maxTextScale.tile}

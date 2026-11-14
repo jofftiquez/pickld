@@ -251,7 +251,8 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
     await act(async () => {});
 
-    expect(takeMockPhoto).toHaveBeenCalledWith('back');
+    // #selfie opens on the front lens (D-99).
+    expect(takeMockPhoto).toHaveBeenCalledWith('front');
     // The editor opens on the queued photo once it is in the queue (preparing runs behind it).
     expect(screen).toHavePathname('/edit/1');
     expect(saveCapture).toHaveBeenCalledTimes(1);
@@ -348,6 +349,14 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(parseDevPhotoParam('toString', true)).toBeNull();
     expect(parseDevPhotoParam('../etc', true)).toBeNull();
     expect(parseDevPhotoParam(['wide'], true)).toBeNull();
+  });
+
+  it('#selfie starts on the front lens and flip still goes back to the rear one (D-99)', async () => {
+    await openCamera('/camera?slot=selfie');
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+    expect(takeMockPhoto).toHaveBeenCalledWith('back');
   });
 
   it('flip takes the front fixture', async () => {
@@ -527,6 +536,11 @@ describe('Camera on a phone', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
     expect(jest.mocked(useCameraDevice)).toHaveBeenLastCalledWith('front');
     expect(screen.getByRole('button', { name: 'Flash off' }).props.accessibilityState).toEqual({ disabled: true });
+  });
+
+  it('#selfie opens on the front lens (D-99)', async () => {
+    await openCamera('/camera?slot=selfie');
+    expect(jest.mocked(useCameraDevice)).toHaveBeenLastCalledWith('front');
   });
 
   it('a failed capture stays on the camera with the shutter enabled again', async () => {

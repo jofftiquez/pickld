@@ -130,6 +130,7 @@ export default function TodayScreen() {
         now={now}
         tz={tz}
         tiles={tiles}
+        coverMomentId={jar?.jar?.coverMomentId ?? null}
         hasAnyJar={jar ? jar.hasAnyJar : null}
         displayName={me?.displayName ?? null}
         avatarUrl={me?.avatarUrl ?? null}

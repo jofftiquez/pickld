@@ -80,9 +80,6 @@ export const colors = {
   onPhotoMuted: '#e2e5dc', // date and count over a photo (Memories); 12:1 on the photo fade
   cropAction: '#e2e5dc', // Cancel and Reset on the dark header (Crop); 15:1 on editor
   cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
-  coverFadeTop: 'rgba(10,12,8,0.35)', // top of the dark fade over the Jar page cover, behind Back (Story)
-  coverFadeBottom: 'rgba(10,12,8,0.75)', // bottom of that fade, behind the author and title
-  coverSubtitle: '#eef0ea', // date and count under the title on the cover (Story)
   surfaceClear: 'rgba(255,255,255,0)', // transparent end of fades into surface (the sticker grid's bottom edge)
   progressTrack: 'rgba(255,255,255,0.4)', // moments not reached yet in Moment detail's progress bars (Moment)
 } as const;
@@ -407,7 +404,6 @@ export const sizes = {
   unlockSticker: 150, // earned sticker's width over the jar; height follows the art
   progressBarWidth: 80, // Milestones progress bar (StickerUnlock)
   progressBarHeight: 6,
-  jarCover: 230, // cover photo on the Jar page (Story)
   profileCover: 150, // cover band at the top of a profile (Profile, ProfileOther)
   profileAvatarOverlap: 44, // how far the profile avatar rises into the cover
   profileButton: 40, // Edit profile pill beside the avatar (Profile)
@@ -418,8 +414,6 @@ export const sizes = {
   lidChoice: 36, // jar lid colour squares (EditProfile)
   lidRing: 2, // ink ring on the chosen one
   lidJar: 40, // jar beside them, wearing the chosen lid
-  jarTile: 112, // tile height in the Jar page's 3-column grid (Story)
-  jarTileFade: 48, // bottom fade under a Jar page tile's #slot
   momentProgress: 3, // height of each of Moment detail's progress bars, one per shown moment (Moment)
   momentProgressCurrent: 5, // the bar of the moment on screen
   momentSheetOverlap: 24, // Moment detail's white sheet tucks this far under the photo

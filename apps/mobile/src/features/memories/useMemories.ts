@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
+import { fetchMomentRenders } from '@/features/moment/momentRenders';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
@@ -40,10 +41,9 @@ export async function fetchMemories(today: string): Promise<Memories> {
   const y = z.array(yearSummaryRow).parse(summary.data)[0];
   if (!r || !y) throw new Error('memories: empty summary');
 
-  const urls = await photoUrls([
-    ...(day?.cover_moment_id ? [day.cover_moment_id] : []),
-    ...r.strip.map((p) => p.moment_id),
-  ]);
+  const ids = [...(day?.cover_moment_id ? [day.cover_moment_id] : []), ...r.strip.map((p) => p.moment_id)];
+  // The photos' edits (D-96), read as the owner; a failed read leaves them plain.
+  const [urls, renders] = await Promise.all([photoUrls(ids), fetchMomentRenders(ids)]);
   return {
     onThisDay: day
       ? {
@@ -53,6 +53,7 @@ export async function fetchMemories(today: string): Promise<Memories> {
           yearsAgo: yearsBetween(day.local_date, today),
           coverMomentId: day.cover_moment_id,
           photoUrl: day.cover_moment_id ? (urls.get(day.cover_moment_id)?.full ?? null) : null,
+          photoRender: day.cover_moment_id ? (renders.get(day.cover_moment_id) ?? null) : null,
         }
       : null,
     recap: {
@@ -65,6 +66,7 @@ export async function fetchMemories(today: string): Promise<Memories> {
         jarId: p.jar_id,
         slot: p.slot,
         thumbUrl: urls.get(p.moment_id)?.thumb ?? null,
+        render: renders.get(p.moment_id) ?? null,
       })),
     },
     year: { year, jarsFilled: y.jars_filled, fullDays: y.full_days, momentCount: y.moment_count },

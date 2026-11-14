@@ -87,6 +87,29 @@ describe('MomentPreviewView', () => {
     }
   });
 
+  it('offers the owner Set as cover in the bar, and shows Cover instead on the jar’s cover (D-98)', async () => {
+    const onSetCover = jest.fn();
+    const withCover = items.map((i) => (i.slot === 'ootd' ? { ...i, isCover: true } : i));
+    await setup({ items: withCover, onSetCover });
+    await fireEvent.press(screen.getByRole('button', { name: 'Set as cover' }));
+    expect(onSetCover.mock.calls.map(([item]) => item.key)).toEqual(['m-whereami']);
+    expect(screen.queryByTestId('preview-cover-action')).toBeNull();
+
+    await swipeTo(1);
+    const cover = screen.getByTestId('preview-cover-action');
+    expect(cover).toBeDisabled();
+    expect(cover.props.accessibilityState).toEqual(expect.objectContaining({ selected: true }));
+    expect(screen.queryByTestId('preview-set-cover')).toBeNull();
+    await fireEvent.press(cover);
+    expect(onSetCover).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves Set as cover out of the bar when the screen can’t set it', async () => {
+    await setup();
+    expect(screen.queryByTestId('preview-set-cover')).toBeNull();
+    expect(screen.queryByTestId('preview-cover-action')).toBeNull();
+  });
+
   it('an Only me moment keeps Share but it is disabled and says why', async () => {
     const h = await setup({ startSlot: 'ootd' });
     const share = screen.getByTestId('preview-share');

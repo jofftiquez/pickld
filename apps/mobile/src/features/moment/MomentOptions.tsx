@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { usePendingCrop } from '@/features/capture/pendingCrop';
-import { jarPageQueryKeys } from '@/features/jar/useJarPage';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import type { GridTile } from '@/features/jar/todayGrid';
 import { formatShortDate, formatTime } from '@/lib/format';
@@ -18,13 +17,13 @@ import {
   deleteMoment,
   MomentOptionError,
   moveMoment,
-  setJarCover,
   setMomentVisibility,
   type MomentTarget,
   type OptionError,
 } from './momentActions';
 import { MomentOptionsSheet, type MomentOptionsMode } from './MomentOptionsSheet';
 import { openRecrop } from './recrop';
+import { useSetJarCover } from './useSetJarCover';
 
 export type MomentOptionsSelection = {
   tile: GridTile;
@@ -64,6 +63,7 @@ export function MomentOptions({ visible, mode, selection, userId, freeSlots, tz,
   const router = useRouter();
   const queryClient = useQueryClient();
   const setPendingCrop = usePendingCrop((s) => s.setPending);
+  const setCover = useSetJarCover(userId);
   const { tile, target } = selection;
   // A queued photo left at the owner's default shows that default; Readers until the profile has loaded.
   const [visibility, setVisibility] = useState<Visibility>(
@@ -145,12 +145,8 @@ export function MomentOptions({ visible, mode, selection, userId, freeSlots, tz,
       onSetCover={
         selection.canSetCover && target.kind === 'server'
           ? () => {
-              void run(() => setJarCover(getSupabase(), target.jarId, target.momentId)).then((ok) => {
-                if (!ok) return;
-                void queryClient.invalidateQueries({ queryKey: jarPageQueryKeys.jar(userId, target.jarId) });
-                void queryClient.invalidateQueries({ queryKey: ['profile'] });
-                onClose();
-                showToast('coverSet');
+              void run(() => setCover(target.jarId, target.momentId)).then((ok) => {
+                if (ok) onClose();
               });
             }
           : undefined

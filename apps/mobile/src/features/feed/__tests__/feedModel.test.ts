@@ -33,11 +33,11 @@ describe('buildMosaic', () => {
   const ids = ['m1', 'm2', 'm3', 'm4'];
   it('puts the first preview large and counts the rest of the visible moments as "+n" (design: 6 → +2)', () => {
     const m = buildMosaic({ preview_moment_ids: ids, previewUrls: ['u1', null, 'u3', 'u4'], visible_count: 6 });
-    expect(m.large).toEqual({ momentId: 'm1', url: 'u1' });
+    expect(m.large).toEqual({ momentId: 'm1', url: 'u1', render: null });
     expect(m.small).toEqual([
-      { momentId: 'm2', url: null },
-      { momentId: 'm3', url: 'u3' },
-      { momentId: 'm4', url: 'u4' },
+      { momentId: 'm2', url: null, render: null },
+      { momentId: 'm3', url: 'u3', render: null },
+      { momentId: 'm4', url: 'u4', render: null },
     ]);
     expect(m.more).toBe(2);
   });
@@ -60,8 +60,24 @@ describe('buildMosaic', () => {
       visible_count: 4,
       cover_moment_id: 'm3',
     });
-    expect(m.large).toEqual({ momentId: 'm3', url: 'u3' });
+    expect(m.large).toEqual({ momentId: 'm3', url: 'u3', render: null });
     expect(m.small.map((p) => p.momentId)).toEqual(['m1', 'm2', 'm4']);
+  });
+  it('gives each photo its edits row when the page read one (D-96)', () => {
+    const render = {
+      edits: { v: 1, filter: 'merienda', overlays: [] },
+      captured_at: null,
+      added_at: '2026-11-08T00:00:00Z',
+      tz: 'Asia/Manila',
+    };
+    const m = buildMosaic({
+      preview_moment_ids: ['m1', 'm2'],
+      previewUrls: ['u1', 'u2'],
+      visible_count: 2,
+      previewRenders: { m2: render },
+    });
+    expect(m.large?.render).toBeNull();
+    expect(m.small[0]?.render).toEqual(render);
   });
   it('has no large photo when there are no previews', () => {
     expect(buildMosaic({ preview_moment_ids: [], previewUrls: [], visible_count: 2 })).toEqual({

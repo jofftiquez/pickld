@@ -41,6 +41,8 @@ export type MomentPreviewViewProps = {
   onShare: (item: PreviewItem) => void;
   onVisibility: (item: PreviewItem) => void;
   onMore: (item: PreviewItem) => void;
+  /** Set as cover in the bar (D-98); without it the bar leaves the action out (it stays under More). */
+  onSetCover?: (item: PreviewItem) => void;
   /** Delete on a photo still on the phone; the caller asks for confirmation. */
   onDelete: (item: PreviewItem) => void;
   /** An action is running: the bar is disabled. */
@@ -53,8 +55,9 @@ export type MomentPreviewViewProps = {
 /**
  * Moment preview (QA item 3, D-54; FR-JAR-02; design: MomentPreview): the owner's own moment from Today, full
  * screen, with the 3:4 photo and its edits, the #slot, time, visibility, caption, likes and comments, swiped
- * left and right through today's moments in slot order. The bar has Edit, Share, Visibility and More for a
- * live moment; a photo still on the phone has only Edit and Delete, and none while it uploads.
+ * left and right through today's moments in slot order. The bar has Edit, Share, Visibility, Set as cover
+ * (D-98) and More for a live moment; a photo still on the phone has only Edit and Delete, and none while it
+ * uploads.
  */
 export function MomentPreviewView({
   items,
@@ -66,6 +69,7 @@ export function MomentPreviewView({
   onShare,
   onVisibility,
   onMore,
+  onSetCover,
   onDelete,
   busy = false,
   error = null,
@@ -132,7 +136,7 @@ export function MomentPreviewView({
   const slot = t(`slots.${item.slot}`);
   const at = item.time === null ? null : new Date(item.time);
   const visibilityLabel = t(`visibility.${VISIBILITY_KEY[item.visibility]}`);
-  const actions = previewActions(item);
+  const actions = previewActions(item).filter((action) => action !== 'cover' || onSetCover !== undefined);
   const shareable = canShare(item);
   const note = item.kind === 'queued' ? (item.uploading ? t('preview.uploading') : t('preview.queued')) : null;
 
@@ -296,6 +300,31 @@ export function MomentPreviewView({
                       disabled={busy}
                       wide={large}
                       testID="preview-visibility-action"
+                    />
+                  );
+                case 'cover':
+                  // Already the cover: a state, not an action (D-98).
+                  return item.isCover ? (
+                    <PreviewActionButton
+                      key={action}
+                      icon="check"
+                      label={t('tile.cover')}
+                      accessibilityHint={t('preview.coverLabel')}
+                      onPress={() => undefined}
+                      selected
+                      wide={large}
+                      testID="preview-cover-action"
+                    />
+                  ) : (
+                    <PreviewActionButton
+                      key={action}
+                      icon="photo"
+                      label={t('preview.setCover')}
+                      accessibilityHint={t('preview.setCoverHint')}
+                      onPress={() => onSetCover?.(item)}
+                      disabled={busy}
+                      wide={large}
+                      testID="preview-set-cover"
                     />
                   );
                 case 'more':

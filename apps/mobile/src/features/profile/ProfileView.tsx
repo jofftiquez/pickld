@@ -12,6 +12,9 @@ import { ListRow } from '@/components/ListRow';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
+import { parseEdits } from '@/features/edit/edits';
+import type { StampMoment } from '@/features/edit/stickers/stamps';
+import type { JarMoment } from '@/features/jar/jarPage';
 import { deviceLocale } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, slots, space } from '@/theme/tokens';
@@ -58,6 +61,11 @@ const MAX_MOMENTS = slots.length;
 const GRID_COLUMNS = 3;
 const GRID_GAP = space.sm - 2;
 const GRID_PADDING = space.xl;
+
+/** A tile's auto stamps: capture time in the jar's zone (D-96). */
+function stampOf(moment: Pick<JarMoment, 'captured_at' | 'added_at'>, tz: string): StampMoment {
+  return { capturedAt: new Date(moment.captured_at ?? moment.added_at), tz };
+}
 
 function formatTileDate(localDate: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(
@@ -339,6 +347,8 @@ export function ProfileView({
                       <ProfileGridTile
                         key={jar.id}
                         uri={cover.thumbUrl}
+                        edits={parseEdits(cover.edits)}
+                        stamp={stampOf(cover, jar.tz)}
                         width={tileWidth}
                         title={date}
                         detail={t('profile.jarCount', { count, max: MAX_MOMENTS })}
@@ -356,6 +366,8 @@ export function ProfileView({
                       <ProfileGridTile
                         key={moment.id}
                         uri={moment.thumbUrl}
+                        edits={parseEdits(moment.edits)}
+                        stamp={stampOf(moment, jar.tz)}
                         width={tileWidth}
                         title={slot}
                         detail={date}

@@ -142,8 +142,14 @@ describe('canSetCover', () => {
 });
 
 describe('previewActions', () => {
-  it('a live moment has Edit, Share, Visibility and More; a photo on the phone only Edit and Delete', () => {
-    expect(previewActions({ kind: 'live', uploading: false })).toEqual(['edit', 'share', 'visibility', 'more']);
+  it('a live moment has Edit, Share, Visibility, Set as cover (D-98) and More; a photo on the phone only Edit and Delete', () => {
+    expect(previewActions({ kind: 'live', uploading: false })).toEqual([
+      'edit',
+      'share',
+      'visibility',
+      'cover',
+      'more',
+    ]);
     expect(previewActions({ kind: 'queued', uploading: false })).toEqual(['edit', 'delete']);
     expect(previewActions({ kind: 'queued', uploading: true })).toEqual([]);
   });

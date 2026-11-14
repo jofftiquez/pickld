@@ -47,4 +47,4 @@ appId: me.pickld.app
 - tapOn:
     id: moment-close
 - assertVisible:
-    id: jar-count-tile
+    id: jar-header

@@ -1,9 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import type { JarMoment, JarPageData } from '../jarPage';
 import { JarPageView, type JarPageViewProps } from '../JarPageView';
 
 const insets = { top: 0, right: 0, bottom: 0, left: 0 };
+const hidden = { includeHiddenElements: true } as const;
 
 function moment(over: Partial<JarMoment> & Pick<JarMoment, 'id' | 'slot'>): JarMoment {
   return {
@@ -49,34 +50,58 @@ async function setup(props: Partial<JarPageViewProps> = {}) {
 }
 
 describe('JarPageView', () => {
-  it('shows the cover title, date, count, Full jar tag and the cover caption with its slot and time', async () => {
+  it('has a plain header with the author, day title, date, count and Full jar tag, and no cover band (D-97)', async () => {
     // The owner's count is every moment (D-9), so their full jar says so.
-    await setup({ data: { ...daleJar, viewerId: 'dale-id' } });
+    const onOpenAuthor = jest.fn();
+    await setup({ data: { ...daleJar, viewerId: 'dale-id' }, onOpenAuthor });
     expect(screen.getByRole('header', { name: 'Dale’s Sunday' })).toBeTruthy();
     expect(screen.getByTestId('jar-subtitle')).toHaveTextContent('Nov 8, 2026 · 8 of 8 moments');
     expect(screen.getByTestId('jar-full-tag')).toHaveTextContent('Full jar');
-    expect(screen.getByTestId('jar-highlight')).toHaveTextContent('“Rain again. Coffee first.” — #morning, 6:48 AM');
-    expect(screen.getByLabelText('8 of 8 moments')).toBeTruthy();
+    expect(screen.queryByTestId('jar-highlight')).toBeNull();
+    expect(screen.queryByTestId('jar-cover-photo')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Dale Santos' }));
+    expect(onOpenAuthor).toHaveBeenCalledTimes(1);
+    // Without a signed avatar, the author's initials.
+    expect(within(screen.getByTestId('jar-avatar', hidden)).getByText('DS', hidden)).toBeTruthy();
   });
 
-  it('lists the other visible moments with Added later badges, and never a private one for a reader', async () => {
+  it('shows the author’s signed profile photo, not initials, in the header (D-93)', async () => {
+    await setup({ authorAvatarUrl: 'https://photos.test/avatars/dale.webp' });
+    const avatar = within(screen.getByTestId('jar-avatar', hidden));
+    expect(avatar.queryByText('DS', hidden)).toBeNull();
+  });
+
+  it('shows every visible moment in slot order in two columns, the cover badged and never a private one for a reader', async () => {
     await setup();
+    const tiles = screen.getAllByTestId(/^jar-tile-[a-z]+$/).map((node) => node.props.testID as string);
+    expect(tiles).toEqual(['jar-tile-whereami', 'jar-tile-mebusywith', 'jar-tile-morning']);
     expect(screen.getByLabelText('#whereami, added later')).toBeTruthy();
     expect(screen.getByTestId('jar-tile-whereami-added-later')).toHaveTextContent('Added later');
     expect(screen.getByLabelText('#mebusywith')).toBeTruthy();
     expect(screen.queryByTestId('jar-tile-mebusywith-added-later')).toBeNull();
     expect(screen.queryByTestId('jar-tile-ootd')).toBeNull();
-    // The cover isn't repeated in the grid.
-    expect(screen.queryByTestId('jar-tile-morning')).toBeNull();
+    // The newest caption is the cover (D-56): badged "Cover" in the grid (D-98), not a header band.
+    expect(screen.getByTestId('jar-tile-morning-cover')).toHaveTextContent('Cover');
+    expect(screen.getByLabelText('#morning, cover')).toBeTruthy();
+    expect(screen.queryByTestId('jar-tile-whereami-cover')).toBeNull();
+    // Two 3:4 columns, as on Today (D-97): never cropped (D-89).
+    expect(screen.getByTestId('jar-tile-morning').props.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ width: (750 - 2 * 20 - 12) / 2 })]),
+    );
   });
 
-  it('keeps Added later visible when the backfilled moment is the cover', async () => {
-    const moments = daleJar.moments.map((m) => (m.slot === 'morning' ? { ...m, is_backfilled: true } : m));
-    await setup({ data: { ...daleJar, moments } });
-    expect(screen.getByTestId('jar-highlight')).toHaveTextContent(
-      '“Rain again. Coffee first.” — #morning, 6:48 AM · Added later',
-    );
-    expect(screen.getByLabelText('Cover photo, #morning, added later')).toBeTruthy();
+  it('badges the owner’s pick and keeps Added later on a backfilled cover', async () => {
+    const moments = daleJar.moments.map((m) => (m.slot === 'mebusywith' ? { ...m, is_backfilled: true } : m));
+    await setup({ data: { ...daleJar, moments, jar: { ...daleJar.jar, resolved_cover_id: 'm-busy' } } });
+    expect(screen.getByLabelText('#mebusywith, cover, added later')).toBeTruthy();
+    expect(screen.queryByTestId('jar-tile-morning-cover')).toBeNull();
+  });
+
+  it('opens a tile with the moment’s id', async () => {
+    const onOpenMoment = jest.fn();
+    await setup({ onOpenMoment });
+    await fireEvent.press(screen.getByTestId('jar-tile-morning'));
+    expect(onOpenMoment).toHaveBeenCalledWith('m-morning');
   });
 
   it('shows the owner their private moment with a lock', async () => {
