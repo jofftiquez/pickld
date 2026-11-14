@@ -473,6 +473,235 @@ export type Database = {
           },
         ];
       };
+      invite_attempts: {
+        Row: {
+          created_at: string;
+          key: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          key: string;
+        };
+        Update: {
+          created_at?: string;
+          key?: string;
+        };
+        Relationships: [];
+      };
+      invite_codes: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          disabled_at: string | null;
+          expires_at: string | null;
+          kind: Database['public']['Enums']['invite_kind'];
+          max_uses: number;
+          owner_id: string | null;
+          set_no: number | null;
+          slot: Database['public']['Enums']['slot'] | null;
+          uses: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          disabled_at?: string | null;
+          expires_at?: string | null;
+          kind: Database['public']['Enums']['invite_kind'];
+          max_uses?: number;
+          owner_id?: string | null;
+          set_no?: number | null;
+          slot?: Database['public']['Enums']['slot'] | null;
+          uses?: number;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          disabled_at?: string | null;
+          expires_at?: string | null;
+          kind?: Database['public']['Enums']['invite_kind'];
+          max_uses?: number;
+          owner_id?: string | null;
+          set_no?: number | null;
+          slot?: Database['public']['Enums']['slot'] | null;
+          uses?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invite_codes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_codes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_codes_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_codes_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      invite_holders: {
+        Row: {
+          frozen_at: string | null;
+          frozen_by: string | null;
+          frozen_reason: string | null;
+          unlocked_at: string | null;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          frozen_at?: string | null;
+          frozen_by?: string | null;
+          frozen_reason?: string | null;
+          unlocked_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          frozen_at?: string | null;
+          frozen_by?: string | null;
+          frozen_reason?: string | null;
+          unlocked_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invite_holders_frozen_by_fkey';
+            columns: ['frozen_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_holders_frozen_by_fkey';
+            columns: ['frozen_by'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_holders_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_holders_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      invite_links: {
+        Row: {
+          created_at: string;
+          enabled: boolean;
+          link_id: string;
+          owner_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          enabled?: boolean;
+          link_id: string;
+          owner_id: string;
+        };
+        Update: {
+          created_at?: string;
+          enabled?: boolean;
+          link_id?: string;
+          owner_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invite_links_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_links_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: true;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      invite_redemptions: {
+        Row: {
+          code: string;
+          id: string;
+          invitee_id: string | null;
+          invitee_suspended_at: string | null;
+          redeemed_at: string;
+          via_link: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          id?: string;
+          invitee_id?: string | null;
+          invitee_suspended_at?: string | null;
+          redeemed_at?: string;
+          via_link?: boolean;
+        };
+        Update: {
+          code?: string;
+          id?: string;
+          invitee_id?: string | null;
+          invitee_suspended_at?: string | null;
+          redeemed_at?: string;
+          via_link?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'invite_redemptions_code_fkey';
+            columns: ['code'];
+            isOneToOne: false;
+            referencedRelation: 'invite_codes';
+            referencedColumns: ['code'];
+          },
+          {
+            foreignKeyName: 'invite_redemptions_invitee_id_fkey';
+            columns: ['invitee_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'invite_redemptions_invitee_id_fkey';
+            columns: ['invitee_id'];
+            isOneToOne: true;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       jars: {
         Row: {
           comment_count: number;
@@ -1956,7 +2185,28 @@ export type Database = {
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       in_quiet_hours: { Args: { at: string; p_user: string }; Returns: boolean };
+      invite_add_set: { Args: { p_owner: string; p_set_no: number }; Returns: undefined };
+      invite_freeze: { Args: { p_note: string; p_user: string }; Returns: Json };
+      invite_grant_set: { Args: { p_user: string }; Returns: Json };
+      invite_link_reset: { Args: Record<PropertyKey, never>; Returns: string };
+      invite_link_set: { Args: { p_enabled: boolean }; Returns: boolean };
+      invite_moderator: { Args: Record<PropertyKey, never>; Returns: string };
+      invite_new_link: { Args: { p_owner: string }; Returns: string };
+      invite_owner_can_invite: { Args: { p_owner: string }; Returns: boolean };
       invite_period_active: { Args: Record<PropertyKey, never>; Returns: boolean };
+      invite_redeem: { Args: { p_token: string }; Returns: Json };
+      invite_setup: { Args: { p_owner: string; p_sets: number; p_unlocked: boolean }; Returns: undefined };
+      invite_token: { Args: { p_len: number }; Returns: string };
+      invite_unfreeze: { Args: { p_note: string; p_user: string }; Returns: Json };
+      invite_usable_code: {
+        Args: { p_lock?: boolean; p_token: string };
+        Returns: {
+          code: string;
+          kind: Database['public']['Enums']['invite_kind'];
+          owner_id: string;
+          via_link: boolean;
+        }[];
+      };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
@@ -2280,6 +2530,7 @@ export type Database = {
           visibility: Database['public']['Enums']['jar_visibility'];
         }[];
       };
+      my_invites: { Args: Record<PropertyKey, never>; Returns: Json };
       my_pending_moments: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2475,6 +2726,7 @@ export type Database = {
       account_job_status: 'pending' | 'running' | 'done' | 'failed';
       day_slot: 'morning' | 'afternoon' | 'evening';
       day_type: 'early_bird' | 'coffee_first' | 'night_owl';
+      invite_kind: 'personal' | 'waitlist' | 'admin';
       jar_visibility: 'readers' | 'everyone' | 'only_me';
       mod_source: 'auto_check' | 'report' | 'appeal';
       mod_status: 'pending' | 'kept' | 'removed' | 'escalated';
@@ -2597,6 +2849,7 @@ export const Constants = {
       account_job_status: ['pending', 'running', 'done', 'failed'],
       day_slot: ['morning', 'afternoon', 'evening'],
       day_type: ['early_bird', 'coffee_first', 'night_owl'],
+      invite_kind: ['personal', 'waitlist', 'admin'],
       jar_visibility: ['readers', 'everyone', 'only_me'],
       mod_source: ['auto_check', 'report', 'appeal'],
       mod_status: ['pending', 'kept', 'removed', 'escalated'],

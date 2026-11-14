@@ -188,7 +188,10 @@
       "studio_sticker_edit": "Edited sticker",
       "studio_sticker_retire": "Retired sticker",
       "studio_sticker_restore": "Restored sticker",
-      "admit": "Let in from the waiting line"
+      "admit": "Let in from the waiting line",
+      "invite_grant_set": "Gave another set of invite codes",
+      "invite_freeze": "Paused invites",
+      "invite_unfreeze": "Let invites work again"
     },
     "guideline": "Guideline: {{guideline}}",
     "note": "Note: {{note}}",
@@ -201,6 +204,7 @@
       "appeal_overturned": "Appeal overturned",
       "moderator": "Lifted early by a moderator"
     },
+    "suspendedInvitees": "3 people they invited were suspended within 90 days",
     "strikes": "Strikes: {{count}}",
     "until": "Until {{date}}",
     "filtered": "Showing actions by or about account {{user}}",
