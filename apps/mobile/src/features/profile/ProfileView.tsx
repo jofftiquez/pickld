@@ -169,8 +169,9 @@ export function ProfileView({
             />
             <View style={styles.actions} testID="profile-actions">
               {isOwner && onEditProfile ? (
-                // BaseButton pins itself to the top (`alignSelf: flex-start`) unless it stretches; this
-                // wrapper is what the row centres, so the pill's middle sits on the cover edge too (D-79).
+                // BaseButton (also under FollowButton) pins itself to the top (`alignSelf: flex-start`)
+                // unless it stretches; the wrapper is what the row centres, so the pill's middle sits on
+                // the cover edge like the round buttons (D-79).
                 <View>
                   <BaseButton
                     label={t('profile.edit')}
@@ -190,13 +191,15 @@ export function ProfileView({
                 </View>
               ) : null}
               {!isOwner && onToggleReading ? (
-                <FollowButton
-                  action={followAction(relationship)}
-                  name={profile.display_name}
-                  onPress={onToggleReading}
-                  disabled={followBusy}
-                  testID="profile-follow"
-                />
+                <View>
+                  <FollowButton
+                    action={followAction(relationship)}
+                    name={profile.display_name}
+                    onPress={onToggleReading}
+                    disabled={followBusy}
+                    testID="profile-follow"
+                  />
+                </View>
               ) : null}
               <RoundIconButton
                 icon="share"
