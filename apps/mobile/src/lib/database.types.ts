@@ -2219,6 +2219,7 @@ export type Database = {
       invite_check: { Args: { p_ip_hash: string; p_token: string }; Returns: Json };
       invite_freeze: { Args: { p_note: string; p_user: string }; Returns: Json };
       invite_grant_set: { Args: { p_user: string }; Returns: Json };
+      invite_joined: { Args: { p_invitee: string; p_owner: string }; Returns: undefined };
       invite_link_reset: { Args: Record<PropertyKey, never>; Returns: string };
       invite_link_set: { Args: { p_enabled: boolean }; Returns: boolean };
       invite_moderator: { Args: Record<PropertyKey, never>; Returns: string };

@@ -14,6 +14,7 @@ export const notificationType = z.enum([
   'appeal_decided',
   'friend_joined',
   'admitted',
+  'invite_joined',
 ]);
 export type NotificationType = z.infer<typeof notificationType>;
 
@@ -55,7 +56,14 @@ export type NotificationEntry = {
 export type NotificationSection = { key: 'today' | 'week' | 'earlier'; entries: NotificationEntry[] };
 
 /** Social rows need their actor; when RLS hides the actor (a block since) the row isn't shown. */
-const NEEDS_ACTOR: ReadonlySet<NotificationType> = new Set(['new_reader', 'like', 'comment', 'reply', 'friend_joined']);
+const NEEDS_ACTOR: ReadonlySet<NotificationType> = new Set([
+  'new_reader',
+  'like',
+  'comment',
+  'reply',
+  'friend_joined',
+  'invite_joined',
+]);
 
 function toEntry(row: NotificationRow): NotificationEntry {
   return {
@@ -131,7 +139,8 @@ export type NotificationTarget =
 export function targetOf(entry: NotificationEntry): NotificationTarget | null {
   switch (entry.type) {
     case 'new_reader':
-    case 'friend_joined': {
+    case 'friend_joined':
+    case 'invite_joined': {
       const who = entry.actors[0];
       return who ? { pathname: '/u/[username]', params: { username: who.username } } : null;
     }

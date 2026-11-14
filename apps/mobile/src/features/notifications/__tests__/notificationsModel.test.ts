@@ -119,6 +119,14 @@ describe('targetOf', () => {
     expect(pushTarget({ type: 'admitted', notificationIds: ['n1'] })).toEqual({ pathname: '/(tabs)/today' });
   });
 
+  it('opens the profile of a friend who joined with an invite, and drops the row once they are gone (0135)', () => {
+    expect(targetOf(entry(row({ id: '1', type: 'invite_joined', actor: mika, created_at: at })))).toEqual({
+      pathname: '/u/[username]',
+      params: { username: 'mika' },
+    });
+    expect(buildSections([row({ id: '2', type: 'invite_joined', created_at: at })], NOW, TZ)).toEqual([]);
+  });
+
   it('has nothing to open when the target is gone', () => {
     expect(targetOf(entry(row({ id: '1', type: 'full_jar', created_at: at })))).toBeNull();
   });

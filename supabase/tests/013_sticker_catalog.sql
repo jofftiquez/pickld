@@ -38,13 +38,13 @@ select ok(pg_get_function_result('public.public_sticker_catalog()'::regprocedure
           'the anon catalog has no ownership, store, artist or milestone columns');
 
 -- ---------------------------------------------------------------- launch catalog (FR-STK-01)
-select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id where p.tier in ('free', 'earned')), 85,
-          '85 rows in the launch packs: the 50 launch stickers, 26 pictures (0032) and 9 stamps and milestones (0060)');
+select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id where p.tier in ('free', 'earned')), 87,
+          '87 rows in the launch packs: the 50 launch stickers, 26 pictures (0032), 9 stamps and milestones (0060) and 2 invite milestones (0135)');
 select results_eq(
   $$ select p.slug, p.tier::text, count(s.id)::int from public.sticker_packs p left join public.stickers s on s.pack_id = p.id
      where p.tier in ('free', 'earned') group by p.slug, p.tier, p.sort order by p.sort $$,
-  $$ values ('everyday', 'free', 25), ('the-eight', 'free', 40), ('stamps', 'free', 10), ('milestones', 'earned', 10) $$,
-  'rows per pack, retired ones included (0032): Everyday 25, The Eight 40, Stamps 10, Milestones 10 (0060)');
+  $$ values ('everyday', 'free', 25), ('the-eight', 'free', 40), ('stamps', 'free', 10), ('milestones', 'earned', 12) $$,
+  'rows per pack, retired ones included (0032): Everyday 25, The Eight 40, Stamps 10, Milestones 12 (0060, 0135)');
 select results_eq(
   $$ select s.slot_hint::text, count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id
      where p.slug = 'the-eight' group by s.slot_hint order by s.slot_hint $$,
@@ -57,7 +57,8 @@ select is((select array_agg(s.stamp::text order by s.sort) from public.stickers 
           array['time', 'date', 'weekday', 'jar_number'], 'Stamps has the auto time, date, day and jar number stamps');
 select is((select array_agg(s.milestone_key order by s.sort) from public.stickers s join public.sticker_packs p on p.id = s.pack_id
            where p.slug = 'milestones'),
-          array['first_full_jar', 'full_jars_7', 'jars_30', 'jars_100', 'one_year', 'jars_7', 'full_jars_30', 'jars_50', 'full_jars_100', 'jars_200'], 'Milestones: one sticker per milestone (D-8, 0060)');
+          array['first_full_jar', 'full_jars_7', 'jars_30', 'jars_100', 'one_year', 'jars_7', 'full_jars_30', 'jars_50', 'full_jars_100', 'jars_200',
+                'first_friend', 'full_jar_of_friends'], 'Milestones: one sticker per milestone (D-8, 0060, 0135)');
 select is((select count(*)::int from public.stickers where milestone_key is not null and pack_id <> (select id from public.sticker_packs where slug = 'milestones')),
           0, 'only Milestones stickers carry a milestone key');
 select is((select count(*)::int from public.stickers where cardinality(tags) = 0), 0, 'every sticker has tags');

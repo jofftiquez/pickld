@@ -71,6 +71,14 @@ describe('NotificationsView', () => {
     expect(screen.queryByTestId('notification-follow')).toBeNull();
   });
 
+  it('says who joined with an invite, and offers to read them when the viewer does not yet (0135)', async () => {
+    const props = await setup({}, { rows: [row({ id: '9', type: 'invite_joined', actor: mika })] });
+    expect(screen.getByLabelText('Unread, Mika Reyes joined with your invite. Say hi?, 12m')).toBeTruthy();
+    expect(screen.getByText('Be a reader')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('notification-follow'));
+    expect(props.onFollow).toHaveBeenCalledWith(expect.objectContaining({ type: 'invite_joined' }));
+  });
+
   it('pins the reminder card only while the slot is empty, and Capture opens that slot', async () => {
     const props = await setup();
     await fireEvent.press(screen.getByLabelText('Capture your #afternoon'));
