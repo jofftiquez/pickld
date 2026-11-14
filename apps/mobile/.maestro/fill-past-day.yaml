@@ -86,6 +86,8 @@ appId: me.pickld.app
       id: editor-screen
     timeout: 10000
 - tapOn:
+    id: editor-next
+- tapOn:
     id: editor-save
 # Back on the day page, the photo holds its slot at once (queued, then uploaded).
 - extendedWaitUntil:

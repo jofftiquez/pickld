@@ -44,6 +44,9 @@ appId: me.pickld.app
     visible:
       id: editor-screen
     timeout: 10000
+# Next opens the details step: the caption and who can see it (D-103).
+- tapOn:
+    id: editor-next
 - tapOn:
     id: editor-caption
 - inputText: Sinigang at the office pantry
@@ -51,7 +54,7 @@ appId: me.pickld.app
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: Capture-with-caption-ios
-# Save is in the editor's top toolbar (D-59), always on screen.
+# Save is in the editor's top toolbar on the details step (D-59, D-103), always on screen.
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

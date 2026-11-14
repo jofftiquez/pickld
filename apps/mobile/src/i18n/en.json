@@ -331,7 +331,13 @@
     "undoHint": "Takes back your last change to the photo",
     "addToSlot": "Add to {{slot}}",
     "done": "Done",
-    "saveFailed": "Couldn’t save your changes. Try again."
+    "saveFailed": "Couldn’t save your changes. Try again.",
+    "next": "Next",
+    "nextHint": "Goes on to the caption and who can see this moment",
+    "back": "Back",
+    "backHint": "Goes back to editing the photo",
+    "hashtag": "Hashtag",
+    "hashtagLabel": "Hashtag: {{slot}}. Set by the slot."
   },
   "editOverlay": {
     "hint": "Double-tap to select. Swipe up or down for actions to move, resize, rotate or delete it.",

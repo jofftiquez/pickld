@@ -62,7 +62,9 @@ appId: me.pickld.app
     visible:
       id: editor-screen
     timeout: 10000
-# Save is in the editor's top toolbar (D-59), always on screen.
+# Next, then Save, in the editor's top toolbar (D-59, D-103), always on screen.
+- tapOn:
+    id: editor-next
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

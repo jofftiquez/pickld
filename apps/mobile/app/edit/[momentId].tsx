@@ -15,7 +15,8 @@ import { textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
 
 // A queued photo is edited by its queue row id (it has no server id until uploaded); an uploaded moment by
-// its moment id (Moment options, M2-23). `focus=caption` is Moment options' Edit caption. `via=crop`: Crop
+// its moment id (Moment options, M2-23). `focus=caption` is Moment options' Edit caption: it opens on the
+// details step (D-104). `via=crop`: Crop
 // opened it on a gallery photo, replacing itself, so the camera is still below (Camera → Crop → Editor).
 const paramsSchema = z.object({
   momentId: z.union([z.coerce.number().int().positive(), z.uuid()]),
@@ -23,7 +24,8 @@ const paramsSchema = z.object({
   via: z.literal('crop').optional(),
 });
 
-// Editor (M2-11, M2-12, M2-23; FR-CAP-04, FR-CAP-08, FR-CAP-09, FR-CAP-10; design: Capture). The camera
+// Editor (M2-11, M2-12, M2-23; FR-CAP-04, FR-CAP-08, FR-CAP-09, FR-CAP-10; designs: EditPhoto, EditDetails),
+// in two steps on this one route (D-103): the photo and its tools, then Next to the caption and visibility. The camera
 // opens it on the photo it just queued; pickld://edit/<queue id> reopens a queued photo with its saved
 // edits, and pickld://edit/<moment id> an uploaded one.
 export default function EditScreen() {

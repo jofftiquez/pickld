@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Pickld – Edit details</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#3f6510}a:hover{color:#2c470a}
+button,input,textarea{font-family:inherit}
+</style>
+<style>html,body{background:#d9dcd3}body{display:flex;justify-content:center;padding:24px 0}</style>
+</head>
+<body>
+<!-- Edit details (D-103): step 2 of the editor, after Next. The edited photo small (stickers and bubbles as drawn), the caption, the slot's hashtag (read-only, D-107) and who can see the moment (D-48). Back (or a swipe from the left edge) returns to Edit photo with everything kept. Edit caption in Moment options opens here directly (D-104). -->
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #0b0d09; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #11140d; display: flex; flex-direction: column; overflow: hidden">
+<div role="toolbar" style="position: absolute; top: 0; left: 0; right: 0; z-index: 2; padding: 54px 16px 8px; background: rgba(10,12,8,0.55); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: flex; align-items: center; gap: 8px">
+<div aria-hidden="true" style="position: absolute; top: 14px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; color: #ffffff"><span>9:41</span><span>●●● ▮</span></div>
+<a href="EditPhoto.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(10,12,8,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #ffffff; display: flex; align-items: center; justify-content: center; text-decoration: none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></a>
+<div style="flex: 1; display: flex; justify-content: center"><div style="display: flex; flex-direction: column; align-items: center; gap: 1px; background: rgba(10,12,8,0.5); border-radius: 18px; padding: 7px 16px">
+<span style="font-size: 15px; font-weight: 700; color: #ffffff">#afternoon</span>
+<span style="font-size: 11px; font-weight: 500; color: #e2e5dc">Today · 2:14 PM</span>
+</div></div>
+<a href="Main.html" style="height: 36px; border-radius: 999px; background: #7fad33; color: #ffffff; padding: 0 12px; display: flex; align-items: center; text-decoration: none; font-weight: 700; font-size: 13px">Add to #afternoon</a>
+</div>
+
+<div style="height: 130px; flex-shrink: 0"></div>
+<div style="position: relative; align-self: center; width: 172px; height: 229px; flex-shrink: 0; border-radius: 22px; overflow: hidden; background: #2a2d26" role="img" aria-label="Photo with a bubble and a sticker">
+<img src="../images/food.jpg" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+<div style="position: absolute; top: 34px; left: 11px; background: #ffffff; color: #11140d; border-radius: 10px 10px 10px 3px; padding: 5px 8px; font-size: 8px; font-weight: 700; transform: rotate(-2deg)">Lunch break, finally!</div>
+<div style="position: absolute; bottom: 16px; right: 11px; background: #7fad33; color: #11140d; border-radius: 6px; padding: 3px 6px; font-weight: 800; font-size: 6px; letter-spacing: 0.06em; transform: rotate(-5deg)">LIVE · LAUGH · EAT</div>
+</div>
+<div style="flex: 1; margin-top: 24px; background: #ffffff; border-radius: 30px 30px 0 0; padding: 20px 20px 26px; display: flex; flex-direction: column; gap: 16px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #565e50">Caption
+<input type="text" value="Sinigang at the office pantry" style="height: 46px; border: 1px solid #dfe2d8; border-radius: 16px; background: #ffffff; color: #11140d; padding: 0 14px; font-size: 15px">
+<span style="align-self: flex-end; font-size: 11px; font-weight: 500">29 / 150</span></label>
+<div aria-label="Hashtag: #afternoon. Set by the slot." style="display: flex; align-items: center; justify-content: space-between; min-height: 32px">
+<span style="font-size: 14px; font-weight: 600">Hashtag</span>
+<span style="background: #f0f2ec; color: #2c470a; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700">#afternoon</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="display: flex; flex-direction: column; font-size: 14px; font-weight: 600">Who can see this moment<span style="font-size: 12px; font-weight: 500; color: #565e50">People who read your days</span></span>
+<div role="tablist" aria-label="Who can see this moment" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #f0f2ec; border-radius: 999px; padding: 4px"><button role="tab" aria-selected="true" style="height: 38px; border: 0; border-radius: 999px; background: #11140d; color: #ffffff; font-weight: 700; font-size: 13px">Readers</button><button role="tab" aria-selected="false" style="height: 38px; border: 0; border-radius: 999px; background: transparent; color: #4b5245; font-weight: 600; font-size: 13px">Everyone</button><button role="tab" aria-selected="false" style="height: 38px; border: 0; border-radius: 999px; background: transparent; color: #4b5245; font-weight: 600; font-size: 13px">Only me</button></div>
+</div>
+</div>
+</div>
+</body>
+</html>

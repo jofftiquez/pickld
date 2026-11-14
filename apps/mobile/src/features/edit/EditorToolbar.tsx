@@ -15,28 +15,36 @@ export type EditorToolbarProps = {
   slot: string;
   /** Capture time, formatted for the slot tag. */
   time: string;
-  /** "Add to #slot" for a photo just taken, "Done" when editing it again. Already translated. */
-  saveLabel: string;
-  saving: boolean;
-  onClose: () => void;
-  onSave: () => void;
-  /** The toolbar's full height (safe area included), so the photo starts below it. */
+  /** Close leaves the editor; Back returns from the details step to the photo step (D-103). */
+  leading: 'close' | 'back';
+  onLeading: () => void;
+  /** "Next" on the photo step; "Add to #slot" or "Done" on the details step. Already translated. */
+  actionLabel: string;
+  actionHint?: string;
+  actionTestID: 'editor-next' | 'editor-save';
+  actionDisabled: boolean;
+  onAction: () => void;
+  /** The toolbar's full height (safe area included), so the content starts below it. */
   onHeight: (height: number) => void;
 };
 
 /**
- * The editor's fixed top bar (D-59, design: Capture): Close, the slot tag and Save. The photo scrolls
- * under its dark surface: Liquid Glass on iOS 26, a frosted blur below that or with Reduce Transparency on (D-57). The right side has room for more actions later (Undo, for example).
- * From 1.5× text the slot tag moves to its own row under the buttons (D-37).
+ * The editor's fixed top bar (D-59, D-103): Close or Back, the slot tag, and Next (photo step) or Save
+ * (details step). The content scrolls under its dark surface: Liquid Glass on iOS 26, a frosted blur below
+ * that or with Reduce Transparency on (D-57, D-80). From 1.5× text the slot tag moves to its own row under
+ * the buttons (D-37).
  */
 export function EditorToolbar({
   topInset,
   slot,
   time,
-  saveLabel,
-  saving,
-  onClose,
-  onSave,
+  leading,
+  onLeading,
+  actionLabel,
+  actionHint,
+  actionTestID,
+  actionDisabled,
+  onAction,
   onHeight,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
@@ -58,16 +66,33 @@ export function EditorToolbar({
         testID="editor-toolbar-surface"
       />
       <View style={styles.row}>
-        <RoundIconButton
-          icon="close"
-          variant="glass"
-          accessibilityLabel={t('common.close')}
-          onPress={onClose}
-          testID="editor-close"
-        />
+        {leading === 'close' ? (
+          <RoundIconButton
+            icon="close"
+            variant="glass"
+            accessibilityLabel={t('common.close')}
+            onPress={onLeading}
+            testID="editor-close"
+          />
+        ) : (
+          <RoundIconButton
+            icon="back"
+            variant="glass"
+            accessibilityLabel={t('edit.back')}
+            accessibilityHint={t('edit.backHint')}
+            onPress={onLeading}
+            testID="editor-back"
+          />
+        )}
         <View style={styles.middle}>{largeText ? null : tag}</View>
         <View style={styles.actions}>
-          <PillButton label={saveLabel} onPress={onSave} disabled={saving} testID="editor-save" />
+          <PillButton
+            label={actionLabel}
+            accessibilityHint={actionHint}
+            onPress={onAction}
+            disabled={actionDisabled}
+            testID={actionTestID}
+          />
         </View>
       </View>
       {largeText ? <View style={styles.tagRow}>{tag}</View> : null}

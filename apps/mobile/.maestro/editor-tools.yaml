@@ -76,6 +76,9 @@ appId: me.pickld.app
     timeout: 3000
 - takeScreenshot: Text-ios
 
+# Next opens the details step (D-103); Add to #slot is in its toolbar.
+- tapOn:
+    id: editor-next
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

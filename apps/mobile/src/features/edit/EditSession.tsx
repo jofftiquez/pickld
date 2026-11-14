@@ -10,7 +10,7 @@ import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
 import { parseEdits } from './edits';
-import { EditorView, type EditorTool } from './EditorView';
+import { EditorView, type EditorStep, type EditorTool } from './EditorView';
 import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
 import { registerOverlayRenderers } from './overlays/registerRenderers';
 import { stickerOverlay } from './stickers/catalog';
@@ -32,7 +32,7 @@ export type EditSessionProps = {
   initial: { caption: string | null; visibility: Visibility; edits: unknown };
   /** "Add to #slot" for a photo just taken, "Done" when editing it again. Already translated. */
   saveLabel: string;
-  /** Moment options' Edit caption opens the editor with the caption field focused (M2-23). */
+  /** Moment options' Edit caption opens the editor on the details step, the caption focused (M2-23, D-104). */
   focusCaption?: boolean;
   insets: EdgeInsets;
   /** Leaves the editor (back to Today, or wherever it was opened from). */
@@ -42,9 +42,10 @@ export type EditSessionProps = {
 };
 
 /**
- * One editing session on a moment (FR-CAP-04, FR-CAP-05, FR-CAP-08, FR-CAP-09): the filter and overlays
- * with Undo, the caption and the visibility choice (D-48), saved through `onSave` by Add to #slot / Done. Edits are
- * data; the photo is never changed.
+ * One editing session on a moment (FR-CAP-04, FR-CAP-05, FR-CAP-08, FR-CAP-09) over the editor's two steps
+ * (D-103): the filter and overlays with Undo on the photo step, then the caption and the visibility choice
+ * (D-48) on the details step, saved together through `onSave` by Add to #slot / Done. Going between the
+ * steps keeps everything; nothing is saved before that. Edits are data; the photo is never changed.
  */
 export function EditSession({
   photoUri,
@@ -60,6 +61,7 @@ export function EditSession({
 }: EditSessionProps) {
   const image = useImage(photoUri);
   const editor = useEditorState(parseEdits(initial.edits));
+  const [step, setStep] = useState<EditorStep>(focusCaption ? 'details' : 'photo');
   const [tool, setTool] = useState<EditorTool>('filters');
   const [caption, setCaption] = useState(initial.caption ?? '');
   const [visibility, setVisibility] = useState(initial.visibility);
@@ -84,9 +86,13 @@ export function EditSession({
 
   return (
     <EditorView
+      step={step}
+      onChangeStep={setStep}
       image={image}
+      photoUri={photoUri}
       slot={slot}
       time={formatTime(shotAt, tz)}
+      edits={editor.edits}
       filter={editor.filter}
       tool={tool}
       insets={insets}
