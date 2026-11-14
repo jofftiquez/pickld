@@ -109,12 +109,12 @@ appId: me.pickld.app
       id: moment-preview
     timeout: 10000
 
-# Edit opens the editor on the uploaded moment.
+# Edit opens the editor on the uploaded moment, at the photo step (D-103).
 - tapOn:
     id: preview-edit
 - extendedWaitUntil:
     visible:
-      id: editor-caption
+      id: editor-screen
     timeout: 15000
 - waitForAnimationToEnd:
     timeout: 3000

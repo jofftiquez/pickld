@@ -48,6 +48,8 @@ appId: me.pickld.app
       id: editor-screen
     timeout: 10000
 - tapOn:
+    id: editor-next
+- tapOn:
     id: editor-save
 
 # The photo uploads, the server counts the 8th moment and Today opens the celebration.

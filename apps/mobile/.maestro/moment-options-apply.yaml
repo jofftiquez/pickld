@@ -49,8 +49,13 @@ appId: me.pickld.app
     id: preview-edit
 - extendedWaitUntil:
     visible:
-      id: editor-caption
+      id: editor-screen
     timeout: 15000
+# Next opens the details step with the caption (D-103).
+- tapOn:
+    id: editor-next
+- tapOn:
+    id: editor-caption
 - eraseText: 160
 - inputText: Coffee first
 - hideKeyboard
@@ -64,12 +69,14 @@ appId: me.pickld.app
     id: preview-edit
 - extendedWaitUntil:
     visible:
-      id: editor-caption
+      id: editor-screen
     timeout: 15000
-- assertVisible: Coffee first
 
-# Edit stickers and filters: Mono, Done; the tile draws the filter.
+# Edit stickers and filters: Mono, Next (the caption is kept), Done; the tile draws the filter.
 - tapOn: Mono
+- tapOn:
+    id: editor-next
+- assertVisible: Coffee first
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

@@ -232,6 +232,7 @@ describe('Stickers tool', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Add the Siesta? sticker' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Add the Lunch break sticker' }));
+    await fireEvent.press(screen.getByTestId('editor-next')); // to the details step (D-103)
     await fireEvent.press(screen.getByRole('button', { name: 'Add to #afternoon' }));
     const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
     expect(edits.overlays).toHaveLength(2);
@@ -305,6 +306,7 @@ describe('Stickers tool', () => {
 });
 
 async function saveAndRead() {
+  await fireEvent.press(screen.getByTestId('editor-next')); // to the details step (D-103)
   await fireEvent.press(screen.getByRole('button', { name: 'Add to #afternoon' }));
   const input = jest.mocked(saveEdits).mock.calls.at(-1)?.[1];
   if (!input) throw new Error('not saved');

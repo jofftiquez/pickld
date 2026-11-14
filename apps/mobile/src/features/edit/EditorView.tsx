@@ -1,41 +1,39 @@
 import type { SkImage } from '@shopify/react-native-skia';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { Keyboard, StyleSheet, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
-import { SecondaryButton } from '@/components/SecondaryButton';
-import { SegmentedControl } from '@/components/SegmentedControl';
-import { TextField } from '@/components/TextField';
 import { useReduceMotion } from '@/lib/useReduceMotion';
-import { VISIBILITIES, VISIBILITY_KEY, type Visibility } from '@/lib/visibility';
-import { textStyle } from '@/theme/text';
-import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
+import type { Visibility } from '@/lib/visibility';
+import { colors, sizes, space, type Slot } from '@/theme/tokens';
 
-import { BubblePanel } from './bubble/BubblePanel';
+import { EditDetailsStep } from './EditDetailsStep';
 import { EditorToolbar } from './EditorToolbar';
-import type { Overlay } from './edits';
-import { FilteredPhoto } from './FilteredPhoto';
-import { FILTER_GAP, FILTER_LEAD, filterThumbSize } from './filterRow';
-import { filterIdSchema, filterMatrices, type FilterId } from './filters';
-import { FilterThumbnail } from './FilterThumbnail';
-import { OverlayLayer } from './overlays/OverlayLayer';
+import { EditPhotoStep, type EditorTool } from './EditPhotoStep';
+import type { Edits, Overlay } from './edits';
+import type { FilterId } from './filters';
 import type { Transform } from './overlays/transform';
 import type { CatalogSticker } from './stickers/catalog';
-import { StickersPanel } from './stickers/StickersPanel';
-import { TextPanel } from './text/TextPanel';
-import { applyTextChange, type TextOverlay } from './text/textOverlay';
 
-export const editorTools = ['filters', 'stickers', 'bubble', 'text'] as const;
-export type EditorTool = (typeof editorTools)[number];
+export { editorTools, type EditorTool } from './EditPhotoStep';
+export { CAPTION_MAX } from './EditDetailsStep';
+
+/** The editor's two steps (D-103): the photo and its tools, then the caption and visibility. */
+export type EditorStep = 'photo' | 'details';
 
 export type EditorViewProps = {
+  step: EditorStep;
+  onChangeStep: (step: EditorStep) => void;
   image: SkImage | null;
+  /** The photo's URI, for the details step's preview. */
+  photoUri: string;
   slot: Slot;
   /** Capture time, formatted for the slot tag. */
   time: string;
+  edits: Edits;
   filter: FilterId;
   tool: EditorTool;
   insets: EdgeInsets;
@@ -70,25 +68,28 @@ export type EditorViewProps = {
   onSave: () => void;
 };
 
-export const CAPTION_MAX = 150;
+// The step change slides like a navigation push: the details step comes in from the right while the
+// photo step moves a quarter of the way out to the left. Reduce Motion: it switches in place.
+const STEP_DURATION = 260;
+const PHOTO_STEP_SHIFT = 0.25;
+// A swipe from the screen's left edge on the details step goes back to the photo step, like a back swipe.
+const EDGE_WIDTH = 24;
+const BACK_SWIPE = 60;
 
-// Room below the photo for the tools, caption and visibility choice (Save is in the toolbar, D-59); the
-// photo shrinks on short phones so they fit. Taller tools (Stickers) and large text scroll the screen.
-const PANEL_MIN_HEIGHT = 260;
-
-// Parallax (item 14): while the panel scrolls up over it, the photo moves up at 40% of the scroll speed
-// and shrinks to 92%, so its top stays in view under the toolbar.
-const PHOTO_SCROLL_SPEED = 0.4;
-const PHOTO_MIN_SCALE = 0.92;
-// The panel can scroll up until this much of the photo's height is left showing between the toolbar and
-// the panel; the panel is at least tall enough to allow it.
-const PHOTO_PEEK = 0.25;
-
-/** The editor layout (design: Capture): the 3:4 photo with the filter applied, tool tabs, the tool's panel. */
+/**
+ * The editor (D-103; designs: EditPhoto, EditDetails), Instagram's two steps in one screen: the photo
+ * with its tools, then Next to the caption, the slot's hashtag and visibility, saved by Add to #slot or
+ * Done. Both steps share one session, so going back and forth keeps everything; nothing is saved until
+ * Save. The toolbar stays on top of both (D-59, D-80).
+ */
 export function EditorView({
+  step,
+  onChangeStep,
   image,
+  photoUri,
   slot,
   time,
+  edits,
   filter,
   tool,
   insets,
@@ -121,215 +122,119 @@ export function EditorView({
   const reduceMotion = useReduceMotion();
   // The toolbar's height until it has been measured: the safe area, a round button and its padding.
   const [toolbarHeight, setToolbarHeight] = useState(insets.top + sizes.roundButton + 2 * space.sm);
-  const available = window.height - toolbarHeight - PANEL_MIN_HEIGHT;
-  const width = Math.min(window.width, Math.max(0, available) * photo.aspect);
-  const height = width / photo.aspect;
-  const filterThumb = filterThumbSize(window.width);
-  const panelMinHeight = Math.max(PANEL_MIN_HEIGHT, window.height - toolbarHeight - Math.round(height * PHOTO_PEEK));
-  // The screen stops scrolling while a finger moves an overlay.
-  const [overlayGesture, setOverlayGesture] = useState(false);
-  const selectedText = overlays.find((o): o is TextOverlay => o.type === 'text' && o.id === selectedOverlayId) ?? null;
+  // The details step stays mounted once opened, so its caption keeps its place when going back and forth.
+  const [detailsOpened, setDetailsOpened] = useState(step === 'details');
+  const onDetails = step === 'details';
+  if (onDetails && !detailsOpened) setDetailsOpened(true);
 
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((event) => {
-    scrollY.set(event.contentOffset.y);
-  });
-  // The photo scrolls with the content, so it is pushed back down by the part of the scroll it skips.
-  // Pulling down past the top (bounce) moves it with the content. Reduce Motion: a plain scroll.
-  const photoMotion = useAnimatedStyle(() => {
-    if (reduceMotion || height <= 0) return { transform: [{ translateY: 0 }, { scale: 1 }] };
-    const scrolled = Math.max(0, scrollY.get());
-    const progress = Math.min(1, scrolled / height);
-    return {
-      transform: [{ translateY: scrolled * (1 - PHOTO_SCROLL_SPEED) }, { scale: 1 - (1 - PHOTO_MIN_SCALE) * progress }],
-    };
-  });
+  // 0 on the photo step, 1 on the details step.
+  const progress = useSharedValue(onDetails ? 1 : 0);
+  useEffect(() => {
+    const target = onDetails ? 1 : 0;
+    progress.set(
+      reduceMotion ? target : withTiming(target, { duration: STEP_DURATION, easing: Easing.out(Easing.cubic) }),
+    );
+  }, [onDetails, reduceMotion, progress]);
+  const photoMotion = useAnimatedStyle(() => ({
+    transform: [{ translateX: -progress.get() * window.width * PHOTO_STEP_SHIFT }],
+  }));
+  const detailsMotion = useAnimatedStyle(() => ({
+    transform: [{ translateX: (1 - progress.get()) * window.width }],
+  }));
+
+  const next = () => {
+    Keyboard.dismiss();
+    onSelectOverlay(null);
+    onChangeStep('details');
+  };
+  const back = () => {
+    Keyboard.dismiss();
+    onChangeStep('photo');
+  };
+  const backSwipe = Gesture.Pan()
+    .runOnJS(true)
+    .hitSlop({ left: 0, width: EDGE_WIDTH })
+    .activeOffsetX(10)
+    .failOffsetY([-15, 15])
+    .onEnd((event) => {
+      if (event.translationX > BACK_SWIPE) back();
+    });
 
   return (
     // The app has no gesture root, so the editor brings its own for the overlay gestures.
     <GestureHandlerRootView style={styles.root}>
-      {/* First, so screen readers start with Close and Save; zIndex keeps it over the scrolling photo. */}
+      {/* First, so screen readers start with Close or Back and the step's action; zIndex keeps it over both steps. */}
       <EditorToolbar
         topInset={insets.top}
         slot={t(`slots.${slot}`)}
         time={time}
-        saveLabel={saveLabel}
-        saving={saving}
-        onClose={onClose}
-        onSave={onSave}
+        leading={onDetails ? 'back' : 'close'}
+        onLeading={onDetails ? back : onClose}
+        actionLabel={onDetails ? saveLabel : t('edit.next')}
+        actionHint={onDetails ? undefined : t('edit.nextHint')}
+        actionTestID={onDetails ? 'editor-save' : 'editor-next'}
+        actionDisabled={onDetails && saving}
+        onAction={onDetails ? onSave : next}
         onHeight={(h) => setToolbarHeight(Math.round(h))}
       />
-      <Animated.ScrollView
-        style={styles.root}
-        contentContainerStyle={[styles.content, { paddingTop: toolbarHeight }]}
-        scrollIndicatorInsets={{ top: toolbarHeight }}
-        keyboardShouldPersistTaps="handled"
-        automaticallyAdjustKeyboardInsets
-        scrollEnabled={!overlayGesture}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        testID="editor-screen"
+      <Animated.View
+        style={[StyleSheet.absoluteFill, photoMotion]}
+        pointerEvents={onDetails ? 'none' : 'auto'}
+        importantForAccessibility={onDetails ? 'no-hide-descendants' : 'auto'}
+        accessibilityElementsHidden={onDetails}
+        testID="editor-step-photo"
       >
-        <Animated.View style={[styles.photo, { width, height }, photoMotion]}>
-          <View
-            accessible
-            accessibilityRole="image"
-            accessibilityLabel={t('edit.photo', { filter: t(`edit.filter.${filter}`) })}
+        <EditPhotoStep
+          image={image}
+          slot={slot}
+          filter={filter}
+          tool={tool}
+          toolbarHeight={toolbarHeight}
+          bottomInset={insets.bottom}
+          onSelectFilter={onSelectFilter}
+          overlays={overlays}
+          selectedOverlayId={selectedOverlayId}
+          onSelectOverlay={onSelectOverlay}
+          onTransformOverlay={onTransformOverlay}
+          onBringOverlayToFront={onBringOverlayToFront}
+          onDeleteOverlay={onDeleteOverlay}
+          onAddSticker={onAddSticker}
+          onAddOverlay={onAddOverlay}
+          onUpdateOverlay={onUpdateOverlay}
+          onSelectTool={onSelectTool}
+          canUndo={canUndo}
+          onUndo={onUndo}
+        />
+      </Animated.View>
+      {detailsOpened ? (
+        <GestureDetector gesture={backSwipe}>
+          <Animated.View
+            style={[StyleSheet.absoluteFill, detailsMotion]}
+            pointerEvents={onDetails ? 'auto' : 'none'}
+            importantForAccessibility={onDetails ? 'auto' : 'no-hide-descendants'}
+            accessibilityElementsHidden={!onDetails}
+            testID="editor-step-details"
           >
-            <FilteredPhoto
-              image={image}
-              matrix={filterMatrices[filter]}
-              width={width}
-              height={height}
-              testID="editor-photo"
+            <EditDetailsStep
+              photoUri={photoUri}
+              edits={edits}
+              slot={slot}
+              toolbarHeight={toolbarHeight}
+              bottomInset={insets.bottom}
+              caption={caption}
+              onChangeCaption={onChangeCaption}
+              focusCaption={focusCaption}
+              visibility={visibility}
+              onChangeVisibility={onChangeVisibility}
+              saveFailed={saveFailed}
             />
-          </View>
-          {/* A sibling of the photo, not inside it, so screen readers reach each overlay. */}
-          <OverlayLayer
-            overlays={overlays}
-            selectedId={selectedOverlayId}
-            width={width}
-            height={height}
-            onSelect={onSelectOverlay}
-            onTransform={onTransformOverlay}
-            onBringToFront={onBringOverlayToFront}
-            onDelete={onDeleteOverlay}
-            onGestureActiveChange={setOverlayGesture}
-          />
-        </Animated.View>
-
-        {/* After the photo, so it draws over it (and takes the taps) as it slides up. */}
-        <View style={[styles.panel, { minHeight: panelMinHeight, paddingBottom: insets.bottom + space.xxl }]}>
-          <SegmentedControl
-            segments={editorTools.map((key) => ({ key, label: t(`edit.tool.${key}`) }))}
-            selected={tool}
-            onSelect={onSelectTool}
-            accessibilityLabel={t('edit.tools')}
-            variant="dark"
-            testID="editor-tools"
-          />
-          {tool === 'filters' ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              accessibilityLabel={t('edit.filters')}
-              style={styles.filterRow}
-              contentContainerStyle={styles.filters}
-              testID="editor-filters"
-            >
-              {filterIdSchema.options.map((id) => (
-                <FilterThumbnail
-                  key={id}
-                  label={t(`edit.filter.${id}`)}
-                  image={image}
-                  matrix={filterMatrices[id]}
-                  selected={id === filter}
-                  onPress={() => onSelectFilter(id)}
-                  size={filterThumb}
-                  testID={`editor-filter-${id}`}
-                />
-              ))}
-            </ScrollView>
-          ) : tool === 'stickers' ? (
-            <StickersPanel slot={slot} onAdd={onAddSticker} />
-          ) : tool === 'bubble' ? (
-            <BubblePanel
-              overlays={overlays}
-              selectedId={selectedOverlayId}
-              onAdd={onAddOverlay}
-              onUpdate={onUpdateOverlay}
-            />
-          ) : tool === 'text' ? (
-            <TextPanel
-              key={selectedText ? `${selectedText.id}:${selectedText.text}` : 'new'}
-              selected={selectedText}
-              onAdd={onAddOverlay}
-              onChange={(id, patch) => onUpdateOverlay(id, (o) => (o.type === 'text' ? applyTextChange(o, patch) : o))}
-            />
-          ) : (
-            <View style={styles.emptyPanel} testID={`editor-panel-${tool}`} />
-          )}
-          <TextField
-            label={t('edit.caption')}
-            value={caption}
-            onChangeText={onChangeCaption}
-            maxLength={CAPTION_MAX}
-            placeholder={t('edit.captionPlaceholder')}
-            autoFocus={focusCaption}
-            testID="editor-caption"
-          />
-          <View style={styles.visibility}>
-            <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-              <Text style={[textStyle('bodyMedium', '600'), styles.visibilityLabel]}>{t('edit.visibility')}</Text>
-              <Text style={[textStyle('label', '500'), styles.visibilityHint]}>
-                {t(`visibility.${VISIBILITY_KEY[visibility]}Body`)}
-              </Text>
-            </View>
-            <SegmentedControl
-              variant="dark"
-              segments={VISIBILITIES.map((key) => ({ key, label: t(`visibility.${VISIBILITY_KEY[key]}`) }))}
-              selected={visibility}
-              onSelect={onChangeVisibility}
-              accessibilityLabel={t('edit.visibility')}
-              testID="editor-visibility"
-            />
-          </View>
-          {saveFailed ? (
-            <Text
-              style={[textStyle('bodySmall'), styles.error]}
-              accessibilityLiveRegion="polite"
-              accessibilityRole="alert"
-            >
-              {t('edit.saveFailed')}
-            </Text>
-          ) : null}
-          {canUndo ? (
-            <View style={styles.actions}>
-              <SecondaryButton
-                variant="outline"
-                label={t('edit.undo')}
-                accessibilityHint={t('edit.undoHint')}
-                onPress={onUndo}
-                testID="editor-undo"
-              />
-            </View>
-          ) : null}
-        </View>
-      </Animated.ScrollView>
+          </Animated.View>
+        </GestureDetector>
+      ) : null}
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.editor },
-  content: { flexGrow: 1 },
-  photo: {
-    alignSelf: 'center',
-    // The parallax shrinks it toward its top edge, which stays under the toolbar.
-    transformOrigin: 'top',
-    overflow: 'hidden',
-    backgroundColor: colors.editorPhoto,
-    borderBottomLeftRadius: radius.editorPhoto,
-    borderBottomRightRadius: radius.editorPhoto,
-  },
-  panel: {
-    flex: 1,
-    marginTop: -sizes.editorPanelOverlap,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
-    paddingTop: space.lg + 2,
-    paddingHorizontal: space.xl,
-    gap: space.md + 2,
-  },
-  // The row runs to both screen edges, so the last thumbnail in view is cut by the edge (filterRow.ts).
-  filterRow: { marginHorizontal: -space.xl },
-  // 12 px between thumbnails, as designed: each thumbnail already reserves its ring and white gap.
-  filters: { gap: FILTER_GAP, paddingHorizontal: FILTER_LEAD },
-  emptyPanel: { minHeight: sizes.filterThumb },
-  visibility: { gap: space.sm },
-  visibilityLabel: { color: colors.ink },
-  visibilityHint: { color: colors.muted },
-  error: { color: colors.danger },
-  actions: { flexDirection: 'row' },
 });
