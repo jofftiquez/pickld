@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -27,7 +27,13 @@ export function IntroView({ step, insets, onBack, onSignUp, onNext }: IntroViewP
   const { t } = useTranslation();
   const last = step === INTRO_STEPS;
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]} testID={`intro-${step}`}>
+    // Scrolls only when the content is taller than the screen (large text), so Next stays reachable.
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}
+      bounces={false}
+      testID={`intro-${step}`}
+    >
       <View style={styles.header}>
         <RoundIconButton icon="back" accessibilityLabel={t('intro.back')} onPress={onBack} testID="intro-back" />
         <Pressable
@@ -38,7 +44,12 @@ export function IntroView({ step, insets, onBack, onSignUp, onNext }: IntroViewP
           style={styles.skip}
           testID="intro-skip"
         >
-          <Text style={[textStyle('bodyMedium', '700'), { color: colors.muted }]}>{t('intro.skip')}</Text>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.control}
+            style={[textStyle('bodyMedium', '700'), { color: colors.muted }]}
+          >
+            {t('intro.skip')}
+          </Text>
         </Pressable>
       </View>
       <IntroArt step={step} />
@@ -68,12 +79,13 @@ export function IntroView({ step, insets, onBack, onSignUp, onNext }: IntroViewP
           testID="intro-next"
         />
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { flexGrow: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

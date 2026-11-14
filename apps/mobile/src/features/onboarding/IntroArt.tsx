@@ -4,7 +4,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { Icon } from '@/components/Icon';
 import { JarGraphic } from '@/components/JarGraphic';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, slots, space } from '@/theme/tokens';
 
 import { onboardingPhotos, type OnboardingPhoto } from './photos';
@@ -35,7 +35,13 @@ function Slots() {
             {/* An overlay, so the dashed border doesn't shrink the label's room as a real border would. */}
             {filled ? null : <View style={styles.tileDash} />}
             <Icon name={slot} color={filled ? 'brand' : 'ink'} size={20} />
-            <Text style={[textStyle('caption'), { color: filled ? colors.surface : colors.ink }]} numberOfLines={1}>
+            <Text
+              style={[textStyle('caption'), { color: filled ? colors.surface : colors.ink }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+              maxFontSizeMultiplier={maxTextScale.tile}
+            >
               {t(`slots.${slot}`)}
             </Text>
           </View>
@@ -71,7 +77,12 @@ function Jar() {
         />
       ))}
       <View style={styles.countPill}>
-        <Text style={[textStyle('bodySmall', '800'), { color: colors.brandText }]}>{t('intro.2.count')}</Text>
+        <Text
+          maxFontSizeMultiplier={maxTextScale.tile}
+          style={[textStyle('bodySmall', '800'), { color: colors.brandText }]}
+        >
+          {t('intro.2.count')}
+        </Text>
       </View>
     </View>
   );
@@ -85,10 +96,17 @@ function Real() {
       <View style={styles.hero}>
         <Image source={onboardingPhotos.selfie} style={styles.heroPhoto} contentFit="cover" accessible={false} />
         <View style={styles.sticker}>
-          <Text style={[textStyle('bodySmall', '800'), { color: colors.ink }]}>{t('intro.3.sticker')}</Text>
+          <Text
+            maxFontSizeMultiplier={maxTextScale.tile}
+            style={[textStyle('bodySmall', '800'), { color: colors.ink }]}
+          >
+            {t('intro.3.sticker')}
+          </Text>
         </View>
         <View style={styles.bubble}>
-          <Text style={[textStyle('label', '700'), { color: colors.ink }]}>{t('intro.3.bubble')}</Text>
+          <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('label', '700'), { color: colors.ink }]}>
+            {t('intro.3.bubble')}
+          </Text>
         </View>
       </View>
       <View style={styles.promises}>
@@ -97,7 +115,12 @@ function Real() {
             <View style={styles.check}>
               <Icon name="check" color="brandText" size={14} strokeWidth={2.6} />
             </View>
-            <Text style={[textStyle('bodyMedium', '600'), styles.promiseText]}>{t(`intro.3.${k}`)}</Text>
+            <Text
+              maxFontSizeMultiplier={maxTextScale.tile}
+              style={[textStyle('bodyMedium', '600'), styles.promiseText]}
+            >
+              {t(`intro.3.${k}`)}
+            </Text>
           </View>
         ))}
       </View>
@@ -105,7 +128,10 @@ function Real() {
   );
 }
 
-/** The illustration for How it works page 1, 2 or 3. Decorative: the title and body say the same. */
+/**
+ * The illustration for How it works page 1, 2 or 3. Decorative: the title and body say the same, so its
+ * words stop growing at the tile cap and the drawing keeps its fixed size at large text.
+ */
 export function IntroArt({ step }: { step: 1 | 2 | 3 }) {
   return (
     <View style={styles.area} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
