@@ -1946,6 +1946,7 @@ export type Database = {
           report: number;
         }[];
       };
+      mod_require_moderator: { Args: Record<PropertyKey, never>; Returns: string };
       mod_suspend: { Args: { p_note: string; p_user: string }; Returns: Json };
       mod_user: { Args: { p_user: string }; Returns: Json };
       mod_user_moments: {
@@ -1976,6 +1977,28 @@ export type Database = {
           username: string;
         }[];
       };
+      mod_waitlist: {
+        Args: { p_limit?: number; p_offset?: number; p_query?: string; p_state?: string };
+        Returns: {
+          created_at: string;
+          email: string;
+          source: string;
+          state: string;
+          total: number;
+        }[];
+      };
+      mod_waitlist_export: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          created_at: string;
+          email: string;
+          source: string;
+          state: string;
+        }[];
+      };
+      mod_waitlist_remove: { Args: { p_email: string; p_note: string }; Returns: Json };
+      mod_waitlist_state: { Args: { p_admitted: string; p_user: string }; Returns: string };
+      mod_waitlist_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       moderation_apply: {
         Args: {
           p_decision: string;

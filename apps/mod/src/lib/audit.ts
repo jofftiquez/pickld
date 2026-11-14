@@ -57,9 +57,9 @@ export function actionLabel(action: string): string {
   }
 }
 
-export function details(e: Pick<AuditEntry, 'data'>): string {
+export function details(e: Pick<AuditEntry, 'data' | 'action'>): string {
   const parts: string[] = [];
-  const { result, guideline, note, reason, strikes } = e.data;
+  const { result, guideline, note, reason, strikes, count } = e.data;
   // The Action column already says kept or removed; only an appeal's outcome adds something.
   if (result === 'overturned' || result === 'upheld') parts.push(t(`audit.outcome.${result}`));
   if (reason === 'expired' || reason === 'appeal_overturned' || reason === 'moderator') {
@@ -67,6 +67,10 @@ export function details(e: Pick<AuditEntry, 'data'>): string {
   }
   if (typeof e.data.until === 'string') parts.push(t('audit.until', { date: when(e.data.until) }));
   if (typeof strikes === 'number') parts.push(t('audit.strikes', { count: strikes }));
+  if (typeof count === 'number') parts.push(t('audit.exported', { count }));
+  if (e.action === 'waitlist_remove' && typeof e.data.source === 'string') {
+    parts.push(t('audit.waitlistSource', { source: e.data.source }));
+  }
   if (typeof guideline === 'string') parts.push(t('audit.guideline', { guideline: t(`guideline.${guideline}`) }));
   if (typeof note === 'string') parts.push(t('audit.note', { note }));
   return parts.join(' · ');
