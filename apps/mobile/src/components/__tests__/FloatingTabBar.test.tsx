@@ -9,8 +9,8 @@ import { colors, glassGlyph, radius, shadow, sizes, space } from '@/theme/tokens
 import { expectMinTapArea, flatStyle } from './testUtils';
 
 // The navigator's routes include the hidden Capture route (`href: null`); it must get no tab (D-52).
-const routes = ['today', 'moments', 'capture', 'jars'].map((name) => ({ key: `${name}-key`, name }));
-const labels = ['Today', 'Moments', 'Jars'];
+const routes = ['today', 'moments', 'capture', 'jars', 'discover'].map((name) => ({ key: `${name}-key`, name }));
+const labels = ['Today', 'Moments', 'Jars', 'Discover'];
 
 function setup({ index = 0, preventDefault = false, insets = { top: 0, right: 0, bottom: 0, left: 0 } } = {}) {
   const emit = jest.fn(() => ({ defaultPrevented: preventDefault }));
@@ -26,7 +26,7 @@ function setup({ index = 0, preventDefault = false, insets = { top: 0, right: 0,
 }
 
 describe('FloatingTabBar', () => {
-  it('shows Today, Moments and Jars in order with translated labels inside a named tablist, and no Capture tab', async () => {
+  it('shows Today, Moments, Jars and Discover in order with translated labels inside a named tablist, and no Capture tab', async () => {
     const { props } = setup();
     await render(<FloatingTabBar {...props} />);
     expect(screen.getByLabelText('Main').props.accessibilityRole).toBe('tablist');
@@ -43,6 +43,7 @@ describe('FloatingTabBar', () => {
       false,
       false,
       true,
+      false,
     ]);
     expect(screen.getAllByRole('tab', { selected: true })).toHaveLength(1);
     expect(screen.getByRole('tab', { name: 'Jars', selected: true })).toBeTruthy();

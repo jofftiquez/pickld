@@ -51,7 +51,6 @@ async function setup(props: Partial<FeedViewProps> = {}) {
     onRefresh: jest.fn(),
     onEndReached: jest.fn(),
     onOpenNotifications: jest.fn(),
-    onOpenDiscover: jest.fn(),
     onFindPeople: jest.fn(),
     onInvite: jest.fn(),
   };
@@ -108,10 +107,9 @@ describe('FeedView', () => {
     expect(onOpenNotifications).toHaveBeenCalled();
   });
 
-  it('the compass next to the bell opens Discover (D-101)', async () => {
-    const h = await setup();
-    await fireEvent.press(screen.getByRole('button', { name: 'Discover' }));
-    expect(h.onOpenDiscover).toHaveBeenCalled();
+  it('has no compass next to the bell: Discover is a tab (D-130)', async () => {
+    await setup();
+    expect(screen.queryByRole('button', { name: 'Discover' })).toBeNull();
   });
 
   it('opens the jar when a card is pressed', async () => {

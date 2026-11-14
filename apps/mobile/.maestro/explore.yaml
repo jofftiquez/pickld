@@ -1,5 +1,5 @@
-# M6-08, D-100: Discover (design: Explore). Opens /explore, checks Suggested authors and the Moments | Jars switch,
-# then searches "ju" and finds Jun.
+# M6-08, D-100, D-130: Discover (design: Explore), the fourth tab. Opens it from the tab bar, checks Suggested
+# authors and the Moments | Jars switch, then searches "ju" and finds Jun. pickld://explore opens the same tab.
 # Needs the seed data (dale reads mika and aya, not jun) and dale signed in:
 # maestro test apps/mobile/.maestro/explore.yaml
 appId: me.pickld.app
@@ -9,15 +9,17 @@ appId: me.pickld.app
     visible:
       id: today-avatar
     timeout: 20000
-- openLink: pickld://explore
+- tapOn:
+    id: tab-discover
 - extendedWaitUntil:
     visible:
       id: explore-search
     timeout: 20000
 - assertVisible: Suggested authors
-- assertVisible: Discover
 - assertVisible:
     id: discover-tabs
+- assertNotVisible:
+    id: explore-back
 - tapOn:
     id: explore-search
 - inputText: ju
@@ -26,3 +28,16 @@ appId: me.pickld.app
       id: explore-result-jun
     timeout: 10000
 - assertNotVisible: Suggested authors
+# The old /explore link lands on the tab, not a stacked copy.
+- tapOn:
+    id: tab-today
+- openLink: pickld://explore
+- tapOn:
+    text: Open
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: explore-search
+    timeout: 20000
+- assertNotVisible:
+    id: explore-back

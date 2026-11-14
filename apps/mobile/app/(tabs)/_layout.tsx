@@ -8,14 +8,15 @@ import { useLiquidGlassState } from '@/lib/useLiquidGlass';
 import { colors, space } from '@/theme/tokens';
 
 // Template images rendered from the app's own stroke icons by scripts/render-tab-icons.mjs, so both bars use the
-// same Today, Moments and Jars glyphs.
+// same Today, Moments, Jars and Discover glyphs.
 const nativeIcons = {
   today: require('../../assets/tabs/today.png'),
   moments: require('../../assets/tabs/moments.png'),
   jars: require('../../assets/tabs/jars.png'),
+  discover: require('../../assets/tabs/discover.png'),
 } as const satisfies Record<keyof typeof mainTabs, number>;
 
-// Main tab shell (design: Main; D-52): Today | Moments | Jars; screen order sets tab order. My days is a stack
+// Main tab shell (design: Main; D-52, D-130): Today | Moments | Jars | Discover; screen order sets tab order. My days is a stack
 // screen (app/my-days.tsx) opened from Today's calendar button.
 // iOS 26+ with glass allowed gets the system's floating Liquid Glass tab bar, the selected tab on a lighter glass
 // pill (D-108). Older iOS, and Reduce Transparency, keep the custom FloatingTabBar.
@@ -48,6 +49,7 @@ export default function TabsLayout() {
       {/* Hidden, not deleted (D-52): Today's tiles open /camera?slot=… directly. */}
       <Tabs.Screen name="capture" options={{ href: null }} />
       <Tabs.Screen name="jars" />
+      <Tabs.Screen name="discover" />
     </Tabs>
   );
 }

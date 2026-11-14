@@ -45,7 +45,11 @@ export function TabBarButton({ icon, label, focused, onPress, onLongPress, glyph
       >
         <Icon name={icon} color={tint} size={22} strokeWidth={focused ? 2 : 1.8} />
       </View>
+      {/* Four tabs share the bar (D-130): a label stays on one line and shrinks a little rather than wrap. */}
       <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
         maxFontSizeMultiplier={maxTextScale.tabLabel}
         style={[textStyle('caption', focused ? '700' : '600'), { color: colors[tint] }, glyph?.text, styles.label]}
       >

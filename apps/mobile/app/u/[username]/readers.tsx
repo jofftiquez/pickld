@@ -44,7 +44,7 @@ export default function ReadersScreen() {
         else router.replace({ pathname: '/u/[username]', params: { username: params.username } });
       }}
       onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}
-      onFindPeople={() => router.push('/explore')}
+      onFindPeople={() => router.navigate('/discover')}
       onToggleReading={(row) =>
         follow.setReading({ authorId: row.id, username: row.username, reading: !row.is_following })
       }
