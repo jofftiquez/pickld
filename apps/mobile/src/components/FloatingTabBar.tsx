@@ -20,7 +20,12 @@ export const mainTabs = {
   discover: { icon: 'compass', label: 'tabs.discover' },
 } as const satisfies Record<string, { icon: IconName; label: `tabs.${string}` }>;
 
-type MainTab = keyof typeof mainTabs;
+export type MainTab = keyof typeof mainTabs;
+
+export type FloatingTabBarProps = BottomTabBarProps & {
+  /** Tabs that show a small dot, each with what VoiceOver reads after the tab's name ("new posts"). Translated. */
+  badges?: Partial<Record<MainTab, string>>;
+};
 
 function isMainTab(name: string): name is MainTab {
   return name in mainTabs;
@@ -31,7 +36,7 @@ function isMainTab(name: string): name is MainTab {
  * Floats over the screen, inset from the edges and above the home indicator. Lightly tinted Liquid Glass on
  * iOS 26 (D-80), the milky frosted blur below that or with Reduce Transparency on (D-57).
  */
-export function FloatingTabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
+export function FloatingTabBar({ state, emitter, navigateToTab, insets, badges }: FloatingTabBarProps) {
   const { t } = useTranslation();
   const glass = useLiquidGlass();
   return (
@@ -74,6 +79,7 @@ export function FloatingTabBar({ state, emitter, navigateToTab, insets }: Bottom
                   icon={mainTabs[route.name].icon}
                   label={t(mainTabs[route.name].label)}
                   focused={focused}
+                  badge={badges?.[route.name]}
                   onPress={onPress}
                   onLongPress={onLongPress}
                   glyph={glyph}

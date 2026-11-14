@@ -1,8 +1,10 @@
+import { usePathname } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 import { Tabs } from 'expo-router/js-tabs';
 import { useTranslation } from 'react-i18next';
 
 import { FloatingTabBar, mainTabs } from '@/components/FloatingTabBar';
+import { useDiscoverUnread } from '@/features/explore/useDiscoverUnread';
 import { TabBarClearanceContext } from '@/lib/tabBarClearance';
 import { useLiquidGlassState } from '@/lib/useLiquidGlass';
 import { colors, space } from '@/theme/tokens';
@@ -23,17 +25,30 @@ const nativeIcons = {
 export default function TabsLayout() {
   const { t } = useTranslation();
   const glass = useLiquidGlassState();
+  // A dot on Discover while it has posts newer than the newest one seen there (FR-EXP-04).
+  const discoverUnread = useDiscoverUnread(usePathname() === '/discover');
   // Wait for Reduce Transparency before choosing, so the bar (and each tab's state) mounts once.
   if (glass === null) return null;
   if (glass) {
     return (
       <TabBarClearanceContext.Provider value={space.lg}>
-        <NativeTabs tintColor={colors.brandText} minimizeBehavior="never">
+        <NativeTabs tintColor={colors.brandText} badgeBackgroundColor={colors.notifyDot} minimizeBehavior="never">
           {(Object.keys(mainTabs) as (keyof typeof mainTabs)[]).map((name) => (
             // The screens pad for the safe area themselves, which here already ends above the bar.
-            <NativeTabs.Trigger key={name} name={name} disableAutomaticContentInsets testID={`tab-${name}`}>
+            <NativeTabs.Trigger
+              key={name}
+              name={name}
+              disableAutomaticContentInsets
+              // The system badge has no spoken text, so the label says it ("Discover, new posts").
+              accessibilityLabel={
+                name === 'discover' && discoverUnread ? t('tabs.discoverUnread') : t(mainTabs[name].label)
+              }
+              testID={`tab-${name}`}
+            >
               <NativeTabs.Trigger.Icon src={nativeIcons[name]} renderingMode="template" />
               <NativeTabs.Trigger.Label>{t(mainTabs[name].label)}</NativeTabs.Trigger.Label>
+              {/* No text: the system draws an empty badge, a dot. */}
+              <NativeTabs.Trigger.Badge hidden={!(name === 'discover' && discoverUnread)} />
             </NativeTabs.Trigger>
           ))}
           {/* Hidden, not deleted (D-52): Today's tiles open /camera?slot=… directly. */}
@@ -43,7 +58,12 @@ export default function TabsLayout() {
     );
   }
   return (
-    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <FloatingTabBar {...props} />}>
+    <Tabs
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => (
+        <FloatingTabBar {...props} badges={discoverUnread ? { discover: t('tabs.discoverNew') } : undefined} />
+      )}
+    >
       <Tabs.Screen name="today" />
       <Tabs.Screen name="moments" />
       {/* Hidden, not deleted (D-52): Today's tiles open /camera?slot=… directly. */}

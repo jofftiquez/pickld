@@ -13,7 +13,9 @@
     "today": "Today",
     "moments": "Moments",
     "jars": "Jars",
-    "discover": "Discover"
+    "discover": "Discover",
+    "discoverNew": "new posts",
+    "discoverUnread": "Discover, new posts"
   },
   "today": {
     "title": "Today",
