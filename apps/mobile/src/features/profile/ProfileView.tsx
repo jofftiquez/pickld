@@ -25,6 +25,7 @@ import { compactCount, followAction, isOwnProfile, profileMoments } from './prof
 import { ProfileGridTile } from './ProfileGridTile';
 import type { FollowList } from './useFollowList';
 import type { ProfilePage } from './useProfile';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type ProfileTab = 'jars' | 'moments';
 
@@ -159,7 +160,7 @@ export function ProfileView({
         <View style={[styles.cover, { height: sizes.profileCover + insets.top }]} testID="profile-cover">
           {data.images?.cover ? (
             <Image
-              source={{ uri: data.images.cover }}
+              source={photoSource(data.images.cover)}
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               accessible={false}

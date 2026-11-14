@@ -20,6 +20,7 @@ import {
   type StoryFormat,
   type StoryLayout,
 } from './storyLayout';
+import { photoSource } from '@/lib/image/photoCache';
 
 // The wordmark pre-coloured brand green (see PromiseView).
 const logo = require('../../../assets/brand/wordmark.png');
@@ -95,7 +96,7 @@ export function StoryCard(props: StoryCardProps) {
       testID="share-card"
     >
       {palette.blurred && blurUri ? (
-        <Image source={{ uri: blurUri }} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={px(60)} />
+        <Image source={photoSource(blurUri)} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={px(60)} />
       ) : null}
       {palette.scrim ? <View style={[StyleSheet.absoluteFill, { backgroundColor: palette.scrim }]} /> : null}
       {palette.card && layout.card ? (

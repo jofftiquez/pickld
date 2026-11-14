@@ -24,6 +24,7 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, lidColors, radius, sizes, space } from '@/theme/tokens';
 
 import { BIO_MAX, formProblems, type EditForm, type SaveError, type UsernameStatus } from './editProfileModel';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type EditProfileViewProps = {
   form: EditForm;
@@ -124,7 +125,12 @@ export function EditProfileView({
       >
         <View style={styles.cover} testID="edit-profile-cover">
           {coverUri ? (
-            <Image source={{ uri: coverUri }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
+            <Image
+              source={photoSource(coverUri)}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              accessible={false}
+            />
           ) : null}
           <View style={styles.changeCoverWrap}>
             <BaseButton

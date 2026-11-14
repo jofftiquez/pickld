@@ -28,6 +28,7 @@ import {
   type StoryLayout,
   type StoryLayoutId,
 } from './storyLayout';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type ShareAction = 'save' | 'copy' | 'message';
 const ACTIONS: { key: ShareAction | 'shareTo'; icon: IconName }[] = [
@@ -185,7 +186,7 @@ export function ShareCardView({
                 <View style={[styles.swatchFill, { backgroundColor: palette.fill }]}>
                   {palette.blurred && swatchUri ? (
                     <Image
-                      source={{ uri: swatchUri }}
+                      source={photoSource(swatchUri)}
                       style={StyleSheet.absoluteFill}
                       contentFit="cover"
                       blurRadius={6}

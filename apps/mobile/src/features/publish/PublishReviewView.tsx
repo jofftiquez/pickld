@@ -17,6 +17,7 @@ import { colors, photo, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { publishNote, type Visibility } from './publishJar';
 import { VisibilityOptions } from './VisibilityOptions';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type PublishReviewViewProps = {
   /** The jar's local date (YYYY-MM-DD). */
@@ -179,7 +180,12 @@ function ReviewSlot({ tile }: { tile: GridTile }) {
           {tile.uri !== null && hasVisibleEdits(tile.edits) ? (
             <MomentCover uri={tile.uri} edits={tile.edits} stamp={tile.stamp} accessible={false} />
           ) : tile.uri ? (
-            <Image source={{ uri: tile.uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
+            <Image
+              source={photoSource(tile.uri)}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              accessible={false}
+            />
           ) : null}
           {tile.visibility ? (
             <View style={styles.badge}>

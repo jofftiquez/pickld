@@ -10,6 +10,7 @@ import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import { ReviewCard } from './ReviewCard';
 import type { GuidelineKey, RequestReviewResult, ReviewState } from './useOwnMoment';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type RemovedViewProps = {
   slot: Slot;
@@ -67,7 +68,7 @@ export function RemovedView({
             {thumbUrl ? (
               <Image
                 testID="moment-removed-photo"
-                source={{ uri: thumbUrl }}
+                source={photoSource(thumbUrl)}
                 style={StyleSheet.absoluteFill}
                 contentFit="cover"
                 blurRadius={photo.checkingBlur}

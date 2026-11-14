@@ -39,10 +39,15 @@ export interface UploaderDeps {
   now?: () => number;
   /** Turns a raw camera photo into the uploadable files (prepareItem by default). */
   prepare?: (item: QueueItem) => Promise<QueueItem>;
+  /** Keeps an uploaded file in the phone's photo cache under its object key (rememberPhoto by default). */
+  remember?: (localUri: string, key: string) => Promise<void>;
 }
 
 // Loaded on first use, so this module doesn't pull the native image manipulator in until a raw item needs it.
 const prepareRaw = (item: QueueItem) => import('./prepare').then((m) => m.prepareItem(item));
+// Best effort: a photo that isn't cached only downloads when it is first shown.
+const rememberUploaded = (localUri: string, key: string) =>
+  import('../image/photoCache').then((m) => m.rememberPhoto(localUri, key)).catch(() => undefined);
 
 export type UploadOutcome =
   | { kind: 'uploaded'; itemId: number; momentId: string }
@@ -149,7 +154,14 @@ async function insertMoment(
 
 /** Runs one due queue item through the pipeline and persists the resulting state. */
 export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<UploadOutcome> {
-  const { client, putFile = putWithUploadTask, newId = newMomentId, now = Date.now, prepare = prepareRaw } = deps;
+  const {
+    client,
+    putFile = putWithUploadTask,
+    newId = newMomentId,
+    now = Date.now,
+    prepare = prepareRaw,
+    remember = rememberUploaded,
+  } = deps;
   const uploading = start(item, now());
   await saveStatus(uploading);
   try {
@@ -179,6 +191,8 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
 
     await putFile(photo.uri, files.photo);
     await putFile(thumb.uri, files.thumb);
+    // The phone already has both files: showing the new moment never downloads them.
+    await Promise.all([remember(photo.uri, files.photo.key), remember(thumb.uri, files.thumb.key)]);
 
     const inserted = await insertMoment(client, item, {
       id: momentId,
