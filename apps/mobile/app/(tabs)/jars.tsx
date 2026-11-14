@@ -9,6 +9,7 @@ import { FeedView } from '@/features/feed/FeedView';
 import { useFeed } from '@/features/feed/useFeed';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { useUnreadNotifications } from '@/features/notifications/useNotifications';
+import { useAvatarUrls } from '@/lib/avatars';
 import { profileUrl } from '@/lib/links';
 
 const MINUTE = 60_000;
@@ -26,6 +27,11 @@ export default function JarsScreen() {
     queryFn: () => fetchMe(userId ?? ''),
     enabled: userId !== null,
   });
+  // Signed avatars for the avatar row and the cards, re-signed when someone changes their photo (D-93).
+  const avatars = useAvatarUrls([
+    ...(feed.authors ?? []).map((a) => ({ id: a.author_id, path: a.avatar_path })),
+    ...(feed.jars ?? []).map((j) => ({ id: j.author_id, path: j.author_avatar_path })),
+  ]);
   // The spinner shows only for a pull, not for background refetches (focus, reconnect, app start).
   const [pulling, setPulling] = useState(false);
   // "Updated 2h ago" follows the clock.
@@ -51,6 +57,8 @@ export default function JarsScreen() {
       jars={feed.jars}
       authors={feed.authors}
       myName={me.data?.displayName ?? null}
+      myAvatarUrl={me.data?.avatarUrl ?? null}
+      avatars={avatars}
       now={now}
       insets={insets}
       isLoading={feed.isLoading}

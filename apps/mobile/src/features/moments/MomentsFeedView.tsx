@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { FeedEmpty } from '@/features/feed/FeedEmpty';
 import type { FeedAuthor } from '@/features/feed/feedModel';
+import type { AvatarUrls } from '@/lib/avatars';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
@@ -16,6 +17,8 @@ export type MomentsFeedViewProps = {
   /** The authors the user reads (`feed_authors`): none means the Find people card (D-53). */
   authors: FeedAuthor[] | undefined;
   viewerId: string | null;
+  /** Signed avatars by author id; initials for anyone missing. */
+  avatars?: AvatarUrls;
   insets: { top: number; bottom: number };
   isLoading: boolean;
   isRefreshing: boolean;
@@ -25,7 +28,8 @@ export type MomentsFeedViewProps = {
   onRefresh: () => void;
   onEndReached: () => void;
   onOpenNotifications: () => void;
-  onOpenMoment: (moment: FeedMoment) => void;
+  /** Go to jar on a card (D-94). */
+  onOpenJar: (moment: FeedMoment) => void;
   onToggleLike: (moment: FeedMoment) => void;
   onOpenComments: (moment: FeedMoment) => void;
   onFindPeople: () => void;
@@ -41,6 +45,7 @@ export function MomentsFeedView({
   moments,
   authors,
   viewerId,
+  avatars = {},
   insets,
   isLoading,
   isRefreshing,
@@ -49,7 +54,7 @@ export function MomentsFeedView({
   onRefresh,
   onEndReached,
   onOpenNotifications,
-  onOpenMoment,
+  onOpenJar,
   onToggleLike,
   onOpenComments,
   onFindPeople,
@@ -104,7 +109,8 @@ export function MomentsFeedView({
             moment={item}
             photoWidth={photoWidth}
             viewerId={viewerId}
-            onOpen={() => onOpenMoment(item)}
+            avatarUrl={avatars[item.author_id] ?? null}
+            onOpenJar={() => onOpenJar(item)}
             onToggleLike={() => onToggleLike(item)}
             onOpenComments={() => onOpenComments(item)}
           />

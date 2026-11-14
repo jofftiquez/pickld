@@ -25,7 +25,7 @@ const momentRow = z.object({
   captured_at: z.string().nullable(),
   added_at: z.string(),
   edits: z.unknown(),
-  author: z.object({ display_name: z.string() }).nullable(),
+  author: z.object({ display_name: z.string(), avatar_path: z.string().nullish() }).nullable(),
 });
 
 const photoUrlsResponse = z.object({
@@ -49,7 +49,7 @@ export async function fetchCommentMoment(jarId: string, momentId: string): Promi
   const { data, error } = await supabase
     .from('moments')
     .select(
-      'id, jar_id, user_id, slot, caption, comment_count, captured_at, added_at, edits, author:profiles(display_name)',
+      'id, jar_id, user_id, slot, caption, comment_count, captured_at, added_at, edits, author:profiles(display_name, avatar_path)',
     )
     .eq('id', momentId)
     .eq('status', 'live')

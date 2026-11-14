@@ -55,7 +55,11 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
   const jar = await fetchJarRow(id);
   if (!jar) return null;
   const [author, moments] = await Promise.all([
-    supabase.from('profiles').select('username, display_name, lid_color').eq('id', jar.user_id).maybeSingle(),
+    supabase
+      .from('profiles')
+      .select('username, display_name, lid_color, avatar_path')
+      .eq('id', jar.user_id)
+      .maybeSingle(),
     supabase
       .from('moments')
       .select(

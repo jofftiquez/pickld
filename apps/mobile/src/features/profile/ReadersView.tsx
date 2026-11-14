@@ -10,6 +10,7 @@ import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
+import type { AvatarUrls } from '@/lib/avatars';
 import { deviceLocale } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
@@ -28,6 +29,8 @@ export type ReadersViewProps = {
   onChangeQuery: (query: string) => void;
   /** Undefined while the first load runs. */
   rows: FollowListRow[] | undefined;
+  /** Signed avatars by profile id; initials for anyone missing. */
+  avatars?: AvatarUrls;
   failed?: boolean;
   /** A follow request is in flight. */
   busy?: boolean;
@@ -55,6 +58,7 @@ export function ReadersView({
   query,
   onChangeQuery,
   rows,
+  avatars = {},
   failed = false,
   busy = false,
   insets,
@@ -185,6 +189,7 @@ export function ReadersView({
                 <FollowRow
                   key={row.id}
                   row={row}
+                  avatarUrl={avatars[row.id] ?? null}
                   isViewer={row.id === viewerId}
                   divider={i < rows.length - 1}
                   onOpen={() => onOpenProfile(row.username)}

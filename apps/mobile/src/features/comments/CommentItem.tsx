@@ -11,6 +11,8 @@ import type { ThreadComment } from './commentsModel';
 
 export type CommentItemProps = {
   comment: ThreadComment;
+  /** The commenter's signed avatar; initials without it. */
+  avatarUrl?: string | null;
   isReply?: boolean;
   now: Date;
   /** Shown when the comment can take replies. */
@@ -25,14 +27,22 @@ export type CommentItemProps = {
 const ACTION_HEIGHT = 24;
 
 /** One comment or reply in the thread (Comments): avatar, name and age, text, Reply, Delete and Report. */
-export function CommentItem({ comment, isReply = false, now, onReply, onDelete, onReport }: CommentItemProps) {
+export function CommentItem({
+  comment,
+  avatarUrl = null,
+  isReply = false,
+  now,
+  onReply,
+  onDelete,
+  onReport,
+}: CommentItemProps) {
   const { t } = useTranslation();
   const name = comment.author?.display_name ?? t('comments.someone');
   const age = ageOf(comment.created_at, now);
   const when = comment.pending ? t('comments.checking') : t(`comments.age.${age.unit}`, { count: age.count });
   return (
     <View style={[styles.row, isReply ? styles.reply : null]} testID={`comment-${comment.id}`}>
-      <Avatar name={name} uri={null} size={isReply ? 'sm' : 'feed'} decorative />
+      <Avatar name={name} uri={avatarUrl} size={isReply ? 'sm' : 'feed'} decorative />
       <View style={styles.body}>
         <Text style={[textStyle('bodySmall', '400'), { color: colors.ink }]}>
           <Text style={textStyle('bodySmall', '700')}>{name}</Text>

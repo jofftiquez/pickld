@@ -155,7 +155,9 @@
     "meta": "{{slot}} · {{when}}",
     "cardLabel": "{{name}}, {{slot}}, {{when}}",
     "private": "Only you can see it",
-    "openHint": "Opens the moment",
+    "openHint": "Opens the moment’s comments",
+    "goToJar": "Go to jar",
+    "goToJarLabel": "Go to {{name}}’s jar",
     "list": "Moments from people you read and you"
   },
   "jarPage": {

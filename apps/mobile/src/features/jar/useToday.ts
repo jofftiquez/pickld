@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { z } from 'zod';
 
 import { useAuthStore } from '@/lib/authStore';
+import { fetchAvatarUrls } from '@/lib/avatars';
 import { trackNetwork } from '@/lib/connectivity';
 import { findOpenJar, localDateIn, normalizeZone } from '@/lib/jars';
 import { listQueue, subscribeQueue } from '@/lib/queue/store';
@@ -146,11 +147,17 @@ export async function fetchMe(userId: string): Promise<Me> {
     if (own.error) throw new Error(own.error.message);
     suspendedUntil = own.data?.suspended_until ?? null;
   }
-  // TODO(M3-13): avatar photo URLs; until then the avatar shows initials.
+  // A failed signing leaves the avatar on its initials (D-93).
+  const avatarUrl = data.avatar_path
+    ? await fetchAvatarUrls([userId]).then(
+        (urls) => urls[userId] ?? null,
+        () => null,
+      )
+    : null;
   return {
     displayName: data.display_name,
     username: data.username,
-    avatarUrl: null,
+    avatarUrl,
     readerCount: data.reader_count,
     lidColor: data.lid_color,
     defaultVisibility: data.default_visibility,

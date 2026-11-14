@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react-native
 import { StyleSheet } from 'react-native';
 
 import { parseEdits } from '@/features/edit/edits';
+import { radius, space } from '@/theme/tokens';
 
 import { buildThread, COMMENT_MAX, type CommentRow } from '../commentsModel';
 import { CommentsView, type CommentsViewProps } from '../CommentsView';
@@ -64,6 +65,15 @@ async function setup(props: Partial<CommentsViewProps> = {}) {
 }
 
 describe('CommentsView', () => {
+  it('shows signed avatars for commenters and the composer, and initials without one (D-93)', async () => {
+    await setup({ avatars: { 'mika-id': 'https://photos.test/mika.jpg' }, myAvatarUrl: 'https://photos.test/me.jpg' });
+    const hidden = { includeHiddenElements: true };
+    expect(within(screen.getByTestId('comment-c1')).queryByText('MR', hidden)).toBeNull();
+    // My reply has no avatar in the map; the composer's comes from myAvatarUrl.
+    expect(screen.getAllByText('DS', hidden)).toHaveLength(1);
+    expect(within(screen.getByTestId('comment-c2')).getByText('DS', hidden)).toBeTruthy();
+  });
+
   it('shows the header, the comment with its age, and my own reply as checking', async () => {
     await setup();
     expect(screen.getByRole('header', { name: 'Comments' })).toBeTruthy();
@@ -161,14 +171,20 @@ describe('CommentsView', () => {
     },
   };
 
-  it('opens a moment thread with the whole moment at 3:4, full width, then author, caption and comments (D-84)', async () => {
+  it('opens a moment thread with the whole moment at 3:4, then author, caption and comments (D-84)', async () => {
     await setup(momentProps);
     expect(screen.getByTestId('comments-subtitle')).toHaveTextContent('Mika’s #morning · 4');
-    // Moment detail's renderer, edge to edge at the window's width, 3:4.
+    // Moment detail's renderer, inside the screen's side margins, exactly 3:4 (D-95).
     const view = screen.getByTestId('comments-moment-view', { includeHiddenElements: true });
     const { width, height } = StyleSheet.flatten(view.props.style) as { width: number; height: number };
-    expect(width).toBe(750);
-    expect(height).toBe(1000);
+    expect(width).toBe(750 - 2 * space.xl);
+    expect(height).toBeCloseTo((width * 4) / 3);
+    // Rounded like the app's other photos, clipping the stickers and text on it.
+    expect(StyleSheet.flatten(screen.getByTestId('comments-moment-photo').props.style)).toMatchObject({
+      marginHorizontal: space.xl,
+      borderRadius: radius.tile,
+      overflow: 'hidden',
+    });
     expect(within(view).getByTestId('moment-view-photo', { includeHiddenElements: true })).toHaveProp('source', [
       { uri: 'https://photos.test/m1/full.webp' },
     ]);
