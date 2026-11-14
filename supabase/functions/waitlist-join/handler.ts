@@ -25,7 +25,7 @@ export interface WaitlistDeps {
 const encoder = new TextEncoder();
 
 /** Same-length strings compared without an early exit. */
-function sameSecret(a: string, b: string): boolean {
+export function sameSecret(a: string, b: string): boolean {
   const x = encoder.encode(a);
   const y = encoder.encode(b);
   let diff = x.length ^ y.length;
