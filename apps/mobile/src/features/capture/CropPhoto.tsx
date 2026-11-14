@@ -121,8 +121,13 @@ export function CropPhoto({
   return (
     <GestureDetector gesture={gesture}>
       <View style={[styles.root, { height }]} testID="crop-area">
+        {/* Full resolution, held in memory: the view's size changes on every pinch step, and expo-image would
+            otherwise shrink the photo to each size with a fresh decode from disk, cancelled by the next step,
+            so the photo showed a smaller copy stretched up while zooming (D-139). */}
         <Image
           source={{ uri }}
+          allowDownscaling={false}
+          cachePolicy="memory"
           contentFit="fill"
           accessible
           accessibilityLabel={t('crop.photo')}
