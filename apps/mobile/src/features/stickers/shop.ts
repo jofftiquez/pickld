@@ -20,7 +20,7 @@ export type ShopPack = {
   /** The store product a purchase unlocks; null for free and earned packs. */
   productId: string | null;
   stickerCount: number;
-  /** Every sticker in catalog order (cards show the first three). */
+  /** Every sticker in catalog order (cards show the first six, the pack page's cover the first five). */
   stickers: { asset: string; label: string }[];
   /** Every sticker label, for search. */
   labels: string[];

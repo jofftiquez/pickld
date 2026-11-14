@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PackPreviewView } from '@/features/stickers/PackPreviewView';
 import { buildPacks } from '@/features/stickers/shop';
-import { useBuyPack, useLatestPhoto } from '@/features/stickers/usePackPreview';
+import { useBuyPack } from '@/features/stickers/usePackPreview';
 import { usePrices, useShopRows } from '@/features/stickers/useShop';
 import { WEB_BASE_URL } from '@/lib/links';
 
@@ -17,7 +17,6 @@ export default function PackPreviewScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const rows = useShopRows();
-  const photo = useLatestPhoto();
   const buy = useBuyPack();
   const pack = useMemo(
     () =>
@@ -32,7 +31,6 @@ export default function PackPreviewScreen() {
       pack={pack}
       failed={rows.isError}
       price={pack?.productId ? prices.get(pack.productId) : undefined}
-      photoUrl={photo.data ?? null}
       buying={buy.isPending}
       buyFailed={buy.isError}
       insets={insets}
