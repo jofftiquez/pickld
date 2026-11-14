@@ -32,7 +32,7 @@ async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null
 
 /**
  * One page of jars from the feed, or from Discover (`discover_jars_page`, 0070), which returns the same rows. A
- * `newer` cursor reads the feed's rows just above it (`feed_page_newer`, 0130), newest first.
+ * `newer` cursor reads the feed's rows just above it (`feed_page_newer`, 0140), newest first.
  */
 export async function fetchFeedPage(
   cursor: PageCursor | null,

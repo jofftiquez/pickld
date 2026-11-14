@@ -1,4 +1,4 @@
-// The days on a timeline with how many rows each holds (`moments_feed_days`, `feed_days`; 0130), newest first, in
+// The days on a timeline with how many rows each holds (`moments_feed_days`, `feed_days`; 0140), newest first, in
 // the phone's zone: the scrubber's rail (FR-SOC-01). Same visibility as the timeline itself.
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';

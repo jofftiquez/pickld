@@ -1,5 +1,5 @@
 // The date scrubber on the Moments and Jars timelines (FR-SOC-01): which days hold rows (`moments_feed_days`,
-// `feed_days`, 0130), where each sits on the rail, which day a drag points at, and the anchor that starts a
+// `feed_days`, 0140), where each sits on the rail, which day a drag points at, and the anchor that starts a
 // timeline at a day it hasn't loaded yet. The rail is proportional to rows, not to time, as in Google Photos:
 // a busy week takes more of the rail than a quiet month, and empty stretches take none.
 import { z } from 'zod';

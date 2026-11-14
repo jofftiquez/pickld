@@ -1,4 +1,4 @@
--- 0130 (FR-SOC-01): the date scrubber's functions on the Moments and Jars timelines.
+-- 0140 (FR-SOC-01): the date scrubber's functions on the Moments and Jars timelines.
 -- moments_feed_days and feed_days count exactly what moments_feed_page and feed_page show, per day in the
 -- caller's zone; moments_feed_page_newer and feed_page_newer page back up through exactly the same rows. Both
 -- are checked against a full walk of the existing pages as owner, reader, outsider, blocked user, blocker and

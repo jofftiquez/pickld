@@ -1,4 +1,4 @@
--- 0130 — The date scrubber on the Moments and Jars timelines (FR-SOC-01, NFR-PERF-02).
+-- 0140 — The date scrubber on the Moments and Jars timelines (FR-SOC-01, NFR-PERF-02).
 -- Additive only: four functions. Nothing is dropped or renamed.
 --
 -- The rail on the right edge maps a drag to a day and jumps there, so the app needs to know which days hold
@@ -27,7 +27,7 @@ end $$;
 revoke execute on function public.check_iana_zone(text) from public, anon;
 grant execute on function public.check_iana_zone(text) to authenticated;
 comment on function public.check_iana_zone(text) is
-  'Raises 22023 unless p_tz is an IANA zone name Postgres knows (rule 7) (0130).';
+  'Raises 22023 unless p_tz is an IANA zone name Postgres knows (rule 7) (0140).';
 
 -- ---------------------------------------------------------------- Moments: days
 create or replace function public.moments_feed_days(p_tz text)
@@ -59,7 +59,7 @@ end $$;
 revoke execute on function public.moments_feed_days(text) from public, anon;
 grant execute on function public.moments_feed_days(text) to authenticated;
 comment on function public.moments_feed_days(text) is
-  'Moments timeline days for the scrubber: the days (added_at in p_tz) holding moments moments_feed_page would show the caller, newest first, with counts (0130).';
+  'Moments timeline days for the scrubber: the days (added_at in p_tz) holding moments moments_feed_page would show the caller, newest first, with counts (0140).';
 
 -- ---------------------------------------------------------------- Moments: newer page
 create or replace function public.moments_feed_page_newer(cursor_at timestamptz, cursor_id uuid)
@@ -128,7 +128,7 @@ end $$;
 revoke execute on function public.moments_feed_page_newer(timestamptz, uuid) from public, anon;
 grant execute on function public.moments_feed_page_newer(timestamptz, uuid) to authenticated;
 comment on function public.moments_feed_page_newer(timestamptz, uuid) is
-  'Moments timeline, the other way: the 20 rows of moments_feed_page directly above the cursor, oldest first (0130).';
+  'Moments timeline, the other way: the 20 rows of moments_feed_page directly above the cursor, oldest first (0140).';
 
 -- ---------------------------------------------------------------- Jars: days
 create or replace function public.feed_days(p_tz text)
@@ -168,7 +168,7 @@ end $$;
 revoke execute on function public.feed_days(text) from public, anon;
 grant execute on function public.feed_days(text) to authenticated;
 comment on function public.feed_days(text) is
-  'Jars timeline days for the scrubber: the days (feed_at in p_tz) holding jars feed_page would show the caller, newest first, with counts (0130).';
+  'Jars timeline days for the scrubber: the days (feed_at in p_tz) holding jars feed_page would show the caller, newest first, with counts (0140).';
 
 -- ---------------------------------------------------------------- Jars: newer page
 create or replace function public.feed_page_newer(cursor_at timestamptz, cursor_id uuid)
@@ -252,4 +252,4 @@ end $$;
 revoke execute on function public.feed_page_newer(timestamptz, uuid) from public, anon;
 grant execute on function public.feed_page_newer(timestamptz, uuid) to authenticated;
 comment on function public.feed_page_newer(timestamptz, uuid) is
-  'Jars timeline, the other way: the 20 rows of feed_page directly above the cursor, oldest first (0130).';
+  'Jars timeline, the other way: the 20 rows of feed_page directly above the cursor, oldest first (0140).';

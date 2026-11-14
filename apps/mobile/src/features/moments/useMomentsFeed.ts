@@ -53,7 +53,7 @@ async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
 
 /**
  * One page of moments from the timeline, or from Discover (`discover_moments_page`, 0070), which returns the same
- * rows. A `newer` cursor reads the timeline's rows just above it (`moments_feed_page_newer`, 0130), newest first.
+ * rows. A `newer` cursor reads the timeline's rows just above it (`moments_feed_page_newer`, 0140), newest first.
  */
 export async function fetchMomentsPage(
   cursor: PageCursor | null,
