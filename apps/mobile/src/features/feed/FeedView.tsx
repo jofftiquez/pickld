@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { maxTextScale, textStyle } from '@/theme/text';
 import type { AvatarUrls } from '@/lib/avatars';
+import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { FeedEmpty } from './FeedEmpty';
@@ -73,7 +74,8 @@ export function FeedView({
 }: FeedViewProps) {
   const { t } = useTranslation();
   // Content scrolls under the floating tab bar; this keeps the last card clear of it.
-  const bottomPadding = Math.max(insets.bottom, space.lg) + sizes.tabBar + space.lg;
+  const tabBarClearance = useTabBarClearance();
+  const bottomPadding = Math.max(insets.bottom, space.lg) + tabBarClearance;
   // Jars, empty: only once we know the user reads nobody (FR-SOC-02), never while the authors load.
   const readsNobody = authors !== undefined && authors.length === 0;
   const hasJars = jars !== undefined && jars.length > 0;

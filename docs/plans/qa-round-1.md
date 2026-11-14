@@ -919,13 +919,22 @@ The product owner sent three more round 3 items while H, I and J were being buil
 - **Method:** capture each page and state at full size in the Simulator, with a simulator-only fix for App Transport Security so photos load, and compare with `design/`. Judge balance, wasted space, alignment, consistent spacing, tap targets, readability and safe areas. Fix what looks bad and cut what can't be made to work, recording each as an auto-approved decision after L's numbers. Photo checks happen on the real iPhone. The product owner gets per-page contact sheets, then a phone rebuild.
 - **Size:** L. It runs after L and may split into several pull requests by page.
 
+### R3-G Liquid Glass tab bar, the real one
+
+- **Ask:** "I am still not seeing the liquid glass bottom nav bar on my phone", with a screenshot of Apple's floating glass tab bar from another app.
+- **Today:** the bar was real glass, but a custom one: a wide white-tinted bar with a border, a shadow and a solid green pill, so it read as frosted white rather than Apple's bar.
+- **Change:** on iOS 26+ with Reduce Transparency off, the tab layout mounts Expo Router's `NativeTabs` (the system's floating Liquid Glass capsule, selected tab on a lighter glass pill), with the app's own icons; the custom bar stays below iOS 26 and with Reduce Transparency on. Screens drop the custom bar's bottom clearance under the native bar.
+- **Touches:** `app/(tabs)/_layout.tsx`, `useLiquidGlass`, the three tab screens' bottom padding, `assets/tabs`, Main.html note. No schema.
+- **Size:** S.
+
 ## Pieces, order and parallel work (updated)
 
 | Piece                     | Items          | Decisions       | Runs with                          |
 | ------------------------- | -------------- | --------------- | ---------------------------------- |
 | R3-H, R3-I, R3-J          | 1–7            | D-90–D-99       | merged (#328, #326, #327)          |
 | R3-K Discover             | 8              | D-100–D-102     | L                                  |
-| R3-L Two-step editor      | 9              | D-103 onward    | K                                  |
+| R3-L Two-step editor      | 9              | D-103–D-107     | merged (#331)                      |
+| R3-G Glass tab bar        | owner's ask    | D-108           | before M; in the next rebuild      |
 | R3-M Critical-page audit  | owner's ask    | after L         | after L merges; rebuild at the end |
 
 ## Decisions added (auto-approved Nov 14)
@@ -933,3 +942,4 @@ The product owner sent three more round 3 items while H, I and J were being buil
 9. **Discover (D-100–D-102):** Explore becomes Discover at the same route and opens from a compass button next to the bell on the Moments and Jars tabs, with the tab bar unchanged. It shows Everyone moments and published Everyone jars from active people the viewer doesn't read, with no blocks either way and never the viewer's own.
 10. **Two-step editor (D-103 onward):** the photo tools first, then Next to the details, then Save or Share. It adds no new social features.
 11. **Critical-page audit (after L):** every fix or cut is recorded as its own decision.
+12. **Glass tab bar (D-108):** iOS 26+ uses the system's Liquid Glass tab bar; older iOS and Reduce Transparency keep the custom bar.

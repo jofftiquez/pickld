@@ -7,6 +7,7 @@ import { FeedEmpty } from '@/features/feed/FeedEmpty';
 import type { FeedAuthor } from '@/features/feed/feedModel';
 import type { AvatarUrls } from '@/lib/avatars';
 import { maxTextScale, textStyle } from '@/theme/text';
+import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { MomentFeedCard } from './MomentFeedCard';
@@ -67,7 +68,8 @@ export function MomentsFeedView({
   const { width } = useWindowDimensions();
   // The card sits inside the screen padding and its own padding; the photo fills the rest.
   const photoWidth = Math.max(0, width - 2 * space.xl - 2 * space.md);
-  const bottomPadding = Math.max(insets.bottom, space.lg) + sizes.tabBar + space.lg;
+  const tabBarClearance = useTabBarClearance();
+  const bottomPadding = Math.max(insets.bottom, space.lg) + tabBarClearance;
   const readsNobody = authors !== undefined && authors.length === 0;
   const hasMoments = moments !== undefined && moments.length > 0;
 
