@@ -8,6 +8,14 @@ import { AccessibilityInfo } from 'react-native';
  * on never sees glass flash in.
  */
 export function useLiquidGlass(): boolean {
+  return useLiquidGlassState() === true;
+}
+
+/**
+ * The same answer, but null while Reduce Transparency is still being read on a phone that supports glass.
+ * For a choice that can't change cheaply once drawn, such as which tab bar to mount (D-108).
+ */
+export function useLiquidGlassState(): boolean | null {
   const supported = isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
   const [reduceTransparency, setReduceTransparency] = useState<boolean | null>(null);
   useEffect(() => {
@@ -22,5 +30,6 @@ export function useLiquidGlass(): boolean {
       sub.remove();
     };
   }, [supported]);
-  return supported && reduceTransparency === false;
+  if (!supported) return false;
+  return reduceTransparency === null ? null : !reduceTransparency;
 }
