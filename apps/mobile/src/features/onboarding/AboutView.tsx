@@ -154,6 +154,7 @@ export function AboutView({
         </View>
         <View style={styles.birthday} accessibilityRole="none">
           <Text style={[textStyle('label'), { color: colors.muted }]}>{t('setup.about.birthday')}</Text>
+          {/* Large text: Month, Day and Year each take the whole row, so a month name is never cut to "No…". */}
           <View style={styles.birthdayRow}>
             <SelectField
               label={t('setup.about.month')}
@@ -161,6 +162,7 @@ export function AboutView({
               options={months}
               value={b.month}
               onChange={(month) => setBirthday({ month })}
+              fullWidthWhenLarge
               testID="about-month"
             />
             <SelectField
@@ -169,6 +171,7 @@ export function AboutView({
               options={days}
               value={b.day}
               onChange={(day) => setBirthday({ day })}
+              fullWidthWhenLarge
               testID="about-day"
             />
             <SelectField
@@ -177,6 +180,7 @@ export function AboutView({
               options={years}
               value={b.year}
               onChange={(year) => setBirthday({ year })}
+              fullWidthWhenLarge
               testID="about-year"
             />
           </View>

@@ -16,6 +16,7 @@ import { parseEdits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
 import type { JarMoment } from '@/features/jar/jarPage';
 import { deviceLocale } from '@/lib/format';
+import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, slots, space } from '@/theme/tokens';
 
@@ -98,6 +99,7 @@ export function ProfileView({
 }: ProfileViewProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
+  const large = useLargeText();
   const [tab, setTab] = useState<ProfileTab>('jars');
 
   const backButton = (
@@ -166,7 +168,7 @@ export function ProfileView({
           ) : null}
         </View>
         <View style={styles.body}>
-          <View style={styles.avatarRow}>
+          <View style={[styles.avatarRow, large && styles.avatarRowLarge]}>
             <Avatar
               name={profile.display_name}
               uri={data.images?.avatar}
@@ -175,7 +177,7 @@ export function ProfileView({
               decorative
               testID="profile-avatar"
             />
-            <View style={styles.actions} testID="profile-actions">
+            <View style={[styles.actions, large && styles.actionsLarge]} testID="profile-actions">
               {isOwner && onEditProfile ? (
                 // BaseButton (also under FollowButton) pins itself to the top (`alignSelf: flex-start`)
                 // unless it stretches; the wrapper is what the row centres, so the pill's middle sits on
@@ -427,6 +429,10 @@ const styles = StyleSheet.create({
     gap: space.sm,
     height: sizes.profileAvatarOverlap * 2,
   },
+  // Large text: the grown Edit profile or Read pill no longer fits beside the avatar and pushed Share off the
+  // right edge, so the buttons move under the avatar and wrap.
+  avatarRowLarge: { flexDirection: 'column', alignItems: 'flex-start', gap: space.sm },
+  actionsLarge: { height: undefined, alignSelf: 'stretch', flexWrap: 'wrap' },
   names: { gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm },
   name: { flexShrink: 1 },
