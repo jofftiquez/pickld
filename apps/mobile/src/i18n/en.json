@@ -233,6 +233,12 @@
     "subtitle_other": "{{month}} · {{count}} moments",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
+    "monthPicker": {
+      "open_one": "{{month}}, {{count}} moment",
+      "open_other": "{{month}}, {{count}} moments",
+      "openHint": "Opens the month picker",
+      "title": "Choose a month"
+    },
     "calendar": "{{month}} calendar",
     "day": "{{date}}, {{count}} of {{total}} moments",
     "dayToday": "{{date}}, today, {{count}} of {{total}} moments",

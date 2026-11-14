@@ -131,13 +131,25 @@ export type MonthNav = { canGoPrevious: boolean; canGoNext: boolean };
 export const BACKFILL_MONTHS = 12;
 
 /**
- * Previous months go back to the month of the user's first jar or `BACKFILL_MONTHS` before the current
- * month, whichever is earlier, so a new user can still reach and fill days before their first jar. Next
- * stops at the current month. `firstJarMonth` is null when the user has no jar yet (or it isn't known).
+ * The earliest month My days reaches: the month of the user's first jar or `BACKFILL_MONTHS` before the
+ * current month, whichever is earlier, so a new user can still reach and fill days before their first jar.
+ * `firstJarMonth` is null when the user has no jar yet (or it isn't known).
  */
-export function monthNav(month: string, currentMonth: string, firstJarMonth: string | null): MonthNav {
+export function earliestMonth(currentMonth: string, firstJarMonth: string | null): string {
   const backfill = addMonths(currentMonth, -BACKFILL_MONTHS);
-  const earliest = firstJarMonth !== null && firstJarMonth < backfill ? firstJarMonth : backfill;
+  return firstJarMonth !== null && firstJarMonth < backfill ? firstJarMonth : backfill;
+}
+
+/** Every month from `from` to `to`, both included, oldest first; empty when `from` is after `to`. */
+export function monthsBetween(from: string, to: string): string[] {
+  const months: string[] = [];
+  for (let month = from; month <= to; month = addMonths(month, 1)) months.push(month);
+  return months;
+}
+
+/** Previous goes back to `earliestMonth`; Next stops at the current month. */
+export function monthNav(month: string, currentMonth: string, firstJarMonth: string | null): MonthNav {
+  const earliest = earliestMonth(currentMonth, firstJarMonth);
   return {
     canGoPrevious: month > earliest,
     canGoNext: month < currentMonth,

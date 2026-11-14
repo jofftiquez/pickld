@@ -2,10 +2,12 @@ import {
   addMonths,
   buildMonthGrid,
   daysInMonth,
+  earliestMonth,
   fillFraction,
   monthJarRow,
   monthMomentCount,
   monthNav,
+  monthsBetween,
   weekStartFrom,
   type DayCell,
   type GridCell,
@@ -110,6 +112,40 @@ describe('buildMonthGrid', () => {
     expect(grid.find((d) => d.day === 6)?.jar?.coverUrl).toBe('https://photos/x.webp');
     expect(grid.find((d) => d.day === 8)?.jar).toMatchObject({ moment_count: 0, coverUrl: null });
     expect(grid.filter((d) => d.jar).map((d) => d.day)).toEqual([6, 8]);
+  });
+});
+
+describe('earliestMonth and monthsBetween', () => {
+  it('reaches 12 months back across a year boundary when there is no older first jar', () => {
+    expect(earliestMonth('2026-02', null)).toBe('2025-02');
+    expect(earliestMonth('2026-02', '2026-01')).toBe('2025-02');
+    expect(monthsBetween(earliestMonth('2026-02', null), '2026-02')).toEqual([
+      '2025-02',
+      '2025-03',
+      '2025-04',
+      '2025-05',
+      '2025-06',
+      '2025-07',
+      '2025-08',
+      '2025-09',
+      '2025-10',
+      '2025-11',
+      '2025-12',
+      '2026-01',
+      '2026-02',
+    ]);
+  });
+
+  it('starts at an older first jar beyond 12 months', () => {
+    expect(earliestMonth('2026-02', '2024-11')).toBe('2024-11');
+    const months = monthsBetween(earliestMonth('2026-02', '2024-11'), '2026-02');
+    expect(months).toHaveLength(16);
+    expect(months[0]).toBe('2024-11');
+    expect(months[months.length - 1]).toBe('2026-02');
+  });
+
+  it('is empty when the start is after the end', () => {
+    expect(monthsBetween('2026-03', '2026-02')).toEqual([]);
   });
 });
 
