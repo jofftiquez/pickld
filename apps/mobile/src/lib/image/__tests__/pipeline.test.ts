@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { LocationMetadataError } from '../exif';
-import { flipPhoto, preparePhoto } from '../pipeline';
+import { flipPhoto, prepareMedium, preparePhoto } from '../pipeline';
 
 type Op = [string, unknown];
 
@@ -92,7 +92,15 @@ jest.mock('expo-file-system', () => {
 });
 
 beforeEach(() => {
-  Object.assign(mockState, { outputs: {}, saves: [], ops: [], released: 0, deleted: [], fullFixture: 'clean.webp' });
+  Object.assign(mockState, {
+    outputs: {},
+    saves: [],
+    ops: [],
+    released: 0,
+    deleted: [],
+    fullFixture: 'clean.webp',
+    sourceSize: { width: 4032, height: 3024 },
+  });
 });
 
 describe('preparePhoto', () => {
@@ -192,5 +200,23 @@ describe('flipPhoto (Mirror selfies off, D-66)', () => {
     expect(uri).toBe('file:///cache/out-0.webp');
     expect(mockState.deleted).toEqual([]);
     expect(mockState.released).toBe(2);
+  });
+});
+
+describe('prepareMedium (NFR-PERF-02)', () => {
+  it('writes the 1080 × 1440 feed copy of the full photo as WebP q80', async () => {
+    mockState.sourceSize = { width: 1440, height: 1920 };
+    const result = await prepareMedium('file:///queue/full.webp');
+    expect(result).toEqual({ uri: 'file:///cache/out-0.webp', width: 1080, height: 1440 });
+    expect(mockState.ops).toEqual([[['resize', { width: 1080, height: 1440 }]]]);
+    expect(mockState.saves.map((s) => s.options)).toEqual([{ format: 'webp', compress: 0.8 }]);
+    expect(mockState.released).toBe(2);
+    expect(mockState.deleted).toEqual([]);
+  });
+
+  it('refuses and deletes a copy that carries location', async () => {
+    mockState.fullFixture = 'gps.webp';
+    await expect(prepareMedium('file:///queue/full.webp')).rejects.toBeInstanceOf(LocationMetadataError);
+    expect(mockState.deleted).toEqual(['file:///cache/out-0.webp']);
   });
 });

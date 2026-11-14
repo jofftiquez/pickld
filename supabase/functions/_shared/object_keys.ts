@@ -4,6 +4,8 @@
 // avatar_path and cover_path.
 //
 //   moments/<user id>/<upload id>/full.jpg     the 3:4 photo (WebP or JPEG; the suffix is fixed, the stored content type is served)
+//   moments/<user id>/<upload id>/medium.jpg   a 1080 × 1440 copy for feeds (NFR-PERF-02); optional: moments uploaded
+//                                              before it have none, and the Worker then serves full.jpg
 //   moments/<user id>/<upload id>/thumb.jpg    its thumbnail
 //   avatars/<user id>/<upload id>.jpg
 //   covers/<user id>/<upload id>.jpg
@@ -15,17 +17,32 @@
 // Art never changes under a key: new art gets a new file name (and a new asset_path), so it can be cached forever.
 
 export type ObjectKind = 'moment' | 'avatar' | 'cover';
-export type MomentVariant = 'full' | 'thumb';
+export type MomentVariant = 'full' | 'medium' | 'thumb';
 
 const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
 const KEY_PATTERN = new RegExp(
-  `^(?:moments/(${UUID})/${UUID}/(?:full|thumb)|avatars/(${UUID})/${UUID}|covers/(${UUID})/${UUID}|seed/(?:photos|thumbs|avatars)/[a-z0-9_]{1,40})\\.jpg$`,
+  `^(?:moments/(${UUID})/${UUID}/(?:full|medium|thumb)|avatars/(${UUID})/${UUID}|covers/(${UUID})/${UUID}|seed/(?:photos|thumbs|avatars)/[a-z0-9_]{1,40})\\.jpg$`,
 );
 
 /** Keys for one new upload. Call once per upload; ids are never reused. */
-export function newMomentKeys(userId: string): { photo: string; thumb: string } {
+export function newMomentKeys(userId: string): { photo: string; medium: string; thumb: string } {
   const base = `moments/${userId}/${crypto.randomUUID()}`;
-  return { photo: `${base}/full.jpg`, thumb: `${base}/thumb.jpg` };
+  return { photo: `${base}/full.jpg`, medium: `${base}/medium.jpg`, thumb: `${base}/thumb.jpg` };
+}
+
+const FULL_SUFFIX = '/full.jpg';
+const MEDIUM_SUFFIX = '/medium.jpg';
+
+/** The medium key that sits next to a moment's full photo key, or null for anything else (seed photos have none). */
+export function mediumKeyFor(photoKey: string): string | null {
+  if (!photoKey.startsWith('moments/') || !photoKey.endsWith(FULL_SUFFIX) || !isObjectKey(photoKey)) return null;
+  return photoKey.slice(0, -FULL_SUFFIX.length) + MEDIUM_SUFFIX;
+}
+
+/** The full photo key a medium key was made from, or null when `key` is not a medium key. */
+export function fullKeyForMedium(key: string): string | null {
+  if (!key.startsWith('moments/') || !key.endsWith(MEDIUM_SUFFIX) || !isObjectKey(key)) return null;
+  return key.slice(0, -MEDIUM_SUFFIX.length) + FULL_SUFFIX;
 }
 
 export function newProfileImageKey(kind: 'avatar' | 'cover', userId: string): string {

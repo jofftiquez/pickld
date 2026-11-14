@@ -53,7 +53,12 @@ export const jarMomentRow = z.object({
 export type JarMomentRow = z.infer<typeof jarMomentRow>;
 
 /** A moment with its signed photo URLs from `fn:photo-urls` (null when signing failed). */
-export type JarMoment = JarMomentRow & { thumbUrl: string | null; fullUrl: string | null };
+export type JarMoment = JarMomentRow & {
+  thumbUrl: string | null;
+  fullUrl: string | null;
+  /** The 1080 × 1440 copy (NFR-PERF-02); absent in a jar page cached before it existed. */
+  mediumUrl?: string | null;
+};
 
 export type JarPageData = {
   jar: JarRow;

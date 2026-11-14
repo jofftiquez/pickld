@@ -2,9 +2,11 @@ import { assertEquals } from 'jsr:@std/assert@1';
 import { handlePhotoRequest, type PhotoStore } from '../src/handler.ts';
 import { signPhotoToken, signPhotoUrl, verifyPhotoToken } from '../../../supabase/functions/_shared/photo_token.ts';
 import {
+  fullKeyForMedium,
   isObjectKey,
   isStickerKey,
   keyOwner,
+  mediumKeyFor,
   newMomentKeys,
   newProfileImageKey,
 } from '../../../supabase/functions/_shared/object_keys.ts';
@@ -44,6 +46,35 @@ Deno.test('a valid token serves the full photo and the thumbnail', async () => {
     assertEquals(res.body, body);
     assertEquals(res.headers.get('content-type'), 'image/jpeg');
     assertEquals(res.headers.get('cache-control'), 'private, max-age=900');
+  }
+});
+
+Deno.test('a medium link serves the medium copy, or the full photo when the moment has none', async () => {
+  const withMedium = newMomentKeys(USER);
+  objects.set(withMedium.photo, 'FULL2');
+  objects.set(withMedium.medium, 'MEDIUM2');
+  for (const [key, body] of [[withMedium.medium, 'MEDIUM2'], [keys.medium, 'FULL']]) {
+    const res = await get((await signPhotoUrl(BASE, key, SECRET, 900, NOW)).url);
+    assertEquals(res.status, 200, key);
+    assertEquals(res.body, body, key);
+  }
+  // The token is for the medium key: it never opens the full photo's own link.
+  const { exp, sig } = await signPhotoToken(keys.medium, SECRET, 900, NOW);
+  assertEquals((await get(`${BASE}/${keys.photo}?exp=${exp}&sig=${sig}`)).status, 403);
+  // A missing full photo is still 404, and only moment medium keys fall back.
+  assertEquals((await get((await signPhotoUrl(BASE, newMomentKeys(USER).medium, SECRET, 900, NOW)).url)).status, 404);
+});
+
+Deno.test('medium keys sit next to the full photo key, and nothing else maps to one', () => {
+  assertEquals(mediumKeyFor(keys.photo), keys.medium);
+  assertEquals(fullKeyForMedium(keys.medium), keys.photo);
+  for (
+    const k of [keys.thumb, keys.medium, 'seed/photos/morning.jpg', newProfileImageKey('avatar', USER), '../full.jpg']
+  ) {
+    assertEquals(mediumKeyFor(k), null, k);
+  }
+  for (const k of [keys.photo, keys.thumb, 'seed/photos/medium.jpg', `moments/${USER}/x/medium.jpg`]) {
+    assertEquals(fullKeyForMedium(k), null, k);
   }
 });
 
@@ -121,7 +152,7 @@ Deno.test('every upload gets a new key, so nothing is overwritten', () => {
   const b = newMomentKeys(USER);
   assertEquals(a.photo === b.photo, false);
   assertEquals(newProfileImageKey('avatar', USER) === newProfileImageKey('avatar', USER), false);
-  for (const k of [a.photo, a.thumb, newProfileImageKey('avatar', USER), newProfileImageKey('cover', USER)]) {
+  for (const k of [a.photo, a.medium, a.thumb, newProfileImageKey('avatar', USER), newProfileImageKey('cover', USER)]) {
     assertEquals(isObjectKey(k), true, k);
     assertEquals(keyOwner(k), USER, k);
   }

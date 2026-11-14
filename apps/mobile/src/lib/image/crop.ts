@@ -4,6 +4,8 @@ import { z } from 'zod';
 /** Uploaded photo and thumbnail sizes, portrait 3:4 (FR-CAP-03, M2-09). */
 export const FULL_SIZE = { width: 1440, height: 1920 } as const;
 export const THUMB_SIZE = { width: 480, height: 640 } as const;
+/** The feed copy (NFR-PERF-02): a timeline card is about 360 pt wide, 1080 px on a 3× screen. */
+export const MEDIUM_SIZE = { width: 1080, height: 1440 } as const;
 
 /** A rectangle in source pixels, as `expo-image-manipulator` crops take it. */
 export type CropRect = { originX: number; originY: number; width: number; height: number };

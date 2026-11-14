@@ -5,7 +5,7 @@
 // Sticker art (`stickers/<pack>/<name>.png`) is the exception: it is public catalog data that anyone viewing a
 // moment sees, including the anonymous web page (FR-STK-04, C-6), so it is served without a token. Art never
 // changes under a key, so it is cached as immutable by the CDN and the phone (FR-STK-02).
-import { isObjectKey, isStickerKey } from '../../../supabase/functions/_shared/object_keys.ts';
+import { fullKeyForMedium, isObjectKey, isStickerKey } from '../../../supabase/functions/_shared/object_keys.ts';
 import { verifyPhotoToken } from '../../../supabase/functions/_shared/photo_token.ts';
 
 export interface StoredObject {
@@ -25,7 +25,12 @@ const SECURITY_HEADERS = { 'x-content-type-options': 'nosniff', 'referrer-policy
 function plain(status: number, text: string, extra: Record<string, string> = {}): Response {
   return new Response(text, {
     status,
-    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', ...SECURITY_HEADERS, ...extra },
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'no-store',
+      ...SECURITY_HEADERS,
+      ...extra,
+    },
   });
 }
 
@@ -62,7 +67,9 @@ export async function handlePhotoRequest(
   const check = await verifyPhotoToken(key, url.searchParams.get('exp'), url.searchParams.get('sig'), secret, now);
   if (check !== 'ok') return plain(403, 'Forbidden');
 
-  const object = await store.get(key);
+  // A moment uploaded before medium copies existed (NFR-PERF-02) has none: its medium link serves the full photo.
+  const fullKey = fullKeyForMedium(key);
+  const object = (await store.get(key)) ?? (fullKey ? await store.get(fullKey) : null);
   if (!object) return plain(404, 'Not found');
 
   const exp = Number(url.searchParams.get('exp'));

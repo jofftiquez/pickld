@@ -14,11 +14,18 @@ const jarId = z.uuid();
 
 const photoUrlsResponse = z.object({
   data: z.object({
-    moments: z.array(z.object({ id: z.string(), full: z.string().nullable(), thumb: z.string().nullable() })),
+    moments: z.array(
+      z.object({
+        id: z.string(),
+        full: z.string().nullable(),
+        medium: z.string().nullable().optional(),
+        thumb: z.string().nullable(),
+      }),
+    ),
   }),
 });
 
-type PhotoUrls = { full: string | null; thumb: string | null };
+type PhotoUrls = { full: string | null; medium: string | null; thumb: string | null };
 
 /** Signed URLs from `fn:photo-urls`; a failure leaves the photos on their placeholder. */
 async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
@@ -26,7 +33,9 @@ async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
-  return new Map(parsed.data.data.moments.map((m) => [m.id, { full: m.full, thumb: m.thumb }]));
+  return new Map(
+    parsed.data.data.moments.map((m) => [m.id, { full: m.full, medium: m.medium ?? null, thumb: m.thumb }]),
+  );
 }
 
 /**
@@ -80,6 +89,7 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
       ...m,
       thumbUrl: urls.get(m.id)?.thumb ?? null,
       fullUrl: urls.get(m.id)?.full ?? null,
+      mediumUrl: urls.get(m.id)?.medium ?? null,
     })),
     viewerId,
     liked,

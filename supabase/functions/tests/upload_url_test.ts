@@ -63,6 +63,21 @@ Deno.test('owner gets photo and thumbnail URLs that upload to new keys', async (
   assert(again.json.data.files.photo.key !== photo.key, 'a second request gets a different key');
 });
 
+Deno.test('an optional medium copy gets its own URL next to the full photo', async () => {
+  const MEDIUM = new Uint8Array(600).fill(3);
+  const { status, json } = await call(
+    { ...momentBody(ownJar.id), medium: { contentType: 'image/webp', size: MEDIUM.length } },
+    owner,
+  );
+  assertEquals(status, 200);
+  const { photo, medium } = json.data.files;
+  assertEquals(medium.key, photo.key.replace('full.jpg', 'medium.jpg'));
+  const res = await fetch(medium.url, { method: 'PUT', headers: medium.headers, body: MEDIUM });
+  assertEquals(res.status, 200, await res.text());
+  const without = await call(momentBody(ownJar.id), owner);
+  assertEquals(without.json.data.files.medium, undefined, 'older apps upload without one');
+});
+
 Deno.test('URLs expire within 10 minutes and sign the content type and size', async () => {
   const now = new Date();
   const { json } = await call(momentBody(ownJar.id), owner, { now });
@@ -132,6 +147,7 @@ Deno.test('input is validated', async () => {
     { ...momentBody(ownJar.id), photo: { contentType: 'image/png', size: 100 } },
     { ...momentBody(ownJar.id), photo: { contentType: 'image/jpeg', size: SIZE_LIMITS.photo + 1 } },
     { ...momentBody(ownJar.id), thumb: { contentType: 'image/jpeg', size: SIZE_LIMITS.thumb + 1 } },
+    { ...momentBody(ownJar.id), medium: { contentType: 'image/jpeg', size: SIZE_LIMITS.medium + 1 } },
     { ...momentBody(ownJar.id), photo: { contentType: 'image/jpeg', size: 0 } },
     { ...momentBody(ownJar.id), userId: other.id },
     { kind: 'avatar', file: { contentType: 'image/jpeg', size: SIZE_LIMITS.avatar + 1 } },

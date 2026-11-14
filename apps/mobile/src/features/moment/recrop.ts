@@ -7,7 +7,7 @@ import { Image } from 'react-native';
 
 import type { PendingCrop } from '@/features/capture/pendingCrop';
 import type { CropSpec } from '@/lib/image/crop';
-import { preparePhoto } from '@/lib/image/pipeline';
+import { prepareMedium, preparePhoto } from '@/lib/image/pipeline';
 import { prepareItem } from '@/lib/queue/prepare';
 import { getItem } from '@/lib/queue/store';
 import type { Slot } from '@/theme/tokens';
@@ -65,9 +65,21 @@ export async function finishRecrop(
   crop: CropSpec,
 ): Promise<void> {
   let prepared: Awaited<ReturnType<typeof preparePhoto>> | null = null;
+  let mediumUri: string | null = null;
   try {
     prepared = await preparePhoto(pending.photo.uri, crop);
-    await saveRecrop(client, pending.recrop, { photoUri: prepared.full.uri, thumbUri: prepared.thumb.uri });
+    // An uploaded moment uploads its feed copy now (best effort: the Worker serves full without one, NFR-PERF-02).
+    if (pending.recrop.kind === 'server') {
+      mediumUri = await prepareMedium(prepared.full.uri).then(
+        (out) => out.uri,
+        () => null,
+      );
+    }
+    await saveRecrop(client, pending.recrop, {
+      photoUri: prepared.full.uri,
+      thumbUri: prepared.thumb.uri,
+      mediumUri,
+    });
   } catch (error) {
     throw error instanceof MomentOptionError ? error : new MomentOptionError('failed', error);
   } finally {
@@ -75,6 +87,7 @@ export async function finishRecrop(
       deleteQuietly(prepared.full.uri);
       deleteQuietly(prepared.thumb.uri);
     }
+    if (mediumUri) deleteQuietly(mediumUri);
   }
   discardRecropPhoto(pending);
 }

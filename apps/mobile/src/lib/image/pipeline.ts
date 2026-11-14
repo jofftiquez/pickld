@@ -9,7 +9,7 @@
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
-import { cropRect34, FULL_SIZE, scaleRect, THUMB_SIZE, type CropSpec } from './crop';
+import { cropRect34, FULL_SIZE, MEDIUM_SIZE, scaleRect, THUMB_SIZE, type CropSpec } from './crop';
 import { assertNoLocationMetadata } from './exif';
 
 export type PreparedImage = { uri: string; width: number; height: number };
@@ -17,6 +17,7 @@ export type PreparedPhoto = { full: PreparedImage; thumb: PreparedImage };
 
 const FULL_QUALITY = 0.85;
 const THUMB_QUALITY = 0.8;
+const MEDIUM_QUALITY = 0.8;
 
 type Releasable = { release(): void };
 
@@ -70,6 +71,31 @@ export async function preparePhoto(uri: string, options: PrepareOptions = {}): P
     throw error;
   } finally {
     for (const ref of refs) ref.release();
+  }
+}
+
+/**
+ * Writes the 1080 × 1440 feed copy of a prepared full photo (NFR-PERF-02) as WebP in the cache directory.
+ * Made from the queue's full file just before upload, so the queue keeps only the full photo and thumbnail.
+ * Like every output, it is checked for location metadata (and deleted if it has any).
+ */
+export async function prepareMedium(fullUri: string): Promise<PreparedImage> {
+  const context = ImageManipulator.manipulate(fullUri);
+  let image: Releasable | null = null;
+  try {
+    const rendered = await context.resize(MEDIUM_SIZE).renderAsync();
+    image = rendered;
+    const out = await rendered.saveAsync({ format: SaveFormat.WEBP, compress: MEDIUM_QUALITY });
+    try {
+      assertNoLocationMetadata(await new File(out.uri).bytes());
+    } catch (error) {
+      new File(out.uri).delete();
+      throw error;
+    }
+    return { uri: out.uri, width: out.width, height: out.height };
+  } finally {
+    image?.release();
+    context.release();
   }
 }
 

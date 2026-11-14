@@ -178,7 +178,13 @@ export function fakeBackend() {
           method: 'PUT',
           headers: { 'content-type': 'image/jpeg' },
         });
-        return { data: { data: { files: { photo: signed('full'), thumb: signed('thumb') } } }, error: null };
+        const withMedium = (options.body as { medium?: unknown }).medium !== undefined;
+        const files = {
+          photo: signed('full'),
+          ...(withMedium ? { medium: signed('medium') } : {}),
+          thumb: signed('thumb'),
+        };
+        return { data: { data: { files } }, error: null };
       },
     },
     from: (table: string) => ({

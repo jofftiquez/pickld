@@ -169,7 +169,7 @@ const signedUpload = z.object({
   headers: z.record(z.string(), z.string()),
 });
 const uploadUrlResponse = z.object({
-  data: z.object({ files: z.object({ photo: signedUpload, thumb: signedUpload }) }),
+  data: z.object({ files: z.object({ photo: signedUpload, medium: signedUpload.optional(), thumb: signedUpload }) }),
 });
 
 export type RecropDeps = {
@@ -179,7 +179,8 @@ export type RecropDeps = {
 };
 
 /**
- * Saves a re-cropped photo (already prepared: 1440 × 1920 and 480 × 640 WebP without location, rule 5).
+ * Saves a re-cropped photo (already prepared: 1440 × 1920 and 480 × 640 WebP without location, rule 5, plus
+ * the optional 1080 × 1440 feed copy for an uploaded moment; a queued one gets its copy when it uploads).
  * A queued moment swaps its files; an uploaded moment uploads them like a new photo (fn:upload-url, PUT)
  * and proposes them as its new photo, which fn:moderate checks like any photo before readers see it. The
  * moment keeps its id, capture time, "Added later" flag, likes and overlays (placed relative to the photo).
@@ -187,11 +188,12 @@ export type RecropDeps = {
 export async function saveRecrop(
   client: MomentsClient,
   target: MomentTarget,
-  files: { photoUri: string; thumbUri: string },
+  files: { photoUri: string; thumbUri: string; mediumUri?: string | null },
   deps: RecropDeps = {},
 ): Promise<void> {
+  const { mediumUri, ...queueFiles } = files;
   if (target.kind === 'queued') {
-    await onQueue(() => saveRecropped(target.queueId, files));
+    await onQueue(() => saveRecropped(target.queueId, queueFiles));
     void requestUploads();
     return;
   }
@@ -202,12 +204,14 @@ export async function saveRecrop(
         kind: 'moment',
         jarId: target.jarId,
         photo: { contentType: 'image/webp', size: sizeOf(files.photoUri) },
+        ...(mediumUri ? { medium: { contentType: 'image/webp', size: sizeOf(mediumUri) } } : {}),
         thumb: { contentType: 'image/webp', size: sizeOf(files.thumbUri) },
       },
     });
     if (error) throw error;
     const signed = uploadUrlResponse.parse(body).data.files;
     await putFile(files.photoUri, signed.photo);
+    if (mediumUri && signed.medium) await putFile(mediumUri, signed.medium);
     await putFile(files.thumbUri, signed.thumb);
     await updateMoment(client, target.momentId, { photo_path: signed.photo.key, thumb_path: signed.thumb.key });
   } catch (error) {

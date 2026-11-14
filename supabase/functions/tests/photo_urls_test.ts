@@ -124,7 +124,8 @@ Deno.test('tokens last 15 minutes and open the full photo and the thumbnail thro
   assertEquals(PHOTO_TOKEN_TTL_SECONDS, 900);
   const [m] = json.data.moments;
   const store = { get: (key: string) => Promise.resolve({ body: new Blob([key]).stream(), contentType: 'image/jpeg' }) };
-  for (const [url, key] of [[m.full, live.full], [m.thumb, live.thumb]]) {
+  const medium = live.full.replace(/full\.jpg$/, 'medium.jpg');
+  for (const [url, key] of [[m.full, live.full], [m.medium, medium], [m.thumb, live.thumb]]) {
     const u = new URL(url);
     assertEquals(u.pathname.slice(1), key);
     assertEquals(Number(u.searchParams.get('exp')), NOW + 900);
@@ -146,8 +147,10 @@ Deno.test('pending (unchecked) edits get tokens for the owner and moderators of 
   const r = await call({ momentIds: [livePublic.id] }, reader);
   assertEquals(r.json.data.moments[0].pendingFull, undefined, 'readers never get the unchecked photo');
   assert(r.json.data.moments[0].full, 'readers still get the live photo');
+  assertEquals(r.json.data.moments[0].pendingMedium, undefined, 'nor its medium copy');
   const o = await call({ momentIds: [livePublic.id] }, owner);
   assertEquals(new URL(o.json.data.moments[0].pendingFull).pathname.slice(1), pending);
+  assertEquals(new URL(o.json.data.moments[0].pendingMedium).pathname.slice(1), pending.replace(/full\.jpg$/, 'medium.jpg'));
   const before = await call({ momentIds: [livePublic.id] }, moderator);
   assertEquals(before.json.data.moments[0].pendingFull, undefined, 'not queued yet');
   await insert('moderation_items', { moment_id: livePublic.id, source: 'auto_check', status: 'pending' });
