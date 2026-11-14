@@ -7,7 +7,7 @@
     "start": "next start -p 3200",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test:e2e": "next build && node --test tests/*.test.mjs"
+    "test:e2e": "next build && node --test --test-concurrency=1 tests/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
