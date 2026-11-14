@@ -67,6 +67,7 @@
       "label": "Main",
       "home": "Pickld home",
       "stickers": "Stickers",
+      "story": "Our story",
       "faq": "FAQ",
       "join": "Join the waitlist"
     },
@@ -106,14 +107,14 @@
       "decorateAlt": "Pickld’s photo editor with a row of color filters under the photo",
       "shareTitle": "Share it your way",
       "shareBody": "Publish your jar for the people who read you, or turn a moment or the whole jar into a card for your Stories, with your pickld.me link on it.",
-      "shareAlt": "A Pickld jar card for Stories: three photos, the caption “lunch crew” and Dale’s Thursday, 3 of 8"
+      "shareAlt": "A Pickld jar card for Stories: eight photos, the caption “sinigang night” and Dale’s Thursday, 8 of 8"
     },
     "stickers": {
       "eyebrow": "Stickers",
       "title": "Meet Olivia",
       "body": "Olivia is a real cat: white, fluffy and not impressed. She has her own sticker pack, next to free packs for every moment and packs made for very Pinoy days.",
       "cta": "See every sticker pack",
-      "shopAlt": "The Stickers screen on Pickld with the Christmas pack and packs like Pinoy Life and Barkada",
+      "packAlt": "Olivia’s pack on Pickld: a white cat with a crown, hearts and a sleepy face, 16 stickers for ₱49",
       "oliviaLabel": "Olivia stickers"
     },
     "privacy": {
@@ -255,8 +256,47 @@
         "description": "Ride on. For coffee rides, ahon and the long way home."
       }
     },
-    "editorAlt": "Pickld’s sticker tool on a photo, suggesting stickers for #mebusywith",
-    "packAlt": "The Pinoy Life pack on Pickld, with a preview of its stickers on a photo",
+    "editorAlt": "Pickld’s sticker tool on a photo, suggesting stickers for #afternoon like a mango and a watermelon",
+    "shopAlt": "The sticker shop on Pickld with the Christmas pack and packs like Pinoy Life and Barkada",
     "packLabel": "{{name}} stickers"
+  },
+  "story": {
+    "metaTitle": "Our story · Pickld",
+    "metaDescription": "We started Pickld more than ten years ago, set it aside for healthcare technology, and promised to come back. This is that promise, kept.",
+    "eyebrow": "Our story",
+    "title1": "We said we’d",
+    "title2": "come back.",
+    "lead": "Pickld isn’t new. We started it more than ten years ago, put it down for something bigger, and promised ourselves we’d return one day. This is that day.",
+    "quote": "“The easiest way to tell your story.”",
+    "quoteBy": "The first Pickld’s line, more than ten years ago",
+    "timelineLabel": "How we got here",
+    "steps": {
+      "first": {
+        "when": "More than ten years ago",
+        "title": "The first Pickld",
+        "body": "We built the first Pickld, right here on pickld.me, around one idea: eight moments make one real day. It was the easiest way to tell your story, your days as they really were, not as they were supposed to look."
+      },
+      "calling": {
+        "when": "Then",
+        "title": "A bigger calling",
+        "body": "Healthcare technology called, and we answered. Helping people get better care mattered more than a photo app, so we set Pickld aside and gave those years to it."
+      },
+      "promise": {
+        "when": "All those years",
+        "title": "A promise",
+        "body": "We never really let go. We swore to each other that one day, we’d get back to Pickld."
+      },
+      "now": {
+        "when": "Now",
+        "title": "Pickld, again",
+        "body": "Pickld is back, and the eight moments are still its heart. What’s new is everything around them, made for how we share today: jars your friends actually read, stickers, and cards for your Stories. Starting in the Philippines, on iPhone first."
+      }
+    },
+    "videoTitle": "Where it started",
+    "videoBody": "“You Deserve to Be You!”, one of the first Pickld videos, made in January 2016.",
+    "videoPlay": "Play “You Deserve to Be You!”, the first Pickld video from 2016, from YouTube",
+    "videoFrame": "You Deserve to Be You!, the first Pickld video, on YouTube",
+    "finalTitle": "You deserve to be you.",
+    "finalBody": "That was true ten years ago, and it’s still why we make Pickld. Join the waitlist to be among the first to fill a jar."
   }
 }

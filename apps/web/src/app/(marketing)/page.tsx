@@ -110,7 +110,7 @@ export default function Home() {
             </Link>
           </div>
           <div className="mk-art">
-            <Phone src={shot.shop} alt={t('marketing.stickers.shopAlt')} sizes="(min-width: 900px) 290px, 76vw" />
+            <Phone src={shot.pack} alt={t('marketing.stickers.packAlt')} sizes="(min-width: 900px) 290px, 76vw" />
           </div>
         </div>
       </section>
