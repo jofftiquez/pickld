@@ -5,8 +5,10 @@ import { colors, radius } from '@/theme/tokens';
 import { t } from '~/i18n/t';
 import { RANGES, type Range } from '~/lib/analytics';
 
-/** The top of an Analytics page (Charts or Tables): its name, the privacy note, and the 7 / 30 / 90-day window. */
-export function AnalyticsHeader({ page, days }: { page: 'charts' | 'tables'; days: Range }) {
+/** The top of an Analytics page (Charts, Audience, Packs or Top stickers): its name, the privacy note, and the 7 / 30 / 90-day window. */
+export type AnalyticsPage = 'charts' | 'audience' | 'packs' | 'stickers';
+
+export function AnalyticsHeader({ page, days }: { page: AnalyticsPage; days: Range }) {
   const base = `/analytics/${page}`;
   return (
     <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16 }}>

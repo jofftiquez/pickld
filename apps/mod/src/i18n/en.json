@@ -35,7 +35,9 @@
     "waitlist": "Waitlist",
     "analytics": "Analytics",
     "analyticsCharts": "Charts",
-    "analyticsTables": "Tables",
+    "analyticsAudience": "Audience",
+    "analyticsPacks": "Packs",
+    "analyticsStickers": "Top stickers",
     "stickers": "Sticker packs"
   },
   "queue": {
@@ -466,7 +468,9 @@
     "title": "Analytics",
     "pages": {
       "charts": "Charts",
-      "tables": "Tables"
+      "audience": "Audience",
+      "packs": "Packs",
+      "stickers": "Top stickers"
     },
     "subtitle": "Counts by Manila day. Only me and removed moments aren't counted, and no photo or caption is shown.",
     "range": {

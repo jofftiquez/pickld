@@ -22,7 +22,7 @@ export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
   const params = useSearchParams();
   const filter = params.get('filter');
   const here = filter && filter !== 'all' ? `${path}?filter=${filter}` : path;
-  // Analytics' window (?days=) carries over between its Charts and Tables pages.
+  // Analytics' window (?days=) carries over between its pages.
   const days = path.startsWith('/analytics') ? params.get('days') : null;
   // Reports and Appeals are queue filters, so Queue lights up only for the other filters.
   const isActive = (item: NavItem) =>

@@ -46,7 +46,9 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
       label: t('nav.analytics'),
       children: [
         { href: '/analytics/charts', label: t('nav.analyticsCharts') },
-        { href: '/analytics/tables', label: t('nav.analyticsTables') },
+        { href: '/analytics/audience', label: t('nav.analyticsAudience') },
+        { href: '/analytics/packs', label: t('nav.analyticsPacks') },
+        { href: '/analytics/stickers', label: t('nav.analyticsStickers') },
       ],
     },
     { href: '/audit', label: t('nav.audit') },
