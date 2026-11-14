@@ -32,6 +32,18 @@ describe('query cache persister', () => {
     expect(after.getQueryData(['jar', 'u1', '2026-11-10'])).toEqual({ count: 5 });
   });
 
+  it('leaves out a timeline the date scrubber jumped into, and keeps the newest-first one', async () => {
+    const before = createQueryClient();
+    before.setQueryData(['momentsFeed', 'u1'], { pages: [['newest']] });
+    before.setQueryData(['momentsFeed', 'u1', { from: '2026-11-12T16:00:00.000Z' }], { pages: [['nov 12']] });
+    await persistQueryClientSave({ queryClient: before, ...persistOptions });
+
+    const after = createQueryClient();
+    await persistQueryClientRestore({ queryClient: after, ...persistOptions });
+    expect(after.getQueryData(['momentsFeed', 'u1'])).toEqual({ pages: [['newest']] });
+    expect(after.getQueryData(['momentsFeed', 'u1', { from: '2026-11-12T16:00:00.000Z' }])).toBeUndefined();
+  });
+
   it('keeps restored queries for at least the persist max age', () => {
     expect(createQueryClient().getDefaultOptions().queries?.gcTime).toBeGreaterThanOrEqual(persistOptions.maxAge ?? 0);
   });

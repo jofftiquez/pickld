@@ -222,8 +222,10 @@ export function FeedView({
         onViewableItemsChanged={topRow.onViewable}
         onStartReached={onStartReached}
         onStartReachedThreshold={0.6}
-        // Rows loaded above a jumped-to day keep that day where it is on screen.
-        maintainVisibleContentPosition={anchored ? { minIndexForVisible: 0 } : undefined}
+        // Rows loaded above a jumped-to day keep that day where it is on screen. Index 0 is the list header, which
+        // stays at the top, so the first row (1) is the one held in place. Clipped subviews leave the native view
+        // tree that holding relies on, so a jumped-to list keeps them.
+        maintainVisibleContentPosition={anchored ? { minIndexForVisible: 1 } : undefined}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -235,7 +237,7 @@ export function FeedView({
         // Cards are tall; a small window keeps scrolling smooth on older phones (NFR-PERF-02).
         initialNumToRender={4}
         windowSize={7}
-        removeClippedSubviews
+        removeClippedSubviews={!anchored}
         testID="feed-list"
       />
       {showBackToTop ? <BackToTopButton onPress={backToTop} bottom={bottomPadding} /> : null}

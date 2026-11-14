@@ -196,8 +196,10 @@ export function MomentsFeedView({
         onEndReachedThreshold={0.6}
         onStartReached={onStartReached}
         onStartReachedThreshold={0.6}
-        // Rows loaded above a jumped-to day keep that day where it is on screen.
-        maintainVisibleContentPosition={anchored ? { minIndexForVisible: 0 } : undefined}
+        // Rows loaded above a jumped-to day keep that day where it is on screen. Index 0 is the list header, which
+        // stays at the top, so the first row (1) is the one held in place. Clipped subviews leave the native view
+        // tree that holding relies on, so a jumped-to list keeps them.
+        maintainVisibleContentPosition={anchored ? { minIndexForVisible: 1 } : undefined}
         onViewableItemsChanged={onViewableItemsChanged}
         refreshControl={
           <RefreshControl
@@ -210,7 +212,7 @@ export function MomentsFeedView({
         // Each card holds a full-width photo; a small window keeps scrolling smooth (NFR-PERF-02).
         initialNumToRender={3}
         windowSize={5}
-        removeClippedSubviews
+        removeClippedSubviews={!anchored}
         accessibilityLabel={t('moments.list')}
         testID="moments-list"
       />

@@ -1,4 +1,7 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+
+import { isAnchoredQueryKey } from '@/lib/queryClient';
 
 import { anchorFor, type TimelineScrubber } from './scrubberModel';
 import { useFeedDays, type TimelineKind } from './useFeedDays';
@@ -9,7 +12,14 @@ import { useFeedDays, type TimelineKind } from './useFeedDays';
  * that day (or of the newest row, for the newest day). `clearJump` goes back to the newest row.
  */
 export function useTimelineJump(kind: TimelineKind) {
+  const queryClient = useQueryClient();
   const { days, tz, refetch } = useFeedDays(kind);
+  // A list from an earlier jump holds the rows loaded above its day; a jump starts again at the day itself.
+  const dropAnchored = () =>
+    queryClient.removeQueries({
+      queryKey: [kind === 'moments' ? 'momentsFeed' : 'feed'],
+      predicate: (q) => isAnchoredQueryKey(q.queryKey),
+    });
   const [jump, setJump] = useState<{ day: string; from: string } | null>(null);
   const [jumps, setJumps] = useState(0);
   const scrubber: TimelineScrubber = {
@@ -17,6 +27,7 @@ export function useTimelineJump(kind: TimelineKind) {
     timeZone: tz,
     anchorDay: jump?.day ?? null,
     onJump: (day) => {
+      dropAnchored();
       setJump(day === days?.[0]?.day ? null : { day, from: anchorFor(day, tz) });
       setJumps((n) => n + 1);
     },
