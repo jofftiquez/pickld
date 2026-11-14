@@ -2186,6 +2186,7 @@ export type Database = {
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       in_quiet_hours: { Args: { at: string; p_user: string }; Returns: boolean };
       invite_add_set: { Args: { p_owner: string; p_set_no: number }; Returns: undefined };
+      invite_check: { Args: { p_ip_hash: string; p_token: string }; Returns: Json };
       invite_freeze: { Args: { p_note: string; p_user: string }; Returns: Json };
       invite_grant_set: { Args: { p_user: string }; Returns: Json };
       invite_link_reset: { Args: Record<PropertyKey, never>; Returns: string };
