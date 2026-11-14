@@ -33,7 +33,7 @@ deploy_app() {
   vercel_env "$project" SUPABASE_URL "$url"
   vercel_env "$project" SUPABASE_ANON_KEY "$anon"
   if [[ "$app" == web ]]; then
-    for name in SITE_URL APP_STORE_URL PLAY_STORE_URL APPLE_TEAM_ID ANDROID_CERT_SHA256; do
+    for name in SITE_URL APP_STORE_URL PLAY_STORE_URL APPLE_TEAM_ID ANDROID_CERT_SHA256 WAITLIST_SECRET; do
       value="${!name:-}"
       [[ "$name" == SITE_URL ]] && value="${WEB_URL:-}"
       [[ -n "$value" ]] && vercel_env "$project" "$name" "$value"

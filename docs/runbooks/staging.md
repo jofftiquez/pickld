@@ -44,6 +44,7 @@ Repository → Settings → Environments → New environment → `staging`. Opti
 | `VERCEL_PROJECT_ID_WEB`, `VERCEL_PROJECT_ID_MOD`                                                          | variables | each project's Settings → General                                                                             | web apps                 |
 | `WEB_URL`, `MOD_URL`                                                                                      | variables | each project's production `*.vercel.app` URL                                                                  | links                    |
 | `SENTRY_DSN`, `OPENAI_API_KEY`, `EXPO_ACCESS_TOKEN`, `REVENUECAT_WEBHOOK_SECRET`, `REVENUECAT_SECRET_KEY` | secrets   | optional, when those accounts exist                                                                           | passed to Edge Functions |
+| `WAITLIST_SECRET`                                                                                         | secret    | optional: `openssl rand -hex 32`; until it is set, the pickld.me waitlist form shows "try again"             | fn:waitlist-join, web    |
 | `OPENAI_VISION_MODEL`, `APP_STORE_URL`, `PLAY_STORE_URL`, `APPLE_TEAM_ID`, `ANDROID_CERT_SHA256`          | variables | optional                                                                                                      | functions, web           |
 
 Never paste any of these into chat, an issue or the repo.
