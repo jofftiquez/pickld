@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { handlePhotoRequest, type PhotoStore } from '../src/handler.ts';
+import { type Edge, EDGE_CACHE_SECONDS, handlePhotoRequest, type PhotoStore } from '../src/handler.ts';
 import { signPhotoToken, signPhotoUrl, verifyPhotoToken } from '../../../supabase/functions/_shared/photo_token.ts';
 import {
   fullKeyForMedium,
@@ -194,4 +194,101 @@ Deno.test('sticker keys are strict and are not photo keys', () => {
 Deno.test('a photo key without a token is still 403 next to public stickers', async () => {
   assertEquals((await get(`${BASE}/${keys.photo}`)).status, 403);
   assertEquals((await get(`${BASE}/stickers/../${keys.photo}`)).status, 403);
+});
+
+// ---------------------------------------------------------------- edge cache (NFR-PERF-02)
+function fakeEdge() {
+  const entries = new Map<string, Response>();
+  const pending: Promise<unknown>[] = [];
+  const edge: Edge = {
+    cache: {
+      match: (req) => Promise.resolve(entries.get(req.url)?.clone()),
+      put: async (req, res) => {
+        entries.set(req.url, new Response(await res.arrayBuffer(), { headers: res.headers }));
+      },
+    },
+    waitUntil: (p) => void pending.push(p),
+  };
+  return { edge, entries, settle: () => Promise.all(pending) };
+}
+
+function countingStore() {
+  const reads: string[] = [];
+  const counted: PhotoStore = {
+    get(key) {
+      reads.push(key);
+      return store.get(key);
+    },
+  };
+  return { counted, reads };
+}
+
+async function edgeGet(url: string, s: PhotoStore, edge: Edge, now = NOW) {
+  const res = await handlePhotoRequest(new Request(url), s, SECRET, now, edge);
+  return { status: res.status, body: await res.text(), headers: res.headers };
+}
+
+Deno.test('the edge cache serves a photo again without reading the bucket, for any valid link to it', async () => {
+  const { edge, entries, settle } = fakeEdge();
+  const { counted, reads } = countingStore();
+  const first = await edgeGet((await signPhotoUrl(BASE, keys.photo, SECRET, 900, NOW)).url, counted, edge);
+  await settle();
+  assertEquals([first.status, first.body], [200, 'FULL']);
+  // Stored once, without the token, for a week; the client still gets a private copy bounded by its token.
+  assertEquals([...entries.keys()], [`${BASE}/${keys.photo}`]);
+  assertEquals(
+    entries.get(`${BASE}/${keys.photo}`)?.headers.get('cache-control'),
+    `public, max-age=${EDGE_CACHE_SECONDS}`,
+  );
+  assertEquals(first.headers.get('cache-control'), 'private, max-age=900');
+
+  // A later link with a different token and expiry: served from the edge.
+  const later = await edgeGet(
+    (await signPhotoUrl(BASE, keys.photo, SECRET, 600, NOW + 60)).url,
+    counted,
+    edge,
+    NOW + 60,
+  );
+  assertEquals([later.status, later.body], [200, 'FULL']);
+  assertEquals(later.headers.get('cache-control'), 'private, max-age=600');
+  assertEquals(later.headers.get('content-length'), '4');
+  assertEquals(reads, [keys.photo], 'the bucket was read once');
+});
+
+Deno.test('a cached photo still needs a valid token', async () => {
+  const { edge, settle } = fakeEdge();
+  const { counted } = countingStore();
+  await edgeGet((await signPhotoUrl(BASE, keys.photo, SECRET, 900, NOW)).url, counted, edge);
+  await settle();
+  const { url } = await signPhotoUrl(BASE, keys.photo, SECRET, 900, NOW);
+  assertEquals((await edgeGet(url, counted, edge, NOW + 900)).status, 403, 'expired');
+  assertEquals((await edgeGet(`${BASE}/${keys.photo}`, counted, edge)).status, 403, 'no token');
+  const { exp, sig } = await signPhotoToken(keys.photo, OTHER_SECRET, 900, NOW);
+  assertEquals((await edgeGet(`${BASE}/${keys.photo}?exp=${exp}&sig=${sig}`, counted, edge)).status, 403, 'forged');
+});
+
+Deno.test('missing photos and HEAD requests are not cached, and a failing cache only costs a bucket read', async () => {
+  const { edge, entries, settle } = fakeEdge();
+  const { counted } = countingStore();
+  assertEquals(
+    (await edgeGet((await signPhotoUrl(BASE, newMomentKeys(USER).photo, SECRET, 900, NOW)).url, counted, edge)).status,
+    404,
+  );
+  const head = await handlePhotoRequest(
+    new Request((await signPhotoUrl(BASE, keys.thumb, SECRET, 900, NOW)).url, { method: 'HEAD' }),
+    counted,
+    SECRET,
+    NOW,
+    edge,
+  );
+  assertEquals(head.status, 200);
+  await settle();
+  assertEquals(entries.size, 0);
+
+  const broken: Edge = {
+    cache: { match: () => Promise.reject(new Error('down')), put: () => Promise.reject(new Error('down')) },
+    waitUntil: (p) => void p,
+  };
+  const res = await edgeGet((await signPhotoUrl(BASE, keys.thumb, SECRET, 900, NOW)).url, counted, broken);
+  assertEquals([res.status, res.body], [200, 'THUMB']);
 });
