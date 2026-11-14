@@ -1,9 +1,14 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { BackToTopButton } from '@/components/BackToTopButton';
 import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
+import { FeedScrubber } from '@/features/scrubber/FeedScrubber';
+import { dayOf, type TimelineScrubber } from '@/features/scrubber/scrubberModel';
+import { useScrubberVisibility } from '@/features/scrubber/useScrubberVisibility';
+import { useTopRowDay } from '@/features/scrubber/useTopRowDay';
 import { FeedEmpty } from '@/features/feed/FeedEmpty';
 import type { FeedAuthor } from '@/features/feed/feedModel';
 import type { AvatarUrls } from '@/lib/avatars';
@@ -31,6 +36,11 @@ export type MomentsFeedViewProps = {
   hasUnread: boolean;
   onRefresh: () => void;
   onEndReached: () => void;
+  /** The date scrubber on the right edge (FR-SOC-01); none without it. */
+  scrubber?: TimelineScrubber;
+  /** The list reached its top: a timeline the scrubber jumped into loads the rows above. */
+  onStartReached?: () => void;
+  isFetchingPreviousPage?: boolean;
   /** After the back-to-top button brings the list up: on `reload` the screen fetches the newest page again. */
   onBackToTop: (mode: BackToTopMode) => void;
   onOpenNotifications: () => void;
@@ -59,6 +69,9 @@ export function MomentsFeedView({
   hasUnread,
   onRefresh,
   onEndReached,
+  scrubber,
+  onStartReached,
+  isFetchingPreviousPage = false,
   onBackToTop,
   onOpenNotifications,
   onOpenJar,
@@ -76,11 +89,33 @@ export function MomentsFeedView({
   const readsNobody = authors !== undefined && authors.length === 0;
   const hasMoments = moments !== undefined && moments.length > 0;
 
-  const onViewableItemsChanged = usePhotoPrefetch(moments, cardPhotoUrl);
+  const prefetch = usePhotoPrefetch(moments, cardPhotoUrl);
   const { listRef, onScroll, scrollEventThrottle, showBackToTop, backToTop } = useBackToTop<FeedMoment>(onBackToTop);
+  const anchored = scrubber !== undefined && scrubber.anchorDay !== null;
+  const rail = useScrubberVisibility(anchored);
+  const timeZone = scrubber?.timeZone ?? 'UTC';
+  const topRow = useTopRowDay(useCallback((row: FeedMoment) => dayOf(row.added_at, timeZone), [timeZone]));
+  const { poke } = rail;
+  const onListScroll: typeof onScroll = useCallback(
+    (e) => {
+      onScroll(e);
+      poke();
+    },
+    [onScroll, poke],
+  );
+  // Both stable: FlatList refuses a new onViewableItemsChanged after mount.
+  const { onViewable } = topRow;
+  const onViewableItemsChanged: typeof prefetch = useCallback(
+    (info) => {
+      prefetch(info);
+      onViewable(info);
+    },
+    [prefetch, onViewable],
+  );
 
   const header = (
     <View>
+      {isFetchingPreviousPage ? <ActivityIndicator color={colors.muted} style={styles.newer} /> : null}
       <View style={styles.titleRow}>
         <Text
           maxFontSizeMultiplier={maxTextScale.title}
@@ -115,7 +150,7 @@ export function MomentsFeedView({
       <FlatList
         style={styles.screen}
         ref={listRef}
-        onScroll={onScroll}
+        onScroll={onListScroll}
         scrollEventThrottle={scrollEventThrottle}
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
         data={moments ?? []}
@@ -159,6 +194,10 @@ export function MomentsFeedView({
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
+        onStartReached={onStartReached}
+        onStartReachedThreshold={0.6}
+        // Rows loaded above a jumped-to day keep that day where it is on screen.
+        maintainVisibleContentPosition={anchored ? { minIndexForVisible: 0 } : undefined}
         onViewableItemsChanged={onViewableItemsChanged}
         refreshControl={
           <RefreshControl
@@ -176,6 +215,18 @@ export function MomentsFeedView({
         testID="moments-list"
       />
       {showBackToTop ? <BackToTopButton onPress={backToTop} bottom={bottomPadding} /> : null}
+      {scrubber ? (
+        <FeedScrubber
+          days={scrubber.days}
+          currentDay={topRow.day ?? scrubber.anchorDay}
+          visible={rail.visible}
+          top={insets.top + sizes.headerTop + sizes.roundButton + space.md}
+          bottom={bottomPadding}
+          onDragChange={rail.onDragChange}
+          onJump={scrubber.onJump}
+          testID="moments-scrubber"
+        />
+      ) : null}
     </View>
   );
 }
@@ -210,4 +261,5 @@ const styles = StyleSheet.create({
   separator: { height: space.md },
   findPeople: { paddingBottom: space.md },
   loading: { marginTop: space.xxl },
+  newer: { paddingTop: space.md },
 });

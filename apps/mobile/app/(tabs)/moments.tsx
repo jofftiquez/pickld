@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { MomentsFeedView } from '@/features/moments/MomentsFeedView';
 import { useMomentsFeed } from '@/features/moments/useMomentsFeed';
+import { useTimelineJump } from '@/features/scrubber/useTimelineJump';
 import { useUnreadNotifications } from '@/features/notifications/useNotifications';
 import { useAvatarUrls } from '@/lib/avatars';
 import { profileUrl } from '@/lib/links';
@@ -18,7 +19,9 @@ export default function MomentsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const feed = useMomentsFeed();
+  // The date scrubber's jump (FR-SOC-01): the timeline starts at that day and pages both ways from it.
+  const jump = useTimelineJump('moments');
+  const feed = useMomentsFeed(jump.from);
   const unread = useUnreadNotifications();
   const { userId } = feed;
   const me = useQuery({
@@ -39,6 +42,7 @@ export default function MomentsScreen() {
 
   return (
     <MomentsFeedView
+      key={jump.viewKey}
       moments={feed.moments}
       authors={feed.authors}
       viewerId={userId}
@@ -49,15 +53,24 @@ export default function MomentsScreen() {
       isFetchingNextPage={feed.isFetchingNextPage}
       hasUnread={unread.hasUnread}
       onRefresh={() => {
-        setPulling(true);
         unread.refresh();
+        jump.refetchDays();
+        // Pulling at the top of a jumped-to day goes back to the newest moments.
+        if (jump.jumped) return jump.clearJump();
+        setPulling(true);
         void feed.refresh().finally(() => setPulling(false));
       }}
       onBackToTop={(mode) => {
-        if (mode === 'reload') void feed.refresh();
+        if (jump.jumped) jump.clearJump();
+        else if (mode === 'reload') void feed.refresh();
       }}
       onEndReached={() => {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
+      }}
+      scrubber={jump.scrubber}
+      isFetchingPreviousPage={feed.isFetchingPreviousPage}
+      onStartReached={() => {
+        if (feed.hasPreviousPage && !feed.isFetchingPreviousPage) feed.fetchPreviousPage();
       }}
       onOpenNotifications={() => router.push('/notifications')}
       onOpenJar={(m) => router.push({ pathname: '/jar/[id]', params: { id: m.jar_id } })}
