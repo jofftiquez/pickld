@@ -10,13 +10,14 @@ import type { IconName } from './icons';
 import { TabBarButton } from './TabBarButton';
 
 /**
- * The main tabs, keyed by route name under `app/(tabs)/` (D-52): Today | Moments | Jars; only the selected tab
- * is highlighted. Routes not listed here (the hidden Capture route) get no tab.
+ * The main tabs, keyed by route name under `app/(tabs)/` (D-52, D-130): Today | Moments | Jars | Discover; only
+ * the selected tab is highlighted. Routes not listed here (the hidden Capture route) get no tab.
  */
 export const mainTabs = {
   today: { icon: 'today', label: 'tabs.today' },
   moments: { icon: 'moments', label: 'tabs.moments' },
   jars: { icon: 'jars', label: 'tabs.jars' },
+  discover: { icon: 'compass', label: 'tabs.discover' },
 } as const satisfies Record<string, { icon: IconName; label: `tabs.${string}` }>;
 
 type MainTab = keyof typeof mainTabs;

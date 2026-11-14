@@ -74,13 +74,12 @@ export default function JarsScreen() {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
       onOpenNotifications={() => router.push('/notifications')}
-      onOpenDiscover={() => router.push('/explore')}
       onOpenJar={(jarId) => router.push({ pathname: '/jar/[id]', params: { id: jarId } })}
       onOpenProfile={(username) => {
         const name = username ?? me.data?.username;
         if (name) router.push({ pathname: '/u/[username]', params: { username: name } });
       }}
-      onFindPeople={() => router.push('/explore')}
+      onFindPeople={() => router.navigate('/discover')}
       onInvite={() => {
         const username = me.data?.username;
         if (username) void Share.share({ message: t('feed.inviteMessage', { url: profileUrl(username) }) });

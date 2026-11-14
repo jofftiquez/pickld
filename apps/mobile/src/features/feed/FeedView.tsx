@@ -32,8 +32,6 @@ export type FeedViewProps = {
   onRefresh: () => void;
   onEndReached: () => void;
   onOpenNotifications: () => void;
-  /** The compass next to the bell (D-101). */
-  onOpenDiscover: () => void;
   onOpenJar?: (jarId: string) => void;
   /** Opens a profile from the avatar row; `null` is the viewer's own ("You"). */
   onOpenProfile?: (username: string | null) => void;
@@ -66,7 +64,6 @@ export function FeedView({
   onRefresh,
   onEndReached,
   onOpenNotifications,
-  onOpenDiscover,
   onOpenJar,
   onOpenProfile,
   onFindPeople,
@@ -92,13 +89,6 @@ export function FeedView({
           {t('jars.title')}
         </Text>
         <View style={styles.headerButtons}>
-          <RoundIconButton
-            icon="compass"
-            accessibilityLabel={t('feed.discover')}
-            accessibilityHint={t('feed.discoverHint')}
-            onPress={onOpenDiscover}
-            testID="feed-discover"
-          />
           <View>
             <RoundIconButton
               icon="bell"

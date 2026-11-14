@@ -927,6 +927,14 @@ The product owner sent three more round 3 items while H, I and J were being buil
 - **Touches:** `app/(tabs)/_layout.tsx`, `useLiquidGlass`, the three tab screens' bottom padding, `assets/tabs`, Main.html note. No schema.
 - **Size:** S.
 
+### R3-N Discover tab
+
+- **Ask:** "Let's put the Discover to the bottom nav bar, beside the Jars."
+- **Today:** Discover opens from a compass button next to the bell on the Moments and Jars tabs and from Find people, as a page stacked over the tabs; the tab bar is Today | Moments | Jars (D-101).
+- **Change:** the tab bar becomes Today | Moments | Jars | Discover, with the compass icon, in both the system Liquid Glass bar (iOS 26+) and the custom bar (older iOS and Reduce Transparency). Discover moves into the tab (`app/(tabs)/discover.tsx`), drops its back button and keeps clear of the tab bar. The compass header buttons are removed; Find people opens the tab, and the old `/explore` link redirects to it, so Discover never opens as a stacked copy. Custom bar labels stay on one line and shrink a little to fit four tabs.
+- **Touches:** `app/(tabs)/_layout.tsx`, `app/(tabs)/discover.tsx`, `app/explore.tsx`, `FloatingTabBar`, `TabBarButton`, `DiscoverView`, the Moments and Jars tab headers, `assets/tabs/discover*.png`, `scripts/render-tab-icons.mjs`, `en.json`, Main.html and Feed.html notes. No schema.
+- **Size:** S.
+
 ## Pieces, order and parallel work (updated)
 
 | Piece                     | Items          | Decisions       | Runs with                          |
@@ -936,6 +944,7 @@ The product owner sent three more round 3 items while H, I and J were being buil
 | R3-L Two-step editor      | 9              | D-103–D-107     | merged (#331)                      |
 | R3-G Glass tab bar        | owner's ask    | D-108           | before M; in the next rebuild      |
 | R3-M Critical-page audit  | owner's ask    | after L         | after L merges; rebuild at the end |
+| R3-N Discover tab         | owner's ask    | D-130           | after M's audit pull requests     |
 
 ## Decisions added (auto-approved Nov 14)
 
@@ -944,3 +953,4 @@ The product owner sent three more round 3 items while H, I and J were being buil
 11. **Critical-page audit (after L):** every fix or cut is recorded as its own decision.
 12. **Glass tab bar (D-108):** iOS 26+ uses the system's Liquid Glass tab bar; older iOS and Reduce Transparency keep the custom bar.
 13. **Moments tab icon (D-109):** a # (hashtag) in both bars. The editor keeps no crop tool; crop stays before the editor and in Re-crop (D-106, confirmed).
+14. **Discover tab (D-130):** Discover is the fourth tab, beside Jars, in both tab bars; the compass header button is removed and `/explore` redirects to the tab. It replaces D-101's "tab bar unchanged".

@@ -16,7 +16,6 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
-import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { FeedJarCard } from '@/features/feed/FeedJarCard';
@@ -25,8 +24,9 @@ import { MomentFeedCard } from '@/features/moments/MomentFeedCard';
 import type { FeedMoment } from '@/features/moments/momentsModel';
 import { FollowButton } from '@/features/profile/FollowButton';
 import type { AvatarUrls } from '@/lib/avatars';
+import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { maxTextScale, textStyle } from '@/theme/text';
-import { colors, explore as e, radius, space } from '@/theme/tokens';
+import { colors, explore as e, radius, sizes, space } from '@/theme/tokens';
 
 import type { Explore, Person, Suggestion } from './explore';
 import type { DiscoverTab } from './useDiscover';
@@ -60,7 +60,6 @@ export type DiscoverViewProps = {
   now: Date;
   onRefresh: () => void;
   onEndReached: () => void;
-  onBack: () => void;
   /** Loads Suggested authors again. */
   onRetry: () => void;
   /** Loads the shown list again. */
@@ -105,7 +104,6 @@ export function DiscoverView({
   now,
   onRefresh,
   onEndReached,
-  onBack,
   onRetry,
   onRetryList,
   onOpenProfile,
@@ -117,6 +115,8 @@ export function DiscoverView({
 }: DiscoverViewProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
+  // Discover is a tab (D-130): the list clears the tab bar like Today, Moments and Jars.
+  const tabBarClearance = useTabBarClearance();
   // The moment card sits inside the screen padding and its own padding; the photo fills the rest.
   const photoWidth = Math.max(0, width - 2 * space.xl - 2 * space.md);
   const showingSearch = searching || results !== undefined || searchFailed;
@@ -136,7 +136,6 @@ export function DiscoverView({
         >
           {t('explore.title')}
         </Text>
-        <RoundIconButton icon="back" accessibilityLabel={t('explore.back')} onPress={onBack} testID="explore-back" />
       </View>
 
       <View style={styles.search}>
@@ -227,7 +226,10 @@ export function DiscoverView({
     <FlatList
       style={styles.screen}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, space.lg) + space.lg }}
+      contentContainerStyle={{
+        paddingTop: insets.top,
+        paddingBottom: Math.max(insets.bottom, space.lg) + tabBarClearance,
+      }}
       data={items}
       keyExtractor={(item) => (item.kind === 'moment' ? `m:${item.moment.moment_id}` : `j:${item.jar.jar_id}`)}
       renderItem={({ item }) => (
@@ -424,12 +426,14 @@ function SearchResults({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  // Same title block as the Moments and Jars tabs, so the title doesn't jump when switching tabs.
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: sizes.headerTop + sizes.roundButton + space.md,
     paddingHorizontal: space.xl,
-    paddingTop: space.md,
+    paddingTop: sizes.headerTop,
     paddingBottom: space.md,
   },
   title: { color: colors.ink, flexShrink: 1 },

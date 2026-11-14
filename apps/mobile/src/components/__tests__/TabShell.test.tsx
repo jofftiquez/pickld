@@ -1,14 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
-import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
 import { isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import type { ReactNode } from 'react';
 import { AccessibilityInfo } from 'react-native';
 
 import TabsLayout from '../../../app/(tabs)/_layout';
+import DiscoverScreen from '../../../app/(tabs)/discover';
 import JarsScreen from '../../../app/(tabs)/jars';
 import MomentsScreen from '../../../app/(tabs)/moments';
 import TodayScreen from '../../../app/(tabs)/today';
+import ExploreRedirect from '../../../app/explore';
 import MyDaysScreen from '../../../app/my-days';
 
 // Today draws a JarGraphic, which needs Reanimated's native worklets; expo-router's testing mocks
@@ -25,10 +27,26 @@ jest.mock('@/features/jar/PublishBurst', () => ({ PublishBurst: () => null }));
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 // Today's Retry reaches the upload worker, which reports errors through Sentry (ESM, not loadable here).
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+// Discover's suggestions check the contacts permission; the native module can't load under Jest.
+jest.mock('expo-contacts', () => ({ getPermissionsAsync: jest.fn(async () => ({ granted: false })) }));
 
 // Today reads its data with React Query (signed out here, so no query runs).
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
+}
+
+type Rendered = { type: string; props: Record<string, unknown>; children: Rendered[] | null } | string;
+
+/** Titles of the system tab bar's tabs, in order, from the rendered native tab screens. */
+function nativeTabTitles(node: unknown): string[] {
+  const nodes = Array.isArray(node) ? node : [node];
+  return nodes.flatMap((n: Rendered | null) =>
+    n === null || typeof n === 'string'
+      ? []
+      : n.type === 'RNSTabsScreenIOS' && typeof n.props.title === 'string'
+        ? [n.props.title]
+        : nativeTabTitles(n.children ?? []),
+  );
 }
 
 // The real route files from app/, wired through Expo Router's in-memory router.
@@ -39,15 +57,18 @@ const routes = {
   '(tabs)/moments': MomentsScreen,
   '(tabs)/capture': () => null,
   '(tabs)/jars': JarsScreen,
+  '(tabs)/discover': DiscoverScreen,
+  explore: ExploreRedirect,
   'my-days': MyDaysScreen,
 };
 
-// D-52: Today | Moments | Jars. Capture is hidden (its route opens the camera: see
+// D-52, D-130: Today | Moments | Jars | Discover. Capture is hidden (its route opens the camera: see
 // features/capture/__tests__/captureTab.test.tsx) and My days is a stack screen opened from Today.
 const tabs = [
   { label: 'Today', path: '/today' },
   { label: 'Moments', path: '/moments' },
   { label: 'Jars', path: '/jars' },
+  { label: 'Discover', path: '/discover' },
 ];
 
 describe('tab shell', () => {
@@ -64,13 +85,24 @@ describe('tab shell', () => {
     for (const { label, path } of tabs) {
       await fireEvent.press(screen.getByRole('tab', { name: label }));
       expect(screen).toHavePathname(path);
-      expect(screen.getAllByRole('tab', { selected: true }).map((tab) => tab.props.accessibilityLabel)).toEqual([
-        label,
-      ]);
+      // Scoped to the bar: Discover's own Moments | Jars switch is made of tabs too.
+      const bar = within(screen.getByTestId('floating-tab-bar'));
+      expect(bar.getAllByRole('tab', { selected: true }).map((tab) => tab.props.accessibilityLabel)).toEqual([label]);
       // The screen title, not just the tab label, is on screen.
       expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(2);
     }
-    expect(screen.getAllByRole('tab').map((tab) => tab.props.accessibilityLabel)).toEqual(['Today', 'Moments', 'Jars']);
+    expect(
+      within(screen.getByTestId('floating-tab-bar'))
+        .getAllByRole('tab')
+        .map((tab) => tab.props.accessibilityLabel),
+    ).toEqual(['Today', 'Moments', 'Jars', 'Discover']);
+  });
+
+  it('opens the Discover tab for /explore links, with no back button (D-130)', async () => {
+    await renderRouter(routes, { initialUrl: '/explore', wrapper });
+    expect(screen).toHavePathname('/discover');
+    expect(screen.getByRole('tab', { name: 'Discover', selected: true })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
   });
 
   it('opens My days from Today’s calendar button, over the tabs, and Back returns to Today', async () => {
@@ -99,6 +131,8 @@ describe('tab shell', () => {
       await renderRouter(routes, { initialUrl: '/today', wrapper });
       expect(await screen.findByRole('header', { name: 'Today' })).toBeTruthy();
       expect(screen.queryByTestId('floating-tab-bar')).toBeNull();
+      // Four native tabs in order (D-130); the hidden Capture route draws none.
+      expect(nativeTabTitles(screen.toJSON())).toEqual(['Today', 'Moments', 'Jars', 'Discover']);
     });
 
     it('keeps the floating tab bar with Reduce Transparency on', async () => {

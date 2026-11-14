@@ -10,7 +10,8 @@
     "label": "Main",
     "today": "Today",
     "moments": "Moments",
-    "jars": "Jars"
+    "jars": "Jars",
+    "discover": "Discover"
   },
   "today": {
     "title": "Today",
@@ -129,8 +130,6 @@
     "inviteFriends": "Invite friends",
     "inviteMessage": "I keep a photo diary on Pickld. Read my days: {{url}}",
     "notifications": "Notifications",
-    "discover": "Discover",
-    "discoverHint": "Find moments and jars from people you don’t read yet",
     "notificationsUnread": "Notifications, unread",
     "authors": "People you read",
     "you": "You",
@@ -1592,7 +1591,6 @@
   },
   "explore": {
     "title": "Discover",
-    "back": "Back",
     "searchPlaceholder": "Search people or @username",
     "searchLabel": "Search people by name or username",
     "suggested": "Suggested authors",
