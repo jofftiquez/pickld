@@ -2190,8 +2190,8 @@ export type Database = {
       };
       username_available: { Args: { candidate: string }; Returns: string };
       waitlist_join:
-        | { Args: { p_source?: string }; Returns: string }
-        | { Args: { p_email: string; p_ip_hash: string; p_source?: string }; Returns: string };
+        | { Args: { p_email: string; p_ip_hash: string; p_source?: string }; Returns: string }
+        | { Args: { p_source?: string }; Returns: string };
     };
     Enums: {
       account_job_kind: 'export' | 'delete';
