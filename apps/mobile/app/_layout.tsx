@@ -99,6 +99,13 @@ export default function RootLayout() {
           name="stickers/pack/[slug]"
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
         />
+        {/* Invites (INV-06): Scan QR opens from Sign up and Waiting; a pickld.me/i/… link passes through /i/[token]. */}
+        <Stack.Screen
+          name="scan"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
+        />
+        <Stack.Screen name="i/[token]" options={{ animation: 'none' }} />
+        <Stack.Screen name="waiting" options={{ animation: 'none', gestureEnabled: false }} />
         <Stack.Screen name="publish" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         {/* Celebrations fade in; Reduce Motion keeps the fade and drops the confetti (NFR-A11Y-02). */}
         <Stack.Screen name="full-jar" options={{ presentation: 'transparentModal', animation: 'fade' }} />

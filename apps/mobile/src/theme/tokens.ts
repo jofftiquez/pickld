@@ -649,6 +649,28 @@ export const invite = {
   qrCodeSpacing: 4.7, // 0.18em
 } as const;
 
+// Joining with an invite (SignUpCode, SignUpInvite, Waiting, ScanQR; INV-06).
+export const join = {
+  cardRadius: 22, // Have a code? and the invited card on Sign up
+  cardShadow: {
+    shadowColor: '#11140d',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  codeSpacing: 2, // the code in the invited card's green pill
+  waitingArt: 140, // light green circle behind the jar on Waiting
+  waitingJar: 70,
+  waitingLayers: 3,
+  scanFrame: 250, // the square the corner brackets mark on Scan QR
+  scanCorner: 42,
+  scanCornerWidth: 4,
+  scanCornerRadius: 20,
+  scanShade: 'rgba(0,0,0,0.35)', // over the camera so the white text reads (Scan QR)
+  scanErrorFill: 'rgba(17,20,13,0.78)', // "That's not a Pickld invite"
+} as const;
+
 // Speech bubbles (Bubble, FR-CAP-06). Each color's text pair meets WCAG AA (4.5:1); pickle takes ink
 // text, not white, because white on it is reserved for primary buttons (AGENTS rule 12).
 export const bubbleColors = {

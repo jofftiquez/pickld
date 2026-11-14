@@ -45,8 +45,16 @@ jest.mock('@/lib/supabase', () => ({
   getSupabase: () => ({
     functions: { invoke: (...a: unknown[]) => mockInvoke(...a) },
     auth: { signOut: () => mockSignOut() },
-    from: () => ({ insert: (row: unknown) => mockInsert(row) }),
+    from: () => ({ insert: (row: unknown) => ({ select: () => ({ single: () => mockInsert(row) }) }) }),
   }),
+}));
+const mockAnnounce = jest.fn();
+const mockPending = { token: null as string | null, clear: jest.fn(async () => undefined) };
+const mockRedeem = jest.fn();
+jest.mock('@/features/invite/join', () => ({
+  usePendingInvite: { getState: () => ({ load: async () => mockPending.token, clear: mockPending.clear }) },
+  redeemInvite: (...a: unknown[]) => mockRedeem(...a),
+  announceJoined: (...a: unknown[]) => mockAnnounce(...a),
 }));
 
 const props = () => mockView.props!;
@@ -59,6 +67,7 @@ describe('About you', () => {
   beforeEach(() => {
     jest.useFakeTimers({ now: new Date('2026-11-12T04:00:00Z'), doNotFake: ['nextTick', 'setImmediate'] });
     jest.clearAllMocks();
+    mockPending.token = null;
     useAuthStore.getState().setSession({ user: { id: 'u-1', user_metadata: {} } } as unknown as Session);
   });
   afterEach(() => jest.useRealTimers());
@@ -74,6 +83,9 @@ describe('About you', () => {
     expect(mockReplace).toHaveBeenCalledWith('/setup/under13');
     expect(mockSignOut).toHaveBeenCalled();
     expect(track).not.toHaveBeenCalled();
+    // A kept invite is dropped, never used.
+    expect(mockPending.clear).toHaveBeenCalled();
+    expect(mockRedeem).not.toHaveBeenCalled();
   });
 
   it('a failed purge stays here with an error, without showing Under 13', async () => {
@@ -86,7 +98,7 @@ describe('About you', () => {
   });
 
   it('13 today: saves the profile with the birthday and phone zone, then goes on to Your day', async () => {
-    mockInsert.mockResolvedValue({ error: null });
+    mockInsert.mockResolvedValue({ data: { status: 'active' }, error: null });
     await render(<AboutScreen />);
     await fill(2013, 11, 12);
     await act(async () => props().onContinue());
@@ -98,7 +110,8 @@ describe('About you', () => {
       birthday: '2013-11-12',
       home_tz: 'Asia/Manila',
     });
-    expect(mockSetQueryData).toHaveBeenCalledWith(['hasProfile', 'u-1'], true);
+    expect(mockSetQueryData).toHaveBeenCalledWith(['profileStatus', 'u-1'], 'active');
+    expect(mockRedeem).not.toHaveBeenCalled();
     // Setup continues at Your day, and a relaunch would resume there.
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/day');
     expect(mockReplace).toHaveBeenCalledWith('/setup/day');
@@ -112,5 +125,52 @@ describe('About you', () => {
     await act(async () => props().onContinue());
     expect(props().error).toBe('taken');
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  describe('with a kept invite (INV-06)', () => {
+    beforeEach(() => {
+      mockPending.token = 'XADXFG';
+      mockInsert.mockResolvedValue({ data: { status: 'waiting' }, error: null });
+    });
+
+    it("an adult joined with a friend's code: let in, the code dropped, and told they read each other", async () => {
+      mockRedeem.mockResolvedValue({ result: 'joined', kind: 'personal', inviter: 'mia' });
+      await render(<AboutScreen />);
+      await fill(1990, 3, 14);
+      await act(async () => props().onContinue());
+      expect(mockRedeem).toHaveBeenCalledWith('XADXFG');
+      expect(mockPending.clear).toHaveBeenCalled();
+      expect(mockAnnounce).toHaveBeenCalledWith('mia', true);
+      expect(mockSetQueryData).toHaveBeenCalledWith(['profileStatus', 'u-1'], 'active');
+    });
+
+    it('a teen (16) joined: told only that they follow the inviter', async () => {
+      mockRedeem.mockResolvedValue({ result: 'joined', kind: 'personal', inviter: 'mia' });
+      await render(<AboutScreen />);
+      await fill(2009, 11, 13); // turns 17 tomorrow, so still under 18
+      await act(async () => props().onContinue());
+      expect(mockAnnounce).toHaveBeenCalledWith('mia', false);
+    });
+
+    it('a code that can no longer be used: dropped, and the person waits', async () => {
+      mockRedeem.mockResolvedValue({ result: 'unavailable' });
+      await render(<AboutScreen />);
+      await fill(1990, 3, 14);
+      await act(async () => props().onContinue());
+      expect(mockPending.clear).toHaveBeenCalled();
+      expect(mockAnnounce).not.toHaveBeenCalled();
+      expect(mockSetQueryData).toHaveBeenCalledWith(['profileStatus', 'u-1'], 'waiting');
+      expect(mockReplace).toHaveBeenCalledWith('/setup/day');
+    });
+
+    it('offline: the code stays on the phone for Waiting to try again', async () => {
+      mockRedeem.mockRejectedValue(new Error('offline'));
+      await render(<AboutScreen />);
+      await fill(1990, 3, 14);
+      await act(async () => props().onContinue());
+      expect(mockPending.clear).not.toHaveBeenCalled();
+      expect(mockSetQueryData).toHaveBeenCalledWith(['profileStatus', 'u-1'], 'waiting');
+      expect(mockReplace).toHaveBeenCalledWith('/setup/day');
+    });
   });
 });

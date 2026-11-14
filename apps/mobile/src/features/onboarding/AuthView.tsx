@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
@@ -46,6 +47,10 @@ export type AuthViewProps = {
   /** Sign up ↔ Sign in. */
   onSwitchMode: () => void;
   onLegal: (page: 'terms' | 'privacy') => void;
+  /** Sign up's invite card (INV-06), under the title in place of the body text. */
+  codeCard?: ReactNode;
+  /** False hides the photo fan (Sign up with a friend's invite). */
+  showFan?: boolean;
 };
 
 /** Sign up and Sign in (FR-ACC-01, FR-ACC-02, FR-PRV-04): Apple, Google, or a 6-digit email code. */
@@ -61,6 +66,8 @@ export function AuthView({
   onSubmitEmail,
   onSwitchMode,
   onLegal,
+  codeCard,
+  showFan = true,
 }: AuthViewProps) {
   const { t } = useTranslation();
   const k = mode === 'signUp' ? 'auth.signUp' : 'auth.signIn';
@@ -78,17 +85,19 @@ export function AuthView({
         keyboardShouldPersistTaps="handled"
       >
         <RoundIconButton icon="back" accessibilityLabel={t('auth.back')} onPress={onBack} testID="auth-back" />
-        <View style={styles.fan} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {FAN[mode].map((f, i) => (
-            <Image
-              key={f.photo}
-              source={onboardingPhotos[f.photo]}
-              contentFit="cover"
-              accessible={false}
-              style={[styles.fanPhoto, { marginTop: f.top, transform: [{ rotate: f.rotate }], zIndex: i % 2 }]}
-            />
-          ))}
-        </View>
+        {showFan ? (
+          <View style={styles.fan} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            {FAN[mode].map((f, i) => (
+              <Image
+                key={f.photo}
+                source={onboardingPhotos[f.photo]}
+                contentFit="cover"
+                accessible={false}
+                style={[styles.fanPhoto, { marginTop: f.top, transform: [{ rotate: f.rotate }], zIndex: i % 2 }]}
+              />
+            ))}
+          </View>
+        ) : null}
         <Text
           maxFontSizeMultiplier={maxTextScale.title}
           accessibilityRole="header"
@@ -96,7 +105,7 @@ export function AuthView({
         >
           {t(`${k}.title`)}
         </Text>
-        <Text style={[textStyle('body'), styles.body]}>{t(`${k}.body`)}</Text>
+        {codeCard ?? <Text style={[textStyle('body'), styles.body]}>{t(`${k}.body`)}</Text>}
         <View style={styles.providers}>
           <ProviderButton
             provider="apple"
