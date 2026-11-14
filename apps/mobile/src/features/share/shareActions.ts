@@ -8,10 +8,23 @@ import * as Sharing from 'expo-sharing';
 import type { ComponentRef, RefObject } from 'react';
 import { Linking, Platform, Share, type View } from 'react-native';
 
+import { settleStickerArt } from '@/features/edit/stickers/remoteStickerArt';
+
 export type CardRef = RefObject<ComponentRef<typeof View> | null>;
 
-/** Renders the card view to `<name>.png` in the cache; resolves with its file URI. */
-export async function renderCardImage(view: CardRef, name: string): Promise<string> {
+// How long the card gets to draw sticker art that was still downloading when the user tapped.
+const ART_SETTLE_MS = 400;
+
+/**
+ * Renders the card view to `<name>.png` in the cache; resolves with its file URI. Sticker art that isn't bundled
+ * (D-131) is waited for first, so the image never shows a sticker's loading placeholder when the art exists.
+ */
+export async function renderCardImage(
+  view: CardRef,
+  name: string,
+  stickerAssets: readonly string[] = [],
+): Promise<string> {
+  if (await settleStickerArt(stickerAssets)) await new Promise((resolve) => setTimeout(resolve, ART_SETTLE_MS));
   // Skia's type predates React Native's element refs; it reads the native view behind any host ref.
   const image = await makeImageFromView(view as unknown as Parameters<typeof makeImageFromView>[0]);
   if (!image) throw new Error('card render failed');

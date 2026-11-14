@@ -3,6 +3,7 @@
 // Restore purchases (the store replays purchases, then fn:store-sync reads them back).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { rememberStickerArt } from '@/features/edit/stickers/remoteStickerArt';
 import { stickerCatalogQueryKey } from '@/features/edit/stickers/useStickerCatalog';
 import { useAuthStore } from '@/lib/authStore';
 import { getStore } from '@/lib/store/store';
@@ -22,13 +23,16 @@ async function fetchMyPacks(userId: string): Promise<MyPack[]> {
       .select('id, slug, name, sort, tier, store_product_id, available_from, available_to, pack_usable'),
     supabase
       .from('stickers')
-      .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable')
-      // Retired stickers (0032) aren't offered; moments that use them still draw their bundled art.
+      .select(
+        'id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable, art_width, art_height, art_version',
+      )
+      // Retired stickers (0032) aren't offered; moments that use them still draw their art.
       .is('retired_at', null),
     supabase.from('owned_packs').select('pack_id, source, acquired_at').eq('user_id', userId),
     supabase.from('user_pack_prefs').select('pack_id, sort, hidden').eq('user_id', userId),
   ]);
   for (const result of [packs, stickers, owned, prefs]) if (result.error) throw new Error(result.error.message);
+  rememberStickerArt(stickers.data ?? []);
   return buildMyPacks(packs.data ?? [], stickers.data ?? [], owned.data ?? [], prefs.data ?? []);
 }
 
