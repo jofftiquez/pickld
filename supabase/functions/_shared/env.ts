@@ -74,6 +74,11 @@ export function accountJobsSecret(): string {
   return required('ACCOUNT_JOBS_SECRET');
 }
 
+/** The x-waitlist-secret header pickld.me's server sends to fn:waitlist-join (at least 32 characters). */
+export function waitlistSecret(): string {
+  return required('WAITLIST_SECRET');
+}
+
 /** Optional: only needed when the Expo project turns on enhanced push security. */
 export function expoAccessToken(): string | undefined {
   return Deno.env.get('EXPO_ACCESS_TOKEN') || undefined;

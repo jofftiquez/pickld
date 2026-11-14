@@ -9,6 +9,7 @@ import { t } from '~/i18n/t';
 
 import { Footer } from './Footer';
 import { Header } from './Header';
+import { column } from './Page';
 
 export type LegalSlug = 'terms' | 'privacy' | 'guidelines';
 
@@ -52,7 +53,7 @@ function render(markdown: string): ReactNode[] {
 export async function LegalPage({ slug }: { slug: LegalSlug }) {
   const text = await draft(slug);
   return (
-    <>
+    <div style={column}>
       <Header getAppUrl="/" />
       <main style={{ padding: '18px', flex: 1, fontSize: 15, lineHeight: 1.55, color: colors.inkSoft }}>
         {text ? (
@@ -65,6 +66,6 @@ export async function LegalPage({ slug }: { slug: LegalSlug }) {
         )}
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

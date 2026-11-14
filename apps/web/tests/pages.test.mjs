@@ -21,6 +21,9 @@ const COVERED = '66666666-6666-4666-8666-666666666666';
 let stub, stubUrl, web, base, browser;
 const SITE = 'https://pickld.test';
 const TEAM = 'ABCDE12345';
+const SECRET = 'stub-waitlist-secret-0123456789abcdef';
+/** What the waitlist stub received; `next` is its next answer's status. */
+const waitlist = { calls: [], next: 200 };
 const CERT = Array.from({ length: 32 }, (_, i) => i.toString(16).padStart(2, '0').toUpperCase()).join(':');
 /** Photo paths the stub served, to see what a preview fetched. */
 const served = [];
@@ -122,6 +125,17 @@ before(async () => {
     req.on('data', (c) => (body += c));
     req.on('end', () => {
       assert.equal(req.headers.authorization, `Bearer ${ANON}`);
+      if (req.url === '/functions/v1/waitlist-join') {
+        waitlist.calls.push({
+          body: JSON.parse(body),
+          secret: req.headers['x-waitlist-secret'],
+          ip: req.headers['x-client-ip'],
+        });
+        res.writeHead(waitlist.next, { 'content-type': 'application/json' });
+        return res.end(
+          JSON.stringify(waitlist.next === 200 ? { data: { joined: true } } : { error: { code: 'x', message: 'x' } }),
+        );
+      }
       const input = JSON.parse(body);
       const data = pages(stubUrl);
       const found = input.jarId ? data.jars[input.jarId] : data.profiles[String(input.username).toLowerCase()];
@@ -141,6 +155,7 @@ before(async () => {
       ...process.env,
       SUPABASE_URL: stubUrl,
       SUPABASE_ANON_KEY: ANON,
+      WAITLIST_SECRET: SECRET,
       SITE_URL: SITE,
       APPLE_TEAM_ID: TEAM,
       ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} `,
@@ -256,6 +271,87 @@ test('legal pages are reachable from the footer', async () => {
   await page.close();
 });
 
+// ---------------------------------------------------------------- marketing pages and the waitlist
+
+test('the home page shows the pitch, the eight moments and loaded screenshots without side scroll', async () => {
+  const { page, status } = await open('/');
+  assert.equal(status, 200);
+  assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' '), 'Eight moments. One real day.');
+  const moments = await page.getByRole('list', { name: 'The eight moments' }).locator('b').allTextContents();
+  assert.deepEqual(moments, [
+    '#whereami',
+    '#mebusywith',
+    '#whoamiwith',
+    '#ootd',
+    '#selfie',
+    '#morning',
+    '#afternoon',
+    '#evening',
+  ]);
+  const imgs = page.locator('main img');
+  assert.ok((await imgs.count()) >= 15);
+  // Lazy images load as they scroll in; the floating stickers animate, so scroll with the DOM, not Playwright.
+  for (const img of await imgs.all()) {
+    const ok = await img.evaluate(async (e) => {
+      e.scrollIntoView({ block: 'center' });
+      await e.decode().catch(() => {});
+      return e.complete && e.naturalWidth > 0;
+    });
+    assert.ok(ok, await img.getAttribute('src'));
+  }
+  // Decorative stickers are hidden from screen readers; every other image says what it shows.
+  assert.ok(await imgs.evaluateAll((els) => els.every((e) => e.hasAttribute('alt'))));
+  assert.equal(await page.getByRole('link', { name: 'Google Play' }).count(), 0, 'iPhone first');
+  assert.ok(await noSideScroll(page));
+  await page.close();
+});
+
+test('the waitlist form posts the address with the secret and visitor IP, then thanks them', async () => {
+  waitlist.calls.length = 0;
+  waitlist.next = 200;
+  const { page } = await open('/');
+  await page.getByLabel('Email address').first().fill('  Mika@Example.com ');
+  await page.getByRole('button', { name: 'Join the waitlist' }).first().click();
+  await page.waitForURL(`${base}/waitlist?status=joined`);
+  assert.equal(await page.locator('h1').textContent(), 'You’re on the list');
+  assert.equal(waitlist.calls.length, 1);
+  assert.deepEqual(waitlist.calls[0].body, { email: 'Mika@Example.com', source: 'hero' });
+  assert.equal(waitlist.calls[0].secret, SECRET);
+  assert.ok(waitlist.calls[0].ip);
+  assert.ok(!(await page.content()).includes(SECRET), 'the secret stays on the server');
+  await page.close();
+});
+
+test('the waitlist works without JavaScript and says when there were too many sign-ups', async () => {
+  waitlist.calls.length = 0;
+  waitlist.next = 429;
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto(`${base}/waitlist`);
+  await page.getByLabel('Email address').fill('dale@example.com');
+  await page.getByRole('button', { name: 'Join the waitlist' }).click();
+  await page.waitForURL(`${base}/waitlist?status=limited`);
+  assert.equal(await page.locator('h1').textContent(), 'Too many sign-ups from here');
+  assert.equal(waitlist.calls[0].body.source, 'waitlist');
+  waitlist.next = 200;
+  await context.close();
+});
+
+test('/stickers lists every pack, Olivia first, with its kind', async () => {
+  const { page, status } = await open('/stickers');
+  assert.equal(status, 200);
+  const names = await page.locator('main h2[id^="pack-"]').allTextContents();
+  assert.equal(names[0], 'Olivia');
+  assert.equal(names.length, 17);
+  assert.ok(names.includes('Everyday') && names.includes('Pinoy Life'));
+  const olivia = page.getByRole('list', { name: 'Olivia stickers' }).locator('img');
+  assert.equal(await olivia.count(), 16);
+  assert.equal(await olivia.first().getAttribute('alt'), 'Queen');
+  assert.ok(await page.getByRole('heading', { name: 'Everyday' }).locator('..').getByText('Free').isVisible());
+  assert.ok(await noSideScroll(page));
+  await page.close();
+});
+
 // ---------------------------------------------------------------- link previews (M4-14, FR-WEB-02)
 
 async function meta(route) {
@@ -341,14 +437,14 @@ test('the jar preview matches its snapshot', async () => {
 
 // ---------------------------------------------------------------- universal links / app links (M4-15)
 
-test('the AASA file lets the app open profile, jar and sign-in links but not legal pages', async () => {
+test('the AASA file lets the app open profile, jar and sign-in links but not legal or marketing pages', async () => {
   const res = await fetch(`${base}/.well-known/apple-app-site-association`, { redirect: 'manual' });
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type'), /^application\/json/);
   const [detail] = (await res.json()).applinks.details;
   assert.deepEqual(detail.appIDs, [`${TEAM}.me.pickld.app`]);
   const excluded = detail.components.filter((c) => c.exclude).map((c) => c['/']);
-  assert.deepEqual(excluded, ['/terms', '/privacy', '/guidelines', '/.well-known/*']);
+  assert.deepEqual(excluded, ['/terms', '/privacy', '/guidelines', '/', '/stickers', '/waitlist', '/.well-known/*']);
   // iOS takes the first matching component, so the exclusions must come before the catch-all.
   const all = detail.components.map((c) => c['/']);
   assert.ok(all.indexOf('/terms') < all.indexOf('/*'));
