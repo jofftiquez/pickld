@@ -943,3 +943,4 @@ The product owner sent three more round 3 items while H, I and J were being buil
 10. **Two-step editor (D-103 onward):** the photo tools first, then Next to the details, then Save or Share. It adds no new social features.
 11. **Critical-page audit (after L):** every fix or cut is recorded as its own decision.
 12. **Glass tab bar (D-108):** iOS 26+ uses the system's Liquid Glass tab bar; older iOS and Reduce Transparency keep the custom bar.
+13. **Moments tab icon (D-109):** a # (hashtag) in both bars. The editor keeps no crop tool; crop stays before the editor and in Re-crop (D-106, confirmed).

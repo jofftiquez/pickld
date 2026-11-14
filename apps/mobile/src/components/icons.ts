@@ -53,8 +53,8 @@ export const icons = {
   // Tab bar
   today: [p('M4.5 4.5 19 3l1.5 12.5-12 1.5-3 4z')],
   capture: [p('M4 8h3l2-3h6l2 3h3v11H4z'), c(12, 13, 3.5)],
-  // Two stacked 3:4 photos: the Moments timeline.
-  moments: [r(7.5, 3.5, 11, 14, 2.5), p('M5.5 7v11a2.5 2.5 0 0 0 2.5 2.5h8')],
+  // A hashtag: moments are the slot hashtags (#morning, #ootd…) (D-109).
+  moments: [p('M10 3.5 8 20.5M16 3.5l-2 17M4.5 9h16M3.5 15h16')],
   jars: [
     p('M8.5 2.5h7v3h-7z'),
     p('M7.5 5.5h9a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-10a3 3 0 0 1 3-3z'),
