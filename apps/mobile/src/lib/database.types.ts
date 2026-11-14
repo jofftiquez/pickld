@@ -498,6 +498,7 @@ export type Database = {
           expires_at: string | null;
           kind: Database['public']['Enums']['invite_kind'];
           max_uses: number;
+          note: string | null;
           owner_id: string | null;
           set_no: number | null;
           slot: Database['public']['Enums']['slot'] | null;
@@ -512,6 +513,7 @@ export type Database = {
           expires_at?: string | null;
           kind: Database['public']['Enums']['invite_kind'];
           max_uses?: number;
+          note?: string | null;
           owner_id?: string | null;
           set_no?: number | null;
           slot?: Database['public']['Enums']['slot'] | null;
@@ -525,6 +527,7 @@ export type Database = {
           expires_at?: string | null;
           kind?: Database['public']['Enums']['invite_kind'];
           max_uses?: number;
+          note?: string | null;
           owner_id?: string | null;
           set_no?: number | null;
           slot?: Database['public']['Enums']['slot'] | null;
@@ -2307,6 +2310,10 @@ export type Database = {
       mod_analytics_stickers: { Args: { p_days?: number }; Returns: Json };
       mod_day_start: { Args: Record<PropertyKey, never>; Returns: string };
       mod_decide: { Args: { p_action: string; p_guideline?: string; p_item: string; p_note?: string }; Returns: Json };
+      mod_invite_code_create: { Args: { p_ends_at?: string; p_note: string; p_uses: number }; Returns: Json };
+      mod_invite_code_set: { Args: { p_code: string; p_enabled: boolean }; Returns: Json };
+      mod_invite_codes: { Args: Record<PropertyKey, never>; Returns: Json };
+      mod_invite_summary: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_lift_suspension: { Args: { p_note: string; p_user: string }; Returns: Json };
       mod_manual_suspension: {
         Args: { p_user: string };
@@ -2403,6 +2410,7 @@ export type Database = {
       mod_studio_valid_part: { Args: { p: string; p_max: number }; Returns: boolean };
       mod_suspend: { Args: { p_note: string; p_user: string }; Returns: Json };
       mod_user: { Args: { p_user: string }; Returns: Json };
+      mod_user_invites: { Args: { p_user: string }; Returns: Json };
       mod_user_moments: {
         Args: { p_limit?: number; p_user: string };
         Returns: {
