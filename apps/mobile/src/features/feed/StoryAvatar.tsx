@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 export type StoryAvatarProps = {
@@ -39,7 +39,13 @@ export function StoryAvatar({ name, label, uri, isNew, accessibilityLabel, onPre
           <Avatar name={name} uri={uri} decorative size="story" />
         </View>
       </View>
-      <Text style={[textStyle('caption', '600'), styles.label]} numberOfLines={1}>
+      {/* A first name under a 64-point ring: past 1.3× it shrank to one letter ("M…"), so it stops there like
+          tile labels (D-37). The spoken label has the full name. */}
+      <Text
+        style={[textStyle('caption', '600'), styles.label]}
+        numberOfLines={1}
+        maxFontSizeMultiplier={maxTextScale.tile}
+      >
         {label}
       </Text>
     </>

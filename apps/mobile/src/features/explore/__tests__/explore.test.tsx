@@ -162,12 +162,14 @@ describe('DiscoverView', () => {
     expect(h.onSetReading).toHaveBeenCalledWith(expect.objectContaining({ id: 'jun' }), true);
   });
 
-  it('lists moments under the Moments | Jars switch; a card opens its thread, Be a reader reads its author', async () => {
+  it('lists moments under the Moments | Jars switch; a card opens its thread, Be a reader (not Go to jar) reads its author', async () => {
     const h = await renderDiscover();
     expect(screen.getByRole('tab', { name: 'Moments', selected: true })).toBeTruthy();
     expect(screen.getByTestId('moments-card-m1')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('moments-open-m1'));
     expect(h.onOpenMoment).toHaveBeenCalledWith(MOMENT);
+    // Be a reader takes Go to jar's place in the card's header (design: Explore).
+    expect(screen.queryByTestId('moments-jar-m1')).toBeNull();
     await fireEvent.press(screen.getByTestId('moments-read-m1'));
     expect(h.onReadAuthor).toHaveBeenCalledWith('rio-id');
     await fireEvent.press(screen.getByTestId('moments-like-m1'));

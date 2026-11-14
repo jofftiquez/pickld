@@ -89,3 +89,17 @@ export function ageOf(updatedAt: string, now: Date): Age {
   if (hours < 24) return { unit: 'hours', count: hours };
   return { unit: 'days', count: Math.floor(hours / 24) };
 }
+
+export type MosaicCell = { kind: 'photo'; photo: MosaicPhoto } | { kind: 'more' };
+
+/**
+ * The small cells beside the large photo (Jars timeline and Discover cards), in rows: one or two cells fill the column top to bottom, three put
+ * two over one, four make the 2 × 2 grid. No row is ever padded with an empty cell (QA round 3).
+ */
+export function mosaicRows(mosaic: Mosaic): MosaicCell[][] {
+  // Up to three small photos, then "+n" (buildMosaic): never more than four cells.
+  const cells: MosaicCell[] = mosaic.small.map((photo) => ({ kind: 'photo', photo }));
+  if (mosaic.more > 0) cells.push({ kind: 'more' });
+  if (cells.length <= 2) return cells.map((cell) => [cell]);
+  return [cells.slice(0, 2), cells.slice(2)];
+}

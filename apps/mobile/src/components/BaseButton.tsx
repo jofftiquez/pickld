@@ -33,6 +33,8 @@ export type ButtonTone = {
   stretch: boolean;
   /** Icon size and stroke; defaults to 20 and 2. */
   icon?: { size: number; strokeWidth: number };
+  /** Stop the label growing past this text scale (a button laid over something, like Change cover). */
+  maxTextScale?: number;
 };
 
 export const PRESSED_OPACITY = 0.85;
@@ -79,7 +81,10 @@ export function BaseButton({
       {icon ? (
         <Icon name={icon} color={tone.text} size={tone.icon?.size ?? 20} strokeWidth={tone.icon?.strokeWidth ?? 2} />
       ) : null}
-      <Text style={[textStyle(tone.textVariant, tone.textWeight), { color: colors[tone.text] }, styles.label]}>
+      <Text
+        style={[textStyle(tone.textVariant, tone.textWeight), { color: colors[tone.text] }, styles.label]}
+        maxFontSizeMultiplier={tone.maxTextScale}
+      >
         {label}
       </Text>
     </Pressable>

@@ -6,7 +6,7 @@ import { momentRender } from '@/features/moment/momentRenders';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
 
-import type { Mosaic, MosaicPhoto } from './feedModel';
+import { mosaicRows, type Mosaic, type MosaicPhoto } from './feedModel';
 
 function Photo({ photo, large }: { photo: MosaicPhoto; large?: boolean }) {
   const render = momentRender(photo.render);
@@ -28,11 +28,13 @@ function Photo({ photo, large }: { photo: MosaicPhoto; large?: boolean }) {
   );
 }
 
-/** A feed card's photos (design: Feed), with their edits (D-96): the large one spans two rows next to a 2 × 2 grid ending in "+n". */
+/** A feed card's photos (design: Feed), with their edits (D-96): the large one spans two rows next to the
+ * small ones (mosaicRows), with "+n" last when there are more. */
 export function FeedMosaic({ mosaic }: { mosaic: Mosaic }) {
   const { t } = useTranslation();
   if (mosaic.large === null) return null;
-  const solo = mosaic.small.length === 0 && mosaic.more === 0;
+  const rows = mosaicRows(mosaic);
+  const solo = rows.length === 0;
   return (
     // The card's label already says how many moments it holds; the photos are decorative.
     <View
@@ -46,22 +48,19 @@ export function FeedMosaic({ mosaic }: { mosaic: Mosaic }) {
       </View>
       {solo ? null : (
         <View style={styles.grid}>
-          {[0, 2].map((first) => (
-            <View key={first} style={styles.gridRow}>
-              {[first, first + 1].map((i) => {
-                const photo = mosaic.small[i];
-                if (photo) return <Photo key={photo.momentId} photo={photo} />;
-                if (i === 3 && mosaic.more > 0) {
-                  return (
-                    <View key="more" style={[styles.cell, styles.more]} testID="feed-mosaic-more">
-                      <Text style={[textStyle('bodySmall', '700'), { color: colors.surface }]}>
-                        {t('feed.more', { count: mosaic.more })}
-                      </Text>
-                    </View>
-                  );
-                }
-                return <View key={`empty-${i}`} style={[styles.cell, styles.empty]} />;
-              })}
+          {rows.map((row, r) => (
+            <View key={r} style={styles.gridRow}>
+              {row.map((cell) =>
+                cell.kind === 'photo' ? (
+                  <Photo key={cell.photo.momentId} photo={cell.photo} />
+                ) : (
+                  <View key="more" style={[styles.cell, styles.more]} testID="feed-mosaic-more">
+                    <Text style={[textStyle('bodySmall', '700'), { color: colors.surface }]}>
+                      {t('feed.more', { count: mosaic.more })}
+                    </Text>
+                  </View>
+                ),
+              )}
             </View>
           ))}
         </View>
@@ -79,5 +78,4 @@ const styles = StyleSheet.create({
   cell: { flex: 1, overflow: 'hidden', backgroundColor: colors.photoPlaceholder, borderRadius: radius.thumbLg },
   large: { flex: 1 },
   more: { backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  empty: { backgroundColor: 'transparent' },
 });
