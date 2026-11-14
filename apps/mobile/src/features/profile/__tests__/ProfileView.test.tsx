@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Dimensions } from 'react-native';
 
 import type { ProfileMoment } from '../profileModel';
 import { buildProfileJars } from '../profileModel';
@@ -59,7 +60,20 @@ async function renderView(props: Partial<ProfileViewProps> & Pick<ProfileViewPro
   return handlers;
 }
 
+afterEach(() => {
+  Dimensions.set({ window: { ...Dimensions.get('window'), fontScale: 1 } });
+});
+
 describe('ProfileView', () => {
+  it('at large text the buttons move under the avatar and wrap, so Share never runs off the edge', async () => {
+    await renderView({ data: page('mika-id', false), onEditProfile: jest.fn() });
+    expect(screen.getByTestId('profile-actions')).not.toHaveStyle({ flexWrap: 'wrap' });
+    Dimensions.set({ window: { ...Dimensions.get('window'), fontScale: 3 } });
+    await renderView({ data: page('mika-id', false), onEditProfile: jest.fn() });
+    expect(screen.getByTestId('profile-actions')).toHaveStyle({ flexWrap: 'wrap' });
+    expect(screen.getByTestId('profile-share')).toBeTruthy();
+  });
+
   it('shows the header, compact counts and the visible jar count to another viewer', async () => {
     await renderView({ data: page('dale-id', true) });
     expect(screen.getByTestId('profile-name')).toHaveTextContent('Mika Reyes');
