@@ -42,10 +42,6 @@
     "body": "This page may be private, or it doesn’t exist.",
     "home": "Go to pickld.me"
   },
-  "home": {
-    "title": "Pickld",
-    "body": "Fill a jar with eight moments of your day, and read the people you care about."
-  },
   "legal": {
     "terms": "Terms",
     "privacy": "Privacy Policy",
@@ -62,5 +58,205 @@
     "alt": "{{name}}’s jar on Pickld",
     "description": "{{count}} of 8 moments from {{name}}’s {{weekday}}.",
     "descriptionReaders": "A jar for {{name}}’s readers."
+  },
+  "marketing": {
+    "metaTitle": "Pickld: eight moments, one real day",
+    "metaDescription": "Pickld is a photo diary for the day you actually had. Fill a jar with eight moments, decorate them with stickers and let your friends read along. Coming soon to iPhone.",
+    "skip": "Skip to content",
+    "nav": {
+      "label": "Main",
+      "home": "Pickld home",
+      "stickers": "Stickers",
+      "faq": "FAQ",
+      "join": "Join the waitlist"
+    },
+    "hero": {
+      "eyebrow": "Coming soon to iPhone",
+      "title1": "Eight moments.",
+      "title2": "One real day.",
+      "body": "Pickld is a photo diary for the day you actually had. Fill a jar with eight photos, from where you are to how your evening went, then let your friends read it.",
+      "jarAlt": "Mika’s Friday on Pickld: a jar of photos, each labelled with its moment, like #whereami and #ootd"
+    },
+    "form": {
+      "label": "Email address",
+      "placeholder": "you@email.com",
+      "submit": "Join the waitlist",
+      "note": "We’ll only email you about Pickld’s launch."
+    },
+    "moments": {
+      "title": "One jar a day. Eight moments to fill.",
+      "body": "Every moment has its own slot, so your jar tells the whole day, not just the highlight. A new jar starts at midnight.",
+      "whereami": "Where you are right now",
+      "mebusywith": "What’s keeping you busy",
+      "whoamiwith": "The people you’re with",
+      "ootd": "Today’s outfit",
+      "selfie": "Your face, as it is",
+      "morning": "How the day began",
+      "afternoon": "The middle of it all",
+      "evening": "How it ended",
+      "label": "The eight moments"
+    },
+    "how": {
+      "title": "Snap. Decorate. Share.",
+      "snapTitle": "Snap it when it happens",
+      "snapBody": "Take the photo and it drops into the right slot. No signal? It’s saved on your phone and uploads later.",
+      "snapAlt": "Thursday’s jar on Pickld with eight moments, each with the time it was taken",
+      "decorateTitle": "Make it yours",
+      "decorateBody": "Color filters, stickers, speech bubbles and text. No beauty filters or face retouching, ever.",
+      "decorateAlt": "Pickld’s photo editor with a row of color filters under the photo",
+      "shareTitle": "Share it your way",
+      "shareBody": "Publish your jar for the people who read you, or turn a moment or the whole jar into a card for your Stories, with your pickld.me link on it.",
+      "shareAlt": "A Pickld jar card for Stories: three photos, the caption “lunch crew” and Dale’s Thursday, 3 of 8"
+    },
+    "stickers": {
+      "eyebrow": "Stickers",
+      "title": "Meet Olivia",
+      "body": "Olivia is a real cat: white, fluffy and not impressed. She has her own sticker pack, next to free packs for every moment and packs made for very Pinoy days.",
+      "cta": "See every sticker pack",
+      "shopAlt": "The Stickers screen on Pickld with the Christmas pack and packs like Pinoy Life and Barkada",
+      "oliviaLabel": "Olivia stickers"
+    },
+    "privacy": {
+      "title": "Yours, on your terms",
+      "body": "Every jar picks its own audience when you publish it.",
+      "readers": "Readers",
+      "readersBody": "The people you let read you. This is the default.",
+      "everyone": "Everyone",
+      "everyoneBody": "Anyone with the link, and your page at pickld.me.",
+      "onlyMe": "Only me",
+      "onlyMeBody": "Keep this jar just for you.",
+      "private": "A single moment can be private too. Private moments stay with you: never in feeds, shares or notifications."
+    },
+    "memories": {
+      "title": "Look back without scrolling",
+      "body": "On this day brings back your jar from a year ago, monthly recaps add up your moments, and a home screen widget keeps today’s jar one tap away.",
+      "memoriesAlt": "Memories on Pickld: a jar from one year ago and an October recap",
+      "widgetAlt": "The Pickld widget on an iPhone home screen: 4 of 8 moments today, next up #whoamiwith"
+    },
+    "faq": {
+      "title": "Questions",
+      "freeQ": "Is Pickld free?",
+      "freeA": "Yes. Jars, readers and the free sticker packs cost nothing. Some extra sticker packs will cost a little, and what you buy is yours to keep.",
+      "androidQ": "Is it on Android?",
+      "androidA": "Pickld starts on iPhone. Android comes later; join the waitlist and we’ll tell you when it’s ready.",
+      "whoQ": "Who can see my jar?",
+      "whoA": "Your readers, unless you choose otherwise. Make a jar Everyone to share it with a link, or Only me to keep it to yourself. You can block anyone.",
+      "fullQ": "Do I have to fill all eight?",
+      "fullA": "No. A jar holds up to eight moments, and messy, half-full days count too.",
+      "missedQ": "What if I miss a moment?",
+      "missedA": "Fill it in later. Any past day can be filled, and those moments get a small “Added later” badge so your readers know.",
+      "ageQ": "How old do I need to be?",
+      "ageA": "13 or older.",
+      "label": "Frequently asked questions"
+    },
+    "final": {
+      "title": "You deserve to be you.",
+      "body": "The easiest way to tell your story. Join the waitlist and be first in when Pickld opens."
+    },
+    "footer": {
+      "copyright": "© 2026 Pickld"
+    },
+    "waitlist": {
+      "metaTitle": "Join the waitlist · Pickld",
+      "title": "Join the waitlist",
+      "body": "Be first to know when Pickld is in the App Store.",
+      "joinedTitle": "You’re on the list",
+      "joinedBody": "Thank you! We’ll email you when Pickld is ready for your iPhone.",
+      "limitedTitle": "Too many sign-ups from here",
+      "limitedBody": "Please try again in an hour.",
+      "invalidTitle": "Check your email address",
+      "invalidBody": "That doesn’t look like an email address. Try again?",
+      "errorTitle": "Something went wrong",
+      "errorBody": "We couldn’t add you just now. Please try again in a bit.",
+      "back": "Back to pickld.me"
+    }
+  },
+  "stickers": {
+    "metaTitle": "Sticker packs · Pickld",
+    "metaDescription": "Every sticker pack on Pickld, from the free Everyday pack to Olivia the cat.",
+    "title": "Stickers for every kind of day",
+    "body": "Free packs for every moment, stickers you earn along the way, and packs made for very Pinoy days. Here are a few from each.",
+    "note": "Paid packs are one-time purchases and yours to keep. Prices show in the app at launch.",
+    "kind": {
+      "free": "Free",
+      "earned": "Earned",
+      "seasonal": "Limited",
+      "premium": "Paid"
+    },
+    "count_one": "{{count}} sticker shown",
+    "count_other": "{{count}} stickers shown",
+    "packs": {
+      "olivia": {
+        "name": "Olivia",
+        "description": "Meet Olivia: white, fluffy and not impressed. For cat people and anyone with a little attitude."
+      },
+      "everyday": {
+        "name": "Everyday",
+        "description": "Little pictures for ordinary days: animals, fruit and things you see every day."
+      },
+      "the-eight": {
+        "name": "The Eight",
+        "description": "Stickers for each of the eight moments, from sunrise to the sleepy moon."
+      },
+      "stamps": {
+        "name": "Stamps",
+        "description": "Date and time stamps, plus a few words for real days."
+      },
+      "milestones": {
+        "name": "Milestones",
+        "description": "Earned, never sold: unlock them as you fill your jars."
+      },
+      "christmas-2026": {
+        "name": "Christmas pack",
+        "description": "Simbang Gabi, Noche Buena, aguinaldo. For the longest Christmas season in the world."
+      },
+      "pinoy-life": {
+        "name": "Pinoy Life",
+        "description": "Traffic, ulam, sweldo and everything in between. For the days that are very, very Pinoy."
+      },
+      "barkada": {
+        "name": "Barkada",
+        "description": "Libre mo? For the group chat that never sleeps and the friends who always show up."
+      },
+      "hashtags": {
+        "name": "Hashtags",
+        "description": "#TGIF, #ExamNa, #LunesNaNaman. The hashtags of every Pinoy week, in speech bubbles."
+      },
+      "work-from-wherever": {
+        "name": "Work From Wherever",
+        "description": "Camera off, coffee on. For meetings that could have been an email and the desk you carry everywhere."
+      },
+      "pet-parent": {
+        "name": "Pet Parent",
+        "description": "Pet tax paid. For fur babies, zoomies and the nap buddy who owns the bed."
+      },
+      "fish-moods": {
+        "name": "Fish Moods",
+        "description": "One goldfish, every feeling. Happy, hangry, in love or very, very sleepy."
+      },
+      "corporate": {
+        "name": "Corporate",
+        "description": "Noted with thanks. For quick syncs, action items and the meeting after the meeting."
+      },
+      "gen-z": {
+        "name": "Gen Z",
+        "description": "It’s giving. For main character days, no cap."
+      },
+      "trentahin": {
+        "name": "Trentahin",
+        "description": "Tulog by 9, bills paid, likod check. For the thirties and loving it."
+      },
+      "pride": {
+        "name": "Pride",
+        "description": "Love is love. For Pride, chosen family and every day you get to be you."
+      },
+      "cyclists": {
+        "name": "Cyclists",
+        "description": "Ride on. For coffee rides, ahon and the long way home."
+      }
+    },
+    "editorAlt": "Pickld’s sticker tool on a photo, suggesting stickers for #mebusywith",
+    "packAlt": "The Pinoy Life pack on Pickld, with a preview of its stickers on a photo",
+    "packLabel": "{{name}} stickers"
   }
 }

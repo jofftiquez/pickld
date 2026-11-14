@@ -8,10 +8,7 @@ export function env() {
   return supabase.parse(process.env);
 }
 
-const optionalUrl = z
-  .url()
-  .optional()
-  .catch(undefined);
+const optionalUrl = z.url().optional().catch(undefined);
 
 /** Store listings; static pages read them at build time, so they never need the Supabase settings. */
 export function storeLinks() {
@@ -42,3 +39,9 @@ export function appIdentity() {
 }
 
 export const APP_ID = 'me.pickld.app';
+
+/** The waitlist form's settings (fn:waitlist-join); null until WAITLIST_SECRET is set, and the form then says try later. */
+export function waitlistEnv() {
+  const parsed = supabase.extend({ WAITLIST_SECRET: z.string().min(32) }).safeParse(process.env);
+  return parsed.success ? parsed.data : null;
+}
