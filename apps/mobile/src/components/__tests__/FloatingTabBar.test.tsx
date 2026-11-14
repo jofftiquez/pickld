@@ -1,8 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
+import { AccessibilityInfo, StyleSheet } from 'react-native';
 
 import { FloatingTabBar } from '../FloatingTabBar';
-import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
+import { maxTextScale } from '@/theme/text';
+import { colors, glassGlyph, radius, shadow, sizes, space } from '@/theme/tokens';
 import { expectMinTapArea, flatStyle } from './testUtils';
 
 // The navigator's routes include the hidden Capture route (`href: null`); it must get no tab (D-52).
@@ -119,6 +122,47 @@ describe('FloatingTabBar', () => {
       ...shadow.floating,
     });
     expect(screen.getByTestId('tab-bar-blur')).toBeTruthy();
+    // Below iOS 26: no liquid tint, and the muted labels without a halo, as before.
+    expect(screen.getByTestId('tab-bar').props.tintColor).toBeUndefined();
+    const label = StyleSheet.flatten(screen.getByText('Moments').props.style);
+    expect(label.color).toBe(colors.muted);
+    expect(label.textShadowColor).toBeUndefined();
+  });
+
+  it('on iOS 26: lightly tinted interactive Liquid Glass, ink labels with a halo, large-text cap kept (D-80)', async () => {
+    jest.mocked(isLiquidGlassAvailable).mockReturnValue(true);
+    jest.mocked(isGlassEffectAPIAvailable).mockReturnValue(true);
+    jest.spyOn(AccessibilityInfo, 'isReduceTransparencyEnabled').mockResolvedValue(false);
+    try {
+      const { props } = setup({ insets: { top: 47, right: 0, bottom: 34, left: 0 } });
+      await render(<FloatingTabBar {...props} />);
+      await act(async () => {});
+      expect(screen.getByTestId('tab-bar').props).toMatchObject({
+        glassEffectStyle: 'regular',
+        tintColor: colors.liquidTabBarTint,
+        isInteractive: true,
+        colorScheme: 'light',
+      });
+      expect(screen.queryByTestId('tab-bar-blur')).toBeNull();
+      // The glass carries the fill, so the outer view has none.
+      expect(flatStyle(screen.getByTestId('floating-tab-bar')).backgroundColor).toBeUndefined();
+
+      const moments = screen.getByText('Moments');
+      expect(StyleSheet.flatten(moments.props.style)).toMatchObject({ color: colors.ink, ...glassGlyph.light.text });
+      expect(moments.props.maxFontSizeMultiplier).toBe(maxTextScale.tabLabel);
+      const today = screen.getByText('Today');
+      expect(StyleSheet.flatten(today.props.style)).toMatchObject({
+        color: colors.brandText,
+        ...glassGlyph.light.text,
+      });
+      expect(screen.getByTestId('icon-moments', { includeHiddenElements: true }).props.stroke).toBe(colors.ink);
+      expect(screen.getByTestId('icon-today', { includeHiddenElements: true }).props.stroke).toBe(colors.brandText);
+      expect(flatStyle(screen.getByTestId('tab-active-pill')).backgroundColor).toBe(colors.brandTint);
+    } finally {
+      jest.restoreAllMocks();
+      jest.mocked(isLiquidGlassAvailable).mockReturnValue(false);
+      jest.mocked(isGlassEffectAPIAvailable).mockReturnValue(false);
+    }
   });
 
   it('keeps the design gap from the screen edge on devices without a home indicator', async () => {

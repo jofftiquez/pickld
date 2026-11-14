@@ -356,7 +356,7 @@ Plus Jakarta Sans throughout. Screen titles 32/800 with –0.03em tracking; sect
 
 - Radii: 10–14 small thumbnails, 16–22 tiles, 24 cards, 26 tab bar, 30 sheets, full pills for buttons and chips.
 - Shadows: soft card (0 2 10, 6% ink) and floating (0 8 28, 14% ink) for the tab bar and action bars.
-- Frosted glass on controls over photos and on the tab bar. On iOS 26 and later these draw as Apple's Liquid Glass: the tab bar, round glass buttons, the editor toolbar, the moment preview's action bar and Moment detail's top buttons (D-57, D-76). Below iOS 26, or with Reduce Transparency on, they keep the frosted blur.
+- Frosted glass on controls over photos and on the tab bar. On iOS 26 and later these draw as Apple's Liquid Glass: the tab bar, round glass buttons, the editor toolbar, the moment preview's action bar and Moment detail's top buttons (D-57, D-76), with light tints so they read as glass; labels and icons on it get a darker color or a soft shadow to stay readable (D-80). Below iOS 26, or with Reduce Transparency on, they keep the frosted blur.
 
 ### Photos
 

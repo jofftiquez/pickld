@@ -30,10 +30,15 @@ export const colors = {
   likeText: '#a01d14',
   scrim: 'rgba(10,12,8,0.55)',
   glass: 'rgba(10,12,8,0.45)', // controls over photos (with blur)
-  // Liquid Glass tint for dark glass that carries text (iOS 26, D-76): white text stays above 4.5:1 even
-  // over a white photo, as glass is more see-through than the blur.
-  glassStrong: 'rgba(10,12,8,0.6)',
-  tabBarGlass: 'rgba(255,255,255,0.86)',
+  tabBarGlass: 'rgba(255,255,255,0.86)', // the tab bar's milky blur fill
+  glassStrong: 'rgba(10,12,8,0.6)', // dark pills that carry white text on share cards (D-82)
+  // Liquid Glass tints (iOS 26+, D-80), light enough that the glass shows; `glass` and `tabBarGlass` stay for
+  // the blur fallback. Labels keep AA with their colors and the `glassGlyph` shadows.
+  liquidTabBarTint: 'rgba(255,255,255,0.3)', // tab bar, moment preview action bar (light glass)
+  liquidDarkTint: 'rgba(10,12,8,0.25)', // round glass buttons, editor toolbar (white icons)
+  liquidDarkStrongTint: 'rgba(10,12,8,0.35)', // dark glass that carries white text (Moment detail's author pill)
+  liquidShadowOnDark: 'rgba(0,0,0,0.6)', // shadow under white labels and icons on dark Liquid Glass
+  liquidHaloOnLight: 'rgba(255,255,255,0.85)', // halo around ink labels and icons on light Liquid Glass
   tabBarBorder: 'rgba(17,20,13,0.05)', // 1 px ring around the floating tab bar (Main)
   onDarkMuted: '#c9cec2',
   photoPlaceholder: '#d9dcd3', // behind a photo while it loads (moment tiles)
@@ -243,6 +248,34 @@ export const shadow = {
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },
     elevation: 6,
+  },
+} as const;
+
+// Keeps labels (`text`) and icons (`icon`, on a transparent view around the icon) readable on the lighter
+// Liquid Glass tints over bright and dark content (D-80), per surface tone. Only on glass; the blur's
+// stronger tints need none, so the fallback looks as before.
+export const glassGlyph = {
+  dark: {
+    text: {
+      textShadowColor: colors.liquidShadowOnDark,
+      textShadowRadius: 4,
+      textShadowOffset: { width: 0, height: 1 },
+    },
+    icon: {
+      shadowColor: colors.liquidShadowOnDark,
+      shadowOpacity: 1,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+    },
+  },
+  light: {
+    text: { textShadowColor: colors.liquidHaloOnLight, textShadowRadius: 4, textShadowOffset: { width: 0, height: 0 } },
+    icon: {
+      shadowColor: colors.liquidHaloOnLight,
+      shadowOpacity: 1,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 0 },
+    },
   },
 } as const;
 

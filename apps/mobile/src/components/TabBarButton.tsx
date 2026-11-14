@@ -5,6 +5,7 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { PRESSED_OPACITY } from './BaseButton';
+import type { GlassGlyph } from './GlassSurface';
 import { Icon } from './Icon';
 import type { IconName } from './icons';
 
@@ -15,13 +16,16 @@ export type TabBarButtonProps = {
   focused: boolean;
   onPress: () => void;
   onLongPress: () => void;
+  /** The bar's glass shadows on Liquid Glass (D-80), else null (the milky blur). */
+  glyph?: GlassGlyph | null;
   testID: string;
 };
 
 /** One tab of FloatingTabBar: icon in a pill (tinted when selected) over a caption. */
-export function TabBarButton({ icon, label, focused, onPress, onLongPress, testID }: TabBarButtonProps) {
+export function TabBarButton({ icon, label, focused, onPress, onLongPress, glyph = null, testID }: TabBarButtonProps) {
   const [pressed, setPressed] = useState(false);
-  const tint = focused ? 'brandText' : 'muted';
+  // The lighter glass lets dark content through, so unselected tabs use ink there instead of muted (D-80).
+  const tint = focused ? 'brandText' : glyph ? 'ink' : 'muted';
   return (
     <Pressable
       accessibilityRole="tab"
@@ -34,12 +38,16 @@ export function TabBarButton({ icon, label, focused, onPress, onLongPress, testI
       testID={testID}
       style={[styles.tab, pressed ? { opacity: PRESSED_OPACITY } : null]}
     >
-      <View style={[styles.pill, focused ? styles.pillActive : null]} testID={focused ? 'tab-active-pill' : undefined}>
+      <View
+        // The selected pill is opaque; an unselected icon sits on the glass and gets its halo.
+        style={[styles.pill, focused ? styles.pillActive : glyph?.icon]}
+        testID={focused ? 'tab-active-pill' : undefined}
+      >
         <Icon name={icon} color={tint} size={22} strokeWidth={focused ? 2 : 1.8} />
       </View>
       <Text
         maxFontSizeMultiplier={maxTextScale.tabLabel}
-        style={[textStyle('caption', focused ? '700' : '600'), { color: colors[tint] }, styles.label]}
+        style={[textStyle('caption', focused ? '700' : '600'), { color: colors[tint] }, glyph?.text, styles.label]}
       >
         {label}
       </Text>

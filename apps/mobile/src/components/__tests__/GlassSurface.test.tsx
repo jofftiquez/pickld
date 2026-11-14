@@ -3,7 +3,7 @@ import { isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-ef
 import { AccessibilityInfo, Text } from 'react-native';
 
 import { GlassSurface } from '../GlassSurface';
-import { colors, radius } from '@/theme/tokens';
+import { colors, glassGlyph, radius } from '@/theme/tokens';
 import { flatStyle } from './testUtils';
 
 const liquidGlass = jest.mocked(isLiquidGlassAvailable);
@@ -25,7 +25,7 @@ async function renderSurface() {
     <GlassSurface
       tone="dark"
       radius={radius.pill}
-      tint={colors.glassStrong}
+      tint={colors.liquidDarkStrongTint}
       fallbackColor={colors.glass}
       testID="surface"
     >
@@ -43,7 +43,7 @@ describe('GlassSurface', () => {
     glassApi.mockReturnValue(false);
   });
 
-  it('draws Liquid Glass with the token tint on iOS 26 when Reduce Transparency is off', async () => {
+  it('draws Liquid Glass with the light liquid tint on iOS 26 when Reduce Transparency is off (D-80)', async () => {
     liquidGlass.mockReturnValue(true);
     glassApi.mockReturnValue(true);
     reduceTransparency(false);
@@ -51,7 +51,8 @@ describe('GlassSurface', () => {
     const surface = screen.getByTestId('surface');
     expect(surface.props).toMatchObject({
       glassEffectStyle: 'regular',
-      tintColor: colors.glassStrong,
+      tintColor: colors.liquidDarkStrongTint,
+      isInteractive: false,
       colorScheme: 'dark',
     });
     expect(flatStyle(surface)).toMatchObject({ borderRadius: radius.pill, overflow: 'hidden' });
@@ -59,12 +60,42 @@ describe('GlassSurface', () => {
     expect(screen.getByText('Mia')).toBeTruthy();
   });
 
-  it('keeps the blur look below iOS 26', async () => {
+  it('keeps the blur look below iOS 26, with the old tint and no liquid one', async () => {
     reduceTransparency(false);
     await renderSurface();
     expect(screen.getByTestId('surface').props.glassEffectStyle).toBeUndefined();
+    expect(screen.getByTestId('surface').props.tintColor).toBeUndefined();
     expect(flatStyle(screen.getByTestId('surface')).backgroundColor).toBe(colors.glass);
     expect(screen.getByTestId('surface-blur')).toBeTruthy();
+  });
+
+  it('can react to touch on Liquid Glass', async () => {
+    liquidGlass.mockReturnValue(true);
+    glassApi.mockReturnValue(true);
+    reduceTransparency(false);
+    await render(<GlassSurface tone="light" tint={colors.liquidTabBarTint} interactive testID="surface" />);
+    await act(async () => {});
+    expect(screen.getByTestId('surface').props).toMatchObject({
+      isInteractive: true,
+      tintColor: colors.liquidTabBarTint,
+      colorScheme: 'light',
+    });
+  });
+
+  it("hands content the tone's glass shadows on Liquid Glass, and nothing on the blur", async () => {
+    liquidGlass.mockReturnValue(true);
+    glassApi.mockReturnValue(true);
+    const change = reduceTransparency(false);
+    await render(
+      <GlassSurface tone="dark" tint={colors.liquidDarkTint} fallbackColor={colors.glass}>
+        {(glyph) => <Text style={glyph?.text}>Mia</Text>}
+      </GlassSurface>,
+    );
+    await act(async () => {});
+    expect(screen.getByText('Mia').props.style).toEqual(glassGlyph.dark.text);
+
+    await act(async () => change(true));
+    expect(screen.getByText('Mia').props.style).toBeUndefined();
   });
 
   it('keeps the blur look when iOS 26 lacks the glass API', async () => {
