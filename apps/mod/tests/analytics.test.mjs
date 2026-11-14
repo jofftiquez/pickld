@@ -136,10 +136,14 @@ function tile(name) {
     .locator('dd');
 }
 
-test('Analytics shows usage, slots and groups, and the slots add up to the moments', async () => {
+test('Analytics is two pages under one nav group; Charts shows usage and the slots add up to the moments', async () => {
+  // The old address opens Charts.
   await page.goto(`${base}/analytics`);
-  await page.getByRole('heading', { level: 1, name: 'Analytics' }).waitFor();
-  assert.equal(await page.getByRole('link', { name: 'Analytics' }).getAttribute('aria-current'), 'page');
+  await page.waitForURL(`${base}/analytics/charts`);
+  await page.getByRole('heading', { level: 1, name: 'Charts' }).waitFor();
+  const group = page.getByRole('group', { name: 'Analytics' });
+  assert.equal(await group.getByRole('link', { name: 'Charts' }).getAttribute('aria-current'), 'page');
+  assert.equal(await group.getByRole('link', { name: 'Tables' }).getAttribute('aria-current'), null);
   await page.getByRole('heading', { name: 'Usage, last 30 days' }).waitFor();
 
   const moments = Number(await tile('Moments added').textContent());
@@ -149,14 +153,22 @@ test('Analytics shows usage, slots and groups, and the slots add up to the momen
   for (const text of await slots.locator(':scope > span:last-child').allTextContents()) sum += Number(text);
   assert.ok(moments >= 2, 'the test’s two counted moments are included');
   assert.equal(sum, moments, 'every counted moment is in one slot');
+  assert.equal(await page.getByRole('region', { name: 'By age' }).count(), 0, 'the tables are on their own page');
+});
 
+test('Tables shows the age and time zone groups', async () => {
+  await page.goto(`${base}/analytics/charts`);
+  await page.getByRole('group', { name: 'Analytics' }).getByRole('link', { name: 'Tables' }).click();
+  await page.waitForURL(`${base}/analytics/tables`);
+  await page.getByRole('heading', { level: 1, name: 'Tables' }).waitFor();
   const ages = page.getByRole('region', { name: 'By age' });
   assert.equal(await ages.locator('tbody tr').count(), 6);
   await page.getByRole('region', { name: 'By home time zone' }).waitFor();
+  assert.equal(await page.getByRole('figure', { name: 'Moments per day' }).count(), 0, 'the graphs are on Charts');
 });
 
 test('a sticker’s uses count Readers and Everyone moments, not Only me ones', async () => {
-  await page.goto(`${base}/analytics`);
+  await page.goto(`${base}/analytics/tables`);
   const row = page.getByRole('region', { name: 'Most used stickers' }).getByRole('row').filter({ hasText: label });
   assert.deepEqual(await row.locator('th, td').allTextContents(), [label, slug, '2', '1', 'New', '2']);
   const pack = page.getByRole('region', { name: 'Sticker packs' }).getByRole('row').filter({ hasText: slug });
@@ -173,7 +185,7 @@ async function thumbLines(row) {
 
 test('Sticker packs and the Studio list show each pack’s likes, all time and in the window', async () => {
   const thumbsCell = async () => {
-    await page.goto(`${base}/analytics`);
+    await page.goto(`${base}/analytics/tables`);
     const row = page.getByRole('region', { name: 'Sticker packs' }).getByRole('row').filter({ hasText: 'everyday ·' });
     return thumbLines(row);
   };
@@ -197,17 +209,21 @@ test('Sticker packs and the Studio list show each pack’s likes, all time and i
 
   // A draft can't get thumbs, so the test's draft pack shows none.
   const draft = page.getByRole('region', { name: 'Sticker packs' }).getByRole('row').filter({ hasText: slug });
-  await page.goto(`${base}/analytics`);
+  await page.goto(`${base}/analytics/tables`);
   assert.deepEqual(await thumbLines(draft), ['0', '0 in this window']);
 });
 
-test('the window can be 7 or 90 days', async () => {
-  await page.goto(`${base}/analytics`);
+test('the window can be 7 or 90 days, and it carries over between Charts and Tables', async () => {
+  await page.goto(`${base}/analytics/charts`);
   await page.getByRole('link', { name: '7 days' }).click();
-  await page.waitForURL(`${base}/analytics?days=7`);
+  await page.waitForURL(`${base}/analytics/charts?days=7`);
   await page.getByRole('heading', { name: 'Usage, last 7 days' }).waitFor();
   assert.equal(await page.getByRole('link', { name: '7 days' }).getAttribute('aria-current'), 'page');
+  await page.getByRole('group', { name: 'Analytics' }).getByRole('link', { name: 'Tables' }).click();
+  await page.waitForURL(`${base}/analytics/tables?days=7`);
+  assert.equal(await page.getByRole('link', { name: '7 days' }).getAttribute('aria-current'), 'page');
   await page.goto(`${base}/analytics?days=90`);
+  await page.waitForURL(`${base}/analytics/charts?days=90`);
   await page.getByRole('heading', { name: 'Stickers, last 90 days' }).waitFor();
   assert.equal(await page.getByRole('figure', { name: 'Moments per day' }).locator('li').count(), 90);
 });

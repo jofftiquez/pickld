@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
+import { t } from '~/i18n/t';
+
 // public.mod_analytics(), mod_analytics_stickers() and mod_user_stats() (0101), mod_sticker_thumbs() (0110). Counts only, by Manila day;
 // Only me and removed moments are never counted (rule 9). The functions refuse non-moderators.
 export const RANGES = [7, 30, 90] as const;
@@ -125,4 +127,10 @@ export function trend(now: number, before: number): { kind: 'new' | 'same' | 'up
   const pct = Math.round(((now - before) / before) * 100);
   if (pct === 0) return { kind: 'same', pct };
   return { kind: pct > 0 ? 'up' : 'down', pct: Math.abs(pct) };
+}
+
+/** The trend as the tables and tiles show it. */
+export function trendText(now: number, before: number): string {
+  const tr = trend(now, before);
+  return t(`analytics.trend.${tr.kind}`, { pct: tr.pct });
 }

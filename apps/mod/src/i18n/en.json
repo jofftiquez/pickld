@@ -34,6 +34,8 @@
     "count": "{{count}} open",
     "waitlist": "Waitlist",
     "analytics": "Analytics",
+    "analyticsCharts": "Charts",
+    "analyticsTables": "Tables",
     "stickers": "Sticker packs"
   },
   "queue": {
@@ -462,6 +464,10 @@
   },
   "analytics": {
     "title": "Analytics",
+    "pages": {
+      "charts": "Charts",
+      "tables": "Tables"
+    },
     "subtitle": "Counts by Manila day. Only me and removed moments aren't counted, and no photo or caption is shown.",
     "range": {
       "label": "Window",
