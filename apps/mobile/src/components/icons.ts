@@ -116,6 +116,13 @@ export const icons = {
   bell: [p('M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9'), p('M13.7 21a2 2 0 0 1-3.4 0')],
   heart: [p('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z')],
   comment: [p('M4 5h16v11H9l-4 3v-3H4z')],
+  // Thumbs up on a sticker pack (Pack preview, the shop's cards).
+  thumbsUp: [
+    p('M7 10v11'),
+    p(
+      'M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z',
+    ),
+  ],
   mail: [r(3, 5, 18, 14, 3), p('m4 7 8 6 8-6')],
   send: [p('M4 12 20 4l-6 16-3-7z')],
 } satisfies Record<string, IconShape[]>;

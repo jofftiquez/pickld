@@ -618,6 +618,9 @@
     "packLabel_other": "{{name}}, {{count}} stickers, {{price}}",
     "packName_one": "{{name}}, {{count}} sticker",
     "packName_other": "{{name}}, {{count}} stickers",
+    "withThumbs": "{{label}}, {{thumbs}}",
+    "thumbs_one": "{{count}} thumbs up",
+    "thumbs_other": "{{count}} thumbs up",
     "openHint": "Opens the pack preview"
   },
   "stickersHome": {
@@ -642,7 +645,11 @@
     "buyFailed": "That didn’t go through. Try again in a moment.",
     "owned": "You have this pack. Find it in the Stickers tool.",
     "notForSale": "This pack isn’t for sale right now.",
-    "bought": "{{name}} is yours"
+    "bought": "{{name}} is yours",
+    "thumbs_one": "{{count}} thumbs up",
+    "thumbs_other": "{{count}} thumbs up",
+    "thumbHint": "Gives this pack a thumbs up",
+    "unthumbHint": "Takes back your thumbs up"
   },
   "myStickers": {
     "intro": "Drag to reorder how packs appear in the editor. Turn one off to hide it without losing it.",

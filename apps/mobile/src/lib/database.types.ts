@@ -1041,6 +1041,47 @@ export type Database = {
           },
         ];
       };
+      pack_thumbs: {
+        Row: {
+          created_at: string;
+          pack_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          pack_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          pack_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'pack_thumbs_pack_id_fkey';
+            columns: ['pack_id'];
+            isOneToOne: false;
+            referencedRelation: 'sticker_packs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'pack_thumbs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'pack_thumbs_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           author_count: number;
@@ -1970,6 +2011,7 @@ export type Database = {
         }[];
       };
       mod_require_moderator: { Args: Record<PropertyKey, never>; Returns: string };
+      mod_sticker_thumbs: { Args: { p_days?: number }; Returns: Json };
       mod_studio_actor: { Args: Record<PropertyKey, never>; Returns: string };
       mod_studio_art_key: { Args: { p_name: string; p_pack: string }; Returns: Json };
       mod_studio_create_pack: { Args: { p_description?: string; p_name: string; p_slug: string }; Returns: Json };
@@ -2200,6 +2242,15 @@ export type Database = {
         Returns: undefined;
       };
       notify_friend_joined: { Args: { p_friends: string[]; p_new_user: string }; Returns: number };
+      pack_thumb_count: { Args: { p_pack: string; viewer: string }; Returns: number };
+      pack_thumbs: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          mine: boolean;
+          pack_id: string;
+          thumbs: number;
+        }[];
+      };
       pack_usable: {
         Args: {
           p: Omit<
@@ -2281,6 +2332,7 @@ export type Database = {
           username: string;
         }[];
       };
+      set_pack_thumb: { Args: { p_on: boolean; p_pack: string }; Returns: Json };
       sticker_usable: {
         Args: {
           s: Omit<
