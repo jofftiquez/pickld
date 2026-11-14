@@ -2226,6 +2226,7 @@ export type Database = {
       invite_new_link: { Args: { p_owner: string }; Returns: string };
       invite_owner_can_invite: { Args: { p_owner: string }; Returns: boolean };
       invite_period_active: { Args: Record<PropertyKey, never>; Returns: boolean };
+      invite_period_ends_at: { Args: Record<PropertyKey, never>; Returns: string };
       invite_redeem: { Args: { p_token: string }; Returns: Json };
       invite_setup: { Args: { p_owner: string; p_sets: number; p_unlocked: boolean }; Returns: undefined };
       invite_token: { Args: { p_len: number }; Returns: string };

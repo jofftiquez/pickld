@@ -163,14 +163,19 @@ describe('Waiting', () => {
   beforeEach(() => {
     mockProfile.status = 'waiting';
     mockRpc.mockImplementation(async (name: string) =>
-      name === 'waiting_position' ? { data: 1241, error: null } : { data: { result: 'unavailable' }, error: null },
+      name === 'waiting_position'
+        ? { data: 1241, error: null }
+        : name === 'invite_period_ends_at'
+          ? { data: '2027-02-14T00:00:00+00:00', error: null }
+          : { data: { result: 'unavailable' }, error: null },
     );
   });
 
-  it('shows the people ahead (position 1241 → 1,240 ahead)', async () => {
+  it('shows the people ahead (position 1241 → 1,240 ahead) and when early access ends', async () => {
     await render(withQuery(<WaitingScreen />));
     await flush();
     expect(mockViews.waiting?.ahead).toBe(1240);
+    expect(mockViews.waiting?.endsAt?.toISOString()).toBe('2027-02-14T00:00:00.000Z');
   });
 
   it("a kept code is used on opening: an adult friend's code lets them in, reading each other", async () => {

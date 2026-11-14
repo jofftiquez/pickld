@@ -8,6 +8,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { CodeField } from '@/features/onboarding/CodeField';
 import { CODE_LENGTH } from '@/lib/auth';
+import { formatMonthDay } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, join, radius, sizes, space } from '@/theme/tokens';
 
@@ -17,6 +18,8 @@ export type WaitingViewProps = {
   insets: EdgeInsets;
   /** People ahead in line; 0 when next, null while unknown (loading or offline). */
   ahead: number | null;
+  /** When early access ends, for the footnote; null leaves the date out. */
+  endsAt: Date | null;
   code: string;
   onChangeCode: (code: string) => void;
   error: WaitingError | null;
@@ -36,6 +39,7 @@ export type WaitingViewProps = {
 export function WaitingView({
   insets,
   ahead,
+  endsAt,
   code,
   onChangeCode,
   error,
@@ -119,7 +123,9 @@ export function WaitingView({
           disabled={busy || code.length !== CODE_LENGTH}
           testID="waiting-get-in"
         />
-        <Text style={[textStyle('caption'), styles.centered, styles.footnote]}>{t('join.waitingFootnote')}</Text>
+        <Text style={[textStyle('caption'), styles.centered, styles.footnote]}>
+          {endsAt ? t('join.waitingFootnoteDate', { date: formatMonthDay(endsAt) }) : t('join.waitingFootnote')}
+        </Text>
       </ScrollView>
       <View style={[styles.settings, { top }]}>
         <RoundIconButton

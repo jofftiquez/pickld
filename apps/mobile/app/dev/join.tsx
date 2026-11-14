@@ -19,12 +19,13 @@ const cards: Record<string, JoinCode> = {
 
 // Dev builds only (like /dev/invite): the INV-06 screens from fixtures, no backend.
 // pickld://dev/join?screen=signup&card=none|error|checking|invited|ready
-// pickld://dev/join?screen=waiting&ahead=12&code=K7M&error=unavailable
+// pickld://dev/join?screen=waiting&ahead=12&code=K7M&endsAt=2027-02-14&error=unavailable
 // pickld://dev/join?screen=scan&notInvite=1 (or &denied=1)
 type Params = {
   screen?: string;
   card?: string;
   ahead?: string;
+  endsAt?: string;
   code?: string;
   error?: string;
   notInvite?: string;
@@ -51,6 +52,7 @@ function DevJoin({ params }: { params: Params }) {
       <WaitingView
         insets={insets}
         ahead={params.ahead === undefined ? null : Number(params.ahead)}
+        endsAt={params.endsAt ? new Date(params.endsAt) : null}
         code={code}
         onChangeCode={setCode}
         error={(params.error as WaitingError | undefined) ?? null}

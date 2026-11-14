@@ -1778,6 +1778,7 @@
     "getIn": "Get in",
     "settings": "Settings",
     "waitingFootnote": "Everyone still waiting gets in when early access ends. We’ll send you a notification.",
+    "waitingFootnoteDate": "Everyone still waiting gets in when early access ends on {{date}}. We’ll send you a notification.",
     "scanTitle": "Scan an invite",
     "scanBody": "Point at a friend’s Pickld QR code.",
     "scanNotInvite": "That’s not a Pickld invite",
