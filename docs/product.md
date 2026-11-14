@@ -165,13 +165,13 @@ Goes to: card or “+2” → Jar page · avatar → Other profile · bell → N
 One person’s full jar for one day. A cover photo carries the author, “Dale’s Sunday”, the date, the moment count and a “Full jar” tag when complete. The owner picks the cover with **Set as cover** (D-56); without a pick, or for someone who can’t see the picked moment, it is the moment with the newest caption, else the first in slot order (D-75). The same cover leads the feed card, the share card and the web page.
 
 - A highlighted caption, then a 3-column grid of moments in 3:4 with hashtag labels and an “Added later” badge where relevant, ending with an 8/8 tile.
-- Floating action bar: like count, comment count, **Share jar**.
+- Floating action bar: like count, comment count, **Share jar** (on your own jar only; D-83).
 
 Goes to: moment → Moment detail · comments → Comments · Share jar → Share jar card.
 
 ### Moment detail — “Moment detail”
 
-A single moment full screen in 3:4, with eight progress bars showing its place in the jar (swipe for the next). The sheet shows the hashtag, time and date, caption, likes, comments and share.
+A single moment full screen in 3:4, with eight progress bars showing its place in the jar (swipe for the next). The sheet shows the hashtag, time and date, caption, likes, comments and, on your own moment, share (D-83).
 
 ### Comments — “Comments”
 
@@ -179,7 +179,7 @@ The thread for one jar, with avatars, names, times, likes per comment, one level
 
 ### Share jar card — “Share jar card”
 
-Previews the 9:16 image exported for other apps: author, day title, all 8 moments in a 4×2 grid, the last caption, the Pickld logo and pickld.me/username.
+Previews the 9:16 image exported for other apps: author, day title, the moments in the chosen layout, the last caption, the Pickld logo and pickld.me/username. The photos fill the card less a thin margin, with the name, caption and link on small pills inside the band Instagram leaves uncovered (D-82). Only your own jars and moments can be shared; someone else's jar shows “You can only share your own jars” (D-83).
 
 - **Include captions** switch; Save image, Copy link, Message, More; **Share to…**
 - The watermark and link make every share a way for new users to find Pickld.

@@ -42,7 +42,9 @@ export default function JarScreen() {
           if (data) router.push({ pathname: '/u/[username]', params: { username: data.author.username } });
         }}
         onShare={() => {
-          if (data) router.push({ pathname: '/share/[jarId]', params: { jarId: data.jar.id } });
+          // Only the owner shares (D-83); the view offers Share on their own jar only.
+          if (data && data.jar.user_id === data.viewerId)
+            router.push({ pathname: '/share/[jarId]', params: { jarId: data.jar.id } });
         }}
         onMore={() => setReporting(true)}
         onRetry={() => void refresh()}

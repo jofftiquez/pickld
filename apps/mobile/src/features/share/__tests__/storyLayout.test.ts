@@ -3,8 +3,10 @@ import { colors, lidColors } from '@/theme/tokens';
 
 import {
   canvasSize,
+  frameArea,
   layoutsFor,
   lidOf,
+  overlayRects,
   paletteFor,
   photoArea,
   readableOn,
@@ -37,15 +39,20 @@ describe('Share to Stories layout (T-509)', () => {
     expect(canvasSize('story')).toEqual({ width: 1080, height: 1920 });
     expect(canvasSize('feed')).toEqual({ width: 1080, height: 1350 });
     const story = safeInsets('story');
-    // Instagram's profile bar and reply bar: at least 13% at the top and 17% at the bottom stay clear.
+    // Instagram's profile bar and reply bar: at least 13% at the top and 18% at the bottom stay clear.
     expect(story.top / 1920).toBeGreaterThanOrEqual(0.13);
-    expect(story.bottom / 1920).toBeGreaterThanOrEqual(0.17);
+    expect(story.bottom / 1920).toBeGreaterThanOrEqual(0.18);
   });
 
   it('offers five backgrounds, the blurred photo first', () => {
     expect(storyBackgrounds).toEqual(['blur', 'lid', 'paper', 'ink', 'print']);
     expect(paletteFor('blur', null)).toMatchObject({ blurred: true, text: colors.surface });
     expect(paletteFor('print', null)).toMatchObject({ blurred: true, card: colors.surface, text: colors.ink });
+    // Names and captions sit on pills over the photos (D-82): dark glass with white text, or white with ink.
+    expect(paletteFor('blur', null)).toMatchObject({ pill: colors.glassStrong });
+    expect(paletteFor('ink', null)).toMatchObject({ pill: colors.glassStrong, text: colors.surface });
+    expect(paletteFor('paper', null)).toMatchObject({ pill: colors.surface, text: colors.ink });
+    expect(paletteFor('print', null)).toMatchObject({ pill: colors.surface });
   });
 
   it('fills Lid color with the author’s lid and the more readable of ink or white on it', () => {
@@ -53,6 +60,7 @@ describe('Share to Stories layout (T-509)', () => {
     expect(paletteFor('lid', lidColors.ube)).toMatchObject({ fill: lidColors.ube, text: colors.ink });
     expect(paletteFor('lid', lidColors.mango)).toMatchObject({ fill: lidColors.mango, text: colors.ink });
     expect(paletteFor('lid', '#ABCDEF').fill).toBe(lidColors.pickle);
+    expect(paletteFor('lid', lidColors.ube).pill).toBe(lidColors.ube);
     expect(lidOf('#F2B632')).toBe(lidColors.mango);
     expect(lidOf(null)).toBe(lidColors.pickle);
     expect(readableOn(lidColors.ink)).toBe(colors.surface);
@@ -74,23 +82,21 @@ describe('Share to Stories layout (T-509)', () => {
   });
 });
 
-describe('Share card layouts (D-62)', () => {
+describe('Share card layouts (D-62, D-82)', () => {
   const ids = (count: number) => layoutsFor(count, 'story').map((l) => l.id);
+  const eps = 1e-6;
   const inside = (r: Rect, area: Rect) =>
-    r.x >= area.x - 1e-6 &&
-    r.y >= area.y - 1e-6 &&
-    r.x + r.width <= area.x + area.width + 1e-6 &&
-    r.y + r.height <= area.y + area.height + 1e-6;
+    r.x >= area.x - eps &&
+    r.y >= area.y - eps &&
+    r.x + r.width <= area.x + area.width + eps &&
+    r.y + r.height <= area.y + area.height + eps;
   const overlap = (a: Rect, b: Rect) =>
-    a.x < b.x + b.width - 1e-6 &&
-    b.x < a.x + a.width - 1e-6 &&
-    a.y < b.y + b.height - 1e-6 &&
-    b.y < a.y + a.height - 1e-6;
-  const options = [
-    { framed: false, caption: false },
-    { framed: false, caption: true },
-    { framed: true, caption: true },
-  ];
+    a.x < b.x + b.width - eps && b.x < a.x + a.width - eps && a.y < b.y + b.height - eps && b.y < a.y + a.height - eps;
+  const share = (cells: Rect[], format: 'story' | 'feed') => {
+    const { width, height } = canvasSize(format);
+    return cells.reduce((sum, c) => sum + c.width * c.height, 0) / (width * height);
+  };
+  const options = [{ framed: false }, { framed: true }];
 
   it('offers the planned layouts for each count, the default first', () => {
     expect(ids(1)).toEqual(['full']);
@@ -105,12 +111,11 @@ describe('Share card layouts (D-62)', () => {
     expect(layoutsFor(4, 'story')[0]?.labelKey).toBe('share.layout.grid2x2');
   });
 
-  it('gives every count 1–8, in both formats, one rectangle per photo inside the safe area with no overlaps', () => {
+  it('gives every count 1–8, in both formats, one rectangle per photo on the card with no overlaps', () => {
     for (const format of storyFormats) {
       for (const option of options) {
         const area = photoArea(format, option);
-        const safe = safeArea(format);
-        expect(inside(area, safe)).toBe(true);
+        expect(inside(area, frameArea(format))).toBe(true);
         for (let count = 1; count <= 8; count++) {
           const layouts = layoutsFor(count, format, option);
           expect(layouts.length).toBeGreaterThan(0);
@@ -119,8 +124,10 @@ describe('Share card layouts (D-62)', () => {
             layout.cells.forEach((cell, i) => {
               expect(cell.width).toBeGreaterThan(50);
               expect(cell.height).toBeGreaterThan(50);
+              // Cropped, never squashed past a story's own 9:16 (or 16:9) shape.
+              expect(cell.height / cell.width).toBeGreaterThanOrEqual(9 / 16 - eps);
+              expect(cell.height / cell.width).toBeLessThanOrEqual(16 / 9 + eps);
               expect(inside(cell, area)).toBe(true);
-              expect(inside(cell, safe)).toBe(true);
               layout.cells.slice(i + 1).forEach((other) => expect(overlap(cell, other)).toBe(false));
             });
           }
@@ -129,11 +136,71 @@ describe('Share card layouts (D-62)', () => {
     }
   });
 
-  it('draws one photo alone at 3:4, as large as the space allows', () => {
-    const area = photoArea('story', { framed: false, caption: false });
+  it('fills the card’s width or its height, less a 24 px margin, with 12 px between photos', () => {
+    for (const format of storyFormats) {
+      const area = photoArea(format, { framed: false });
+      expect(area).toEqual({ x: 24, y: 24, width: 1032, height: canvasSize(format).height - 48 });
+      for (let count = 1; count <= 8; count++) {
+        for (const { cells } of layoutsFor(count, format)) {
+          const left = Math.min(...cells.map((c) => c.x));
+          const right = Math.max(...cells.map((c) => c.x + c.width));
+          const top = Math.min(...cells.map((c) => c.y));
+          const bottom = Math.max(...cells.map((c) => c.y + c.height));
+          const fillsWidth = left <= area.x + eps && right >= area.x + area.width - eps;
+          const fillsHeight = top <= area.y + eps && bottom >= area.y + area.height - eps;
+          expect(fillsWidth || fillsHeight).toBe(true);
+        }
+      }
+    }
+    const [a, b, c] = layoutsFor(4, 'story')[0]!.cells;
+    expect(b!.x - (a!.x + a!.width)).toBeCloseTo(12);
+    expect(c!.y - (a!.y + a!.height)).toBeCloseTo(12);
+  });
+
+  it('puts far more of the card into photos than the old safe-area layouts could', () => {
+    // The old layouts kept photos inside the safe area less the author row and footer: 936 × 1109 px, 50%
+    // of the Story, so no old layout could reach half the card (its best, one moment, was 44.5%). Now every
+    // count has a layout covering at least two thirds of the Story, and the defaults at least a third (the
+    // old defaults were 22–45%). On a post the old photo area was 936 × 985 px, 63% of the card; now every
+    // count has a layout above three quarters.
+    for (let count = 1; count <= 8; count++) {
+      const shares = layoutsFor(count, 'story').map((l) => share(l.cells, 'story'));
+      expect(Math.max(...shares)).toBeGreaterThan(2 / 3);
+      expect(shares[0]).toBeGreaterThan(1 / 3);
+      const feed = layoutsFor(count, 'feed').map((l) => share(l.cells, 'feed'));
+      expect(Math.max(...feed)).toBeGreaterThan(0.75);
+    }
+  });
+
+  it('draws one photo alone whole at 3:4, as large as the card allows, its key part in the uncovered band', () => {
+    const area = photoArea('story', { framed: false });
     const [cell] = layoutsFor(1, 'story')[0]!.cells;
     expect(cell!.width / cell!.height).toBeCloseTo(3 / 4);
-    expect(Math.max(cell!.height / area.height, cell!.width / area.width)).toBeCloseTo(1);
+    // The full width less the margins: 1032 px wide, up from 832 px.
+    expect(cell!.width).toBeCloseTo(area.width);
+    expect(cell!.width).toBeGreaterThan(1000);
+    expect(share([cell!], 'story')).toBeGreaterThan(0.65);
+    // Centred on what Instagram leaves uncovered, so at least 95% of its height shows on a Story.
+    const safe = safeArea('story');
+    const shown = Math.min(cell!.y + cell!.height, safe.y + safe.height) - Math.max(cell!.y, safe.y);
+    expect(shown / cell!.height).toBeGreaterThan(0.95);
+    // A post is shorter: the photo takes the full height instead.
+    const [post] = layoutsFor(1, 'feed')[0]!.cells;
+    expect(post!.width / post!.height).toBeCloseTo(3 / 4);
+    expect(post!.height).toBeCloseTo(photoArea('feed', { framed: false }).height);
+  });
+
+  it('keeps names and captions inside the safe area, clear of each other', () => {
+    for (const format of storyFormats) {
+      const safe = safeArea(format);
+      const { author, caption, footer } = overlayRects(format);
+      for (const r of [author, caption, footer]) expect(inside(r, safe)).toBe(true);
+      expect(overlap(author, caption)).toBe(false);
+      expect(overlap(caption, footer)).toBe(false);
+    }
+    const { author, footer } = overlayRects('story');
+    expect(author.y / 1920).toBeGreaterThanOrEqual(0.13);
+    expect((footer.y + footer.height) / 1920).toBeLessThanOrEqual(0.82);
   });
 
   it('keeps today’s 2 rows of 4 as the default for a full jar, the short row centred', () => {
@@ -146,9 +213,9 @@ describe('Share card layouts (D-62)', () => {
     expect(centre(last)).toBeCloseTo(centre(first));
   });
 
-  it('leaves room for the caption and the Print card', () => {
-    const plain = photoArea('feed', { framed: false, caption: false });
-    expect(photoArea('feed', { framed: false, caption: true }).height).toBeLessThan(plain.height);
-    expect(photoArea('feed', { framed: true, caption: false }).width).toBeLessThan(plain.width);
+  it('leaves room for the Print card', () => {
+    const plain = photoArea('feed', { framed: false });
+    expect(photoArea('feed', { framed: true }).width).toBeLessThan(plain.width);
+    expect(photoArea('feed', { framed: true }).height).toBeLessThan(plain.height);
   });
 });

@@ -5,6 +5,8 @@ import { StyleSheet } from 'react-native';
 import type { JarMoment } from '@/features/jar/jarPage';
 import { slots } from '@/theme/tokens';
 
+import { safeArea } from '../storyLayout';
+
 import { ShareCardScreen } from '../ShareCardScreen';
 
 // Share jar, picture first (D-62; QA item 21): the layout row follows the number of moments on the card,
@@ -34,7 +36,8 @@ const setMoments = (count: number, extra: JarMoment[] = []) => {
 jest.mock('@/features/jar/useJarPage', () => ({
   useJarPage: () => ({
     data: {
-      jar: { id: 'jar-10', local_date: '2026-11-08', tz: 'Asia/Manila' },
+      viewerId: 'dale-id',
+      jar: { id: 'jar-10', user_id: 'dale-id', local_date: '2026-11-08', tz: 'Asia/Manila' },
       author: { display_name: 'Dale Cruz', username: 'dale', lid_color: null },
       moments: mockJar.moments,
     },
@@ -89,6 +92,13 @@ const cellBox = (slot: string) => {
   const { left, top, width, height } = StyleSheet.flatten(screen.getByTestId(`share-card-${slot}`).props.style);
   return { left, top, width, height };
 };
+
+const boxOf = (testID: string) => {
+  const { left, top, bottom, width, height } = StyleSheet.flatten(screen.getByTestId(testID).props.style);
+  return { left, top, bottom, width, height };
+};
+// The card is drawn at its export size times `unit` (1 / pixel ratio).
+const unitOf = () => StyleSheet.flatten(screen.getByTestId('share-card').props.style).width / 1080;
 
 describe('Share jar layouts (D-62)', () => {
   it('offers the layouts for the number of moments on the card, the default picked', async () => {
@@ -169,5 +179,36 @@ describe('Share jar layouts (D-62)', () => {
       StyleSheet.flatten(screen.getByTestId('share-card').props.style).width * 1.5,
     );
     expect(cellBox(slots[0]!)).not.toEqual(story);
+  });
+});
+
+describe('Story card uses the space (D-82)', () => {
+  it('draws one moment whole at 3:4 across the card, less the thin margin', async () => {
+    setMoments(1);
+    await render(<ShareCardScreen jarId="jar-10" />);
+    const unit = unitOf();
+    const cell = cellBox(slots[0]!);
+    expect(cell.left / unit).toBeCloseTo(24);
+    expect(cell.width / unit).toBeCloseTo(1032);
+    expect(cell.width / cell.height).toBeCloseTo(3 / 4);
+  });
+
+  it('puts the name, caption and link on pills inside the part of a Story that Instagram leaves uncovered', async () => {
+    setMoments(3);
+    mockJar.moments[0] = moment(0, { caption: 'Early night.' });
+    await render(<ShareCardScreen jarId="jar-10" />);
+    const unit = unitOf();
+    const safe = safeArea('story');
+    const author = boxOf('share-card-author');
+    expect(author.top / unit).toBeGreaterThanOrEqual(safe.y);
+    expect(author.top / unit).toBeGreaterThanOrEqual(0.13 * 1920);
+    const footer = boxOf('share-card-footer');
+    expect((footer.top + footer.height) / unit).toBeLessThanOrEqual(safe.y + safe.height + 1e-6);
+    expect((footer.top + footer.height) / unit).toBeLessThanOrEqual(0.82 * 1920);
+    const band = boxOf('share-card-caption-band');
+    expect(1920 - band.bottom / unit).toBeLessThanOrEqual(footer.top / unit);
+    expect(screen.getByText('“Early night.”')).toBeTruthy();
+    // Photos reach past the text zones, to the card's margin.
+    expect(cellBox(slots[0]!).top / unit).toBeCloseTo(24);
   });
 });

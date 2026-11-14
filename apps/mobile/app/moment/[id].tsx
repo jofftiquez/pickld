@@ -49,7 +49,8 @@ export default function MomentScreen() {
           if (page.data) router.push({ pathname: '/comments/[jarId]', params: { jarId: page.data.jar.id, momentId } });
         }}
         onShare={(momentId) => {
-          if (page.data)
+          // Only the owner shares (D-83); the view offers Share on their own moments only.
+          if (page.data && page.data.jar.user_id === page.data.viewerId)
             router.push({ pathname: '/share/[jarId]', params: { jarId: page.data.jar.id, moment: momentId } });
         }}
         onMore={setReporting}
