@@ -9,7 +9,9 @@
 --   mod_user_invites(user)                     who invited them, who they invited, their codes and whether their
 --                                              invites are paused
 --
--- All of them refuse anyone who isn't a moderator with a profile (invite_moderator(), 0132). Giving another set
+-- All of them refuse anyone who isn't a moderator. The writes also need the moderator to have a profile, for the
+-- audit row (invite_moderator(), 0132); the reads don't, so a moderator without one still sees a person's page.
+-- Giving another set
 -- and pausing invites stay invite_grant_set() / invite_freeze() / invite_unfreeze() (0132); letting people in
 -- stays admit_waiting() (0131, founders only).
 
@@ -22,7 +24,9 @@ comment on column public.invite_codes.note is
 create or replace function public.mod_invite_codes() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  perform invite_moderator();
+  if not is_moderator() then
+    raise exception 'moderators only' using errcode = '42501';
+  end if;
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'code', c.code, 'note', c.note, 'uses', c.uses, 'max_uses', c.max_uses,
@@ -109,7 +113,9 @@ comment on function public.mod_invite_code_set(text, boolean) is
 create or replace function public.mod_invite_summary() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
-  perform invite_moderator();
+  if not is_moderator() then
+    raise exception 'moderators only' using errcode = '42501';
+  end if;
   return jsonb_build_object(
     'waiting', (select count(*) from profiles where status = 'waiting'),
     'joined_with_codes', (select count(*) from invite_redemptions r join invite_codes c on c.code = r.code
@@ -126,7 +132,9 @@ language plpgsql stable security definer set search_path = public as $$
 declare
   h invite_holders;
 begin
-  perform invite_moderator();
+  if not is_moderator() then
+    raise exception 'moderators only' using errcode = '42501';
+  end if;
   if not exists (select 1 from profiles where id = p_user) then
     return null;
   end if;

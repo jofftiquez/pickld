@@ -3,7 +3,7 @@
 -- a person's invites as moderators see them, and that a plain moderator still can't let people in.
 begin;
 \ir _helpers.psql
-select plan(43);
+select plan(46);
 
 select tests.create_user('moderator', 'moderator');
 select tests.create_user('founder', 'moderator');
@@ -92,6 +92,18 @@ select throws_ok($$select public.mod_invite_code_set('ABCDEF', false)$$, '42501'
 select throws_ok($$select public.mod_invite_summary()$$, '42501', null, 'only moderators see the summary');
 select throws_ok($$select public.mod_user_invites(tests.id('owner'))$$, '42501', null,
                  'only moderators see a person''s invites');
+select tests.reset_role();
+
+-- A moderator without an app profile can read (the console's person page) but not write (no audit actor).
+select set_config('role', 'authenticated', true), set_config('request.jwt.claims', jsonb_build_object(
+  'sub', gen_random_uuid(), 'role', 'authenticated', 'aud', 'authenticated',
+  'app_metadata', jsonb_build_object('provider', 'email', 'role', 'moderator'))::text, true);
+select lives_ok($$select public.mod_user_invites(tests.id('owner'))$$,
+                'a moderator without a profile sees a person''s invites');
+select lives_ok($$select public.mod_invite_codes(), public.mod_invite_summary()$$,
+                'a moderator without a profile sees the codes and the summary');
+select throws_ok($$select public.mod_invite_code_create('Party', 5)$$, '42501', null,
+                 'a moderator without a profile can''t make a code');
 select tests.reset_role();
 
 -- ---------------------------------------------------------------- making a code
