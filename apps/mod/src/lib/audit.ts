@@ -65,6 +65,7 @@ export function details(e: Pick<AuditEntry, 'data' | 'action'>): string {
   if (reason === 'expired' || reason === 'appeal_overturned' || reason === 'moderator') {
     parts.push(t(`audit.lifted.${reason}`));
   }
+  if (reason === 'suspended_invitees') parts.push(t('audit.suspendedInvitees'));
   if (typeof e.data.until === 'string') parts.push(t('audit.until', { date: when(e.data.until) }));
   if (typeof strikes === 'number') parts.push(t('audit.strikes', { count: strikes }));
   if (typeof count === 'number') {
