@@ -51,7 +51,7 @@ export function EditorToolbar({
     >
       <GlassSurface
         tone="dark"
-        tint={colors.glass}
+        tint={colors.liquidDarkTint}
         fallbackColor={colors.glass}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"

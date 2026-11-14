@@ -197,20 +197,24 @@ export function MomentDetailView({
             onPress={onClose}
             testID="moment-close"
           />
-          {/* White text on glass: the stronger tint keeps it AA over a bright photo on iOS 26 (D-76). */}
+          {/* White text on glass: a stronger tint and, on Liquid Glass, a text shadow keep it readable (D-80). */}
           <GlassSurface
             tone="dark"
             radius={radius.pill}
-            tint={colors.glassStrong}
+            tint={colors.liquidDarkStrongTint}
             fallback="none"
             fallbackColor={colors.glass}
             style={styles.author}
             testID="moment-author"
           >
-            <Avatar name={data.author.display_name} uri={null} size="sm" decorative />
-            <Text style={[textStyle('bodySmall', '700'), { color: colors.surface }]} numberOfLines={1}>
-              {firstName(data.author.display_name)}
-            </Text>
+            {(glyph) => (
+              <>
+                <Avatar name={data.author.display_name} uri={null} size="sm" decorative />
+                <Text style={[textStyle('bodySmall', '700'), { color: colors.surface }, glyph?.text]} numberOfLines={1}>
+                  {firstName(data.author.display_name)}
+                </Text>
+              </>
+            )}
           </GlassSurface>
           {onMore && data.jar.user_id !== data.viewerId ? (
             <RoundIconButton

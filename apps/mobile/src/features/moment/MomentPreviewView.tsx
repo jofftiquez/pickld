@@ -251,7 +251,7 @@ export function MomentPreviewView({
           <GlassSurface
             tone="light"
             radius={radius.card}
-            tint={colors.tabBarGlass}
+            tint={colors.liquidTabBarTint}
             fallback="none"
             style={[styles.actions, large ? styles.actionsWide : null]}
             testID="preview-actions"

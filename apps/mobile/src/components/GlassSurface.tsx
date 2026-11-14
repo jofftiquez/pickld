@@ -4,6 +4,10 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View, type ColorValue, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useLiquidGlass } from '@/lib/useLiquidGlass';
+import { glassGlyph } from '@/theme/tokens';
+
+/** What content adds on Liquid Glass so it stays readable (D-80): a text shadow and an icon shadow. */
+export type GlassGlyph = (typeof glassGlyph)[keyof typeof glassGlyph];
 
 export type GlassSurfaceProps = {
   /** `dark` over photos and the camera (white content), `light` on app backgrounds (ink content). */
@@ -12,8 +16,10 @@ export type GlassSurfaceProps = {
   radius?: number;
   /** Liquid Glass style: `regular` (frosted, the default) or `clear` (more see-through). */
   glassStyle?: 'regular' | 'clear';
-  /** Glass tint, a token from `colors`. It keeps labels as readable as the blur look below iOS 26. */
+  /** Liquid Glass tint, a `liquid…` token from `colors` (D-80); light, so the glass shows. */
   tint?: ColorValue;
+  /** Liquid Glass reacts to touch (iOS's press shimmer), for pressable glass. Needs touches to reach it. */
+  interactive?: boolean;
   /** Below iOS 26 or with Reduce Transparency on: today's frosted blur, or a plain view in `fallbackColor`. */
   fallback?: 'blur' | 'none';
   /** Fallback blur strength, so each surface keeps its current look. */
@@ -22,7 +28,11 @@ export type GlassSurfaceProps = {
   fallbackColor?: ColorValue;
   style?: StyleProp<ViewStyle>;
   pointerEvents?: 'auto' | 'none' | 'box-none' | 'box-only';
-  children?: ReactNode;
+  /**
+   * Content, or a function that gets the tone's `glassGlyph` shadows on Liquid Glass (null on the fallback,
+   * which needs none), so labels and icons stay readable on the lighter tints (D-80).
+   */
+  children?: ReactNode | ((glyph: GlassGlyph | null) => ReactNode);
   /** On the surface; the fallback blur gets `${testID}-blur`. */
   testID?: string;
 };
@@ -37,6 +47,7 @@ export function GlassSurface({
   radius = 0,
   glassStyle = 'regular',
   tint,
+  interactive = false,
   fallback = 'blur',
   blurIntensity = 30,
   fallbackColor,
@@ -47,17 +58,19 @@ export function GlassSurface({
 }: GlassSurfaceProps) {
   const glass = useLiquidGlass();
   const shape: ViewStyle = { borderRadius: radius, overflow: 'hidden' };
+  const content = typeof children === 'function' ? children(glass ? glassGlyph[tone] : null) : children;
   if (glass) {
     return (
       <GlassView
         glassEffectStyle={glassStyle}
         tintColor={tint}
+        isInteractive={interactive}
         colorScheme={tone}
         style={[shape, style]}
         pointerEvents={pointerEvents}
         testID={testID}
       >
-        {children}
+        {content}
       </GlassView>
     );
   }
@@ -75,7 +88,7 @@ export function GlassSurface({
           testID={testID ? `${testID}-blur` : undefined}
         />
       ) : null}
-      {children}
+      {content}
     </View>
   );
 }
