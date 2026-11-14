@@ -27,8 +27,8 @@ function isMainTab(name: string): name is MainTab {
 
 /**
  * Custom `tabBar` for the Expo Router `Tabs` in `app/(tabs)/_layout.tsx` (design: Main).
- * Floats over the screen, inset from the edges and above the home indicator. Liquid Glass on iOS 26, the light
- * frosted blur below that or with Reduce Transparency on (D-57).
+ * Floats over the screen, inset from the edges and above the home indicator. Lightly tinted Liquid Glass on
+ * iOS 26 (D-80), the milky frosted blur below that or with Reduce Transparency on (D-57).
  */
 export function FloatingTabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const { t } = useTranslation();
@@ -48,29 +48,40 @@ export function FloatingTabBar({ state, emitter, navigateToTab, insets }: Bottom
       testID="floating-tab-bar"
     >
       {/* Separate from the outer view so the clip doesn't cut off the iOS shadow. */}
-      <GlassSurface tone="light" radius={radius.tabBar} tint={colors.tabBarGlass} blurIntensity={40} testID="tab-bar">
-        <View accessibilityRole="tablist" accessibilityLabel={t('tabs.label')} style={styles.row}>
-          {state.routes.map((route, index) => {
-            if (!isMainTab(route.name)) return null;
-            const focused = index === state.index;
-            const onPress = () => {
-              const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!focused && !event.defaultPrevented) navigateToTab(route.key);
-            };
-            const onLongPress = () => emitter.emit({ type: 'tabLongPress', target: route.key });
-            return (
-              <TabBarButton
-                key={route.key}
-                icon={mainTabs[route.name].icon}
-                label={t(mainTabs[route.name].label)}
-                focused={focused}
-                onPress={onPress}
-                onLongPress={onLongPress}
-                testID={`tab-${route.name}`}
-              />
-            );
-          })}
-        </View>
+      {/* Lightly tinted so the glass shows (D-80); the labels get ink and a halo on it instead. */}
+      <GlassSurface
+        tone="light"
+        radius={radius.tabBar}
+        tint={colors.liquidTabBarTint}
+        interactive
+        blurIntensity={40}
+        testID="tab-bar"
+      >
+        {(glyph) => (
+          <View accessibilityRole="tablist" accessibilityLabel={t('tabs.label')} style={styles.row}>
+            {state.routes.map((route, index) => {
+              if (!isMainTab(route.name)) return null;
+              const focused = index === state.index;
+              const onPress = () => {
+                const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+                if (!focused && !event.defaultPrevented) navigateToTab(route.key);
+              };
+              const onLongPress = () => emitter.emit({ type: 'tabLongPress', target: route.key });
+              return (
+                <TabBarButton
+                  key={route.key}
+                  icon={mainTabs[route.name].icon}
+                  label={t(mainTabs[route.name].label)}
+                  focused={focused}
+                  onPress={onPress}
+                  onLongPress={onLongPress}
+                  glyph={glyph}
+                  testID={`tab-${route.name}`}
+                />
+              );
+            })}
+          </View>
+        )}
       </GlassSurface>
     </View>
   );
