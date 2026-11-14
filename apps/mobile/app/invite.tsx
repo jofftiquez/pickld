@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InviteView } from '@/features/invite/InviteView';
 import { useInviteLink, useInvites } from '@/features/invite/useInvites';
 import { copyLink, shareLink } from '@/features/share/shareActions';
+import { track } from '@/lib/analytics';
 import { useAvatarUrls } from '@/lib/avatars';
 import { showToast } from '@/lib/toast';
 
@@ -30,12 +31,17 @@ export default function InviteScreen() {
       insets={insets}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
       onRetry={() => void refresh()}
-      onShareUrl={(url) => void shareLink(t('invite.shareMessage', { url })).catch(() => undefined)}
-      onCopyUrl={(url) =>
+      onShareUrl={(url) => {
+        track('invite_shared', { what: 'code' });
+        void shareLink(t('invite.shareMessage', { url })).catch(() => undefined);
+      }}
+      onCopyUrl={(url) => {
+        track('invite_shared', { what: 'link' });
         void copyLink(url)
           .then(() => showToast('linkCopied'))
-          .catch(() => undefined)
-      }
+          .catch(() => undefined);
+      }}
+      onQrShown={() => track('invite_qr_shown', {})}
       onLinkEnabled={setEnabled}
       onResetLink={reset}
       onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}

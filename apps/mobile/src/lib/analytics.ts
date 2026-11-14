@@ -29,6 +29,19 @@ export const analyticsEvents = {
   // Each queued photo's final result, for the upload-failure alert (NFR-REL-01, M4-20; D-34). Retries and
   // offline waits are not results; a photo that used up its attempts is `failed`.
   upload_result: z.strictObject({ outcome: z.enum(['uploaded', 'failed']) }),
+  // The invite funnel (INV-11): outcomes only, never a code, link id or anyone's name (rule 10).
+  // Funnel: invite_page_opened → invite_redeemed (outcome joined) → first_moment.
+  invite_shared: z.strictObject({ what: z.enum(['code', 'link']) }),
+  invite_qr_shown: z.strictObject({}),
+  // A pickld.me/i/… link opened in the app, and who opened it.
+  invite_page_opened: z.strictObject({ as: z.enum(['signed_out', 'setting_up', 'waiting', 'member']) }),
+  invite_redeemed: z.strictObject({
+    kind: z.enum(['personal', 'waitlist', 'admin']).optional(),
+    outcome: z.enum(['joined', 'unavailable', 'limited', 'already_member']),
+  }),
+  invite_scan: z.strictObject({ outcome: z.enum(['invite', 'not_invite', 'denied']) }),
+  // Leaving Waiting: with a code, or let in another way (a founder, or early access ended).
+  waiting_admitted: z.strictObject({ reason: z.enum(['code', 'let_in']) }),
 } as const;
 
 export type AnalyticsEvent = keyof typeof analyticsEvents;

@@ -5,6 +5,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { z } from 'zod';
 import { create } from 'zustand';
 
+import { track } from '@/lib/analytics';
 import { inviteTokenFromUrl, normalizeInviteToken } from '@/lib/links';
 import { getSupabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
@@ -98,7 +99,12 @@ export type RedeemResult = z.infer<typeof redeemed>;
 export async function redeemInvite(token: string): Promise<RedeemResult> {
   const { data, error } = await getSupabase().rpc('invite_redeem', { p_token: token });
   if (error) throw new Error(error.message);
-  return redeemed.parse(data);
+  const result = redeemed.parse(data);
+  track(
+    'invite_redeemed',
+    result.result === 'joined' ? { kind: result.kind, outcome: 'joined' } : { outcome: result.result },
+  );
+  return result;
 }
 
 /** The toast once a code let you in: an adult reads a friend both ways, a teen only follows them (0135). */

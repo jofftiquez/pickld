@@ -42,6 +42,8 @@ export type InviteViewProps = {
   /** Shares a code or the link as \"Join me on Pickld…\" with its pickld.me/i/ URL. */
   onShareUrl: (url: string) => void;
   onCopyUrl: (url: string) => void;
+  /** A code's QR sheet opened (for analytics). */
+  onQrShown?: () => void;
   onLinkEnabled: (enabled: boolean) => void;
   onResetLink: () => void;
   onOpenProfile: (username: string) => void;
@@ -62,6 +64,7 @@ export function InviteView({
   onRetry,
   onShareUrl,
   onCopyUrl,
+  onQrShown,
   onLinkEnabled,
   onResetLink,
   onOpenProfile,
@@ -96,7 +99,10 @@ export function InviteView({
         state={invites.state}
         revealed={revealed === code.code}
         onToggleReveal={() => setRevealed((r) => (r === code.code ? null : code.code))}
-        onShowQr={() => setQr(code)}
+        onShowQr={() => {
+          setQr(code);
+          onQrShown?.();
+        }}
         onShare={() => onShareUrl(inviteUrl(code.code))}
         onOpenProfile={onOpenProfile}
         avatarUrl={code.invitee?.profile ? (avatars[code.invitee.profile.id] ?? null) : null}
