@@ -62,7 +62,7 @@ The floating tab bar (Today · Capture · Jars · My days) is the spine; every o
 
 &#91;embedded content: Navigation map · onboarding, tab bar and the screens under each tab\]
 
-Indented boxes open from the box above them. Two shortcuts cross tabs: Today’s moment tiles and the day page’s empty tiles (from My days’ **Fill this jar**) both open Capture, and the empty Jars state opens Discover.
+Indented boxes open from the box above them. Two shortcuts cross tabs: Today’s moment tiles and the day page’s empty tiles (from My days’ **Fill this jar**) both open Capture, and the empty Jars state opens the Discover tab.
 
 ## Onboarding
 
@@ -224,7 +224,7 @@ Resurfaces past jars: an “On this day” card from one year ago, a monthly rec
 
 ### Discover — “Explore”
 
-Opened from the compass button next to the bell on Moments and Jars, and from **Find people** (D-101). Search by name or @username and Suggested authors with a **Be a reader** button (D-86) stay at the top. Below them a **Moments | Jars** switch lists public moments and published jars from active people you do not read yet, newest first, with infinite scroll and pull to refresh; each card shows its author with **Be a reader** (in a moment card's header, where the Moments tab has Go to jar; at a jar card's bottom right; D-118, D-121). A moment opens its thread, a jar opens its Jar page. Today's full jars are folded into the Jars list (D-100, D-102). Empty: “Nothing to discover yet.”
+The fourth tab, beside Jars (Today · Moments · Jars · Discover, with a compass icon); **Find people** buttons and the old `/explore` link open the tab (D-130, replacing D-101's compass button). Search by name or @username and Suggested authors with a **Be a reader** button (D-86) stay at the top. Below them a **Moments | Jars** switch lists public moments and published jars from active people you do not read yet, newest first, with infinite scroll and pull to refresh; each card shows its author with **Be a reader** (in a moment card's header, where the Moments tab has Go to jar; at a jar card's bottom right; D-118, D-121). A moment opens its thread, a jar opens its Jar page. Today's full jars are folded into the Jars list (D-100, D-102). Empty: “Nothing to discover yet.”
 
 ### Empty and first-use states
 

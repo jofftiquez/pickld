@@ -1,5 +1,5 @@
 // Renders the native tab bar's icons (D-108) from the app's own stroke icons in apps/mobile/src/components/icons.ts,
-// so the iOS 26 Liquid Glass bar uses the same Today, Moments and Jars glyphs as the custom bar.
+// so the iOS 26 Liquid Glass bar uses the same Today, Moments, Jars and Discover glyphs as the custom bar.
 // Usage: node scripts/render-tab-icons.mjs   (writes apps/mobile/assets/tabs/<name>.png, @2x and @3x)
 // Black on transparent; iOS draws them as template images in the bar's own colors.
 import { mkdirSync } from 'node:fs';
@@ -14,6 +14,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(root, 'apps/mobile/assets/tabs');
 const POINTS = 26; // UIKit's tab bar image size; the 24-unit grid fills it.
 const STROKE = 1.8; // <Icon>'s default stroke width.
+// Tab name → icon in icons.ts (Discover uses the compass, D-130).
+const TABS = { today: 'today', moments: 'moments', jars: 'jars', discover: 'compass' };
 
 function svg(shapes) {
   const body = shapes
@@ -32,9 +34,9 @@ mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();
 for (const scale of [1, 2, 3]) {
   const page = await browser.newPage({ viewport: { width: POINTS, height: POINTS }, deviceScaleFactor: scale });
-  for (const name of ['today', 'moments', 'jars']) {
+  for (const [name, icon] of Object.entries(TABS)) {
     await page.setContent(
-      `<style>html,body{margin:0;background:transparent}svg{display:block}</style>${svg(icons[name])}`,
+      `<style>html,body{margin:0;background:transparent}svg{display:block}</style>${svg(icons[icon])}`,
     );
     await page
       .locator('svg')

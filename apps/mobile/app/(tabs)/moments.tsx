@@ -57,13 +57,12 @@ export default function MomentsScreen() {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
       onOpenNotifications={() => router.push('/notifications')}
-      onOpenDiscover={() => router.push('/explore')}
       onOpenJar={(m) => router.push({ pathname: '/jar/[id]', params: { id: m.jar_id } })}
       onToggleLike={feed.toggleLike}
       onOpenComments={(m) =>
         router.push({ pathname: '/comments/[jarId]', params: { jarId: m.jar_id, momentId: m.moment_id } })
       }
-      onFindPeople={() => router.push('/explore')}
+      onFindPeople={() => router.navigate('/discover')}
       onInvite={() => {
         const username = me.data?.username;
         if (username) void Share.share({ message: t('feed.inviteMessage', { url: profileUrl(username) }) });
