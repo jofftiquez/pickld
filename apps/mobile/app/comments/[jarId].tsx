@@ -14,6 +14,7 @@ import { useJarPage } from '@/features/jar/useJarPage';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { ReportSheet } from '@/features/safety/ReportSheet';
 import { useBlockFlow } from '@/features/safety/useBlockFlow';
+import { useAvatarUrls } from '@/lib/avatars';
 
 // /comments/[jarId] (M3-11; FR-SOC-06): the jar's thread, from the comment pill on the Jar page.
 // /comments/[jarId]?momentId=… (0068; D-51): that moment's own thread, from Moment detail or a
@@ -43,6 +44,11 @@ export default function CommentsScreen() {
   const blockFlow = useBlockFlow();
 
   const ownerId = momentId ? m?.user_id : jar?.jar.user_id;
+  // The moment's owner and every commenter, re-signed when someone changes their photo (D-93).
+  const avatars = useAvatarUrls([
+    ...(m ? [{ id: m.user_id, path: m.author?.avatar_path }] : []),
+    ...(comments.comments ?? []).map((c) => ({ id: c.user_id, path: c.author?.avatar_path })),
+  ]);
   const slot = m ? t(`slots.${m.slot}`) : null;
 
   return (
@@ -66,6 +72,7 @@ export default function CommentsScreen() {
                 stamp: m.tz ? { capturedAt: new Date(m.captured_at ?? m.added_at), tz: m.tz } : null,
                 slot,
                 authorName: m.author?.display_name ?? t('comments.someone'),
+                authorAvatarUrl: avatars[m.user_id] ?? null,
                 caption: m.caption?.trim() || null,
               }
             : null
@@ -78,6 +85,8 @@ export default function CommentsScreen() {
         failed={comments.failed || (momentId ? moment.failed : page.failed)}
         unavailable={momentId ? m === null : jar === null}
         myName={me.data?.displayName ?? null}
+        myAvatarUrl={me.data?.avatarUrl ?? null}
+        avatars={avatars}
         now={new Date()}
         insets={insets}
         isSending={comments.isSending}

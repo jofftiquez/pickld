@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
+import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { VisibilityBadge } from '@/components/VisibilityBadge';
 import { parseEdits } from '@/features/edit/edits';
 import { CommentsButton } from '@/features/jar/CommentsButton';
@@ -19,22 +20,28 @@ export type MomentFeedCardProps = {
   photoWidth: number;
   /** The viewer, so their own Only me moments get the lock (D-53). */
   viewerId: string | null;
-  onOpen: () => void;
+  /** The author's signed avatar; initials without it. */
+  avatarUrl?: string | null;
+  /** Go to jar (D-94); only offered when the viewer may open the jar. */
+  onOpenJar: () => void;
   onToggleLike: () => void;
+  /** The moment's thread: the header, photo and caption open it, like the comment pill (D-94). */
   onOpenComments: () => void;
   locale?: string;
 };
 
 /**
- * One moment in the Moments timeline (design: MomentsFeed): author, #slot and time, the 3:4 photo with its
- * edits, the caption, then likes and comments. The top part opens Moment detail; the like and comment
- * pills are their own buttons beside it, so screen readers reach all three.
+ * One moment in the Moments timeline (design: MomentsFeed): author, #slot and time, Go to jar, the 3:4 photo
+ * with its edits, the caption, then likes and comments. The header, photo and caption open the moment's
+ * thread, as the comment pill does (D-94); Go to jar opens its jar. Screen readers get the header (which
+ * reads the caption too), Go to jar, and the like and comment pills.
  */
 export function MomentFeedCard({
   moment,
   photoWidth,
   viewerId,
-  onOpen,
+  avatarUrl = null,
+  onOpenJar,
   onToggleLike,
   onOpenComments,
   locale = deviceLocale(),
@@ -59,16 +66,16 @@ export function MomentFeedCard({
 
   return (
     <View style={styles.card} testID={`moments-card-${moment.moment_id}`}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityHint={t('moments.openHint')}
-        onPress={onOpen}
-        style={styles.open}
-        testID={`moments-open-${moment.moment_id}`}
-      >
-        <View style={styles.header}>
-          <Avatar name={moment.author_display_name} uri={null} size="feed" decorative />
+      <View style={styles.header}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={label}
+          accessibilityHint={t('moments.openHint')}
+          onPress={onOpenComments}
+          style={styles.author}
+          testID={`moments-open-${moment.moment_id}`}
+        >
+          <Avatar name={moment.author_display_name} uri={avatarUrl} size="feed" decorative />
           <View style={styles.titles}>
             <Text style={[textStyle('body', '700'), { color: colors.ink }]} numberOfLines={1}>
               {moment.author_display_name}
@@ -77,7 +84,29 @@ export function MomentFeedCard({
               {t('moments.meta', { slot, when })}
             </Text>
           </View>
-        </View>
+        </Pressable>
+        {/* A jar the viewer can't open yet (not published, D-48) would only say "not available". */}
+        {moment.jar_visible ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('moments.goToJarLabel', { name: moment.author_display_name })}
+            onPress={onOpenJar}
+            style={({ pressed }) => [styles.goToJar, pressed ? { opacity: PRESSED_OPACITY } : null]}
+            testID={`moments-jar-${moment.moment_id}`}
+          >
+            <Text style={[textStyle('label', '700'), { color: colors.brandLink }]}>{t('moments.goToJar')}</Text>
+          </Pressable>
+        ) : null}
+      </View>
+      {/* The header above already reads all of this to screen readers. */}
+      <Pressable
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+        onPress={onOpenComments}
+        style={styles.open}
+        testID={`moments-photo-${moment.moment_id}`}
+      >
         <View style={[styles.photo, { width: photoWidth }]}>
           <MomentView
             uri={moment.fullUrl ?? moment.thumbUrl}
@@ -129,8 +158,18 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space.sm + 2,
+    gap: space.sm,
     paddingTop: 2,
+    paddingLeft: space.xs,
+  },
+  author: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm + 2 },
+  // A 44-point target (AGENTS rule 11) without growing the header around the avatar.
+  goToJar: {
+    minWidth: sizes.minTap,
+    minHeight: sizes.minTap,
+    marginVertical: -space.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: space.xs,
   },
   titles: { flex: 1, gap: 1 },

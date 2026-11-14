@@ -18,7 +18,9 @@ const idParam = z.uuid();
 export async function fetchComments(jarId: string, momentId: string | null = null): Promise<CommentRow[]> {
   const query = getSupabase()
     .from('comments')
-    .select('id, jar_id, user_id, parent_id, body, is_hidden, created_at, author:profiles(display_name, username)')
+    .select(
+      'id, jar_id, user_id, parent_id, body, is_hidden, created_at, author:profiles(display_name, username, avatar_path)',
+    )
     .eq('jar_id', jarId);
   const { data, error } = await (
     momentId === null ? query.is('moment_id', null) : query.eq('moment_id', momentId)

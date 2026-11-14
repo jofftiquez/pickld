@@ -37,6 +37,8 @@ export type MomentDetailViewProps = {
   failed?: boolean;
   /** The moment to open on. */
   momentId: string;
+  /** The author's signed avatar; initials without it. */
+  authorAvatarUrl?: string | null;
   insets: EdgeInsets;
   onClose: () => void;
   /** Opens the comments of the moment on screen: its own thread (D-51). */
@@ -61,6 +63,7 @@ export function MomentDetailView({
   data,
   failed = false,
   momentId,
+  authorAvatarUrl = null,
   insets,
   onClose,
   onOpenComments,
@@ -209,7 +212,7 @@ export function MomentDetailView({
           >
             {(glyph) => (
               <>
-                <Avatar name={data.author.display_name} uri={null} size="sm" decorative />
+                <Avatar name={data.author.display_name} uri={authorAvatarUrl} size="sm" decorative />
                 <Text style={[textStyle('bodySmall', '700'), { color: colors.surface }, glyph?.text]} numberOfLines={1}>
                   {firstName(data.author.display_name)}
                 </Text>

@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Te
 import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { maxTextScale, textStyle } from '@/theme/text';
+import type { AvatarUrls } from '@/lib/avatars';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { FeedEmpty } from './FeedEmpty';
@@ -16,6 +17,10 @@ export type FeedViewProps = {
   authors: FeedAuthor[] | undefined;
   /** The signed-in user's display name, for the "You" avatar. */
   myName: string | null;
+  /** The signed-in user's signed avatar. */
+  myAvatarUrl?: string | null;
+  /** Signed avatars by profile id (authors and card authors); initials for anyone missing. */
+  avatars?: AvatarUrls;
   now: Date;
   insets: { top: number; bottom: number };
   isLoading: boolean;
@@ -47,6 +52,8 @@ export function FeedView({
   jars,
   authors,
   myName,
+  myAvatarUrl = null,
+  avatars = {},
   now,
   insets,
   isLoading,
@@ -106,7 +113,7 @@ export function FeedView({
             <StoryAvatar
               name={myName}
               label={t('feed.you')}
-              uri={null}
+              uri={myAvatarUrl}
               isNew={false}
               accessibilityLabel={t('feed.you')}
               onPress={onOpenProfile ? () => onOpenProfile(null) : undefined}
@@ -118,7 +125,7 @@ export function FeedView({
               key={a.author_id}
               name={a.display_name}
               label={firstName(a.display_name)}
-              uri={null}
+              uri={avatars[a.author_id] ?? null}
               isNew={a.has_new}
               accessibilityLabel={a.has_new ? t('feed.authorNew', { name: a.display_name }) : a.display_name}
               onPress={onOpenProfile ? () => onOpenProfile(a.username) : undefined}
@@ -138,7 +145,12 @@ export function FeedView({
       keyExtractor={(jar) => jar.jar_id}
       renderItem={({ item }) => (
         <View style={styles.cardWrap}>
-          <FeedJarCard jar={item} now={now} onPress={onOpenJar ? () => onOpenJar(item.jar_id) : undefined} />
+          <FeedJarCard
+            jar={item}
+            now={now}
+            avatarUrl={avatars[item.author_id] ?? null}
+            onPress={onOpenJar ? () => onOpenJar(item.jar_id) : undefined}
+          />
         </View>
       )}
       ItemSeparatorComponent={Separator}

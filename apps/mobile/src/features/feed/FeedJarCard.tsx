@@ -13,12 +13,14 @@ import { ageOf, buildMosaic, type FeedJar } from './feedModel';
 export type FeedJarCardProps = {
   jar: FeedJar;
   now: Date;
+  /** The author's signed avatar; initials without it. */
+  avatarUrl?: string | null;
   /** Opens the Jar page; without it the card isn't pressable. */
   onPress?: () => void;
 };
 
 /** A followed author's jar in the Jars feed (design: Feed): header, photo mosaic, likes, comments and caption. */
-export function FeedJarCard({ jar, now, onPress }: FeedJarCardProps) {
+export function FeedJarCard({ jar, now, avatarUrl = null, onPress }: FeedJarCardProps) {
   const { t } = useTranslation();
   const age = ageOf(jar.feed_at, now);
   const updated = t(`feed.updated.${age.unit}`, { count: age.count });
@@ -33,7 +35,7 @@ export function FeedJarCard({ jar, now, onPress }: FeedJarCardProps) {
   const body = (
     <>
       <View style={styles.header}>
-        <Avatar name={jar.author_display_name} uri={null} size="feed" decorative />
+        <Avatar name={jar.author_display_name} uri={avatarUrl} size="feed" decorative />
         <View style={styles.titles}>
           <Text style={[textStyle('body', '700'), { color: colors.ink }]} numberOfLines={1}>
             {jar.author_display_name}

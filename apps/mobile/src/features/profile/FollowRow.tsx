@@ -14,6 +14,8 @@ import type { FollowListRow } from './useFollowList';
 
 export type FollowRowProps = {
   row: FollowListRow;
+  /** Their signed avatar; initials without it. */
+  avatarUrl?: string | null;
   /** The row is the viewer: no follow button. */
   isViewer: boolean;
   divider: boolean;
@@ -25,7 +27,16 @@ export type FollowRowProps = {
 };
 
 /** One person in Readers & authors (Readers): avatar, name, @username and their Read / Read back / Reading button. */
-export function FollowRow({ row, isViewer, divider, onOpen, onToggleReading, onRemove, disabled }: FollowRowProps) {
+export function FollowRow({
+  row,
+  avatarUrl = null,
+  isViewer,
+  divider,
+  onOpen,
+  onToggleReading,
+  onRemove,
+  disabled,
+}: FollowRowProps) {
   const { t } = useTranslation();
   const large = useLargeText();
   const [pressed, setPressed] = useState(false);
@@ -49,7 +60,7 @@ export function FollowRow({ row, isViewer, divider, onOpen, onToggleReading, onR
         style={[styles.person, large && styles.personLarge, pressed ? { opacity: PRESSED_OPACITY } : null]}
         testID={`follow-row-${row.username}-open`}
       >
-        <Avatar name={row.display_name} size="header" decorative />
+        <Avatar name={row.display_name} uri={avatarUrl} size="header" decorative />
         <View style={styles.names}>
           <Text style={[textStyle('body', '600'), { color: colors.ink }]} numberOfLines={1}>
             {row.display_name}

@@ -9,10 +9,11 @@ import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { MomentsFeedView } from '@/features/moments/MomentsFeedView';
 import { useMomentsFeed } from '@/features/moments/useMomentsFeed';
 import { useUnreadNotifications } from '@/features/notifications/useNotifications';
+import { useAvatarUrls } from '@/lib/avatars';
 import { profileUrl } from '@/lib/links';
 
 // Moments tab (QA round 1, piece 5; FR-SOC-01, FR-SOC-02, D-52, D-53): live moments from people the user
-// reads and their own, newest first. A card opens Moment detail through its jar.
+// reads and their own, newest first. A card opens the moment's thread; Go to jar opens its jar (D-94).
 export default function MomentsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -25,6 +26,8 @@ export default function MomentsScreen() {
     queryFn: () => fetchMe(userId ?? ''),
     enabled: userId !== null,
   });
+  // Re-signed when someone changes their photo (D-93).
+  const avatars = useAvatarUrls((feed.moments ?? []).map((m) => ({ id: m.author_id, path: m.author_avatar_path })));
   // The spinner shows only for a pull, not for background refetches.
   const [pulling, setPulling] = useState(false);
   useFocusEffect(
@@ -39,6 +42,7 @@ export default function MomentsScreen() {
       moments={feed.moments}
       authors={feed.authors}
       viewerId={userId}
+      avatars={avatars}
       insets={insets}
       isLoading={feed.isLoading}
       isRefreshing={pulling}
@@ -53,7 +57,7 @@ export default function MomentsScreen() {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
       onOpenNotifications={() => router.push('/notifications')}
-      onOpenMoment={(m) => router.push({ pathname: '/moment/[id]', params: { id: m.moment_id, jar: m.jar_id } })}
+      onOpenJar={(m) => router.push({ pathname: '/jar/[id]', params: { id: m.jar_id } })}
       onToggleLike={feed.toggleLike}
       onOpenComments={(m) =>
         router.push({ pathname: '/comments/[jarId]', params: { jarId: m.jar_id, momentId: m.moment_id } })

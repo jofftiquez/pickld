@@ -16,7 +16,14 @@ export const commentRow = z.object({
   body: z.string(),
   is_hidden: z.boolean(),
   created_at: z.string(),
-  author: z.object({ display_name: z.string(), username: z.string() }).nullable(),
+  author: z
+    .object({
+      display_name: z.string(),
+      username: z.string(),
+      /** For the avatar (D-93); missing in caches from before it. */
+      avatar_path: z.string().nullish(),
+    })
+    .nullable(),
 });
 export type CommentRow = z.infer<typeof commentRow>;
 

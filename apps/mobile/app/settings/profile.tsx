@@ -26,7 +26,8 @@ type Kind = 'avatar' | 'cover';
 
 // /settings/profile (M3-15; FR-SOC-11, FR-ACC-03, FR-ONB-04): Edit profile, from My profile. Writes only
 // the columns that changed, as the user, so the profiles policies and checks decide (0001, 0002, 0016,
-// 0018). After a save every cached profile, the Today header and the feed are read again.
+// 0018). After a save every query that shows the person's name or photo is read again, so a new avatar
+// shows across the app (D-93): each screen's avatar query is keyed by the avatar key it reads.
 export default function EditProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -90,12 +91,22 @@ export default function EditProfileScreen() {
       setSaveError(saveErrorOf(error));
       return;
     }
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['profile'] }),
-      queryClient.invalidateQueries({ queryKey: ['me'] }),
-      queryClient.invalidateQueries({ queryKey: ['feed'] }),
-      queryClient.invalidateQueries({ queryKey: ['jarPage'] }),
-    ]);
+    await Promise.all(
+      [
+        'profile',
+        'me',
+        'feed',
+        'feedAuthors',
+        'jarPage',
+        'momentsFeed',
+        'comments',
+        'explore',
+        'search',
+        'followList',
+        'notifications',
+        'avatars',
+      ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+    );
     showToast(
       Object.keys(update).every((k) => k === 'avatar_path' || k === 'cover_path') ? 'photoUpdated' : 'profileUpdated',
     );

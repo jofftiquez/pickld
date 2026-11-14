@@ -9,6 +9,7 @@ import { OwnMomentView } from '@/features/moment/OwnMomentView';
 import { useOwnMoment } from '@/features/moment/useOwnMoment';
 import { ReportSheet } from '@/features/safety/ReportSheet';
 import { useBlockFlow } from '@/features/safety/useBlockFlow';
+import { useAvatarUrls } from '@/lib/avatars';
 
 // /moment/[id]: Moment detail (M3-08; FR-SOC-04) when opened from a jar (`jar` param) or for the owner's
 // own live moment, swiping through that jar's shown moments. The owner's checking or removed moment
@@ -26,6 +27,8 @@ export default function MomentScreen() {
   const page = useJarPage(jarId, { fromMoment: true });
   const like = useLike(page.data?.viewerId ?? null, page.data?.jar.id ?? null);
   const [reporting, setReporting] = useState<string | null>(null);
+  // Re-signed when the author changes their photo (D-93).
+  const avatars = useAvatarUrls(page.data ? [{ id: page.data.jar.user_id, path: page.data.author.avatar_path }] : []);
   const blockFlow = useBlockFlow(() => router.replace('/jars'));
 
   const close = () => {
@@ -42,6 +45,7 @@ export default function MomentScreen() {
         data={page.data}
         failed={page.failed}
         momentId={id ?? ''}
+        authorAvatarUrl={page.data ? (avatars[page.data.jar.user_id] ?? null) : null}
         insets={insets}
         onClose={close}
         onToggleLike={like.toggle}
