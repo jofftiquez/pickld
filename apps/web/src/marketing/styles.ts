@@ -71,13 +71,13 @@ export const css = `
 .mk-pair{display:flex;justify-content:center;gap:16px}
 .mk-pair .mk-phone{width:min(230px,42vw);border-width:6px;border-radius:34px}
 .mk-pair .mk-phone:last-child{margin-top:40px}
-.mk-faq{display:flex;flex-direction:column;gap:10px;max-width:760px}
+.mk-faq{display:flex;flex-direction:column;gap:10px}
 .mk-faq details{background:${colors.surface};border-radius:${radius.banner}px}
 .mk-faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:56px;padding:14px 18px;font-weight:800;font-size:17px;color:${colors.ink}}
 .mk-faq summary::-webkit-details-marker{display:none}
 .mk-faq summary::after{content:'+';font-size:24px;line-height:1;color:${colors.brandText}}
 .mk-faq details[open] summary::after{content:'–'}
-.mk-faq details p{padding:0 18px 18px}
+.mk-faq details p{padding:0 18px 18px;max-width:780px}
 .mk-final{border-radius:${radius.card}px;padding:36px 24px;display:flex;flex-direction:column;gap:12px}
 .mk-final .mk-form{margin-top:12px}
 .mk-foot{padding:40px 0 28px}
