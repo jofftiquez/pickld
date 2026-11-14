@@ -30,6 +30,7 @@ const routes = {
   'setup/about': () => <Text>About you</Text>,
   'setup/day': () => <Text>Your day</Text>,
   '(tabs)/today': () => <Text>Today</Text>,
+  waiting: () => <Text>Waiting</Text>,
 };
 const signIn = () => useAuthStore.getState().setSession({ user: { id: 'u-1' } } as Session);
 
@@ -56,7 +57,7 @@ describe('where the app opens', () => {
 
   it('a returning user → Today', async () => {
     signIn();
-    mockProfileLookup.mockResolvedValue({ data: { id: 'u-1' }, error: null });
+    mockProfileLookup.mockResolvedValue({ data: { status: 'active' }, error: null });
     await renderRouter(routes, { initialUrl: '/', wrapper });
     expect(await screen.findByText('Today')).toBeTruthy();
   });
@@ -64,7 +65,22 @@ describe('where the app opens', () => {
   it('setup left unfinished on this phone → that step (FR-ONB-09)', async () => {
     signIn();
     mockDisk.set('setupStep:u-1', '/setup/day');
-    mockProfileLookup.mockResolvedValue({ data: { id: 'u-1' }, error: null });
+    mockProfileLookup.mockResolvedValue({ data: { status: 'active' }, error: null });
+    await renderRouter(routes, { initialUrl: '/', wrapper });
+    expect(await screen.findByText('Your day')).toBeTruthy();
+  });
+
+  it('an account waiting for early access, setup done → Waiting (INV-06)', async () => {
+    signIn();
+    mockProfileLookup.mockResolvedValue({ data: { status: 'waiting' }, error: null });
+    await renderRouter(routes, { initialUrl: '/', wrapper });
+    expect(await screen.findByText('Waiting')).toBeTruthy();
+  });
+
+  it('a waiting account mid-setup finishes setup first', async () => {
+    signIn();
+    mockDisk.set('setupStep:u-1', '/setup/day');
+    mockProfileLookup.mockResolvedValue({ data: { status: 'waiting' }, error: null });
     await renderRouter(routes, { initialUrl: '/', wrapper });
     expect(await screen.findByText('Your day')).toBeTruthy();
   });

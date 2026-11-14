@@ -6,9 +6,12 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 export type CodeFieldProps = {
-  /** Digits typed so far (0–6). */
+  /** Characters typed so far (0–6). */
   value: string;
-  /** Called with digits only, never more than six. */
+  /** `digits` for the emailed sign-in code; `invite` for an invite code: letters and digits from the
+   * invite alphabet, upper case (INV-06). */
+  kind?: 'digits' | 'invite';
+  /** Called with allowed characters only, never more than six. */
   onChangeText: (value: string) => void;
   /** Spoken name of the field. Already translated. */
   label: string;
@@ -19,12 +22,17 @@ export type CodeFieldProps = {
   testID?: string;
 };
 
+// The invite alphabet (0132): no 0/O or 1/I/L.
+const NOT_INVITE = /[^ABCDEFGHJKMNPQRSTUVWXYZ23456789]/g;
+
 /**
  * The 6-digit code on Check your email (FR-ACC-02, D-60). One TextInput, so iOS offers the code from Mail
  * above the keyboard and paste fills every box; it sits over the six boxes, almost transparent, and takes
  * the taps. The boxes only draw the digits and are hidden from screen readers, which read the field.
+ * The invite kind (Waiting) takes letters too and doesn't open the keyboard by itself.
  */
-export function CodeField({ value, onChangeText, label, invalid, editable, testID }: CodeFieldProps) {
+export function CodeField({ value, kind = 'digits', onChangeText, label, invalid, editable, testID }: CodeFieldProps) {
+  const invite = kind === 'invite';
   const [focused, setFocused] = useState(false);
   return (
     <View style={styles.row}>
@@ -46,15 +54,21 @@ export function CodeField({ value, onChangeText, label, invalid, editable, testI
       <TextInput
         accessibilityLabel={label}
         value={value}
-        onChangeText={(text) => onChangeText(text.replace(/\D/g, '').slice(0, CODE_LENGTH))}
+        onChangeText={(text) =>
+          onChangeText(
+            (invite ? text.toUpperCase().replace(NOT_INVITE, '') : text.replace(/\D/g, '')).slice(0, CODE_LENGTH),
+          )
+        }
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         editable={editable}
-        keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        autoComplete="one-time-code"
+        keyboardType={invite ? 'default' : 'number-pad'}
+        textContentType={invite ? 'none' : 'oneTimeCode'}
+        autoComplete={invite ? 'off' : 'one-time-code'}
+        autoCapitalize={invite ? 'characters' : 'none'}
+        autoCorrect={false}
         maxLength={CODE_LENGTH}
-        autoFocus
+        autoFocus={!invite}
         caretHidden
         testID={testID}
         style={styles.input}

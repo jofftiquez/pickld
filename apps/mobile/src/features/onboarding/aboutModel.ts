@@ -36,12 +36,23 @@ export function completeBirthday(b: Birthday): YMD | null {
  * non-leap year.
  */
 export function isUnder13(birthday: YMD, today: YMD): boolean {
-  const year = today.year - MIN_AGE;
+  return isYoungerThan(MIN_AGE, birthday, today);
+}
+
+/** Not yet `age` years old today (a 29 February birthday counts from 28 February in other years). */
+export function isYoungerThan(age: number, birthday: YMD, today: YMD): boolean {
+  const year = today.year - age;
   const cutoff = { year, month: today.month, day: Math.min(today.day, daysInMonth(year, today.month)) };
   return compare(birthday, cutoff) > 0;
 }
 
 const compare = (a: YMD, b: YMD) => a.year - b.year || a.month - b.month || a.day - b.day;
+
+/** 'YYYY-MM-DD' (a birthday column, a local date) as year, month and day. */
+export function ymd(iso: string): YMD {
+  const [year = 0, month = 0, day = 0] = iso.split('-').map(Number);
+  return { year, month, day };
+}
 
 export const isoDate = ({ year, month, day }: YMD) =>
   `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;

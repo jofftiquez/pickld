@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { announceJoined, redeemInvite, usePendingInvite } from '@/features/invite/join';
 import { phoneTimeZone } from '@/features/jar/useToday';
 import { saveErrorOf } from '@/features/profile/editProfileModel';
 import { pickProfileImage, uploadProfileImage, type PreparedImage } from '@/features/profile/uploadProfileImage';
@@ -12,24 +13,31 @@ import { useAuthStore } from '@/lib/authStore';
 import { localDateIn } from '@/lib/jars';
 import { resetTo } from '@/lib/navigation';
 import { getSupabase } from '@/lib/supabase';
+import type { Database } from '@/lib/database.types';
 
-import { aboutProblems, completeBirthday, emptyAbout, isoDate, isUnder13, type AboutForm } from './aboutModel';
+import {
+  aboutProblems,
+  completeBirthday,
+  emptyAbout,
+  isoDate,
+  isUnder13,
+  isYoungerThan,
+  ymd,
+  type AboutForm,
+  type YMD,
+} from './aboutModel';
 import { AboutView, type AboutError } from './AboutView';
 import { nextSetupRoute, saveSetupStep } from './setupFlow';
 
-const todayYMD = () => {
-  const [year, month, day] = localDateIn(new Date(), phoneTimeZone()).split('-').map(Number) as [
-    number,
-    number,
-    number,
-  ];
-  return { year, month, day };
-};
+type ProfileStatus = Database['public']['Enums']['profile_status'];
+
+const todayYMD = () => ymd(localDateIn(new Date(), phoneTimeZone()));
 
 /**
  * About you (FR-ACC-03, FR-ACC-04). The photo stays on the phone until Continue. Under 13: fn:account-purge
  * deletes the account before anything is written, then Under 13. Otherwise the profile is saved first (the
  * database checks the birthday and username) and the photo uploaded after, since uploads need a profile.
+ * Then an invite kept on this phone is used (INV-06): the person is let in, and reads their inviter.
  */
 export function AboutScreen() {
   const router = useRouter();
@@ -43,18 +51,36 @@ export function AboutScreen() {
     return emptyAbout(typeof name === 'string' ? name.slice(0, 40) : '');
   });
   const [photo, setPhoto] = useState<PreparedImage | null>(null);
-  const [saved, setSaved] = useState(false);
+  // The new profile's status once saved: waiting during early access, else active.
+  const [saved, setSaved] = useState<ProfileStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<AboutError | null>(null);
   const usernameStatus = useUsernameAvailability(form.username, '');
-  const canContinue = saved || aboutProblems(form, usernameStatus).length === 0;
+  const canContinue = saved !== null || aboutProblems(form, usernameStatus).length === 0;
 
-  const finish = async () => {
+  const finish = async (status: ProfileStatus, birthday: YMD) => {
     track('signup_step_completed', { step: 'about' });
-    queryClient.setQueryData(['hasProfile', userId], true);
+    queryClient.setQueryData(['profileStatus', userId], await redeemKeptInvite(status, birthday));
     const next = nextSetupRoute('/setup/about');
     if (userId) await saveSetupStep(userId, next);
     router.replace(next ?? '/');
+  };
+
+  // A failure or an invite that can't be used never stops setup: Waiting offers the code field again.
+  const redeemKeptInvite = async (status: ProfileStatus, birthday: YMD): Promise<ProfileStatus> => {
+    const pending = usePendingInvite.getState();
+    const token = await pending.load().catch(() => null);
+    if (!token) return status;
+    try {
+      const result = await redeemInvite(token);
+      await pending.clear();
+      if (result.result !== 'joined') return status;
+      announceJoined(result.inviter, !isYoungerThan(18, birthday, today));
+      return 'active';
+    } catch {
+      // Offline: the code stays on the phone and Waiting tries it again.
+      return status;
+    }
   };
 
   const onContinue = async () => {
@@ -66,14 +92,20 @@ export function AboutScreen() {
       if (!saved && isUnder13(birthday, today)) {
         const { error: purgeError } = await getSupabase().functions.invoke('account-purge', { method: 'POST' });
         if (purgeError) throw purgeError;
+        // No code is used under 13.
+        await usePendingInvite
+          .getState()
+          .clear()
+          .catch(() => undefined);
         // The account is gone. Show Under 13 first, then drop the session this phone still holds (About
         // would otherwise redirect to Welcome as soon as it sees the sign-out).
         router.replace('/setup/under13');
         await getSupabase().auth.signOut({ scope: 'local' });
         return;
       }
-      if (!saved) {
-        const { error: insertError } = await getSupabase()
+      let status = saved;
+      if (!status) {
+        const { data: inserted, error: insertError } = await getSupabase()
           .from('profiles')
           .insert({
             id: userId,
@@ -81,14 +113,18 @@ export function AboutScreen() {
             display_name: form.displayName.trim(),
             birthday: isoDate(birthday),
             home_tz: phoneTimeZone(),
-          });
-        if (insertError) {
+          })
+          .select('status')
+          .single();
+        if (insertError || !inserted) {
+          if (!insertError) throw new Error('no profile');
           const kind = saveErrorOf(insertError);
           const tooYoung = insertError.code === '23514' && (insertError.message ?? '').includes('birthday');
           setError(tooYoung ? 'birthday' : kind);
           return;
         }
-        setSaved(true);
+        status = inserted.status;
+        setSaved(status);
       }
       if (photo) {
         try {
@@ -106,7 +142,7 @@ export function AboutScreen() {
           }
         }
       }
-      await finish();
+      await finish(status, birthday);
     } catch {
       setError('failed');
     } finally {

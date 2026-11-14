@@ -26,6 +26,11 @@ jest.mock('../WelcomeView', () => ({
     return null;
   },
 }));
+// Sign up reads a kept invite code from the phone (INV-06); none here.
+jest.mock('expo-sqlite/kv-store', () => ({
+  __esModule: true,
+  default: { getItem: async () => null, setItem: async () => undefined, removeItem: async () => undefined },
+}));
 jest.mock('../AuthView', () => ({
   AuthView: (p: AuthViewProps) => {
     mockViews.auth = p;
