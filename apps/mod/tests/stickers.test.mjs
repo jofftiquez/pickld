@@ -173,7 +173,7 @@ test('a moderator creates a free draft pack from the list', async () => {
 
   // The list shows it first, as a draft.
   await page.goto(`${base}/stickers`);
-  const first = page.getByRole('region', { name: 'Sticker packs' }).getByRole('listitem').first();
+  const first = page.getByRole('region', { name: 'Sticker packs' }).locator('tbody tr').first();
   await first.getByText(`Studio ${tag}`).waitFor();
   await first.getByText('Draft', { exact: true }).waitFor();
 });

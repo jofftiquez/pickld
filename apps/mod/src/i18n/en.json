@@ -63,7 +63,8 @@
     "rowLabel": "{{reason}} from @{{user}}, waiting {{wait}}",
     "empty": "Nothing waiting here. New items show up as they come in.",
     "emptyDetail": "Pick an item to review it.",
-    "noUser": "deleted account"
+    "noUser": "deleted account",
+    "label": "Queue items"
   },
   "source": {
     "auto_check": "Auto-check",
@@ -166,8 +167,6 @@
     },
     "system": "System",
     "empty": "No decisions yet.",
-    "older": "Older entries",
-    "newest": "Back to newest",
     "actions": {
       "keep": "Kept",
       "remove": "Removed",
@@ -431,10 +430,7 @@
       "placeholder": "Part of an email",
       "state": "Show",
       "button": "Search",
-      "empty": "No emails match.",
-      "count": "{{count}} matching · page {{page}} of {{pages}}",
-      "newer": "← Newer",
-      "older": "Older →"
+      "empty": "No emails match."
     },
     "states": {
       "all": "Everyone",
@@ -520,7 +516,7 @@
       "people": "People using",
       "uses": "Uses",
       "trend": "vs. before",
-      "thumbs": "Thumbs up",
+      "thumbs": "Likes",
       "thumbsWindow": "{{count}} in this window",
       "meta": "{{slug}} · {{count}} stickers",
       "draft": "draft",
@@ -561,10 +557,11 @@
       "tier": "Type",
       "status": "Status",
       "stickers": "Stickers",
-      "thumbs": "Thumbs up",
+      "thumbs": "Likes",
       "retiredCount": "{{count}} retired",
       "empty": "No sticker packs yet.",
-      "readOnly": "Read-only here"
+      "readOnly": "Read-only here",
+      "rowLabel": "{{name}}, {{status}}"
     },
     "status": {
       "draft": "Draft",
@@ -681,5 +678,21 @@
       "unavailable": "The Studio can’t be reached right now. Try again.",
       "too_many": "More than 100 files in one drop. Add it in the next one."
     }
+  },
+  "table": {
+    "sortAsc": "Sort by {{column}}, ascending",
+    "sortDesc": "Sort by {{column}}, descending",
+    "loading": "Loading…"
+  },
+  "pagination": {
+    "label": "Pages",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
+    "none": "No results",
+    "size": "Rows per page",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{n}}",
+    "current": "Page {{n}}, current page",
+    "gap": "More pages"
   }
 }

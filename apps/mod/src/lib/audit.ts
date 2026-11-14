@@ -3,8 +3,6 @@ import { z } from 'zod';
 
 import { t } from '~/i18n/t';
 
-export const PAGE = 50;
-
 const Entry = z.object({
   id: z.number(),
   actor_id: z.uuid().nullable(),
@@ -17,22 +15,21 @@ const Entry = z.object({
 export type AuditEntry = z.infer<typeof Entry> & { actor: string | null };
 
 /**
- * One page of the audit log, newest first (RLS: moderators read it; nobody can change it, 0001 and 0041).
- * `before` is the id to page back from; `user` keeps rows that person did or that were about their account.
+ * One page of the audit log, newest first, and how many entries there are in all (RLS: moderators read it;
+ * nobody can change it, 0001 and 0041). `user` keeps rows that person did or that were about their account.
  */
 export async function loadAudit(
   client: SupabaseClient,
-  before: number | null,
+  page: { size: number; offset: number },
   user: string | null = null,
-): Promise<AuditEntry[]> {
+): Promise<{ entries: AuditEntry[]; total: number }> {
   let query = client
     .from('audit_log')
-    .select('id, actor_id, action, target, target_id, data, created_at')
+    .select('id, actor_id, action, target, target_id, data, created_at', { count: 'exact' })
     .order('id', { ascending: false })
-    .limit(PAGE);
-  if (before !== null) query = query.lt('id', before);
+    .range(page.offset, page.offset + page.size - 1);
   if (user !== null) query = query.or(`actor_id.eq.${user},target_id.eq.${user}`);
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw new Error(error.message);
   const rows = z.array(Entry).parse(data);
   const ids = [...new Set(rows.flatMap((r) => (r.actor_id ? [r.actor_id] : [])))];
@@ -46,7 +43,10 @@ export async function loadAudit(
       names.set(p.id, p.username);
     }
   }
-  return rows.map((r) => ({ ...r, actor: r.actor_id ? (names.get(r.actor_id) ?? r.actor_id.slice(0, 8)) : null }));
+  return {
+    entries: rows.map((r) => ({ ...r, actor: r.actor_id ? (names.get(r.actor_id) ?? r.actor_id.slice(0, 8)) : null })),
+    total: count ?? rows.length,
+  };
 }
 
 export function actionLabel(action: string): string {

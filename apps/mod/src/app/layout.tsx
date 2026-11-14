@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { colors } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
+import { globalCss } from '~/lib/css';
 
 const jakarta = localFont({
   src: [
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={jakarta.className}
         style={{ margin: 0, background: colors.background, color: colors.ink, fontWeight: 500, minHeight: '100vh' }}
       >
-        <style>{`a{color:${colors.brandLink}}button{font:inherit;cursor:pointer}`}</style>
+        <style>{globalCss}</style>
         {children}
       </body>
     </html>
