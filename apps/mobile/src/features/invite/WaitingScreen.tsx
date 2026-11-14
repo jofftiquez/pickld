@@ -32,14 +32,21 @@ export function WaitingScreen() {
     queryKey: ['waiting', userId],
     enabled: userId !== undefined,
     queryFn: async () => {
-      const [position, profile] = await Promise.all([
+      const [position, profile, endsAt] = await Promise.all([
         getSupabase().rpc('waiting_position'),
         getSupabase().from('profiles').select('birthday').eq('id', userId!).single(),
+        getSupabase().rpc('invite_period_ends_at'),
       ]);
       if (position.error) throw position.error;
       if (profile.error) throw profile.error;
+      if (endsAt.error) throw endsAt.error;
       // waiting_position(): 1 is next; null once this account isn't waiting any more.
-      return { position: position.data as number | null, birthday: profile.data.birthday };
+      // invite_period_ends_at(): null when there is no end date to show.
+      return {
+        position: position.data as number | null,
+        birthday: profile.data.birthday,
+        endsAt: (endsAt.data as string | null) ?? null,
+      };
     },
   });
 
@@ -93,6 +100,7 @@ export function WaitingScreen() {
     <WaitingView
       insets={insets}
       ahead={line.data?.position ? line.data.position - 1 : null}
+      endsAt={line.data?.endsAt ? new Date(line.data.endsAt) : null}
       code={code}
       onChangeCode={(value) => {
         setCode(value);
