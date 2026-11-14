@@ -114,10 +114,10 @@ Goes to: tile → Capture (that slot) or Moment detail if filled · Publish → 
 
 ### Capture — “Capture”
 
-The photo editor for one moment. A dark frosted toolbar at the top holds Close, the slot tag with time, and Save (D-59); iOS 26 and later draw it as Liquid Glass (D-57). The photo sits below it; stickers and speech bubbles sit on the photo.
+The photo editor for one moment, in two steps like Instagram's (D-103; designs: EditPhoto, EditDetails). A dark frosted toolbar at the top holds Close (Back on step 2), the slot tag with time, and Next (Save on step 2) (D-59); iOS 26 and later draw it as Liquid Glass (D-57, D-80). On step 1 the photo sits below it, as large as fits at 3:4; stickers and speech bubbles sit on the photo.
 
-- Bottom sheet: tool tabs (Filters · Stickers · Bubble · Text), filter thumbnails (Original, Kalamansi, Merienda, Mono, Dusk) previewing the actual photo, caption field, **Keep this moment private** switch, Undo. Swiping up slides the sheet over the photo, which moves up more slowly and shrinks a little (off with Reduce Motion).
-- **Add to #afternoon** in the toolbar saves the moment into today’s jar (**Done** when editing it again).
+- Step 1, the photo: bottom sheet with tool tabs (Filters · Stickers · Bubble · Text), filter thumbnails previewing the actual photo, the tool's panel and Undo. Swiping up slides the sheet over the photo, which moves up more slowly and shrinks a little (off with Reduce Motion; D-105). **Next** slides in step 2 (no slide with Reduce Motion).
+- Step 2, the details: the edited photo small, the caption, the slot's hashtag (read-only), and Readers · Everyone · Only me. **Add to #afternoon** in the toolbar saves the moment into today’s jar (**Done** when editing it again); Back or a swipe from the left edge returns to step 1 with everything kept. Edit caption opens straight on step 2 (D-104).
 
 Goes to: gallery → Crop · tool tabs → Stickers / Bubble / Text · Close or save → Today.
 

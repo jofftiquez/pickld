@@ -21,8 +21,9 @@ import { setDeviceOnline } from '@/lib/connectivity';
 import { useToastStore } from '@/lib/toast';
 import type { Session } from '@supabase/supabase-js';
 
-// Editor (FR-CAP-04, FR-CAP-08, FR-CAP-09): loads the queued photo, draws it with the selected filter's
-// matrix, switches tools, and saves the caption, visibility and edits into the queue item. Skia's native
+// Editor (FR-CAP-04, FR-CAP-08, FR-CAP-09; D-103): loads the queued photo, draws it with the selected
+// filter's matrix and switches tools on the photo step, then Next opens the details step, whose Save stores
+// the caption, visibility and edits into the queue item. Skia's native
 // canvas is replaced by plain views that expose what would be drawn. The queue is an in-memory fake
 // with the store's save semantics (the store's own test runs them on real SQLite).
 
@@ -142,6 +143,11 @@ async function openEditor(url: string) {
 const matrixIn = (testID: string) =>
   JSON.parse(within(screen.getByTestId(testID)).getByTestId('color-matrix').props.accessibilityValue.text) as number[];
 const filterButton = (name: string) => screen.getByRole('button', { name });
+/** The photo step's Next (D-103): opens the details step with the caption and visibility. */
+async function goToDetails() {
+  await fireEvent.press(screen.getByTestId('editor-next'));
+  expect(screen.getByTestId('editor-details')).toBeTruthy();
+}
 
 beforeEach(() => {
   queryClient = new QueryClient();
@@ -228,7 +234,10 @@ describe('Editor', () => {
   it('Close returns to where the editor was opened from, keeps the photo queued unedited and lets it upload', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
+    await fireEvent.press(filterButton('Mono'));
+    await goToDetails();
     await fireEvent.changeText(screen.getByLabelText('Caption'), 'not kept');
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     expect(screen).toHavePathname('/today');
     await act(async () => {});
@@ -249,6 +258,7 @@ describe('Editor', () => {
     await push('/camera');
     await push('/edit/7?via=crop');
     await screen.findByTestId('editor-screen');
+    await goToDetails();
     await fireEvent.press(saveButton());
     await act(async () => {});
     expect(saveEdits).toHaveBeenCalledTimes(1);
@@ -285,6 +295,8 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
   it('shows the empty caption with its counter, the default visibility, no Undo, and "Add to #slot" for a photo just taken', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
+    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+    await goToDetails();
     const field = screen.getByLabelText('Caption');
     expect(field.props.value).toBe('');
     expect(field.props.maxLength).toBe(150);
@@ -292,13 +304,13 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     // Starts at the queued visibility (the owner's default, D-48).
     expect(screen.getByTestId('editor-visibility').props.accessibilityLabel).toBe('Who can see this moment');
     expect(selectedVisibility()).toEqual(['Readers']);
-    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
     expect(saveButton().props.accessibilityLabel).toBe('Add to #afternoon');
   });
 
   it('counts the caption as it is typed', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
+    await goToDetails();
     await fireEvent.changeText(screen.getByLabelText('Caption'), 'Sinigang at the office pantry');
     expect(screen.getByText('29 / 150')).toBeTruthy();
   });
@@ -322,6 +334,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Kalamansi'));
+    await goToDetails();
     await fireEvent.changeText(screen.getByLabelText('Caption'), '  Lunch break, finally!  ');
     await fireEvent.press(visibilityTab('Only me'));
     expect(selectedVisibility()).toEqual(['Only me']);
@@ -349,6 +362,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
   it('saves an empty or blank caption as no caption', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
+    await goToDetails();
     await fireEvent.changeText(screen.getByLabelText('Caption'), '   ');
     await fireEvent.press(saveButton());
     await act(async () => {});
@@ -359,6 +373,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     useToastStore.setState({ current: null });
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
+    await goToDetails();
     await fireEvent.press(saveButton());
     await act(async () => {});
     expect(useToastStore.getState().current).toMatchObject({ key: 'momentAdded', params: { slot: '#afternoon' } });
@@ -368,6 +383,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     try {
       await openEditor('/edit/8');
       await screen.findByTestId('editor-screen');
+      await goToDetails();
       await fireEvent.press(saveButton());
       await act(async () => {});
       expect(useToastStore.getState().current?.key).toBe('momentSavedOffline');
@@ -381,6 +397,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Mono'));
+    await goToDetails();
     await fireEvent.changeText(screen.getByLabelText('Caption'), 'keep me');
     await fireEvent.press(saveButton());
     await act(async () => {});
@@ -409,16 +426,18 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     await screen.findByTestId('editor-screen');
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.merienda);
     expect(filterButton('Merienda').props.accessibilityState).toMatchObject({ selected: true });
+    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+    await goToDetails();
     expect(screen.getByLabelText('Caption').props.value).toBe('Sinigang at the office pantry');
     expect(selectedVisibility()).toEqual(['Only me']);
     expect(saveButton().props.accessibilityLabel).toBe('Done');
-    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
   });
 
   it('save, then reopen in the same app run: shows what was saved, not the copy read before', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Dusk'));
+    await goToDetails();
     await fireEvent.changeText(screen.getByLabelText('Caption'), 'evening walk');
     await fireEvent.press(visibilityTab('Only me'));
     await fireEvent.press(saveButton());
@@ -428,6 +447,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     await push('/edit/7');
     await screen.findByTestId('editor-screen');
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.dusk);
+    await goToDetails();
     expect(screen.getByLabelText('Caption').props.value).toBe('evening walk');
     expect(selectedVisibility()).toEqual(['Only me']);
     expect(saveButton().props.accessibilityLabel).toBe('Done');
@@ -437,7 +457,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     expect(trackMomentAdded).toHaveBeenCalledTimes(1);
   });
 
-  it('Save sits in the fixed top toolbar (FR-CAP-09), not below the panel, and is disabled while saving', async () => {
+  it('Next, then Save, sit in the fixed top toolbar (FR-CAP-09), not in the content; Save is disabled while saving', async () => {
     let finish = () => {};
     jest.mocked(saveEdits).mockImplementationOnce(
       (id, input) =>
@@ -451,9 +471,13 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     );
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
+    expect(within(screen.getByTestId('editor-toolbar')).getByTestId('editor-next')).toBeTruthy();
+    expect(screen.queryByTestId('editor-save')).toBeNull();
+    await goToDetails();
+    expect(screen.queryByTestId('editor-next')).toBeNull();
     expect(screen.getAllByTestId('editor-save')).toHaveLength(1);
     expect(within(screen.getByTestId('editor-toolbar')).getByTestId('editor-save')).toBe(saveButton());
-    expect(within(screen.getByTestId('editor-screen')).queryByTestId('editor-save')).toBeNull();
+    expect(within(screen.getByTestId('editor-details')).queryByTestId('editor-save')).toBeNull();
 
     await fireEvent.press(saveButton());
     expect(saveButton().props.accessibilityState).toMatchObject({ disabled: true });
@@ -500,6 +524,7 @@ describe('Overlays (M2-13)', () => {
     expect(screen.getByTestId('overlay-s2')).toBeTruthy();
     await fireEvent(screen.getByTestId('overlay-s2'), 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
 
+    await goToDetails();
     await fireEvent.press(screen.getByRole('button', { name: 'Done' }));
     expect(saveEdits).toHaveBeenCalledTimes(1);
     const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
@@ -519,6 +544,7 @@ describe('Bubble tool (M2-16)', () => {
     await fireEvent.changeText(screen.getByLabelText('Bubble text'), 'Lunch break, finally!');
     expect(screen.getByRole('button', { name: 'Speech bubble: Lunch break, finally!' })).toBeTruthy();
 
+    await goToDetails();
     await fireEvent.press(screen.getByRole('button', { name: 'Add to #afternoon' }));
     const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
     expect(edits.overlays).toEqual([
@@ -545,6 +571,7 @@ describe('Text tool (M2-17)', () => {
     await fireEvent.press(screen.getByTestId('editor-undo')); // takes back the color only
     expect(screen.getByRole('radio', { name: 'Sky blue' }).props.accessibilityState).toMatchObject({ checked: false });
 
+    await goToDetails();
     await fireEvent.press(saveButton());
     await act(async () => {});
     const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
@@ -592,6 +619,7 @@ describe('Text tool (M2-17)', () => {
     await fireEvent(screen.getByLabelText('Your text'), 'endEditing');
     expect(screen.getByRole('button', { name: 'Text: lola’s kitchen ❤️' })).toBeTruthy();
 
+    await goToDetails();
     await fireEvent.press(saveButton());
     await act(async () => {});
     const edits = editsSchema.parse(jest.mocked(saveEdits).mock.calls[0]?.[1].edits);
@@ -623,7 +651,7 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
     jest.mocked(saveMomentEdits).mockClear();
   });
 
-  it('opens with this opening’s fetch, not a cached copy, caption focused; Done saves on the server', async () => {
+  it('opens with this opening’s fetch, not a cached copy, on the details step with the caption focused; Done saves on the server', async () => {
     // A copy from an earlier opening, restored from the persisted cache (JSON: no Date objects).
     queryClient.setQueryData(editableMomentQueryKey(USER, MOMENT), {
       id: MOMENT,
@@ -637,14 +665,19 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
       photoUrl: 'https://photos.test/expired.webp',
     });
     await openEditor(`/edit/${MOMENT}?focus=caption`);
-    await screen.findByTestId('editor-screen');
+    await screen.findByTestId('editor-details');
 
     expect(mockServer.reads).toBe(1);
+    // Edit caption opens straight on the details step (D-104): the photo step is behind it.
+    expect(screen.queryByTestId('editor-screen')).toBeNull();
+    expect(screen.getByTestId('editor-back')).toBeTruthy();
     const caption = screen.getByLabelText('Caption');
     expect(caption.props.value).toBe('fresh from the server');
     expect(caption.props.autoFocus).toBe(true);
-    expect(matrixIn('editor-photo')).toEqual(filterMatrices.mono);
-    expect(screen.getAllByTestId('skia-image')[0]?.props.accessibilityHint).toBe(`https://photos.test/${MOMENT}.webp`);
+    expect(matrixIn('editor-preview')).toEqual(filterMatrices.mono);
+    expect(within(screen.getByTestId('editor-preview')).getByTestId('skia-image').props.accessibilityHint).toBe(
+      `https://photos.test/${MOMENT}.webp`,
+    );
     expect(screen.getByText(/7:30/)).toBeTruthy();
     expect(saveButton().props.accessibilityLabel).toBe('Done');
 
@@ -662,11 +695,123 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
     expect(releaseEditing).not.toHaveBeenCalled();
   });
 
+  it('from the photo step: a filter, Next, Everyone, and Done saves the edits, caption and visibility on the server', async () => {
+    await openEditor(`/edit/${MOMENT}`);
+    await screen.findByTestId('editor-screen');
+    expect(matrixIn('editor-photo')).toEqual(filterMatrices.mono);
+    await fireEvent.press(filterButton('Ube'));
+    await goToDetails();
+    expect(matrixIn('editor-preview')).toEqual(filterMatrices.ube);
+    expect(screen.getByLabelText('Caption').props.autoFocus).toBe(false);
+    await fireEvent.press(visibilityTab('Everyone'));
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveMomentEdits).toHaveBeenCalledWith(
+      expect.anything(),
+      { kind: 'server', momentId: MOMENT, jarId: JAR },
+      { caption: 'fresh from the server', visibility: 'everyone', edits: { v: 1, filter: 'ube', overlays: [] } },
+    );
+    expect(screen).toHavePathname('/today');
+  });
+
   it('says it couldn’t open a removed moment', async () => {
     mockServer.row = { ...serverRow, status: 'removed' };
     await openEditor(`/edit/${MOMENT}`);
     expect(await screen.findByTestId('editor-missing')).toHaveTextContent(
       'Couldn’t open this moment. Check your connection and try again.',
     );
+  });
+});
+
+describe('Two steps: photo, then details (D-103)', () => {
+  it('the photo step has the photo and its tools, Close and Next, but no caption, visibility or Save', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    expect(screen.getByTestId('editor-photo')).toBeTruthy();
+    expect(screen.getByTestId('editor-tools')).toBeTruthy();
+    expect(screen.queryByLabelText('Caption')).toBeNull();
+    expect(screen.queryByTestId('editor-visibility')).toBeNull();
+    expect(screen.queryByTestId('editor-hashtag')).toBeNull();
+    expect(screen.queryByTestId('editor-save')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
+    expect(screen.getByTestId('editor-next').props.accessibilityLabel).toBe('Next');
+  });
+
+  it('Next opens the details step with the edited photo drawn small, the slot hashtag and Back', async () => {
+    rows.set(7, {
+      ...item,
+      edits: {
+        v: 1,
+        filter: 'original',
+        overlays: [{ id: 's1', type: 'sticker', ...kape, x: 0.5, y: 0.5, scale: 0.3, rotation: 0 }],
+      },
+    });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(filterButton('Mono'));
+    await goToDetails();
+
+    // The photo step is behind the details step, out of reach of touch and screen readers.
+    expect(screen.queryByTestId('editor-screen')).toBeNull();
+    expect(screen.queryByTestId('editor-tools')).toBeNull();
+    expect(matrixIn('editor-preview')).toEqual(filterMatrices.mono);
+    expect(within(screen.getByTestId('editor-preview')).getByTestId('skia-image').props.accessibilityHint).toBe(
+      item.photoUri,
+    );
+    expect(within(screen.getByTestId('editor-preview')).getByTestId('moment-overlay-s1')).toBeTruthy();
+    expect(screen.getByTestId('editor-hashtag').props.accessibilityLabel).toBe('Hashtag: #afternoon. Set by the slot.');
+    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+    expect(saveButton().props.accessibilityLabel).toBe('Add to #afternoon');
+    expect(saveEdits).not.toHaveBeenCalled();
+  });
+
+  it('Back returns to the photo step with every edit kept; Next again keeps the caption and visibility', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(filterButton('Gabi'));
+    await goToDetails();
+    await fireEvent.changeText(screen.getByLabelText('Caption'), 'rainy commute');
+    await fireEvent.press(visibilityTab('Only me'));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByTestId('editor-screen')).toBeTruthy();
+    expect(screen.queryByLabelText('Caption')).toBeNull();
+    expect(matrixIn('editor-photo')).toEqual(filterMatrices.gabi);
+    expect(filterButton('Gabi').props.accessibilityState).toMatchObject({ selected: true });
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
+    expect(saveEdits).not.toHaveBeenCalled();
+    expect(screen).toHavePathname('/edit/7');
+
+    await fireEvent.press(filterButton('Luma'));
+    await goToDetails();
+    expect(screen.getByLabelText('Caption').props.value).toBe('rainy commute');
+    expect(selectedVisibility()).toEqual(['Only me']);
+    expect(matrixIn('editor-preview')).toEqual(filterMatrices.luma);
+
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveEdits).toHaveBeenCalledWith(7, {
+      caption: 'rainy commute',
+      visibility: 'only_me',
+      edits: { v: 1, filter: 'luma', overlays: [] },
+    });
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('`focus=caption` on a queued photo opens on the details step with the caption focused; Back goes to the photo step', async () => {
+    rows.set(7, { ...item, editingSince: null, caption: 'merienda time' });
+    await openEditor('/edit/7?focus=caption');
+    await screen.findByTestId('editor-details');
+    expect(screen.queryByTestId('editor-screen')).toBeNull();
+    expect(screen.getByLabelText('Caption').props.autoFocus).toBe(true);
+    expect(screen.getByLabelText('Caption').props.value).toBe('merienda time');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByTestId('editor-screen')).toBeTruthy();
+    expect(screen).toHavePathname('/edit/7');
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    expect(screen).toHavePathname('/today');
+    expect(saveEdits).not.toHaveBeenCalled();
   });
 });

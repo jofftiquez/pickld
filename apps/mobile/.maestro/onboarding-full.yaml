@@ -270,6 +270,8 @@ appId: me.pickld.app
       id: editor-screen
     timeout: 10000
 - tapOn:
+    id: editor-next
+- tapOn:
     id: editor-save
 - extendedWaitUntil:
     visible:
