@@ -21,9 +21,10 @@ import { SegmentedControl } from '@/components/SegmentedControl';
 import { FeedJarCard } from '@/features/feed/FeedJarCard';
 import type { FeedJar } from '@/features/feed/feedModel';
 import { MomentFeedCard } from '@/features/moments/MomentFeedCard';
-import type { FeedMoment } from '@/features/moments/momentsModel';
+import { cardPhotoUrl, type FeedMoment } from '@/features/moments/momentsModel';
 import { FollowButton } from '@/features/profile/FollowButton';
 import type { AvatarUrls } from '@/lib/avatars';
+import { usePhotoPrefetch } from '@/lib/image/usePhotoPrefetch';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, explore as e, radius, sizes, space } from '@/theme/tokens';
@@ -76,6 +77,9 @@ export type DiscoverViewProps = {
 
 type Item = { kind: 'moment'; moment: FeedMoment } | { kind: 'jar'; jar: FeedJar };
 
+/** Moment cards draw a large photo worth loading ahead (NFR-PERF-02); jar cards draw small thumbnails. */
+const itemPhoto = (item: Item) => (item.kind === 'moment' ? cardPhotoUrl(item.moment) : null);
+
 /**
  * Discover (D-100, FR-EXP-01 to FR-EXP-03): search people by name or @username and Suggested authors, then a
  * Moments | Jars switch listing Everyone moments and jars of people the viewer doesn't read yet, newest first,
@@ -125,6 +129,7 @@ export function DiscoverView({
     : tab === 'moments'
       ? (moments ?? []).map((moment) => ({ kind: 'moment', moment }))
       : (jars ?? []).map((jar) => ({ kind: 'jar', jar }));
+  const onViewableItemsChanged = usePhotoPrefetch(items, itemPhoto);
 
   const header = (
     <View>
@@ -231,6 +236,7 @@ export function DiscoverView({
         paddingBottom: Math.max(insets.bottom, space.lg) + tabBarClearance,
       }}
       data={items}
+      onViewableItemsChanged={onViewableItemsChanged}
       keyExtractor={(item) => (item.kind === 'moment' ? `m:${item.moment.moment_id}` : `j:${item.jar.jar_id}`)}
       renderItem={({ item }) => (
         <View style={styles.cardWrap}>

@@ -63,3 +63,8 @@ export function withMomentLike(pages: MomentsPage[], momentId: string, liked: bo
     ),
   }));
 }
+
+/** The photo a timeline card draws: the 1080 × 1440 copy, else the full photo, else the thumbnail (NFR-PERF-02). */
+export function cardPhotoUrl(m: Pick<FeedMoment, 'fullUrl' | 'mediumUrl' | 'thumbUrl'>): string | null {
+  return m.mediumUrl ?? m.fullUrl ?? m.thumbUrl;
+}

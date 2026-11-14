@@ -1,6 +1,7 @@
 import {
   MOMENTS_PAGE_SIZE,
   nextMomentsCursor,
+  cardPhotoUrl,
   withMomentLike,
   type FeedMoment,
   type MomentsPage,
@@ -41,5 +42,14 @@ describe('withMomentLike', () => {
     expect(withMomentLike(pages, 'b', true)[0]?.moments[1]).toMatchObject({ liked: true, like_count: 5 });
     const odd: MomentsPage[] = [{ moments: [m('z', true, 0)], nextCursor: null }];
     expect(withMomentLike(odd, 'z', false)[0]?.moments[0]).toMatchObject({ liked: false, like_count: 0 });
+  });
+});
+
+describe('cardPhotoUrl (NFR-PERF-02)', () => {
+  it('draws the medium copy, else the full photo, else the thumbnail', () => {
+    expect(cardPhotoUrl({ mediumUrl: 'm', fullUrl: 'f', thumbUrl: 't' })).toBe('m');
+    expect(cardPhotoUrl({ mediumUrl: null, fullUrl: 'f', thumbUrl: 't' })).toBe('f');
+    expect(cardPhotoUrl({ fullUrl: null, thumbUrl: 't' })).toBe('t');
+    expect(cardPhotoUrl({ fullUrl: null, thumbUrl: null })).toBeNull();
   });
 });
