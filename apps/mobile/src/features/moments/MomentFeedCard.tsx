@@ -14,7 +14,7 @@ import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
-import type { FeedMoment } from './momentsModel';
+import { cardPhotoUrl, type FeedMoment } from './momentsModel';
 
 export type MomentFeedCardProps = {
   moment: FeedMoment;
@@ -130,7 +130,7 @@ export function MomentFeedCard({
       >
         <View style={[styles.photo, { width: photoWidth }]}>
           <MomentView
-            uri={moment.mediumUrl ?? moment.fullUrl ?? moment.thumbUrl}
+            uri={cardPhotoUrl(moment)}
             edits={parseEdits(moment.edits)}
             width={photoWidth}
             stamp={{ capturedAt: at, tz: moment.jar_tz }}

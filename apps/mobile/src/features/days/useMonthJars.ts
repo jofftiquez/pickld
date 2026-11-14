@@ -8,6 +8,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
 import { monthJarRow, monthOf, type MonthJar } from './monthGrid';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const photoUrlsResponse = z.object({
   data: z.object({ moments: z.array(z.object({ id: z.string(), thumb: z.string().nullable() })) }),
@@ -17,6 +18,7 @@ const photoUrlsResponse = z.object({
 async function coverUrls(momentIds: string[]): Promise<Map<string, string | null>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
   return new Map(parsed.data.data.moments.map((m) => [m.id, m.thumb]));

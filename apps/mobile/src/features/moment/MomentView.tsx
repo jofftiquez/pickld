@@ -12,6 +12,7 @@ import { colors, photo } from '@/theme/tokens';
 import { FilteredMomentPhoto } from './FilteredMomentPhoto';
 import { momentLabel } from './momentRender';
 import { photoSource } from '@/lib/image/photoCache';
+import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
 
 // The same renderers the editor draws with, so a moment looks the way its owner left it.
 registerOverlayRenderers();
@@ -42,6 +43,7 @@ export function MomentView({ uri, edits, width, stamp = null, accessible = true,
   const { t } = useTranslation();
   useAspectRevision();
   const size = { width, height: width / photo.aspect };
+  const placeholder = photoPlaceholder(uri);
   const placed = edits.overlays.flatMap((overlay) => {
     const renderer = getOverlayRenderer(overlay.type);
     return renderer ? [{ overlay, renderer, box: toPixels(overlay, size, renderer.aspect(overlay)) }] : [];
@@ -61,13 +63,27 @@ export function MomentView({ uri, edits, width, stamp = null, accessible = true,
       {uri === null ? null : edits.filter === 'original' ? (
         <Image
           source={photoSource(uri)}
+          placeholder={placeholder}
+          placeholderContentFit="cover"
           style={StyleSheet.absoluteFill}
           contentFit="cover"
           accessible={false}
           testID="moment-view-photo"
         />
       ) : (
-        <FilteredMomentPhoto uri={uri} filter={edits.filter} width={size.width} height={size.height} />
+        <>
+          {/* Skia draws nothing until the photo file is ready; the blurred placeholder shows through until then. */}
+          {placeholder ? (
+            <Image
+              source={placeholder}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              accessible={false}
+              testID="moment-view-placeholder"
+            />
+          ) : null}
+          <FilteredMomentPhoto uri={uri} filter={edits.filter} width={size.width} height={size.height} />
+        </>
       )}
       <StampMomentProvider value={stamp}>
         {placed.map(({ overlay, renderer: { Content }, box }) => (

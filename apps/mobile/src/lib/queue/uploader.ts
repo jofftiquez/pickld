@@ -45,6 +45,8 @@ export interface UploaderDeps {
   remember?: (localUri: string, key: string) => Promise<void>;
   /** Writes the 1080 × 1440 feed copy of the full photo, or null when it can't (prepareMedium by default). */
   makeMedium?: (fullUri: string) => Promise<string | null>;
+  /** The ThumbHash placeholder for the thumbnail, or null when it can't (generateThumbhash by default). */
+  makeThumbhash?: (thumbUri: string) => Promise<string | null>;
 }
 
 // Loaded on first use, so this module doesn't pull the native image manipulator in until a raw item needs it.
@@ -55,6 +57,10 @@ const rememberUploaded = (localUri: string, key: string) =>
 // Best effort too (NFR-PERF-02): without a medium copy the Worker serves the full photo under the medium link.
 const makeMediumCopy = (fullUri: string) =>
   import('../image/pipeline').then((m) => m.prepareMedium(fullUri).then((out) => out.uri)).catch(() => null);
+
+// Best effort as well (NFR-PERF-02): without one the photo shows the plain tile color while it loads.
+const generateThumbhash = (thumbUri: string) =>
+  import('../image/photoThumbhash').then((m) => m.makeThumbhash(thumbUri)).catch(() => null);
 
 function deleteQuietly(uri: string): void {
   try {
@@ -178,6 +184,7 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
     prepare = prepareRaw,
     remember = rememberUploaded,
     makeMedium = makeMediumCopy,
+    makeThumbhash = generateThumbhash,
   } = deps;
   const uploading = start(item, now());
   await saveStatus(uploading);
@@ -199,6 +206,7 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
     // Made from the queue's full photo for each attempt and deleted after it, so the queue keeps two files.
     mediumUri = await makeMedium(ready.photoUri);
     const medium = mediumUri === null ? null : new File(mediumUri);
+    const thumbhash = await makeThumbhash(ready.thumbUri);
     const { data: body, error: urlError } = await client.functions.invoke<unknown>('upload-url', {
       body: {
         kind: 'moment',
@@ -206,6 +214,7 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
         photo: { contentType: 'image/webp', size: photo.size },
         ...(medium ? { medium: { contentType: 'image/webp', size: medium.size } } : {}),
         thumb: { contentType: 'image/webp', size: thumb.size },
+        ...(thumbhash ? { thumbhash } : {}),
       },
     });
     if (urlError) throw urlError;

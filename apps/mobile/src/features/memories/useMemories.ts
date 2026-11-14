@@ -8,6 +8,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
 import { monthRecapRow, onThisDayRow, previousMonth, yearsBetween, yearSummaryRow, type Memories } from './memories';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const photoUrlsResponse = z.object({
   data: z.object({
@@ -19,6 +20,7 @@ const photoUrlsResponse = z.object({
 async function photoUrls(momentIds: string[]): Promise<Map<string, { full: string | null; thumb: string | null }>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
   return new Map(parsed.data.data.moments.map((m) => [m.id, { full: m.full, thumb: m.thumb }]));

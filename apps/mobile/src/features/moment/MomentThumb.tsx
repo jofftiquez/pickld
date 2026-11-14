@@ -7,6 +7,7 @@ import type { StampMoment } from '@/features/edit/stickers/stamps';
 import { MomentCover } from './MomentCover';
 import { hasVisibleEdits } from './momentRender';
 import { photoSource } from '@/lib/image/photoCache';
+import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
 
 export type MomentThumbProps = {
   uri: string | null;
@@ -31,6 +32,8 @@ export function MomentThumb({ uri, edits, stamp = null, recyclingKey, transition
   return (
     <Image
       source={photoSource(uri)}
+      placeholder={photoPlaceholder(uri)}
+      placeholderContentFit="cover"
       style={StyleSheet.absoluteFill}
       contentFit="cover"
       recyclingKey={recyclingKey}

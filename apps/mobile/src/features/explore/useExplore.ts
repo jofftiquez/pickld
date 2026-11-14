@@ -22,6 +22,7 @@ import {
   type Person,
 } from './explore';
 import { removeDiscoverAuthor } from './useDiscover';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const SEARCH_DELAY_MS = 250;
 const MAX_BATCH = 100; // fn:photo-urls
@@ -36,6 +37,7 @@ async function signedAvatars(profileIds: string[]): Promise<Map<string, string |
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', {
     body: { profileIds: profileIds.slice(0, MAX_BATCH) },
   });
+  rememberPlaceholders(data);
   const parsed = urlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
   return new Map((parsed.data.data.profiles ?? []).map((p) => [p.id, p.avatar]));

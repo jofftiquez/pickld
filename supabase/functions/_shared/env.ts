@@ -18,7 +18,8 @@ export function userClient(jwt: string): SupabaseClient {
 }
 
 /**
- * The server credential, for fn:moderate only: applying a verdict must be something no client can do.
+ * The server credential, for work no client may do (fn:moderate applying a verdict, fn:upload-url and fn:photo-urls
+ * handling ThumbHash placeholders, account jobs).
  * SUPABASE_SERVICE_ROLE_KEY is provided by the Edge runtime and never leaves the server (rule 2). Even
  * with it, a moment becomes live or removed only through moderation_apply() (migration 0011).
  */

@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
 import { notificationRow, type NotificationRow } from './notificationsModel';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const LIMIT = 100;
 const PHOTO_BATCH = 100; // fn:photo-urls MAX_BATCH, per list
@@ -41,6 +42,7 @@ async function photoUrls(momentIds: string[], profileIds: string[]) {
   const body = { momentIds: momentIds.slice(0, PHOTO_BATCH), profileIds: profileIds.slice(0, PHOTO_BATCH) };
   if (body.momentIds.length + body.profileIds.length === 0) return { moments: [], profiles: [] };
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   // A failure leaves avatars on their initials and thumbnails on their placeholder.
   return error || !parsed.success ? { moments: [], profiles: [] } : parsed.data.data;

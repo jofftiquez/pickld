@@ -6,6 +6,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-na
 import { maxTextScale, textStyle, type FontWeight, type TextVariant } from '@/theme/text';
 import { colors, photo, radius as radii, sizes, space } from '@/theme/tokens';
 import { photoSource } from '@/lib/image/photoCache';
+import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
 
 export type PhotoTileProps = {
   /** Photo to show; `null` shows the placeholder color (e.g. while a queued photo loads). */
@@ -72,6 +73,8 @@ export function PhotoTile({
         <Image
           testID="photo-tile-image"
           source={photoSource(uri)}
+          placeholder={photoPlaceholder(uri)}
+          placeholderContentFit="cover"
           style={StyleSheet.absoluteFill}
           contentFit="cover"
           blurRadius={blurred ? photo.checkingBlur : undefined}

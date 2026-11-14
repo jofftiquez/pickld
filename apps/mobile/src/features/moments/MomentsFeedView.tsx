@@ -6,12 +6,13 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { FeedEmpty } from '@/features/feed/FeedEmpty';
 import type { FeedAuthor } from '@/features/feed/feedModel';
 import type { AvatarUrls } from '@/lib/avatars';
+import { usePhotoPrefetch } from '@/lib/image/usePhotoPrefetch';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { MomentFeedCard } from './MomentFeedCard';
-import type { FeedMoment } from './momentsModel';
+import { cardPhotoUrl, type FeedMoment } from './momentsModel';
 
 export type MomentsFeedViewProps = {
   moments: FeedMoment[] | undefined;
@@ -69,6 +70,8 @@ export function MomentsFeedView({
   const bottomPadding = Math.max(insets.bottom, space.lg) + tabBarClearance;
   const readsNobody = authors !== undefined && authors.length === 0;
   const hasMoments = moments !== undefined && moments.length > 0;
+
+  const onViewableItemsChanged = usePhotoPrefetch(moments, cardPhotoUrl);
 
   const header = (
     <View>
@@ -146,6 +149,7 @@ export function MomentsFeedView({
       }
       onEndReached={onEndReached}
       onEndReachedThreshold={0.6}
+      onViewableItemsChanged={onViewableItemsChanged}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
