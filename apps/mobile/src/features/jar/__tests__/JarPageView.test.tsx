@@ -91,10 +91,18 @@ describe('JarPageView', () => {
     expect(screen.getByTestId('jar-subtitle')).toHaveTextContent('Nov 8, 2026 · 3 of 8 moments');
   });
 
-  it('shows likes and comments and shares the jar', async () => {
-    const { onShare, onBack } = await setup();
+  it('shows a reader likes and comments but no Share: only the owner shares (D-83)', async () => {
+    const { onBack } = await setup();
     expect(screen.getByLabelText('48 likes')).toBeTruthy();
     expect(screen.getByLabelText('6 comments')).toBeTruthy();
+    expect(screen.queryByTestId('jar-share')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Share jar' })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the owner share their jar', async () => {
+    const { onShare, onBack } = await setup({ data: { ...daleJar, viewerId: 'dale-id' } });
     await fireEvent.press(screen.getByRole('button', { name: 'Share jar' }));
     expect(onShare).toHaveBeenCalledTimes(1);
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));

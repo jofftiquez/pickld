@@ -1392,6 +1392,7 @@
     "failed": "Couldn’t share the card. Try again.",
     "unavailable": "This jar isn’t available to share.",
     "unavailableMoment": "This moment isn’t available to share.",
+    "notOwner": "You can only share your own jars.",
     "empty": "Nothing on this jar can be shared yet.",
     "linkMessage": "{{title}} on Pickld: {{url}}"
   },

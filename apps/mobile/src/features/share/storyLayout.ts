@@ -21,58 +21,83 @@ export function canvasSize(format: StoryFormat): { width: number; height: number
 }
 
 /**
- * Space kept clear of names and captions. On a Story, Instagram and Facebook draw the profile bar over
- * the top ~13% and the reply bar over the bottom ~18%; a feed post only needs a margin.
+ * Where names and captions may go. On a Story, Instagram and Facebook draw the profile bar over the top 13%
+ * and the reply bar over the bottom 18%; text stays out of both. A feed post only needs a margin. Photos are
+ * not held to this: they fill the card (D-82).
  */
 export function safeInsets(format: StoryFormat): { top: number; bottom: number; side: number } {
-  return format === 'story' ? { top: 250, bottom: 340, side: 72 } : { top: 72, bottom: 72, side: 72 };
+  return format === 'story' ? { top: 250, bottom: 346, side: 48 } : { top: 48, bottom: 48, side: 48 };
 }
 
 /**
- * Fixed sizes of what the card prints around the photos, in exported pixels. Text on the card never
- * follows the system text size, so these heights are known before anything is drawn.
+ * Fixed sizes of what the card prints, in exported pixels. Text on the card never follows the system text
+ * size, so these heights are known before anything is drawn. Names and captions are compact overlays on
+ * the photos (D-82), each on its own pill so it reads on any photo.
  */
 export const storyMetrics = {
-  /** Author row: the name (40 px, 1.3 line height) over the date (30 px). */
-  authorBand: 40 * 1.3 + 30 * 1.3,
-  avatar: 88,
-  /** Wordmark at the bottom; its height sets the footer row. */
-  logoWidth: 160,
-  logoAspect: 1200 / 496,
-  /** Room kept for the caption under the footer row: up to 3 lines of 34 px. */
-  captionSize: 34,
-  captionLines: 3,
-  captionGap: 16,
-  /** Between the author row, the photos and the footer. */
-  bandGap: 32,
+  /** Around the photos, at the card's edge. */
+  margin: 24,
   /** Between photos. */
-  tileGap: 16,
-  /** Inside the paper card of the Print background. */
-  printPad: 40,
+  tileGap: 12,
+  /** Between the Print background's paper card and the photos. */
+  printPad: 24,
+  /** Author pill: avatar beside the name (34 px) over the date (26 px). */
+  avatar: 64,
+  nameSize: 34,
+  dateSize: 26,
+  pillPad: 12,
+  pillPadX: 24,
+  /** Footer row: the link or slot pill and the wordmark pill. */
+  footerHeight: 72,
+  footerSize: 28,
+  logoWidth: 120,
+  logoAspect: 1200 / 496,
+  /** Caption band over the footer: up to 3 lines of 32 px. */
+  captionSize: 32,
+  captionLines: 3,
+  captionPad: 16,
+  /** Between the caption band and the footer row. */
+  overlayGap: 12,
 } as const;
 
 export type Rect = { x: number; y: number; width: number; height: number };
 
-/** The card's safe area: inside `safeInsets`, where names, captions and photos are drawn. */
+/** The card's safe area: inside `safeInsets`, the only place names and captions are drawn. */
 export function safeArea(format: StoryFormat): Rect {
   const size = canvasSize(format);
   const safe = safeInsets(format);
   return { x: safe.side, y: safe.top, width: size.width - 2 * safe.side, height: size.height - safe.top - safe.bottom };
 }
 
-/**
- * Where the photos may go: the safe area less the Print card's padding, the author row at the top and the
- * footer (link or slot, wordmark, and room for 3 caption lines when there is a caption) at the bottom.
- */
-export function photoArea(format: StoryFormat, options: { framed: boolean; caption: boolean }): Rect {
+/** The card less its outer margin; the Print background's paper card fills it. */
+export function frameArea(format: StoryFormat): Rect {
+  const size = canvasSize(format);
+  const m = storyMetrics.margin;
+  return { x: m, y: m, width: size.width - 2 * m, height: size.height - 2 * m };
+}
+
+/** Where the photos may go: the whole card less a small margin (and the Print card's padding). */
+export function photoArea(format: StoryFormat, options: { framed: boolean }): Rect {
+  const frame = frameArea(format);
+  const pad = options.framed ? storyMetrics.printPad : 0;
+  return { x: frame.x + pad, y: frame.y + pad, width: frame.width - 2 * pad, height: frame.height - 2 * pad };
+}
+
+/** The most room each overlay can take; each hugs its text inside its box, anchored to the box's left. */
+export type StoryOverlays = { author: Rect; caption: Rect; footer: Rect };
+
+/** The author pill at the top of the safe area; the footer row, and the caption band over it, at the bottom. */
+export function overlayRects(format: StoryFormat): StoryOverlays {
   const m = storyMetrics;
   const safe = safeArea(format);
-  const pad = options.framed ? m.printPad : 0;
-  const footer =
-    m.logoWidth / m.logoAspect + (options.caption ? m.captionGap + m.captionLines * m.captionSize * 1.3 : 0);
-  const top = safe.y + pad + m.authorBand + m.bandGap;
-  const bottom = safe.y + safe.height - pad - footer - m.bandGap;
-  return { x: safe.x + pad, y: top, width: safe.width - 2 * pad, height: bottom - top };
+  const authorHeight = Math.max(m.avatar, (m.nameSize + m.dateSize) * 1.3) + 2 * m.pillPad;
+  const captionHeight = m.captionLines * m.captionSize * 1.3 + 2 * m.captionPad;
+  const footerY = safe.y + safe.height - m.footerHeight;
+  return {
+    author: { x: safe.x, y: safe.y, width: safe.width, height: authorHeight },
+    caption: { x: safe.x, y: footerY - m.overlayGap - captionHeight, width: safe.width, height: captionHeight },
+    footer: { x: safe.x, y: footerY, width: safe.width, height: m.footerHeight },
+  };
 }
 
 export const storyLayoutIds = [
@@ -100,19 +125,27 @@ export type StoryLayout = {
   cells: Rect[];
 };
 
-/** A grid of `cols` × `rows` cells, each `unit` times as tall as it is wide; a cell spans whole cells. */
+/**
+ * A grid of `cols` × `rows` cells, each `unit` times as tall as it is wide; a cell spans whole cells.
+ * `stretch` is the range a cell's height-to-width ratio may grow or shrink to, so the grid fills the card.
+ */
 type Grid = {
   cols: number;
   rows: number;
   unit: number;
+  stretch: readonly [min: number, max: number];
   cells: [col: number, row: number, cols: number, rows: number][];
 };
 
 const PORTRAIT = 4 / 3; // 3:4 cells, the photo's own shape
 const LANDSCAPE = 3 / 4; // 4:3 cells for stacked layouts, so they stay wide enough
+/** Cells may become anything from 16:9 to 9:16 to fill the card; photos are cropped, centred, to fit. */
+const STRETCH = [9 / 16, 16 / 9] as const;
+/** A single moment stays whole at 3:4. */
+const WHOLE = [PORTRAIT, PORTRAIT] as const;
 
 /** `count` cells filled row by row, `cols` to a row; a short last row is centred. */
-function rowsOf(count: number, cols: number, unit: number): Grid {
+function rowsOf(count: number, cols: number, unit: number, stretch: Grid['stretch'] = STRETCH): Grid {
   const rows = Math.ceil(count / cols);
   const cells: Grid['cells'] = [];
   for (let i = 0; i < count; i++) {
@@ -120,26 +153,42 @@ function rowsOf(count: number, cols: number, unit: number): Grid {
     const inRow = row === rows - 1 ? count - row * cols : cols;
     cells.push([(cols - inRow) / 2 + (i % cols), row, 1, 1]);
   }
-  return { cols, rows, unit, cells };
+  return { cols, rows, unit, stretch, cells };
 }
 
-/** One large 3:4 photo with the other `count - 1` in a row below it. */
+/** One large photo with the other `count - 1` in a row below it. */
 function largeAndStrip(count: number): Grid {
   const n = count - 1;
   const cells: Grid['cells'] = [[0, 0, n, n]];
   for (let i = 0; i < n; i++) cells.push([i, n, 1, 1]);
-  return { cols: n, rows: n + 1, unit: PORTRAIT, cells };
+  return { cols: n, rows: n + 1, unit: PORTRAIT, stretch: STRETCH, cells };
 }
 
-/** The grid at the largest size that fits `area`, centred in it. Gaps stay `tileGap` at any size. */
-function place(grid: Grid, area: Rect): Rect[] {
+/**
+ * The grid as large as it fits in `area` (D-82): first at its own cell shape, then stretched within its
+ * range along the side that still has room, so it fills the card's width or height and usually both.
+ * Gaps stay `tileGap`. Centred across; up and down it is centred on `focusY` (the middle of what a Story
+ * leaves uncovered) as far as the area allows.
+ */
+function place(grid: Grid, area: Rect, focusY: number): Rect[] {
   const g = storyMetrics.tileGap;
   const byWidth = (area.width - (grid.cols - 1) * g) / grid.cols;
-  const byHeight = (area.height - (grid.rows - 1) * g) / grid.rows / grid.unit;
-  const w = Math.max(0, Math.min(byWidth, byHeight));
-  const h = w * grid.unit;
-  const left = area.x + (area.width - (grid.cols * w + (grid.cols - 1) * g)) / 2;
-  const top = area.y + (area.height - (grid.rows * h + (grid.rows - 1) * g)) / 2;
+  const byHeight = (area.height - (grid.rows - 1) * g) / grid.rows;
+  const [lo, hi] = grid.stretch;
+  let w: number;
+  let h: number;
+  if (byWidth * grid.unit <= byHeight) {
+    w = byWidth;
+    h = Math.min(byHeight, w * hi);
+  } else {
+    h = byHeight;
+    w = Math.min(byWidth, h / lo);
+  }
+  w = Math.max(0, w);
+  h = Math.max(0, h);
+  const total = { width: grid.cols * w + (grid.cols - 1) * g, height: grid.rows * h + (grid.rows - 1) * g };
+  const left = area.x + (area.width - total.width) / 2;
+  const top = Math.min(Math.max(focusY - total.height / 2, area.y), area.y + area.height - total.height);
   return grid.cells.map(([col, row, cols, rows]) => ({
     x: left + col * (w + g),
     y: top + row * (h + g),
@@ -151,7 +200,7 @@ function place(grid: Grid, area: Rect): Rect[] {
 function gridsFor(count: number): [StoryLayoutId, Grid][] {
   switch (count) {
     case 1:
-      return [['full', rowsOf(1, 1, PORTRAIT)]];
+      return [['full', rowsOf(1, 1, PORTRAIT, WHOLE)]];
     case 2:
       return [
         ['sideBySide', rowsOf(2, 2, PORTRAIT)],
@@ -185,17 +234,20 @@ function gridsFor(count: number): [StoryLayoutId, Grid][] {
 
 /**
  * The layouts a card with `count` photos can use, the default first (D-62). Each gives every photo's
- * rectangle inside the safe area; the card draws the photos there and the exported image is that same
- * view, so the preview and the file match. Photos are 3:4 and are cropped, centred, into other shapes.
+ * rectangle on the card; the card draws the photos there and the exported image is that same view, so the
+ * preview and the file match. Photos fill the card less a thin margin (D-82) and are cropped, centred, into
+ * their cells; one moment alone stays whole at 3:4.
  */
 export function layoutsFor(
   count: number,
   format: StoryFormat,
-  options: { framed: boolean; caption: boolean } = { framed: false, caption: false },
+  options: { framed: boolean } = { framed: false },
 ): StoryLayout[] {
   const n = Math.min(slots.length, Math.max(1, Math.round(count)));
   const area = photoArea(format, options);
-  return gridsFor(n).map(([id, grid]) => ({ id, labelKey: `share.layout.${id}`, cells: place(grid, area) }));
+  const safe = safeArea(format);
+  const focusY = safe.y + safe.height / 2;
+  return gridsFor(n).map(([id, grid]) => ({ id, labelKey: `share.layout.${id}`, cells: place(grid, area, focusY) }));
 }
 
 /** Points per exported pixel: draws the image at 1080 pixels wide on a screen with this pixel ratio. */
@@ -212,8 +264,11 @@ export type StoryPalette = {
   scrim: string | null;
   /** A paper card holds the content (`print`). */
   card: string | null;
+  /** The pill under names, the caption and the wordmark, so they read on any photo (D-82). */
+  pill: string;
+  /** Text on the pills. */
   text: string;
-  /** Wordmark tint; null keeps its own brand green (on light paper). */
+  /** Wordmark tint; null keeps its own brand green (on a white pill). */
   logoTint: string | null;
 };
 
@@ -248,22 +303,32 @@ export function paletteFor(background: StoryBackground, lidColor: string | null 
         blurred: true,
         scrim: colors.glass,
         card: null,
+        pill: colors.glassStrong,
         text: colors.surface,
         logoTint: colors.surface,
       };
     case 'lid': {
       const lid = lidOf(lidColor);
       const text = readableOn(lid);
-      return { fill: lid, blurred: false, scrim: null, card: null, text, logoTint: text };
+      return { fill: lid, blurred: false, scrim: null, card: null, pill: lid, text, logoTint: text };
     }
     case 'paper':
-      return { fill: colors.background, blurred: false, scrim: null, card: null, text: colors.ink, logoTint: null };
+      return {
+        fill: colors.background,
+        blurred: false,
+        scrim: null,
+        card: null,
+        pill: colors.surface,
+        text: colors.ink,
+        logoTint: null,
+      };
     case 'ink':
       return {
         fill: colors.ink,
         blurred: false,
         scrim: null,
         card: null,
+        pill: colors.glassStrong,
         text: colors.surface,
         logoTint: colors.surface,
       };
@@ -273,6 +338,7 @@ export function paletteFor(background: StoryBackground, lidColor: string | null 
         blurred: true,
         scrim: colors.glass,
         card: colors.surface,
+        pill: colors.surface,
         text: colors.ink,
         logoTint: null,
       };

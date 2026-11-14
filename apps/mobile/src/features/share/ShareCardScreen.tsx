@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SecondaryButton } from '@/components/SecondaryButton';
 import { jarTitle } from '@/features/jar/shareJar';
 import { useJarPage } from '@/features/jar/useJarPage';
 import { track } from '@/lib/analytics';
@@ -17,7 +18,6 @@ import { type CardRef, copyLink, messageLink, renderCardImage, saveImage, shareI
 import { buildShareCard } from './shareCard';
 import { ShareCardView, type ShareAction } from './ShareCardView';
 import {
-  cardCaption,
   layoutsFor,
   paletteFor,
   shareableMoment,
@@ -28,7 +28,9 @@ import {
 
 /**
  * Share a jar, or one moment of it when `momentId` is set (FR-SOC-10, T-509). Reads the jar as the viewer,
- * so RLS and the card model both filter; a private, checking or removed moment can't be shared.
+ * so RLS and the card model both filter; a private, checking or removed moment can't be shared. Only the
+ * jar's owner may share it (D-83); anyone else gets a calm refusal with a way back. The card is made on the
+ * phone and nothing about it is stored on the server, so this is the whole rule.
  */
 export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined; momentId?: string }) {
   const { t } = useTranslation();
@@ -46,14 +48,21 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/jars'));
 
-  const moment = data && momentId !== undefined ? shareableMoment(data.moments, momentId) : null;
-  if (!data || (momentId !== undefined && !moment)) {
+  // Only the owner shares (D-83): someone else's jar never reaches the card, so their photos are never drawn.
+  const mine = data ? data.jar.user_id === data.viewerId : false;
+  const moment = data && mine && momentId !== undefined ? shareableMoment(data.moments, momentId) : null;
+  if (!data || !mine || (momentId !== undefined && !moment)) {
+    const message = data === null ? 'share.unavailable' : !mine ? 'share.notOwner' : 'share.unavailableMoment';
     return (
-      <View style={{ flex: 1, backgroundColor: colors.camera, justifyContent: 'center', padding: space.xxl }}>
+      <View
+        style={{ flex: 1, backgroundColor: colors.camera, justifyContent: 'center', padding: space.xxl, gap: space.lg }}
+        testID="share-refused"
+      >
         {data !== undefined ? (
-          <Text style={[textStyle('body'), { color: colors.surface, textAlign: 'center' }]}>
-            {t(data === null ? 'share.unavailable' : 'share.unavailableMoment')}
-          </Text>
+          <>
+            <Text style={[textStyle('body'), { color: colors.surface, textAlign: 'center' }]}>{t(message)}</Text>
+            <SecondaryButton variant="onDark" label={t('share.back')} onPress={back} testID="share-refused-back" />
+          </>
         ) : null}
       </View>
     );
@@ -67,10 +76,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
   const date = formatDate(new Date(`${data.jar.local_date}T12:00:00Z`), 'UTC');
   // One moment alone always uses the single full layout.
   const count = moment ? 1 : card.moments.length;
-  const layouts = layoutsFor(count, format, {
-    framed: paletteFor(background, data.author.lid_color).card !== null,
-    caption: cardCaption(card, moment, includeCaption) !== null,
-  });
+  const layouts = layoutsFor(count, format, { framed: paletteFor(background, data.author.lid_color).card !== null });
   const layout = layouts.find((l) => picked?.count === count && l.id === picked.id) ?? layouts[0]!;
 
   type Notice = { text: string; error: boolean } | null;
