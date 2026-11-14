@@ -1970,6 +1970,28 @@ export type Database = {
         }[];
       };
       mod_require_moderator: { Args: Record<PropertyKey, never>; Returns: string };
+      mod_studio_actor: { Args: Record<PropertyKey, never>; Returns: string };
+      mod_studio_art_key: { Args: { p_name: string; p_pack: string }; Returns: Json };
+      mod_studio_create_pack: { Args: { p_description?: string; p_name: string; p_slug: string }; Returns: Json };
+      mod_studio_description: { Args: { p: string }; Returns: string };
+      mod_studio_edit_pack: { Args: { p_description?: string; p_name: string; p_pack: string }; Returns: Json };
+      mod_studio_edit_sticker: {
+        Args: {
+          p_label: string;
+          p_slot_hint?: Database['public']['Enums']['slot'];
+          p_sticker: string;
+          p_tags?: string[];
+        };
+        Returns: Json;
+      };
+      mod_studio_publish: { Args: { p_pack: string }; Returns: Json };
+      mod_studio_put_art: {
+        Args: { p_height: number; p_label: string; p_name: string; p_pack: string; p_width: number };
+        Returns: Json;
+      };
+      mod_studio_set_retired: { Args: { p_retired: boolean; p_sticker: string }; Returns: Json };
+      mod_studio_text: { Args: { p: string; p_max: number }; Returns: string };
+      mod_studio_valid_part: { Args: { p: string; p_max: number }; Returns: boolean };
       mod_suspend: { Args: { p_note: string; p_user: string }; Returns: Json };
       mod_user: { Args: { p_user: string }; Returns: Json };
       mod_user_moments: {

@@ -33,7 +33,8 @@
     "signOut": "Sign out",
     "count": "{{count}} open",
     "waitlist": "Waitlist",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "stickers": "Sticker packs"
   },
   "queue": {
     "title": "Review queue",
@@ -175,7 +176,15 @@
       "suspend": "Suspended",
       "lift_suspension": "Lifted suspension",
       "waitlist_export": "Downloaded waitlist",
-      "waitlist_remove": "Removed waitlist email"
+      "waitlist_remove": "Removed waitlist email",
+      "studio_pack_create": "Created sticker pack",
+      "studio_pack_edit": "Edited sticker pack",
+      "studio_pack_publish": "Published sticker pack",
+      "studio_sticker_add": "Added sticker",
+      "studio_sticker_replace": "Replaced sticker art",
+      "studio_sticker_edit": "Edited sticker",
+      "studio_sticker_retire": "Retired sticker",
+      "studio_sticker_restore": "Restored sticker"
     },
     "guideline": "Guideline: {{guideline}}",
     "note": "Note: {{note}}",
@@ -194,7 +203,11 @@
     "openUser": "Open their page",
     "clearFilter": "Show everything",
     "exported": "{{count}} emails",
-    "waitlistSource": "joined from {{source}}"
+    "waitlistSource": "joined from {{source}}",
+    "pack": "Pack {{pack}}",
+    "sticker": "sticker {{sticker}}",
+    "published_one": "{{count}} sticker",
+    "published_other": "{{count}} stickers"
   },
   "help": {
     "title": "Help",
@@ -535,6 +548,120 @@
       "same": "Same",
       "up": "+{{pct}}%",
       "down": "−{{pct}}%"
+    }
+  },
+  "stickers": {
+    "title": "Sticker packs",
+    "subtitle": "Stage free packs as drafts, add art, then publish · drafts are seen only by moderators",
+    "list": {
+      "label": "Sticker packs",
+      "pack": "Pack",
+      "tier": "Type",
+      "status": "Status",
+      "stickers": "Stickers",
+      "retiredCount": "{{count}} retired",
+      "empty": "No sticker packs yet.",
+      "readOnly": "Read-only here"
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "tier": {
+      "free": "Free",
+      "premium": "Premium",
+      "earned": "Earned",
+      "seasonal": "Seasonal"
+    },
+    "create": {
+      "title": "New pack",
+      "slug": "Short name (used in file paths)",
+      "slugHint": "Lower-case letters, digits and hyphens; can’t be changed later.",
+      "name": "Pack name",
+      "description": "Description (optional)",
+      "button": "Create draft"
+    },
+    "pack": {
+      "back": "All sticker packs",
+      "details": "Pack details",
+      "save": "Save details",
+      "publishedOn": "Published {{date}}",
+      "draftNote": "Only moderators see this pack until it’s published. Publishing can’t be undone.",
+      "readOnly": "This is a {{tier}} pack. Its store, milestone or date rules aren’t managed here, so it’s read-only.",
+      "publishedNote": "Published art never changes. To change a sticker’s art, upload it under a new name and retire the old one.",
+      "slug": "Short name",
+      "live": "{{count}} live",
+      "retiredCount": "{{count}} retired"
+    },
+    "upload": {
+      "title": "Add art",
+      "titleDraft": "Add or replace art",
+      "file": "PNG file",
+      "fileHint": "PNG only, up to 2048 × 2048 pixels and 2 MB.",
+      "name": "Sticker name (file name)",
+      "nameHint": "Upload under an existing name to replace that sticker’s art while the pack is a draft.",
+      "label": "Label (optional)",
+      "button": "Upload"
+    },
+    "publish": {
+      "title": "Publish",
+      "body": "Puts the pack in everyone’s sticker picker. It can’t go back to draft.",
+      "button": "Publish pack",
+      "confirm": "Publish this pack for everyone? This can’t be undone."
+    },
+    "sticker": {
+      "label": "Label",
+      "tags": "Tags, comma separated",
+      "slot": "Suggested for",
+      "noSlot": "Any slot",
+      "save": "Save",
+      "retire": "Retire",
+      "restore": "Restore",
+      "retired": "Retired",
+      "size": "{{w}} × {{h}} px",
+      "noSize": "No size",
+      "version": "v{{v}}",
+      "artLabel": "Art for {{label}}",
+      "noArt": "Art preview unavailable",
+      "empty": "No stickers yet. Upload PNG art to add the first one."
+    },
+    "slot": {
+      "whereami": "Where am I",
+      "mebusywith": "Me busy with",
+      "whoamiwith": "Who am I with",
+      "ootd": "OOTD",
+      "selfie": "Selfie",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening"
+    },
+    "results": {
+      "created": "Draft created.",
+      "saved": "Saved.",
+      "bad_slug": "Use lower-case letters, digits and hyphens.",
+      "slug_taken": "That short name is taken.",
+      "not_found": "That pack or sticker no longer exists.",
+      "not_editable": "Only free packs are edited here.",
+      "invalid": "Check the fields and try again.",
+      "unknown": "Something went wrong. Try again.",
+      "published": "Published. It’s in everyone’s picker now.",
+      "already_published": "This pack is already published.",
+      "empty": "Add at least one live sticker first.",
+      "missing_size": "Every live sticker needs its art size. Upload its art again.",
+      "retired": "Retired. It leaves the picker but stays on moments that used it.",
+      "restored": "Restored.",
+      "unchanged": "Nothing changed.",
+      "added": "Sticker added.",
+      "replaced": "Art replaced. Apps fetch the new file.",
+      "not_png": "That file isn’t a PNG.",
+      "bad_size": "Art is at most 2048 pixels on each side.",
+      "too_large": "Art is at most 2 MB.",
+      "invalid_input": "Choose a PNG and give it a name.",
+      "bad_name": "A sticker name is lower-case letters, digits and hyphens.",
+      "name_taken": "That name is used in this published pack. Use a new name.",
+      "not_moderator": "Only moderators use the Studio.",
+      "upload_failed": "The art couldn’t be stored. Try again.",
+      "unavailable": "The Studio can’t be reached right now. Try again."
     }
   }
 }
