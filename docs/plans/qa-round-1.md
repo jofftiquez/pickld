@@ -893,3 +893,43 @@ All three run in parallel in their own worktrees. Each merges on a green `ci`. T
 6. **Jar page grid (D-97):** someone's day drops the cover band for a header and the Today-style 2 by 4 grid, cover badged.
 7. **Cover discoverable (D-98):** Set as cover is an action in the owner's moment preview, and the cover tile carries a badge.
 8. **Selfie camera (D-99):** #selfie opens on the front camera.
+
+## Added after the plan (Nov 14)
+
+The product owner sent three more round 3 items while H, I and J were being built. They are auto-approved on the same terms. Discover is the only one that needs a migration, and it is additive.
+
+### R3-8 Discover: moments and jars from public people you don't read yet
+
+- **Today:** Explore lists people and a few full jars, and there is no feed of public content from people the viewer doesn't read.
+- **Change:** Explore becomes **Discover**, at the same `/explore` route (D-100). It is a feed of moments set to Everyone and published jars set to Everyone. Every item comes from an active person the viewer doesn't read. Blocked people (either way), and content that is removed, hidden or still checking, never show, and neither does the viewer's own (D-102). A compass button next to the bell on the Moments and Jars tabs opens it, and the empty Moments and Jars timelines point to it. The tab bar stays Today | Moments | Jars (D-101).
+- **Schema:** migration 0070 adds two RPCs (Remote Procedure Calls), `discover_moments_page` and `discover_jars_page`, keyset-paged at 20 a page, with two partial indexes. Like the existing feeds they apply `can_view_moment`, `can_view_jar` and the block check. An Everyone moment in an unpublished or Readers jar shows under Moments, but its jar doesn't show under Jars. It is additive only: no drops or renames. pgTAP tests cover the owner, a reader, an outsider, a blocked person both ways, an inactive person, and removed or checking content.
+- **Touches:** `supabase/migrations/0070_*.sql`, `supabase/tests/`, `src/features/explore/*`, `app/explore.tsx`, the Moments and Jars tab headers, `en.json`. **Design:** Explore (renamed Discover). **Risk:** cost of the page query; it is paged and indexed. **Size:** M.
+
+### R3-9 Editor in two steps, like Instagram
+
+- **Today:** one edit screen holds the photo tools (filters, stickers, text, crop and zoom) and the moment's details (caption, visibility) in a sheet that slides up over the photo.
+- **Change:** step 1 is a full-screen photo editor with every existing tool and a **Next** button. Step 2 is a details screen with a 3:4 preview, the caption, visibility (Readers, Everyone, Only me) and the moment's other existing settings, then **Save** or **Share**. It adds no new social features: Pickld has no tags or mentions, so step 2 has none. The toolbar, parallax and Liquid Glass stay where they still fit. An edit already in the queue keeps working offline.
+- **Touches:** `app/edit/[momentId].tsx`, `src/features/edit/*`, `app/publish.tsx` if it applies, `en.json`. **Design:** new EditPhoto and EditDetails screens in `design/screens/`, drawn in Instagram's style. **Risk:** an offline edit loses its step 2 state; drafts persist across both steps. **Size:** L. Decisions start at D-103.
+
+### R3-M Thorough audit of the critical pages
+
+- **Ask:** the same full-size, judged-like-a-user pass the share screen got, for every critical page.
+- **Pages:** onboarding and the sign-in code, Today and a past day, camera, the editor (both steps, after L merges), moment preview, Moment detail and comments, the Moments and Jars timelines, the jar page (someone's day), profile (own and others), Stickers and the pack preview, Discover, Settings.
+- **States, where they apply:** empty, 1 moment, partly full, 8 of 8, long captions and names, no avatar, Only me, offline and failed upload, large Dynamic Type, iOS 26 Liquid Glass and Reduce Transparency.
+- **Method:** capture each page and state at full size in the Simulator, with a simulator-only fix for App Transport Security so photos load, and compare with `design/`. Judge balance, wasted space, alignment, consistent spacing, tap targets, readability and safe areas. Fix what looks bad and cut what can't be made to work, recording each as an auto-approved decision after L's numbers. Photo checks happen on the real iPhone. The product owner gets per-page contact sheets, then a phone rebuild.
+- **Size:** L. It runs after L and may split into several pull requests by page.
+
+## Pieces, order and parallel work (updated)
+
+| Piece                     | Items          | Decisions       | Runs with                          |
+| ------------------------- | -------------- | --------------- | ---------------------------------- |
+| R3-H, R3-I, R3-J          | 1–7            | D-90–D-99       | merged (#328, #326, #327)          |
+| R3-K Discover             | 8              | D-100–D-102     | L                                  |
+| R3-L Two-step editor      | 9              | D-103 onward    | K                                  |
+| R3-M Critical-page audit  | owner's ask    | after L         | after L merges; rebuild at the end |
+
+## Decisions added (auto-approved Nov 14)
+
+9. **Discover (D-100–D-102):** Explore becomes Discover at the same route and opens from a compass button next to the bell on the Moments and Jars tabs, with the tab bar unchanged. It shows Everyone moments and published Everyone jars from active people the viewer doesn't read, with no blocks either way and never the viewer's own.
+10. **Two-step editor (D-103 onward):** the photo tools first, then Next to the details, then Save or Share. It adds no new social features.
+11. **Critical-page audit (after L):** every fix or cut is recorded as its own decision.
