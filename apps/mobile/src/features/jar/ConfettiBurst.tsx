@@ -53,8 +53,8 @@ function BurstPieceView({ piece, clock, width, height }: Props) {
 let bursts = 0;
 
 /**
- * Confetti thrown up and out of the jar card after Publish (D-132): it slows in the air, falls with drag,
- * flutters, tumbles and fades. Decorative, so screen readers skip it; the caller leaves it out with Reduce Motion.
+ * Confetti thrown up and out of the jar card after Publish (D-132, D-133): it slows in the air, then floats down
+ * like light paper, each piece at its own pace, zigzagging as it tumbles, and fades. Decorative, so screen readers skip it; the caller leaves it out with Reduce Motion.
  */
 export function ConfettiBurst() {
   const { width, height } = useWindowDimensions();

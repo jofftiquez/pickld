@@ -19,7 +19,7 @@ export function markJarPublished(jarId: string): void {
   usePublishMoment.setState({ pending: jarId });
 }
 
-// The burst (D-132) has faded out by its last frame; a beat later it is taken off the page.
+// The burst (D-132, D-133; about 4.4 s) has faded out by its last frame; a beat later it is taken off the page.
 export const PUBLISH_CELEBRATION_MS = BURST_DURATION_MS + motion.fast;
 
 /** True while the page showing `jarId` celebrates its publishing; once per publish. */
