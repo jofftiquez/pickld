@@ -146,7 +146,8 @@ after(async () => {
 const panel = () => page.getByRole('region', { name: 'Item details' });
 const open = async (id) => {
   await page.goto(`${base}/queue?filter=all&item=${id}`);
-  await panel().getByRole('group', { name: 'Decision' }).waitFor();
+  // Keys pressed before the page hydrates are lost, so wait until the shortcuts listen.
+  await panel().locator('[role="group"][data-shortcuts="on"]').waitFor();
 };
 
 test('K keeps the item', async () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type CSSProperties, useCallback, useEffect, useState, useTransition } from 'react';
+import { type CSSProperties, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { colors, radius } from '@/theme/tokens';
 
@@ -58,6 +58,7 @@ export function Decisions({
   const [guideline, setGuideline] = useState<Guideline | ''>(initialGuideline ?? '');
   const [message, setMessage] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const group = useRef<HTMLDivElement>(null);
   const can = allowed(item);
 
   const run = useCallback(
@@ -94,7 +95,13 @@ export function Decisions({
       run(action);
     }
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // The panel is server-rendered, so it shows before the shortcuts listen; this says when they do.
+    const el = group.current;
+    el?.setAttribute('data-shortcuts', 'on');
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      el?.removeAttribute('data-shortcuts');
+    };
   }, [run]);
 
   const button = (action: Action) => (
@@ -113,7 +120,7 @@ export function Decisions({
   );
 
   return (
-    <div role="group" aria-label={t('decide.label')} style={{ display: 'grid', gap: 8, marginTop: 'auto' }}>
+    <div ref={group} role="group" aria-label={t('decide.label')} style={{ display: 'grid', gap: 8, marginTop: 'auto' }}>
       {can.remove ? (
         <label style={{ display: 'grid', gap: 4, fontSize: 12, color: colors.muted }}>
           {t('decide.guideline')}
