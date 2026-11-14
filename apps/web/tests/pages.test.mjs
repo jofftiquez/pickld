@@ -352,6 +352,18 @@ test('/stickers lists every pack, Olivia first, with its kind', async () => {
   await page.close();
 });
 
+test('Our story is linked from the home page and tells the four steps, with the waitlist', async () => {
+  const { page } = await open('/');
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Our story' }).click();
+  await page.waitForURL(`${base}/story`);
+  assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' '), 'We said we’d come back.');
+  const steps = await page.getByRole('region', { name: 'How we got here' }).locator('h2').allTextContents();
+  assert.deepEqual(steps, ['The first Pickld', 'A bigger calling', 'A promise', 'Pickld, again']);
+  assert.equal(await page.getByRole('button', { name: 'Join the waitlist' }).count(), 1);
+  assert.ok(await noSideScroll(page));
+  await page.close();
+});
+
 // ---------------------------------------------------------------- link previews (M4-14, FR-WEB-02)
 
 async function meta(route) {
@@ -444,7 +456,16 @@ test('the AASA file lets the app open profile, jar and sign-in links but not leg
   const [detail] = (await res.json()).applinks.details;
   assert.deepEqual(detail.appIDs, [`${TEAM}.me.pickld.app`]);
   const excluded = detail.components.filter((c) => c.exclude).map((c) => c['/']);
-  assert.deepEqual(excluded, ['/terms', '/privacy', '/guidelines', '/', '/stickers', '/waitlist', '/.well-known/*']);
+  assert.deepEqual(excluded, [
+    '/terms',
+    '/privacy',
+    '/guidelines',
+    '/',
+    '/stickers',
+    '/story',
+    '/waitlist',
+    '/.well-known/*',
+  ]);
   // iOS takes the first matching component, so the exclusions must come before the catch-all.
   const all = detail.components.map((c) => c['/']);
   assert.ok(all.indexOf('/terms') < all.indexOf('/*'));

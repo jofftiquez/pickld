@@ -16,8 +16,8 @@ export const css = `
 .mk-top .mk-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:64px}
 .mk-nav{display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0}
 .mk-nav a{display:flex;align-items:center;min-height:44px;padding:0 10px;color:${colors.ink};text-decoration:none;font-weight:700;font-size:14px}
-.mk-nav .mk-faq-link{display:none}
-@media (min-width:480px){.mk-nav .mk-faq-link{display:flex}}
+.mk-nav .mk-wide{display:none}
+@media (min-width:560px){.mk-nav .mk-wide{display:flex}}
 .mk-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border:0;border-radius:${radius.pill}px;background:${colors.brand};color:${colors.surface}!important;font:inherit;font-weight:800;font-size:15px;text-decoration:none;cursor:pointer}
 .mk-nav .mk-btn{min-height:40px;padding:0 16px;font-size:13px;margin-left:4px}
 .mk .mk-eyebrow{display:inline-block;margin:0 0 14px;padding:6px 12px;border-radius:${radius.pill}px;background:${colors.brandTint};color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
@@ -94,6 +94,14 @@ export const css = `
 .mk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;list-style:none;margin:16px 0 0;padding:0}
 .mk-grid li{background:${colors.subtle};border-radius:${radius.thumbLg}px;aspect-ratio:1;padding:10px;display:flex;align-items:center;justify-content:center}
 .mk-grid img{max-height:100%;width:auto}
+.mk-quote{margin:0;background:${colors.surface};border-radius:${radius.card}px;padding:32px 26px;display:flex;flex-direction:column;gap:18px}
+.mk-quote blockquote{margin:0;color:${colors.ink};font-size:clamp(26px,5vw,34px);font-weight:800;line-height:1.15;letter-spacing:-.025em}
+.mk-quote figcaption{color:${colors.muted};font-size:14px;font-weight:700}
+.mk-timeline{list-style:none;margin:0;padding:0 0 0 28px;border-left:3px solid ${colors.brandTint};display:flex;flex-direction:column;gap:36px;max-width:720px}
+.mk-timeline li{position:relative;display:flex;flex-direction:column;gap:8px}
+.mk-timeline li::before{content:'';position:absolute;left:-40px;top:0;width:16px;height:16px;border-radius:50%;background:${colors.brand};border:3px solid ${colors.background}}
+.mk-timeline h2{font-size:clamp(26px,5vw,34px)}
+.mk .mk-when{color:${colors.brandText};font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .mk-status{padding:56px 0 72px;max-width:620px}
 .mk-status p{margin-top:12px}
 @media (min-width:720px){
@@ -109,6 +117,9 @@ export const css = `
   .mk-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mk-split{grid-template-columns:1fr 1fr;gap:64px}
   .mk-split-flip>:first-child{order:2}
+  .mk-timeline{flex-direction:row;max-width:none;padding:28px 0 0;border-left:0;border-top:3px solid ${colors.brandTint};gap:32px}
+  .mk-timeline li{flex:1}
+  .mk-timeline li::before{left:0;top:-41px}
   .mk-final{padding:56px;align-items:center;text-align:center}
   .mk-final .mk-form{margin-left:auto;margin-right:auto;width:100%}
   .mk-float-a{left:calc(50% - 215px)}

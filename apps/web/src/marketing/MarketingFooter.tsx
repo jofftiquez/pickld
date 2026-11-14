@@ -14,6 +14,9 @@ export function MarketingFooter() {
             <Link href="/stickers">{t('marketing.nav.stickers')}</Link>
           </li>
           <li>
+            <Link href="/story">{t('marketing.nav.story')}</Link>
+          </li>
+          <li>
             <Link href="/#faq">{t('marketing.nav.faq')}</Link>
           </li>
           <li>
