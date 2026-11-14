@@ -1064,6 +1064,7 @@
     "appealDecided": "We reviewed your appeal",
     "friendJoined": "<bold>{{name}}</bold> joined Pickld. Say hi?",
     "admitted": "<bold>You're in.</bold> Fill your first jar.",
+    "inviteJoined": "<bold>{{name}}</bold> joined with your invite. Say hi?",
     "unread": "Unread",
     "openHint": "Opens it",
     "reminderBody": {

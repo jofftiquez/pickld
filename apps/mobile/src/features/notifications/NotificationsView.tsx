@@ -136,7 +136,8 @@ export function NotificationsView({
               <View style={styles.card}>
                 {section.entries.map((entry, i) => {
                   const actor = entry.actors[0];
-                  const social = entry.type === 'new_reader' || entry.type === 'friend_joined';
+                  const social =
+                    entry.type === 'new_reader' || entry.type === 'friend_joined' || entry.type === 'invite_joined';
                   // Likes, comments and replies show the photo they are about (the jar's first one for the whole jar).
                   const photo = entry.type === 'like' || entry.type === 'comment' || entry.type === 'reply';
                   const momentId = photo

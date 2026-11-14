@@ -112,6 +112,11 @@ Deno.test('comments and replies quote the text, trimmed; types that are not push
   assertEquals([rm?.title, rm?.data.momentId], ['We removed one of your moments', 'm9']);
 });
 
+Deno.test('the inviter hears who joined with their invite (0135)', () => {
+  const [p] = composePushes([row({ id: 'ij', type: 'invite_joined', actor_name: 'Ana', jar_id: null, jar_local_date: null })]);
+  assertEquals([p?.title, p?.body, p?.data.type], ['Ana', 'joined with your invite. Say hi?', 'invite_joined']);
+});
+
 Deno.test('an admitted account hears it is in (0131)', () => {
   const [p] = composePushes([row({ id: 'ad', type: 'admitted', actor_name: null, jar_id: null, jar_local_date: null })]);
   assertEquals([p?.title, p?.body, p?.data.type], ["You're in", 'Fill your first jar.', 'admitted']);

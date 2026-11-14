@@ -867,9 +867,19 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 660,
     height: 354,
   },
+  'stickers/milestones/first-friend.png': {
+    source: require('../../../../../../assets/stickers/milestones/first-friend.png'),
+    width: 744,
+    height: 252,
+  },
   'stickers/milestones/first-full-jar.png': {
     source: require('../../../../../../assets/stickers/milestones/first-full-jar.png'),
     width: 753,
+    height: 252,
+  },
+  'stickers/milestones/full-jar-of-friends.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jar-of-friends.png'),
+    width: 966,
     height: 252,
   },
   'stickers/milestones/full-jars-100.png': {

@@ -14,7 +14,7 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012, 0029, 0032, 0060 and 0065 seed, and nothing else', () => {
+  it('has a PNG for every sticker 0012, 0029, 0032, 0060, 0065 and 0135 seed, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
     const assetsIn = (migration: string, from = 'insert into') =>
       [
@@ -40,12 +40,16 @@ describe('bundled art', () => {
     const restyled = wordArt.map((a) => a.replace('.png', '-v2.png'));
     const hashtags = assetsIn('0065_word_art_restyle.sql');
     expect(hashtags).toHaveLength(16);
+    // 0135 adds the two invite milestones (INV-08).
+    const invite = assetsIn('0135_invite_joined.sql');
+    expect(invite).toHaveLength(2);
     const words = [
       ...seededStickers.map((s) => s.asset),
       ...paid,
       ...added.filter((a) => !addedPictures.includes(a)),
       ...restyled,
       ...hashtags,
+      ...invite,
     ];
     expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures, ...addedPictures].sort());
     // Word stickers are wide labels (hashtag bubbles can be near square); picture stickers fit a near-square box.

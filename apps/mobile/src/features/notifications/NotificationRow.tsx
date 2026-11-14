@@ -44,7 +44,8 @@ type SentenceKey =
   | 'notifications.fullJarPlain'
   | 'notifications.removed'
   | 'notifications.appealDecided'
-  | 'notifications.admitted';
+  | 'notifications.admitted'
+  | 'notifications.inviteJoined';
 
 /** The sentence for an entry, with <bold> parts, as a translation key and its values. */
 function sentence(
@@ -98,6 +99,8 @@ function sentence(
       return { key: 'notifications.appealDecided', values: {} };
     case 'admitted':
       return { key: 'notifications.admitted', values: {} };
+    case 'invite_joined':
+      return { key: 'notifications.inviteJoined', values: { name } };
   }
 }
 
