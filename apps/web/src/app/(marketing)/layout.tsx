@@ -5,7 +5,7 @@ import { MarketingFooter } from '~/marketing/MarketingFooter';
 import { MarketingHeader } from '~/marketing/MarketingHeader';
 import { css } from '~/marketing/styles';
 
-/** The marketing pages (pickld.me home, Stickers, Join the waitlist): full width, unlike the shared-link pages. */
+/** The marketing pages (pickld.me home, Stickers, Our story, Join the waitlist): full width, unlike the shared-link pages. */
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
     <div className="mk">

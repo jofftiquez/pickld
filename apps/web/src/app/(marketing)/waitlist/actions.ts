@@ -10,7 +10,7 @@ export type WaitlistStatus = 'joined' | 'limited' | 'invalid' | 'error';
 
 const input = z.object({
   email: z.string().trim().max(254).pipe(z.email()),
-  source: z.enum(['hero', 'final', 'waitlist']).catch('hero'),
+  source: z.enum(['hero', 'final', 'waitlist', 'story']).catch('hero'),
 });
 
 /** Sends the address to fn:waitlist-join with the shared secret and the visitor's IP (for its rate limit). */

@@ -26,7 +26,7 @@ export default function Stickers() {
         </div>
         <div className="mk-pair">
           <Phone src={shot.stickers} alt={t('stickers.editorAlt')} sizes="(min-width: 900px) 230px, 42vw" preload />
-          <Phone src={shot.pack} alt={t('stickers.packAlt')} sizes="(min-width: 900px) 230px, 42vw" />
+          <Phone src={shot.shop} alt={t('stickers.shopAlt')} sizes="(min-width: 900px) 230px, 42vw" />
         </div>
       </div>
       <div className="mk-wrap">

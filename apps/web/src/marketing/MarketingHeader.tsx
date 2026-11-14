@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Logo } from '~/components/Logo';
 import { t } from '~/i18n/t';
 
-/** The marketing pages' top bar: wordmark, Stickers, FAQ and Join the waitlist. */
+/** The marketing pages' top bar: wordmark, Stickers, Our story, FAQ and Join the waitlist. */
 export function MarketingHeader() {
   return (
     <header className="mk-top">
@@ -20,7 +20,10 @@ export function MarketingHeader() {
             <li>
               <Link href="/stickers">{t('marketing.nav.stickers')}</Link>
             </li>
-            <li className="mk-faq-link">
+            <li className="mk-wide">
+              <Link href="/story">{t('marketing.nav.story')}</Link>
+            </li>
+            <li className="mk-wide">
               <Link href="/#faq">{t('marketing.nav.faq')}</Link>
             </li>
             <li>
