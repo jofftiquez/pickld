@@ -168,6 +168,10 @@
     "goToJarLabel": "Go to {{name}}’s jar",
     "list": "Moments from people you read and you"
   },
+  "scrubber": {
+    "label": "Jump to a date",
+    "hint": "Swipe up or down to move a day."
+  },
   "jarPage": {
     "title": "{{name}}’s {{weekday}}",
     "subtitle_one": "{{date}} · {{count}} of {{max}} moment",

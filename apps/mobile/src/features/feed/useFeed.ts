@@ -11,7 +11,9 @@ import { useAuthStore } from '@/lib/authStore';
 import { refetchFirstPage } from '@/lib/firstPage';
 import { getSupabase } from '@/lib/supabase';
 
-import { anchorCursor, feedAuthorRow, feedRow, nextCursor, type FeedCursor, type FeedPage } from './feedModel';
+import { newerCursor, type PageCursor } from '@/features/scrubber/scrubberModel';
+
+import { anchorCursor, FEED_PAGE_SIZE, feedAuthorRow, feedRow, nextCursor, type FeedPage } from './feedModel';
 import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const photoUrlsResponse = z.object({
@@ -28,14 +30,20 @@ async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null
   return new Map(parsed.data.data.moments.map((m) => [m.id, m.thumb]));
 }
 
-/** One page of jars from the feed, or from Discover (`discover_jars_page`, 0070), which returns the same rows. */
+/**
+ * One page of jars from the feed, or from Discover (`discover_jars_page`, 0070), which returns the same rows. A
+ * `newer` cursor reads the feed's rows just above it (`feed_page_newer`, 0140), newest first.
+ */
 export async function fetchFeedPage(
-  cursor: FeedCursor | null,
+  cursor: PageCursor | null,
   rpc: 'feed_page' | 'discover_jars_page' = 'feed_page',
 ): Promise<FeedPage> {
-  const { data, error } = await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
+  const { data, error } = cursor?.newer
+    ? await getSupabase().rpc('feed_page_newer', { cursor_at: cursor.at, cursor_id: cursor.id })
+    : await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
   if (error) throw new Error(error.message);
   const rows = z.array(feedRow).parse(data);
+  if (cursor?.newer) rows.reverse();
   const ids = rows.flatMap((r) => r.preview_moment_ids);
   // The previews' edits, read per page as the viewer (D-96); a moment they can't read stays plain.
   const [urls, renders] = await Promise.all([thumbUrls(ids), fetchMomentRenders(ids)]);
@@ -67,7 +75,13 @@ export const feedQueryKeys = {
   authors: (userId: string) => ['feedAuthors', userId] as const,
 };
 
-/** The Jars feed, newest first, or from `from` back (see `anchorCursor`). */
+/** An anchored list leaves the (persisted) cache five minutes after the screen lets it go. */
+const ANCHORED_GC_MS = 5 * 60 * 1000;
+
+/**
+ * The Jars feed, newest first, or from `from` back (see `anchorCursor`). An anchored feed (the date scrubber's
+ * jump) also pages up toward the newest jar (`fetchPreviousPage`).
+ */
 export function useFeed(from?: string) {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const enabled = userId !== null;
@@ -76,8 +90,13 @@ export function useFeed(from?: string) {
   const feed = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) => fetchFeedPage(pageParam),
-    initialPageParam: from ? anchorCursor(from) : null,
+    initialPageParam: (from ? anchorCursor(from) : null) as PageCursor | null,
     getNextPageParam: (last) => last.nextCursor,
+    getPreviousPageParam: (first, _pages, firstParam) => {
+      const top = first.jars[0];
+      return newerCursor(firstParam, top && { at: top.feed_at, id: top.jar_id }, first.jars.length, FEED_PAGE_SIZE);
+    },
+    gcTime: from ? ANCHORED_GC_MS : undefined,
     enabled,
   });
   const authors = useQuery({ queryKey: feedQueryKeys.authors(userId ?? ''), queryFn: fetchFeedAuthors, enabled });
@@ -97,6 +116,9 @@ export function useFeed(from?: string) {
     hasNextPage: feed.hasNextPage,
     isFetchingNextPage: feed.isFetchingNextPage,
     fetchNextPage: () => void feed.fetchNextPage(),
+    hasPreviousPage: feed.hasPreviousPage,
+    isFetchingPreviousPage: feed.isFetchingPreviousPage,
+    fetchPreviousPage: () => void feed.fetchPreviousPage(),
     /** Pull to refresh and the far back-to-top: the newest page only (`refetchFirstPage`). */
     refresh: async () => {
       await Promise.all([refetchFirstPage(queryClient, queryKey), authors.refetch()]);

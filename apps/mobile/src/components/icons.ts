@@ -20,6 +20,7 @@ export const icons = {
   chevronRight: [p('m9 18 6-6-6-6')],
   chevronDown: [p('m6 9 6 6 6-6')],
   arrowUp: [p('M12 19V5M5 12l7-7 7 7')],
+  chevronUpDown: [p('m8 9 4-4 4 4'), p('m8 15 4 4 4-4')],
   close: [p('M6 6l12 12M18 6 6 18')],
   check: [p('M5 12.5l4.5 4.5L19 7')],
   plus: [p('M12 5v14M5 12h14')],

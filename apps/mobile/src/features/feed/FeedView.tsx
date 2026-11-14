@@ -1,9 +1,14 @@
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BackToTopButton } from '@/components/BackToTopButton';
 import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
+import { FeedScrubber } from '@/features/scrubber/FeedScrubber';
+import { dayOf, type TimelineScrubber } from '@/features/scrubber/scrubberModel';
+import { useScrubberVisibility } from '@/features/scrubber/useScrubberVisibility';
+import { useTopRowDay } from '@/features/scrubber/useTopRowDay';
 import { maxTextScale, textStyle } from '@/theme/text';
 import type { AvatarUrls } from '@/lib/avatars';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
@@ -33,6 +38,11 @@ export type FeedViewProps = {
   hasUnread: boolean;
   onRefresh: () => void;
   onEndReached: () => void;
+  /** The date scrubber on the right edge (FR-SOC-01); none without it. */
+  scrubber?: TimelineScrubber;
+  /** The list reached its top: a timeline the scrubber jumped into loads the rows above. */
+  onStartReached?: () => void;
+  isFetchingPreviousPage?: boolean;
   /** After the back-to-top button brings the list up: on `reload` the screen fetches the newest page again. */
   onBackToTop: (mode: BackToTopMode) => void;
   onOpenNotifications: () => void;
@@ -67,6 +77,9 @@ export function FeedView({
   hasUnread,
   onRefresh,
   onEndReached,
+  scrubber,
+  onStartReached,
+  isFetchingPreviousPage = false,
   onBackToTop,
   onOpenNotifications,
   onOpenJar,
@@ -82,9 +95,22 @@ export function FeedView({
   const readsNobody = authors !== undefined && authors.length === 0;
   const hasJars = jars !== undefined && jars.length > 0;
   const { listRef, onScroll, scrollEventThrottle, showBackToTop, backToTop } = useBackToTop<FeedJar>(onBackToTop);
+  const anchored = scrubber !== undefined && scrubber.anchorDay !== null;
+  const rail = useScrubberVisibility(anchored);
+  const timeZone = scrubber?.timeZone ?? 'UTC';
+  const topRow = useTopRowDay(useCallback((row: FeedJar) => dayOf(row.feed_at, timeZone), [timeZone]));
+  const { poke } = rail;
+  const onListScroll: typeof onScroll = useCallback(
+    (e) => {
+      onScroll(e);
+      poke();
+    },
+    [onScroll, poke],
+  );
 
   const header = (
     <View>
+      {isFetchingPreviousPage ? <ActivityIndicator color={colors.muted} style={styles.newer} /> : null}
       <View style={styles.titleRow}>
         <Text
           maxFontSizeMultiplier={maxTextScale.title}
@@ -152,7 +178,7 @@ export function FeedView({
       <FlatList
         style={styles.screen}
         ref={listRef}
-        onScroll={onScroll}
+        onScroll={onListScroll}
         scrollEventThrottle={scrollEventThrottle}
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
         data={jars ?? []}
@@ -193,6 +219,13 @@ export function FeedView({
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
+        onViewableItemsChanged={topRow.onViewable}
+        onStartReached={onStartReached}
+        onStartReachedThreshold={0.6}
+        // Rows loaded above a jumped-to day keep that day where it is on screen. Index 0 is the list header, which
+        // stays at the top, so the first row (1) is the one held in place. Clipped subviews leave the native view
+        // tree that holding relies on, so a jumped-to list keeps them.
+        maintainVisibleContentPosition={anchored ? { minIndexForVisible: 1 } : undefined}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -204,10 +237,22 @@ export function FeedView({
         // Cards are tall; a small window keeps scrolling smooth on older phones (NFR-PERF-02).
         initialNumToRender={4}
         windowSize={7}
-        removeClippedSubviews
+        removeClippedSubviews={!anchored}
         testID="feed-list"
       />
       {showBackToTop ? <BackToTopButton onPress={backToTop} bottom={bottomPadding} /> : null}
+      {scrubber ? (
+        <FeedScrubber
+          days={scrubber.days}
+          currentDay={topRow.day ?? scrubber.anchorDay}
+          visible={rail.visible}
+          top={insets.top + sizes.headerTop + sizes.roundButton + space.md}
+          bottom={bottomPadding}
+          onDragChange={rail.onDragChange}
+          onJump={scrubber.onJump}
+          testID="feed-scrubber"
+        />
+      ) : null}
     </View>
   );
 }
@@ -243,4 +288,5 @@ const styles = StyleSheet.create({
   separator: { height: space.md },
   findPeople: { paddingBottom: space.md },
   loading: { marginTop: space.xxl },
+  newer: { paddingTop: space.md },
 });

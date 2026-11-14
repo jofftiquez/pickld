@@ -1,4 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import 'react-native-gesture-handler/jestSetup';
+
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
 import type { FeedAuthor } from '@/features/feed/feedModel';
 
@@ -176,5 +179,51 @@ describe('MomentsFeedView', () => {
   it('has no compass next to the bell: Discover is a tab (D-130)', async () => {
     await setup();
     expect(screen.queryByRole('button', { name: 'Discover' })).toBeNull();
+  });
+
+  // 6 rows: Nov 12 holds 3 (the top half of the rail), Nov 9 holds 2, Oct 30 holds 1 (the last sixth).
+  const days = [
+    { day: '2026-11-12', n: 3 },
+    { day: '2026-11-09', n: 2 },
+    { day: '2026-10-30', n: 1 },
+  ];
+
+  it('drags the date scrubber: a bubble names the day under the finger, and letting go jumps there', async () => {
+    const onJump = jest.fn();
+    await setup({ scrubber: { days, timeZone: 'Asia/Manila', anchorDay: null, onJump } });
+    // 344 pt of rail less the 44 pt thumb: 300 pt of travel. With no row on screen yet the thumb rests at the top.
+    await fireEvent(screen.getByTestId('moments-scrubber'), 'layout', {
+      nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 344 } },
+    });
+    const thumb = createGestureController('moments-scrubber-thumb');
+    await act(() => {
+      thumb.begin({ translationY: 0 });
+      thumb.activate({ translationY: 0 });
+      thumb.update({ translationY: 160 });
+    });
+    expect(screen.getByTestId('moments-scrubber-bubble')).toHaveTextContent('Mon, Nov 9');
+    await act(() => thumb.update({ translationY: 280 }));
+    expect(screen.getByTestId('moments-scrubber-bubble')).toHaveTextContent('Fri, Oct 30');
+    expect(onJump).not.toHaveBeenCalled();
+    await act(() => thumb.end({ translationY: 280 }));
+    expect(onJump).toHaveBeenCalledWith('2026-10-30');
+    expect(screen.queryByTestId('moments-scrubber-bubble')).toBeNull();
+  });
+
+  it('steps the scrubber a day at a time for a screen reader, from the day the timeline jumped to', async () => {
+    const onJump = jest.fn();
+    await setup({ scrubber: { days, timeZone: 'Asia/Manila', anchorDay: '2026-11-09', onJump } });
+    const handle = screen.getByTestId('moments-scrubber-handle');
+    expect(handle.props.accessibilityLabel).toBe('Jump to a date');
+    expect(handle.props.accessibilityValue).toEqual({ text: 'Mon, Nov 9' });
+    await fireEvent(handle, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+    expect(onJump).toHaveBeenCalledWith('2026-10-30');
+    await fireEvent(handle, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+    expect(onJump).toHaveBeenLastCalledWith('2026-11-12');
+  });
+
+  it('has no scrubber unless the screen gives it one', async () => {
+    await setup();
+    expect(screen.queryByTestId('moments-scrubber', { includeHiddenElements: true })).toBeNull();
   });
 });

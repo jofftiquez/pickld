@@ -9,16 +9,17 @@ import { z } from 'zod';
 import { anchorCursor } from '@/features/feed/feedModel';
 import { fetchFeedAuthors, feedQueryKeys } from '@/features/feed/useFeed';
 import { keyOf, sendLike, serialize } from '@/features/jar/useLike';
+import { newerCursor, type PageCursor } from '@/features/scrubber/scrubberModel';
 import { useAuthStore } from '@/lib/authStore';
 import { refetchFirstPage } from '@/lib/firstPage';
 import { getSupabase } from '@/lib/supabase';
 
 import {
+  MOMENTS_PAGE_SIZE,
   momentsFeedRow,
   nextMomentsCursor,
   withMomentLike,
   type FeedMoment,
-  type MomentsCursor,
   type MomentsPage,
 } from './momentsModel';
 import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
@@ -50,14 +51,20 @@ async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
   );
 }
 
-/** One page of moments from the timeline, or from Discover (`discover_moments_page`, 0070), which returns the same rows. */
+/**
+ * One page of moments from the timeline, or from Discover (`discover_moments_page`, 0070), which returns the same
+ * rows. A `newer` cursor reads the timeline's rows just above it (`moments_feed_page_newer`, 0140), newest first.
+ */
 export async function fetchMomentsPage(
-  cursor: MomentsCursor | null,
+  cursor: PageCursor | null,
   rpc: 'moments_feed_page' | 'discover_moments_page' = 'moments_feed_page',
 ): Promise<MomentsPage> {
-  const { data, error } = await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
+  const { data, error } = cursor?.newer
+    ? await getSupabase().rpc('moments_feed_page_newer', { cursor_at: cursor.at, cursor_id: cursor.id })
+    : await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
   if (error) throw new Error(error.message);
   const rows = z.array(momentsFeedRow).parse(data);
+  if (cursor?.newer) rows.reverse();
   const urls = await photoUrls(rows.map((r) => r.moment_id));
   return {
     moments: rows.map((r) => ({
@@ -76,12 +83,18 @@ export const momentsQueryKeys = {
     from ? (['momentsFeed', userId, { from }] as const) : (['momentsFeed', userId] as const),
 };
 
-type Pages = InfiniteData<MomentsPage, MomentsCursor | null>;
+type Pages = InfiniteData<MomentsPage, PageCursor | null>;
 
 /** Like requests still running per moment; the jar page is read again once a moment has none left. */
 const inFlight = new Map<string, number>();
 
-/** The Moments timeline, newest first, or from `from` back (see `anchorCursor`). */
+/** An anchored list leaves the (persisted) cache five minutes after the screen lets it go. */
+const ANCHORED_GC_MS = 5 * 60 * 1000;
+
+/**
+ * The Moments timeline, newest first, or from `from` back (see `anchorCursor`). An anchored timeline (the date
+ * scrubber's jump) also pages up toward the newest row (`fetchPreviousPage`), and leaves the cache soon after.
+ */
 export function useMomentsFeed(from?: string) {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const enabled = userId !== null;
@@ -90,8 +103,18 @@ export function useMomentsFeed(from?: string) {
   const feed = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) => fetchMomentsPage(pageParam),
-    initialPageParam: from ? anchorCursor(from) : null,
+    initialPageParam: (from ? anchorCursor(from) : null) as PageCursor | null,
     getNextPageParam: (last) => last.nextCursor,
+    getPreviousPageParam: (first, _pages, firstParam) => {
+      const top = first.moments[0];
+      return newerCursor(
+        firstParam,
+        top && { at: top.added_at, id: top.moment_id },
+        first.moments.length,
+        MOMENTS_PAGE_SIZE,
+      );
+    },
+    gcTime: from ? ANCHORED_GC_MS : undefined,
     enabled,
   });
   const authors = useQuery({ queryKey: feedQueryKeys.authors(userId ?? ''), queryFn: fetchFeedAuthors, enabled });
@@ -133,6 +156,9 @@ export function useMomentsFeed(from?: string) {
     hasNextPage: feed.hasNextPage,
     isFetchingNextPage: feed.isFetchingNextPage,
     fetchNextPage: () => void feed.fetchNextPage(),
+    hasPreviousPage: feed.hasPreviousPage,
+    isFetchingPreviousPage: feed.isFetchingPreviousPage,
+    fetchPreviousPage: () => void feed.fetchPreviousPage(),
     /** Pull to refresh and the far back-to-top: the newest page only (`refetchFirstPage`). */
     refresh: async () => {
       await Promise.all([refetchFirstPage(queryClient, queryKey), authors.refetch()]);
