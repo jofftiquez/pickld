@@ -9,9 +9,11 @@ import { SelectedDayCard } from '@/features/days/SelectedDayCard';
 import {
   addMonths,
   buildMonthGrid,
+  earliestMonth,
   monthMomentCount,
   monthNav,
   monthOf,
+  monthsBetween,
   weekStartFrom,
 } from '@/features/days/monthGrid';
 import { useDayJar } from '@/features/days/useDayJar';
@@ -50,6 +52,8 @@ export default function MyDaysScreen() {
   );
 
   const nav = monthNav(month, currentMonth, firstJarMonth ?? null);
+  // The month picker offers the same months Previous and Next reach.
+  const pickableMonths = monthsBetween(earliestMonth(currentMonth, firstJarMonth ?? null), currentMonth);
   const grid = buildMonthGrid({
     month,
     today,
@@ -78,6 +82,8 @@ export default function MyDaysScreen() {
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
       onPrevious={() => nav.canGoPrevious && setMonth(addMonths(month, -1))}
       onNext={() => nav.canGoNext && setMonth(addMonths(month, 1))}
+      pickableMonths={pickableMonths}
+      onPickMonth={(picked) => pickableMonths.includes(picked) && setMonth(picked)}
       onSelectDay={setSelectedDate}
       onMemories={() => router.push('/memories')}
       selectedDay={

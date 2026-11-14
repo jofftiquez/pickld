@@ -12,6 +12,37 @@ import type { DayJar } from '../useDayJar';
 // My days wiring for M2-26: selecting a day shows its card, and Fill this jar opens that day's page (D-55).
 // Data hooks are mocked; the card and the day page have their own tests.
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
+// The month picker's kit sheet reads Reduce Motion from Reanimated. expo-router's testing library mocks
+// Reanimated with `react-native-reanimated/mock`, which can't load here; give it what the sheet needs.
+jest.mock('react-native-reanimated/mock', () => ({
+  __esModule: true,
+  default: {},
+  useReducedMotion: () => false,
+  ReduceMotion: { System: 'system', Always: 'always', Never: 'never' },
+}));
+// gorhom's native sheet and the gesture root are plain pass-throughs here.
+jest.mock('react-native-gesture-handler', () => ({
+  GestureHandlerRootView: jest.requireActual('react-native').View,
+}));
+jest.mock('@gorhom/bottom-sheet', () => {
+  const actual = jest.requireActual('@gorhom/bottom-sheet/mock');
+  const { forwardRef, useImperativeHandle } = jest.requireActual<typeof import('react')>('react');
+  const Sheet = forwardRef<{ close: () => void }, { onClose: () => void; children: ReactNode }>(
+    function Sheet(props, ref) {
+      useImperativeHandle(ref, () => ({ close: () => props.onClose() }));
+      return <>{props.children}</>;
+    },
+  );
+  return {
+    ...actual,
+    __esModule: true,
+    default: Sheet,
+    BottomSheetView: ({ children }: { children: ReactNode }) => children,
+    BottomSheetScrollView: ({ children }: { children: ReactNode }) => children,
+    BottomSheetBackdrop: () => null,
+    useBottomSheetTimingConfigs: (config: object) => config,
+  };
+});
 jest.mock('@/features/jar/useToday', () => ({ phoneTimeZone: () => 'Asia/Manila' }));
 jest.mock('../useMonthJars', () => ({
   useMonthJars: () => ({ userId: 'u-1', jars: [], firstJarMonth: '2026-11' }),
@@ -121,5 +152,22 @@ describe('My days back button', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(screen).toHavePathname('/today');
     expect(screen.getByText('Today stub')).toBeTruthy();
+  });
+});
+
+// FR-DAY-01: the month line jumps straight to a month instead of pressing Previous month over and over.
+describe('My days month picker', () => {
+  it('jumps to the chosen month, as far back as Previous reaches', async () => {
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'November 2026, 0 moments' }));
+    // First jar this month: 12 months back, November 2025 to November 2026.
+    expect(screen.getAllByRole('radio')).toHaveLength(13);
+    expect(screen.queryByRole('radio', { name: 'October 2025' })).toBeNull();
+    await fireEvent.press(screen.getByRole('radio', { name: 'November 2025' }));
+    expect(screen.getByText('November 2025 · 0 moments')).toBeTruthy();
+    expect(screen.getByTestId('day-2025-11-15')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Previous month' }).props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
   });
 });

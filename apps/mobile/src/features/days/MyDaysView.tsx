@@ -1,13 +1,17 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { PRESSED_OPACITY } from '@/components/BaseButton';
+import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
+import { hitSlopFor } from '@/lib/hitSlop';
 import { deviceLocale } from '@/lib/format';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { CalendarDay } from './CalendarDay';
+import { MonthPickerSheet } from './MonthPickerSheet';
 import { MOMENTS_PER_JAR, type DayCell, type MonthGrid, type MonthNav } from './monthGrid';
 
 export type MyDaysViewProps = {
@@ -27,6 +31,10 @@ export type MyDaysViewProps = {
   selectedDay?: ReactNode;
   /** Opens Memories (FR-DAY-03). */
   onMemories?: () => void;
+  /** The months the month picker offers, oldest first: the range Previous and Next reach (`monthsBetween`). */
+  pickableMonths?: readonly string[];
+  /** Jumps to a month chosen in the month picker. Without it the month line is plain text. */
+  onPickMonth?: (month: string) => void;
   locale?: string;
 };
 
@@ -63,10 +71,19 @@ export function MyDaysView({
   onSelectDay,
   selectedDay,
   onMemories,
+  pickableMonths = [],
+  onPickMonth,
   locale = deviceLocale(),
 }: MyDaysViewProps) {
   const { t } = useTranslation();
   const month = monthLabel(grid.month, locale);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [monthPressed, setMonthPressed] = useState(false);
+  const subtitle = (
+    <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]} testID="my-days-subtitle">
+      {t('myDays.subtitle', { month, count: momentCount })}
+    </Text>
+  );
   // A stack screen since D-52: no floating tab bar to clear at the bottom.
   const bottomPadding = Math.max(insets.bottom, space.lg) + space.lg;
 
@@ -90,9 +107,25 @@ export function MyDaysView({
       ) : null}
       <View style={styles.header}>
         <View style={styles.titles}>
-          <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]} testID="my-days-subtitle">
-            {t('myDays.subtitle', { month, count: momentCount })}
-          </Text>
+          {onPickMonth ? (
+            // The month line opens the month picker, to jump far back without pressing Previous over and over.
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('myDays.monthPicker.open', { month, count: momentCount })}
+              accessibilityHint={t('myDays.monthPicker.openHint')}
+              onPress={() => setPickerOpen(true)}
+              onPressIn={() => setMonthPressed(true)}
+              onPressOut={() => setMonthPressed(false)}
+              hitSlop={hitSlopFor(undefined, sizes.monthButton)}
+              testID="my-days-month"
+              style={[styles.monthButton, monthPressed ? { opacity: PRESSED_OPACITY } : null]}
+            >
+              {subtitle}
+              <Icon name="chevronDown" size={sizes.monthButtonIcon} strokeWidth={2.4} color="muted" />
+            </Pressable>
+          ) : (
+            subtitle
+          )}
           <Text
             maxFontSizeMultiplier={maxTextScale.title}
             testID="screen-title"
@@ -158,6 +191,19 @@ export function MyDaysView({
         </View>
       </View>
       {selectedDay}
+      {onPickMonth ? (
+        <MonthPickerSheet
+          visible={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          months={pickableMonths}
+          selected={grid.month}
+          onSelect={(picked) => {
+            setPickerOpen(false);
+            onPickMonth(picked);
+          }}
+          locale={locale}
+        />
+      ) : null}
     </ScrollView>
   );
 }
@@ -174,6 +220,13 @@ const styles = StyleSheet.create({
     paddingBottom: space.md,
   },
   titles: { flexShrink: 1, gap: space.xs / 2 },
+  monthButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: space.xs,
+    minHeight: sizes.monthButton,
+  },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   card: {
     marginHorizontal: space.lg,
