@@ -38,6 +38,9 @@ export const css = `
 .mk-form-note{margin-top:10px!important;font-size:13px!important;color:${colors.muted}!important}
 .mk-dark .mk-form label{color:${colors.surface}}
 .mk-dark .mk-form-note{color:${colors.onDarkMuted}!important}
+.mk-captcha:not(:empty){margin-top:10px}
+.mk-code{letter-spacing:.3em;font-variant-numeric:tabular-nums}
+.mk-form-error{margin-top:10px!important;font-size:14px!important;font-weight:700;color:${colors.danger}!important}
 .mk-art{position:relative;display:flex;justify-content:center;padding:10px 0}
 .mk-phone{position:relative;width:min(290px,76vw);border:8px solid ${colors.ink};border-radius:44px;overflow:hidden;background:${colors.ink};box-shadow:0 24px 60px -24px ${colors.scrim}}
 .mk-phone img{width:100%}

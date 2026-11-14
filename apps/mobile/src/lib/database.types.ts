@@ -1443,23 +1443,35 @@ export type Database = {
       };
       waitlist: {
         Row: {
+          admitted_at: string | null;
           created_at: string;
           email: string;
-          ip_hash: string;
+          ip_hash: string | null;
+          joined_at: string | null;
+          notified_at: string | null;
           source: string;
+          user_id: string | null;
         };
         ComputedFields: never;
         Insert: {
+          admitted_at?: string | null;
           created_at?: string;
           email: string;
-          ip_hash: string;
+          ip_hash?: string | null;
+          joined_at?: string | null;
+          notified_at?: string | null;
           source?: string;
+          user_id?: string | null;
         };
         Update: {
+          admitted_at?: string | null;
           created_at?: string;
           email?: string;
-          ip_hash?: string;
+          ip_hash?: string | null;
+          joined_at?: string | null;
+          notified_at?: string | null;
           source?: string;
+          user_id?: string | null;
         };
         Relationships: [];
       };
@@ -2050,6 +2062,7 @@ export type Database = {
           item_id: string;
         }[];
       };
+      my_waitlist_status: { Args: Record<PropertyKey, never>; Returns: string };
       notify: {
         Args: {
           p_actor?: string;
@@ -2176,7 +2189,9 @@ export type Database = {
         }[];
       };
       username_available: { Args: { candidate: string }; Returns: string };
-      waitlist_join: { Args: { p_email: string; p_ip_hash: string; p_source?: string }; Returns: string };
+      waitlist_join:
+        | { Args: { p_source?: string }; Returns: string }
+        | { Args: { p_email: string; p_ip_hash: string; p_source?: string }; Returns: string };
     };
     Enums: {
       account_job_kind: 'export' | 'delete';

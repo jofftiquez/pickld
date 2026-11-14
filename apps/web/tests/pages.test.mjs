@@ -21,9 +21,20 @@ const COVERED = '66666666-6666-4666-8666-666666666666';
 let stub, stubUrl, web, base, browser;
 const SITE = 'https://pickld.test';
 const TEAM = 'ABCDE12345';
-const SECRET = 'stub-waitlist-secret-0123456789abcdef';
-/** What the waitlist stub received; `next` is its next answer's status. */
-const waitlist = { calls: [], next: 200 };
+const TURNSTILE_SECRET = 'stub-turnstile-secret-0123456789';
+const USER_TOKEN = 'stub-user-access-token';
+const CODE = '123456';
+/**
+ * What the Supabase Auth, waitlist_join and Turnstile stubs received (INV-12). `otpStatus` is the next
+ * /auth/v1/otp answer's status and `answer` what waitlist_join returns.
+ */
+const waitlist = { captcha: [], otp: [], verify: [], rpc: [], logout: 0, otpStatus: 200, answer: 'joined' };
+const resetWaitlist = () =>
+  Object.assign(waitlist, { captcha: [], otp: [], verify: [], rpc: [], logout: 0, otpStatus: 200, answer: 'joined' });
+// Stands in for Cloudflare's script in the browser: the widget adds the token field the server checks.
+const FAKE_TURNSTILE = `window.turnstile = { render(el) { const i = document.createElement('input');
+  i.type = 'hidden'; i.name = 'cf-turnstile-response'; i.value = 'stub-token'; el.appendChild(i); return 'w1'; },
+  remove() {} };`;
 const CERT = Array.from({ length: 32 }, (_, i) => i.toString(16).padStart(2, '0').toUpperCase()).join(':');
 /** Photo paths the stub served, to see what a preview fetched. */
 const served = [];
@@ -124,17 +135,37 @@ before(async () => {
     let body = '';
     req.on('data', (c) => (body += c));
     req.on('end', () => {
+      const json = (status, value) => {
+        res.writeHead(status, { 'content-type': 'application/json' });
+        res.end(JSON.stringify(value));
+      };
+      if (req.url === '/turnstile') {
+        const form = Object.fromEntries(new URLSearchParams(body));
+        waitlist.captcha.push(form);
+        return json(200, { success: form.secret === TURNSTILE_SECRET && form.response === 'stub-token' });
+      }
+      assert.equal(req.headers.apikey, ANON);
+      if (req.url === '/rest/v1/rpc/waitlist_join' || req.url.startsWith('/auth/v1/logout')) {
+        assert.equal(req.headers.authorization, `Bearer ${USER_TOKEN}`, 'as the new account');
+        if (req.url.startsWith('/auth/v1/logout')) {
+          waitlist.logout += 1;
+          res.writeHead(204);
+          return res.end();
+        }
+        waitlist.rpc.push(JSON.parse(body));
+        return json(200, waitlist.answer);
+      }
       assert.equal(req.headers.authorization, `Bearer ${ANON}`);
-      if (req.url === '/functions/v1/waitlist-join') {
-        waitlist.calls.push({
-          body: JSON.parse(body),
-          secret: req.headers['x-waitlist-secret'],
-          ip: req.headers['x-client-ip'],
-        });
-        res.writeHead(waitlist.next, { 'content-type': 'application/json' });
-        return res.end(
-          JSON.stringify(waitlist.next === 200 ? { data: { joined: true } } : { error: { code: 'x', message: 'x' } }),
-        );
+      if (req.url === '/auth/v1/otp') {
+        waitlist.otp.push(JSON.parse(body));
+        return json(waitlist.otpStatus, {});
+      }
+      if (req.url === '/auth/v1/verify') {
+        const input = JSON.parse(body);
+        waitlist.verify.push(input);
+        return input.token === CODE
+          ? json(200, { access_token: USER_TOKEN, refresh_token: 'r', user: { id: 'u' } })
+          : json(403, { code: 'otp_expired', msg: 'Token has expired or is invalid' });
       }
       const input = JSON.parse(body);
       const data = pages(stubUrl);
@@ -155,7 +186,8 @@ before(async () => {
       ...process.env,
       SUPABASE_URL: stubUrl,
       SUPABASE_ANON_KEY: ANON,
-      WAITLIST_SECRET: SECRET,
+      TURNSTILE_SECRET_KEY: TURNSTILE_SECRET,
+      TURNSTILE_VERIFY_URL: `${stubUrl}/turnstile`,
       SITE_URL: SITE,
       APPLE_TEAM_ID: TEAM,
       ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} `,
@@ -181,6 +213,9 @@ after(async () => {
 
 async function open(route) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await page.route('https://challenges.cloudflare.com/**', (r) =>
+    r.fulfill({ contentType: 'text/javascript', body: FAKE_TURNSTILE }),
+  );
   const res = await page.goto(base + route);
   await page.waitForLoadState('networkidle');
   return { page, status: res.status() };
@@ -306,35 +341,92 @@ test('the home page shows the pitch, the eight moments and loaded screenshots wi
   await page.close();
 });
 
-test('the waitlist form posts the address with the secret and visitor IP, then thanks them', async () => {
-  waitlist.calls.length = 0;
-  waitlist.next = 200;
+test('joining the waitlist checks the captcha, emails a code, then joins as the new account and signs out', async () => {
+  resetWaitlist();
   const { page } = await open('/');
+  await page.locator('input[name="cf-turnstile-response"]').first().waitFor({ state: 'attached' });
   await page.getByLabel('Email address').first().fill('  Mika@Example.com ');
   await page.getByRole('button', { name: 'Join the waitlist' }).first().click();
+  await page.waitForURL(`${base}/waitlist/code`);
+  assert.equal(waitlist.captcha[0].response, 'stub-token');
+  assert.deepEqual(waitlist.otp, [{ email: 'Mika@Example.com', create_user: true }]);
+  assert.match(await page.locator('main').innerText(), /Mika@Example\.com/);
+  assert.ok(!page.url().includes('Mika'), 'the address never goes in a URL');
+
+  await page.getByLabel('6-digit code').fill('000000');
+  await page.getByRole('button', { name: 'Join the waitlist' }).click();
+  await page.waitForURL(`${base}/waitlist/code?error=badcode`);
+  assert.equal(
+    await page.locator('#waitlist-code-error').textContent(),
+    'That code didn’t work. Check the latest email and try again.',
+  );
+  assert.equal(waitlist.rpc.length, 0);
+
+  await page.getByLabel('6-digit code').fill(CODE);
+  await page.getByRole('button', { name: 'Join the waitlist' }).click();
   await page.waitForURL(`${base}/waitlist?status=joined`);
   assert.equal(await page.locator('h1').textContent(), 'You’re on the list');
-  assert.equal(waitlist.calls.length, 1);
-  assert.deepEqual(waitlist.calls[0].body, { email: 'Mika@Example.com', source: 'hero' });
-  assert.equal(waitlist.calls[0].secret, SECRET);
-  assert.ok(waitlist.calls[0].ip);
-  assert.ok(!(await page.content()).includes(SECRET), 'the secret stays on the server');
+  assert.deepEqual(waitlist.verify.at(-1), { type: 'email', email: 'Mika@Example.com', token: CODE });
+  assert.deepEqual(waitlist.rpc, [{ p_source: 'hero' }]);
+  assert.equal(waitlist.logout, 1, 'the web session is signed out');
+  const html = await page.content();
+  assert.ok(
+    !html.includes(TURNSTILE_SECRET) && !html.includes(USER_TOKEN),
+    'secrets and the session stay on the server',
+  );
+  assert.deepEqual(await page.context().cookies(), [], 'nothing is left behind');
   await page.close();
 });
 
-test('the waitlist works without JavaScript and says when there were too many sign-ups', async () => {
-  waitlist.calls.length = 0;
-  waitlist.next = 429;
+test('an email that already has an account or is on the list gets its own answer', async () => {
+  for (const [answer, title] of [
+    ['member', 'You’re already on Pickld'],
+    ['already', 'You’re already on the list'],
+  ]) {
+    resetWaitlist();
+    waitlist.answer = answer;
+    const { page } = await open('/waitlist');
+    await page.locator('input[name="cf-turnstile-response"]').waitFor({ state: 'attached' });
+    await page.getByLabel('Email address').fill('dale@example.com');
+    await page.getByRole('button', { name: 'Join the waitlist' }).click();
+    await page.waitForURL(`${base}/waitlist/code`);
+    await page.getByLabel('6-digit code').fill(CODE);
+    await page.getByRole('button', { name: 'Join the waitlist' }).click();
+    await page.waitForURL(`${base}/waitlist?status=${answer}`);
+    assert.equal(await page.locator('h1').textContent(), title);
+    assert.deepEqual(waitlist.rpc, [{ p_source: 'waitlist' }]);
+    await page.close();
+  }
+});
+
+test('without the captcha no code is sent, and Auth rate limits say so', async () => {
+  resetWaitlist();
   const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
-  const page = await context.newPage();
-  await page.goto(`${base}/waitlist`);
+  const noJs = await context.newPage();
+  await noJs.goto(`${base}/waitlist`);
+  await noJs.getByLabel('Email address').fill('dale@example.com');
+  await noJs.getByRole('button', { name: 'Join the waitlist' }).click();
+  await noJs.waitForURL(`${base}/waitlist?status=captcha`);
+  assert.equal(await noJs.locator('h1').textContent(), 'Please try that again');
+  assert.equal(waitlist.otp.length, 0, 'no email without a captcha token');
+  await context.close();
+
+  waitlist.otpStatus = 429;
+  const { page } = await open('/waitlist');
+  await page.locator('input[name="cf-turnstile-response"]').waitFor({ state: 'attached' });
   await page.getByLabel('Email address').fill('dale@example.com');
   await page.getByRole('button', { name: 'Join the waitlist' }).click();
   await page.waitForURL(`${base}/waitlist?status=limited`);
   assert.equal(await page.locator('h1').textContent(), 'Too many sign-ups from here');
-  assert.equal(waitlist.calls[0].body.source, 'waitlist');
-  waitlist.next = 200;
-  await context.close();
+  await page.close();
+});
+
+test('the code page without a pending email asks to start again', async () => {
+  const { page, status } = await open('/waitlist/code');
+  assert.equal(status, 200);
+  assert.equal(await page.locator('h1').textContent(), 'That took a little too long');
+  assert.equal(await page.getByLabel('6-digit code').count(), 0);
+  await page.close();
 });
 
 test('/stickers lists every pack, Olivia first, with its kind', async () => {
@@ -471,6 +563,7 @@ test('the AASA file lets the app open profile, jar and sign-in links but not leg
     '/stickers',
     '/story',
     '/waitlist',
+    '/waitlist/*',
     '/.well-known/*',
   ]);
   // iOS takes the first matching component, so the exclusions must come before the catch-all.
