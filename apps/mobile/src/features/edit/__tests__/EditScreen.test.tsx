@@ -183,7 +183,8 @@ describe('Editor', () => {
     );
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.original);
     expect(filterButton('Original').props.accessibilityState).toMatchObject({ selected: true });
-    expect(screen.getByTestId('camera-slot-tag').props.accessibilityLabel).toBe('#afternoon, today at 2:14 PM');
+    // The photo was taken on Nov 11, not today, so the tag names the day.
+    expect(screen.getByTestId('camera-slot-tag').props.accessibilityLabel).toBe('#afternoon, Wed, Nov 11 at 2:14 PM');
   });
 
   it('shows eleven thumbnails, each previewing the real photo through its own filter', async () => {
@@ -678,7 +679,9 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
     expect(within(screen.getByTestId('editor-preview')).getByTestId('skia-image').props.accessibilityHint).toBe(
       `https://photos.test/${MOMENT}.webp`,
     );
-    expect(screen.getByText(/7:30/)).toBeTruthy();
+    // Taken on another day: the slot tag names that day, not "Today".
+    expect(screen.getByText('7:30 AM · Mon,\u00a0Nov\u00a09')).toBeTruthy();
+    expect(screen.getByTestId('camera-slot-tag').props.accessibilityLabel).toBe('#ootd, Mon, Nov 9 at 7:30 AM');
     expect(saveButton().props.accessibilityLabel).toBe('Done');
 
     await fireEvent.changeText(caption, 'Green shirt day');

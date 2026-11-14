@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 export type Segment<K extends string> = { key: K; label: string };
@@ -47,7 +47,13 @@ export function SegmentedControl<K extends string>({
             hitSlop={{ top: space.xs, bottom: space.xs }}
             style={[styles.tab, isSelected ? (dark ? styles.selectedDark : styles.selected) : null]}
           >
+            {/* One line at any text size (NFR-A11Y-02): up to 200%, then the label shrinks to fit its segment
+                instead of breaking mid-word ("Read/ers"). */}
             <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.5}
+              maxFontSizeMultiplier={maxTextScale.control}
               style={[
                 textStyle('bodySmall', isSelected ? '700' : '600'),
                 { color: isSelected ? (dark ? colors.surface : colors.ink) : colors.muted },

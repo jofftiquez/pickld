@@ -78,6 +78,10 @@ export function EditDetailsStep({
           value={caption}
           onChangeText={onChangeCaption}
           maxLength={CAPTION_MAX}
+          // Several lines, so a long caption can be read back whole; Return closes the keyboard.
+          multiline
+          returnKeyType="done"
+          submitBehavior="blurAndSubmit"
           placeholder={t('edit.captionPlaceholder')}
           autoFocus={focusCaption}
           testID="editor-caption"

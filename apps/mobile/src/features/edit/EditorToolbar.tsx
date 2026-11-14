@@ -15,6 +15,8 @@ export type EditorToolbarProps = {
   slot: string;
   /** Capture time, formatted for the slot tag. */
   time: string;
+  /** The capture day when it isn't today, formatted for the slot tag. */
+  shotOn: string | null;
   /** Close leaves the editor; Back returns from the details step to the photo step (D-103). */
   leading: 'close' | 'back';
   onLeading: () => void;
@@ -38,6 +40,7 @@ export function EditorToolbar({
   topInset,
   slot,
   time,
+  shotOn,
   leading,
   onLeading,
   actionLabel,
@@ -49,7 +52,7 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
   const { t } = useTranslation();
   const largeText = useLargeText();
-  const tag = <SlotTag slot={slot} time={time} />;
+  const tag = <SlotTag slot={slot} time={time} shotOn={shotOn} />;
   return (
     <View
       accessibilityRole="toolbar"

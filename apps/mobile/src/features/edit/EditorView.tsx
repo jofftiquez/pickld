@@ -33,6 +33,8 @@ export type EditorViewProps = {
   slot: Slot;
   /** Capture time, formatted for the slot tag. */
   time: string;
+  /** The capture day when it isn't today, formatted for the slot tag. */
+  shotOn: string | null;
   edits: Edits;
   filter: FilterId;
   tool: EditorTool;
@@ -89,6 +91,7 @@ export function EditorView({
   photoUri,
   slot,
   time,
+  shotOn,
   edits,
   filter,
   tool,
@@ -168,6 +171,7 @@ export function EditorView({
         topInset={insets.top}
         slot={t(`slots.${slot}`)}
         time={time}
+        shotOn={shotOn}
         leading={onDetails ? 'back' : 'close'}
         onLeading={onDetails ? back : onClose}
         actionLabel={onDetails ? saveLabel : t('edit.next')}
