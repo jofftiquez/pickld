@@ -2,6 +2,7 @@
 // every sticker, and the user's onboarding answers (owner-only RLS), plus the store's prices.
 import { useQuery } from '@tanstack/react-query';
 
+import { rememberStickerArt } from '@/features/edit/stickers/remoteStickerArt';
 import { useAuthStore } from '@/lib/authStore';
 import { getStore, type StoreProduct } from '@/lib/store/store';
 import { getSupabase } from '@/lib/supabase';
@@ -18,8 +19,10 @@ async function fetchShopRows(userId: string): Promise<ShopRows> {
       .select('id, slug, name, tier, description, store_product_id, available_from, available_to, sort, pack_usable'),
     supabase
       .from('stickers')
-      .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable')
-      // Retired stickers (0032) aren't offered; moments that use them still draw their bundled art.
+      .select(
+        'id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable, art_width, art_height, art_version',
+      )
+      // Retired stickers (0032) aren't offered; moments that use them still draw their art.
       .is('retired_at', null),
     supabase
       .from('onboarding_answers')
@@ -29,6 +32,7 @@ async function fetchShopRows(userId: string): Promise<ShopRows> {
   ]);
   if (packs.error) throw new Error(packs.error.message);
   if (stickers.error) throw new Error(stickers.error.message);
+  rememberStickerArt(stickers.data);
   return { packs: packs.data, stickers: stickers.data, answers: answers.error ? null : answers.data };
 }
 

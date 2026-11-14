@@ -1,6 +1,6 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { stickerArtFor } from '@/features/edit/stickers/stickerArt';
+import { stickerArtSize } from '@/features/edit/stickers/remoteStickerArt';
 import { StickerImage } from '@/features/edit/stickers/StickerImage';
 import { stickerShop } from '@/theme/tokens';
 
@@ -35,7 +35,7 @@ export function PackArt({ samples, layouts, testID }: PackArtProps) {
       {samples.slice(0, layout.spots.length).map((sample, i) => {
         const spot = layout.spots[i];
         if (!spot) return null;
-        const art = stickerArtFor(sample.asset);
+        const art = stickerArtSize(sample.asset);
         const ratio = art ? art.width / art.height : 1;
         // The sticker keeps its shape inside the box: wide word art is held to maxWidth, pictures to height.
         const width = Math.min(layout.height * ratio, layout.maxWidth ?? Infinity);

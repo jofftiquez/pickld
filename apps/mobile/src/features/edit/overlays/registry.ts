@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import type { ComponentType } from 'react';
+import { useSyncExternalStore, type ComponentType } from 'react';
 
 import type { Overlay } from '../edits';
 
@@ -35,6 +35,28 @@ export function registerOverlayRenderer<T extends OverlayType>(type: T, renderer
 /** The renderer for an overlay's kind. Overlays of a kind with no renderer are not drawn. */
 export function getOverlayRenderer(type: OverlayType): OverlayRenderer | undefined {
   return renderers.get(type);
+}
+
+// Bumped when an aspect a renderer reports may have changed (a downloaded sticker's size became known, D-131),
+// so views that place overlays lay them out again.
+let aspectRevision = 0;
+const aspectListeners = new Set<() => void>();
+
+/** Tells views that place overlays to ask the renderers for their aspects again. */
+export function notifyAspectsChanged(): void {
+  aspectRevision++;
+  for (const listener of aspectListeners) listener();
+}
+
+/** Re-renders the caller when an overlay aspect changes; call it in any view that uses `aspect`. */
+export function useAspectRevision(): number {
+  return useSyncExternalStore(
+    (listener) => {
+      aspectListeners.add(listener);
+      return () => aspectListeners.delete(listener);
+    },
+    () => aspectRevision,
+  );
 }
 
 /** Removes a renderer (tests). */

@@ -20,7 +20,7 @@ import { textStyle } from '@/theme/text';
 import { colors, radius, space, stickerTool, type Slot } from '@/theme/tokens';
 
 import { suggestionsFor, type CatalogSticker } from './catalog';
-import { stickerArtFor } from './stickerArt';
+import { stickerArtSize } from './remoteStickerArt';
 import { StickerImage } from './StickerImage';
 import { useStickerCatalog } from './useStickerCatalog';
 
@@ -179,7 +179,7 @@ export function StickersPanel({ slot, onAdd }: StickersPanelProps) {
           {rowsOf(stickers, stickerTool.cellColumns).map((row) => (
             <View key={row.map((s) => s.id).join()} style={styles.row}>
               {row.map((sticker) => {
-                const art = stickerArtFor(sticker.asset);
+                const art = stickerArtSize(sticker.asset);
                 // Wide word art keeps the short box; near-square pictures (0032) get the taller one.
                 const height =
                   art && art.width < art.height * 1.6 ? stickerTool.cellPictureHeight : stickerTool.cellArtHeight;
