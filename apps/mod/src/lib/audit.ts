@@ -74,6 +74,10 @@ export function details(e: Pick<AuditEntry, 'data' | 'action'>): string {
   if (e.action === 'waitlist_remove' && typeof e.data.source === 'string') {
     parts.push(t('audit.waitlistSource', { source: e.data.source }));
   }
+  if (e.action.startsWith('invite_code_') && typeof e.data.code === 'string') {
+    parts.push(t('audit.code', { code: e.data.code }));
+    if (typeof e.data.uses === 'number') parts.push(t('audit.uses', { count: e.data.uses }));
+  }
   // Sticker Studio rows (0102) name their pack and sticker; target_type has no sticker value.
   if (typeof e.data.pack === 'string') parts.push(t('audit.pack', { pack: e.data.pack }));
   if (typeof e.data.sticker === 'string') parts.push(t('audit.sticker', { sticker: e.data.sticker }));

@@ -38,7 +38,8 @@
     "analyticsAudience": "Audience",
     "analyticsPacks": "Packs",
     "analyticsStickers": "Top stickers",
-    "stickers": "Sticker packs"
+    "stickers": "Sticker packs",
+    "invites": "Invite codes"
   },
   "queue": {
     "title": "Review queue",
@@ -191,7 +192,10 @@
       "admit": "Let in from the waiting line",
       "invite_grant_set": "Gave another set of invite codes",
       "invite_freeze": "Paused invites",
-      "invite_unfreeze": "Let invites work again"
+      "invite_unfreeze": "Let invites work again",
+      "invite_code_create": "Made an invite code",
+      "invite_code_off": "Switched an invite code off",
+      "invite_code_on": "Switched an invite code on"
     },
     "guideline": "Guideline: {{guideline}}",
     "note": "Note: {{note}}",
@@ -211,6 +215,9 @@
     "openUser": "Open their page",
     "clearFilter": "Show everything",
     "exported": "{{count}} emails",
+    "code": "Code {{code}}",
+    "uses_one": "{{count}} use",
+    "uses_other": "{{count}} uses",
     "waitlistSource": "joined from {{source}}",
     "pack": "Pack {{pack}}",
     "sticker": "sticker {{sticker}}",
@@ -371,6 +378,51 @@
       "childSafetyHint": "Child-safety suspensions can't be lifted from the console."
     },
     "notePlaceholder": "What happened, for the audit log",
+    "invites": {
+      "title": "Invites",
+      "invitedBy": "Let in by",
+      "noInviter": "Nobody (joined before invites, or let in from the waiting line)",
+      "kind": {
+        "personal": "A personal code",
+        "waitlist": "A waitlist code",
+        "admin": "Console code: {{note}}"
+      },
+      "viaLink": "by link",
+      "codes": "Their codes",
+      "codesLine": "{{used}} of {{codes}} used · {{sets}}",
+      "sets_one": "{{count}} set",
+      "sets_other": "{{count}} sets",
+      "noCodes": "None yet",
+      "locked": "Not unlocked yet (they need a first moment)",
+      "link": "Invite link",
+      "linkOn": "On",
+      "linkOff": "Off",
+      "paused": "Paused",
+      "pausedAuto": "automatically",
+      "invitees_one": "They let in {{count}} person",
+      "invitees_other": "They let in {{count}} people",
+      "gone": "Deleted account",
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "deleted": "Deleted",
+        "waiting": "Waiting"
+      },
+      "grant": "Give another set of 8",
+      "granted": "Set {{set}} added.",
+      "freeze": "Pause their invites",
+      "freezeNote": "Why pause them (required)",
+      "unfreeze": "Let their invites work again",
+      "unfreezeNote": "Why let them work again (required)",
+      "errors": {
+        "note": "Write a note of up to 500 characters.",
+        "already_frozen": "Their invites are already paused.",
+        "not_frozen": "Their invites aren't paused.",
+        "own_account": "You can't pause your own invites.",
+        "not_found": "That account no longer exists.",
+        "unknown": "That didn't work. Try again."
+      }
+    },
     "suspend": {
       "hint": "Suspend for 7 days. They can't post, comment or appear to others until it ends.",
       "note": "Why are you suspending this account?",
@@ -414,6 +466,74 @@
   "chart": {
     "bar": "{{date}}: {{count}}",
     "peak": "Most in a day: {{count}}"
+  },
+  "invites": {
+    "title": "Invite codes",
+    "subtitle": "Codes to hand out in person, at events or for App Review · they don't make anyone a reader",
+    "totals": {
+      "title": "Early access",
+      "waiting": "Waiting",
+      "joined": "Joined with these",
+      "ends": "Early access ends",
+      "off": "Off",
+      "offHint": "Anyone can sign up"
+    },
+    "list": {
+      "title": "Codes",
+      "empty": "No codes yet. Make one below."
+    },
+    "columns": {
+      "code": "Code",
+      "note": "Note",
+      "used": "Used",
+      "ends": "Ends",
+      "by": "Made by",
+      "state": "State"
+    },
+    "used": "{{uses}} / {{max}}",
+    "madeBy": {
+      "founder": "{{name}} (founder)",
+      "moderator": "{{name}} (moderator)"
+    },
+    "states": {
+      "on": "On",
+      "off": "Off",
+      "used_up": "Used up",
+      "ended": "Ended"
+    },
+    "switchOff": "Switch off",
+    "switchOn": "Switch on",
+    "switchOffLabel": "Switch code {{code}} off",
+    "switchOnLabel": "Switch code {{code}} on",
+    "new": {
+      "title": "New code",
+      "note": "Note (only moderators see it)",
+      "uses": "Uses",
+      "ends": "Ends (optional)",
+      "button": "Make code",
+      "hint": "Use 1 for one person. You can switch a code off anytime.",
+      "made": "Made {{code}}.",
+      "errors": {
+        "note": "Write a note of up to 200 characters.",
+        "uses": "Uses must be from 1 to 10,000.",
+        "ends": "Pick an end day after today.",
+        "unknown": "That didn't work. Try again."
+      }
+    },
+    "letIn": {
+      "title": "Let people in early",
+      "body": "{{count}} accounts are waiting. Let the oldest in now; each gets a push.",
+      "button": "Let in the oldest {{count}}",
+      "founders": "Founders only.",
+      "done_one": "Let {{count}} person in.",
+      "done_other": "Let {{count}} people in.",
+      "errors": {
+        "founders": "Only founders can let people in early.",
+        "count": "Nobody is waiting.",
+        "unknown": "That didn't work. Try again."
+      }
+    },
+    "waitlistLater": "Sending codes to the email waitlist comes later, with the email service (INV-09)."
   },
   "waitlist": {
     "title": "Waitlist",
