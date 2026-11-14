@@ -31,6 +31,8 @@ export const authorRow = z.object({
   display_name: z.string(),
   /** For the Share background in the lid color; feed rows don't select it. */
   lid_color: z.string().nullish(),
+  /** For the avatar (D-93); missing in caches from before it. */
+  avatar_path: z.string().nullish(),
 });
 export type AuthorRow = z.infer<typeof authorRow>;
 

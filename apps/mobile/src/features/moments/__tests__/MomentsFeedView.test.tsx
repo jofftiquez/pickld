@@ -51,7 +51,7 @@ async function setup(props: Partial<MomentsFeedViewProps> = {}) {
     onRefresh: jest.fn(),
     onEndReached: jest.fn(),
     onOpenNotifications: jest.fn(),
-    onOpenMoment: jest.fn(),
+    onOpenJar: jest.fn(),
     onToggleLike: jest.fn(),
     onOpenComments: jest.fn(),
     onFindPeople: jest.fn(),
@@ -82,7 +82,8 @@ describe('MomentsFeedView', () => {
     expect(screen.getByTestId('moments-card-m2')).toBeTruthy();
     expect(screen.getByText('Mika Reyes')).toBeTruthy();
     expect(screen.getByText(/#ootd · 7:30/)).toBeTruthy();
-    expect(screen.getByText('Green shirt day.')).toBeTruthy();
+    // The header reads the caption to screen readers, so the photo and caption below are hidden from them.
+    expect(screen.getByText('Green shirt day.', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByTestId('moments-open-m1').props.accessibilityLabel).toMatch(
       /^Mika Reyes, #ootd, 7:30.*Green shirt day\.$/,
     );
@@ -95,10 +96,33 @@ describe('MomentsFeedView', () => {
     expect(screen.getByTestId('moments-open-m1').props.accessibilityLabel).not.toMatch(/Only you/);
   });
 
-  it('opens the moment, likes it and opens its comments', async () => {
+  it('opens the moment’s thread from the header, the photo and the comment pill (D-94)', async () => {
     const h = await setup();
     await fireEvent.press(screen.getByTestId('moments-open-m1'));
-    expect(h.onOpenMoment).toHaveBeenCalledWith(mika);
+    await fireEvent.press(screen.getByTestId('moments-photo-m1', { includeHiddenElements: true }));
+    expect(h.onOpenComments).toHaveBeenCalledTimes(2);
+    expect(h.onOpenComments).toHaveBeenCalledWith(mika);
+    expect(screen.getByTestId('moments-open-m1').props.accessibilityHint).toBe('Opens the moment’s comments');
+  });
+
+  it('Go to jar opens the moment’s jar, and only when the viewer may open it (D-94)', async () => {
+    const hidden = moment({ moment_id: 'm3', jar_id: 'jar-hidden', jar_visible: false });
+    const h = await setup({ moments: [mika, hidden] });
+    await fireEvent.press(screen.getByRole('button', { name: 'Go to Mika Reyes’s jar' }));
+    expect(h.onOpenJar).toHaveBeenCalledWith(mika);
+    expect(h.onOpenComments).not.toHaveBeenCalled();
+    expect(screen.getByTestId('moments-jar-m1')).toBeTruthy();
+    expect(screen.queryByTestId('moments-jar-m3')).toBeNull();
+  });
+
+  it('shows the author’s signed avatar, and initials without one (D-93)', async () => {
+    await setup({ avatars: { 'mika-id': 'https://photos.test/a.jpg' } });
+    expect(screen.getByText('DS', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('MR', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('likes it and opens its comments', async () => {
+    const h = await setup();
     await fireEvent.press(screen.getByTestId('moments-like-m1'));
     expect(h.onToggleLike).toHaveBeenCalledWith(mika);
     await fireEvent.press(screen.getByTestId('moments-comments-m1'));

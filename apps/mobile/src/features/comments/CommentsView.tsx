@@ -26,6 +26,7 @@ import { SecondaryButton } from '@/components/SecondaryButton';
 import type { Edits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
 import { MomentView } from '@/features/moment/MomentView';
+import type { AvatarUrls } from '@/lib/avatars';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
@@ -45,6 +46,8 @@ export type CommentsMoment = {
   slot: string;
   /** The moment's owner. */
   authorName: string;
+  /** Their signed avatar; initials without it. */
+  authorAvatarUrl?: string | null;
   caption: string | null;
 };
 
@@ -63,6 +66,10 @@ export type CommentsViewProps = {
   unavailable: boolean;
   /** The viewer's name, for the avatar beside the input. */
   myName: string | null;
+  /** The viewer's signed avatar, beside the input. */
+  myAvatarUrl?: string | null;
+  /** Signed avatars of the commenters by profile id; initials for anyone missing. */
+  avatars?: AvatarUrls;
   now: Date;
   insets: EdgeInsets;
   isSending: boolean;
@@ -78,8 +85,8 @@ export type CommentsViewProps = {
 
 /**
  * One thread (Comments; FR-SOC-06): a jar's own, or one moment's (D-51), which opens with the whole moment
- * at 3:4, full width, drawn by Moment detail's `MomentView`, then its author and caption, scrolling away
- * with the comments (D-84). Comments with one level of replies and the input bar pinned above the keyboard.
+ * at 3:4 inside the screen's side margins with rounded corners (D-95), drawn by Moment detail's `MomentView`,
+ * then its author and caption, scrolling away with the comments (D-84). Comments with one level of replies and the input bar pinned above the keyboard.
  */
 export function CommentsView({
   jarTitle,
@@ -89,6 +96,8 @@ export function CommentsView({
   failed,
   unavailable,
   myName,
+  myAvatarUrl = null,
+  avatars = {},
   now,
   insets,
   isSending,
@@ -104,6 +113,8 @@ export function CommentsView({
   const [replyTo, setReplyTo] = useState<ThreadComment | null>(null);
   const [deleting, setDeleting] = useState<ThreadComment | null>(null);
   const { width } = useWindowDimensions();
+  // Inside the side margins the text and comments use; MomentView scales the 3:4 photo to this width (D-95).
+  const photoWidth = Math.max(0, width - 2 * space.xl);
   const reduceMotion = useReducedMotion();
   const list = useRef<ScrollViewInstance>(null);
   const focused = useRef(false);
@@ -121,6 +132,7 @@ export function CommentsView({
     <CommentItem
       key={c.id}
       comment={c}
+      avatarUrl={avatars[c.user_id] ?? null}
       isReply={isReply}
       now={now}
       onReply={c.canReply ? () => setReplyTo(c) : undefined}
@@ -190,12 +202,13 @@ export function CommentsView({
               accessible
               accessibilityRole="image"
               accessibilityLabel={t('moment.photo', { slot: moment.slot })}
+              style={styles.momentPhoto}
               testID="comments-moment-photo"
             >
               <MomentView
                 uri={moment.uri}
                 edits={moment.edits}
-                width={width}
+                width={photoWidth}
                 stamp={moment.stamp}
                 accessible={false}
                 testID="comments-moment-view"
@@ -203,7 +216,7 @@ export function CommentsView({
             </View>
             <View style={styles.momentText}>
               <View style={styles.momentAuthor}>
-                <Avatar name={moment.authorName} uri={null} size="sm" decorative />
+                <Avatar name={moment.authorName} uri={moment.authorAvatarUrl ?? null} size="sm" decorative />
                 <Text style={[textStyle('bodySmall', '700'), styles.authorName]} testID="comments-moment-author">
                   {moment.authorName}
                 </Text>
@@ -278,7 +291,7 @@ export function CommentsView({
             </Text>
           ) : null}
           <View style={styles.inputRow}>
-            <Avatar name={myName ?? ''} uri={null} size="feed" decorative />
+            <Avatar name={myName ?? ''} uri={myAvatarUrl} size="feed" decorative />
             <TextInput
               value={draft}
               onChangeText={setDraft}
@@ -355,8 +368,9 @@ const styles = StyleSheet.create({
   },
   titles: { flex: 1, alignItems: 'center' },
   headerSpacer: { width: sizes.roundButton },
-  // A moment thread's list: the moment runs edge to edge; the text and comments keep the side margins.
+  // A moment thread's list: the moment, its text and the comments share the side margins (D-95).
   momentList: { paddingBottom: space.lg },
+  momentPhoto: { marginHorizontal: space.xl, borderRadius: radius.tile, overflow: 'hidden' },
   momentText: { paddingHorizontal: space.xl, paddingTop: space.lg, paddingBottom: space.md, gap: space.sm + 2 },
   momentAuthor: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
   authorName: { color: colors.ink, flexShrink: 1 },
