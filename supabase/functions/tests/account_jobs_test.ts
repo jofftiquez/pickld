@@ -112,6 +112,13 @@ async function allKeys(userId: string): Promise<string[]> {
 let s3: Awaited<ReturnType<typeof localS3>>;
 let owner: TestUser, other: TestUser, reader: TestUser;
 let ownerUsername: string;
+// Invites (INV-12): the owner joined with a console code; `other` joined with the owner's morning code.
+const ADMIN_CODE = Array.from(
+  crypto.getRandomValues(new Uint8Array(6)),
+  (b) => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 31],
+)
+  .join('');
+let otherUsername: string, morningCode: string;
 const photos = new Map<string, Uint8Array>(); // photo key → bytes
 const strays: string[] = []; // keys of someone else's, or similar to the owner's: must survive
 const SEED_KEY = 'seed/avatars/av_aya.jpg';
@@ -216,6 +223,14 @@ Deno.test('setup', async () => {
     .single();
   ownerUsername = p!.username;
   await insert('follows', { reader_id: reader.id, author_id: owner.id });
+  await insert('invite_codes', { code: ADMIN_CODE, kind: 'admin', max_uses: 5, uses: 1, note: 'secret meetup note' });
+  await insert('invite_redemptions', { code: ADMIN_CODE, invitee_id: owner.id });
+  const { data: mine } = await db.from('invite_codes').select('code').eq('owner_id', owner.id).eq('slot', 'morning')
+    .single();
+  morningCode = mine!.code;
+  await db.from('invite_codes').update({ uses: 1 }).eq('code', morningCode);
+  await insert('invite_redemptions', { code: morningCode, invitee_id: other.id, via_link: true });
+  otherUsername = (await db.from('profiles').select('username').eq('id', other.id).single()).data!.username;
 
   const jar = async (user: TestUser, daysAgo: number, visibility: string) => {
     const date = localDate('Asia/Manila', daysAgo);
@@ -335,6 +350,24 @@ Deno.test('data-export: nothing yet, then a pending job, then a zip of exactly t
   assertEquals(profile.birthday, '1995-05-05');
   assertEquals(profile.display_name, 'jobowner');
 
+  // Invites: who let them in, their link, and their 8 codes with who joined; never the console code's note.
+  const invitesText = new TextDecoder().decode(files.get('invites.json'));
+  const invites = JSON.parse(invitesText);
+  assertEquals(
+    { ...invites.invited_by, joined_at: typeof invites.invited_by?.joined_at },
+    { code: ADMIN_CODE, kind: 'admin', inviter: null, via_link: false, joined_at: 'string' },
+  );
+  assert(!invitesText.includes('secret meetup note'), 'a console code’s note stays with moderators');
+  assert(/^https:\/\/pickld\.me\/i\/[A-Z2-9]{10}$/.test(invites.link.url), invites.link.url);
+  assertEquals(invites.link.enabled, true);
+  assertEquals(invites.codes.length, 8);
+  const joined = invites.codes.filter((c: Json) => c.joined);
+  assertEquals(
+    joined.map((c: Json) => [c.code, c.slot, c.set, c.used, c.joined.username, c.joined.via_link]),
+    [[morningCode, 'morning', 1, true, otherUsername, true]],
+  );
+  assert(invites.codes.every((c: Json) => c.joined || !c.used), 'unused codes have no one');
+
   const moments = JSON.parse(new TextDecoder().decode(files.get('moments.json')));
   const [newer, older] = [localDate('Asia/Manila', 1), localDate('Asia/Manila', 2)];
   const at = '2026-11-01T01:02:03+00:00';
@@ -365,7 +398,7 @@ Deno.test('data-export: nothing yet, then a pending job, then a zip of exactly t
     assertEquals(files.get(`photos/${s.date}/${s.slot}.jpg`), photos.get(s.key), s.slot);
     if (!edited.has(s.slot)) assertEquals(files.get(`finished/${s.date}/${s.slot}.jpg`), photos.get(s.key), s.slot);
   }
-  assertEquals(files.size, 2 + 2 * seeded.length, 'nothing else in the archive');
+  assertEquals(files.size, 3 + 2 * seeded.length, 'nothing else in the archive');
 
   // Finished copies as the app shows them. Mono of (200, 40, 120) is Rec. 709 luma 0.2126·200 +
   // 0.7152·40 + 0.0722·120 ≈ 80; each sticker is 0.3 of the 300-wide photo (90 px) around its point.
@@ -593,5 +626,7 @@ Deno.test('cleanup', async () => {
   // The test pack would break the catalog checks in supabase/tests (its stickers cascade).
   const { error } = await (await admin()).from('sticker_packs').delete().eq('slug', PACK);
   if (error) throw new Error(`delete test pack: ${error.message}`);
+  const { error: codeError } = await (await admin()).from('invite_codes').delete().eq('code', ADMIN_CODE);
+  if (codeError) throw new Error(`delete test code: ${codeError.message}`);
   await cleanup();
 });

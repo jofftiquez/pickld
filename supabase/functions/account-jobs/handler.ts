@@ -9,6 +9,11 @@
 //             moments.json                 [{ date, slot, caption, captured_at, added_at, is_private,
 //                                             visibility (of the jar), photo and finished (paths in the zip
 //                                             or null) }]
+//             invites.json                 who invited them (code, kind, inviter's username, via_link,
+//                                             joined_at), their link, and each of their codes with who joined
+//                                             with it (INV-12). Never a code's moderator note or why their
+//                                             invites were paused; an account deleted but not purged yet
+//                                             shows no username.
 //             photos/<date>/<slot>.jpg     the photo as stored; a pending replacement is <slot>-replacement.jpg
 //             finished/<date>/<slot>.jpg   the same moment as people saw it in the app: its filter, stickers,
 //                                          bubbles and text drawn on (T-508, _shared/moment_render.ts). A
@@ -82,6 +87,18 @@ export interface ExportMoment {
   replacement: boolean;
 }
 
+export interface ExportInviteJoin {
+  username: string | null;
+  via_link: boolean;
+  joined_at: string;
+}
+
+export interface ExportInvites {
+  invited_by: { code: string; kind: string; inviter: string | null; via_link: boolean; joined_at: string } | null;
+  link: { url: string; enabled: boolean } | null;
+  codes: { code: string; set: number; slot: string; used: boolean; joined: ExportInviteJoin | null }[];
+}
+
 export interface UploadSink {
   write(chunk: Uint8Array): Promise<void>;
   complete(): Promise<void>;
@@ -95,7 +112,7 @@ export interface JobsStore {
   fail(id: string, message: string): Promise<void>;
   /** account_job_yield() (0061): back to pending for the next run, without using an attempt. */
   yieldJob(id: string): Promise<void>;
-  exportData(userId: string): Promise<{ profile: ExportProfile; moments: ExportMoment[] }>;
+  exportData(userId: string): Promise<{ profile: ExportProfile; moments: ExportMoment[]; invites: ExportInvites }>;
   /** account_delete_purge(): false, with nothing touched, unless the profile is 'deleted'. */
   purgeAccount(userId: string): Promise<boolean>;
   getObject(key: string): Promise<Uint8Array | null>;
@@ -193,7 +210,7 @@ async function drawFinished(store: JobsStore, job: AccountJob, moments: ExportMo
 
 /** The zip's key when the export is done, or null when it was handed back to draw more next run. */
 async function runExport(store: JobsStore, job: AccountJob, run: ExportRun): Promise<string | null> {
-  const { profile, moments } = await store.exportData(job.user_id);
+  const { profile, moments, invites } = await store.exportData(job.user_id);
   moments.sort((a, b) =>
     a.date < b.date ? -1 : a.date > b.date ? 1 : SLOTS.indexOf(a.slot) - SLOTS.indexOf(b.slot) ||
       Number(a.replacement) - Number(b.replacement)
@@ -205,6 +222,7 @@ async function runExport(store: JobsStore, job: AccountJob, run: ExportRun): Pro
   try {
     const zip = new ZipWriter((chunk) => upload.write(chunk));
     await zip.add('profile.json', json(profile));
+    await zip.add('invites.json', json(invites));
     const entries = [];
     for (const m of moments) {
       const bytes = hasPhoto(m) ? await store.getObject(m.photo_path) : null;
@@ -286,6 +304,59 @@ export async function handleAccountJobs(req: Request, deps: AccountJobsDeps): Pr
 const PAGE = 1000;
 
 /** The JobsStore over the service-role client and the S3 API (s3ServerConfigFromEnv). */
+type Named = { username: string; status: string } | null;
+const one = <T>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
+const shown = (p: Named) => (p && p.status !== 'deleted' ? p.username : null);
+
+/** invites.json (INV-12): the person's side of the invite tables, as the service role reads them. */
+async function exportInvites(db: SupabaseClient, userId: string): Promise<ExportInvites> {
+  const [by, link, codes] = await Promise.all([
+    db.from('invite_redemptions')
+      .select(
+        'via_link, redeemed_at, invite_codes!inner(code, kind, owner:profiles!invite_codes_owner_id_fkey(username, status))',
+      )
+      .eq('invitee_id', userId)
+      .maybeSingle(),
+    db.from('invite_links').select('link_id, enabled').eq('owner_id', userId).maybeSingle(),
+    db.from('invite_codes')
+      .select(
+        'code, set_no, slot, uses, max_uses, invite_redemptions(via_link, redeemed_at, profiles(username, status))',
+      )
+      .eq('owner_id', userId)
+      .eq('kind', 'personal')
+      .order('set_no')
+      .order('created_at'),
+  ]);
+  for (const [name, r] of [['invited_by', by], ['invite_link', link], ['invite_codes', codes]] as const) {
+    if (r.error) throw new Error(`${name}: ${r.error.code}`);
+  }
+  type Used = { code: string; kind: string; owner: Named | Named[] };
+  const used = by.data && one(by.data.invite_codes as Used | Used[]);
+  return {
+    invited_by: by.data && used
+      ? {
+        code: used.code,
+        kind: used.kind,
+        inviter: shown(one(used.owner)),
+        via_link: by.data.via_link,
+        joined_at: by.data.redeemed_at,
+      }
+      : null,
+    link: link.data ? { url: `https://pickld.me/i/${link.data.link_id}`, enabled: link.data.enabled } : null,
+    codes: (codes.data ?? []).map((c) => {
+      type Join = { via_link: boolean; redeemed_at: string; profiles: Named | Named[] };
+      const r = one(c.invite_redemptions as Join | Join[]);
+      return {
+        code: c.code,
+        set: c.set_no!,
+        slot: c.slot!,
+        used: c.uses >= c.max_uses,
+        joined: r ? { username: shown(one(r.profiles)), via_link: r.via_link, joined_at: r.redeemed_at } : null,
+      };
+    }),
+  };
+}
+
 export function serviceStore(db: SupabaseClient, s3: S3Config, partSize?: number): JobsStore {
   return {
     async claim(limit) {
@@ -343,7 +414,7 @@ export function serviceStore(db: SupabaseClient, s3: S3Config, partSize?: number
         }
         if ((data ?? []).length < PAGE) break;
       }
-      return { profile: profile as ExportProfile, moments };
+      return { profile: profile as ExportProfile, moments, invites: await exportInvites(db, userId) };
     },
     async purgeAccount(userId) {
       const { data, error } = await db.rpc('account_delete_purge', { p_user: userId });
