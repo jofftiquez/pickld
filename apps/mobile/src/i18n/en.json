@@ -4,7 +4,9 @@
     "cancel": "Cancel"
   },
   "jar": {
-    "moments": "{{count}} of {{total}} moments"
+    "moments": "{{count}} of {{total}} moments",
+    "tapLabel": "Jar",
+    "tapHint": "Tap to see how your jar feels"
   },
   "tabs": {
     "label": "Main",

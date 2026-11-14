@@ -20,6 +20,7 @@ jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: 
 jest.mock('@/features/jar/TilePop', () => ({ TilePop: ({ children }: { children: React.ReactNode }) => children }));
 jest.mock('@/features/jar/PublishBurst', () => ({ PublishBurst: () => null }));
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
+jest.mock('@/features/jar/JarTapReaction', () => ({ JarTapReaction: () => null }));
 // Today pulls in the upload runner, which loads Sentry (ESM) through monitoring.
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 

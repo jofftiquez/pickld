@@ -954,3 +954,20 @@ The product owner sent three more round 3 items while H, I and J were being buil
 12. **Glass tab bar (D-108):** iOS 26+ uses the system's Liquid Glass tab bar; older iOS and Reduce Transparency keep the custom bar.
 13. **Moments tab icon (D-109):** a # (hashtag) in both bars. The editor keeps no crop tool; crop stays before the editor and in Re-crop (D-106, confirmed).
 14. **Discover tab (D-130):** Discover is the fourth tab, beside Jars, in both tab bars; the compass header button is removed and `/explore` redirects to the tab. It replaces D-101's "tab bar unchanged".
+
+## Round 4 (Nov 14)
+
+### R4-1 Jar easter egg on Today
+
+- **Ask:** "Add an easter egg animation to the jar in the Today that when you tap it it will animate / react but different reactions depending how full it is."
+- **Today:** the jar on the Today card (and a day page's card) is a picture; only the words and Publish or Published react to taps.
+- **Change:** tapping the jar plays a short reaction with a light haptic, and it grows with the jar: empty shivers or leans as if looking for something; 1–3 moments hop; 4–5 squash and stretch; 6–7 bounce with a squash on landing; 8 of 8 jumps while the lid pops and green sparkles fly; a published jar sways, its lid rattles and a white heart floats up. Repeat taps alternate between two variants and nudge the size, so no two taps in a row look the same. Each reaction is under a second and a tap mid-reaction restarts it. With Reduce Motion the jar only blinks softly and the sparkles or heart fade in place. The jar sits beside the words and Publish, never over them, so their taps are unchanged.
+- **Touches:** `JarCard`, new `JarTapReaction` and `jarReaction`, `JarGraphic` (a lid hop), `en.json`. No schema.
+- **Size:** S. Decision D-131.
+
+### R4-2 Publish confetti that moves like real confetti
+
+- **Ask:** "I noticed that the publish confetti's reaction to gravity is not close to realistic and it's just overall weird."
+- **Change:** the Publish confetti (piece 11) is reworked: a quick burst up and out, then gravity with air drag, pieces drifting and fluttering side to side, tumbling and flipping, varied sizes and speeds, fading as they settle or leave the screen. Reduce Motion keeps its fallback.
+- **Touches:** the confetti component and its tests. No schema.
+- **Size:** S. Decision D-132.
