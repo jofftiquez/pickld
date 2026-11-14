@@ -41,8 +41,15 @@ export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
       </p>
       <nav aria-label={t('nav.label')} style={{ display: 'grid', gap: 4 }}>
         {items.map((item) => {
+          // Reports and Appeals are queue filters, so Queue lights up only for the other filters.
           const active =
-            item.href.startsWith('/?') || item.href === '/' ? here === item.href : path.startsWith(item.href);
+            item.href === '/'
+              ? path === '/'
+              : item.href.includes('?')
+                ? here === item.href
+                : item.href === '/queue'
+                  ? path === '/queue' && !items.some((other) => other.href.includes('?') && other.href === here)
+                  : path.startsWith(item.href);
           return (
             <Link
               key={item.href}

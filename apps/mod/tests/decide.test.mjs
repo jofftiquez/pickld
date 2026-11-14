@@ -145,7 +145,7 @@ after(async () => {
 
 const panel = () => page.getByRole('region', { name: 'Item details' });
 const open = async (id) => {
-  await page.goto(`${base}/?filter=all&item=${id}`);
+  await page.goto(`${base}/queue?filter=all&item=${id}`);
   await panel().getByRole('group', { name: 'Decision' }).waitFor();
 };
 

@@ -73,7 +73,7 @@ export function Decisions({
       start(async () => {
         const result = await decide({ itemId: item.id, action, ...(needs && guideline ? { guideline } : {}) });
         if (result.ok) {
-          router.replace(filter === 'all' ? '/' : `/?filter=${filter}`, { scroll: false });
+          router.replace(filter === 'all' ? '/queue' : `/queue?filter=${filter}`, { scroll: false });
         } else {
           setMessage(t(`decide.errors.${result.code}`));
           router.refresh();

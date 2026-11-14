@@ -1883,7 +1883,18 @@ export type Database = {
           moment_count: number;
         }[];
       };
+      mod_day_start: { Args: Record<PropertyKey, never>; Returns: string };
       mod_decide: { Args: { p_action: string; p_guideline?: string; p_item: string; p_note?: string }; Returns: Json };
+      mod_lift_suspension: { Args: { p_note: string; p_user: string }; Returns: Json };
+      mod_manual_suspension: {
+        Args: { p_user: string };
+        Returns: {
+          actor_id: string;
+          created_at: string;
+          note: string;
+        }[];
+      };
+      mod_overview: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_queue: {
         Args: { p_filter?: string; p_limit?: number };
         Returns: {
@@ -1918,6 +1929,36 @@ export type Database = {
           open_appeals: number;
           pending: number;
           report: number;
+        }[];
+      };
+      mod_suspend: { Args: { p_note: string; p_user: string }; Returns: Json };
+      mod_user: { Args: { p_user: string }; Returns: Json };
+      mod_user_moments: {
+        Args: { p_limit?: number; p_user: string };
+        Returns: {
+          added_at: string;
+          caption: string;
+          hidden: boolean;
+          id: string;
+          local_date: string;
+          moderation: string;
+          slot: Database['public']['Enums']['slot'];
+          status: Database['public']['Enums']['moment_status'];
+          visibility: Database['public']['Enums']['jar_visibility'];
+        }[];
+      };
+      mod_user_search: {
+        Args: { p_limit?: number; p_query: string };
+        Returns: {
+          created_at: string;
+          display_name: string;
+          id: string;
+          moment_count: number;
+          open_reports: number;
+          status: Database['public']['Enums']['profile_status'];
+          strikes: number;
+          suspended_until: string;
+          username: string;
         }[];
       };
       moderation_apply: {

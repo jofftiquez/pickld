@@ -10,7 +10,7 @@ import { t } from '~/i18n/t';
  * The item's photo, blurred until the moderator presses Show photo (FR-MOD-03). Each item starts blurred
  * again: the panel is keyed by item, so this state never carries over.
  */
-export function BlurredPhoto({ url, label }: { url: string | null; label: string }) {
+export function BlurredPhoto({ url, label, aspect = '3 / 2' }: { url: string | null; label: string; aspect?: string }) {
   const [shown, setShown] = useState(false);
   return (
     <div
@@ -19,7 +19,7 @@ export function BlurredPhoto({ url, label }: { url: string | null; label: string
         borderRadius: radius.thumbLg,
         overflow: 'hidden',
         background: colors.photoPlaceholder,
-        aspectRatio: '3 / 2',
+        aspectRatio: aspect,
       }}
     >
       {url ? (
@@ -53,6 +53,7 @@ export function BlurredPhoto({ url, label }: { url: string | null; label: string
             color: colors.ink,
             fontWeight: 700,
             fontSize: 14,
+            whiteSpace: 'nowrap',
           }}
         >
           {shown ? t('detail.hide') : t('detail.show')}

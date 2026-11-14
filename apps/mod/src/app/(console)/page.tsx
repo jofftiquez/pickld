@@ -1,100 +1,187 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { colors, radius } from '@/theme/tokens';
 
-import { Decisions } from '~/components/Decisions';
-import { DetailPanel } from '~/components/DetailPanel';
-import { QueueList } from '~/components/QueueList';
+import { Tile } from '~/components/Tile';
 import { t } from '~/i18n/t';
-import { defaultGuideline } from '~/lib/decide';
-import { photoUrls } from '~/lib/photos';
-import { FILTERS, FilterParam, loadQueue, loadStats, waitLabel } from '~/lib/queue';
+import { env } from '~/lib/env';
+import { loadOverview } from '~/lib/overview';
+import { waitLabel } from '~/lib/queue';
 import { supabase } from '~/lib/supabase';
 
-function Stat({ label, value }: { label: string; value: string }) {
+const TWO_HOURS = 2 * 60 * 60;
+
+function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <div
-      style={{
-        background: colors.surface,
-        borderRadius: radius.thumbLg,
-        padding: '8px 14px',
-        minWidth: 72,
-        display: 'flex',
-        flexDirection: 'column-reverse',
-      }}
-    >
-      <dt style={{ color: colors.muted, fontSize: 11 }}>{label}</dt>
-      <dd style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>{value}</dd>
-    </div>
+    <section aria-label={title} style={{ display: 'grid', gap: 10 }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{title}</h2>
+        {action}
+      </header>
+      <dl
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+          gap: 10,
+          margin: 0,
+        }}
+      >
+        {children}
+      </dl>
+    </section>
   );
 }
 
-// The review queue (FR-MOD-02, FR-MOD-03; design: ModConsole). Oldest first; ?filter= picks a source and
-// ?item= opens one in the panel, where Keep / Remove / Escalate (and K, R, E) decide it.
-export default async function Queue({ searchParams }: { searchParams: Promise<{ filter?: string; item?: string }> }) {
-  const params = await searchParams;
-  const filter = FilterParam.parse(params.filter);
-  const client = await supabase();
-  const [items, stats] = await Promise.all([loadQueue(client, filter), loadStats(client)]);
-  const selected = items.find((i) => i.id === params.item) ?? items[0] ?? null;
-  const momentIds = [...new Set(items.flatMap((i) => (i.moment_id ? [i.moment_id] : [])))];
-  const photos = await photoUrls(client, momentIds);
-  // A server render's clock; waits only need minute precision.
-  // eslint-disable-next-line react-hooks/purity
-  const now = Date.now();
+const link = { color: colors.brandLink, fontWeight: 700, fontSize: 14 } as const;
+
+// The console's home (FR-MOD-06): is the queue keeping up, what happened today (Manila time), and is the app
+// healthy. Every number is a count from mod_overview(); nothing here shows a photo or a caption.
+export default async function Overview() {
+  const data = await loadOverview(await supabase());
+  const { queue, today, people, suspended } = data;
+  const uploadsUrl = env().POSTHOG_UPLOADS_URL;
+  const date = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'Asia/Manila',
+  });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.52, margin: 0 }}>{t('queue.title')}</h1>
-          <p style={{ color: colors.muted, margin: '4px 0 0', fontSize: 13 }}>{t('queue.subtitle')}</p>
-        </div>
-        <dl aria-label={t('queue.stats.label')} style={{ display: 'flex', gap: 10, margin: 0 }}>
-          <Stat label={t('queue.stats.pending')} value={String(stats.pending)} />
-          <Stat label={t('queue.stats.wait')} value={waitLabel(stats.median_wait_seconds)} />
-          <Stat label={t('queue.stats.appeals')} value={String(stats.open_appeals)} />
-        </dl>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+      <header>
+        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.52, margin: 0 }}>{t('overview.title')}</h1>
+        <p style={{ color: colors.muted, margin: '4px 0 0', fontSize: 13 }}>{t('overview.subtitle', { date })}</p>
       </header>
-      <nav aria-label={t('queue.filters.label')} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {FILTERS.map((f) => {
-          const active = f === filter;
-          return (
-            <Link
-              key={f}
-              href={f === 'all' ? '/' : `/?filter=${f}`}
-              aria-current={active ? 'true' : undefined}
-              style={{
-                padding: '8px 14px',
-                minHeight: 44,
-                border: `1px solid ${active ? colors.ink : colors.divider}`,
-                boxSizing: 'border-box',
-                display: 'inline-flex',
-                alignItems: 'center',
-                borderRadius: radius.pill,
-                fontSize: 13,
-                fontWeight: 700,
-                textDecoration: 'none',
-                background: active ? colors.ink : colors.surface,
-                color: active ? colors.surface : colors.ink,
-              }}
-            >
-              {t(`queue.filters.${f}`)}
-            </Link>
-          );
-        })}
-      </nav>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 16, alignItems: 'start' }}>
-        <QueueList items={items} photos={photos} selected={selected?.id ?? null} filter={filter} now={now} />
-        {selected ? (
-          <DetailPanel
-            key={selected.id}
-            item={selected}
-            photo={selected.moment_id ? photos.get(selected.moment_id) : undefined}
-            actions={<Decisions item={selected} filter={filter} initialGuideline={defaultGuideline(selected)} />}
-          />
-        ) : null}
-      </div>
+
+      {queue.over_two_hours > 0 ? (
+        <p
+          role="alert"
+          style={{
+            margin: 0,
+            padding: '12px 16px',
+            borderRadius: radius.thumbLg,
+            background: colors.dangerTint,
+            color: colors.likeText,
+            fontWeight: 700,
+            fontSize: 14,
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          {t('overview.queue.late', { count: queue.over_two_hours })}
+          <Link href="/queue" style={{ color: colors.likeText }}>
+            {t('overview.queue.open')}
+          </Link>
+        </p>
+      ) : null}
+
+      <Section
+        title={t('overview.queue.title')}
+        action={
+          <Link href="/queue" style={link}>
+            {t('overview.queue.open')}
+          </Link>
+        }
+      >
+        <Tile
+          label={t('overview.queue.waiting')}
+          value={String(queue.open)}
+          hint={t('overview.queue.escalated', { count: queue.escalated })}
+        />
+        <Tile
+          label={t('overview.queue.oldest')}
+          value={queue.open > 0 ? waitLabel(queue.oldest_seconds) : '—'}
+          alert={queue.oldest_seconds > TWO_HOURS}
+        />
+        <Tile label={t('overview.queue.median')} value={queue.open > 0 ? waitLabel(queue.median_wait_seconds) : '—'} />
+        <Tile
+          label={t('overview.queue.overTwoHours')}
+          value={String(queue.over_two_hours)}
+          alert={queue.over_two_hours > 0}
+        />
+      </Section>
+
+      <Section title={t('overview.today.title')}>
+        <Tile label={t('overview.today.reports')} value={String(today.reports)} />
+        <Tile
+          label={t('overview.today.appeals')}
+          value={String(today.appeals_opened)}
+          hint={t('overview.today.appealsDecided', { count: today.appeals_decided })}
+        />
+        <Tile label={t('overview.today.removedAuto')} value={String(today.removed_auto)} />
+        <Tile label={t('overview.today.removedByModerators')} value={String(today.removed_by_moderators)} />
+        <Tile label={t('overview.today.kept')} value={String(today.kept)} />
+        <Tile label={t('overview.today.suspensions')} value={String(today.suspensions)} />
+      </Section>
+
+      <section aria-label={t('overview.decisions.title')} style={{ display: 'grid', gap: 10 }}>
+        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{t('overview.decisions.title')}</h2>
+        <div style={{ background: colors.surface, borderRadius: radius.card, padding: '6px 16px' }}>
+          {today.decisions.length === 0 ? (
+            <p style={{ margin: '10px 0', color: colors.muted, fontSize: 14 }}>{t('overview.decisions.empty')}</p>
+          ) : (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {today.decisions.map((d, i) => (
+                <li
+                  key={d.username}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '10px 0',
+                    fontSize: 14,
+                    borderTop: i === 0 ? 'none' : `1px solid ${colors.divider}`,
+                  }}
+                >
+                  <span style={{ fontWeight: 700 }}>@{d.username}</span>
+                  <span style={{ color: colors.muted }}>{t('overview.decisions.count', { count: d.count })}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <Section title={t('overview.people.title')}>
+        <Tile
+          label={t('overview.people.signups')}
+          value={String(people.signups_today)}
+          hint={t('overview.people.week', { count: people.signups_week })}
+        />
+        <Tile
+          label={t('overview.people.posted')}
+          value={String(people.posted_today)}
+          hint={t('overview.people.week', { count: people.posted_week })}
+        />
+        <Tile label={t('overview.people.moments')} value={String(people.moments_today)} />
+        <Tile
+          label={t('overview.people.suspended')}
+          value={String(suspended.total)}
+          hint={t('overview.people.childSafety', { count: suspended.child_safety })}
+        />
+      </Section>
+
+      <Section
+        title={t('overview.uploads.title')}
+        action={
+          uploadsUrl ? (
+            <a href={uploadsUrl} target="_blank" rel="noreferrer" style={link}>
+              {t('overview.uploads.posthog')}
+            </a>
+          ) : (
+            <span style={{ color: colors.muted, fontSize: 13 }}>{t('overview.uploads.posthogMissing')}</span>
+          )
+        }
+      >
+        <Tile
+          label={t('overview.uploads.stuck')}
+          value={String(data.stuck_uploads)}
+          hint={t('overview.uploads.stuckHint')}
+          alert={data.stuck_uploads > 0}
+        />
+      </Section>
     </div>
   );
 }

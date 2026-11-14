@@ -122,7 +122,7 @@ after(async () => {
 const rows = () => page.getByRole('link', { name: new RegExp(`from @${username}`) });
 
 test('All lists open items oldest first; decided-or-not filters narrow it', async () => {
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/queue`);
   await page.getByRole('heading', { name: 'Review queue' }).waitFor();
   const labels = await rows().evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
   assert.deepEqual(
@@ -141,7 +141,7 @@ test('All lists open items oldest first; decided-or-not filters narrow it', asyn
 });
 
 test('counts match the open items in the database', async () => {
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/queue`);
   const { count } = await admin
     .from('moderation_items')
     .select('id', { count: 'exact', head: true })
@@ -152,7 +152,7 @@ test('counts match the open items in the database', async () => {
 });
 
 test('the panel shows the selected item, with the photo blurred until Show photo', async (t) => {
-  await page.goto(`${base}/?filter=auto_check`);
+  await page.goto(`${base}/queue?filter=auto_check`);
   await rows().first().click();
   const panel = page.getByRole('region', { name: 'Item details' });
   await panel.getByRole('heading', { name: '#whereami · Sat, Nov 7' }).waitFor();

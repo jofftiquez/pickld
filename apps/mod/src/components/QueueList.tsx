@@ -59,7 +59,7 @@ export function QueueList({
             return (
               <li key={item.id} style={{ borderBottom: `1px solid ${colors.divider}` }}>
                 <Link
-                  href={`/?filter=${filter}&item=${item.id}`}
+                  href={`/queue?filter=${filter}&item=${item.id}`}
                   aria-current={active ? 'true' : undefined}
                   aria-label={t('queue.rowLabel', { reason: reason(item), user, wait })}
                   scroll={false}
