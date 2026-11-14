@@ -19,10 +19,10 @@ import { MockCameraPreview } from '@/features/capture/MockCameraPreview';
 import { isThreeByFour } from '@/features/capture/cropMath';
 import { parseDevPhotoParam, parseMockAccessParam, pickDevPhoto, takeMockPhoto } from '@/features/capture/mockCamera';
 import { usePendingCrop } from '@/features/capture/pendingCrop';
-import { pickFromGallery } from '@/features/capture/pickFromGallery';
 import { galleryTarget, saveCapture, saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
 import { useFillCapture } from '@/features/capture/useFillCapture';
+import { useGalleryPicker } from '@/features/capture/useGalleryPicker';
 import { useReplaceConfirm } from '@/features/capture/useReplaceConfirm';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
@@ -157,14 +157,16 @@ export default function CameraScreen() {
     else router.replace(`/edit/${queuedId}`);
   };
 
-  // Gallery (M2-08, M2-10; FR-CAP-02): a 3:4 photo is queued like a shot; any other opens Crop first.
+  // Gallery (M2-08, M2-10; FR-CAP-02): a 3:4 photo is queued like a shot; any other opens Crop first. With
+  // Photos access the grid shows each photo's day and opens on the day being filled.
+  const gallery = useGalleryPicker({ tz, target: fill?.target.localDate ?? null, insets });
   const devPhoto = parseDevPhotoParam(params.devPhoto, __DEV__);
   const setPendingCrop = usePendingCrop((s) => s.setPending);
   const onGallery = async () => {
     if (busy || userId === null || fillFull) return;
     setBusy(true);
     try {
-      const photo = devPhoto ? await pickDevPhoto(devPhoto) : await pickFromGallery();
+      const photo = devPhoto ? await pickDevPhoto(devPhoto) : await gallery.pick();
       if (photo === null) return;
       const openJar = jar?.jar ?? null;
       const target = galleryTarget({ exif: photo.exif, tz, now: new Date(), openJar, fill: fill?.target ?? null });
@@ -186,14 +188,17 @@ export default function CameraScreen() {
 
   if (access === 'denied') {
     return (
-      <CameraAccessOff
-        insets={insets}
-        onClose={leave}
-        onOpenSettings={() => {
-          Linking.openSettings().catch((error: unknown) => captureError(error, { area: 'camera' }));
-        }}
-        onChooseFromGallery={() => void onGallery()}
-      />
+      <>
+        <CameraAccessOff
+          insets={insets}
+          onClose={leave}
+          onOpenSettings={() => {
+            Linking.openSettings().catch((error: unknown) => captureError(error, { area: 'camera' }));
+          }}
+          onChooseFromGallery={() => void onGallery()}
+        />
+        {gallery.modal}
+      </>
     );
   }
 
@@ -201,7 +206,12 @@ export default function CameraScreen() {
     access === 'mock' ? (
       <MockCameraPreview facing={facing} />
     ) : access === 'granted' ? (
-      <CameraPreview ref={camera} facing={facing} isActive={focused && foreground} onFlashSupport={setFlashSupported} />
+      <CameraPreview
+        ref={camera}
+        facing={facing}
+        isActive={focused && foreground && !gallery.open}
+        onFlashSupport={setFlashSupported}
+      />
     ) : null;
 
   return (
@@ -219,7 +229,12 @@ export default function CameraScreen() {
       onFlip={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
       onGallery={() => void onGallery()}
       onShutter={() => void onShutter()}
-      overlay={replaceConfirm.dialog}
+      overlay={
+        <>
+          {replaceConfirm.dialog}
+          {gallery.modal}
+        </>
+      }
     />
   );
 }

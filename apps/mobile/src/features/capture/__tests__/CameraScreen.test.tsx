@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
-import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
 import { AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'react-native';
 import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
@@ -8,6 +8,7 @@ import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera
 import CameraScreen from '../../../../app/camera';
 import { parseDevPhotoParam, parseMockAccessParam, pickDevPhoto, takeMockPhoto } from '../mockCamera';
 import { usePendingCrop } from '../pendingCrop';
+import { libraryAccess, libraryPhotoFile, loadLibraryPhotos } from '../libraryPhotos';
 import { pickFromGallery } from '../pickFromGallery';
 import { saveCapture, saveGalleryPhoto } from '../saveCapture';
 import { captureError } from '@/lib/monitoring';
@@ -74,6 +75,14 @@ jest.mock('../saveCapture', () => ({
   saveGalleryPhoto: jest.fn(),
 }));
 jest.mock('../pickFromGallery', () => ({ pickFromGallery: jest.fn() }));
+// The in-app grid's library (iOS with Photos access); no access by default, so the system picker opens.
+jest.mock('../libraryPhotos', () => ({
+  libraryAccess: jest.fn(),
+  loadLibraryPhotos: jest.fn(),
+  libraryPhotoFile: jest.fn(),
+  onLibraryChange: () => () => {},
+  chooseMorePhotos: jest.fn(),
+}));
 const mockMirror = { on: true };
 jest.mock('../cameraPrefs', () => ({ getMirrorSelfies: async () => mockMirror.on }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
@@ -193,6 +202,8 @@ beforeEach(() => {
   jest.mocked(pickFromGallery).mockReset();
   jest.mocked(pickFromGallery).mockResolvedValue(null);
   jest.mocked(pickDevPhoto).mockClear();
+  jest.mocked(libraryAccess).mockReset();
+  jest.mocked(libraryAccess).mockResolvedValue(null);
   jest.mocked(saveGalleryPhoto).mockReset();
   jest
     .mocked(saveGalleryPhoto)
@@ -737,6 +748,64 @@ describe('Fill this jar (?date=, FR-DAY-02)', () => {
         target: { localDate: '2026-11-08', tz: 'Asia/Tokyo', capturedAt: '2026-11-02T09:00:00+08:00' },
       }),
     );
+  });
+
+  it('with Photos access the grid opens on the day being filled, and its photo goes to Crop full size', async () => {
+    jest.mocked(libraryAccess).mockResolvedValue('all');
+    const at = (iso: string, id: string) => ({ id, width: 4032, height: 3024, creationTime: Date.parse(iso) });
+    jest
+      .mocked(loadLibraryPhotos)
+      .mockResolvedValue([
+        at('2026-11-10T09:00:00+08:00', 'ph://new'),
+        at('2026-11-08T21:00:00+08:00', 'ph://filled'),
+        at('2026-11-07T09:00:00+08:00', 'ph://old'),
+      ]);
+    jest.mocked(libraryPhotoFile).mockResolvedValue({
+      uri: 'file:///cache/gallery-1.jpg',
+      width: 4032,
+      height: 3024,
+      exif: { DateTimeOriginal: '2026:11:08 21:00:00', OffsetTimeOriginal: '+08:00' },
+    });
+    await openCamera('/camera?date=2026-11-08&slot=selfie');
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    expect(await screen.findByRole('header', { name: 'Sun, Nov 8, the day you’re filling' })).toBeTruthy();
+    expect(screen.getByText('Filling')).toBeTruthy();
+    expect(pickFromGallery).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByTestId('gallery-photo-ph://filled'));
+    await waitFor(() => expect(screen).toHavePathname('/crop'));
+    expect(libraryPhotoFile).toHaveBeenCalledWith(expect.objectContaining({ id: 'ph://filled' }), 'Asia/Manila');
+    expect(usePendingCrop.getState().pending).toEqual(
+      expect.objectContaining({
+        photo: expect.objectContaining({ uri: 'file:///cache/gallery-1.jpg' }),
+        slot: 'selfie',
+        target: { localDate: '2026-11-08', tz: 'Asia/Tokyo', capturedAt: '2026-11-08T21:00:00+08:00' },
+      }),
+    );
+  });
+
+  it('closing the grid keeps the camera and queues nothing', async () => {
+    jest.mocked(libraryAccess).mockResolvedValue('all');
+    jest.mocked(loadLibraryPhotos).mockResolvedValue([]);
+    await openCamera('/camera?date=2026-11-08&slot=selfie');
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await fireEvent.press(await screen.findByTestId('gallery-close'));
+    await waitFor(() => expect(screen.queryByTestId('gallery-grid')).toBeNull());
+    // The pick settles once the grid has gone; the camera is usable again.
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Take photo' }).props.accessibilityState).toEqual({ disabled: false }),
+    );
+    expect(screen).toHavePathname('/camera');
+    expect(saveGalleryPhoto).not.toHaveBeenCalled();
+    expect(usePendingCrop.getState().pending).toBeNull();
+  });
+
+  it("when the library can't be read, the system picker opens instead", async () => {
+    jest.mocked(libraryAccess).mockResolvedValue('all');
+    jest.mocked(loadLibraryPhotos).mockRejectedValue(new Error('no library'));
+    await openCamera('/camera?date=2026-11-08&slot=selfie');
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await waitFor(() => expect(pickFromGallery).toHaveBeenCalledTimes(1));
+    expect(screen).toHavePathname('/camera');
   });
 
   it('a full past jar has nothing to fill: the shutter is disabled', async () => {
