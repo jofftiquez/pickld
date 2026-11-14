@@ -15,7 +15,7 @@ Local URLs: API `http://127.0.0.1:55421`, database `postgresql://postgres:postgr
 Studio `http://127.0.0.1:55423`, mail (Mailpit) `http://127.0.0.1:55424`.
 
 `0001_init.sql` stays as delivered; every fix is an additive migration (`0002_…`, `0003_…`), and no column is
-dropped or renamed (docs/decisions.md C-5).
+dropped or renamed (decision C-5).
 
 ## Seed data
 

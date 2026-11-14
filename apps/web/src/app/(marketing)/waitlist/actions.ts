@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { waitlistEnv } from '~/lib/env';
 
-// Joining the waitlist makes a verified account (INV-12, docs/plans/invite-codes.md):
+// Joining the waitlist makes a verified account (INV-12):
 //   1. requestCode: check the Turnstile token, then Supabase Auth emails a 6-digit code (creating the auth user).
 //   2. verifyCode: check the code, call waitlist_join(source) as that user, then sign that session out.
 // Everything runs on the server with the anon key; the browser never holds a session. The address waits
