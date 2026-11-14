@@ -5,6 +5,7 @@ import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { FollowButton } from '@/features/profile/FollowButton';
+import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
@@ -18,7 +19,8 @@ export type FeedJarCardProps = {
   avatarUrl?: string | null;
   /** Opens the Jar page; without it the card isn't pressable. */
   onPress?: () => void;
-  /** Discover (D-100): a "Be a reader" button under the card for an author the viewer doesn't read yet. */
+  /** Discover (D-100): a "Be a reader" button at the bottom right of the card for an author the viewer doesn't
+   * read yet. */
   onRead?: () => void;
   readDisabled?: boolean;
 };
@@ -26,6 +28,7 @@ export type FeedJarCardProps = {
 /** A followed author's jar in the Jars feed (design: Feed): header, photo mosaic, likes, comments and caption. */
 export function FeedJarCard({ jar, now, avatarUrl = null, onPress, onRead, readDisabled = false }: FeedJarCardProps) {
   const { t } = useTranslation();
+  const large = useLargeText();
   const age = ageOf(jar.feed_at, now);
   const updated = t(`feed.updated.${age.unit}`, { count: age.count });
   const label = t('feed.cardLabel', {
@@ -38,15 +41,18 @@ export function FeedJarCard({ jar, now, avatarUrl = null, onPress, onRead, readD
   });
   const body = (
     <>
-      <View style={styles.header}>
-        <Avatar name={jar.author_display_name} uri={avatarUrl} size="feed" decorative />
-        <View style={styles.titles}>
-          <Text style={[textStyle('body', '700'), { color: colors.ink }]} numberOfLines={1}>
-            {jar.author_display_name}
-          </Text>
-          <Text style={[textStyle('label', '500'), { color: colors.muted }]} numberOfLines={1}>
-            {updated}
-          </Text>
+      {/* At large text the count pill goes under the name, which otherwise shrank to "Joff Ti…" / "Update…". */}
+      <View style={large ? styles.headerStacked : styles.header}>
+        <View style={[styles.who, large && styles.whoStacked]}>
+          <Avatar name={jar.author_display_name} uri={avatarUrl} size="feed" decorative />
+          <View style={styles.titles}>
+            <Text style={[textStyle('body', '700'), { color: colors.ink }]} numberOfLines={large ? 2 : 1}>
+              {jar.author_display_name}
+            </Text>
+            <Text style={[textStyle('label', '500'), { color: colors.muted }]} numberOfLines={large ? 2 : 1}>
+              {updated}
+            </Text>
+          </View>
         </View>
         <View style={styles.pill}>
           <JarGraphic count={jar.visible_count} size={sizes.countJar} decorative />
@@ -129,6 +135,9 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     paddingHorizontal: space.xs,
   },
+  headerStacked: { alignItems: 'flex-start', gap: space.sm, paddingTop: 2, paddingHorizontal: space.xs },
+  who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm + 2 },
+  whoStacked: { flex: 0, alignSelf: 'stretch', alignItems: 'flex-start' },
   titles: { flex: 1, gap: 1 },
   pill: {
     flexDirection: 'row',
@@ -149,6 +158,7 @@ const styles = StyleSheet.create({
   },
   stat: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   body: { gap: space.sm + 2 },
-  read: { alignItems: 'flex-end', paddingHorizontal: space.xs },
+  // A row, so the button (which aligns itself to the start) sits at the right end.
+  read: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: space.xs },
   caption: { flex: 1, textAlign: 'right', color: colors.muted },
 });

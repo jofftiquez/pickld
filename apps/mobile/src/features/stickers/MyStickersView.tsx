@@ -12,7 +12,8 @@ import { Toggle } from '@/components/Toggle';
 import { stickerArtFor } from '@/features/edit/stickers/stickerArt';
 import { StickerImage } from '@/features/edit/stickers/StickerImage';
 import { formatMonthDay } from '@/lib/format';
-import { textStyle } from '@/theme/text';
+import { useLargeText } from '@/lib/useLargeText';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, myStickers, radius, sizes, space, stickerTool } from '@/theme/tokens';
 
 import { movePack, type MyPack } from './myStickers';
@@ -52,6 +53,8 @@ export function MyStickersView({
   onShop,
 }: MyStickersViewProps) {
   const { t } = useTranslation();
+  // At large text the Restore button left the title one or two letters a line: stack icon, words and button.
+  const large = useLargeText();
   // The row being dragged and how far; other rows make room for it.
   const [drag, setDrag] = useState<{ index: number; dy: number } | null>(null);
   const [rowHeight, setRowHeight] = useState(0);
@@ -131,11 +134,11 @@ export function MyStickersView({
           </Text>
         ) : null}
 
-        <Card style={styles.restoreCard}>
+        <Card style={large ? styles.restoreCardStacked : styles.restoreCard}>
           <View style={styles.restoreIcon}>
             <Icon name="download" size={20} strokeWidth={1.8} />
           </View>
-          <View style={styles.restoreText}>
+          <View style={[styles.restoreText, large && styles.restoreTextStacked]}>
             <Text style={[textStyle('cardTitle', '800'), { color: colors.ink }]}>{t('myStickers.restoreTitle')}</Text>
             <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>{t('myStickers.restoreBody')}</Text>
           </View>
@@ -255,10 +258,21 @@ function PackRow({
         ) : null}
       </View>
       <View style={styles.rowText}>
-        <Text style={[textStyle('cardTitle', '800'), { color: colors.ink }]} numberOfLines={1}>
+        {/* Beside the grip, the pack tile and the switch the name became "Ever…" at accessibility sizes: it
+            stops at 2× and shrinks to fit, like segmented labels (D-110). */}
+        <Text
+          style={[textStyle('cardTitle', '800'), { color: colors.ink }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+          maxFontSizeMultiplier={maxTextScale.control}
+        >
           {pack.name}
         </Text>
-        <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>{detail}</Text>
+        {/* Stops at 2× too, so the name never ends up smaller than the line under it. */}
+        <Text style={[textStyle('bodySmall'), { color: colors.muted }]} maxFontSizeMultiplier={maxTextScale.control}>
+          {detail}
+        </Text>
       </View>
       <Toggle
         value={!pack.hidden}
@@ -305,6 +319,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   restoreText: { flex: 1, gap: 2 },
+  restoreCardStacked: { alignItems: 'flex-start', gap: space.sm },
+  restoreTextStacked: { flex: 0, alignSelf: 'stretch' },
   message: { gap: space.md, paddingVertical: space.xxl, alignItems: 'center' },
   center: { textAlign: 'center', color: colors.muted },
   error: { color: colors.danger, textAlign: 'center' },

@@ -1,4 +1,4 @@
-import { ageOf, buildMosaic, FEED_PAGE_SIZE, nextCursor, type FeedRow } from '../feedModel';
+import { ageOf, buildMosaic, FEED_PAGE_SIZE, mosaicRows, nextCursor, type FeedRow } from '../feedModel';
 
 function row(i: number): FeedRow {
   return {
@@ -85,6 +85,27 @@ describe('buildMosaic', () => {
       small: [],
       more: 2,
     });
+  });
+});
+
+describe('mosaicRows', () => {
+  const photo = (i: number) => ({ momentId: `m${i}`, url: null, render: null });
+  const shape = (small: number, more: number) =>
+    mosaicRows({ large: photo(0), small: Array.from({ length: small }, (_, i) => photo(i + 1)), more }).map((row) =>
+      row.map((cell) => (cell.kind === 'more' ? '+' : cell.photo.momentId)),
+    );
+  it('leaves no empty cell: one or two cells fill the column, three are two over one, four a 2 × 2 grid', () => {
+    expect(shape(0, 0)).toEqual([]);
+    expect(shape(1, 0)).toEqual([['m1']]);
+    expect(shape(2, 0)).toEqual([['m1'], ['m2']]);
+    expect(shape(3, 0)).toEqual([['m1', 'm2'], ['m3']]);
+    expect(shape(3, 2)).toEqual([
+      ['m1', 'm2'],
+      ['m3', '+'],
+    ]);
+  });
+  it('puts "+n" after the photos it has when thumbnails are missing', () => {
+    expect(shape(1, 1)).toEqual([['m1'], ['+']]);
   });
 });
 
