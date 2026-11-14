@@ -43,7 +43,8 @@ type SentenceKey =
   | 'notifications.fullJar'
   | 'notifications.fullJarPlain'
   | 'notifications.removed'
-  | 'notifications.appealDecided';
+  | 'notifications.appealDecided'
+  | 'notifications.admitted';
 
 /** The sentence for an entry, with <bold> parts, as a translation key and its values. */
 function sentence(
@@ -95,6 +96,8 @@ function sentence(
       return { key: 'notifications.removed', values: {} };
     case 'appeal_decided':
       return { key: 'notifications.appealDecided', values: {} };
+    case 'admitted':
+      return { key: 'notifications.admitted', values: {} };
   }
 }
 
@@ -119,7 +122,11 @@ export function NotificationRow({
   const spoken = t(key, values).replace(/<\/?bold>/g, '');
   const actor = entry.actors[0];
   const icon =
-    entry.type === 'full_jar' ? 'jars' : entry.type === 'removed' || entry.type === 'appeal_decided' ? 'warning' : null;
+    entry.type === 'full_jar' || entry.type === 'admitted'
+      ? 'jars'
+      : entry.type === 'removed' || entry.type === 'appeal_decided'
+        ? 'warning'
+        : null;
 
   return (
     <View

@@ -85,6 +85,9 @@ function one(n: DueNotification): Push | null {
       return { ...base, title: 'Your review is done', body: 'Tap to see what we decided.', data };
     case 'friend_joined':
       return { ...base, title: actor, body: 'joined Pickld. Say hi?', data };
+    case 'admitted':
+      // The invite period let this account in (0131).
+      return { ...base, title: "You're in", body: 'Fill your first jar.', data };
     default:
       return null;
   }

@@ -25,10 +25,11 @@
 // A failure puts the job back for another try in 10 minutes, and fails it after the third attempt
 // (account_job_fail). Messages name only the step and a status code, never a key or personal data.
 //
-// Each run also ends strike suspensions whose 7 days are over (moderation_lift_suspensions, 0041; D-11).
+// Each run also ends strike suspensions whose 7 days are over (moderation_lift_suspensions, 0041; D-11), and
+// once the invite period is over lets in every account still waiting for a code (admit_all_waiting, 0131).
 //
 // POST {}  (x-jobs-secret: …)
-//   → { data: { claimed, done, failed, waiting (handed back to draw more), lifted } }
+//   → { data: { claimed, done, failed, waiting (handed back to draw more), lifted, admitted } }
 //   → { error: { code, message } }   401 wrong secret, 405 method
 import type { SupabaseClient } from '../_shared/deps.ts';
 import { deletePrefix, getObject, listAllKeys, MultipartUpload, putObject } from '../_shared/bucket.ts';
@@ -105,6 +106,8 @@ export interface JobsStore {
   startUpload(key: string, contentType: string): Promise<UploadSink>;
   /** moderation_lift_suspensions() (0041): ends strike suspensions whose 7 days are over. */
   liftSuspensions(): Promise<number>;
+  /** admit_all_waiting() (0131): when the invite period is over, lets every waiting account in. */
+  admitAll(): Promise<number>;
 }
 
 export interface AccountJobsDeps {
@@ -251,6 +254,7 @@ export async function handleAccountJobs(req: Request, deps: AccountJobsDeps): Pr
 
   const store = deps.store();
   const lifted = await store.liftSuspensions();
+  const admitted = await store.admitAll();
   const jobs = await store.claim(BATCH);
   const run: ExportRun = {
     renderer: deps.renderer ?? finishedRenderer,
@@ -276,7 +280,7 @@ export async function handleAccountJobs(req: Request, deps: AccountJobsDeps): Pr
       await store.fail(job.id, e instanceof Error ? e.message : 'failed');
     }
   }
-  return ok({ claimed: jobs.length, done, failed, waiting, lifted });
+  return ok({ claimed: jobs.length, done, failed, waiting, lifted, admitted });
 }
 
 const PAGE = 1000;
@@ -349,6 +353,11 @@ export function serviceStore(db: SupabaseClient, s3: S3Config, partSize?: number
     async liftSuspensions() {
       const { data, error } = await db.rpc('moderation_lift_suspensions');
       if (error) throw new Error(`moderation_lift_suspensions: ${error.code}`);
+      return Number(data ?? 0);
+    },
+    async admitAll() {
+      const { data, error } = await db.rpc('admit_all_waiting');
+      if (error) throw new Error(`admit_all_waiting: ${error.code}`);
       return Number(data ?? 0);
     },
     getObject: (key) => getObject(s3, key),

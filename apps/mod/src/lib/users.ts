@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 // public.mod_user_search_page() (0120), mod_user() and mod_user_moments() (0090). Text and ids only; photos come from
 // fn:photo-urls, which signs only what the moderator may see (public or queued moments).
-const Status = z.enum(['active', 'suspended', 'deleted']);
+const Status = z.enum(['active', 'suspended', 'deleted', 'waiting']);
 
 const Row = z.object({
   id: z.uuid(),
