@@ -45,6 +45,17 @@ export type FeedJar = FeedRow & { previewUrls: (string | null)[]; previewRenders
 export type FeedPage = { jars: FeedJar[]; nextCursor: FeedCursor | null };
 export type FeedCursor = { at: string; id: string };
 
+/** Above every id, so an anchored first page keeps the rows at exactly `from`. */
+const LAST_ID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+
+/**
+ * The first page's cursor for a list anchored at `from` (an ISO instant; the date scrubber passes the start of the
+ * next day in the phone's zone): the list starts with the newest row at or before it. Same shape for moments.
+ */
+export function anchorCursor(from: string): FeedCursor {
+  return { at: from, id: LAST_ID };
+}
+
 /** The next page starts after the last row; a short page is the end of the feed. */
 export function nextCursor(rows: FeedRow[]): FeedCursor | null {
   const last = rows[rows.length - 1];

@@ -118,6 +118,7 @@ async function renderDiscover(props: Partial<DiscoverViewProps> = {}) {
     onTabChange: jest.fn(),
     onRefresh: jest.fn(),
     onEndReached: jest.fn(),
+    onBackToTop: jest.fn(),
     onRetry: jest.fn(),
     onRetryList: jest.fn(),
     onOpenProfile: jest.fn(),

@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { BackToTopButton } from '@/components/BackToTopButton';
 import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { maxTextScale, textStyle } from '@/theme/text';
 import type { AvatarUrls } from '@/lib/avatars';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
+import { useBackToTop, type BackToTopMode } from '@/lib/useBackToTop';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { FeedEmpty } from './FeedEmpty';
@@ -31,6 +33,8 @@ export type FeedViewProps = {
   hasUnread: boolean;
   onRefresh: () => void;
   onEndReached: () => void;
+  /** After the back-to-top button brings the list up: on `reload` the screen fetches the newest page again. */
+  onBackToTop: (mode: BackToTopMode) => void;
   onOpenNotifications: () => void;
   onOpenJar?: (jarId: string) => void;
   /** Opens a profile from the avatar row; `null` is the viewer's own ("You"). */
@@ -63,6 +67,7 @@ export function FeedView({
   hasUnread,
   onRefresh,
   onEndReached,
+  onBackToTop,
   onOpenNotifications,
   onOpenJar,
   onOpenProfile,
@@ -76,6 +81,7 @@ export function FeedView({
   // Jars, empty: only once we know the user reads nobody (FR-SOC-02), never while the authors load.
   const readsNobody = authors !== undefined && authors.length === 0;
   const hasJars = jars !== undefined && jars.length > 0;
+  const { listRef, onScroll, scrollEventThrottle, showBackToTop, backToTop } = useBackToTop<FeedJar>(onBackToTop);
 
   const header = (
     <View>
@@ -142,61 +148,67 @@ export function FeedView({
   );
 
   return (
-    <FlatList
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
-      data={jars ?? []}
-      keyExtractor={(jar) => jar.jar_id}
-      renderItem={({ item }) => (
-        <View style={styles.cardWrap}>
-          <FeedJarCard
-            jar={item}
-            now={now}
-            avatarUrl={avatars[item.author_id] ?? null}
-            onPress={onOpenJar ? () => onOpenJar(item.jar_id) : undefined}
-          />
-        </View>
-      )}
-      ItemSeparatorComponent={Separator}
-      ListHeaderComponent={header}
-      ListEmptyComponent={
-        readsNobody && !isLoading ? (
+    <View style={styles.screen}>
+      <FlatList
+        style={styles.screen}
+        ref={listRef}
+        onScroll={onScroll}
+        scrollEventThrottle={scrollEventThrottle}
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
+        data={jars ?? []}
+        keyExtractor={(jar) => jar.jar_id}
+        renderItem={({ item }) => (
           <View style={styles.cardWrap}>
-            <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} refreshable />
+            <FeedJarCard
+              jar={item}
+              now={now}
+              avatarUrl={avatars[item.author_id] ?? null}
+              onPress={onOpenJar ? () => onOpenJar(item.jar_id) : undefined}
+            />
           </View>
-        ) : isLoading ? (
-          <ActivityIndicator color={colors.muted} style={styles.loading} testID="feed-loading" />
-        ) : authors !== undefined ? (
-          // Reading people who haven't published a jar yet (D-87).
-          <EmptyState
-            illustration="jar"
-            title={t('feed.quietTitle')}
-            body={t('feed.quietBody')}
-            action={{ label: t('feed.findMore'), onPress: onFindPeople, testID: 'feed-find-more' }}
-            refreshable
-            testID="feed-quiet"
+        )}
+        ItemSeparatorComponent={Separator}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          readsNobody && !isLoading ? (
+            <View style={styles.cardWrap}>
+              <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} refreshable />
+            </View>
+          ) : isLoading ? (
+            <ActivityIndicator color={colors.muted} style={styles.loading} testID="feed-loading" />
+          ) : authors !== undefined ? (
+            // Reading people who haven't published a jar yet (D-87).
+            <EmptyState
+              illustration="jar"
+              title={t('feed.quietTitle')}
+              body={t('feed.quietBody')}
+              action={{ label: t('feed.findMore'), onPress: onFindPeople, testID: 'feed-find-more' }}
+              refreshable
+              testID="feed-quiet"
+            />
+          ) : undefined
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
+        }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.6}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.muted}
+            progressViewOffset={insets.top}
           />
-        ) : undefined
-      }
-      ListFooterComponent={
-        isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
-      }
-      onEndReached={onEndReached}
-      onEndReachedThreshold={0.6}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.muted}
-          progressViewOffset={insets.top}
-        />
-      }
-      // Cards are tall; a small window keeps scrolling smooth on older phones (NFR-PERF-02).
-      initialNumToRender={4}
-      windowSize={7}
-      removeClippedSubviews
-      testID="feed-list"
-    />
+        }
+        // Cards are tall; a small window keeps scrolling smooth on older phones (NFR-PERF-02).
+        initialNumToRender={4}
+        windowSize={7}
+        removeClippedSubviews
+        testID="feed-list"
+      />
+      {showBackToTop ? <BackToTopButton onPress={backToTop} bottom={bottomPadding} /> : null}
+    </View>
   );
 }
 

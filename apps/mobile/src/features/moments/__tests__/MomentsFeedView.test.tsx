@@ -50,6 +50,7 @@ async function setup(props: Partial<MomentsFeedViewProps> = {}) {
   const handlers = {
     onRefresh: jest.fn(),
     onEndReached: jest.fn(),
+    onBackToTop: jest.fn(),
     onOpenNotifications: jest.fn(),
     onOpenJar: jest.fn(),
     onToggleLike: jest.fn(),

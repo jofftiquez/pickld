@@ -6,9 +6,11 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { z } from 'zod';
 
+import { anchorCursor } from '@/features/feed/feedModel';
 import { fetchFeedAuthors, feedQueryKeys } from '@/features/feed/useFeed';
 import { keyOf, sendLike, serialize } from '@/features/jar/useLike';
 import { useAuthStore } from '@/lib/authStore';
+import { refetchFirstPage } from '@/lib/firstPage';
 import { getSupabase } from '@/lib/supabase';
 
 import {
@@ -69,8 +71,9 @@ export async function fetchMomentsPage(
 }
 
 export const momentsQueryKeys = {
-  /** ['momentsFeed', userId]: every loaded page, each fetched with its cursor. */
-  feed: (userId: string) => ['momentsFeed', userId] as const,
+  /** ['momentsFeed', userId]: every loaded page, newest first; an anchored list (`from`) is cached on its own. */
+  feed: (userId: string, from?: string) =>
+    from ? (['momentsFeed', userId, { from }] as const) : (['momentsFeed', userId] as const),
 };
 
 type Pages = InfiniteData<MomentsPage, MomentsCursor | null>;
@@ -78,15 +81,16 @@ type Pages = InfiniteData<MomentsPage, MomentsCursor | null>;
 /** Like requests still running per moment; the jar page is read again once a moment has none left. */
 const inFlight = new Map<string, number>();
 
-export function useMomentsFeed() {
+/** The Moments timeline, newest first, or from `from` back (see `anchorCursor`). */
+export function useMomentsFeed(from?: string) {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const enabled = userId !== null;
   const queryClient = useQueryClient();
-  const queryKey = momentsQueryKeys.feed(userId ?? '');
+  const queryKey = momentsQueryKeys.feed(userId ?? '', from);
   const feed = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) => fetchMomentsPage(pageParam),
-    initialPageParam: null as MomentsCursor | null,
+    initialPageParam: from ? anchorCursor(from) : null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
   });
@@ -129,8 +133,9 @@ export function useMomentsFeed() {
     hasNextPage: feed.hasNextPage,
     isFetchingNextPage: feed.isFetchingNextPage,
     fetchNextPage: () => void feed.fetchNextPage(),
+    /** Pull to refresh and the far back-to-top: the newest page only (`refetchFirstPage`). */
     refresh: async () => {
-      await Promise.all([feed.refetch(), authors.refetch()]);
+      await Promise.all([refetchFirstPage(queryClient, queryKey), authors.refetch()]);
     },
     toggleLike: (moment: FeedMoment) => {
       if (userId === null) return;

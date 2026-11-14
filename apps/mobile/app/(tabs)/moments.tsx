@@ -53,6 +53,9 @@ export default function MomentsScreen() {
         unread.refresh();
         void feed.refresh().finally(() => setPulling(false));
       }}
+      onBackToTop={(mode) => {
+        if (mode === 'reload') void feed.refresh();
+      }}
       onEndReached={() => {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
