@@ -5,10 +5,13 @@ import { z } from 'zod';
 
 import { colors, radius } from '@/theme/tokens';
 
+import { BarList } from '~/components/BarList';
 import { BlurredPhoto } from '~/components/BlurredPhoto';
+import { DayBars } from '~/components/DayBars';
 import { SuspendForm } from '~/components/SuspendForm';
 import { Tile } from '~/components/Tile';
 import { t } from '~/i18n/t';
+import { loadUserStats } from '~/lib/analytics';
 import { actionLabel, details, when } from '~/lib/audit';
 import { photoUrls } from '~/lib/photos';
 import { dayLabel, monthLabel, reasonLabel } from '~/lib/queue';
@@ -48,7 +51,11 @@ export default async function User({ params }: { params: Promise<{ id: string }>
   const id = z.uuid().safeParse((await params).id).data;
   if (!id) notFound();
   const client = await supabase();
-  const [user, moments] = await Promise.all([loadUser(client, id), loadUserMoments(client, id)]);
+  const [user, moments, usage] = await Promise.all([
+    loadUser(client, id),
+    loadUserMoments(client, id),
+    loadUserStats(client, id),
+  ]);
   if (!user) notFound();
   const photos = await photoUrls(
     client,
@@ -171,6 +178,73 @@ export default async function User({ params }: { params: Promise<{ id: string }>
               </ul>
             )}
           </Card>
+
+          {usage ? (
+            <Card title={t('users.usage.title')}>
+              <p style={{ margin: 0, fontSize: 14 }}>
+                {t('users.usage.line', {
+                  moments: usage.moments,
+                  days: usage.active_days,
+                  total: usage.moments_all_time,
+                })}
+                {usage.last_added_at ? (
+                  <span style={{ color: colors.muted }}>
+                    {' · '}
+                    {t('users.usage.last', { date: when(usage.last_added_at) })}
+                  </span>
+                ) : null}
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+                <DayBars
+                  title={t('users.usage.perDay')}
+                  days={usage.per_day.map((d) => ({ day: d.day, count: d.moments }))}
+                />
+                <BarList
+                  title={t('users.usage.slots')}
+                  rows={usage.per_slot.map((r) => ({ label: `#${r.slot}`, value: r.moments }))}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+                <div>
+                  <h3 style={{ margin: '4px 0', fontSize: 13, color: colors.muted }}>{t('users.usage.stickers')}</h3>
+                  {usage.stickers.length === 0 ? (
+                    <Empty>{t('users.usage.noStickers')}</Empty>
+                  ) : (
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                      {usage.stickers.map((s) => (
+                        <li key={`${s.pack}/${s.label}`} style={row}>
+                          <strong>{s.label}</strong>
+                          <span style={{ color: colors.muted }}>
+                            {' · '}
+                            {s.pack} · {t('users.usage.uses', { count: s.uses })}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <h3 style={{ margin: '4px 0', fontSize: 13, color: colors.muted }}>{t('users.usage.packs')}</h3>
+                  {usage.packs.length === 0 ? (
+                    <Empty>{t('users.usage.noPacks')}</Empty>
+                  ) : (
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                      {usage.packs.map((pk) => (
+                        <li key={pk.slug} style={row}>
+                          <strong>{pk.name}</strong>
+                          <span style={{ color: colors.muted }}>
+                            {' · '}
+                            {t(`users.usage.source.${pk.source}`)} · {when(pk.acquired_at)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <p style={{ margin: 0, color: colors.muted, fontSize: 12 }}>{t('users.usage.note')}</p>
+            </Card>
+          ) : null}
 
           <Card title={t('users.reports.title')}>
             {user.reports_against.length === 0 ? (

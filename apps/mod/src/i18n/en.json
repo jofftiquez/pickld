@@ -32,7 +32,8 @@
     "role": "{{name}} (moderator)",
     "signOut": "Sign out",
     "count": "{{count}} open",
-    "waitlist": "Waitlist"
+    "waitlist": "Waitlist",
+    "analytics": "Analytics"
   },
   "queue": {
     "title": "Review queue",
@@ -366,6 +367,26 @@
       "not_suspended": "This account isn't suspended.",
       "child_safety": "Child-safety suspensions can't be lifted here.",
       "unknown": "That didn't work. Try again."
+    },
+    "usage": {
+      "title": "Usage, last 30 days",
+      "line": "Moments: {{moments}} · Days active: {{days}} · All time: {{total}}",
+      "last": "Last added {{date}}",
+      "perDay": "Moments per day",
+      "slots": "Moments per slot",
+      "stickers": "Stickers they use most",
+      "noStickers": "No stickers used.",
+      "packs": "Packs they own",
+      "noPacks": "No packs beyond the free ones.",
+      "note": "Only me and removed moments aren't counted.",
+      "source": {
+        "free": "free",
+        "purchase": "bought",
+        "earned": "earned",
+        "subscription": "subscription"
+      },
+      "uses_one": "{{count}} use",
+      "uses_other": "{{count}} uses"
     }
   },
   "chart": {
@@ -428,6 +449,92 @@
         "note": "Enter the email and a note.",
         "unknown": "Something went wrong. Try again."
       }
+    }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Counts by Manila day. Only me and removed moments aren't counted, and no photo or caption is shown.",
+    "range": {
+      "label": "Window",
+      "days": "{{count}} days"
+    },
+    "usage": {
+      "title": "Usage, last {{count}} days",
+      "moments": "Moments added",
+      "posters": "People posting",
+      "signups": "Sign-ups",
+      "withStickers": "Moments with stickers",
+      "share": "{{pct}}% of moments",
+      "people": "People (all time)",
+      "allTime": "Moments (all time)"
+    },
+    "charts": {
+      "moments": "Moments per day",
+      "posters": "People posting per day",
+      "signups": "Sign-ups per day",
+      "slots": "Moments per slot",
+      "uses": "Sticker uses per day",
+      "acquired": "Packs acquired per day"
+    },
+    "groups": {
+      "ages": "By age",
+      "zones": "By home time zone",
+      "note": "Age today, from the birthday given at sign-up. A group of fewer than 5 people shows no numbers.",
+      "zonesNote": "From each person's home time zone. Zones with fewer than 5 people are grouped together.",
+      "age": "Age",
+      "zone": "Time zone",
+      "people": "People",
+      "posters": "Posting",
+      "moments": "Moments",
+      "hidden": "Fewer than 5",
+      "notGiven": "Not given",
+      "otherZones": "Other zones",
+      "empty": "Nobody yet."
+    },
+    "stickers": {
+      "title": "Stickers, last {{count}} days",
+      "uses": "Sticker uses",
+      "people": "People using stickers",
+      "acquired": "Packs acquired"
+    },
+    "packs": {
+      "title": "Sticker packs",
+      "note": "Owners and acquisitions come from owned packs (bought, earned or by subscription). Free packs have no owners, so people who used them is the number to watch.",
+      "pack": "Pack",
+      "tier": "Tier",
+      "owners": "Owners",
+      "acquired": "Acquired",
+      "people": "People using",
+      "uses": "Uses",
+      "trend": "vs. before",
+      "meta": "{{slug}} · {{count}} stickers",
+      "draft": "draft",
+      "empty": "No sticker packs."
+    },
+    "top": {
+      "title": "Most used stickers",
+      "note": "Up to 100, by uses in this window. \"vs. before\" compares with the same number of days just before.",
+      "sticker": "Sticker",
+      "pack": "Pack",
+      "uses": "Uses",
+      "people": "People",
+      "trend": "vs. before",
+      "total": "All time",
+      "retired": "{{label}} (retired)",
+      "empty": "No stickers used yet."
+    },
+    "tier": {
+      "free": "Free",
+      "premium": "Premium",
+      "earned": "Earned",
+      "seasonal": "Seasonal"
+    },
+    "trend": {
+      "none": "—",
+      "new": "New",
+      "same": "Same",
+      "up": "+{{pct}}%",
+      "down": "−{{pct}}%"
     }
   }
 }
