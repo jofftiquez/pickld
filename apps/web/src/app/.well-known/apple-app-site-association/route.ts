@@ -18,6 +18,7 @@ export function GET() {
             { '/': '/guidelines', exclude: true },
             { '/': '/', exclude: true },
             { '/': '/stickers', exclude: true },
+            { '/': '/story', exclude: true },
             { '/': '/waitlist', exclude: true },
             { '/': '/.well-known/*', exclude: true },
             { '/': '/j/*' },
