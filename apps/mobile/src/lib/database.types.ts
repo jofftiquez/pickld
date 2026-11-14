@@ -1313,10 +1313,8 @@ export type Database = {
           id: string;
           locale: string | null;
           name: string;
-          published_at: string | null;
           slug: string;
           sort: number;
-          status: string;
           store_product_id: string | null;
           tier: Database['public']['Enums']['pack_tier'];
           pack_usable: boolean | null;
@@ -1330,10 +1328,8 @@ export type Database = {
           id?: string;
           locale?: string | null;
           name: string;
-          published_at?: string | null;
           slug: string;
           sort?: number;
-          status?: string;
           store_product_id?: string | null;
           tier: Database['public']['Enums']['pack_tier'];
         };
@@ -1345,10 +1341,8 @@ export type Database = {
           id?: string;
           locale?: string | null;
           name?: string;
-          published_at?: string | null;
           slug?: string;
           sort?: number;
-          status?: string;
           store_product_id?: string | null;
           tier?: Database['public']['Enums']['pack_tier'];
         };
@@ -1356,9 +1350,6 @@ export type Database = {
       };
       stickers: {
         Row: {
-          art_height: number | null;
-          art_version: number;
-          art_width: number | null;
           asset_path: string;
           id: string;
           label: string;
@@ -1373,9 +1364,6 @@ export type Database = {
         };
         ComputedFields: 'sticker_usable';
         Insert: {
-          art_height?: number | null;
-          art_version?: number;
-          art_width?: number | null;
           asset_path: string;
           id?: string;
           label: string;
@@ -1388,9 +1376,6 @@ export type Database = {
           tags?: string[];
         };
         Update: {
-          art_height?: number | null;
-          art_version?: number;
-          art_width?: number | null;
           asset_path?: string;
           id?: string;
           label?: string;
