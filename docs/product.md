@@ -179,7 +179,7 @@ The thread for one jar or one moment (D-51), with avatars, names, times, likes p
 
 ### Share jar card — “Share jar card”
 
-Previews the 9:16 image exported for other apps: author, day title, the moments in the chosen layout, the last caption, the Pickld logo and pickld.me/username. The photos fill the card less a thin margin, with the name, caption and link on small pills inside the band Instagram leaves uncovered (D-82). Only your own jars and moments can be shared; someone else's jar shows “You can only share your own jars” (D-83).
+Previews the 9:16 image exported for other apps: author, day title, the moments in the chosen layout, the last caption, the Pickld logo and pickld.me/username. The photos keep their own 3:4 shape and grow as large as the card allows less a thin margin (D-89), with the name, caption and link on small pills inside the band Instagram leaves uncovered (D-82). Only your own jars and moments can be shared; someone else's jar shows “You can only share your own jars” (D-83).
 
 - **Include captions** switch; Save image, Copy link, Message, More; **Share to…**
 - The watermark and link make every share a way for new users to find Pickld.

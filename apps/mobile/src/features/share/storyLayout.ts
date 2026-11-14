@@ -23,7 +23,7 @@ export function canvasSize(format: StoryFormat): { width: number; height: number
 /**
  * Where names and captions may go. On a Story, Instagram and Facebook draw the profile bar over the top 13%
  * and the reply bar over the bottom 18%; text stays out of both. A feed post only needs a margin. Photos are
- * not held to this: they fill the card (D-82).
+ * not held to this: they grow as large as the card allows at 3:4 (D-82, D-89).
  */
 export function safeInsets(format: StoryFormat): { top: number; bottom: number; side: number } {
   return format === 'story' ? { top: 250, bottom: 346, side: 48 } : { top: 48, bottom: 48, side: 48 };
@@ -126,26 +126,21 @@ export type StoryLayout = {
 };
 
 /**
- * A grid of `cols` × `rows` cells, each `unit` times as tall as it is wide; a cell spans whole cells.
- * `stretch` is the range a cell's height-to-width ratio may grow or shrink to, so the grid fills the card.
+ * A grid of `cols` × `rows` 3:4 cells; a cell spans whole cells. `large` marks the one-large-and-a-strip
+ * layouts, whose big photo is sized to stay exactly 3:4 rather than spanning rows (gaps would skew it).
  */
 type Grid = {
   cols: number;
   rows: number;
-  unit: number;
-  stretch: readonly [min: number, max: number];
+  large?: boolean;
   cells: [col: number, row: number, cols: number, rows: number][];
 };
 
-const PORTRAIT = 4 / 3; // 3:4 cells, the photo's own shape
-const LANDSCAPE = 3 / 4; // 4:3 cells for stacked layouts, so they stay wide enough
-/** Cells may become anything from 16:9 to 9:16 to fill the card; photos are cropped, centred, to fit. */
-const STRETCH = [9 / 16, 16 / 9] as const;
-/** A single moment stays whole at 3:4. */
-const WHOLE = [PORTRAIT, PORTRAIT] as const;
+/** Every photo keeps its own 3:4 shape: never stretched or cropped to fill the card (D-89). */
+const PORTRAIT = 4 / 3;
 
 /** `count` cells filled row by row, `cols` to a row; a short last row is centred. */
-function rowsOf(count: number, cols: number, unit: number, stretch: Grid['stretch'] = STRETCH): Grid {
+function rowsOf(count: number, cols: number): Grid {
   const rows = Math.ceil(count / cols);
   const cells: Grid['cells'] = [];
   for (let i = 0; i < count; i++) {
@@ -153,82 +148,78 @@ function rowsOf(count: number, cols: number, unit: number, stretch: Grid['stretc
     const inRow = row === rows - 1 ? count - row * cols : cols;
     cells.push([(cols - inRow) / 2 + (i % cols), row, 1, 1]);
   }
-  return { cols, rows, unit, stretch, cells };
+  return { cols, rows, cells };
 }
 
 /** One large photo with the other `count - 1` in a row below it. */
 function largeAndStrip(count: number): Grid {
   const n = count - 1;
-  const cells: Grid['cells'] = [[0, 0, n, n]];
-  for (let i = 0; i < n; i++) cells.push([i, n, 1, 1]);
-  return { cols: n, rows: n + 1, unit: PORTRAIT, stretch: STRETCH, cells };
+  const cells: Grid['cells'] = [[0, 0, n, 1]];
+  for (let i = 0; i < n; i++) cells.push([i, 1, 1, 1]);
+  return { cols: n, rows: 2, large: true, cells };
 }
 
 /**
- * The grid as large as it fits in `area` (D-82): first at its own cell shape, then stretched within its
- * range along the side that still has room, so it fills the card's width or height and usually both.
- * Gaps stay `tileGap`. Centred across; up and down it is centred on `focusY` (the middle of what a Story
- * leaves uncovered) as far as the area allows.
+ * The grid as large as it fits in `area` with every photo at 3:4 (D-89): small cells `w` wide and `w × 4/3`
+ * tall, `tileGap` apart. In a large-and-strip layout the large photo is as wide as the strip and 3:4 too.
+ * Centred across; up and down it is centred on `focusY` (the middle of what a Story leaves uncovered) as
+ * far as the area allows.
  */
 function place(grid: Grid, area: Rect, focusY: number): Rect[] {
   const g = storyMetrics.tileGap;
   const byWidth = (area.width - (grid.cols - 1) * g) / grid.cols;
-  const byHeight = (area.height - (grid.rows - 1) * g) / grid.rows;
-  const [lo, hi] = grid.stretch;
-  let w: number;
-  let h: number;
-  if (byWidth * grid.unit <= byHeight) {
-    w = byWidth;
-    h = Math.min(byHeight, w * hi);
-  } else {
-    h = byHeight;
-    w = Math.min(byWidth, h / lo);
-  }
-  w = Math.max(0, w);
-  h = Math.max(0, h);
-  const total = { width: grid.cols * w + (grid.cols - 1) * g, height: grid.rows * h + (grid.rows - 1) * g };
+  // Height of the whole grid for small cells `w` wide; the largest `w` that fits both ways wins.
+  const byHeight = grid.large
+    ? (area.height - g - (grid.cols - 1) * g * PORTRAIT) / ((grid.cols + 1) * PORTRAIT)
+    : (area.height - (grid.rows - 1) * g) / grid.rows / PORTRAIT;
+  const w = Math.max(0, Math.min(byWidth, byHeight));
+  const h = w * PORTRAIT;
+  const big = grid.cols * w + (grid.cols - 1) * g;
+  const rowTop = (row: number) => (grid.large ? (row === 0 ? 0 : big * PORTRAIT + g) : row * (h + g));
+  const total = {
+    width: grid.cols * w + (grid.cols - 1) * g,
+    height: grid.large ? big * PORTRAIT + g + h : grid.rows * h + (grid.rows - 1) * g,
+  };
   const left = area.x + (area.width - total.width) / 2;
   const top = Math.min(Math.max(focusY - total.height / 2, area.y), area.y + area.height - total.height);
-  return grid.cells.map(([col, row, cols, rows]) => ({
-    x: left + col * (w + g),
-    y: top + row * (h + g),
-    width: cols * w + (cols - 1) * g,
-    height: rows * h + (rows - 1) * g,
-  }));
+  return grid.cells.map(([col, row, cols]) => {
+    const width = cols * w + (cols - 1) * g;
+    return { x: left + col * (w + g), y: top + rowTop(row), width, height: width * PORTRAIT };
+  });
 }
 
 function gridsFor(count: number): [StoryLayoutId, Grid][] {
   switch (count) {
     case 1:
-      return [['full', rowsOf(1, 1, PORTRAIT, WHOLE)]];
+      return [['full', rowsOf(1, 1)]];
     case 2:
       return [
-        ['sideBySide', rowsOf(2, 2, PORTRAIT)],
-        ['stacked', rowsOf(2, 1, LANDSCAPE)],
+        ['sideBySide', rowsOf(2, 2)],
+        ['stacked', rowsOf(2, 1)],
       ];
     case 3:
       return [
         ['oneLargeTwo', largeAndStrip(3)],
-        ['threeStacked', rowsOf(3, 1, LANDSCAPE)],
-        ['threeRow', rowsOf(3, 3, PORTRAIT)],
+        ['threeStacked', rowsOf(3, 1)],
+        ['threeRow', rowsOf(3, 3)],
       ];
     case 4:
       return [
-        ['grid2x2', rowsOf(4, 2, PORTRAIT)],
+        ['grid2x2', rowsOf(4, 2)],
         ['oneLargeThree', largeAndStrip(4)],
       ];
     case 5:
     case 6:
       return [
-        ['grid2x3', rowsOf(count, 3, PORTRAIT)],
+        ['grid2x3', rowsOf(count, 3)],
         ['oneLargeStrip', largeAndStrip(count)],
       ];
     default:
       return [
-        // The 4 by 2 grid leads: it fills about 90% of the card where the 2 by 4 grid fills 42% (D-88).
-        ['grid4x2', rowsOf(count, 2, PORTRAIT)],
-        ['grid2x4', rowsOf(count, 4, PORTRAIT)],
-        ['filmStrip', rowsOf(count, 1, LANDSCAPE)],
+        // The 4 by 2 grid leads: its photos are about twice the size of the 2 by 4 grid's on a Story (D-88).
+        ['grid4x2', rowsOf(count, 2)],
+        ['grid2x4', rowsOf(count, 4)],
+        ['filmStrip', rowsOf(count, 1)],
       ];
   }
 }
@@ -236,8 +227,8 @@ function gridsFor(count: number): [StoryLayoutId, Grid][] {
 /**
  * The layouts a card with `count` photos can use, the default first (D-62). Each gives every photo's
  * rectangle on the card; the card draws the photos there and the exported image is that same view, so the
- * preview and the file match. Photos fill the card less a thin margin (D-82) and are cropped, centred, into
- * their cells; one moment alone stays whole at 3:4.
+ * preview and the file match. Photos grow as large as the card allows less a thin margin (D-82), each kept
+ * whole at its own 3:4 shape (D-89).
  */
 export function layoutsFor(
   count: number,
