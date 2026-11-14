@@ -44,5 +44,12 @@ export const useAnimatedProps = (props: () => object) => props();
 export const withTiming = <T,>(to: T) => to;
 export const withSpring = <T,>(to: T) => to;
 export const withDelay = <T,>(_ms: number, value: T) => value;
-export const Easing = { out: (easing: unknown) => easing, cubic: 'cubic' };
+export const withSequence = <T,>(...values: T[]) => values[values.length - 1];
+export const cancelAnimation = () => undefined;
+export const Easing = {
+  out: (easing: unknown) => easing,
+  inOut: (easing: unknown) => easing,
+  cubic: 'cubic',
+  quad: 'quad',
+};
 export const ReduceMotion = { System: 'system', Always: 'always', Never: 'never' };
