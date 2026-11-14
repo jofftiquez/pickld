@@ -1,4 +1,5 @@
 import { useImage } from '@shopify/react-native-skia';
+import { useEffect } from 'react';
 
 import { FilteredPhoto } from '@/features/edit/FilteredPhoto';
 import { filterMatrices, type FilterId } from '@/features/edit/filters';
@@ -10,14 +11,19 @@ export type FilteredMomentPhotoProps = {
   filter: FilterId;
   width: number;
   height: number;
+  /** Called once the photo is decoded and drawn, so what sits on it can appear with it. */
+  onReady?: () => void;
 };
 
 /**
  * A moment's photo decoded by Skia and drawn with its color filter (the editor's own canvas). Skia has no
  * cache of its own, so it reads the photo cache's file (downloaded into it first when needed).
  */
-export function FilteredMomentPhoto({ uri, filter, width, height }: FilteredMomentPhotoProps) {
+export function FilteredMomentPhoto({ uri, filter, width, height, onReady }: FilteredMomentPhotoProps) {
   const image = useImage(useCachedPhotoFile(uri) ?? undefined);
+  useEffect(() => {
+    if (image) onReady?.();
+  }, [image, onReady]);
   return (
     <FilteredPhoto
       image={image}

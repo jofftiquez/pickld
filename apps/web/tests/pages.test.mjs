@@ -64,10 +64,31 @@ const moment = (url, n, slot, extra = {}) => ({
   ...extra,
 });
 
+/** A text overlay on the evening moment, drawn over its photo. */
+const CAPTIONED = {
+  v: 1,
+  filter: 'original',
+  overlays: [
+    {
+      id: 't1',
+      type: 'text',
+      text: 'Antok pa ko',
+      font: 'serif',
+      color: 'white',
+      size: 40,
+      align: 'center',
+      x: 0.5,
+      y: 0.6,
+      scale: 0.7,
+      rotation: 0,
+    },
+  ],
+};
+
 function pages(url) {
   // Out of slot order on purpose: the page sorts them.
   const moments = [
-    moment(url, 3, 'evening', { caption: 'Early night. Ordinary and good.' }),
+    moment(url, 3, 'evening', { caption: 'Early night. Ordinary and good.', edits: CAPTIONED }),
     moment(url, 1, 'morning', { caption: 'older caption', edits: { v: 1, filter: 'mono', overlays: [] } }),
     moment(url, 2, 'whereami'),
   ];
@@ -243,6 +264,29 @@ test('an Everyone jar shows its moments in slot order with the newest caption', 
   assert.ok(await page.getByRole('link', { name: 'Google Play' }).isVisible());
   assert.ok(await noSideScroll(page));
   assert.ok(!(await page.content()).includes(ANON), 'the anon key stays on the server');
+  await page.close();
+});
+
+test('stickers and text sit on a photo only once it has loaded, never on the empty box', async () => {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  let release;
+  const held = new Promise((r) => (release = r));
+  await page.route('**/img/evening.jpg', async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto(`${base}/j/${EVERYONE}`, { waitUntil: 'domcontentloaded' });
+  const overlays = page.locator('[data-overlays]').filter({ hasText: 'Antok pa ko' });
+  // Long enough for the page to come alive; the photo is still on its way.
+  await page.waitForTimeout(1000);
+  assert.equal(await overlays.evaluate((el) => getComputedStyle(el).opacity), '0');
+  release();
+  await page.waitForFunction(
+    () => [...document.querySelectorAll('[data-overlays]')].every((el) => getComputedStyle(el).opacity === '1'),
+    null,
+    { timeout: 10_000 },
+  );
+  assert.ok(await page.getByText('Antok pa ko').isVisible());
   await page.close();
 });
 

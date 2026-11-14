@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { StyleSheet, type ViewStyle } from 'react-native';
 
 import { parseEdits, type Edits } from '@/features/edit/edits';
@@ -282,5 +282,47 @@ describe('MomentView: content', () => {
     const hidden = screen.getByTestId('mv', { includeHiddenElements: true });
     expect(hidden.props.importantForAccessibility).toBe('no-hide-descendants');
     expect(hidden.props.accessibilityLabel).toBeUndefined();
+  });
+});
+
+describe('MomentView: overlays wait for the photo', () => {
+  const hidden = () => styleOf(screen.getByTestId('moment-overlays')).opacity === 0;
+  const signed = (exp: number) => `https://photos.test/u1/m1/thumb.webp?exp=${exp}&sig=abc${exp}`;
+
+  it('keeps stickers and text hidden over the placeholder until the photo loads, then shows them', async () => {
+    await render(<MomentView uri={URI} edits={edits} width={390} />);
+    expect(hidden()).toBe(true);
+    // Mounted while hidden, so their art loads alongside the photo.
+    expect(screen.getByTestId('sticker-s1')).toBeTruthy();
+    await fireEvent(screen.getByTestId('moment-view-photo'), 'load', { nativeEvent: {} });
+    expect(hidden()).toBe(false);
+  });
+
+  it('a photo that fails to load keeps them hidden', async () => {
+    await render(<MomentView uri={URI} edits={edits} width={390} />);
+    await fireEvent(screen.getByTestId('moment-view-photo'), 'error', { nativeEvent: { error: 'offline' } });
+    expect(hidden()).toBe(true);
+  });
+
+  it('a re-signed link for the same photo keeps them; another photo hides them until it loads', async () => {
+    const view = await render(<MomentView uri={signed(1)} edits={edits} width={390} />);
+    await fireEvent(screen.getByTestId('moment-view-photo'), 'load', { nativeEvent: {} });
+    await view.rerender(<MomentView uri={signed(2)} edits={edits} width={390} />);
+    expect(hidden()).toBe(false);
+    await view.rerender(
+      <MomentView uri="https://photos.test/u1/m2/thumb.webp?exp=1&sig=x" edits={edits} width={390} />,
+    );
+    expect(hidden()).toBe(true);
+  });
+
+  it('with a color filter, shows them once Skia has the photo', async () => {
+    await render(<MomentView uri={URI} edits={{ ...edits, filter: 'dusk' }} width={390} />);
+    expect(screen.getByTestId('skia-image')).toBeTruthy();
+    expect(hidden()).toBe(false);
+  });
+
+  it('with a color filter, keeps them hidden while Skia has nothing to draw', async () => {
+    await render(<MomentView uri={null} edits={{ ...edits, filter: 'dusk' }} width={390} />);
+    expect(hidden()).toBe(true);
   });
 });

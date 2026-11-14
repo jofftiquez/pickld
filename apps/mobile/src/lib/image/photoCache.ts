@@ -8,6 +8,8 @@ import { Image, type ImageSource } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 
+import { PHOTO_RETRY_DELAYS_MS } from './usePhotoRetry';
+
 /** `<origin>/<object key>?exp=…&sig=…`, the photo Worker's signed link (D-12). */
 const SIGNED_LINK = /^https?:\/\/[^/?#]+\/([^?#]+)\?(?:[^#]*&)?sig=/;
 
@@ -70,23 +72,34 @@ export function cachedPhotoFile(uri: string): Promise<string | null> {
   return job;
 }
 
-/** `cachedPhotoFile` as a hook: null until the local file is ready (or when it can't be had). */
+/**
+ * `cachedPhotoFile` as a hook: null until the local file is ready (or when it can't be had). A failed
+ * download is tried again (`PHOTO_RETRY_DELAYS_MS`) with the newest link, which may have been re-signed.
+ */
 export function useCachedPhotoFile(uri: string | null | undefined): string | null {
   const key = uri ? photoCacheKey(uri) : null;
   // A re-signed link for the same photo keeps the file it already has (the key is the same).
   const [file, setFile] = useState<{ key: string; file: string | null } | null>(null);
+  const [retry, setRetry] = useState<{ key: string | null; attempt: number }>({ key, attempt: 0 });
+  const attempt = retry.key === key ? retry.attempt : 0;
   useEffect(() => {
     if (!uri || !key) return;
     let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     void cachedPhotoFile(uri).then((f) => {
-      if (live) setFile({ key, file: f });
+      if (!live) return;
+      setFile({ key, file: f });
+      if (f === null && attempt < PHOTO_RETRY_DELAYS_MS.length) {
+        timer = setTimeout(() => setRetry({ key, attempt: attempt + 1 }), PHOTO_RETRY_DELAYS_MS[attempt]);
+      }
     });
     return () => {
       live = false;
+      if (timer) clearTimeout(timer);
     };
-    // The link changes on every re-sign; only a new photo (key) needs a new file.
+    // The link changes on every re-sign; only a new photo (key) or a new try needs a new file.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, attempt]);
   if (!uri) return null;
   if (!key) return uri;
   return file && file.key === key ? file.file : null;
