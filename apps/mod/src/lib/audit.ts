@@ -67,10 +67,15 @@ export function details(e: Pick<AuditEntry, 'data' | 'action'>): string {
   }
   if (typeof e.data.until === 'string') parts.push(t('audit.until', { date: when(e.data.until) }));
   if (typeof strikes === 'number') parts.push(t('audit.strikes', { count: strikes }));
-  if (typeof count === 'number') parts.push(t('audit.exported', { count }));
+  if (typeof count === 'number') {
+    parts.push(t(e.action === 'studio_pack_publish' ? 'audit.published' : 'audit.exported', { count }));
+  }
   if (e.action === 'waitlist_remove' && typeof e.data.source === 'string') {
     parts.push(t('audit.waitlistSource', { source: e.data.source }));
   }
+  // Sticker Studio rows (0102) name their pack and sticker; target_type has no sticker value.
+  if (typeof e.data.pack === 'string') parts.push(t('audit.pack', { pack: e.data.pack }));
+  if (typeof e.data.sticker === 'string') parts.push(t('audit.sticker', { sticker: e.data.sticker }));
   if (typeof guideline === 'string') parts.push(t('audit.guideline', { guideline: t(`guideline.${guideline}`) }));
   if (typeof note === 'string') parts.push(t('audit.note', { note }));
   return parts.join(' · ');

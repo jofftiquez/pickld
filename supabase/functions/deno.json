@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "check": "deno check _shared/ upload-url/ photo-urls/ moderate/ contacts-match/ send-push/ account-purge/ public-page/ account-delete/ data-export/ account-jobs/ mod-action/ health/ revenuecat-webhook/ waitlist-join/ tests/",
+    "check": "deno check _shared/ upload-url/ photo-urls/ moderate/ contacts-match/ send-push/ account-purge/ public-page/ account-delete/ data-export/ account-jobs/ mod-action/ health/ revenuecat-webhook/ waitlist-join/ sticker-studio/ tests/",
     "lint": "deno lint",
     "test": "deno test --allow-env --allow-net --allow-run=pnpm,docker,python3 --allow-read=. tests/"
   },
