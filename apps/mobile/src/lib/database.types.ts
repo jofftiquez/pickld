@@ -1898,6 +1898,29 @@ export type Database = {
           moment_count: number;
         }[];
       };
+      mod_age_band: { Args: { p_birthday: string }; Returns: string };
+      mod_analytics: { Args: { p_days?: number }; Returns: Json };
+      mod_analytics_moments: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          added_at: string;
+          day: string;
+          edits: Json;
+          id: string;
+          slot: Database['public']['Enums']['slot'];
+          user_id: string;
+        }[];
+      };
+      mod_analytics_sticker_uses: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          day: string;
+          moment_id: string;
+          sticker_id: string;
+          user_id: string;
+        }[];
+      };
+      mod_analytics_stickers: { Args: { p_days?: number }; Returns: Json };
       mod_day_start: { Args: Record<PropertyKey, never>; Returns: string };
       mod_decide: { Args: { p_action: string; p_guideline?: string; p_item: string; p_note?: string }; Returns: Json };
       mod_lift_suspension: { Args: { p_note: string; p_user: string }; Returns: Json };
@@ -1977,6 +2000,7 @@ export type Database = {
           username: string;
         }[];
       };
+      mod_user_stats: { Args: { p_days?: number; p_user: string }; Returns: Json };
       mod_waitlist: {
         Args: { p_limit?: number; p_offset?: number; p_query?: string; p_state?: string };
         Returns: {
