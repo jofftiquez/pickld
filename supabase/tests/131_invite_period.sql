@@ -1,11 +1,11 @@
 -- INV-02 (0130, 0131): waiting accounts during the invite period. With no date set nothing changes; while the
--- period runs a new profile waits, can't write or be found, can still edit and delete itself, and the 13+
--- check still holds. The founders let the first n in (first come, first served, waitlist sign-ups by when
+-- period runs a new profile waits, can't write or be found, can still edit, export and delete itself, and the
+-- 13+ check still holds. The founders let the first n in (first come, first served, waitlist sign-ups by when
 -- they joined the waitlist); once the period is over, admit_all_waiting() lets everyone in. Each admitted
 -- account gets one `admitted` notification.
 begin;
 \ir _helpers.psql
-select plan(53);
+select plan(54);
 
 select tests.world();
 select tests.create_user('founder', 'moderator');
@@ -150,6 +150,8 @@ select is((select count(*)::int from public.profiles where id = tests.id('waiter
 
 -- ---------------------------------------------------------------- it can leave
 select tests.act_as('leaver');
+select is((select kind::text from public.account_request_export()), 'export',
+          'a waiting account can ask for a copy of its data (0134)');
 select lives_ok($$select public.account_delete_request()$$, 'a waiting account can delete itself');
 select tests.reset_role();
 select is(tests.status('leaver'), 'deleted', 'and is deleted');
