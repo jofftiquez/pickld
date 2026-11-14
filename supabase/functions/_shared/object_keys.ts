@@ -1,6 +1,6 @@
 // Photo object keys in R2 (and the local S3 stand-in). Every upload gets a fresh random id, so an
 // object is never overwritten: a replaced photo is a new object, and the old one stays until it is
-// deleted (docs/architecture.md, backups). The database stores these keys in photo_path, thumb_path,
+// deleted (backups). The database stores these keys in photo_path, thumb_path,
 // avatar_path and cover_path.
 //
 //   moments/<user id>/<upload id>/full.jpg     the 3:4 photo (WebP or JPEG; the suffix is fixed, the stored content type is served)

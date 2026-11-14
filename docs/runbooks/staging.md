@@ -2,7 +2,7 @@
 
 Staging is an online copy of Pickld for the founders and invited testers. It has its own Supabase project, R2 bucket, photo Worker and Vercel projects, and shares nothing with production or with the local stack. Production later reuses the same scripts with its own GitHub environment (`production`) and its own accounts' projects.
 
-**Staging is testers only.** Moderation auto-approves there until the OpenAI key and an approved child-safety matcher exist (D-22, D-41, docs/csam-scanning.md), so no real users and no public links.
+**Staging is testers only.** Moderation auto-approves there until the OpenAI key and an approved child-safety matcher exist (D-22, D-41), so no real users and no public links.
 
 ## How it works
 
@@ -54,7 +54,7 @@ Never paste any of these into chat, an issue or the repo.
 Each step is a click in a dashboard; the agent does the rest.
 
 1. **Supabase.** New project `pickld-staging`, region Southeast Asia (Singapore), Free plan. Store the database password in the password manager. Create the `staging` GitHub environment and set `SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`.
-2. **Cloudflare.** Create the account (or use the existing one). R2 asks for a payment method before it turns on; staging stays inside the free allowance (10 GB, docs/photo-storage-costs.md), but adding a card is the founders' call. Then:
+2. **Cloudflare.** Create the account (or use the existing one). R2 asks for a payment method before it turns on; staging stays inside the free allowance, but adding a card is the founders' call. Then:
    - Workers & Pages → pick a workers.dev subdomain.
    - R2 → Create bucket `pickld-photos-staging`, location Asia-Pacific, no public access.
    - The API token and the R2 token from the table above, set on the environment with `CLOUDFLARE_ACCOUNT_ID`.
@@ -74,7 +74,7 @@ Each step is a click in a dashboard; the agent does the rest.
 - **Sign-in email uses Supabase's built-in sender.** It only delivers to addresses that are members of the Supabase organization, and a few emails an hour. Invite each tester to the Supabase organization (no project access needed beyond that) or wait for the SMTP step below.
 - **Apple and Google sign-in** need their credentials in Supabase Auth (#12); until then, email only.
 - **App links** (`WEB_BASE_URL` in the app) still point at `https://pickld.me`, which is a placeholder today. Share cards and legal links open that placeholder until pickld.me serves `apps/web`.
-- **Free plan:** the project pauses after a week without traffic (Restore in the dashboard), and there are no downloadable daily backups. M1-28's "daily backups on" and the backup drill (docs/runbooks/backup-restore.md) need the Pro plan, which is paid and waits for the founders.
+- **Free plan:** the project pauses after a week without traffic (Restore in the dashboard), and there are no downloadable daily backups. M1-28's "daily backups on" and the backup drill (docs/runbooks/backup-restore.md) need a paid plan, which waits for the founders.
 
 ## Later (not part of staging yet)
 

@@ -1,4 +1,4 @@
-// The full check (M2-20; FR-SAF-03, FR-SAF-04; D-13, D-22; docs/csam-scanning.md). For a photo:
+// The full check (M2-20; FR-SAF-03, FR-SAF-04; D-13, D-22). For a photo:
 //   1. CSAM gate: the full photo goes to the hash matcher. A match returns `block` and nothing else runs.
 //   2. Content scores: the thumbnail and caption go to omni-moderation; thresholds.ts decides.
 //   3. Second opinion: a review verdict (a borderline score) asks a vision model for a short reason that the
@@ -93,7 +93,7 @@ export function fullCheck(deps: PipelineDeps): ModerationProvider {
 }
 
 /**
- * The local stand-in for the hash matcher until PhotoDNA is approved (docs/csam-scanning.md, decision 1).
+ * The local stand-in for the hash matcher until PhotoDNA is approved.
  * Matches exact SHA-256 hashes from a list (tests put a fixture's hash in it). It finds nothing real:
  * config.ts refuses it in production.
  */
