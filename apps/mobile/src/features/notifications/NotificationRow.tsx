@@ -13,6 +13,7 @@ import { colors, radius, sizes, slots, space } from '@/theme/tokens';
 
 import { FollowButton } from '../profile/FollowButton';
 import type { NotificationEntry } from './notificationsModel';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type NotificationRowProps = {
   entry: NotificationEntry;
@@ -155,7 +156,7 @@ export function NotificationRow({
           <Text style={[textStyle('label', '500'), { color: colors.muted }]}>{age}</Text>
         </View>
         {follow === null && thumbUrl !== null ? (
-          <Image source={{ uri: thumbUrl }} style={styles.thumb} contentFit="cover" accessible={false} />
+          <Image source={photoSource(thumbUrl)} style={styles.thumb} contentFit="cover" accessible={false} />
         ) : null}
       </Pressable>
       {follow !== null && actor ? (

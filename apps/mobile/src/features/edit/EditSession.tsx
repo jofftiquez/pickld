@@ -16,6 +16,7 @@ import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
 import { registerOverlayRenderers } from './overlays/registerRenderers';
 import { stickerOverlay } from './stickers/catalog';
 import { useEditorState } from './useEditorState';
+import { useCachedPhotoFile } from '@/lib/image/photoCache';
 
 // Stickers, bubbles and text draw with their own renderers (M2-15, M2-16, M2-17), registered first so
 // the development placeholders (plain boxes) only fill in for a kind without one.
@@ -60,7 +61,7 @@ export function EditSession({
   onLeave,
   onSave,
 }: EditSessionProps) {
-  const image = useImage(photoUri);
+  const image = useImage(useCachedPhotoFile(photoUri) ?? undefined);
   const editor = useEditorState(parseEdits(initial.edits));
   const [step, setStep] = useState<EditorStep>(focusCaption ? 'details' : 'photo');
   const [tool, setTool] = useState<EditorTool>('filters');

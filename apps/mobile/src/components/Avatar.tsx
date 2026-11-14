@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type AvatarSize = 'sm' | 'notify' | 'feed' | 'header' | 'story' | 'md' | 'lg' | 'edit' | 'xl';
 
@@ -56,7 +57,7 @@ export function Avatar({ name, uri, size = 'md', ring = false, decorative = fals
       style={[styles.circle, { width: d, height: d }, ring ? styles.ring : null]}
     >
       {uri ? (
-        <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
+        <Image source={photoSource(uri)} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
       ) : (
         // a11y-fixed-size: fixed inside a fixed circle, so it doesn't scale with system text; the name is the label.
         <Text

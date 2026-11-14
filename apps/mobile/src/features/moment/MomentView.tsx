@@ -11,6 +11,7 @@ import { colors, photo } from '@/theme/tokens';
 
 import { FilteredMomentPhoto } from './FilteredMomentPhoto';
 import { momentLabel } from './momentRender';
+import { photoSource } from '@/lib/image/photoCache';
 
 // The same renderers the editor draws with, so a moment looks the way its owner left it.
 registerOverlayRenderers();
@@ -59,7 +60,7 @@ export function MomentView({ uri, edits, width, stamp = null, accessible = true,
     >
       {uri === null ? null : edits.filter === 'original' ? (
         <Image
-          source={{ uri }}
+          source={photoSource(uri)}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
           accessible={false}

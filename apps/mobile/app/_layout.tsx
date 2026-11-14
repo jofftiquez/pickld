@@ -14,6 +14,7 @@ import { ToastHost } from '@/components/ToastHost';
 import { usePushTaps } from '@/features/notifications/usePushTaps';
 import { startAuth } from '@/lib/authBootstrap';
 import { useAuthStore } from '@/lib/authStore';
+import { configurePhotoCache } from '@/lib/image/photoCache';
 import { createQueryClient, persistOptions } from '@/lib/queryClient';
 import { deviceNetwork } from '@/lib/network';
 import { startUploadRunner } from '@/lib/queue/runner';
@@ -41,6 +42,7 @@ export default function RootLayout() {
   const signedIn = useAuthStore((s) => s.status === 'signedIn');
 
   useEffect(() => startTelemetry(), []);
+  useEffect(() => configurePhotoCache(), []);
   useEffect(() => startAuth(getSupabase), []);
   useEffect(() => startUploadRunner(getSupabase, { network: deviceNetwork }), []);
   // After the stack has mounted (fonts loaded) and only signed in.

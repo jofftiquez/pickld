@@ -8,6 +8,7 @@ import { SecondaryButton } from '@/components/SecondaryButton';
 import { useReduceMotion } from '@/lib/useReduceMotion';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type CheckingViewProps = {
   slot: Slot;
@@ -31,7 +32,7 @@ export function CheckingView({ slot, photoUrl, insets, onClose }: CheckingViewPr
         {photoUrl ? (
           <Image
             testID="moment-checking-photo"
-            source={{ uri: photoUrl }}
+            source={photoSource(photoUrl)}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             blurRadius={photo.checkingBlur}

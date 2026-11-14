@@ -7,6 +7,7 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
 
 import { fillFraction, type DayCell } from './monthGrid';
+import { photoSource } from '@/lib/image/photoCache';
 
 export type CalendarDayProps = {
   cell: DayCell;
@@ -49,7 +50,7 @@ export function CalendarDay({ cell, accessibilityLabel, selected, onPress }: Cal
         <>
           <Image
             testID="day-cover"
-            source={{ uri: cover }}
+            source={photoSource(cover)}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             accessible={false}
