@@ -44,6 +44,10 @@ export type ProfileViewProps = {
   onSettings?: () => void;
   /** Your own profile only: the Stickers row opening the Stickers page (D-61). */
   onOpenStickers?: () => void;
+  /** Your own profile only: the Invite friends row opening the Invite page (INV-07). */
+  onOpenInvite?: () => void;
+  /** Codes left to give, shown on the Invite friends row. */
+  invitesLeft?: number;
   /** Your own profile only: Add a moment on an empty grid opens the camera (D-87). */
   onAddMoment?: () => void;
   /** Other profile only: Read / Read back starts reading, Reading stops (FR-SOC-07). */
@@ -89,6 +93,8 @@ export function ProfileView({
   onEditProfile,
   onSettings,
   onOpenStickers,
+  onOpenInvite,
+  invitesLeft,
   onAddMoment,
   onToggleReading,
   followBusy = false,
@@ -289,15 +295,26 @@ export function ProfileView({
               );
             })}
           </View>
-          {isOwner && onOpenStickers ? (
+          {isOwner && (onOpenStickers || onOpenInvite) ? (
             <Card style={styles.rowCard}>
-              <ListRow
-                label={t('profile.stickers')}
-                accessibilityHint={t('profile.stickersHint')}
-                onPress={onOpenStickers}
-                divider={false}
-                testID="profile-stickers"
-              />
+              {onOpenInvite ? (
+                <ListRow
+                  label={t('invite.rowTitle')}
+                  value={invitesLeft === undefined ? undefined : t('invite.rowLeft', { count: invitesLeft })}
+                  onPress={onOpenInvite}
+                  divider={onOpenStickers !== undefined}
+                  testID="profile-invite"
+                />
+              ) : null}
+              {onOpenStickers ? (
+                <ListRow
+                  label={t('profile.stickers')}
+                  accessibilityHint={t('profile.stickersHint')}
+                  onPress={onOpenStickers}
+                  divider={false}
+                  testID="profile-stickers"
+                />
+              ) : null}
             </Card>
           ) : null}
           <SegmentedControl

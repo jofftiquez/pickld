@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMirrorSelfies } from '@/features/capture/cameraPrefs';
+import { leftToGive } from '@/features/invite/invites';
+import { useInvites } from '@/features/invite/useInvites';
 import { useBlockedAccounts } from '@/features/safety/block';
 import { openLegal } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
@@ -24,6 +26,7 @@ export function SettingsScreen() {
   const userId = session?.user.id ?? '';
   const { account, reminders, prefs, saveReminder, savePref, saveVisibility } = useSettings(userId);
   const blocked = useBlockedAccounts();
+  const { invites } = useInvites();
   const [mirrorSelfies, setMirrorSelfies] = useMirrorSelfies();
   const [saveFailed, setSaveFailed] = useState(false);
   const onSaved = { onError: () => setSaveFailed(true), onSuccess: () => setSaveFailed(false) };
@@ -58,6 +61,8 @@ export function SettingsScreen() {
       onVisibility={(v) => saveVisibility.mutate(v, onSaved)}
       onBlocked={() => router.push('/settings/blocked')}
       onMyStickers={() => router.push({ pathname: '/stickers', params: { tab: 'mine' } })}
+      onInvite={() => router.push('/invite')}
+      invitesLeft={leftToGive(invites)}
       onHelp={() => router.push('/settings/help')}
       onLegal={() => openLegal('terms')}
       onSignOut={() => void signOut()}

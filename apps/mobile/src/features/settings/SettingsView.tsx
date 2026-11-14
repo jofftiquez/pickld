@@ -50,6 +50,10 @@ export type SettingsViewProps = {
   onVisibility: (visibility: Visibility) => void;
   onBlocked: () => void;
   onMyStickers: () => void;
+  /** Invite friends (INV-07): opens the Invite page. */
+  onInvite?: () => void;
+  /** Codes left to give, shown on the row; undefined while loading or while invites are locked or paused. */
+  invitesLeft?: number;
   onHelp: () => void;
   onLegal: () => void;
   onSignOut: () => void;
@@ -123,6 +127,18 @@ export function SettingsView(props: SettingsViewProps) {
               <Text style={[textStyle('bodyMedium', '700'), styles.link]}>{t('settings.edit')}</Text>
             </Pressable>
           </Card>
+
+          {props.onInvite ? (
+            <Card style={styles.listCard}>
+              <ListRow
+                label={t('invite.rowTitle')}
+                value={props.invitesLeft === undefined ? undefined : t('invite.rowLeft', { count: props.invitesLeft })}
+                onPress={props.onInvite}
+                divider={false}
+                testID="settings-invite"
+              />
+            </Card>
+          ) : null}
 
           {props.saveFailed ? (
             <Text

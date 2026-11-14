@@ -120,6 +120,21 @@ export const icons = {
   comment: [p('M4 5h16v11H9l-4 3v-3H4z')],
   mail: [r(3, 5, 18, 14, 3), p('m4 7 8 6 8-6')],
   send: [p('M4 12 20 4l-6 16-3-7z')],
+  // Invite page (INV-07): show or hide a code, and its QR.
+  eye: [p('M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'), c(12, 12, 3)],
+  eyeOff: [
+    p('M3 3l18 18'),
+    p(
+      'M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6',
+    ),
+    p('M9.9 9.9a3 3 0 0 0 4.2 4.2'),
+  ],
+  qr: [
+    r(3, 3, 7, 7, 1.5),
+    r(14, 3, 7, 7, 1.5),
+    r(3, 14, 7, 7, 1.5),
+    p('M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3'),
+  ],
 } satisfies Record<string, IconShape[]>;
 
 export type IconName = keyof typeof icons;

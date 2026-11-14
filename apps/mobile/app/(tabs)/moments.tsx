@@ -1,22 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { MomentsFeedView } from '@/features/moments/MomentsFeedView';
 import { useMomentsFeed } from '@/features/moments/useMomentsFeed';
 import { useTimelineJump } from '@/features/scrubber/useTimelineJump';
 import { useUnreadNotifications } from '@/features/notifications/useNotifications';
 import { useAvatarUrls } from '@/lib/avatars';
-import { profileUrl } from '@/lib/links';
 
 // Moments tab (QA round 1, piece 5; FR-SOC-01, FR-SOC-02, D-52, D-53): live moments from people the user
 // reads and their own, newest first. A card opens the moment's thread; Go to jar opens its jar (D-94).
 export default function MomentsScreen() {
-  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   // The date scrubber's jump (FR-SOC-01): the timeline starts at that day and pages both ways from it.
@@ -24,11 +18,6 @@ export default function MomentsScreen() {
   const feed = useMomentsFeed(jump.from);
   const unread = useUnreadNotifications();
   const { userId } = feed;
-  const me = useQuery({
-    queryKey: todayQueryKeys.me(userId ?? ''),
-    queryFn: () => fetchMe(userId ?? ''),
-    enabled: userId !== null,
-  });
   // Re-signed when someone changes their photo (D-93).
   const avatars = useAvatarUrls((feed.moments ?? []).map((m) => ({ id: m.author_id, path: m.author_avatar_path })));
   // The spinner shows only for a pull, not for background refetches.
@@ -79,10 +68,7 @@ export default function MomentsScreen() {
         router.push({ pathname: '/comments/[jarId]', params: { jarId: m.jar_id, momentId: m.moment_id } })
       }
       onFindPeople={() => router.navigate('/discover')}
-      onInvite={() => {
-        const username = me.data?.username;
-        if (username) void Share.share({ message: t('feed.inviteMessage', { url: profileUrl(username) }) });
-      }}
+      onInvite={() => router.push('/invite')}
     />
   );
 }
