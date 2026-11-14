@@ -62,6 +62,25 @@ export type Database = {
           },
         ];
       };
+      app_settings: {
+        Row: {
+          id: boolean;
+          invite_period_ends_at: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: boolean;
+          invite_period_ends_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          invite_period_ends_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       appeals: {
         Row: {
           created_at: string;
@@ -1759,6 +1778,9 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      admit_all_waiting: { Args: Record<PropertyKey, never>; Returns: number };
+      admit_profiles: { Args: { p_actor: string; p_ids: string[]; p_reason: string }; Returns: number };
+      admit_waiting: { Args: { p_count: number }; Returns: number };
       blocked_accounts: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1934,6 +1956,7 @@ export type Database = {
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       in_quiet_hours: { Args: { at: string; p_user: string }; Returns: boolean };
+      invite_period_active: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
@@ -2442,6 +2465,7 @@ export type Database = {
         }[];
       };
       username_available: { Args: { candidate: string }; Returns: string };
+      waiting_position: { Args: Record<PropertyKey, never>; Returns: number };
       waitlist_join:
         | { Args: { p_email: string; p_ip_hash: string; p_source?: string }; Returns: string }
         | { Args: { p_source?: string }; Returns: string };
@@ -2457,7 +2481,7 @@ export type Database = {
       moment_status: 'uploading' | 'checking' | 'live' | 'removed';
       pack_source: 'free' | 'purchase' | 'earned' | 'subscription';
       pack_tier: 'free' | 'premium' | 'earned' | 'seasonal';
-      profile_status: 'active' | 'suspended' | 'deleted';
+      profile_status: 'active' | 'suspended' | 'deleted' | 'waiting';
       report_reason: 'sexual' | 'harassment' | 'violence' | 'hate' | 'spam' | 'under_13' | 'other';
       slot: 'whereami' | 'mebusywith' | 'whoamiwith' | 'ootd' | 'selfie' | 'morning' | 'afternoon' | 'evening';
       sticker_stamp: 'time' | 'date' | 'weekday' | 'jar_number';
@@ -2579,7 +2603,7 @@ export const Constants = {
       moment_status: ['uploading', 'checking', 'live', 'removed'],
       pack_source: ['free', 'purchase', 'earned', 'subscription'],
       pack_tier: ['free', 'premium', 'earned', 'seasonal'],
-      profile_status: ['active', 'suspended', 'deleted'],
+      profile_status: ['active', 'suspended', 'deleted', 'waiting'],
       report_reason: ['sexual', 'harassment', 'violence', 'hate', 'spam', 'under_13', 'other'],
       slot: ['whereami', 'mebusywith', 'whoamiwith', 'ootd', 'selfie', 'morning', 'afternoon', 'evening'],
       sticker_stamp: ['time', 'date', 'weekday', 'jar_number'],

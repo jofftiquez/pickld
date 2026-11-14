@@ -13,6 +13,7 @@ export const notificationType = z.enum([
   'removed',
   'appeal_decided',
   'friend_joined',
+  'admitted',
 ]);
 export type NotificationType = z.infer<typeof notificationType>;
 
@@ -124,7 +125,8 @@ export type NotificationTarget =
   | { pathname: '/u/[username]'; params: { username: string } }
   | { pathname: '/jar/[id]'; params: { id: string } }
   | { pathname: '/moment/[id]'; params: { id: string } }
-  | { pathname: '/comments/[jarId]'; params: { jarId: string; momentId?: string } };
+  | { pathname: '/comments/[jarId]'; params: { jarId: string; momentId?: string } }
+  | { pathname: '/(tabs)/today' };
 
 export function targetOf(entry: NotificationEntry): NotificationTarget | null {
   switch (entry.type) {
@@ -147,6 +149,9 @@ export function targetOf(entry: NotificationEntry): NotificationTarget | null {
       return entry.jarId ? { pathname: '/jar/[id]', params: { id: entry.jarId } } : null;
     case 'full_jar':
       return entry.jarId ? { pathname: '/jar/[id]', params: { id: entry.jarId } } : null;
+    case 'admitted':
+      // Let in after the invite period's wait (0131): straight to filling the first jar.
+      return { pathname: '/(tabs)/today' };
   }
 }
 

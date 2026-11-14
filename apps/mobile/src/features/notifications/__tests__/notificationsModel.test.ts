@@ -114,6 +114,11 @@ describe('targetOf', () => {
     });
   });
 
+  it('sends a newly admitted account to Today to fill its first jar, from the row or the push (0131)', () => {
+    expect(targetOf(entry(row({ id: '1', type: 'admitted', created_at: at })))).toEqual({ pathname: '/(tabs)/today' });
+    expect(pushTarget({ type: 'admitted', notificationIds: ['n1'] })).toEqual({ pathname: '/(tabs)/today' });
+  });
+
   it('has nothing to open when the target is gone', () => {
     expect(targetOf(entry(row({ id: '1', type: 'full_jar', created_at: at })))).toBeNull();
   });

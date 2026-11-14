@@ -187,7 +187,8 @@
       "studio_sticker_replace": "Replaced sticker art",
       "studio_sticker_edit": "Edited sticker",
       "studio_sticker_retire": "Retired sticker",
-      "studio_sticker_restore": "Restored sticker"
+      "studio_sticker_restore": "Restored sticker",
+      "admit": "Let in from the waiting line"
     },
     "guideline": "Guideline: {{guideline}}",
     "note": "Note: {{note}}",
@@ -291,6 +292,7 @@
       "active": "Active",
       "suspended": "Suspended",
       "deleted": "Deleted",
+      "waiting": "Waiting for an invite",
       "childSafety": "Suspended (child safety)",
       "suspendedUntil": "Suspended until {{date}}"
     },

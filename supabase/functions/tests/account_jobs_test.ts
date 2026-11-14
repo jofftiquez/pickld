@@ -520,6 +520,35 @@ Deno.test('with no export the purge is due at once; failures retry, then fail', 
   assertEquals(await allKeys(u.id), []);
 });
 
+// ---------------------------------------------------------------- invite period (INV-02, 0131)
+Deno.test('waiting accounts are let in, with an admitted notification, only once the invite period is over', async () => {
+  const db = await admin();
+  const waiter = await createUser('jobwaiter');
+  const setEnd = async (iso: string | null) => {
+    const { error } = await db.from('app_settings').update({ invite_period_ends_at: iso }).eq('id', true);
+    if (error) throw new Error(`app_settings: ${error.message}`);
+  };
+  const status = async () => (await db.from('profiles').select('status').eq('id', waiter.id).single()).data?.status;
+  const { error } = await db.from('profiles').update({ status: 'waiting' }).eq('id', waiter.id);
+  if (error) throw new Error(`waiting: ${error.message}`);
+  try {
+    await setEnd(new Date(Date.now() + 86_400_000).toISOString());
+    const during = await jobsCall();
+    assertEquals(during.status, 200);
+    assertEquals(during.json.data.admitted, 0, 'nobody is let in while the period runs');
+    assertEquals(await status(), 'waiting');
+
+    await setEnd(new Date(Date.now() - 60_000).toISOString());
+    const after = await jobsCall();
+    assert(after.json.data.admitted >= 1, JSON.stringify(after.json));
+    assertEquals(await status(), 'active');
+    const { data: rows } = await db.from('notifications').select('type').eq('user_id', waiter.id);
+    assertEquals(rows?.map((r: { type: string }) => r.type), ['admitted']);
+  } finally {
+    await setEnd(null);
+  }
+});
+
 // ---------------------------------------------------------------- access
 Deno.test('only the cron secret runs jobs; only POST', async () => {
   assertEquals((await jobsCall({ secret: null })).status, 401);
