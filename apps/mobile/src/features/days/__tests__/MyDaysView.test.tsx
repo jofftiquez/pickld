@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
-import { buildMonthGrid, earliestMonth, monthNav, monthsBetween, type MonthJar } from '../monthGrid';
+import { buildMonthGrid, earliestMonth, floorMonth, monthNav, monthsBetween, type MonthJar } from '../monthGrid';
 import { MyDaysView, type MyDaysViewProps } from '../MyDaysView';
 
 // The month picker opens in the real kit sheet; gorhom's native sheet is a plain pass-through here.
@@ -60,7 +60,7 @@ async function renderMyDays(props: Partial<MyDaysViewProps> = {}) {
     <MyDaysView
       grid={buildMonthGrid({ month: '2026-11', today: TODAY, jars: JARS })}
       momentCount={10}
-      nav={monthNav('2026-11', '2026-11', '2026-09')}
+      nav={monthNav('2026-11', '2026-11', '2025-11')}
       selectedDate={null}
       insets={{ top: 47, bottom: 34 }}
       locale="en-US"
@@ -88,10 +88,10 @@ describe('MyDaysView', () => {
     expect(previous.props.accessibilityState).toMatchObject({ disabled: false });
   });
 
-  it('enables Next month on a past month and Previous stops 12 months back', async () => {
+  it('enables Next month on a past month and Previous stops at the earliest month', async () => {
     const { onNext, onPrevious } = await renderMyDays({
       grid: buildMonthGrid({ month: '2025-11', today: TODAY }),
-      nav: monthNav('2025-11', '2026-11', '2026-09'),
+      nav: monthNav('2025-11', '2026-11', '2025-11'),
     });
     const next = screen.getByRole('button', { name: 'Next month' });
     expect(next.props.accessibilityState).toMatchObject({ disabled: false });
@@ -135,72 +135,132 @@ describe('MyDaysView', () => {
   });
 
   describe('month picker', () => {
-    // My days on 2026-02 (current month) with the range from monthGrid, as app/my-days.tsx passes it.
-    async function renderPicker(currentMonth: string, firstJarMonth: string | null, shown = currentMonth) {
+    // My days with the range from monthGrid, as app/my-days.tsx passes it.
+    async function renderPicker(currentMonth: string, birthday: string | null, firstJarMonth: string | null = null) {
       const onPickMonth = jest.fn();
+      const earliest = earliestMonth(floorMonth(birthday), firstJarMonth);
       await renderMyDays({
-        grid: buildMonthGrid({ month: shown, today: `${currentMonth}-10` }),
-        nav: monthNav(shown, currentMonth, firstJarMonth),
-        pickableMonths: monthsBetween(earliestMonth(currentMonth, firstJarMonth), currentMonth),
+        grid: buildMonthGrid({ month: currentMonth, today: `${currentMonth}-10` }),
+        nav: monthNav(currentMonth, currentMonth, earliest),
+        pickableMonths: monthsBetween(earliest, currentMonth),
         onPickMonth,
       });
       return { onPickMonth };
     }
-    const radioNames = () => screen.getAllByRole('radio').map((r) => r.props.accessibilityLabel as string);
+    const chipNames = (prefix: string) =>
+      screen
+        .getAllByRole('radio')
+        .filter((r) => (r.props.testID as string).startsWith(prefix))
+        .map((r) => r.props.accessibilityLabel as string);
+    const monthNames = () => chipNames('month-picker-2');
+    const yearNames = () => chipNames('month-picker-year-');
 
-    it('labels the month line as a button that opens the month picker', async () => {
+    it('draws the month as a pill button that says it opens the month picker', async () => {
       await renderPicker('2026-02', null);
       const button = screen.getByRole('button', { name: 'February 2026, 10 moments' });
       expect(button.props.accessibilityHint).toBe('Opens the month picker');
-      expect(screen.getByText('February 2026 · 10 moments')).toBeTruthy();
+      expect(button.props.testID).toBe('my-days-month');
+      expect(screen.getByText('February 2026')).toBeTruthy();
+      expect(screen.getByTestId('my-days-subtitle', { includeHiddenElements: true })).toHaveTextContent('10 moments');
       expect(screen.queryByRole('radio')).toBeNull();
     });
 
-    it('lists only the months Previous and Next reach, across a year boundary', async () => {
-      await renderPicker('2026-02', null);
+    it('opens on the shown year and lists only months in range, back to the birth year', async () => {
+      await renderPicker('2026-02', '2024-06-15');
       await fireEvent.press(screen.getByTestId('my-days-month'));
       expect(screen.getByText('Choose a month')).toBeTruthy();
-      expect(radioNames()).toEqual([
-        'January 2026',
-        'February 2026',
-        'February 2025',
-        'March 2025',
-        'April 2025',
-        'May 2025',
-        'June 2025',
-        'July 2025',
-        'August 2025',
-        'September 2025',
-        'October 2025',
-        'November 2025',
-        'December 2025',
-      ]);
-      // Out of range: not offered at all, so they can't be chosen.
-      expect(screen.queryByRole('radio', { name: 'January 2025' })).toBeNull();
-      expect(screen.queryByRole('radio', { name: 'March 2026' })).toBeNull();
-      expect(screen.queryByTestId('month-picker-2025-01')).toBeNull();
+      expect(yearNames()).toEqual(['2026', '2025', '2024']);
+      expect(screen.getByRole('radio', { name: '2026' }).props.accessibilityState).toMatchObject({ checked: true });
+      // This year stops at the current month: March 2026 can't be chosen.
+      expect(monthNames()).toEqual(['January 2026', 'February 2026']);
+      expect(screen.queryByTestId('month-picker-2026-03')).toBeNull();
       expect(screen.getByRole('radio', { name: 'February 2026' }).props.accessibilityState).toMatchObject({
         checked: true,
       });
+      await fireEvent.press(screen.getByRole('radio', { name: '2024' }));
+      expect(monthNames()).toHaveLength(12);
+      expect(monthNames()[0]).toBe('January 2024');
+      // Before the floor: no 2023 at all.
+      expect(screen.queryByRole('radio', { name: '2023' })).toBeNull();
     });
 
-    it('goes back to an older first jar beyond 12 months', async () => {
-      await renderPicker('2026-02', '2024-11');
+    it('reaches January 2000 while the birthday is unknown', async () => {
+      await renderPicker('2026-02', null);
       await fireEvent.press(screen.getByTestId('my-days-month'));
-      const names = radioNames();
-      expect(names).toHaveLength(16);
-      expect(names).toContain('November 2024');
-      expect(names).toContain('December 2024');
-      expect(names).not.toContain('October 2024');
+      const years = yearNames();
+      expect(years).toHaveLength(27);
+      expect(years[years.length - 1]).toBe('2000');
+      expect(screen.queryByRole('radio', { name: '1999' })).toBeNull();
+    });
+
+    it('goes back to a first jar older than the floor', async () => {
+      await renderPicker('2026-02', '2010-03-01', '2008-11');
+      await fireEvent.press(screen.getByTestId('my-days-month'));
+      await fireEvent.press(screen.getByRole('radio', { name: '2008' }));
+      expect(monthNames()).toEqual(['November 2008', 'December 2008']);
     });
 
     it('jumps to the chosen month and closes', async () => {
-      const { onPickMonth } = await renderPicker('2026-02', null);
+      const { onPickMonth } = await renderPicker('2026-02', '2020-01-01');
       await fireEvent.press(screen.getByTestId('my-days-month'));
-      await fireEvent.press(screen.getByRole('radio', { name: 'March 2025' }));
-      expect(onPickMonth).toHaveBeenCalledWith('2025-03');
+      await fireEvent.press(screen.getByRole('radio', { name: '2023' }));
+      await fireEvent.press(screen.getByRole('radio', { name: 'March 2023' }));
+      expect(onPickMonth).toHaveBeenCalledWith('2023-03');
       expect(onPickMonth).toHaveBeenCalledTimes(1);
       expect(screen.queryByRole('radio')).toBeNull();
+    });
+  });
+
+  describe('date picker', () => {
+    async function renderDatePicker() {
+      const onPickDate = jest.fn();
+      const earliest = earliestMonth(floorMonth('2020-04-02'), null);
+      await renderMyDays({
+        nav: monthNav('2026-11', '2026-11', earliest),
+        pickableMonths: monthsBetween(earliest, '2026-11'),
+        onPickMonth: jest.fn(),
+        onPickDate,
+        today: TODAY,
+      });
+      return { onPickDate };
+    }
+
+    it('offers Go to a date, labelled for VoiceOver', async () => {
+      await renderDatePicker();
+      const button = screen.getByRole('button', { name: 'Go to a date' });
+      expect(button.props.accessibilityHint).toBe('Opens the date picker, to add moments to any past day');
+    });
+
+    it('goes straight to a day three years back', async () => {
+      const { onPickDate } = await renderDatePicker();
+      await fireEvent.press(screen.getByRole('button', { name: 'Go to a date' }));
+      expect(screen.getByText('Choose a date')).toBeTruthy();
+      await fireEvent.press(screen.getByRole('radio', { name: '2023' }));
+      // The month is kept across years: November 2023.
+      expect(screen.getByRole('radio', { name: 'November 2023' }).props.accessibilityState).toMatchObject({
+        checked: true,
+      });
+      await fireEvent.press(screen.getByRole('radio', { name: 'March 2023' }));
+      const day = screen.getByRole('button', { name: 'Thursday, March 9, 2023' });
+      expect(day.props.accessibilityHint).toBe('Opens this day to add moments');
+      await fireEvent.press(day);
+      expect(onPickDate).toHaveBeenCalledWith('2023-03-09');
+      expect(screen.queryByText('Choose a date')).toBeNull();
+    });
+
+    it('refuses days after today', async () => {
+      const { onPickDate } = await renderDatePicker();
+      await fireEvent.press(screen.getByRole('button', { name: 'Go to a date' }));
+      expect(screen.getByRole('button', { name: 'Monday, November 9, 2026, today' })).toBeTruthy();
+      const future = screen.getByTestId('date-picker-day-2026-11-10');
+      expect(future.props.accessibilityLabel).toBe('Tuesday, November 10, 2026, not yet');
+      expect(future.props.accessibilityState).toMatchObject({ disabled: true });
+      expect(screen.queryByRole('button', { name: /November 10, 2026/ })).toBeNull();
+      await fireEvent.press(future);
+      expect(onPickDate).not.toHaveBeenCalled();
+      // Months after this one aren't offered; years before the floor neither.
+      expect(screen.queryByTestId('date-picker-2026-12')).toBeNull();
+      expect(screen.queryByRole('radio', { name: '2019' })).toBeNull();
     });
   });
 

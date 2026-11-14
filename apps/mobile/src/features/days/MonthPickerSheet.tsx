@@ -1,11 +1,12 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { BottomSheet } from '@/components/BottomSheet';
 import { textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
 
-import { MonthChip } from './MonthChip';
+import { YearMonthGrid } from './YearMonthGrid';
 
 export type MonthPickerSheetProps = {
   visible: boolean;
@@ -18,19 +19,19 @@ export type MonthPickerSheetProps = {
   locale: string;
 };
 
-const COLUMNS = 3;
-
-const format = (month: string, locale: string, options: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(new Date(`${month}-01T00:00:00Z`));
-
 /**
- * Jumps My days to a month (FR-DAY-01): the years newest first, each a grid of its months. Months outside
- * the range are left out (a blank keeps the grid in calendar order), so they can't be chosen.
+ * Jumps My days to a month (FR-DAY-01): a year strip over that year's months. It opens on the shown month's
+ * year; months outside the range are left out, so they can't be chosen.
  */
 export function MonthPickerSheet({ visible, onClose, months, selected, onSelect, locale }: MonthPickerSheetProps) {
   const { t } = useTranslation();
-  const pickable = new Set(months);
-  const years = [...new Set(months.map((m) => m.slice(0, 4)))].sort().reverse();
+  const [year, setYear] = useState(selected.slice(0, 4));
+  // Each opening starts again on the month My days shows (state adjusted while rendering, not in an effect).
+  const [wasVisible, setWasVisible] = useState(visible);
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible) setYear(selected.slice(0, 4));
+  }
 
   return (
     <BottomSheet
@@ -43,49 +44,19 @@ export function MonthPickerSheet({ visible, onClose, months, selected, onSelect,
       <Text accessibilityRole="header" style={[textStyle('body', '700'), styles.title]}>
         {t('myDays.monthPicker.title')}
       </Text>
-      {years.map((year) => {
-        const yearMonths = Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`);
-        const rows: string[][] = [];
-        for (let i = 0; i < yearMonths.length; i += COLUMNS) rows.push(yearMonths.slice(i, i + COLUMNS));
-        return (
-          <View key={year} style={styles.year}>
-            <Text accessibilityRole="header" style={[textStyle('label', '700'), { color: colors.muted }]}>
-              {format(`${year}-01`, locale, { year: 'numeric' })}
-            </Text>
-            <View accessibilityRole="radiogroup" style={styles.rows}>
-              {rows
-                .filter((row) => row.some((m) => pickable.has(m)))
-                .map((row) => (
-                  <View key={row[0]} style={styles.row}>
-                    {/* Equal columns; a month out of range leaves its column empty. */}
-                    {row.map((month) => (
-                      <View key={month} style={styles.cell}>
-                        {pickable.has(month) ? (
-                          <MonthChip
-                            label={format(month, locale, { month: 'short' })}
-                            accessibilityLabel={format(month, locale, { month: 'long', year: 'numeric' })}
-                            selected={month === selected}
-                            onPress={() => onSelect(month)}
-                            testID={`month-picker-${month}`}
-                          />
-                        ) : null}
-                      </View>
-                    ))}
-                  </View>
-                ))}
-            </View>
-          </View>
-        );
-      })}
+      <YearMonthGrid
+        months={months}
+        year={year}
+        onYear={setYear}
+        selectedMonth={selected}
+        onMonth={onSelect}
+        locale={locale}
+        testID="month-picker"
+      />
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { color: colors.ink, marginBottom: space.sm },
-  year: { gap: space.sm, paddingTop: space.sm, paddingBottom: space.md },
-  rows: { gap: space.sm },
-  // Fixed thirds, so a row with an empty column keeps the same column widths as a full one.
-  row: { flexDirection: 'row', marginHorizontal: -space.sm / 2 },
-  cell: { width: `${100 / COLUMNS}%`, paddingHorizontal: space.sm / 2 },
+  title: { color: colors.ink, marginBottom: space.md },
 });

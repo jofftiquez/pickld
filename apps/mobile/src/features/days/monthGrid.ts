@@ -127,17 +127,25 @@ export function buildMonthGrid(input: {
 
 export type MonthNav = { canGoPrevious: boolean; canGoNext: boolean };
 
-/** How many months before the current one My days always reaches, so earlier days can be filled. */
-export const BACKFILL_MONTHS = 12;
+/** The floor's year when the user's birthday isn't known yet (still loading, or offline with nothing cached). */
+export const FALLBACK_FLOOR_YEAR = 2000;
 
 /**
- * The earliest month My days reaches: the month of the user's first jar or `BACKFILL_MONTHS` before the
- * current month, whichever is earlier, so a new user can still reach and fill days before their first jar.
- * `firstJarMonth` is null when the user has no jar yet (or it isn't known).
+ * The oldest month a day can be filled in (D-141): January of the user's birth year, as nothing in a diary
+ * comes before its owner, or January 2000 while the birthday isn't known. `birthday` is "YYYY-MM-DD".
  */
-export function earliestMonth(currentMonth: string, firstJarMonth: string | null): string {
-  const backfill = addMonths(currentMonth, -BACKFILL_MONTHS);
-  return firstJarMonth !== null && firstJarMonth < backfill ? firstJarMonth : backfill;
+export function floorMonth(birthday: string | null | undefined): string {
+  const year = birthday && /^\d{4}-/.test(birthday) ? birthday.slice(0, 4) : String(FALLBACK_FLOOR_YEAR);
+  return `${year}-01`;
+}
+
+/**
+ * The earliest month My days reaches: the floor (`floorMonth`), or the month of the user's first jar if that
+ * is older, so no jar is ever out of reach. `firstJarMonth` is null when the user has no jar yet (or it isn't
+ * known). Previous, the month picker and the date picker all stop here.
+ */
+export function earliestMonth(floor: string, firstJarMonth: string | null): string {
+  return firstJarMonth !== null && firstJarMonth < floor ? firstJarMonth : floor;
 }
 
 /** Every month from `from` to `to`, both included, oldest first; empty when `from` is after `to`. */
@@ -147,9 +155,8 @@ export function monthsBetween(from: string, to: string): string[] {
   return months;
 }
 
-/** Previous goes back to `earliestMonth`; Next stops at the current month. */
-export function monthNav(month: string, currentMonth: string, firstJarMonth: string | null): MonthNav {
-  const earliest = earliestMonth(currentMonth, firstJarMonth);
+/** Previous goes back to `earliest` (`earliestMonth`); Next stops at the current month. */
+export function monthNav(month: string, currentMonth: string, earliest: string): MonthNav {
   return {
     canGoPrevious: month > earliest,
     canGoNext: month < currentMonth,

@@ -10,6 +10,7 @@ import {
   addMonths,
   buildMonthGrid,
   earliestMonth,
+  floorMonth,
   monthMomentCount,
   monthNav,
   monthOf,
@@ -32,7 +33,7 @@ export default function MyDaysScreen() {
   const currentMonth = monthOf(today);
   const [month, setMonth] = useState(currentMonth);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const { userId, jars, firstJarMonth } = useMonthJars(month);
+  const { userId, jars, firstJarMonth, birthday } = useMonthJars(month);
   const { day, queue } = useDayJar(selectedDate);
 
   // Coming back to the screen (e.g. after a capture) re-reads the months; the first focus is the initial load.
@@ -51,15 +52,26 @@ export default function MyDaysScreen() {
     }, [queryClient, userId]),
   );
 
-  const nav = monthNav(month, currentMonth, firstJarMonth ?? null);
-  // The month picker offers the same months Previous and Next reach.
-  const pickableMonths = monthsBetween(earliestMonth(currentMonth, firstJarMonth ?? null), currentMonth);
+  // How far back it goes (D-141): the birth year's January (or January 2000 until known), or the first jar.
+  const earliest = earliestMonth(floorMonth(birthday), firstJarMonth ?? null);
+  const nav = monthNav(month, currentMonth, earliest);
+  // The month and date pickers offer the same months Previous and Next reach.
+  const pickableMonths = monthsBetween(earliest, currentMonth);
   const grid = buildMonthGrid({
     month,
     today,
     weekStart: weekStartFrom(getCalendars()[0]?.firstWeekday),
     jars: jars ?? [],
   });
+  // A date from the date picker opens that day's page (D-55), as Fill this jar does; today is the Today tab.
+  // The calendar moves to that day too, so Back lands on it.
+  const onPickDate = (date: string) => {
+    if (date > today || !pickableMonths.includes(monthOf(date))) return;
+    setMonth(monthOf(date));
+    setSelectedDate(date);
+    if (date === today) router.navigate('/today');
+    else router.push({ pathname: '/day/[date]', params: { date } });
+  };
 
   // The selected day's slots: its server moments merged with photos still in the queue.
   const tiles = selectedDate
@@ -84,6 +96,8 @@ export default function MyDaysScreen() {
       onNext={() => nav.canGoNext && setMonth(addMonths(month, 1))}
       pickableMonths={pickableMonths}
       onPickMonth={(picked) => pickableMonths.includes(picked) && setMonth(picked)}
+      onPickDate={onPickDate}
+      today={today}
       onSelectDay={setSelectedDate}
       onMemories={() => router.push('/memories')}
       selectedDay={

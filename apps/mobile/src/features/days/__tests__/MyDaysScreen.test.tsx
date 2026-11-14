@@ -45,7 +45,7 @@ jest.mock('@gorhom/bottom-sheet', () => {
 });
 jest.mock('@/features/jar/useToday', () => ({ phoneTimeZone: () => 'Asia/Manila' }));
 jest.mock('../useMonthJars', () => ({
-  useMonthJars: () => ({ userId: 'u-1', jars: [], firstJarMonth: '2026-11' }),
+  useMonthJars: () => ({ userId: 'u-1', jars: [], firstJarMonth: '2026-11', birthday: '2023-05-20' }),
 }));
 
 const mockDays: Record<string, DayJar> = {};
@@ -155,19 +155,45 @@ describe('My days back button', () => {
   });
 });
 
-// FR-DAY-01: the month line jumps straight to a month instead of pressing Previous month over and over.
+// FR-DAY-01: the month pill jumps straight to a month; it reaches back to the birth year (D-141).
 describe('My days month picker', () => {
   it('jumps to the chosen month, as far back as Previous reaches', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
     await fireEvent.press(screen.getByRole('button', { name: 'November 2026, 0 moments' }));
-    // First jar this month: 12 months back, November 2025 to November 2026.
-    expect(screen.getAllByRole('radio')).toHaveLength(13);
-    expect(screen.queryByRole('radio', { name: 'October 2025' })).toBeNull();
-    await fireEvent.press(screen.getByRole('radio', { name: 'November 2025' }));
-    expect(screen.getByText('November 2025 · 0 moments')).toBeTruthy();
-    expect(screen.getByTestId('day-2025-11-15')).toBeTruthy();
+    // Birthday in 2023: January 2023 to November 2026.
+    expect(screen.queryByRole('radio', { name: '2022' })).toBeNull();
+    await fireEvent.press(screen.getByRole('radio', { name: '2023' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'January 2023' }));
+    expect(screen.getByText('January 2023')).toBeTruthy();
+    expect(screen.getByTestId('day-2023-01-15')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Previous month' }).props.accessibilityState).toMatchObject({
       disabled: true,
     });
+  });
+});
+
+// FR-DAY-02, D-141: Go to a date opens any past day's page, the one Fill this jar opens.
+describe('My days date picker', () => {
+  it('opens a day years back, and the calendar is on it when coming back', async () => {
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'Go to a date' }));
+    await fireEvent.press(screen.getByRole('radio', { name: '2023' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'June 2023' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Thursday, June 1, 2023' }));
+    expect(screen).toHavePathname('/day/2023-06-01');
+    expect(screen.getByText('day 2023-06-01')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Back from day' }));
+    await act(async () => {});
+    expect(screen).toHavePathname('/my-days');
+    expect(screen.getByText('June 2023')).toBeTruthy();
+    expect(screen.getByTestId('selected-day-card')).toBeTruthy();
+  });
+
+  it('today goes to the Today tab', async () => {
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'Go to a date' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Wednesday, November 11, 2026, today' }));
+    expect(screen).toHavePathname('/today');
   });
 });
