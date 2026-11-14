@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { colors, radius } from '@/theme/tokens';
 
+import { BulkUpload } from '~/components/BulkUpload';
 import { PackDetailsForm } from '~/components/PackDetailsForm';
 import { PublishForm } from '~/components/PublishForm';
 import { StatusPill } from '~/components/StatusPill';
@@ -10,7 +11,7 @@ import { StickerRow } from '~/components/StickerRow';
 import { UploadArtForm } from '~/components/UploadArtForm';
 import { t } from '~/i18n/t';
 import { when } from '~/lib/audit';
-import { artUrl, EDITABLE_TIER, loadPack, stickerArtBase } from '~/lib/stickers';
+import { artUrl, EDITABLE_TIER, loadPack, stickerArtBase, stickerName } from '~/lib/stickers';
 import { supabase } from '~/lib/supabase';
 
 const note = {
@@ -64,6 +65,9 @@ export default async function StickerPack({ params }: { params: Promise<{ id: st
       )}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, 1fr)', gap: 16 }}>
         <section aria-label={t('stickers.list.stickers')} style={{ display: 'grid', gap: 10, alignContent: 'start' }}>
+          {editable && draft ? (
+            <BulkUpload pack={pack.id} taken={stickers.map((s) => stickerName(s.asset_path))} />
+          ) : null}
           <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{t('stickers.list.stickers')}</h2>
           {stickers.length === 0 ? (
             <p style={{ ...note, color: colors.muted }}>{t('stickers.sticker.empty')}</p>

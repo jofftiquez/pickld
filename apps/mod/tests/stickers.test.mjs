@@ -28,7 +28,8 @@ const MOD_EMAIL = 'mod-e2e-stickers@pickld.test';
 const tag = randomUUID().slice(0, 6);
 const slug = `e2e-${tag}`;
 const premiumSlug = `e2e-prem-${tag}`;
-let web, browser, page, modId, packId, premiumId, dir;
+const bulkSlug = `e2e-bulk-${tag}`;
+let web, browser, page, modId, packId, premiumId, bulkId, dir;
 
 function must({ data, error }) {
   if (error) throw new Error(error.message);
@@ -128,13 +129,15 @@ before(async () => {
 after(async () => {
   await browser?.close();
   web?.kill();
-  const ids = [packId, premiumId].filter(Boolean);
+  const ids = [packId, premiumId, bulkId].filter(Boolean);
   if (ids.length) {
     await admin.from('stickers').delete().in('pack_id', ids);
     await admin.from('sticker_packs').delete().in('id', ids);
   }
-  const files = must(await admin.storage.from('photos').list(`stickers/${slug}`)) ?? [];
-  if (files.length) await admin.storage.from('photos').remove(files.map((f) => `stickers/${slug}/${f.name}`));
+  for (const prefix of [slug, bulkSlug]) {
+    const files = must(await admin.storage.from('photos').list(`stickers/${prefix}`)) ?? [];
+    if (files.length) await admin.storage.from('photos').remove(files.map((f) => `stickers/${prefix}/${f.name}`));
+  }
 });
 
 const upload = (page_) => page_.getByRole('form', { name: /art/ });
@@ -237,6 +240,7 @@ test('publishing is final: art is frozen and a sticker can be retired and restor
   await page.getByRole('main').getByText('Published', { exact: true }).first().waitFor();
   await page.getByText('Published art never changes.', { exact: false }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Publish pack' }).count(), 0);
+  assert.equal(await page.getByRole('region', { name: 'Add many stickers' }).count(), 0, 'bulk drops are for drafts');
   const pack = must(await admin.from('sticker_packs').select('status, published_at').eq('id', packId).single());
   assert.equal(pack.status, 'published');
   assert.ok(pack.published_at);
@@ -281,6 +285,72 @@ test('every Studio change is in the audit log under its moderator', async () => 
   assert.ok(rows.every((r) => r.target === null));
   await page.goto(`${base}/audit`);
   await page.getByText('Published sticker pack').first().waitFor();
+});
+
+test('a bulk drop adds many stickers, renames repeated names and lists refused files with the reason', async () => {
+  // A draft with one sticker already named sun-face (its art isn't needed). Made here, not in setup,
+  // so the create test's draft is still first in the list.
+  bulkId = must(
+    await admin
+      .from('sticker_packs')
+      .insert({ slug: bulkSlug, name: `Bulk ${tag}`, tier: 'free', status: 'draft', sort: 9001 })
+      .select('id')
+      .single(),
+  ).id;
+  must(
+    await admin.from('stickers').insert({
+      pack_id: bulkId,
+      label: 'Old sun',
+      asset_path: `stickers/${bulkSlug}/sun-face.png`,
+      art_width: 8,
+      art_height: 8,
+    }),
+  );
+  await page.goto(`${base}/stickers/${bulkId}`);
+  const zone = page.getByRole('region', { name: 'Add many stickers' });
+  await zone.getByLabel('PNG files').setInputFiles([
+    { name: 'Sun Face.png', mimeType: 'image/png', buffer: png(10, 10) }, // sun-face is in the pack
+    { name: 'moon.png', mimeType: 'image/png', buffer: png(20, 10) },
+    { name: 'moon.png', mimeType: 'image/png', buffer: png(10, 20) }, // twice in the drop
+    { name: 'notes.png', mimeType: 'image/png', buffer: Buffer.from('GIF89a, not a PNG') },
+    { name: 'poster.png', mimeType: 'image/png', buffer: png(2049, 1) },
+  ]);
+  await zone.getByText('3 added, 2 refused.', { exact: false }).waitFor();
+  const files = zone.getByRole('list', { name: 'Files in this drop' }).getByRole('listitem');
+  assert.deepEqual(
+    (await files.allTextContents()).map((s) => s.replace(/\s+/g, ' ').trim()),
+    [
+      'Sun Face.png → sun-face-2 (renamed: name already used)Added',
+      'moon.png → moonAdded',
+      'moon.png → moon-2 (renamed: name already used)Added',
+      'notes.pngThat file isn’t a PNG.',
+      'poster.pngArt is at most 2048 pixels on each side.',
+    ],
+  );
+  const rows = must(
+    await admin.from('stickers').select('asset_path, label, art_width, art_height').eq('pack_id', bulkId).order('sort'),
+  );
+  assert.deepEqual(
+    rows.map((r) => [r.asset_path.split('/').pop(), r.label, r.art_width, r.art_height]),
+    [
+      ['sun-face.png', 'Old sun', 8, 8],
+      ['sun-face-2.png', 'Sun face 2', 10, 10],
+      ['moon.png', 'Moon', 20, 10],
+      ['moon-2.png', 'Moon 2', 10, 20],
+    ],
+  );
+
+  // The page refreshes once and the new stickers are edited one by one.
+  const moon = page.getByRole('listitem', { name: 'Moon 2', exact: true });
+  await moon.getByText('10 × 20 px').waitFor();
+  await moon.getByLabel('Label').fill('Crescent');
+  await moon.getByRole('button', { name: 'Save Moon 2' }).click();
+  await page.getByRole('listitem', { name: 'Crescent', exact: true }).getByText('Saved.').waitFor();
+  assert.equal(
+    must(await admin.from('stickers').select('label').eq('asset_path', `stickers/${bulkSlug}/moon-2.png`).single())
+      .label,
+    'Crescent',
+  );
 });
 
 test('premium, earned and seasonal packs are read-only in the Studio', async () => {

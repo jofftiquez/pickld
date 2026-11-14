@@ -603,6 +603,20 @@
       "label": "Label (optional)",
       "button": "Upload"
     },
+    "bulk": {
+      "title": "Add many stickers",
+      "body": "Drop PNG files here or choose them. Each becomes a new sticker named after its file; edit them one by one below, then publish.",
+      "choose": "Choose PNG files",
+      "files": "PNG files",
+      "limits": "PNG only, up to 2048 × 2048 pixels and 2 MB each, 100 files at a time.",
+      "list": "Files in this drop",
+      "progress": "Uploading… {{done}} of {{total}} done.",
+      "done": "{{added}} added, {{refused}} refused. Edit each sticker below, then publish.",
+      "renamed": "renamed: name already used",
+      "waiting": "Waiting",
+      "uploading": "Uploading…",
+      "added": "Added"
+    },
     "publish": {
       "title": "Publish",
       "body": "Puts the pack in everyone’s sticker picker. It can’t go back to draft.",
@@ -661,7 +675,8 @@
       "name_taken": "That name is used in this published pack. Use a new name.",
       "not_moderator": "Only moderators use the Studio.",
       "upload_failed": "The art couldn’t be stored. Try again.",
-      "unavailable": "The Studio can’t be reached right now. Try again."
+      "unavailable": "The Studio can’t be reached right now. Try again.",
+      "too_many": "More than 100 files in one drop. Add it in the next one."
     }
   }
 }
