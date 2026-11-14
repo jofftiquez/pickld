@@ -14,7 +14,7 @@ import { colors, radius, space } from '@/theme/tokens';
 export type LikeButtonProps = {
   count: number;
   liked: boolean;
-  /** Pill height: 44 on the Jar page bar, 46 in Moment detail's sheet. */
+  /** Pill height: 44 on the Jar page bar, 46 in Moment detail's sheet, 40 on Pack preview. */
   height: number;
   onPress: () => void;
   testID?: string;
@@ -23,8 +23,8 @@ export type LikeButtonProps = {
 // A new like's heart springs in from this share of its size (D-58, D-77).
 const HEART_POP_FROM = 0.6;
 
-/** The like count pill on the Jar page, Moment detail and the Moments timeline (Story, Moment; FR-SOC-05): a
- * filled heart once liked, which pops in with a light haptic (D-58). */
+/** The like count pill on the Jar page, Moment detail, the Moments timeline (Story, Moment; FR-SOC-05) and Pack
+ * preview (FR-STK-07): a green heart, filled once liked, which pops in with a light haptic (D-58). */
 export function LikeButton({ count, liked, height, onPress, testID }: LikeButtonProps) {
   const { t } = useTranslation();
   const [pressed, setPressed] = useState(false);
@@ -47,9 +47,9 @@ export function LikeButton({ count, liked, height, onPress, testID }: LikeButton
       testID={testID}
     >
       <Animated.View style={heart} testID={liked ? `like-heart-${reduceMotion ? 'fade' : 'pop'}` : 'like-heart'}>
-        <Icon name="heart" color="likeText" size={16} strokeWidth={2.2} filled={liked} />
+        <Icon name="heart" color="brandText" size={16} strokeWidth={2.2} filled={liked} />
       </Animated.View>
-      <Text style={[textStyle('bodyMedium', '700'), { color: colors.likeText }]}>{count}</Text>
+      <Text style={[textStyle('bodyMedium', '700'), { color: colors.brandText }]}>{count}</Text>
     </Pressable>
   );
 }
@@ -61,6 +61,6 @@ const styles = StyleSheet.create({
     gap: space.xs + 2,
     paddingHorizontal: space.md + 2,
     borderRadius: radius.pill,
-    backgroundColor: colors.dangerTint,
+    backgroundColor: colors.brandTint,
   },
 });

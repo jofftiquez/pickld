@@ -82,13 +82,13 @@ describe('PackPreviewView', () => {
     expect(size(three[0]!).height).toBe(96);
   });
 
-  it('shows the thumbs up with its count, and nothing until the count is known', async () => {
+  it('shows the like heart with its count, and nothing until the count is known', async () => {
     const props = await setup({ thumbs: { thumbs: 12, mine: false }, onThumb: jest.fn() });
-    const thumb = screen.getByTestId('pack-thumb');
-    expect(thumb.props.accessibilityLabel).toBe('12 thumbs up');
+    const thumb = screen.getByTestId('pack-like');
+    expect(thumb.props.accessibilityLabel).toBe('12 likes');
     await fireEvent.press(thumb);
     expect(props.onThumb).toHaveBeenCalledTimes(1);
     await setup({ onThumb: jest.fn() });
-    expect(screen.queryByTestId('pack-thumb')).toBeNull();
+    expect(screen.queryByTestId('pack-like')).toBeNull();
   });
 });

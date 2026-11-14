@@ -119,7 +119,7 @@ describe('StickerShopView', () => {
   });
 });
 
-describe('thumbs up on cards (FR-STK-07)', () => {
+describe('likes on cards (FR-STK-07)', () => {
   it('shows a pack’s count, and nothing for zero or unknown', async () => {
     const shop = buildShop(shopPackRows(), shopStickerRows(), answers(['barkada'], ['work']), NOV);
     const all = [...shop.forYou, ...shop.yours];
@@ -131,9 +131,9 @@ describe('thumbs up on cards (FR-STK-07)', () => {
         [id('everyday'), { thumbs: 0, mine: false }],
       ]),
     });
-    expect(within(screen.getByTestId('sticker-shop-thumbs-pinoy-life')).getByText('7')).toBeTruthy();
-    expect(screen.getByTestId('sticker-shop-pack-pinoy-life').props.accessibilityLabel).toMatch(/, 7 thumbs up$/);
-    expect(screen.queryByTestId('sticker-shop-thumbs-everyday')).toBeNull();
-    expect(screen.queryByTestId('sticker-shop-thumbs-barkada')).toBeNull();
+    expect(within(screen.getByTestId('sticker-shop-likes-pinoy-life')).getByText('7')).toBeTruthy();
+    expect(screen.getByTestId('sticker-shop-pack-pinoy-life').props.accessibilityLabel).toMatch(/, 7 likes$/);
+    expect(screen.queryByTestId('sticker-shop-likes-everyday')).toBeNull();
+    expect(screen.queryByTestId('sticker-shop-likes-barkada')).toBeNull();
   });
 });

@@ -7,12 +7,12 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { stickerArtSize } from '@/features/edit/stickers/remoteStickerArt';
 import { StickerImage } from '@/features/edit/stickers/StickerImage';
+import { LikeButton } from '@/features/jar/LikeButton';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, sizes, space, stickerShop, stickerTool } from '@/theme/tokens';
 
 import { COVER_LAYOUTS, PackArt } from './PackArt';
 import type { ShopPack } from './shop';
-import { ThumbButton } from './ThumbButton';
 import type { PackThumb } from './usePackThumbs';
 
 /** How many stickers the cloud shows before "+N more" (PackPreview). */
@@ -26,7 +26,7 @@ export type PackPreviewViewProps = {
   price?: string;
   buying?: boolean;
   buyFailed?: boolean;
-  /** The pack's thumbs up and the viewer's own; undefined while loading or offline (no button then). */
+  /** The pack's likes (stored as pack_thumbs) and the viewer's own; undefined while loading or offline (no button then). */
   thumbs?: PackThumb | undefined;
   onThumb?: () => void;
   insets: EdgeInsets;
@@ -38,7 +38,7 @@ export type PackPreviewViewProps = {
 
 /**
  * Pack preview (PackPreview; FR-STK-07): a cover of the pack's stickers, large, on its color (no photo, D-81),
- * its story, a thumbs up with its count, its stickers and \"Get <pack> · <price>\". Locked tabs in the Stickers tool and every pack in the
+ * its story, a like heart with its count, its stickers and \"Get <pack> · <price>\". Locked tabs in the Stickers tool and every pack in the
  * shop open it.
  */
 export function PackPreviewView({
@@ -116,7 +116,17 @@ export function PackPreviewView({
               {pack.description ? (
                 <Text style={[textStyle('body', '400'), { color: colors.muted }]}>{pack.description}</Text>
               ) : null}
-              {thumbs && onThumb ? <ThumbButton count={thumbs.thumbs} thumbed={thumbs.mine} onPress={onThumb} /> : null}
+              {thumbs && onThumb ? (
+                <View style={styles.like}>
+                  <LikeButton
+                    count={thumbs.thumbs}
+                    liked={thumbs.mine}
+                    height={sizes.minTap}
+                    onPress={onThumb}
+                    testID="pack-like"
+                  />
+                </View>
+              ) : null}
               <View
                 style={styles.cloud}
                 accessibilityLabel={pack.labels.join(', ')}
@@ -196,6 +206,7 @@ const styles = StyleSheet.create({
     columnGap: space.md,
   },
   title: { color: colors.ink, flexShrink: 1 },
+  like: { alignSelf: 'flex-start' },
   cloud: {
     flexDirection: 'row',
     flexWrap: 'wrap',

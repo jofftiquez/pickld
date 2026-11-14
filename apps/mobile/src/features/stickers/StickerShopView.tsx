@@ -18,7 +18,7 @@ export type StickerShopViewProps = {
   failed?: boolean;
   /** Store prices by product id; a pack without one shows no price. */
   prices: ReadonlyMap<string, string>;
-  /** Thumbs up by pack id; cards show the count when it's known. */
+  /** Likes (pack_thumbs) by pack id; cards show the count when it's known. */
   thumbs?: PackThumbs | undefined;
   query: string;
   onQuery: (query: string) => void;
@@ -227,7 +227,7 @@ function PackCard({
 }: {
   pack: ShopPack;
   price?: string | undefined;
-  /** The pack's thumbs up; undefined while unknown. Zero shows nothing. */
+  /** The pack's likes; undefined while unknown. Zero shows nothing. */
   thumbs?: number | undefined;
   style: object;
   onOpen: (pack: ShopPack) => void;
@@ -243,7 +243,7 @@ function PackCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
-        showThumbs ? t('stickerShop.withThumbs', { label, thumbs: t('stickerShop.thumbs', { count: thumbs }) }) : label
+        showThumbs ? t('stickerShop.withLikes', { label, likes: t('stickerShop.likes', { count: thumbs }) }) : label
       }
       accessibilityHint={t('stickerShop.openHint')}
       onPress={() => onOpen(pack)}
@@ -272,8 +272,8 @@ function PackCard({
               {t('stickerShop.count', { count: pack.stickerCount })}
             </Text>
             {showThumbs ? (
-              <View style={styles.cardThumbs} testID={`sticker-shop-thumbs-${pack.slug}`}>
-                <Icon name="thumbsUp" size={12} strokeWidth={2.2} color="muted" />
+              <View style={styles.cardThumbs} testID={`sticker-shop-likes-${pack.slug}`}>
+                <Icon name="heart" size={12} strokeWidth={2.2} color="muted" />
                 <Text style={[textStyle('caption', '500'), { color: colors.muted }]}>{thumbs}</Text>
               </View>
             ) : null}
