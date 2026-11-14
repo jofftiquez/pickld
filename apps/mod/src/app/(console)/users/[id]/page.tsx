@@ -8,11 +8,13 @@ import { colors, radius } from '@/theme/tokens';
 import { BarList } from '~/components/BarList';
 import { BlurredPhoto } from '~/components/BlurredPhoto';
 import { DayBars } from '~/components/DayBars';
+import { GrantSetForm, InviteFreezeForm } from '~/components/InviteTools';
 import { SuspendForm } from '~/components/SuspendForm';
 import { Tile } from '~/components/Tile';
 import { t } from '~/i18n/t';
 import { loadUserStats } from '~/lib/analytics';
 import { actionLabel, details, when } from '~/lib/audit';
+import { loadUserInvites, type UserInviteInfo } from '~/lib/invites';
 import { photoUrls } from '~/lib/photos';
 import { dayLabel, monthLabel, reasonLabel } from '~/lib/queue';
 import { supabase } from '~/lib/supabase';
@@ -37,6 +39,101 @@ function Empty({ children }: { children: ReactNode }) {
   return <p style={{ margin: 0, color: colors.muted, fontSize: 14 }}>{children}</p>;
 }
 
+function inviterText(by: NonNullable<UserInviteInfo['invited_by']>): ReactNode {
+  if (by.inviter) {
+    return (
+      <Link href={`/users/${by.inviter.id}`} style={{ color: colors.brandLink, fontWeight: 700 }}>
+        @{by.inviter.username}
+      </Link>
+    );
+  }
+  return t(`users.invites.kind.${by.kind}`, { note: by.note ?? '' });
+}
+
+// Their invites (INV-10): who let them in, who they let in, codes used and sets, and the pause switch.
+function InvitesCard({ user, invites }: { user: string; invites: UserInviteInfo }) {
+  const { invited_by: by, frozen } = invites;
+  return (
+    <Card title={t('users.invites.title')}>
+      <dl style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '6px 12px', margin: 0, fontSize: 13 }}>
+        <dt style={{ color: colors.muted }}>{t('users.invites.invitedBy')}</dt>
+        <dd style={{ margin: 0 }}>
+          {by ? (
+            <>
+              {inviterText(by)}
+              <span style={{ color: colors.muted }}>
+                {' · '}
+                {by.code}
+                {by.via_link ? ` · ${t('users.invites.viaLink')}` : ''} · {when(by.joined_at)}
+              </span>
+            </>
+          ) : (
+            t('users.invites.noInviter')
+          )}
+        </dd>
+        <dt style={{ color: colors.muted }}>{t('users.invites.codes')}</dt>
+        <dd style={{ margin: 0 }}>
+          {invites.has_codes
+            ? t('users.invites.codesLine', {
+                used: invites.used,
+                codes: invites.codes,
+                sets: t('users.invites.sets', { count: invites.sets }),
+              })
+            : t(invites.unlocked ? 'users.invites.noCodes' : 'users.invites.locked')}
+        </dd>
+        {invites.link_enabled !== null ? (
+          <>
+            <dt style={{ color: colors.muted }}>{t('users.invites.link')}</dt>
+            <dd style={{ margin: 0 }}>{t(invites.link_enabled ? 'users.invites.linkOn' : 'users.invites.linkOff')}</dd>
+          </>
+        ) : null}
+        {frozen ? (
+          <>
+            <dt style={{ color: colors.muted }}>{t('users.invites.paused')}</dt>
+            <dd style={{ margin: 0, color: colors.likeText }}>
+              {when(frozen.at)}
+              {frozen.by ? ` · @${frozen.by}` : ` · ${t('users.invites.pausedAuto')}`}
+              {frozen.note ? <span style={{ display: 'block', color: colors.inkSoft }}>{frozen.note}</span> : null}
+            </dd>
+          </>
+        ) : null}
+      </dl>
+      {invites.invitees.length > 0 ? (
+        <>
+          <h3 style={{ margin: '6px 0 0', fontSize: 13, color: colors.muted }}>
+            {t('users.invites.invitees', { count: invites.invitees.length })}
+          </h3>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {invites.invitees.map((p, i) => (
+              <li key={p.id ?? `gone-${i}`} style={row}>
+                {p.id && p.username ? (
+                  <Link href={`/users/${p.id}`} style={{ color: colors.brandLink, fontWeight: 700 }}>
+                    @{p.username}
+                  </Link>
+                ) : (
+                  <strong>{t('users.invites.gone')}</strong>
+                )}
+                <span style={{ color: colors.muted }}>
+                  {[
+                    '',
+                    p.status ? t(`users.invites.status.${p.status}`) : null,
+                    p.via_link ? t('users.invites.viaLink') : null,
+                    when(p.joined_at),
+                  ]
+                    .filter((part) => part !== null)
+                    .join(' · ')}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {invites.has_codes ? <GrantSetForm user={user} /> : null}
+      {invites.has_codes ? <InviteFreezeForm user={user} lift={frozen !== null} /> : null}
+    </Card>
+  );
+}
+
 function statusText(u: UserDetail): string {
   const s = u.suspension;
   if (!s) return t(`users.status.${u.profile.status}`);
@@ -51,10 +148,11 @@ export default async function User({ params }: { params: Promise<{ id: string }>
   const id = z.uuid().safeParse((await params).id).data;
   if (!id) notFound();
   const client = await supabase();
-  const [user, moments, usage] = await Promise.all([
+  const [user, moments, usage, invites] = await Promise.all([
     loadUser(client, id),
     loadUserMoments(client, id),
     loadUserStats(client, id),
+    loadUserInvites(client, id),
   ]);
   if (!user) notFound();
   const photos = await photoUrls(
@@ -300,43 +398,48 @@ export default async function User({ params }: { params: Promise<{ id: string }>
           </Card>
         </div>
 
-        <Card title={t('users.suspension.title')}>
-          {suspension ? (
-            <dl style={{ display: 'grid', gridTemplateColumns: '70px 1fr', gap: '6px 12px', margin: 0, fontSize: 13 }}>
-              <dt style={{ color: colors.muted }}>{t('users.suspension.kind')}</dt>
-              <dd style={{ margin: 0, fontWeight: 700 }}>{t(`users.suspension.kinds.${suspension.kind}`)}</dd>
-              <dt style={{ color: colors.muted }}>{t('users.suspension.until')}</dt>
-              <dd style={{ margin: 0 }}>{suspension.until ? when(suspension.until) : t('users.suspension.noEnd')}</dd>
-              {suspension.by ? (
-                <>
-                  <dt style={{ color: colors.muted }}>{t('users.suspension.by')}</dt>
-                  <dd style={{ margin: 0 }}>@{suspension.by}</dd>
-                </>
-              ) : null}
-              {suspension.note ? (
-                <>
-                  <dt style={{ color: colors.muted }}>{t('users.suspension.note')}</dt>
-                  <dd style={{ margin: 0 }}>{suspension.note}</dd>
-                </>
-              ) : null}
-            </dl>
-          ) : (
-            <Empty>{t('users.suspension.none')}</Empty>
-          )}
-          {user.can_suspend ? (
-            <>
-              <p style={{ margin: '4px 0 0', color: colors.muted, fontSize: 13 }}>{t('users.suspend.hint')}</p>
-              <SuspendForm user={profile.id} lift={false} />
-            </>
-          ) : null}
-          {user.can_lift ? (
-            <>
-              <p style={{ margin: '4px 0 0', color: colors.muted, fontSize: 13 }}>{t('users.lift.hint')}</p>
-              <SuspendForm user={profile.id} lift />
-            </>
-          ) : null}
-          {suspension?.kind === 'child_safety' ? <Empty>{t('users.suspension.childSafetyHint')}</Empty> : null}
-        </Card>
+        <div style={{ display: 'grid', gap: 16 }}>
+          <Card title={t('users.suspension.title')}>
+            {suspension ? (
+              <dl
+                style={{ display: 'grid', gridTemplateColumns: '70px 1fr', gap: '6px 12px', margin: 0, fontSize: 13 }}
+              >
+                <dt style={{ color: colors.muted }}>{t('users.suspension.kind')}</dt>
+                <dd style={{ margin: 0, fontWeight: 700 }}>{t(`users.suspension.kinds.${suspension.kind}`)}</dd>
+                <dt style={{ color: colors.muted }}>{t('users.suspension.until')}</dt>
+                <dd style={{ margin: 0 }}>{suspension.until ? when(suspension.until) : t('users.suspension.noEnd')}</dd>
+                {suspension.by ? (
+                  <>
+                    <dt style={{ color: colors.muted }}>{t('users.suspension.by')}</dt>
+                    <dd style={{ margin: 0 }}>@{suspension.by}</dd>
+                  </>
+                ) : null}
+                {suspension.note ? (
+                  <>
+                    <dt style={{ color: colors.muted }}>{t('users.suspension.note')}</dt>
+                    <dd style={{ margin: 0 }}>{suspension.note}</dd>
+                  </>
+                ) : null}
+              </dl>
+            ) : (
+              <Empty>{t('users.suspension.none')}</Empty>
+            )}
+            {user.can_suspend ? (
+              <>
+                <p style={{ margin: '4px 0 0', color: colors.muted, fontSize: 13 }}>{t('users.suspend.hint')}</p>
+                <SuspendForm user={profile.id} lift={false} />
+              </>
+            ) : null}
+            {user.can_lift ? (
+              <>
+                <p style={{ margin: '4px 0 0', color: colors.muted, fontSize: 13 }}>{t('users.lift.hint')}</p>
+                <SuspendForm user={profile.id} lift />
+              </>
+            ) : null}
+            {suspension?.kind === 'child_safety' ? <Empty>{t('users.suspension.childSafetyHint')}</Empty> : null}
+          </Card>
+          {invites ? <InvitesCard user={profile.id} invites={invites} /> : null}
+        </div>
       </div>
     </div>
   );
