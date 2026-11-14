@@ -346,6 +346,7 @@ export const sizes = {
   mosaicGap: 6,
   notifyDot: 8, // unread dot on the bell (Feed)
   welcomeCollage: 470, // photo collage above the Welcome sheet (Welcome)
+  welcomeCollageLarge: 220, // the collage at large text, so the promise and Get started come up sooner
   welcomeSheetOverlap: 24, // the sheet tucks this far over the collage
   welcomeLogo: 76, // Pickld wordmark width on the Welcome sheet
   introArt: 400, // illustration area on How it works (Intro1–3)

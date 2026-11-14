@@ -5,6 +5,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { hitSlopFor } from '@/lib/hitSlop';
+import { useLargeText } from '@/lib/useLargeText';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
@@ -29,6 +30,7 @@ export type WelcomeViewProps = {
 /** Welcome (FR-ONB-01): a collage of real days, the promise, Get started and I already have an account. */
 export function WelcomeView({ insets, onGetStarted, onSignIn }: WelcomeViewProps) {
   const { t } = useTranslation();
+  const largeText = useLargeText();
   return (
     // Scrolls only when the content is taller than the screen (200% text), so Get started stays reachable.
     <ScrollView
@@ -38,7 +40,7 @@ export function WelcomeView({ insets, onGetStarted, onSignIn }: WelcomeViewProps
       testID="welcome-screen"
     >
       <View
-        style={[styles.collage, { height: sizes.welcomeCollage }]}
+        style={[styles.collage, { height: largeText ? sizes.welcomeCollageLarge : sizes.welcomeCollage }]}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >

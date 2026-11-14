@@ -80,7 +80,13 @@ export function JarLidView({ insets, lid, busy, failed, onPick, onContinue, onBa
                 <View style={[styles.ring, selected ? styles.ringOn : null]}>
                   <View style={[styles.swatch, { backgroundColor: lidColors[name] }]} />
                 </View>
-                <Text style={[textStyle('label', selected ? '700' : '500'), { color: colors.ink }]}>
+                {/* Six names share one row under 44-point swatches: past 1.3× they ran together and pushed the
+                    last lids off screen, so they stop there like tile labels (D-37). */}
+                <Text
+                  style={[textStyle('label', selected ? '700' : '500'), { color: colors.ink }]}
+                  numberOfLines={1}
+                  maxFontSizeMultiplier={maxTextScale.tile}
+                >
                   {t(`setup.lid.names.${name}`)}
                 </Text>
               </Pressable>
