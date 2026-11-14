@@ -77,6 +77,7 @@ export const colors = {
   storyRingSeen: '#d9dcd3', // grey ring around an author with nothing new (Feed)
   notifyDot: '#d4451f', // unread dot on the bell (Feed)
   cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
+  galleryHeader: 'rgba(255,255,255,0.94)', // sticky day headers over the gallery grid (Choose a photo)
   onPhotoMuted: '#e2e5dc', // date and count over a photo (Memories); 12:1 on the photo fade
   cropAction: '#e2e5dc', // Cancel and Reset on the dark header (Crop); 15:1 on editor
   cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
@@ -282,6 +283,9 @@ export const sizes = {
   timeChip: 28, // reminder time chips (Settings); 44 pt tap area via hitSlop
   settingsIcon: 36, // slot icon wells on the Reminders card (Settings)
   minTap: 44, // every tap area, via hitSlop when the visual is smaller
+  galleryGap: 2, // gap between photos in the gallery grid (Choose a photo)
+  galleryDayHeader: 36, // a day's header in that grid at default text size; grows with large text
+  galleryRing: 2, // brand outline around the photos of the day being filled
   buttonPrimary: 54,
   buttonSecondary: 50,
   pillButton: 36,

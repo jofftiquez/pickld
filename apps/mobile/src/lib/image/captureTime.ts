@@ -74,7 +74,7 @@ function parseExifOffset(value: string | undefined): number | null {
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
 /** Offset of an IANA zone from UTC in minutes at an instant. */
-function zoneOffsetMinutes(tz: string, ms: number): number {
+export function zoneOffsetMinutes(tz: string, ms: number): number {
   let formatter = formatters.get(tz);
   if (!formatter) {
     formatter = new Intl.DateTimeFormat('en-US', {

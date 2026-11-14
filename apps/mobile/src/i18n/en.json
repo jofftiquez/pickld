@@ -701,7 +701,25 @@
     "jarStamp": "JAR #{{number}}"
   },
   "gallery": {
-    "permissionDescription": "Pickld opens your photos so you can add one from your gallery to your jar."
+    "permissionDescription": "Pickld opens your photos so you can add one from your gallery to your jar.",
+    "title": "Choose a photo",
+    "forDate": "For {{date}}",
+    "close": "Close",
+    "closeHint": "Goes back to the camera without a photo",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "noDate": "No date",
+    "filling": "Filling",
+    "dayHeaderFilling": "{{date}}, the day you’re filling",
+    "photo": "Photo from {{date}} at {{time}}",
+    "photoNoDate": "Photo without a date",
+    "photoHint": "Adds this photo to your moment",
+    "limited": "Pickld sees only the photos you chose.",
+    "chooseMore": "Choose more",
+    "chooseMoreHint": "Opens Photos to share more photos with Pickld",
+    "empty": "No photos to show yet.",
+    "loadFailed": "Couldn’t open your photos. Try again.",
+    "photoFailed": "Couldn’t open that photo. Check your connection and try again."
   },
   "crop": {
     "title": "Crop photo",
