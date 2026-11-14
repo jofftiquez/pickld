@@ -77,7 +77,7 @@ test('a regular account sees access denied, not the queue, and can sign out', as
   assert.equal(new URL(page.url()).pathname, '/');
   await page.getByRole('heading', { name: 'Moderators only' }).waitFor();
   assert.ok((await page.textContent('body')).includes(email));
-  assert.equal(await page.getByRole('heading', { name: 'Review queue' }).count(), 0);
+  assert.equal(await page.getByRole('heading', { name: 'Overview' }).count(), 0);
   await page.getByRole('button', { name: 'Sign out' }).click();
   await page.waitForURL(`${base}/sign-in`);
   await page.goto(`${base}/`);
@@ -96,8 +96,13 @@ test('a role set in user_metadata (which users can edit) does not let them in', 
 test('a moderator gets the console', async () => {
   const email = await makeUser('moderator');
   const page = await signedIn(email);
+  // Home is the Overview (FR-MOD-06); the queue is one click away.
+  await page.getByRole('heading', { name: 'Overview' }).waitFor();
+  await page
+    .getByRole('navigation', { name: 'Console' })
+    .getByRole('link', { name: /^Queue/ })
+    .click();
   await page.getByRole('heading', { name: 'Review queue' }).waitFor();
-  await page.getByRole('navigation', { name: 'Console' }).waitFor();
   assert.equal(await page.getByRole('heading', { name: 'Moderators only' }).count(), 0);
 
   // Help (M3-28): the playbook and the same guidelines file pickld.me/guidelines serves.

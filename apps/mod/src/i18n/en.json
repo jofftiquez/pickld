@@ -22,9 +22,11 @@
   },
   "nav": {
     "label": "Console",
+    "overview": "Overview",
     "queue": "Queue",
     "reports": "Reports",
     "appeals": "Appeals",
+    "users": "Users",
     "audit": "Audit log",
     "help": "Help",
     "role": "{{name}} (moderator)",
@@ -179,9 +181,14 @@
     },
     "lifted": {
       "expired": "Suspension ran out",
-      "appeal_overturned": "Appeal overturned"
+      "appeal_overturned": "Appeal overturned",
+      "moderator": "Lifted early by a moderator"
     },
-    "strikes": "Strikes: {{count}}"
+    "strikes": "Strikes: {{count}}",
+    "until": "Until {{date}}",
+    "filtered": "Showing actions by or about account {{user}}",
+    "openUser": "Open their page",
+    "clearFilter": "Show everything"
   },
   "help": {
     "title": "Help",
@@ -189,5 +196,171 @@
     "playbook": "Moderator playbook",
     "guidelines": "Community Guidelines",
     "missing": "This document isn’t written yet."
+  },
+  "overview": {
+    "title": "Overview",
+    "subtitle": "Today in Manila · {{date}}",
+    "queue": {
+      "title": "Review queue",
+      "open": "Open the queue",
+      "waiting": "Waiting for review",
+      "escalated_one": "{{count}} escalated",
+      "escalated_other": "{{count}} escalated",
+      "oldest": "Oldest item",
+      "median": "Median wait",
+      "overTwoHours": "Waiting over 2 hours",
+      "late_one": "{{count}} item has waited over 2 hours.",
+      "late_other": "{{count}} items have waited over 2 hours."
+    },
+    "today": {
+      "title": "Today",
+      "reports": "Reports",
+      "appeals": "Appeals opened",
+      "appealsDecided_one": "{{count}} decided",
+      "appealsDecided_other": "{{count}} decided",
+      "removedAuto": "Removed by auto-check",
+      "removedByModerators": "Removed by moderators",
+      "kept": "Kept by moderators",
+      "suspensions": "Suspensions"
+    },
+    "decisions": {
+      "title": "Decisions today",
+      "empty": "No decisions yet today.",
+      "count_one": "{{count}} decision",
+      "count_other": "{{count}} decisions"
+    },
+    "people": {
+      "title": "People",
+      "signups": "Sign-ups today",
+      "posted": "Posted today",
+      "week": "{{count}} in the last 7 days",
+      "moments": "Moments added today",
+      "suspended": "Suspended now",
+      "childSafety": "{{count}} for child safety"
+    },
+    "uploads": {
+      "title": "Uploads",
+      "posthog": "Upload failure rate in PostHog",
+      "posthogMissing": "Upload failure rate: set POSTHOG_UPLOADS_URL to link PostHog",
+      "stuck": "Stuck uploads",
+      "stuckHint": "Uploading or checking for over 30 minutes"
+    }
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Find an account by username, name, exact email or id",
+    "label": "Accounts",
+    "search": {
+      "label": "Search accounts",
+      "placeholder": "@username, name, email or id",
+      "button": "Search"
+    },
+    "columns": {
+      "user": "User",
+      "status": "Status",
+      "joined": "Joined",
+      "moments": "Moments",
+      "strikes": "Strikes",
+      "reports": "Reports"
+    },
+    "rowLabel": "@{{user}}, {{status}}",
+    "empty": "No accounts match.",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended",
+      "deleted": "Deleted",
+      "childSafety": "Suspended (child safety)",
+      "suspendedUntil": "Suspended until {{date}}"
+    },
+    "back": "← All users",
+    "headline": "{{name}} · joined {{month}} · {{email}}",
+    "noEmail": "no email",
+    "summary": "Account summary",
+    "tiles": {
+      "moments": "Moments",
+      "momentsHint": "{{live}} live · {{removed}} removed",
+      "strikes": "Strikes (90 days)",
+      "reportsAgainst": "Reports against them",
+      "reportsFiled": "Reports they filed",
+      "week": "{{count}} in the last 7 days",
+      "readers": "Readers",
+      "authors": "{{count}} authors",
+      "jars": "Jars"
+    },
+    "strikes": {
+      "title": "Strikes",
+      "empty": "No removals in the last 90 days.",
+      "moment": "Moment",
+      "comment": "Comment",
+      "appeal": {
+        "open": "Appeal open",
+        "upheld": "Appeal upheld"
+      },
+      "source": {
+        "auto_check": "auto-check",
+        "report": "reported"
+      }
+    },
+    "moments": {
+      "title": "Moments",
+      "empty": "No moments to show. Only-me moments appear only if something flagged them.",
+      "hidden": "Hidden",
+      "visibility": {
+        "readers": "Readers",
+        "everyone": "Everyone",
+        "only_me": "Only me"
+      },
+      "status": {
+        "uploading": "Uploading",
+        "checking": "Checking",
+        "live": "Live",
+        "removed": "Removed"
+      }
+    },
+    "reports": {
+      "title": "Reports against them",
+      "empty": "Nobody has reported this account or its content.",
+      "line": "{{target}} · by @{{reporter}} · {{date}}"
+    },
+    "history": {
+      "title": "Moderation history",
+      "empty": "No moderation actions yet.",
+      "audit": "See in audit log"
+    },
+    "suspension": {
+      "title": "Suspension",
+      "none": "Not suspended.",
+      "kind": "Why",
+      "until": "Until",
+      "by": "By",
+      "note": "Note",
+      "noEnd": "No end date",
+      "kinds": {
+        "manual": "Suspended by a moderator",
+        "strikes": "Three strikes",
+        "child_safety": "Child safety"
+      },
+      "childSafetyHint": "Child-safety suspensions can't be lifted from the console."
+    },
+    "notePlaceholder": "What happened, for the audit log",
+    "suspend": {
+      "hint": "Suspend for 7 days. They can't post, comment or appear to others until it ends.",
+      "note": "Why are you suspending this account?",
+      "button": "Suspend for 7 days"
+    },
+    "lift": {
+      "hint": "Lift the suspension now.",
+      "note": "Why are you lifting it?",
+      "button": "Lift suspension"
+    },
+    "errors": {
+      "note": "Write a note of up to 500 characters.",
+      "not_found": "This account no longer exists.",
+      "own_account": "You can't do this to your own account.",
+      "not_active": "This account isn't active, so it can't be suspended.",
+      "not_suspended": "This account isn't suspended.",
+      "child_safety": "Child-safety suspensions can't be lifted here.",
+      "unknown": "That didn't work. Try again."
+    }
   }
 }

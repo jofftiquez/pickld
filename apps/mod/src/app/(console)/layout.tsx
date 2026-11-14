@@ -34,9 +34,11 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
   }
   const stats = await loadStats(await supabase());
   const items = [
-    { href: '/', label: t('nav.queue'), count: stats.all_open },
-    { href: '/?filter=report', label: t('nav.reports'), count: stats.report },
-    { href: '/?filter=appeal', label: t('nav.appeals'), count: stats.open_appeals },
+    { href: '/', label: t('nav.overview') },
+    { href: '/queue', label: t('nav.queue'), count: stats.all_open },
+    { href: '/queue?filter=report', label: t('nav.reports'), count: stats.report },
+    { href: '/queue?filter=appeal', label: t('nav.appeals'), count: stats.open_appeals },
+    { href: '/users', label: t('nav.users') },
     { href: '/audit', label: t('nav.audit') },
     { href: '/help', label: t('nav.help') },
   ];
