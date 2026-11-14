@@ -1,10 +1,11 @@
-// Avatar and cover photos for Edit profile (M3-15; FR-SOC-11): the largest centred square (avatar) or 5:2
-// band (cover), resized and re-encoded as JPEG. Like the moment pipeline, re-encoding writes no metadata
+// Avatar and cover photos for Edit profile (M3-15; FR-SOC-11): the square (avatar) or 5:2 band (cover) the
+// person framed on the Crop screen (D-79), or the largest centred one when there's no crop (onboarding's
+// About you), resized and re-encoded as JPEG. Like the moment pipeline, re-encoding writes no metadata
 // from the source, and each output is read back and checked so location never leaves the phone (rule 5).
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
-import type { CropRect } from './crop';
+import { cropRectRatio, scaleRect, type CropRect, type Size } from './crop';
 import { assertNoLocationMetadata } from './exif';
 
 export type ProfileImageKind = 'avatar' | 'cover';
@@ -29,11 +30,23 @@ export function centerCrop(width: number, height: number, aspect: number): CropR
   };
 }
 
-/** Writes the prepared JPEG to the cache directory; throws (and deletes it) if it still carries location. */
-export async function prepareProfileImage(uri: string, kind: ProfileImageKind): Promise<{ uri: string; size: number }> {
+/** The Crop screen's frame in the photo's pixels, measured on an image of `basis` size (the picker's size). */
+export type ProfileCrop = { rect: CropRect; basis: Size };
+
+/**
+ * Writes the prepared JPEG to the cache directory; throws (and deletes it) if it still carries location.
+ * `crop` is scaled to the size actually decoded and trimmed to the kind's exact shape.
+ */
+export async function prepareProfileImage(
+  uri: string,
+  kind: ProfileImageKind,
+  crop?: ProfileCrop,
+): Promise<{ uri: string; size: number }> {
   const target = PROFILE_IMAGE_SIZE[kind];
   const source = await ImageManipulator.manipulate(uri).renderAsync();
-  const rect = centerCrop(source.width, source.height, target.width / target.height);
+  const rect = crop
+    ? cropRectRatio(source.width, source.height, target, scaleRect(crop.rect, crop.basis, source))
+    : centerCrop(source.width, source.height, target.width / target.height);
   const context = ImageManipulator.manipulate(source).crop(rect).resize(target);
   const image = await context.renderAsync();
   try {

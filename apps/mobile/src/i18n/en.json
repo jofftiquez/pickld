@@ -705,6 +705,24 @@
       "done": "Save crop",
       "doneHint": "Saves the new crop of your {{slot}} photo",
       "saveFailed": "Couldn’t save the new crop. Check your connection and try again."
+    },
+    "avatar": {
+      "subtitle": "Profile photo",
+      "cancelHint": "Goes back without changing your profile photo",
+      "done": "Use photo",
+      "doneHint": "Uses this crop as your profile photo",
+      "aspect": "1:1",
+      "aspectLabel": "Crop locked to a square",
+      "note": "Your photo shows in a circle on your profile."
+    },
+    "cover": {
+      "subtitle": "Cover photo",
+      "cancelHint": "Goes back without changing your cover photo",
+      "done": "Use photo",
+      "doneHint": "Uses this crop as your cover photo",
+      "aspect": "5:2",
+      "aspectLabel": "Crop locked to 5:2",
+      "note": "Your cover runs across the top of your profile."
     }
   },
   "preview": {

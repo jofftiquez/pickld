@@ -14,6 +14,14 @@ export type CropRect = { originX: number; originY: number; width: number; height
  * off 3:4 from rounding is trimmed to 3:4.
  */
 export function cropRect34(imageWidth: number, imageHeight: number, area?: CropRect): CropRect {
+  return cropRectRatio(imageWidth, imageHeight, { width: 3, height: 4 }, area);
+}
+
+/**
+ * The largest rectangle of `ratio` (width : height, e.g. 1:1 for an avatar or 5:2 for a cover) centred in
+ * `area` (the whole image by default), clamped to the image and rounded to whole pixels (D-79).
+ */
+export function cropRectRatio(imageWidth: number, imageHeight: number, ratio: Size, area?: CropRect): CropRect {
   if (!(imageWidth >= 1 && imageHeight >= 1)) throw new RangeError('Image has no pixels');
   const a = area ?? { originX: 0, originY: 0, width: imageWidth, height: imageHeight };
   if (![a.originX, a.originY, a.width, a.height].every(Number.isFinite))
@@ -26,8 +34,8 @@ export function cropRect34(imageWidth: number, imageHeight: number, area?: CropR
   const areaWidth = right - left;
   const areaHeight = bottom - top;
 
-  const width = Math.min(Math.floor(areaWidth), Math.round((areaHeight * 3) / 4));
-  const height = Math.min(Math.floor(areaHeight), Math.round((width * 4) / 3));
+  const width = Math.min(Math.floor(areaWidth), Math.round((areaHeight * ratio.width) / ratio.height));
+  const height = Math.min(Math.floor(areaHeight), Math.round((width * ratio.height) / ratio.width));
   if (width < 1 || height < 1) throw new RangeError('Crop area is empty');
   return {
     originX: Math.min(Math.round(left + (areaWidth - width) / 2), Math.floor(imageWidth) - width),

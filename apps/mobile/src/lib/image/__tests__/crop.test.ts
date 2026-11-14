@@ -1,4 +1,4 @@
-import { cropRect34 } from '../crop';
+import { cropRect34, cropRectRatio } from '../crop';
 
 describe('cropRect34', () => {
   it.each([
@@ -35,5 +35,28 @@ describe('cropRect34', () => {
     [100, 100, { originX: Number.NaN, originY: 0, width: 10, height: 10 }],
   ])('refuses empty or invalid input (%p×%p)', (w, h, area) => {
     expect(() => cropRect34(w, h, area)).toThrow(RangeError);
+  });
+});
+
+describe('cropRectRatio (profile photos, D-79)', () => {
+  it('trims a nearly square frame to an exact square', () => {
+    expect(
+      cropRectRatio(3000, 4000, { width: 1, height: 1 }, { originX: 10, originY: 500, width: 2001, height: 2000 }),
+    ).toEqual({ originX: 11, originY: 500, width: 2000, height: 2000 });
+  });
+
+  it('takes the largest centred 5:2 band without a frame', () => {
+    expect(cropRectRatio(3000, 4000, { width: 5, height: 2 })).toEqual({
+      originX: 0,
+      originY: 1400,
+      width: 3000,
+      height: 1200,
+    });
+  });
+
+  it('keeps a band that runs past the edge inside the photo', () => {
+    expect(
+      cropRectRatio(3000, 4000, { width: 5, height: 2 }, { originX: 0, originY: 3500, width: 3000, height: 1200 }),
+    ).toEqual({ originX: 875, originY: 3500, width: 1250, height: 500 });
   });
 });
