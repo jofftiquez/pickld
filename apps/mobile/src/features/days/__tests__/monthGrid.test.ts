@@ -119,14 +119,23 @@ describe('monthNav', () => {
     expect(monthNav('2026-10', '2026-11', '2026-01').canGoNext).toBe(true);
   });
 
-  it('stops Previous at the month of the first jar', () => {
-    expect(monthNav('2026-09', '2026-11', '2026-09').canGoPrevious).toBe(false);
-    expect(monthNav('2026-10', '2026-11', '2026-09').canGoPrevious).toBe(true);
-    expect(monthNav('2026-01', '2026-11', '2025-12').canGoPrevious).toBe(true); // across a year
+  it('reaches 12 months back even when the first jar is this month', () => {
+    // The QA bug: a first jar on Nov 7 stopped Previous at November.
+    expect(monthNav('2026-11', '2026-11', '2026-11').canGoPrevious).toBe(true);
+    expect(monthNav('2025-12', '2026-11', '2026-11').canGoPrevious).toBe(true);
+    expect(monthNav('2025-11', '2026-11', '2026-11').canGoPrevious).toBe(false);
   });
 
-  it('allows neither way when there is no jar yet and we are on the current month', () => {
-    expect(monthNav('2026-11', '2026-11', null)).toEqual({ canGoPrevious: false, canGoNext: false });
+  it('goes back to an older first jar beyond 12 months', () => {
+    expect(monthNav('2025-11', '2026-11', '2025-03').canGoPrevious).toBe(true);
+    expect(monthNav('2025-04', '2026-11', '2025-03').canGoPrevious).toBe(true);
+    expect(monthNav('2025-03', '2026-11', '2025-03').canGoPrevious).toBe(false);
+  });
+
+  it('reaches 12 months back when there is no jar yet', () => {
+    expect(monthNav('2026-11', '2026-11', null)).toEqual({ canGoPrevious: true, canGoNext: false });
+    expect(monthNav('2026-01', '2026-02', null).canGoPrevious).toBe(true); // across a year
+    expect(monthNav('2025-02', '2026-02', null).canGoPrevious).toBe(false);
   });
 });
 

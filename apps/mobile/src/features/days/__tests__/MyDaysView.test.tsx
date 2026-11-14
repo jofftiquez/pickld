@@ -60,10 +60,10 @@ describe('MyDaysView', () => {
     expect(previous.props.accessibilityState).toMatchObject({ disabled: false });
   });
 
-  it('enables Next month on a past month and Previous stops at the first-jar month', async () => {
+  it('enables Next month on a past month and Previous stops 12 months back', async () => {
     const { onNext, onPrevious } = await renderMyDays({
-      grid: buildMonthGrid({ month: '2026-09', today: TODAY }),
-      nav: monthNav('2026-09', '2026-11', '2026-09'),
+      grid: buildMonthGrid({ month: '2025-11', today: TODAY }),
+      nav: monthNav('2025-11', '2026-11', '2026-09'),
     });
     const next = screen.getByRole('button', { name: 'Next month' });
     expect(next.props.accessibilityState).toMatchObject({ disabled: false });

@@ -44,6 +44,8 @@ export default function MyDaysScreen() {
       if (userId === null) return;
       void queryClient.invalidateQueries({ queryKey: ['month', userId] });
       void queryClient.invalidateQueries({ queryKey: ['day', userId] });
+      // A day filled before the first jar moves the Previous bound back.
+      void queryClient.invalidateQueries({ queryKey: ['firstJarMonth', userId] });
     }, [queryClient, userId]),
   );
 
