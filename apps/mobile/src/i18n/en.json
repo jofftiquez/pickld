@@ -1385,15 +1385,15 @@
       "sideBySide": "Side by side",
       "stacked": "Stacked",
       "oneLargeTwo": "One large and two small",
-      "threeStacked": "Three stacked",
+      "twoAndOne": "Two and one",
       "threeRow": "Three in a row",
       "grid2x2": "2 by 2 grid",
       "oneLargeThree": "One large and three small",
       "grid2x3": "2 by 3 grid",
       "oneLargeStrip": "One large and a strip below",
-      "grid2x4": "2 by 4 grid",
-      "grid4x2": "4 by 2 grid",
-      "filmStrip": "Film strip"
+      "grid3x3": "3 by 3 grid",
+      "oneLargeGrid": "One large and a grid below",
+      "grid2x4": "2 by 4 grid"
     },
     "background": {
       "label": "Background",
@@ -1404,6 +1404,7 @@
       "print": "Print"
     },
     "subtitle": "{{date}} · {{count}} of {{max}}",
+    "subtitleMoment": "{{slot}} · {{date}}",
     "caption": "“{{caption}}”",
     "logo": "Pickld",
     "includeCaptions": "Include captions",
