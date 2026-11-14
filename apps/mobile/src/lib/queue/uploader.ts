@@ -9,7 +9,7 @@ import { conflict, fail, isDue, start, succeed, waitForNetwork } from './machine
 import { getItem, isHeldForEditing, listQueue, removeItem, saveStatus, saveUploadRefs, type QueueItem } from './store';
 
 // Upload worker (M2-04; NFR-OFF-01, NFR-OFF-02, FR-JAR-03; AGENTS "Upload pipeline", rules 3, 4, 6).
-// One queued moment: ensure_jar → fn:upload-url → PUT photo and thumbnail → insert the moment as
+// One queued moment: ensure_jar → fn:upload-url → PUT photo, medium copy and thumbnail → insert the moment as
 // `checking` → call fn:moderate → mark uploaded and delete the local files. fn:moderate (M2-19) is
 // the only thing that sets `live`. The server stamps added_at and is_backfilled; the app never sends them.
 
@@ -25,7 +25,9 @@ export const signedUploadSchema = z.object({
 export type SignedUpload = z.infer<typeof signedUploadSchema>;
 
 const uploadUrlResponseSchema = z.object({
-  data: z.object({ files: z.object({ photo: signedUploadSchema, thumb: signedUploadSchema }) }),
+  data: z.object({
+    files: z.object({ photo: signedUploadSchema, medium: signedUploadSchema.optional(), thumb: signedUploadSchema }),
+  }),
 });
 
 /** PUTs a local file to a signed URL; rejects unless the bucket answers 2xx. */
@@ -41,6 +43,8 @@ export interface UploaderDeps {
   prepare?: (item: QueueItem) => Promise<QueueItem>;
   /** Keeps an uploaded file in the phone's photo cache under its object key (rememberPhoto by default). */
   remember?: (localUri: string, key: string) => Promise<void>;
+  /** Writes the 1080 × 1440 feed copy of the full photo, or null when it can't (prepareMedium by default). */
+  makeMedium?: (fullUri: string) => Promise<string | null>;
 }
 
 // Loaded on first use, so this module doesn't pull the native image manipulator in until a raw item needs it.
@@ -48,6 +52,18 @@ const prepareRaw = (item: QueueItem) => import('./prepare').then((m) => m.prepar
 // Best effort: a photo that isn't cached only downloads when it is first shown.
 const rememberUploaded = (localUri: string, key: string) =>
   import('../image/photoCache').then((m) => m.rememberPhoto(localUri, key)).catch(() => undefined);
+// Best effort too (NFR-PERF-02): without a medium copy the Worker serves the full photo under the medium link.
+const makeMediumCopy = (fullUri: string) =>
+  import('../image/pipeline').then((m) => m.prepareMedium(fullUri).then((out) => out.uri)).catch(() => null);
+
+function deleteQuietly(uri: string): void {
+  try {
+    const file = new File(uri);
+    if (file.exists) file.delete();
+  } catch {
+    // A leftover cache file wastes space but loses nothing.
+  }
+}
 
 export type UploadOutcome =
   | { kind: 'uploaded'; itemId: number; momentId: string }
@@ -161,9 +177,11 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
     now = Date.now,
     prepare = prepareRaw,
     remember = rememberUploaded,
+    makeMedium = makeMediumCopy,
   } = deps;
   const uploading = start(item, now());
   await saveStatus(uploading);
+  let mediumUri: string | null = null;
   try {
     // A raw camera photo (queued at the shutter) is prepared first: location never leaves the phone (rule 5).
     const ready = item.prepared ? item : await prepare(item);
@@ -178,11 +196,15 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
 
     const photo = new File(ready.photoUri);
     const thumb = new File(ready.thumbUri);
+    // Made from the queue's full photo for each attempt and deleted after it, so the queue keeps two files.
+    mediumUri = await makeMedium(ready.photoUri);
+    const medium = mediumUri === null ? null : new File(mediumUri);
     const { data: body, error: urlError } = await client.functions.invoke<unknown>('upload-url', {
       body: {
         kind: 'moment',
         jarId: jar.id,
         photo: { contentType: 'image/webp', size: photo.size },
+        ...(medium ? { medium: { contentType: 'image/webp', size: medium.size } } : {}),
         thumb: { contentType: 'image/webp', size: thumb.size },
       },
     });
@@ -190,9 +212,14 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
     const { files } = uploadUrlResponseSchema.parse(body).data;
 
     await putFile(photo.uri, files.photo);
+    if (medium && files.medium) await putFile(medium.uri, files.medium);
     await putFile(thumb.uri, files.thumb);
-    // The phone already has both files: showing the new moment never downloads them.
-    await Promise.all([remember(photo.uri, files.photo.key), remember(thumb.uri, files.thumb.key)]);
+    // The phone already has these files: showing the new moment never downloads them.
+    await Promise.all([
+      remember(photo.uri, files.photo.key),
+      medium && files.medium ? remember(medium.uri, files.medium.key) : undefined,
+      remember(thumb.uri, files.thumb.key),
+    ]);
 
     const inserted = await insertMoment(client, item, {
       id: momentId,
@@ -223,6 +250,8 @@ export async function uploadItem(item: QueueItem, deps: UploaderDeps): Promise<U
     return next.state === 'failed'
       ? { kind: 'failed', itemId: item.id, error: next.lastError ?? '' }
       : { kind: 'retrying', itemId: item.id, error: next.lastError ?? '', nextAttemptAt: next.nextAttemptAt ?? 0 };
+  } finally {
+    if (mediumUri !== null) deleteQuietly(mediumUri);
   }
 }
 

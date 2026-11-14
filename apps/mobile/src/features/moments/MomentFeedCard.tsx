@@ -130,7 +130,7 @@ export function MomentFeedCard({
       >
         <View style={[styles.photo, { width: photoWidth }]}>
           <MomentView
-            uri={moment.fullUrl ?? moment.thumbUrl}
+            uri={moment.mediumUrl ?? moment.fullUrl ?? moment.thumbUrl}
             edits={parseEdits(moment.edits)}
             width={photoWidth}
             stamp={{ capturedAt: at, tz: moment.jar_tz }}

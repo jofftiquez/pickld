@@ -33,7 +33,12 @@ export const momentsFeedRow = z.object({
 export type MomentsFeedRow = z.infer<typeof momentsFeedRow>;
 
 /** A card: the row plus signed photo URLs from `fn:photo-urls` (null when signing failed). */
-export type FeedMoment = MomentsFeedRow & { fullUrl: string | null; thumbUrl: string | null };
+export type FeedMoment = MomentsFeedRow & {
+  fullUrl: string | null;
+  /** The 1080 × 1440 copy the card shows (NFR-PERF-02); absent in a timeline cached before it existed. */
+  mediumUrl?: string | null;
+  thumbUrl: string | null;
+};
 
 export type MomentsCursor = { at: string; id: string };
 export type MomentsPage = { moments: FeedMoment[]; nextCursor: MomentsCursor | null };

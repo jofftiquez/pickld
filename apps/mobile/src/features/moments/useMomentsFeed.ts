@@ -22,11 +22,18 @@ import {
 
 const photoUrlsResponse = z.object({
   data: z.object({
-    moments: z.array(z.object({ id: z.string(), full: z.string().nullable(), thumb: z.string().nullable() })),
+    moments: z.array(
+      z.object({
+        id: z.string(),
+        full: z.string().nullable(),
+        medium: z.string().nullable().optional(),
+        thumb: z.string().nullable(),
+      }),
+    ),
   }),
 });
 
-type PhotoUrls = { full: string | null; thumb: string | null };
+type PhotoUrls = { full: string | null; medium: string | null; thumb: string | null };
 
 /** Signed URLs for a page's photos; a failure leaves the photos on their placeholder. */
 async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
@@ -34,7 +41,9 @@ async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
-  return new Map(parsed.data.data.moments.map((m) => [m.id, { full: m.full, thumb: m.thumb }]));
+  return new Map(
+    parsed.data.data.moments.map((m) => [m.id, { full: m.full, medium: m.medium ?? null, thumb: m.thumb }]),
+  );
 }
 
 /** One page of moments from the timeline, or from Discover (`discover_moments_page`, 0070), which returns the same rows. */
@@ -50,6 +59,7 @@ export async function fetchMomentsPage(
     moments: rows.map((r) => ({
       ...r,
       fullUrl: urls.get(r.moment_id)?.full ?? null,
+      mediumUrl: urls.get(r.moment_id)?.medium ?? null,
       thumbUrl: urls.get(r.moment_id)?.thumb ?? null,
     })),
     nextCursor: nextMomentsCursor(rows),

@@ -168,6 +168,33 @@ describe('uploaded moments', () => {
     expect(calls).toEqual(['invoke:upload-url', 'put', 'put', 'update:moments', `eq:id=${MOMENT}`, 'invoke:moderate']);
   });
 
+  it('Re-crop uploads the medium feed copy with the photo when there is one (NFR-PERF-02)', async () => {
+    const signed = (key: string) => ({ key, url: `http://127.0.0.1:55421/${key}`, method: 'PUT', headers: {} });
+    const { client, bodies } = fakeClient({
+      invoke: {
+        'upload-url': {
+          data: {
+            data: { files: { photo: signed('u/p.webp'), medium: signed('u/m.webp'), thumb: signed('u/t.webp') } },
+          },
+          error: null,
+        },
+      },
+    });
+    const puts: string[] = [];
+    await saveRecrop(
+      client,
+      server,
+      { photoUri: 'file:///c/full.webp', thumbUri: 'file:///c/thumb.webp', mediumUri: 'file:///c/medium.webp' },
+      { putFile: async (uri, target) => void puts.push(`${uri}->${target.key}`), sizeOf: () => 5 },
+    );
+    expect(bodies['upload-url']).toMatchObject({ medium: { contentType: 'image/webp', size: 5 } });
+    expect(puts).toEqual([
+      'file:///c/full.webp->u/p.webp',
+      'file:///c/medium.webp->u/m.webp',
+      'file:///c/thumb.webp->u/t.webp',
+    ]);
+  });
+
   it('Re-crop leaves the moment alone when the upload fails', async () => {
     const { client, calls } = fakeClient({
       invoke: {

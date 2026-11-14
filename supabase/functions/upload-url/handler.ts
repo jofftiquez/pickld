@@ -2,9 +2,10 @@
 // photo and thumbnail, or for an avatar or cover. The app uploads straight to the bucket, then writes
 // the returned keys into moments / profiles. Each call gets new keys, so nothing is overwritten.
 //
-// POST { kind: 'moment', jarId, photo: { contentType, size }, thumb: { contentType, size } }
+// POST { kind: 'moment', jarId, photo: { contentType, size }, medium?: { contentType, size }, thumb: { contentType, size } }
 // POST { kind: 'avatar' | 'cover', file: { contentType, size } }
-//   → { data: { kind, expiresAt, files: { photo, thumb } | { file } } }   each: { key, url, method, headers }
+//   → { data: { kind, expiresAt, files: { photo, medium?, thumb } | { file } } }   each: { key, url, method, headers }
+// medium (NFR-PERF-02) is the 1080 × 1440 feed copy; it is optional, so older app versions keep uploading without it.
 //   → { error: { code, message } }
 import { type SupabaseClient, z } from '../_shared/deps.ts';
 import { bearerToken, fail, ok, readJson } from '../_shared/http.ts';
@@ -17,6 +18,7 @@ export const UPLOAD_URL_TTL_SECONDS = 5 * 60;
 /** Bytes. Photos are 3:4 WebP (or JPEG) files resized on the device (expo-image-manipulator), location EXIF stripped. */
 export const SIZE_LIMITS = {
   photo: 5 * 1024 * 1024,
+  medium: 2 * 1024 * 1024,
   thumb: 512 * 1024,
   avatar: 2 * 1024 * 1024,
   cover: 5 * 1024 * 1024,
@@ -33,6 +35,7 @@ export const UploadUrlInput = z.discriminatedUnion('kind', [
     kind: z.literal('moment'),
     jarId: z.uuid(),
     photo: file(SIZE_LIMITS.photo),
+    medium: file(SIZE_LIMITS.medium).optional(),
     thumb: file(SIZE_LIMITS.thumb),
   }),
   z.strictObject({ kind: z.literal('avatar'), file: file(SIZE_LIMITS.avatar) }),
@@ -68,10 +71,15 @@ export async function handleUploadUrl(req: Request, deps: UploadUrlDeps): Promis
   if (body === null) return fail(400, 'invalid_json', 'The request body must be JSON.');
   const parsed = UploadUrlInput.safeParse(body);
   if (!parsed.success) {
-    return fail(400, 'invalid_input', 'The upload request is not valid.', parsed.error.issues.map((i) => ({
-      path: i.path.join('.'),
-      message: i.message,
-    })));
+    return fail(
+      400,
+      'invalid_input',
+      'The upload request is not valid.',
+      parsed.error.issues.map((i) => ({
+        path: i.path.join('.'),
+        message: i.message,
+      })),
+    );
   }
   const input = parsed.data;
 
@@ -99,8 +107,12 @@ export async function handleUploadUrl(req: Request, deps: UploadUrlDeps): Promis
 
   if (input.kind === 'moment') {
     const keys = newMomentKeys(userId);
-    const [photo, thumb] = await Promise.all([sign(keys.photo, input.photo), sign(keys.thumb, input.thumb)]);
-    return ok({ kind: input.kind, expiresAt, files: { photo, thumb } });
+    const [photo, thumb, medium] = await Promise.all([
+      sign(keys.photo, input.photo),
+      sign(keys.thumb, input.thumb),
+      input.medium ? sign(keys.medium, input.medium) : null,
+    ]);
+    return ok({ kind: input.kind, expiresAt, files: medium ? { photo, medium, thumb } : { photo, thumb } });
   }
   const upload = await sign(newProfileImageKey(input.kind, userId), input.file);
   return ok({ kind: input.kind, expiresAt, files: { file: upload } });

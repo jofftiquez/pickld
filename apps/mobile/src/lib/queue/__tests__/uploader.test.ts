@@ -40,7 +40,13 @@ const queuedFiles = () => [...files.keys()].filter((uri) => uri.startsWith('file
 
 let backend: ReturnType<typeof fakeBackend>;
 let clock: number;
-const deps = () => ({ client: backend.client, putFile: backend.putFile, newId: () => MOMENT_ID, now: () => clock });
+const deps = () => ({
+  client: backend.client,
+  putFile: backend.putFile,
+  newId: () => MOMENT_ID,
+  now: () => clock,
+  makeMedium: async () => null,
+});
 
 beforeEach(() => {
   resetFakes();
@@ -94,6 +100,52 @@ describe('uploadItem', () => {
     expect(backend.objects.get(backend.moments[0]?.photo_path as string)).toBe('jpeg:IMG_0001:full-resolution-bytes');
     expect(queuedFiles()).toEqual([]);
     expect(await listQueue(USER)).toEqual([]);
+  });
+
+  it('uploads the medium feed copy with the moment, caches it, and deletes it after (NFR-PERF-02)', async () => {
+    const item = await queueMoment();
+    log.length = 0;
+    const remembered: string[] = [];
+    const makeMedium = jest.fn(async (fullUri: string) => {
+      log.push('medium');
+      files.set('file:///cache/medium.webp', `medium-of:${files.get(fullUri)}`);
+      return 'file:///cache/medium.webp';
+    });
+    const remember = async (_uri: string, key: string) => {
+      remembered.push(key.split('/').pop() ?? '');
+    };
+
+    expect(await uploadItem(item, { ...deps(), makeMedium, remember })).toMatchObject({ kind: 'uploaded' });
+
+    expect(makeMedium).toHaveBeenCalledWith(item.photoUri);
+    expect(log.slice(0, 6)).toEqual([
+      'rpc:ensure_jar',
+      'medium',
+      'fn:upload-url',
+      'put:full.jpg',
+      'put:medium.jpg',
+      'put:thumb.jpg',
+    ]);
+    expect(backend.uploadUrlBodies[0]).toMatchObject({
+      medium: { contentType: 'image/webp', size: Buffer.byteLength('medium-of:jpeg:IMG_0001:full-resolution-bytes') },
+    });
+    const photoKey = backend.moments[0]?.photo_path as string;
+    expect(backend.objects.get(photoKey.replace('full.jpg', 'medium.jpg'))).toBe(
+      'medium-of:jpeg:IMG_0001:full-resolution-bytes',
+    );
+    expect(remembered.sort()).toEqual(['full.jpg', 'medium.jpg', 'thumb.jpg']);
+    expect(files.has('file:///cache/medium.webp')).toBe(false);
+  });
+
+  it('a failed attempt deletes its medium copy too, and the next attempt makes a new one', async () => {
+    const item = await queueMoment();
+    backend.failNext('put', networkError());
+    const makeMedium = async () => {
+      files.set('file:///cache/medium.webp', 'medium');
+      return 'file:///cache/medium.webp';
+    };
+    expect(await uploadItem(item, { ...deps(), makeMedium })).toMatchObject({ kind: 'retrying' });
+    expect(files.has('file:///cache/medium.webp')).toBe(false);
   });
 
   it('prepares a raw camera photo before any network call, then uploads the prepared files', async () => {

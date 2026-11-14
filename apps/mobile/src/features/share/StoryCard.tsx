@@ -109,7 +109,7 @@ export function StoryCard(props: StoryCardProps) {
       {shown.map((item, i) => {
         const cell = layout.cells[i];
         if (!cell) return null;
-        const uri = cell.width >= FULL_PHOTO_WIDTH ? (item.fullUrl ?? item.thumbUrl) : item.thumbUrl;
+        const uri = cell.width >= FULL_PHOTO_WIDTH ? (item.mediumUrl ?? item.fullUrl ?? item.thumbUrl) : item.thumbUrl;
         return (
           <View
             key={item.id}
