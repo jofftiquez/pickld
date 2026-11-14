@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { parseEdits } from '@/features/edit/edits';
 import { buildThread, type ThreadComment } from '@/features/comments/commentsModel';
 import { CommentsView } from '@/features/comments/CommentsView';
 import { useCommentMoment } from '@/features/comments/useCommentMoment';
@@ -16,7 +17,9 @@ import { useBlockFlow } from '@/features/safety/useBlockFlow';
 
 // /comments/[jarId] (M3-11; FR-SOC-06): the jar's thread, from the comment pill on the Jar page.
 // /comments/[jarId]?momentId=… (0068; D-51): that moment's own thread, from Moment detail or a
-// notification, under a small header with the moment. The jar thread reads the jar page query (title,
+// notification, opening with the whole moment drawn as on Moment detail, then its author and caption,
+// scrolling with the comments (D-84). Only a live moment the viewer may see comes back, so a checking,
+// removed or hidden moment stays "not available" and no photo shows. The jar thread reads the jar page query (title,
 // owner, count); a moment thread reads only the moment, which a reader may see before its jar is
 // published (D-48). RLS decides what each returns.
 export default function CommentsScreen() {
@@ -55,7 +58,18 @@ export default function CommentsScreen() {
               : null
         }
         count={momentId ? (m?.comment_count ?? null) : (jar?.jar.comment_count ?? null)}
-        moment={m && slot ? { thumbUrl: m.thumbUrl, slot, caption: m.caption?.trim() || null } : null}
+        moment={
+          m && slot
+            ? {
+                uri: m.fullUrl ?? m.thumbUrl,
+                edits: parseEdits(m.edits),
+                stamp: m.tz ? { capturedAt: new Date(m.captured_at ?? m.added_at), tz: m.tz } : null,
+                slot,
+                authorName: m.author?.display_name ?? t('comments.someone'),
+                caption: m.caption?.trim() || null,
+              }
+            : null
+        }
         thread={
           ownerId !== undefined && comments.comments && viewerId !== null
             ? buildThread(comments.comments, viewerId, ownerId)
