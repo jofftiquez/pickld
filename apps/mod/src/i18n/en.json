@@ -31,7 +31,8 @@
     "help": "Help",
     "role": "{{name}} (moderator)",
     "signOut": "Sign out",
-    "count": "{{count}} open"
+    "count": "{{count}} open",
+    "waitlist": "Waitlist"
   },
   "queue": {
     "title": "Review queue",
@@ -171,7 +172,9 @@
       "remove_warn": "Removed and warned",
       "escalate": "Escalated",
       "suspend": "Suspended",
-      "lift_suspension": "Lifted suspension"
+      "lift_suspension": "Lifted suspension",
+      "waitlist_export": "Downloaded waitlist",
+      "waitlist_remove": "Removed waitlist email"
     },
     "guideline": "Guideline: {{guideline}}",
     "note": "Note: {{note}}",
@@ -188,7 +191,9 @@
     "until": "Until {{date}}",
     "filtered": "Showing actions by or about account {{user}}",
     "openUser": "Open their page",
-    "clearFilter": "Show everything"
+    "clearFilter": "Show everything",
+    "exported": "{{count}} emails",
+    "waitlistSource": "joined from {{source}}"
   },
   "help": {
     "title": "Help",
@@ -361,6 +366,68 @@
       "not_suspended": "This account isn't suspended.",
       "child_safety": "Child-safety suspensions can't be lifted here.",
       "unknown": "That didn't work. Try again."
+    }
+  },
+  "chart": {
+    "bar": "{{date}}: {{count}}",
+    "peak": "Most in a day: {{count}}"
+  },
+  "waitlist": {
+    "title": "Waitlist",
+    "subtitle": "People waiting to join from pickld.me. Admitting people is not done here.",
+    "export": "Download CSV",
+    "totals": {
+      "title": "Totals",
+      "total": "On the waitlist",
+      "week": "{{count}} in the last 7 days",
+      "today": "Joined today",
+      "waiting": "Waiting",
+      "emailOnly": "{{count}} email only (first form)",
+      "admitted": "Admitted, not signed up",
+      "members": "Signed up"
+    },
+    "perDay": "Joins per day, last 30 days",
+    "sources": {
+      "title": "Where they joined",
+      "empty": "Nobody yet."
+    },
+    "list": {
+      "title": "Emails",
+      "search": "Search emails",
+      "placeholder": "Part of an email",
+      "state": "Show",
+      "button": "Search",
+      "empty": "No emails match.",
+      "count": "{{count}} matching · page {{page}} of {{pages}}",
+      "newer": "← Newer",
+      "older": "Older →"
+    },
+    "states": {
+      "all": "Everyone",
+      "email_only": "Email only",
+      "waiting": "Waiting",
+      "admitted": "Admitted",
+      "member": "Signed up"
+    },
+    "columns": {
+      "email": "Email",
+      "source": "Source",
+      "joined": "Joined",
+      "state": "State"
+    },
+    "remove": {
+      "title": "Remove an email",
+      "body": "Use this when someone asks to be taken off the waitlist. The audit log records your note but not the email. An account they made on pickld.me stays.",
+      "email": "Email",
+      "note": "Note (why, and how they asked)",
+      "notePlaceholder": "Asked by email on Nov 14",
+      "button": "Remove from waitlist",
+      "results": {
+        "removed": "Removed.",
+        "not_found": "That email is not on the waitlist.",
+        "note": "Enter the email and a note.",
+        "unknown": "Something went wrong. Try again."
+      }
     }
   }
 }

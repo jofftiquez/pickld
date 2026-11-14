@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 
 import { colors, radius } from '@/theme/tokens';
 
+import { Section } from '~/components/Section';
 import { Tile } from '~/components/Tile';
 import { t } from '~/i18n/t';
 import { env } from '~/lib/env';
@@ -11,27 +11,6 @@ import { waitLabel } from '~/lib/queue';
 import { supabase } from '~/lib/supabase';
 
 const TWO_HOURS = 2 * 60 * 60;
-
-function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
-  return (
-    <section aria-label={title} style={{ display: 'grid', gap: 10 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{title}</h2>
-        {action}
-      </header>
-      <dl
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-          gap: 10,
-          margin: 0,
-        }}
-      >
-        {children}
-      </dl>
-    </section>
-  );
-}
 
 const link = { color: colors.brandLink, fontWeight: 700, fontSize: 14 } as const;
 
