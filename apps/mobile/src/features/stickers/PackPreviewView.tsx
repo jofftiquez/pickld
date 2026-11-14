@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
@@ -11,6 +10,7 @@ import { StickerImage } from '@/features/edit/stickers/StickerImage';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, sizes, space, stickerShop, stickerTool } from '@/theme/tokens';
 
+import { COVER_LAYOUTS, PackArt } from './PackArt';
 import type { ShopPack } from './shop';
 
 /** How many stickers the cloud shows before "+N more" (PackPreview). */
@@ -22,8 +22,6 @@ export type PackPreviewViewProps = {
   failed?: boolean;
   /** The store's price for the pack, or undefined when the store has none (nothing to buy). */
   price?: string;
-  /** The user's latest photo to preview stickers on; null shows the pack tint only. */
-  photoUrl?: string | null;
   buying?: boolean;
   buyFailed?: boolean;
   insets: EdgeInsets;
@@ -34,14 +32,14 @@ export type PackPreviewViewProps = {
 };
 
 /**
- * Pack preview (PackPreview; FR-STK-07): two of the pack's stickers on the user's own photo, its story, its
- * stickers and \"Get <pack> · <price>\". Locked tabs in the Stickers tool and every pack in the shop open it.
+ * Pack preview (PackPreview; FR-STK-07): a cover of the pack's stickers, large, on its color (no photo, D-81),
+ * its story, its stickers and \"Get <pack> · <price>\". Locked tabs in the Stickers tool and every pack in the
+ * shop open it.
  */
 export function PackPreviewView({
   pack,
   failed = false,
   price,
-  photoUrl = null,
   buying = false,
   buyFailed = false,
   insets,
@@ -78,30 +76,8 @@ export function PackPreviewView({
             ) : null}
           </View>
           {ready ? (
-            <View style={styles.stage} accessible={false} importantForAccessibility="no-hide-descendants">
-              <View style={styles.photoCard}>
-                {photoUrl ? (
-                  <Image
-                    source={{ uri: photoUrl }}
-                    style={styles.photo}
-                    contentFit="cover"
-                    testID="pack-preview-photo"
-                  />
-                ) : (
-                  <View style={[styles.photo, { backgroundColor: colors.surface }]} />
-                )}
-              </View>
-              {pack.stickers[1] ? <Sample sticker={pack.stickers[1]} style={styles.sampleTop} rotate={-6} /> : null}
-              {(pack.stickers[4] ?? pack.stickers[0]) ? (
-                <Sample sticker={(pack.stickers[4] ?? pack.stickers[0])!} style={styles.sampleBottom} rotate={3} />
-              ) : null}
-            </View>
-          ) : null}
-          {ready && photoUrl ? (
-            <View style={styles.previewPill}>
-              <Text style={[textStyle('label', '700'), { color: stickerTool.shopBannerLink }]}>
-                {t('packPreview.onYourPhoto')}
-              </Text>
+            <View style={styles.stage}>
+              <PackArt samples={pack.stickers} layouts={COVER_LAYOUTS} testID="pack-preview-cover" />
             </View>
           ) : null}
         </View>
@@ -182,20 +158,10 @@ export function PackPreviewView({
   );
 }
 
-function Sample({
-  sticker,
-  height = stickerShop.heroSampleHeight,
-  rotate = 0,
-  style,
-}: {
-  sticker: { asset: string };
-  height?: number;
-  rotate?: number;
-  style?: object;
-}) {
+function Sample({ sticker, height }: { sticker: { asset: string }; height: number }) {
   const art = stickerArtFor(sticker.asset);
   return (
-    <View style={[style, rotate ? { transform: [{ rotate: `${rotate}deg` }] } : null]}>
+    <View>
       <StickerImage asset={sticker.asset} width={art ? (height * art.width) / art.height : height} height={height} />
     </View>
   );
@@ -207,33 +173,11 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: stickerShop.heroRadius,
     borderBottomRightRadius: stickerShop.heroRadius,
     paddingHorizontal: space.xl,
-    paddingBottom: 0,
+    paddingBottom: space.md,
     overflow: 'hidden',
   },
   header: { flexDirection: 'row', justifyContent: 'space-between' },
-  stage: { height: stickerShop.heroStageHeight, alignItems: 'center', justifyContent: 'flex-end' },
-  photoCard: {
-    width: stickerShop.heroPhotoWidth,
-    aspectRatio: 3 / 4,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 5,
-    marginBottom: -16,
-    transform: [{ rotate: '-3deg' }],
-  },
-  photo: { flex: 1, borderRadius: 15 },
-  sampleTop: { position: 'absolute', top: 26, left: 44 },
-  sampleBottom: { position: 'absolute', bottom: 30, right: 44 },
-  previewPill: {
-    position: 'absolute',
-    left: space.lg,
-    bottom: space.lg,
-    backgroundColor: colors.surface,
-    opacity: 0.92,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
+  stage: { height: stickerShop.heroStageHeight },
   content: { paddingHorizontal: space.xl, paddingTop: space.xl, gap: space.md },
   titleRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: space.md },
   title: { color: colors.ink, flexShrink: 1 },
