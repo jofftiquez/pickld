@@ -59,6 +59,26 @@ describe('analytics allowlist', () => {
     expect(sink.events).toEqual([]);
   });
 
+  it('sends invite funnel outcomes but never a code, link id or name', () => {
+    const sink = fakeSink();
+    setAnalyticsSink(sink);
+    expect(track('invite_redeemed', { kind: 'personal', outcome: 'joined' })).toBe(true);
+    expect(track('invite_redeemed', { outcome: 'unavailable' })).toBe(true);
+    expect(track('invite_page_opened', { as: 'signed_out' })).toBe(true);
+    // @ts-expect-error the code itself is not an allowed property
+    expect(track('invite_redeemed', { kind: 'personal', outcome: 'joined', code: 'K7QMXP' })).toBe(false);
+    // @ts-expect-error nor is the inviter
+    expect(track('invite_shared', { what: 'code', inviter: 'mia' })).toBe(false);
+    expect(sanitizeEvent('invite_page_opened', { as: 'signed_out', token: 'K7QMXPA2BC' })).toBeNull();
+    expect(sanitizeEvent('invite_scan', { outcome: 'https://pickld.me/i/K7QMXP' })).toBeNull();
+    expect(sanitizeEvent('waiting_admitted', { reason: 'code', username: 'mia' })).toBeNull();
+    expect(sink.events).toEqual([
+      ['invite_redeemed', { kind: 'personal', outcome: 'joined' }],
+      ['invite_redeemed', { outcome: 'unavailable' }],
+      ['invite_page_opened', { as: 'signed_out' }],
+    ]);
+  });
+
   it('drops unknown events and invalid values from untyped callers', () => {
     expect(sanitizeEvent('photo_viewed', {})).toBeNull();
     expect(sanitizeEvent('toString', {})).toBeNull();

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { phoneTimeZone } from '@/features/jar/useToday';
 import { isYoungerThan, ymd } from '@/features/onboarding/aboutModel';
+import { track } from '@/lib/analytics';
 import { CODE_LENGTH } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
 import { localDateIn } from '@/lib/jars';
@@ -50,14 +51,18 @@ export function WaitingScreen() {
     },
   });
 
-  const letIn = useCallback(() => {
-    queryClient.setQueryData(['profileStatus', userId], 'active');
-    resetTo(router, '/');
-  }, [queryClient, router, userId]);
+  const letIn = useCallback(
+    (reason: 'code' | 'let_in') => {
+      track('waiting_admitted', { reason });
+      queryClient.setQueryData(['profileStatus', userId], 'active');
+      resetTo(router, '/');
+    },
+    [queryClient, router, userId],
+  );
 
   // Let in some other way meanwhile (early access ended, or a moderator).
   useEffect(() => {
-    if (line.data && line.data.position === null) letIn();
+    if (line.data && line.data.position === null) letIn('let_in');
   }, [line.data, letIn]);
 
   const birthday = line.data?.birthday;
@@ -71,7 +76,7 @@ export function WaitingScreen() {
         const today = ymd(localDateIn(new Date(), phoneTimeZone()));
         announceJoined(result.inviter, birthday ? !isYoungerThan(18, ymd(birthday), today) : false);
       }
-      letIn();
+      letIn(result.result === 'joined' ? 'code' : 'let_in');
     },
   });
   const tryCode = (token: string) => {

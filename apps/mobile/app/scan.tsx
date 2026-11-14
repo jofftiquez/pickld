@@ -8,6 +8,7 @@ import { useCameraAccess } from '@/features/capture/useCameraAccess';
 import { usePendingInvite } from '@/features/invite/join';
 import { ScanPreview } from '@/features/invite/ScanPreview';
 import { ScanView } from '@/features/invite/ScanView';
+import { track } from '@/lib/analytics';
 import { captureError } from '@/lib/monitoring';
 import { inviteTokenFromUrl } from '@/lib/links';
 
@@ -43,6 +44,10 @@ export default function ScanScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (access === 'denied') track('invite_scan', { outcome: 'denied' });
+  }, [access]);
+
   const leave = useCallback(() => (router.canGoBack() ? router.back() : router.replace('/')), [router]);
 
   const onCode = useCallback(
@@ -50,12 +55,18 @@ export default function ScanScreen() {
       if (done.current) return;
       const token = inviteTokenFromUrl(value);
       if (!token) {
-        setNotInvite(true);
+        // Counted once per time the message shows, not for every frame the code stays in view.
         if (hideError.current) clearTimeout(hideError.current);
-        hideError.current = setTimeout(() => setNotInvite(false), NOT_INVITE_MS);
+        else track('invite_scan', { outcome: 'not_invite' });
+        setNotInvite(true);
+        hideError.current = setTimeout(() => {
+          hideError.current = null;
+          setNotInvite(false);
+        }, NOT_INVITE_MS);
         return;
       }
       done.current = true;
+      track('invite_scan', { outcome: 'invite' });
       void keep(token).finally(leave);
     },
     [keep, leave],

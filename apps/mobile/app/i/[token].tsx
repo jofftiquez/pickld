@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 
 import { fetchInvitePreview, usePendingInvite } from '@/features/invite/join';
 import { useProfileStatus } from '@/features/onboarding/useProfileStatus';
+import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
 import { normalizeInviteToken } from '@/lib/links';
 import { showToast } from '@/lib/toast';
@@ -29,6 +30,16 @@ export default function InviteLinkRoute() {
         .finally(() => router.replace(href));
     };
     if (!token) return router.replace('/');
+    track('invite_page_opened', {
+      as:
+        auth === 'signedOut'
+          ? 'signed_out'
+          : profile.data === 'active'
+            ? 'member'
+            : profile.data === 'waiting'
+              ? 'waiting'
+              : 'setting_up',
+    });
     if (auth === 'signedOut') return keepThen('/sign-up');
     // No profile yet, waiting, or unknown (offline): keep it for About you or Waiting.
     if (profile.data === null || profile.data === 'waiting' || profile.data === undefined) return keepThen('/');
