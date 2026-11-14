@@ -36,6 +36,17 @@ const FAKE_TURNSTILE = `window.turnstile = { render(el) { const i = document.cre
   i.type = 'hidden'; i.name = 'cf-turnstile-response'; i.value = 'stub-token'; el.appendChild(i); return 'w1'; },
   remove() {} };`;
 const CERT = Array.from({ length: 32 }, (_, i) => i.toString(16).padStart(2, '0').toUpperCase()).join(':');
+const FORWARD_SECRET = 'stub-forward-secret-0123456789abcdef';
+/** What fn:invite answers per token (INV-05); anything else is unavailable. */
+const dale = (url) => ({ username: 'dale', display_name: 'Dale', avatar: `${url}/img/av_dale.jpg` });
+const INVITES = {
+  K7M2QX: (url) => ({ kind: 'personal', inviter: dale(url) }),
+  LINKAB1234: (url) => ({ kind: 'personal', inviter: dale(url) }),
+  WAIT01: () => ({ kind: 'waitlist', inviter: null }),
+  BUSY99: 'limited',
+};
+/** The checks fn:invite received. */
+const invites = [];
 /** Photo paths the stub served, to see what a preview fetched. */
 const served = [];
 
@@ -165,6 +176,10 @@ before(async () => {
         waitlist.captcha.push(form);
         return json(200, { success: form.secret === TURNSTILE_SECRET && form.response === 'stub-token' });
       }
+      if (req.url === '/store') {
+        res.writeHead(200, { 'content-type': 'text/html' });
+        return res.end('<title>App Store</title>');
+      }
       assert.equal(req.headers.apikey, ANON);
       if (req.url === '/rest/v1/rpc/waitlist_join' || req.url.startsWith('/auth/v1/logout')) {
         assert.equal(req.headers.authorization, `Bearer ${USER_TOKEN}`, 'as the new account');
@@ -188,6 +203,15 @@ before(async () => {
           ? json(200, { access_token: USER_TOKEN, refresh_token: 'r', user: { id: 'u' } })
           : json(403, { code: 'otp_expired', msg: 'Token has expired or is invalid' });
       }
+      if (req.url === '/functions/v1/invite') {
+        const { token } = JSON.parse(body);
+        invites.push({ token, ip: req.headers['x-client-ip'], secret: req.headers['x-waitlist-secret'] });
+        const found = INVITES[token];
+        if (found === 'limited') return json(429, { error: { code: 'rate_limited', message: 'Too many' } });
+        return found
+          ? json(200, { data: found(stubUrl) })
+          : json(404, { error: { code: 'unavailable', message: 'This invite can’t be used.' } });
+      }
       const input = JSON.parse(body);
       const data = pages(stubUrl);
       const found = input.jarId ? data.jars[input.jarId] : data.profiles[String(input.username).toLowerCase()];
@@ -210,6 +234,8 @@ before(async () => {
       TURNSTILE_SECRET_KEY: TURNSTILE_SECRET,
       TURNSTILE_VERIFY_URL: `${stubUrl}/turnstile`,
       SITE_URL: SITE,
+      APP_STORE_URL: `${stubUrl}/store`,
+      WAITLIST_SECRET: FORWARD_SECRET,
       APPLE_TEAM_ID: TEAM,
       ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} `,
     },
@@ -588,6 +614,96 @@ test('the jar preview matches its snapshot', async () => {
   );
   await page.close();
   assert.ok(diff < 0.001, `${(diff * 100).toFixed(2)}% of pixels differ from tests/snapshots/og-jar.png`);
+});
+
+// ---------------------------------------------------------------- invite page (INV-05)
+
+test('an invite names its sender, shows the code and copies it before opening the App Store', async () => {
+  served.length = 0;
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    permissions: ['clipboard-read', 'clipboard-write'],
+  });
+  const page = await context.newPage();
+  await page.goto(`${base}/i/k7m2qx`); // case doesn't matter
+  await page.waitForLoadState('networkidle');
+  assert.equal(await page.locator('h1').textContent(), 'Dale invited you to Pickld');
+  assert.ok(await page.getByText('Dale · @dale').isVisible());
+  assert.ok(await page.getByText('You and Dale will read each other’s jars.', { exact: false }).isVisible());
+  assert.equal(await page.getByTestId('invite-code').textContent(), 'K7M2QX');
+  assert.ok(await page.getByRole('region', { name: 'Your invite code: K 7 M 2 Q X' }).isVisible());
+  // Only the inviter's photo: no moments, on the page or fetched (rule 9).
+  assert.deepEqual(await page.locator('img').evaluateAll((els) => els.map((e) => e.getAttribute('alt'))), [
+    'Dale’s photo',
+  ]);
+  assert.deepEqual(served, ['/img/av_dale.jpg']);
+  assert.equal(await page.getByRole('link', { name: 'Open the app' }).getAttribute('href'), 'pickld://i/K7M2QX');
+  assert.ok(await noSideScroll(page));
+  await page.getByRole('link', { name: 'Get the app' }).last().click();
+  await page.waitForURL(`${stubUrl}/store`);
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'K7M2QX');
+  await context.close();
+});
+
+test('an invite link shows its id as the code to paste', async () => {
+  const { page } = await open('/i/LINKAB1234');
+  assert.equal(await page.getByTestId('invite-code').textContent(), 'LINKAB1234');
+  assert.equal(await page.getByRole('link', { name: 'Open the app' }).getAttribute('href'), 'pickld://i/LINKAB1234');
+  assert.ok(await noSideScroll(page));
+  await page.close();
+});
+
+test('a waitlist code names no one', async () => {
+  const { page } = await open('/i/WAIT01');
+  assert.equal(await page.locator('h1').textContent(), 'You’re invited to Pickld');
+  assert.equal(await page.locator('img').count(), 0);
+  assert.equal(await page.getByTestId('invite-code').textContent(), 'WAIT01');
+  await page.close();
+});
+
+test('every invite that can’t be used gets one page that names no one', async () => {
+  for (const token of ['USED00', 'ZZZZZZZZZZ', 'not-a-code!']) {
+    invites.length = 0;
+    const { page, status } = await open(`/i/${encodeURIComponent(token)}`);
+    assert.equal(status, 200);
+    assert.equal(await page.locator('h1').textContent(), 'This invite can’t be used');
+    assert.equal(await page.locator('img').count(), 0);
+    assert.equal(await page.getByText('Dale').count(), 0);
+    assert.equal(await page.getByTestId('invite-code').count(), 0);
+    assert.equal(await page.getByRole('link', { name: 'Open the app' }).getAttribute('href'), 'pickld://');
+    // Something that isn't a code or link id never reaches fn:invite.
+    assert.equal(invites.length, token === 'not-a-code!' ? 0 : 1);
+    await page.close();
+  }
+  // The preview image is a 404 too, and the tags name no one.
+  const tags = await meta('/i/USED00');
+  const image = new URL(tags['og:image']);
+  assert.equal((await fetch(base + image.pathname + image.search)).status, 404);
+  assert.equal(tags['og:title'], 'This invite can’t be used');
+});
+
+test('too many checks from one visitor says try again later', async () => {
+  const { page } = await open('/i/BUSY99');
+  assert.equal(await page.locator('h1').textContent(), 'Try again in a bit');
+  await page.close();
+});
+
+test('the invite page passes the visitor’s IP to fn:invite with the server secret', async () => {
+  invites.length = 0;
+  const res = await fetch(`${base}/i/K7M2QX`, { headers: { 'x-forwarded-for': '203.0.113.7, 10.0.0.1' } });
+  assert.equal(res.status, 200);
+  assert.deepEqual(invites, [{ token: 'K7M2QX', ip: '203.0.113.7', secret: FORWARD_SECRET }]);
+  assert.match(await res.text(), /<meta name="robots" content="noindex, nofollow"/);
+});
+
+test('an invite preview shows the sender and the jar, never a moment', async () => {
+  const tags = await meta('/i/K7M2QX');
+  assert.equal(tags['og:title'], 'Dale invited you to Pickld');
+  assert.equal(tags['og:url'], `${SITE}/i/K7M2QX`);
+  assert.equal(tags['twitter:card'], 'summary_large_image');
+  served.length = 0;
+  await preview(tags);
+  assert.deepEqual(served, ['/img/av_dale.jpg']);
 });
 
 // ---------------------------------------------------------------- universal links / app links (M4-15)

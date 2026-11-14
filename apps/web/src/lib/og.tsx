@@ -74,24 +74,29 @@ async function embed(url: string | null): Promise<string | null> {
   }
 }
 
+/** Only what a preview shows of its author. */
+type OgAuthor = Pick<PublicAuthor, 'display_name' | 'username' | 'avatar'>;
+
 export type OgInput =
   | {
       kind: 'jar';
-      author: PublicAuthor;
+      author: OgAuthor;
       localDate: string;
       count: number;
       moments: PublicMoment[];
       /** The jar's cover (0069, D-56), drawn first. */
       coverId?: string | null;
     }
-  | { kind: 'readers'; author: PublicAuthor; localDate: string }
-  | { kind: 'profile'; author: PublicAuthor; moments: PublicMoment[] };
+  | { kind: 'readers'; author: OgAuthor; localDate: string }
+  | { kind: 'profile'; author: OgAuthor; moments: PublicMoment[] }
+  /** An invite (INV-05): who sent it and the jar, never photos. */
+  | { kind: 'invite'; author: OgAuthor };
 
 export async function ogImage(input: OgInput): Promise<ImageResponse> {
   const { author } = input;
   const name = author.display_name;
   const moments =
-    input.kind === 'readers'
+    input.kind === 'readers' || input.kind === 'invite'
       ? []
       : (input.kind === 'jar' ? coverFirst(input.moments, input.coverId) : bySlot(input.moments)).slice(0, 8);
   const caption = input.kind === 'jar' ? jarCaption(moments, input.coverId) : null;
@@ -100,13 +105,17 @@ export async function ogImage(input: OgInput): Promise<ImageResponse> {
       ? t('og.jarTitle', { name, weekday: weekday(input.localDate) })
       : input.kind === 'readers'
         ? t('og.readersTitle', { name, weekday: weekday(input.localDate) })
-        : name;
+        : input.kind === 'invite'
+          ? t('invite.ogTitle', { name })
+          : name;
   const meta =
     input.kind === 'jar'
       ? t('og.jarMeta', { date: longDate(input.localDate), count: String(input.count) })
       : input.kind === 'readers'
         ? t('og.readersBody', { name })
-        : t('og.profileMeta', { username: author.username });
+        : input.kind === 'invite'
+          ? t('invite.ogMeta', { username: author.username })
+          : t('og.profileMeta', { username: author.username });
   const [avatar, ...photos] = await Promise.all([
     embed(author.avatar),
     ...moments.map((m) => embed(m.full ?? m.thumb)),

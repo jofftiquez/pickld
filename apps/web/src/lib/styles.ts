@@ -1,5 +1,16 @@
 import { shadow } from '@/theme/tokens';
 
-/** The card shadow token as CSS. */
-const s = shadow.card;
-export const cardShadow = `0 ${s.shadowOffset.height}px ${s.shadowRadius}px color-mix(in srgb, ${s.shadowColor} ${s.shadowOpacity * 100}%, transparent)`;
+type ShadowToken = {
+  shadowColor: string;
+  shadowOpacity: number;
+  shadowRadius: number;
+  shadowOffset: { height: number };
+};
+
+/** A shadow token as CSS. */
+const css = (s: ShadowToken) =>
+  `0 ${s.shadowOffset.height}px ${s.shadowRadius}px color-mix(in srgb, ${s.shadowColor} ${s.shadowOpacity * 100}%, transparent)`;
+
+export const cardShadow = css(shadow.card);
+/** Under the big green buttons (WebInvite). */
+export const brandGlow = css(shadow.brandGlow);
