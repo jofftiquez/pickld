@@ -196,6 +196,8 @@ describe('Crop screen', () => {
       pinch.end({ focalX: 100, focalY: 100, scale: 8 });
     });
     expect(screen.getByRole('adjustable', { name: 'Zoom' }).props.accessibilityValue.now).toBe(300);
+    // Zoomed in, the preview still draws the full-resolution photo, not one shrunk to the starting size.
+    expect(screen.getByTestId('crop-photo').props).toMatchObject({ allowDownscaling: false, cachePolicy: 'memory' });
     await done();
     expect(queuedCrop()?.crop).toMatchObject({ width: 500, originX: 1750 });
   });
