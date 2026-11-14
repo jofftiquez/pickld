@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Dimensions, FlatList } from 'react-native';
 
 import type { FeedAuthor, FeedJar } from '../feedModel';
 import { FeedView, type FeedViewProps } from '../FeedView';
@@ -50,6 +51,7 @@ async function setup(props: Partial<FeedViewProps> = {}) {
   const handlers = {
     onRefresh: jest.fn(),
     onEndReached: jest.fn(),
+    onBackToTop: jest.fn(),
     onOpenNotifications: jest.fn(),
     onFindPeople: jest.fn(),
     onInvite: jest.fn(),
@@ -168,5 +170,35 @@ describe('FeedView', () => {
   it('shows no Find people card once the user reads someone', async () => {
     await setup();
     expect(screen.queryByTestId('feed-find-people-card')).toBeNull();
+  });
+  it('shows Back to top two screens down; it scrolls up near the top and asks for a reload far down', async () => {
+    const scrollTo = jest.spyOn(FlatList.prototype, 'scrollToOffset').mockImplementation(() => undefined);
+    const { height } = Dimensions.get('window');
+    const { onBackToTop } = await setup();
+    const scroll = (y: number) =>
+      fireEvent.scroll(screen.getByTestId('feed-list'), {
+        nativeEvent: {
+          contentOffset: { x: 0, y },
+          contentSize: { height: 100 * height, width: 1 },
+          layoutMeasurement: { height, width: 1 },
+        },
+      });
+
+    await scroll(2 * height);
+    expect(screen.queryByTestId('back-to-top')).toBeNull();
+
+    // Eight screens down is still near: an animated scroll, the pages stay.
+    await scroll(8 * height);
+    await fireEvent.press(screen.getByRole('button', { name: 'Back to top' }));
+    expect(scrollTo).toHaveBeenLastCalledWith({ offset: 0, animated: true });
+    expect(onBackToTop).toHaveBeenLastCalledWith('scroll');
+    expect(screen.queryByTestId('back-to-top')).toBeNull();
+
+    // Past eight screens: jump straight up and let the screen fetch the newest page.
+    await scroll(8 * height + 1);
+    await fireEvent.press(screen.getByTestId('back-to-top'));
+    expect(scrollTo).toHaveBeenLastCalledWith({ offset: 0, animated: false });
+    expect(onBackToTop).toHaveBeenLastCalledWith('reload');
+    scrollTo.mockRestore();
   });
 });

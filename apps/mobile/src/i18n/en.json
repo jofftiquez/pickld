@@ -123,6 +123,7 @@
     "title": "Jars"
   },
   "feed": {
+    "backToTop": "Back to top",
     "emptyTitle": "Your feed is quiet",
     "emptyBody": "Read a few friends’ days and their jars will show up here.",
     "findPeopleTitle": "Read a few friends’ days",

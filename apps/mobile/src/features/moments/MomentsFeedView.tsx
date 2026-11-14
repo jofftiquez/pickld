@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
+import { BackToTopButton } from '@/components/BackToTopButton';
 import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { FeedEmpty } from '@/features/feed/FeedEmpty';
@@ -9,6 +10,7 @@ import type { AvatarUrls } from '@/lib/avatars';
 import { usePhotoPrefetch } from '@/lib/image/usePhotoPrefetch';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
+import { useBackToTop, type BackToTopMode } from '@/lib/useBackToTop';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { MomentFeedCard } from './MomentFeedCard';
@@ -29,6 +31,8 @@ export type MomentsFeedViewProps = {
   hasUnread: boolean;
   onRefresh: () => void;
   onEndReached: () => void;
+  /** After the back-to-top button brings the list up: on `reload` the screen fetches the newest page again. */
+  onBackToTop: (mode: BackToTopMode) => void;
   onOpenNotifications: () => void;
   /** Go to jar on a card (D-94). */
   onOpenJar: (moment: FeedMoment) => void;
@@ -55,6 +59,7 @@ export function MomentsFeedView({
   hasUnread,
   onRefresh,
   onEndReached,
+  onBackToTop,
   onOpenNotifications,
   onOpenJar,
   onToggleLike,
@@ -72,6 +77,7 @@ export function MomentsFeedView({
   const hasMoments = moments !== undefined && moments.length > 0;
 
   const onViewableItemsChanged = usePhotoPrefetch(moments, cardPhotoUrl);
+  const { listRef, onScroll, scrollEventThrottle, showBackToTop, backToTop } = useBackToTop<FeedMoment>(onBackToTop);
 
   const header = (
     <View>
@@ -105,66 +111,72 @@ export function MomentsFeedView({
   );
 
   return (
-    <FlatList
-      style={styles.screen}
-      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
-      data={moments ?? []}
-      keyExtractor={(m) => m.moment_id}
-      renderItem={({ item }) => (
-        <View style={styles.cardWrap}>
-          <MomentFeedCard
-            moment={item}
-            photoWidth={photoWidth}
-            viewerId={viewerId}
-            avatarUrl={avatars[item.author_id] ?? null}
-            onOpenJar={() => onOpenJar(item)}
-            onToggleLike={() => onToggleLike(item)}
-            onOpenComments={() => onOpenComments(item)}
-          />
-        </View>
-      )}
-      ItemSeparatorComponent={Separator}
-      ListHeaderComponent={header}
-      ListEmptyComponent={
-        readsNobody && !isLoading ? (
+    <View style={styles.screen}>
+      <FlatList
+        style={styles.screen}
+        ref={listRef}
+        onScroll={onScroll}
+        scrollEventThrottle={scrollEventThrottle}
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
+        data={moments ?? []}
+        keyExtractor={(m) => m.moment_id}
+        renderItem={({ item }) => (
           <View style={styles.cardWrap}>
-            <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} timeline="moments" refreshable />
+            <MomentFeedCard
+              moment={item}
+              photoWidth={photoWidth}
+              viewerId={viewerId}
+              avatarUrl={avatars[item.author_id] ?? null}
+              onOpenJar={() => onOpenJar(item)}
+              onToggleLike={() => onToggleLike(item)}
+              onOpenComments={() => onOpenComments(item)}
+            />
           </View>
-        ) : isLoading ? (
-          <ActivityIndicator color={colors.muted} style={styles.loading} testID="moments-loading" />
-        ) : authors !== undefined ? (
-          // Reading people who haven't added anything yet (D-87).
-          <EmptyState
-            illustration="moments"
-            title={t('moments.quietTitle')}
-            body={t('moments.quietBody')}
-            action={{ label: t('feed.findMore'), onPress: onFindPeople, testID: 'moments-find-more' }}
-            refreshable
-            testID="moments-empty"
+        )}
+        ItemSeparatorComponent={Separator}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          readsNobody && !isLoading ? (
+            <View style={styles.cardWrap}>
+              <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} timeline="moments" refreshable />
+            </View>
+          ) : isLoading ? (
+            <ActivityIndicator color={colors.muted} style={styles.loading} testID="moments-loading" />
+          ) : authors !== undefined ? (
+            // Reading people who haven't added anything yet (D-87).
+            <EmptyState
+              illustration="moments"
+              title={t('moments.quietTitle')}
+              body={t('moments.quietBody')}
+              action={{ label: t('feed.findMore'), onPress: onFindPeople, testID: 'moments-find-more' }}
+              refreshable
+              testID="moments-empty"
+            />
+          ) : undefined
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
+        }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.6}
+        onViewableItemsChanged={onViewableItemsChanged}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.muted}
+            progressViewOffset={insets.top}
           />
-        ) : undefined
-      }
-      ListFooterComponent={
-        isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
-      }
-      onEndReached={onEndReached}
-      onEndReachedThreshold={0.6}
-      onViewableItemsChanged={onViewableItemsChanged}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.muted}
-          progressViewOffset={insets.top}
-        />
-      }
-      // Each card holds a full-width photo; a small window keeps scrolling smooth (NFR-PERF-02).
-      initialNumToRender={3}
-      windowSize={5}
-      removeClippedSubviews
-      accessibilityLabel={t('moments.list')}
-      testID="moments-list"
-    />
+        }
+        // Each card holds a full-width photo; a small window keeps scrolling smooth (NFR-PERF-02).
+        initialNumToRender={3}
+        windowSize={5}
+        removeClippedSubviews
+        accessibilityLabel={t('moments.list')}
+        testID="moments-list"
+      />
+      {showBackToTop ? <BackToTopButton onPress={backToTop} bottom={bottomPadding} /> : null}
+    </View>
   );
 }
 

@@ -3,14 +3,15 @@
 // and `feed_authors` for the
 // avatar row. Both are React Query queries, so the persisted cache (src/lib/queryClient.ts) keeps the last
 // feed readable offline.
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { fetchMomentRenders } from '@/features/moment/momentRenders';
 import { useAuthStore } from '@/lib/authStore';
+import { refetchFirstPage } from '@/lib/firstPage';
 import { getSupabase } from '@/lib/supabase';
 
-import { feedAuthorRow, feedRow, nextCursor, type FeedCursor, type FeedPage } from './feedModel';
+import { anchorCursor, feedAuthorRow, feedRow, nextCursor, type FeedCursor, type FeedPage } from './feedModel';
 import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const photoUrlsResponse = z.object({
@@ -61,18 +62,21 @@ export async function fetchFeedAuthors() {
 }
 
 export const feedQueryKeys = {
-  /** ['feed', userId]: every loaded page. */
-  feed: (userId: string) => ['feed', userId] as const,
+  /** ['feed', userId]: every loaded page, newest first; an anchored list (`from`) is cached on its own. */
+  feed: (userId: string, from?: string) => (from ? (['feed', userId, { from }] as const) : (['feed', userId] as const)),
   authors: (userId: string) => ['feedAuthors', userId] as const,
 };
 
-export function useFeed() {
+/** The Jars feed, newest first, or from `from` back (see `anchorCursor`). */
+export function useFeed(from?: string) {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const enabled = userId !== null;
+  const queryClient = useQueryClient();
+  const queryKey = feedQueryKeys.feed(userId ?? '', from);
   const feed = useInfiniteQuery({
-    queryKey: feedQueryKeys.feed(userId ?? ''),
+    queryKey,
     queryFn: ({ pageParam }) => fetchFeedPage(pageParam),
-    initialPageParam: null as FeedCursor | null,
+    initialPageParam: from ? anchorCursor(from) : null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
   });
@@ -93,8 +97,9 @@ export function useFeed() {
     hasNextPage: feed.hasNextPage,
     isFetchingNextPage: feed.isFetchingNextPage,
     fetchNextPage: () => void feed.fetchNextPage(),
+    /** Pull to refresh and the far back-to-top: the newest page only (`refetchFirstPage`). */
     refresh: async () => {
-      await Promise.all([feed.refetch(), authors.refetch()]);
+      await Promise.all([refetchFirstPage(queryClient, queryKey), authors.refetch()]);
     },
     markSeen: () => markSeen.mutate(),
   };

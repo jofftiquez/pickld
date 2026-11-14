@@ -73,6 +73,9 @@ export default function DiscoverScreen() {
         setNow(new Date());
         void Promise.all([explore.refetch(), list.refresh()]).finally(() => setPulling(false));
       }}
+      onBackToTop={(mode) => {
+        if (mode === 'reload') void list.refresh();
+      }}
       onEndReached={() => {
         if (list.hasNextPage && !list.isFetchingNextPage) list.fetchNextPage();
       }}

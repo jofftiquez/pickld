@@ -17,6 +17,7 @@ import { keyOf, sendLike, serialize } from '@/features/jar/useLike';
 import { withMomentLike, type FeedMoment, type MomentsCursor, type MomentsPage } from '@/features/moments/momentsModel';
 import { fetchMomentsPage } from '@/features/moments/useMomentsFeed';
 import { useAuthStore } from '@/lib/authStore';
+import { refetchFirstPage } from '@/lib/firstPage';
 
 export type DiscoverTab = 'moments' | 'jars';
 
@@ -95,9 +96,8 @@ export function useDiscoverMoments(enabled: boolean) {
     hasNextPage: list.hasNextPage,
     isFetchingNextPage: list.isFetchingNextPage,
     fetchNextPage: () => void list.fetchNextPage(),
-    refresh: async () => {
-      await list.refetch();
-    },
+    /** Pull to refresh and the far back-to-top: the newest page only (`refetchFirstPage`). */
+    refresh: () => refetchFirstPage(queryClient, queryKey),
     toggleLike: (moment: FeedMoment) => {
       if (userId !== null) like.mutate({ moment, liked: !moment.liked });
     },
@@ -107,8 +107,10 @@ export function useDiscoverMoments(enabled: boolean) {
 /** Discover's Jars list; `enabled` once its tab has been shown. */
 export function useDiscoverJars(enabled: boolean) {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
+  const queryClient = useQueryClient();
+  const queryKey = discoverQueryKeys.jars(userId ?? '');
   const list = useInfiniteQuery({
-    queryKey: discoverQueryKeys.jars(userId ?? ''),
+    queryKey,
     queryFn: ({ pageParam }) => fetchFeedPage(pageParam, 'discover_jars_page'),
     initialPageParam: null as FeedCursor | null,
     getNextPageParam: (last) => last.nextCursor,
@@ -121,8 +123,7 @@ export function useDiscoverJars(enabled: boolean) {
     hasNextPage: list.hasNextPage,
     isFetchingNextPage: list.isFetchingNextPage,
     fetchNextPage: () => void list.fetchNextPage(),
-    refresh: async () => {
-      await list.refetch();
-    },
+    /** Pull to refresh and the far back-to-top: the newest page only (`refetchFirstPage`). */
+    refresh: () => refetchFirstPage(queryClient, queryKey),
   };
 }

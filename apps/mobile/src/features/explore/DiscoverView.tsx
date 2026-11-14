@@ -14,6 +14,7 @@ import {
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
+import { BackToTopButton } from '@/components/BackToTopButton';
 import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -26,6 +27,7 @@ import { FollowButton } from '@/features/profile/FollowButton';
 import type { AvatarUrls } from '@/lib/avatars';
 import { usePhotoPrefetch } from '@/lib/image/usePhotoPrefetch';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
+import { useBackToTop, type BackToTopMode } from '@/lib/useBackToTop';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, explore as e, radius, sizes, space } from '@/theme/tokens';
 
@@ -61,6 +63,8 @@ export type DiscoverViewProps = {
   now: Date;
   onRefresh: () => void;
   onEndReached: () => void;
+  /** After the back-to-top button brings the list up: on `reload` the screen fetches the newest page again. */
+  onBackToTop: (mode: BackToTopMode) => void;
   /** Loads Suggested authors again. */
   onRetry: () => void;
   /** Loads the shown list again. */
@@ -108,6 +112,7 @@ export function DiscoverView({
   now,
   onRefresh,
   onEndReached,
+  onBackToTop,
   onRetry,
   onRetryList,
   onOpenProfile,
@@ -130,6 +135,8 @@ export function DiscoverView({
       ? (moments ?? []).map((moment) => ({ kind: 'moment', moment }))
       : (jars ?? []).map((jar) => ({ kind: 'jar', jar }));
   const onViewableItemsChanged = usePhotoPrefetch(items, itemPhoto);
+  const { listRef, onScroll, scrollEventThrottle, showBackToTop, backToTop } = useBackToTop<Item>(onBackToTop);
+  const bottomPadding = Math.max(insets.bottom, space.lg) + tabBarClearance;
 
   const header = (
     <View>
@@ -228,85 +235,88 @@ export function DiscoverView({
   );
 
   return (
-    <FlatList
-      style={styles.screen}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{
-        paddingTop: insets.top,
-        paddingBottom: Math.max(insets.bottom, space.lg) + tabBarClearance,
-      }}
-      data={items}
-      onViewableItemsChanged={onViewableItemsChanged}
-      keyExtractor={(item) => (item.kind === 'moment' ? `m:${item.moment.moment_id}` : `j:${item.jar.jar_id}`)}
-      renderItem={({ item }) => (
-        <View style={styles.cardWrap}>
-          {item.kind === 'moment' ? (
-            <MomentFeedCard
-              moment={item.moment}
-              photoWidth={photoWidth}
-              viewerId={viewerId}
-              avatarUrl={avatars[item.moment.author_id] ?? null}
-              onOpenJar={() => onOpenJar(item.moment.jar_id)}
-              onToggleLike={() => onToggleLike(item.moment)}
-              onOpenComments={() => onOpenMoment(item.moment)}
-              onRead={() => onReadAuthor(item.moment.author_id)}
-              readDisabled={busy}
-            />
-          ) : (
-            <FeedJarCard
-              jar={item.jar}
-              now={now}
-              avatarUrl={avatars[item.jar.author_id] ?? null}
-              onPress={() => onOpenJar(item.jar.jar_id)}
-              onRead={() => onReadAuthor(item.jar.author_id)}
-              readDisabled={busy}
-            />
-          )}
-        </View>
-      )}
-      ItemSeparatorComponent={Separator}
-      ListHeaderComponent={header}
-      ListEmptyComponent={
-        showingSearch ? undefined : listLoading ? (
-          <ActivityIndicator
-            color={colors.muted}
-            style={styles.loading}
-            accessibilityLabel={t('explore.listLoading')}
-            testID="discover-loading"
-          />
-        ) : listFailed ? (
-          <View style={styles.message}>
-            <Text style={[textStyle('body'), styles.center]}>{t('explore.listFailed')}</Text>
-            <SecondaryButton label={t('explore.retry')} onPress={onRetryList} testID="discover-retry" />
+    <View style={styles.screen}>
+      <FlatList
+        style={styles.screen}
+        ref={listRef}
+        onScroll={onScroll}
+        scrollEventThrottle={scrollEventThrottle}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
+        data={items}
+        onViewableItemsChanged={onViewableItemsChanged}
+        keyExtractor={(item) => (item.kind === 'moment' ? `m:${item.moment.moment_id}` : `j:${item.jar.jar_id}`)}
+        renderItem={({ item }) => (
+          <View style={styles.cardWrap}>
+            {item.kind === 'moment' ? (
+              <MomentFeedCard
+                moment={item.moment}
+                photoWidth={photoWidth}
+                viewerId={viewerId}
+                avatarUrl={avatars[item.moment.author_id] ?? null}
+                onOpenJar={() => onOpenJar(item.moment.jar_id)}
+                onToggleLike={() => onToggleLike(item.moment)}
+                onOpenComments={() => onOpenMoment(item.moment)}
+                onRead={() => onReadAuthor(item.moment.author_id)}
+                readDisabled={busy}
+              />
+            ) : (
+              <FeedJarCard
+                jar={item.jar}
+                now={now}
+                avatarUrl={avatars[item.jar.author_id] ?? null}
+                onPress={() => onOpenJar(item.jar.jar_id)}
+                onRead={() => onReadAuthor(item.jar.author_id)}
+                readDisabled={busy}
+              />
+            )}
           </View>
-        ) : (
-          <EmptyState
-            illustration="compass"
-            title={t('explore.emptyTitle')}
-            body={t('explore.emptyBody')}
-            refreshable
-            testID="discover-empty"
+        )}
+        ItemSeparatorComponent={Separator}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          showingSearch ? undefined : listLoading ? (
+            <ActivityIndicator
+              color={colors.muted}
+              style={styles.loading}
+              accessibilityLabel={t('explore.listLoading')}
+              testID="discover-loading"
+            />
+          ) : listFailed ? (
+            <View style={styles.message}>
+              <Text style={[textStyle('body'), styles.center]}>{t('explore.listFailed')}</Text>
+              <SecondaryButton label={t('explore.retry')} onPress={onRetryList} testID="discover-retry" />
+            </View>
+          ) : (
+            <EmptyState
+              illustration="compass"
+              title={t('explore.emptyTitle')}
+              body={t('explore.emptyBody')}
+              refreshable
+              testID="discover-empty"
+            />
+          )
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
+        }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.6}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.muted}
+            progressViewOffset={insets.top}
           />
-        )
-      }
-      ListFooterComponent={
-        isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
-      }
-      onEndReached={onEndReached}
-      onEndReachedThreshold={0.6}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.muted}
-          progressViewOffset={insets.top}
-        />
-      }
-      // Cards hold full-width photos; a small window keeps scrolling smooth (NFR-PERF-02).
-      initialNumToRender={3}
-      windowSize={5}
-      testID="explore"
-    />
+        }
+        // Cards hold full-width photos; a small window keeps scrolling smooth (NFR-PERF-02).
+        initialNumToRender={3}
+        windowSize={5}
+        testID="explore"
+      />
+      {showBackToTop ? <BackToTopButton onPress={backToTop} bottom={bottomPadding} /> : null}
+    </View>
   );
 }
 
