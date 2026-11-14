@@ -2,9 +2,8 @@ import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { PRESSED_OPACITY } from '@/components/BaseButton';
+import { BaseButton, PRESSED_OPACITY } from '@/components/BaseButton';
 import { Icon } from '@/components/Icon';
-import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { deviceLocale } from '@/lib/format';
@@ -212,13 +211,24 @@ export function MyDaysView({
       </View>
       {onPickDate && today ? (
         <View style={styles.dateRow}>
-          <PillButton
-            variant="subtle"
+          {/* White with an outline, like the month pill: a subtle pill would vanish on the app background. */}
+          <BaseButton
             icon="myDays"
             label={t('myDays.datePicker.open')}
             accessibilityHint={t('myDays.datePicker.openHint')}
             onPress={() => setDatePickerOpen(true)}
             testID="my-days-date"
+            tone={{
+              background: 'surface',
+              text: 'ink',
+              border: 'chevron',
+              height: sizes.pillButton,
+              textVariant: 'bodySmall',
+              textWeight: '700',
+              paddingHorizontal: space.md,
+              stretch: false,
+              icon: { size: sizes.monthButtonIcon, strokeWidth: 2.2 },
+            }}
           />
         </View>
       ) : null}
@@ -285,7 +295,7 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   monthText: { color: colors.ink, flexShrink: 1 },
-  dateRow: { alignItems: 'center', paddingHorizontal: space.lg, paddingTop: space.md },
+  dateRow: { paddingHorizontal: space.lg, paddingTop: space.md },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   card: {
     marginHorizontal: space.lg,
