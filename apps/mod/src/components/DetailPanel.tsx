@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { colors, radius } from '@/theme/tokens';
@@ -79,9 +80,13 @@ export function DetailPanel({ item, photo, actions }: { item: QueueItem; photo?:
           </Fact>
         ) : null}
         <Fact label={t('detail.user')}>
-          {item.username && item.owner_joined
-            ? t('detail.userValue', { user, month: monthLabel(item.owner_joined), count: item.prior_removals })
-            : user}
+          {item.username && item.owner_joined && item.owner_id ? (
+            <Link href={`/users/${item.owner_id}`} style={{ color: colors.brandLink }}>
+              {t('detail.userValue', { user, month: monthLabel(item.owner_joined), count: item.prior_removals })}
+            </Link>
+          ) : (
+            user
+          )}
         </Fact>
         <Fact label={t('detail.visibility')}>
           {item.visible === null ? t('detail.notApplicable') : t(item.visible ? 'detail.visible' : 'detail.hidden')}
