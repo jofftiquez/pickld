@@ -20,6 +20,7 @@ import MyDaysScreen from '../../../app/my-days';
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
 jest.mock('@/features/onboarding/FirstMomentTip', () => ({ FirstMomentTip: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
+jest.mock('@/features/days/MonthPickerSheet', () => ({ MonthPickerSheet: () => null }));
 // The tiles' pop and the publish burst (D-58) use Reanimated, which the router test harness can't load; they
 // have their own tests.
 jest.mock('@/features/jar/TilePop', () => ({ TilePop: ({ children }: { children: React.ReactNode }) => children }));

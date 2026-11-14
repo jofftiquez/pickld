@@ -43,7 +43,6 @@ export function MonthChip({ label, accessibilityLabel, selected, onPress, testID
 
 const styles = StyleSheet.create({
   base: {
-    flex: 1,
     minHeight: sizes.chip,
     paddingHorizontal: space.sm,
     borderRadius: radius.pill,

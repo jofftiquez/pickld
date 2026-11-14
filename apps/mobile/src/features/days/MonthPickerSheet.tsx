@@ -57,20 +57,20 @@ export function MonthPickerSheet({ visible, onClose, months, selected, onSelect,
                 .filter((row) => row.some((m) => pickable.has(m)))
                 .map((row) => (
                   <View key={row[0]} style={styles.row}>
-                    {row.map((month) =>
-                      pickable.has(month) ? (
-                        <MonthChip
-                          key={month}
-                          label={format(month, locale, { month: 'short' })}
-                          accessibilityLabel={format(month, locale, { month: 'long', year: 'numeric' })}
-                          selected={month === selected}
-                          onPress={() => onSelect(month)}
-                          testID={`month-picker-${month}`}
-                        />
-                      ) : (
-                        <View key={month} style={styles.blank} />
-                      ),
-                    )}
+                    {/* Equal columns; a month out of range leaves its column empty. */}
+                    {row.map((month) => (
+                      <View key={month} style={styles.cell}>
+                        {pickable.has(month) ? (
+                          <MonthChip
+                            label={format(month, locale, { month: 'short' })}
+                            accessibilityLabel={format(month, locale, { month: 'long', year: 'numeric' })}
+                            selected={month === selected}
+                            onPress={() => onSelect(month)}
+                            testID={`month-picker-${month}`}
+                          />
+                        ) : null}
+                      </View>
+                    ))}
                   </View>
                 ))}
             </View>
@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
   title: { color: colors.ink, marginBottom: space.sm },
   year: { gap: space.sm, paddingTop: space.sm, paddingBottom: space.md },
   rows: { gap: space.sm },
-  row: { flexDirection: 'row', gap: space.sm },
-  blank: { flex: 1 },
+  // Fixed thirds, so a row with an empty column keeps the same column widths as a full one.
+  row: { flexDirection: 'row', marginHorizontal: -space.sm / 2 },
+  cell: { width: `${100 / COLUMNS}%`, paddingHorizontal: space.sm / 2 },
 });
