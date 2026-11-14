@@ -2,7 +2,7 @@
 # About you, then quit mid-setup and relaunch: setup resumes at Your day (FR-ONB-09). Early bird sets
 # 7:00 AM · 12:30 PM · 7:00 PM and Change moves the evening to 7:30 PM. Your people, Pick your jar (Mango),
 # Permissions (camera preset to allowed; Notifications names the chosen times and Allow shows the prompt),
-# Find friends (contacts preset to allowed; Read follows Mika), the Pickld Promise (held), the First moment
+# Find friends (contacts preset to allowed; Be a reader follows Mika), the Pickld Promise (held), the First moment
 # tip, whose Take my first moment opens Camera on the current slot, the first moment saved to Today, and a back swipe from Today staying on Today.
 # Before the first run on a Simulator, add the seed contacts:
 #   xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf

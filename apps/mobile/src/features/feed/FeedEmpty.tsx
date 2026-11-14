@@ -5,6 +5,7 @@ import { Card } from '@/components/Card';
 import { Icon } from '@/components/Icon';
 import type { IconName } from '@/components/icons';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { PullToRefreshHint } from '@/components/PullToRefreshHint';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
@@ -16,6 +17,8 @@ export type FeedEmptyProps = {
   aboveOwnJars?: boolean;
   /** Which timeline it sits in: the copy says jars or moments (the Moments tab, D-53). */
   timeline?: 'jars' | 'moments';
+  /** Standing alone in a list that refreshes when pulled: adds "Pull down to refresh" under the card (D-87). */
+  refreshable?: boolean;
 };
 
 // The design fans out three placeholder photos; slot icons stand in until there is cleared artwork.
@@ -30,10 +33,16 @@ const tiles: { icon: IconName; rotate: string }[] = [
  * it stands alone; with the user's own published jars below it, it is the Find people card on top (D-53).
  * The Moments timeline uses it the same way with its own copy.
  */
-export function FeedEmpty({ onFindPeople, onInvite, aboveOwnJars = false, timeline = 'jars' }: FeedEmptyProps) {
+export function FeedEmpty({
+  onFindPeople,
+  onInvite,
+  aboveOwnJars = false,
+  timeline = 'jars',
+  refreshable = false,
+}: FeedEmptyProps) {
   const { t } = useTranslation();
   const copy = timeline === 'moments' ? 'moments' : 'feed';
-  return (
+  const card = (
     <Card style={styles.card} testID={aboveOwnJars ? 'feed-find-people-card' : 'feed-empty'}>
       <View style={styles.intro}>
         {aboveOwnJars ? null : (
@@ -63,6 +72,13 @@ export function FeedEmpty({ onFindPeople, onInvite, aboveOwnJars = false, timeli
         />
       </View>
     </Card>
+  );
+  if (!refreshable) return card;
+  return (
+    <View>
+      {card}
+      <PullToRefreshHint testID="feed-empty-refresh-hint" />
+    </View>
   );
 }
 

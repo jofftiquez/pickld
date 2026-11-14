@@ -36,6 +36,10 @@ describe('BlockedView', () => {
 
   it('says so when nobody is blocked', async () => {
     await setup({ rows: [] });
-    expect(screen.getByText('You haven’t blocked anyone.')).toBeTruthy();
+    expect(screen.getByTestId('blocked-empty')).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'You haven’t blocked anyone' })).toBeTruthy();
+    expect(screen.getByText('If you block someone, they show up here, and you can unblock them anytime.')).toBeTruthy();
+    // Not a pull-to-refresh list.
+    expect(screen.queryByText('Pull down to refresh')).toBeNull();
   });
 });

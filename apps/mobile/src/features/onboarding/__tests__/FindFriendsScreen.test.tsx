@@ -99,12 +99,12 @@ describe('Find friends (FR-ONB-06)', () => {
     expect(screen.getByTestId('friends-settings')).toBeTruthy();
   });
 
-  it('a failed follow puts Read back', async () => {
+  it('a failed follow puts Be a reader back', async () => {
     mockSetReading.mockRejectedValueOnce(new Error('offline'));
     const deps = { hashAddressBook: jest.fn(async () => ['b'.repeat(64)]), matchContacts: jest.fn(async () => [mika]) };
     await renderScreen(deps);
     await act(async () => fireEvent.press(screen.getByTestId('friends-find')));
     await act(async () => fireEvent.press(screen.getByTestId('friends-read-mika')));
-    expect(screen.getByText('Read')).toBeTruthy();
+    expect(screen.getByText('Be a reader')).toBeTruthy();
   });
 });

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
+import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
@@ -119,12 +120,13 @@ export function NotificationsView({
         ) : data === undefined ? (
           <ActivityIndicator color={colors.muted} style={styles.message} testID="notifications-loading" />
         ) : sections.length === 0 ? (
-          <Text
-            style={[textStyle('body'), styles.center, styles.message, { color: colors.muted }]}
+          <EmptyState
+            illustration="bell"
+            title={t('notifications.emptyTitle')}
+            body={t('notifications.empty')}
+            refreshable
             testID="notifications-empty"
-          >
-            {t('notifications.empty')}
-          </Text>
+          />
         ) : (
           sections.map((section) => (
             <View key={section.key} style={styles.section} testID={`notifications-${section.key}`}>

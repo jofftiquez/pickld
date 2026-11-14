@@ -123,12 +123,19 @@ describe('MomentsFeedView', () => {
     expect(screen.getByTestId('feed-empty')).toBeTruthy();
     expect(screen.getByText('No moments yet')).toBeTruthy();
     expect(screen.queryByTestId('feed-find-people-card')).toBeNull();
+    // Inside the refreshable list, with the hint (D-87).
+    expect(screen.getByTestId('feed-empty-refresh-hint')).toHaveTextContent('Pull down to refresh');
   });
 
-  it('reading people with no moments yet shows neither card, and a spinner while loading', async () => {
-    await setup({ moments: [] });
+  it('reading people with no moments yet shows the quiet state, and a spinner while loading', async () => {
+    const h = await setup({ moments: [] });
     expect(screen.queryByTestId('feed-empty')).toBeNull();
     expect(screen.queryByTestId('feed-find-people-card')).toBeNull();
+    expect(screen.getByRole('header', { name: 'Nothing new yet' })).toBeTruthy();
+    expect(screen.getByText('When the people you read add moments, they show up here.')).toBeTruthy();
+    expect(screen.getByTestId('moments-empty-refresh-hint')).toHaveTextContent('Pull down to refresh');
+    await fireEvent.press(screen.getByRole('button', { name: 'Find more people' }));
+    expect(h.onFindPeople).toHaveBeenCalled();
     await setup({ moments: undefined, authors: undefined, isLoading: true });
     expect(screen.getByTestId('moments-loading')).toBeTruthy();
     expect(screen.queryByTestId('feed-empty')).toBeNull();

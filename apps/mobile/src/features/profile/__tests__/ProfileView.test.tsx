@@ -133,8 +133,20 @@ describe('ProfileView', () => {
   });
 
   it('says so when another person has shared nothing', async () => {
-    await renderView({ data: { ...page('dale-id', false), jars: [] } });
-    expect(screen.getByTestId('profile-empty')).toHaveTextContent('Mika Reyes hasn’t shared any jars with you yet.');
+    await renderView({ data: { ...page('dale-id', false), jars: [] }, onAddMoment: jest.fn() });
+    expect(screen.getByTestId('profile-empty')).toHaveTextContent(
+      'Nothing here yetMika Reyes hasn’t shared any jars with you yet.',
+    );
+    expect(screen.queryByTestId('profile-add-moment')).toBeNull();
+  });
+
+  it('offers Add a moment on your own empty grid (D-87)', async () => {
+    const onAddMoment = jest.fn();
+    await renderView({ data: { ...page('mika-id', false), jars: [] }, onAddMoment });
+    expect(screen.getByRole('header', { name: 'No jars yet' })).toBeTruthy();
+    expect(screen.getByText('Your jars show up here once you add a moment.')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Add a moment' }));
+    expect(onAddMoment).toHaveBeenCalledTimes(1);
   });
 
   it('says the profile is not available when RLS returns nothing', async () => {

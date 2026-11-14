@@ -52,6 +52,7 @@ export default function ProfileScreen() {
         onEditProfile={() => router.push('/settings/profile')}
         onSettings={() => router.push('/settings')}
         onOpenStickers={() => router.push('/stickers')}
+        onAddMoment={() => router.push('/camera')}
         onOpenList={(list) => {
           if (data) {
             router.push({ pathname: '/u/[username]/readers', params: { username: data.profile.username, list } });
