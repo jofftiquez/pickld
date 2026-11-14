@@ -51,6 +51,7 @@ async function setup(props: Partial<MomentsFeedViewProps> = {}) {
     onRefresh: jest.fn(),
     onEndReached: jest.fn(),
     onOpenNotifications: jest.fn(),
+    onOpenDiscover: jest.fn(),
     onOpenJar: jest.fn(),
     onToggleLike: jest.fn(),
     onOpenComments: jest.fn(),
@@ -170,5 +171,11 @@ describe('MomentsFeedView', () => {
     expect(screen.getByTestId('moments-notifications-dot')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Notifications, unread' }));
     expect(h.onOpenNotifications).toHaveBeenCalled();
+  });
+
+  it('the compass next to the bell opens Discover (D-101)', async () => {
+    const h = await setup();
+    await fireEvent.press(screen.getByRole('button', { name: 'Discover' }));
+    expect(h.onOpenDiscover).toHaveBeenCalled();
   });
 });

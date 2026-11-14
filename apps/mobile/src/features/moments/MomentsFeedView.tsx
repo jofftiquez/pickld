@@ -28,6 +28,8 @@ export type MomentsFeedViewProps = {
   onRefresh: () => void;
   onEndReached: () => void;
   onOpenNotifications: () => void;
+  /** The compass next to the bell (D-101). */
+  onOpenDiscover: () => void;
   /** Go to jar on a card (D-94). */
   onOpenJar: (moment: FeedMoment) => void;
   onToggleLike: (moment: FeedMoment) => void;
@@ -54,6 +56,7 @@ export function MomentsFeedView({
   onRefresh,
   onEndReached,
   onOpenNotifications,
+  onOpenDiscover,
   onOpenJar,
   onToggleLike,
   onOpenComments,
@@ -79,14 +82,23 @@ export function MomentsFeedView({
         >
           {t('moments.title')}
         </Text>
-        <View>
+        <View style={styles.headerButtons}>
           <RoundIconButton
-            icon="bell"
-            accessibilityLabel={hasUnread ? t('feed.notificationsUnread') : t('feed.notifications')}
-            onPress={onOpenNotifications}
-            testID="moments-notifications"
+            icon="compass"
+            accessibilityLabel={t('feed.discover')}
+            accessibilityHint={t('feed.discoverHint')}
+            onPress={onOpenDiscover}
+            testID="moments-discover"
           />
-          {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="moments-notifications-dot" /> : null}
+          <View>
+            <RoundIconButton
+              icon="bell"
+              accessibilityLabel={hasUnread ? t('feed.notificationsUnread') : t('feed.notifications')}
+              onPress={onOpenNotifications}
+              testID="moments-notifications"
+            />
+            {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="moments-notifications-dot" /> : null}
+          </View>
         </View>
       </View>
       {readsNobody && hasMoments ? (
@@ -174,6 +186,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xl,
     paddingBottom: space.md,
   },
+  headerButtons: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   dot: {
     position: 'absolute',
     top: 10,

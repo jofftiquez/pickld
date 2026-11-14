@@ -74,6 +74,7 @@ export default function JarsScreen() {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
       onOpenNotifications={() => router.push('/notifications')}
+      onOpenDiscover={() => router.push('/explore')}
       onOpenJar={(jarId) => router.push({ pathname: '/jar/[id]', params: { id: jarId } })}
       onOpenProfile={(username) => {
         const name = username ?? me.data?.username;

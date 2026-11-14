@@ -1685,6 +1685,52 @@ export type Database = {
         }[];
       };
       delete_comment: { Args: { comment_id: string }; Returns: undefined };
+      discover_jars_page: {
+        Args: { cursor_at?: string; cursor_id?: string };
+        Returns: {
+          author_avatar_path: string;
+          author_display_name: string;
+          author_id: string;
+          author_username: string;
+          comment_count: number;
+          cover_moment_id: string;
+          feed_at: string;
+          is_new: boolean;
+          jar_id: string;
+          last_caption: string;
+          like_count: number;
+          local_date: string;
+          preview_moment_ids: string[];
+          preview_thumb_paths: string[];
+          published_at: string;
+          visibility: Database['public']['Enums']['jar_visibility'];
+          visible_count: number;
+        }[];
+      };
+      discover_moments_page: {
+        Args: { cursor_at?: string; cursor_id?: string };
+        Returns: {
+          added_at: string;
+          author_avatar_path: string;
+          author_display_name: string;
+          author_id: string;
+          author_username: string;
+          caption: string;
+          captured_at: string;
+          comment_count: number;
+          edits: Json;
+          is_backfilled: boolean;
+          jar_id: string;
+          jar_local_date: string;
+          jar_tz: string;
+          jar_visible: boolean;
+          like_count: number;
+          liked: boolean;
+          moment_id: string;
+          slot: Database['public']['Enums']['slot'];
+          visibility: Database['public']['Enums']['jar_visibility'];
+        }[];
+      };
       ensure_jar: {
         Args: { local_date: string; tz: string };
         Returns: {

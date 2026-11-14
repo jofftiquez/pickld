@@ -8,6 +8,7 @@ import { parseEdits } from '@/features/edit/edits';
 import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
 import { MomentView } from '@/features/moment/MomentView';
+import { FollowButton } from '@/features/profile/FollowButton';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
@@ -27,6 +28,9 @@ export type MomentFeedCardProps = {
   onToggleLike: () => void;
   /** The moment's thread: the header, photo and caption open it, like the comment pill (D-94). */
   onOpenComments: () => void;
+  /** Discover (D-100): a "Be a reader" button for an author the viewer doesn't read yet. */
+  onRead?: () => void;
+  readDisabled?: boolean;
   locale?: string;
 };
 
@@ -44,6 +48,8 @@ export function MomentFeedCard({
   onOpenJar,
   onToggleLike,
   onOpenComments,
+  onRead,
+  readDisabled = false,
   locale = deviceLocale(),
 }: MomentFeedCardProps) {
   const { t } = useTranslation();
@@ -141,6 +147,17 @@ export function MomentFeedCard({
           onPress={onOpenComments}
           testID={`moments-comments-${moment.moment_id}`}
         />
+        {onRead ? (
+          <View style={styles.read}>
+            <FollowButton
+              action="read"
+              name={moment.author_display_name}
+              onPress={onRead}
+              disabled={readDisabled}
+              testID={`moments-read-${moment.moment_id}`}
+            />
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -177,4 +194,5 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', top: space.sm, right: space.sm },
   caption: { color: colors.ink, paddingHorizontal: space.xs },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  read: { flex: 1, alignItems: 'flex-end' },
 });

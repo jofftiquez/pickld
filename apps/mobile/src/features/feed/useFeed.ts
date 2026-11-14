@@ -25,11 +25,12 @@ async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null
   return new Map(parsed.data.data.moments.map((m) => [m.id, m.thumb]));
 }
 
-export async function fetchFeedPage(cursor: FeedCursor | null): Promise<FeedPage> {
-  const { data, error } = await getSupabase().rpc(
-    'feed_page',
-    cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {},
-  );
+/** One page of jars from the feed, or from Discover (`discover_jars_page`, 0070), which returns the same rows. */
+export async function fetchFeedPage(
+  cursor: FeedCursor | null,
+  rpc: 'feed_page' | 'discover_jars_page' = 'feed_page',
+): Promise<FeedPage> {
+  const { data, error } = await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
   if (error) throw new Error(error.message);
   const rows = z.array(feedRow).parse(data);
   const ids = rows.flatMap((r) => r.preview_moment_ids);

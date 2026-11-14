@@ -38,6 +38,8 @@ export const icons = {
   // Moment visibility (D-48): Everyone is a globe, Readers two people; Only me is the lock.
   globe: [c(12, 12, 9), p('M3 12h18'), p('M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18')],
   readers: [c(9, 8, 3), c(17, 9, 2.5), p('M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15.2A4.5 4.5 0 0 1 21 19')],
+  // Discover (D-101): a compass, next to the bell on the Moments and Jars tabs.
+  compass: [c(12, 12, 9), p('M15.8 8.2 13.7 13.7 8.2 15.8 10.3 10.3z')],
   warning: [p('M12 3 2 20h20z'), p('M12 10v4M12 17v.5')],
   retry: [p('M3 12a9 9 0 1 0 3-6.7L3 8'), p('M3 3v5h5')],
   clock: [p('M12 6v6l4 2'), c(12, 12, 9)],
