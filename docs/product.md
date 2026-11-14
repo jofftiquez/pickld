@@ -175,7 +175,7 @@ A single moment full screen in 3:4, with eight progress bars showing its place i
 
 ### Comments — “Comments”
 
-The thread for one jar, with avatars, names, times, likes per comment, one level of replies, and an input bar with send.
+The thread for one jar or one moment (D-51), with avatars, names, times, likes per comment, one level of replies, and an input bar with send pinned above the keyboard. A moment's thread opens with the whole moment at 3:4, full width, with its filter and stickers as on Moment detail, then its author and caption; it scrolls away with the comments (D-84).
 
 ### Share jar card — “Share jar card”
 

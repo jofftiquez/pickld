@@ -1,5 +1,4 @@
-import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -11,7 +10,10 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
+  type ScrollViewInstance,
 } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
@@ -21,6 +23,9 @@ import { Dialog } from '@/components/Dialog';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
+import type { Edits } from '@/features/edit/edits';
+import type { StampMoment } from '@/features/edit/stickers/stamps';
+import { MomentView } from '@/features/moment/MomentView';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
@@ -28,11 +33,18 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 import { CommentItem } from './CommentItem';
 import { COMMENT_MAX, COUNTER_FROM, sendable, type ThreadComment, type ThreadEntry } from './commentsModel';
 
-/** The moment a moment thread is about (0068; D-51), shown above its comments. */
+/** The moment a moment thread is about (0068; D-51), drawn whole above its comments (D-84). */
 export type CommentsMoment = {
-  thumbUrl: string | null;
+  /** The full photo (or the thumbnail if that's all that was signed); null shows the placeholder. */
+  uri: string | null;
+  /** Parsed with `parseEdits`, as on Moment detail. */
+  edits: Edits;
+  /** What its auto stamps show; null shows their art. */
+  stamp: StampMoment | null;
   /** "#morning" */
   slot: string;
+  /** The moment's owner. */
+  authorName: string;
   caption: string | null;
 };
 
@@ -65,8 +77,9 @@ export type CommentsViewProps = {
 };
 
 /**
- * One thread (Comments; FR-SOC-06): a jar's own, or one moment's under a small header with the moment
- * (D-51). Comments with one level of replies and the input bar.
+ * One thread (Comments; FR-SOC-06): a jar's own, or one moment's (D-51), which opens with the whole moment
+ * at 3:4, full width, drawn by Moment detail's `MomentView`, then its author and caption, scrolling away
+ * with the comments (D-84). Comments with one level of replies and the input bar pinned above the keyboard.
  */
 export function CommentsView({
   jarTitle,
@@ -90,6 +103,10 @@ export function CommentsView({
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<ThreadComment | null>(null);
   const [deleting, setDeleting] = useState<ThreadComment | null>(null);
+  const { width } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
+  const list = useRef<ScrollViewInstance>(null);
+  const focused = useRef(false);
   const body = sendable(draft);
   const left = COMMENT_MAX - draft.length;
 
@@ -111,6 +128,20 @@ export function CommentsView({
       onReport={c.canReport && onReport && !c.pending ? () => onReport(c) : undefined}
     />
   );
+
+  const threadBody = (entries: ThreadEntry[]) =>
+    entries.length === 0 ? (
+      <Text style={[textStyle('body'), styles.center, styles.empty]} testID="comments-empty">
+        {t('comments.empty')}
+      </Text>
+    ) : (
+      <View style={styles.card} testID="comments-card">
+        {entries.map((c) => [item(c, false), ...c.replies.map((r) => item(r, true))])}
+      </View>
+    );
+  const keepEnd = () => {
+    if (focused.current) list.current?.scrollToEnd({ animated: !reduceMotion });
+  };
 
   return (
     <KeyboardAvoidingView
@@ -143,33 +174,66 @@ export function CommentsView({
       </View>
 
       {moment && !unavailable ? (
-        <View
-          accessible
-          accessibilityLabel={
-            moment.caption
-              ? t('comments.momentA11yCaption', { slot: moment.slot, caption: moment.caption })
-              : t('comments.momentA11y', { slot: moment.slot })
-          }
-          style={styles.moment}
-          testID="comments-moment"
+        // A moment thread: the moment is the top of the list and scrolls away with the comments. While
+        // the composer is focused the list keeps its end in view, so the keyboard (which shrinks the list)
+        // and a new comment never hide the newest comments under the tall header.
+        <ScrollView
+          ref={list}
+          contentContainerStyle={styles.momentList}
+          keyboardShouldPersistTaps="handled"
+          onLayout={keepEnd}
+          onContentSizeChange={keepEnd}
+          testID="comments-list"
         >
-          {moment.thumbUrl ? (
-            <Image source={{ uri: moment.thumbUrl }} style={styles.momentThumb} contentFit="cover" accessible={false} />
-          ) : (
-            <View style={styles.momentThumb} />
-          )}
-          <View style={styles.momentText}>
-            <Text style={[textStyle('bodyMedium', '600'), { color: colors.ink }]}>{moment.slot}</Text>
-            {moment.caption ? (
-              <Text numberOfLines={2} style={[textStyle('bodySmall', '400'), { color: colors.muted }]}>
-                {moment.caption}
-              </Text>
-            ) : null}
+          <View testID="comments-moment">
+            <View
+              accessible
+              accessibilityRole="image"
+              accessibilityLabel={t('moment.photo', { slot: moment.slot })}
+              testID="comments-moment-photo"
+            >
+              <MomentView
+                uri={moment.uri}
+                edits={moment.edits}
+                width={width}
+                stamp={moment.stamp}
+                accessible={false}
+                testID="comments-moment-view"
+              />
+            </View>
+            <View style={styles.momentText}>
+              <View style={styles.momentAuthor}>
+                <Avatar name={moment.authorName} uri={null} size="sm" decorative />
+                <Text style={[textStyle('bodySmall', '700'), styles.authorName]} testID="comments-moment-author">
+                  {moment.authorName}
+                </Text>
+                <View style={styles.slotChip}>
+                  <Text style={[textStyle('bodySmall', '700'), { color: colors.brandText }]}>{moment.slot}</Text>
+                </View>
+              </View>
+              {moment.caption ? (
+                <Text style={[textStyle('momentCaption'), styles.caption]} testID="comments-moment-caption">
+                  {moment.caption}
+                </Text>
+              ) : null}
+            </View>
           </View>
-        </View>
-      ) : null}
-
-      {unavailable ? (
+          <View style={styles.momentComments}>
+            {failed ? (
+              <View style={styles.inlineMessage}>
+                <Text style={[textStyle('body'), styles.center, { color: colors.muted }]}>{t('comments.failed')}</Text>
+                <SecondaryButton label={t('jarPage.retry')} onPress={onRetry} testID="comments-retry" />
+              </View>
+            ) : thread === undefined ? (
+              <View style={styles.inlineMessage}>
+                <ActivityIndicator color={colors.muted} accessibilityLabel={t('comments.loading')} />
+              </View>
+            ) : (
+              threadBody(thread)
+            )}
+          </View>
+        </ScrollView>
+      ) : unavailable ? (
         <View style={styles.message}>
           <Text style={[textStyle('body'), styles.center, { color: colors.muted }]} testID="comments-unavailable">
             {t('jarPage.unavailableTitle')}
@@ -186,15 +250,7 @@ export function CommentsView({
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
-          {thread.length === 0 ? (
-            <Text style={[textStyle('body'), styles.center, styles.empty]} testID="comments-empty">
-              {t('comments.empty')}
-            </Text>
-          ) : (
-            <View style={styles.card} testID="comments-card">
-              {thread.map((c) => [item(c, false), ...c.replies.map((r) => item(r, true))])}
-            </View>
-          )}
+          {threadBody(thread)}
         </ScrollView>
       )}
 
@@ -226,6 +282,13 @@ export function CommentsView({
             <TextInput
               value={draft}
               onChangeText={setDraft}
+              onFocus={() => {
+                focused.current = true;
+                keepEnd();
+              }}
+              onBlur={() => {
+                focused.current = false;
+              }}
               placeholder={replyTo ? t('comments.replyPlaceholder') : t('comments.placeholder')}
               placeholderTextColor={colors.muted}
               accessibilityLabel={replyTo ? t('comments.replyPlaceholder') : t('comments.placeholder')}
@@ -292,25 +355,20 @@ const styles = StyleSheet.create({
   },
   titles: { flex: 1, alignItems: 'center' },
   headerSpacer: { width: sizes.roundButton },
-  moment: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
-    marginHorizontal: space.xl,
-    marginBottom: space.md,
-    padding: space.md,
-    borderRadius: radius.card,
-    backgroundColor: colors.surface,
-    ...shadow.card,
+  // A moment thread's list: the moment runs edge to edge; the text and comments keep the side margins.
+  momentList: { paddingBottom: space.lg },
+  momentText: { paddingHorizontal: space.xl, paddingTop: space.lg, paddingBottom: space.md, gap: space.sm + 2 },
+  momentAuthor: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
+  authorName: { color: colors.ink, flexShrink: 1 },
+  slotChip: {
+    borderRadius: radius.pill,
+    paddingVertical: space.xs + 1,
+    paddingHorizontal: space.md,
+    backgroundColor: colors.brandTint,
   },
-  // The Notifications row's 3:4 thumbnail size.
-  momentThumb: {
-    width: sizes.notifyAvatar,
-    height: sizes.notifyThumbHeight,
-    borderRadius: radius.thumb,
-    backgroundColor: colors.photoPlaceholder,
-  },
-  momentText: { flex: 1, gap: space.xs },
+  caption: { color: colors.ink },
+  momentComments: { paddingHorizontal: space.xl },
+  inlineMessage: { alignItems: 'center', gap: space.md, paddingVertical: space.xxl },
   message: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, paddingHorizontal: space.xxl },
   center: { textAlign: 'center' },
   list: { paddingHorizontal: space.xl, paddingBottom: space.lg },
