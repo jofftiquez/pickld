@@ -3,6 +3,7 @@
 // are fetched by the timelines' own functions (with signed photos) and drawn by their cards. Each list loads
 // the first time its tab is shown. Reading an author takes them out of both lists at once.
 import {
+  infiniteQueryOptions,
   useInfiniteQuery,
   useMutation,
   useQueryClient,
@@ -52,18 +53,23 @@ export async function removeDiscoverAuthor(queryClient: QueryClient, authorId: s
   );
 }
 
+/** The Moments list's query, shared with the Discover tab's unread dot so both read one cache entry. */
+export function discoverMomentsQuery(userId: string | null) {
+  return infiniteQueryOptions({
+    queryKey: discoverQueryKeys.moments(userId ?? ''),
+    queryFn: ({ pageParam }) => fetchMomentsPage(pageParam, 'discover_moments_page'),
+    initialPageParam: null as MomentsCursor | null,
+    getNextPageParam: (last: MomentsPage) => last.nextCursor,
+    enabled: userId !== null,
+  });
+}
+
 /** Discover's Moments list; `enabled` once its tab has been shown. */
 export function useDiscoverMoments(enabled: boolean) {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const queryClient = useQueryClient();
   const queryKey = discoverQueryKeys.moments(userId ?? '');
-  const list = useInfiniteQuery({
-    queryKey,
-    queryFn: ({ pageParam }) => fetchMomentsPage(pageParam, 'discover_moments_page'),
-    initialPageParam: null as MomentsCursor | null,
-    getNextPageParam: (last) => last.nextCursor,
-    enabled: userId !== null && enabled,
-  });
+  const list = useInfiniteQuery({ ...discoverMomentsQuery(userId), enabled: userId !== null && enabled });
   const setLiked = (momentId: string, liked: boolean) =>
     queryClient.setQueryData<MomentPages>(queryKey, (data) =>
       data ? { ...data, pages: withMomentLike(data.pages, momentId, liked) } : data,

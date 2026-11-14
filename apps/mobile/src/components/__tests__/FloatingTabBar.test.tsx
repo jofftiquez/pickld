@@ -78,6 +78,20 @@ describe('FloatingTabBar', () => {
     expect(screen.getByRole('tab', { name: 'Today', selected: true })).toBeTruthy();
   });
 
+  it('shows the dot only on a badged tab, read after its name, and hides it without a badge (FR-EXP-04)', async () => {
+    const { props } = setup();
+    const view = await render(<FloatingTabBar {...props} badges={{ discover: 'new posts' }} />);
+    expect(screen.getByTestId('tab-discover-dot')).toBeTruthy();
+    expect(screen.queryAllByTestId(/^tab-.*-dot$/)).toHaveLength(1);
+    expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue).toEqual({ text: 'new posts' });
+    expect(screen.getByRole('tab', { name: 'Today' }).props.accessibilityValue?.text).toBeUndefined();
+    expect(flatStyle(screen.getByTestId('tab-discover-dot'))).toMatchObject({ backgroundColor: colors.notifyDot });
+
+    await view.rerender(<FloatingTabBar {...props} />);
+    expect(screen.queryByTestId('tab-discover-dot')).toBeNull();
+    expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue?.text).toBeUndefined();
+  });
+
   it('pressing an unfocused tab emits tabPress and navigates to that route', async () => {
     const { props, emit, navigateToTab } = setup({ index: 0 });
     await render(<FloatingTabBar {...props} />);

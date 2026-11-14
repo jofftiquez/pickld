@@ -14,6 +14,8 @@ export type TabBarButtonProps = {
   /** Already translated. */
   label: string;
   focused: boolean;
+  /** Shows a small dot on the icon; the text is read after the label ("Discover, new posts"). Translated. */
+  badge?: string;
   onPress: () => void;
   onLongPress: () => void;
   /** The bar's glass shadows on Liquid Glass (D-80), else null (the milky blur). */
@@ -22,7 +24,16 @@ export type TabBarButtonProps = {
 };
 
 /** One tab of FloatingTabBar: icon in a pill (tinted when selected) over a caption. */
-export function TabBarButton({ icon, label, focused, onPress, onLongPress, glyph = null, testID }: TabBarButtonProps) {
+export function TabBarButton({
+  icon,
+  label,
+  focused,
+  badge,
+  onPress,
+  onLongPress,
+  glyph = null,
+  testID,
+}: TabBarButtonProps) {
   const [pressed, setPressed] = useState(false);
   // The lighter glass lets dark content through, so unselected tabs use ink there instead of muted (D-80).
   const tint = focused ? 'brandText' : glyph ? 'ink' : 'muted';
@@ -31,6 +42,7 @@ export function TabBarButton({ icon, label, focused, onPress, onLongPress, glyph
       accessibilityRole="tab"
       accessibilityLabel={label}
       accessibilityState={{ selected: focused }}
+      accessibilityValue={badge ? { text: badge } : undefined}
       onPress={onPress}
       onLongPress={onLongPress}
       onPressIn={() => setPressed(true)}
@@ -44,6 +56,7 @@ export function TabBarButton({ icon, label, focused, onPress, onLongPress, glyph
         testID={focused ? 'tab-active-pill' : undefined}
       >
         <Icon name={icon} color={tint} size={22} strokeWidth={focused ? 2 : 1.8} />
+        {badge ? <View style={styles.dot} pointerEvents="none" testID={`${testID}-dot`} /> : null}
       </View>
       {/* Four tabs share the bar (D-130): a label stays on one line and shrinks a little rather than wrap. */}
       <Text
@@ -78,5 +91,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pillActive: { backgroundColor: colors.brandTint },
+  // Like the bell's unread dot (Moments), at the icon's top right corner.
+  dot: {
+    position: 'absolute',
+    top: 0,
+    right: space.md,
+    width: sizes.notifyDot + 4,
+    height: sizes.notifyDot + 4,
+    borderRadius: radius.pill,
+    backgroundColor: colors.notifyDot,
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
   label: { textAlign: 'center' },
 });
