@@ -26,6 +26,8 @@ export type TextFieldProps = {
   /** The keyboard's return key: `returnKeyType` names it and `onSubmitEditing` runs when it's pressed. */
   returnKeyType?: TextInputProps['returnKeyType'];
   onSubmitEditing?: () => void;
+  /** What Return does; `blurAndSubmit` on a multi-line field closes the keyboard instead of adding a line. */
+  submitBehavior?: TextInputProps['submitBehavior'];
   /** Focus the field (and show the keyboard) when it appears. */
   autoFocus?: boolean;
   testID?: string;
@@ -49,6 +51,7 @@ export function TextField({
   autoCorrect,
   returnKeyType,
   onSubmitEditing,
+  submitBehavior,
   autoFocus,
   testID,
   trailing,
@@ -80,6 +83,7 @@ export function TextField({
           autoCorrect={autoCorrect}
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
+          submitBehavior={submitBehavior}
           autoFocus={autoFocus}
           textAlignVertical={multiline ? 'top' : 'center'}
           testID={testID}

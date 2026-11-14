@@ -2,7 +2,8 @@ import { useImage } from '@shopify/react-native-skia';
 import { useState } from 'react';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
-import { formatTime } from '@/lib/format';
+import { formatShortDate, formatTime } from '@/lib/format';
+import { localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { newMomentId } from '@/lib/queue/uploader';
 import type { SaveEditsInput } from '@/lib/queue/store';
@@ -92,6 +93,8 @@ export function EditSession({
       photoUri={photoUri}
       slot={slot}
       time={formatTime(shotAt, tz)}
+      // A photo from another day says which day, not "Today".
+      shotOn={localDateIn(shotAt, tz) === localDateIn(new Date(), tz) ? null : formatShortDate(shotAt, tz)}
       edits={editor.edits}
       filter={editor.filter}
       tool={tool}

@@ -43,59 +43,62 @@ export function TodayHeader({
     ? t(`today.greeting.${greeting}`, { name: firstName })
     : t(`today.greetingNoName.${greeting}`);
   return (
-    <View style={styles.row}>
-      <View style={styles.titles}>
-        <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]}>
-          {zoneTag
-            ? t('timeZone.subtitle', { date, tag: zoneTag })
-            : t('today.subtitle', { date, greeting: greetingText })}
-        </Text>
+    // The date and greeting run the full width above the title row, so the round buttons sit beside "Today"
+    // alone and the line wraps only at large text sizes.
+    <View style={styles.header}>
+      <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]}>
+        {zoneTag
+          ? t('timeZone.subtitle', { date, tag: zoneTag })
+          : t('today.subtitle', { date, greeting: greetingText })}
+      </Text>
+      <View style={styles.row}>
         <Text
           maxFontSizeMultiplier={maxTextScale.title}
           testID="screen-title"
           accessibilityRole="header"
-          style={[textStyle('screenTitle'), { color: colors.ink }]}
+          style={[textStyle('screenTitle'), styles.title]}
         >
           {t('today.title')}
         </Text>
-      </View>
-      <View style={styles.actions}>
-        {onOpenStickers ? (
-          <RoundIconButton
-            icon="stickers"
-            accessibilityLabel={t('today.stickers')}
-            onPress={onOpenStickers}
-            testID="today-stickers"
-          />
-        ) : null}
-        {onOpenMyDays ? (
-          <RoundIconButton
-            icon="myDays"
-            accessibilityLabel={t('today.myDays')}
-            onPress={onOpenMyDays}
-            testID="today-my-days"
-          />
-        ) : null}
-        {displayName && onOpenProfile ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={displayName}
-            accessibilityHint={t('profile.openMine')}
-            onPress={onOpenProfile}
-            testID="today-avatar"
-          >
-            <Avatar name={displayName} uri={avatarUrl} size="header" decorative />
-          </Pressable>
-        ) : displayName ? (
-          <Avatar name={displayName} uri={avatarUrl} size="header" testID="today-avatar" />
-        ) : null}
+        <View style={styles.actions}>
+          {onOpenStickers ? (
+            <RoundIconButton
+              icon="stickers"
+              accessibilityLabel={t('today.stickers')}
+              onPress={onOpenStickers}
+              testID="today-stickers"
+            />
+          ) : null}
+          {onOpenMyDays ? (
+            <RoundIconButton
+              icon="myDays"
+              accessibilityLabel={t('today.myDays')}
+              onPress={onOpenMyDays}
+              testID="today-my-days"
+            />
+          ) : null}
+          {displayName && onOpenProfile ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={displayName}
+              accessibilityHint={t('profile.openMine')}
+              onPress={onOpenProfile}
+              testID="today-avatar"
+            >
+              <Avatar name={displayName} uri={avatarUrl} size="header" decorative />
+            </Pressable>
+          ) : displayName ? (
+            <Avatar name={displayName} uri={avatarUrl} size="header" testID="today-avatar" />
+          ) : null}
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  header: { gap: space.xs / 2 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
-  titles: { flexShrink: 1, gap: space.xs / 2 },
+  title: { color: colors.ink, flexShrink: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
 });

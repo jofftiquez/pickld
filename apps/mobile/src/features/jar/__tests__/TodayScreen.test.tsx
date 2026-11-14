@@ -217,8 +217,9 @@ describe('Today screen', () => {
     await renderScreen(newClient());
     await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
     // 05:30 UTC is 1:30 PM in Manila, the phone's zone.
-    expect(screen.getByText('Published 1:30 PM · Readers')).toBeTruthy();
-    expect(screen.getByText('Shared with readers · 21 likes')).toBeTruthy();
+    expect(screen.getByText('Shared with readers')).toBeTruthy();
+    expect(screen.getByText('21 likes ·')).toBeTruthy();
+    expect(screen.getByText('Published 1:30 PM')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull();
     expect(mockSheet.props?.visible).toBe(false);
 
@@ -233,6 +234,9 @@ describe('Today screen', () => {
       { table: 'jars', values: expect.objectContaining({ visibility: 'everyone' }), eq: [['id', 'jar-10']] },
     ]);
     await waitFor(() => expect(mockSheet.props?.visible).toBe(false));
+    // The card's words open the same menu.
+    await fireEvent.press(screen.getByTestId('today-published-text'));
+    expect(mockSheet.props?.visible).toBe(true);
   });
 
   it('no jar yet: Publish is off', async () => {

@@ -36,5 +36,7 @@ export const LARGE_TEXT_SCALE = 1.5;
  *   "Notifications", on one line.
  * - tabLabel: the floating tab bar's labels, like iOS's own tab bar, grow only a little.
  * - tile: labels drawn inside a fixed-size photo tile; the tile's screen reader label has the full text.
+ * - control: labels inside a control's fixed width (segments, filter names, the moment preview's actions)
+ *   grow to 200% (NFR-A11Y-02); where even that won't fit they shrink rather than break mid-word.
  */
-export const maxTextScale = { title: 1.5, tabLabel: 1.2, tile: 1.3 } as const;
+export const maxTextScale = { title: 1.5, tabLabel: 1.2, tile: 1.3, control: 2 } as const;

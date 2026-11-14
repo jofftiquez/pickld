@@ -4,7 +4,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { PillButton } from '@/components/PillButton';
 import type { Visibility } from '@/features/publish/publishJar';
-import { hitSlopFor } from '@/lib/hitSlop';
 import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
@@ -19,11 +18,11 @@ export type JarCardProps = {
   firstDay: boolean;
   /** Opens Publish review; null disables Publish (no jar yet). */
   onPublish: (() => void) | null;
-  /** The jar is published (TodayPublished): who sees it and its likes replace the readers line, the
-   * Published chip replaces Publish, and "Published 10:10 PM · Readers" sits under them. `time` is
-   * already formatted in the phone's zone. */
+  /** The jar is published (TodayPublished): who sees it replaces the readers line, "21 likes · Published
+   * 10:10 PM" goes under it, and the Published chip replaces Publish. `time` is already formatted in the
+   * phone's zone. */
   published?: { visibility: Visibility; likeCount: number; time: string } | null;
-  /** The Published chip and line: open the jar's visibility menu (FR-PUB-03). */
+  /** The Published chip and the card's words: open the jar's visibility menu (FR-PUB-03). */
   onOpenVisibility?: () => void;
   /** A past day's jar on the day page (D-55): "in this jar" instead of "in today’s jar". */
   pastDay?: boolean;
@@ -50,67 +49,83 @@ export function JarCard({
   const subtitle = firstDay
     ? t('today.firstJarBody')
     : published
-      ? t('today.sharedLikes', {
-          shared: t(`today.shared.${published.visibility}`),
-          likes: t('today.likes', { count: published.likeCount }),
-        })
+      ? t(`today.shared.${published.visibility}`)
       : readerCount === null
         ? t(pastDay ? 'day.inJar' : 'today.inTodaysJar')
         : t(pastDay ? 'day.inJarReaders' : 'today.inTodaysJarReaders', { count: readerCount });
-  const publishedLine = published
-    ? t('today.publishedLine', { time: published.time, visibility: t(`settings.visibility.${published.visibility}`) })
-    : null;
+  // Published: likes and the time go on their own line under who sees it, in the text column, instead of
+  // a third line under the jar that said who sees it again. Two pieces, so at large sizes the time wraps
+  // whole under the likes.
+  const likes = published ? t('today.likesDot', { likes: t('today.likes', { count: published.likeCount }) }) : null;
+  const publishedAt = published ? t('today.publishedAt', { time: published.time }) : null;
+  const publishedLine = likes !== null && publishedAt !== null ? `${likes} ${publishedAt}` : null;
+  const lines = (
+    <>
+      <Text style={[textStyle('jarCardTitle'), { color: colors.surface }]}>{title}</Text>
+      <Text style={[textStyle(firstDay ? 'bodySmall' : 'label', '500'), { color: colors.onDarkMuted }]}>
+        {subtitle}
+      </Text>
+      {likes !== null && publishedAt !== null ? (
+        <View style={styles.publishedLine} testID="today-published-line">
+          <Text style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}>{likes}</Text>
+          <Text style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}>{publishedAt}</Text>
+        </View>
+      ) : null}
+    </>
+  );
+  const pill = firstDay ? null : published ? (
+    <PillButton
+      variant="onDark"
+      icon="check"
+      label={t('today.published')}
+      accessibilityLabel={t('today.publishedLabel', { shared: t(`today.shared.${published.visibility}`) })}
+      accessibilityHint={t('today.publishedHint')}
+      onPress={() => onOpenVisibility?.()}
+      testID="today-published"
+    />
+  ) : (
+    <PillButton
+      label={t('today.publish')}
+      accessibilityHint={
+        onPublish ? t(pastDay ? 'day.publishHint' : 'today.publishHint') : t('today.publishDisabledHint')
+      }
+      onPress={() => onPublish?.()}
+      disabled={onPublish === null}
+      testID="today-publish"
+    />
+  );
   return (
     <View style={styles.card} testID={firstDay ? 'jar-card-first-day' : 'jar-card'}>
-      <View style={[styles.row, large ? styles.rowWrap : null]}>
+      {/* Large text: the jar sits above the words and the pill under them, so the words get the card's
+          full width and never break mid-word or run past the card (NFR-A11Y-02). */}
+      <View style={large ? styles.stack : styles.row}>
         <JarGraphic count={count} lidColor={lidColor} onDark decorative closeLid={closeLid} />
-        <View accessible style={[styles.text, large ? styles.textLarge : null]}>
-          <Text style={[textStyle('jarCardTitle'), { color: colors.surface }]}>{title}</Text>
-          <Text style={[textStyle(firstDay ? 'bodySmall' : 'label', '500'), { color: colors.onDarkMuted }]}>
-            {subtitle}
-          </Text>
-        </View>
-        {firstDay ? null : published ? (
-          <PillButton
-            variant="onDark"
-            icon="check"
-            label={t('today.published')}
-            accessibilityLabel={t('today.publishedLabel', { shared: t(`today.shared.${published.visibility}`) })}
+        {published ? (
+          // The words open the visibility menu too (FR-PUB-03), like the Published chip.
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={[title, subtitle, publishedLine].join(', ')}
             accessibilityHint={t('today.publishedHint')}
             onPress={() => onOpenVisibility?.()}
-            testID="today-published"
-          />
+            style={({ pressed }) => [
+              large ? styles.textStacked : styles.text,
+              pressed ? { opacity: PRESSED_OPACITY } : null,
+            ]}
+            testID="today-published-text"
+          >
+            {lines}
+          </Pressable>
         ) : (
-          <PillButton
-            label={t('today.publish')}
-            accessibilityHint={
-              onPublish ? t(pastDay ? 'day.publishHint' : 'today.publishHint') : t('today.publishDisabledHint')
-            }
-            onPress={() => onPublish?.()}
-            disabled={onPublish === null}
-            testID="today-publish"
-          />
+          <View accessible style={large ? styles.textStacked : styles.text}>
+            {lines}
+          </View>
         )}
+        {large ? null : pill}
       </View>
-      {publishedLine !== null ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={publishedLine}
-          accessibilityHint={t('today.publishedHint')}
-          onPress={() => onOpenVisibility?.()}
-          hitSlop={hitSlopFor(undefined, LINE_HEIGHT)}
-          style={({ pressed }) => [styles.line, pressed ? { opacity: PRESSED_OPACITY } : null]}
-          testID="today-published-line"
-        >
-          <Text style={[textStyle('label', '600'), { color: colors.onDarkMuted }]}>{publishedLine}</Text>
-        </Pressable>
-      ) : null}
+      {large && pill ? <View style={styles.pillBelow}>{pill}</View> : null}
     </View>
   );
 }
-
-// The published line's text height at the default size; hitSlop brings it to the 44 pt minimum.
-const LINE_HEIGHT = 20;
 
 const styles = StyleSheet.create({
   card: {
@@ -120,9 +135,9 @@ const styles = StyleSheet.create({
     paddingRight: space.lg,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: sizes.cardPadding },
-  line: { alignSelf: 'flex-start', marginTop: space.md },
   text: { flex: 1, gap: space.xs },
-  // Large text: Publish wraps below, so the count keeps the card's width instead of breaking mid-word.
-  rowWrap: { flexWrap: 'wrap', rowGap: space.md },
-  textLarge: { flexBasis: '60%' },
+  stack: { alignItems: 'flex-start', gap: space.md },
+  textStacked: { alignSelf: 'stretch', gap: space.xs },
+  pillBelow: { alignSelf: 'flex-start', marginTop: space.md },
+  publishedLine: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.xs },
 });

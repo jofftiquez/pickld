@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { DISABLED_OPACITY, PRESSED_OPACITY } from '@/components/BaseButton';
 import { Icon } from '@/components/Icon';
 import type { IconName } from '@/components/icons';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 export type PreviewActionButtonProps = {
@@ -60,7 +60,11 @@ export function PreviewActionButton({
       <View style={[styles.well, { backgroundColor: tint }]}>
         <Icon name={icon} color={danger ? 'danger' : selected ? 'brandText' : 'ink'} size={20} strokeWidth={2} />
       </View>
-      <Text style={[textStyle('label', '600'), wide ? styles.labelWide : styles.labelNarrow, { color: ink }]}>
+      {/* Up to 200%, where "Visibility" still fits half the bar; past that it would break mid-word. */}
+      <Text
+        maxFontSizeMultiplier={maxTextScale.control}
+        style={[textStyle('label', '600'), wide ? styles.labelWide : styles.labelNarrow, { color: ink }]}
+      >
         {label}
       </Text>
     </Pressable>

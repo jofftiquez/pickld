@@ -44,7 +44,8 @@
     "published": "Published",
     "publishedLabel": "Published, {{shared}}",
     "publishedHint": "Changes who can see this jar",
-    "publishedLine": "Published {{time}} · {{visibility}}",
+    "likesDot": "{{likes}} ·",
+    "publishedAt": "Published {{time}}",
     "shared": {
       "readers": "Shared with readers",
       "everyone": "Shared with everyone",
@@ -54,7 +55,6 @@
     "unlikeHint": "Removes your like",
     "likes_one": "{{count}} like",
     "likes_other": "{{count}} likes",
-    "sharedLikes": "{{shared}} · {{likes}}",
     "suspended": {
       "title": "Your account is suspended until {{date}}.",
       "titleNoDate": "Your account is suspended.",
@@ -93,6 +93,8 @@
   "camera": {
     "when": "Today · {{time}}",
     "slotTag": "{{slot}}, today at {{time}}",
+    "whenOn": "{{time}} · {{date}}",
+    "slotTagOn": "{{slot}}, {{date}} at {{time}}",
     "aspect": "3:4",
     "flashOff": "Flash off",
     "flashOn": "Flash on",

@@ -1,7 +1,7 @@
 import type { SkImage } from '@shopify/react-native-skia';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { FilteredPhoto } from './FilteredPhoto';
@@ -45,7 +45,16 @@ export function FilterThumbnail({
           <FilteredPhoto image={image} matrix={matrix} width={size} height={size} />
         </View>
       </View>
-      <Text style={[textStyle('label', selected ? '700' : '500'), styles.label]}>{label}</Text>
+      {/* One line under the thumbnail at any size: it shrinks rather than break mid-word ("Ori/gin/al"). */}
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.5}
+        maxFontSizeMultiplier={maxTextScale.tile}
+        style={[textStyle('label', selected ? '700' : '500'), styles.label]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
