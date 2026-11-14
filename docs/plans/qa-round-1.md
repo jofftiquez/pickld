@@ -795,14 +795,14 @@ The product owner tested the round 1 build (main at `b6664bc`) on his iPhone 14 
 
 ## Pieces, order and parallel work
 
-| Piece | Items | Main files | Runs with |
-| --- | --- | --- | --- |
-| P-A Profile | 1 | crop, profile upload, ProfileView | C, D, F |
-| P-B Liquid Glass | 2 | tokens, GlassSurface, tab bar | after the diagnostic; with anything except files above |
-| P-C Stickers | 3, 10 | PackArt, PackPreviewView, shop | A, D, F |
-| P-D Share | 4, 5 | storyLayout, StoryCard, share route, Moment detail, Jar page | A, C |
-| P-E Comments | 6 | comments route | after D (Moment detail overlap is small) |
-| P-F Small fixes | 7, 8, 9 | under13, FollowButton, empty states, en.json | A, C |
+| Piece            | Items   | Main files                                                   | Runs with                                              |
+| ---------------- | ------- | ------------------------------------------------------------ | ------------------------------------------------------ |
+| P-A Profile      | 1       | crop, profile upload, ProfileView                            | C, D, F                                                |
+| P-B Liquid Glass | 2       | tokens, GlassSurface, tab bar                                | after the diagnostic; with anything except files above |
+| P-C Stickers     | 3, 10   | PackArt, PackPreviewView, shop                               | A, D, F                                                |
+| P-D Share        | 4, 5    | storyLayout, StoryCard, share route, Moment detail, Jar page | A, C                                                   |
+| P-E Comments     | 6       | comments route                                               | after D (Moment detail overlap is small)               |
+| P-F Small fixes  | 7, 8, 9 | under13, FollowButton, empty states, en.json                 | A, C                                                   |
 
 Order: A, C and D first in parallel; F and E next; B once the phone diagnostic is in. Each piece merges on a green `ci`. The phone gets a rebuild after the first batch and once more at the end. The storage fix happens whenever the product owner approves it; until then uploads (and the new cropper's upload) can't be checked end to end on the phone.
 
@@ -819,3 +819,77 @@ Order: A, C and D first in parallel; F and E next; B once the phone diagnostic i
 9. **Empty states (D-87):** every empty list gets an illustration, title, hint and action where possible; pull-to-refresh lists say "Pull down to refresh".
 
 **Parked, needs the product owner:** re-creating the local `supabase_storage_pickld` container on storage-api v1.90.1 to fix uploads (item 1).
+
+# Round 3 (iPhone test of the round 2 build, Nov 14)
+
+The product owner tested Pickld Local built from `62fc3d5` and sent seven items. He auto-approved my recommendations again, so each decision is recorded in `docs/decisions.md` as auto-approved (D-90 onward). No piece needs a migration or a schema change.
+
+## Item by item
+
+### R3-1 Moments timeline: tapping a moment opens its thread; "Go to jar" in the card header
+
+- **Today:** the top of a Moments timeline card opens Moment detail (`/moment/[id]`); the comment pill opens the moment's thread (`/comments/[jarId]?momentId=…`). There is no direct way to the jar.
+- **Change:** tapping the photo, header or caption opens the same thread the comment pill opens (it already shows the whole moment, D-84). The card header gets a "Go to jar" text button at its top right, opening `/jar/[id]`.
+- **Touches:** `src/features/moments/MomentFeedCard.tsx`, `MomentsFeedView.tsx`, `app/(tabs)/moments.tsx`, `en.json`. **Design:** MomentsFeed. **Risk:** low; Moment detail stays reachable from the jar. **Size:** S.
+
+### R3-2 Comment thread photo: rounded corners and a margin
+
+- **Today:** D-84 draws the moment edge to edge with square corners, unlike every other photo in the app.
+- **Change:** the photo sits inside the screen's side margin (`space.lg`), keeps the app's photo corner radius, and stays 3:4.
+- **Touches:** `src/features/comments/CommentsView.tsx`. **Design:** Comments. **Size:** XS.
+
+### R3-3 Jar previews leave out stickers and edits
+
+- **Root cause:** the Jars timeline card (`FeedMosaic`) draws plain thumbnails. `feed_page` returns only `preview_moment_ids`, and `fn:photo-urls` returns only signed thumbnail URLs, so the card never gets a moment's edits. The same plain `Image` is used for previews on the profile grid, the My days day card, Explore's full jars and Memories. The Jar page grid and Today already use `MomentCover` with edits.
+- **Change:** every moment preview draws the moment with its edits (filter, stickers, text, stamps) through `MomentCover`. The previews read `edits` and `captured_at` for the shown moment ids from `moments` (same RLS as the photos; a moment the viewer can't read keeps its plain thumbnail). Tiny calendar dots stay plain.
+- **Touches:** `FeedMosaic.tsx`, `useFeed.ts`, `ProfileGridTile.tsx` / `useProfile.ts`, `SelectedDayCard.tsx`, `ExploreView.tsx` / `useExplore.ts`, `MemoriesView.tsx`. **Design:** Feed, Profile, MyDays (comments). **Risk:** a few more small reads per page; batched by id. **Size:** M.
+
+### R3-4a Share screen redesign
+
+- **Today:** D-89 keeps every photo 3:4, but some layouts leave large empty bands, pills hang beside narrow blocks (film strip), and the product owner calls the results "not sharable".
+- **Change:** a redesign pass judged on the real exported images. Render every layout × background × moment count (1–8) × format (Story, post) plus single moments, save the full-size exports, judge each as an Instagram/Facebook Story or post (balance, empty space, readable text, safe zones, photos 3:4 and whole), fix what looks bad and cut layouts that can't look good. A contact sheet of the final exports goes to the product owner.
+- **Touches:** `src/features/share/*`, a dev-only render screen for the exports, `design/screens/ShareCard.html`. **Risk:** a cut layout someone liked; each cut is recorded. **Size:** L.
+
+### R3-4b Someone's day: no cover header, a 2 by 4 grid like Today
+
+- **Today:** the Jar page (`JarPageView`) opens with a tall cover photo band (`sizes.jarCover`) with the author over it, then a highlight line and the grid.
+- **Change:** a plain header (back, author avatar and name, day title, full tag, like, comments, share for the owner) over the moments in the same 2 by 4 grid as Today, in slot order, with the cover marked by a small badge. The cover still leads the Jars timeline card and the share card.
+- **Touches:** `JarPageView.tsx`, `JarTile.tsx`, `jarPage.ts`, tokens. **Design:** Story (the Jar page). **Risk:** the highlight caption line goes; captions stay on Moment detail. **Size:** M.
+
+### R3-5 New profile photo doesn't show elsewhere
+
+- **Root cause:** avatar photos were only ever built for the Profile, Explore, Notifications, Find friends and Settings. `fetchMe` (Today header and the Me query) still says `TODO(M3-13)` and returns `avatarUrl: null`. The Moments timeline card, Jars timeline card, comments (rows, the moment's author and the composer), Moment detail, the Jar page, Readers and authors lists and Blocked all pass no photo to `Avatar`, so they show initials whatever is uploaded. Where avatars are signed, the cache keys don't change on upload, so the profile save also has to refresh Explore and the follow lists.
+- **Change:** one hook signs avatars for a set of user ids through `fn:photo-urls` (batched, cached by the avatar path so a new upload is a new key), and every place above uses it. `fetchMe` signs the owner's avatar. The profile save refreshes every query holding avatars. The cover only appears on the profile, which already refreshes.
+- **Touches:** a new `src/lib/avatars.ts` (or similar), `useToday.ts`, the views listed, `app/settings/profile.tsx`. The widgets show no avatar. **Design:** none (initials stay the fallback). **Risk:** extra signing calls; batched per screen. **Size:** M.
+
+### R3-6 "Set as cover" is hard to find
+
+- **Today:** Set as cover (D-56) lives in the moment preview's More sheet; nothing on the grid shows which moment is the cover.
+- **Change:** the owner's moment preview (Today, a past day, the Jar page) shows a "Set as cover" action in its action row, and "Cover" when it already is. The Today and day grids and the Jar page mark the cover tile with a small "Cover" badge. More keeps the row too.
+- **Touches:** `momentPreview.ts` (`previewActions`), `MomentPreviewView.tsx`, `app/moment/preview.tsx`, `MomentTile.tsx` / `todayGrid.ts`, `JarTile.tsx`, `en.json`. **Design:** MomentPreview, Main. **Size:** S.
+
+### R3-7 #selfie opens on the front camera
+
+- **Today:** the camera always starts on the back lens (`useState<CameraFacing>('back')` in `app/camera.tsx`).
+- **Change:** the camera starts on the front lens when the slot is #selfie; flip still works. **Touches:** `app/camera.tsx`. **Size:** XS.
+
+## Pieces, order and parallel work
+
+| Piece                                  | Items       | Decisions | Main files                                                                                             | Runs with                                   |
+| -------------------------------------- | ----------- | --------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| R3-H Share redesign                    | 4a          | D-90–D-92 | `src/features/share/*`, dev render screen                                                              | I, J                                        |
+| R3-I Avatars, timeline, comments       | 5, 1, 2     | D-93–D-95 | avatars hook, MomentFeedCard, CommentsView, CommentItem, FeedJarCard, follow lists, `useToday`         | H, J                                        |
+| R3-J Previews, day grid, cover, selfie | 3, 4b, 6, 7 | D-96–D-99 | FeedMosaic, ProfileGridTile, SelectedDayCard, Explore, Memories, JarPageView, JarTile, preview, camera | H, I (rebases on I for the Jar page avatar) |
+
+All three run in parallel in their own worktrees. Each merges on a green `ci`. The phone gets a rebuild at the end.
+
+## Decisions (auto-approved Nov 14, recorded as D-90 onward)
+
+1. **Share redesign (D-90–D-92):** judged on full-size exports; layouts that can't look good are cut; photos stay 3:4 and whole.
+2. **Avatars everywhere (D-93):** every person shown in the app uses their photo when they have one, initials otherwise.
+3. **Timeline tap (D-94):** tapping a Moments timeline card opens the moment's thread; "Go to jar" sits at the card header's top right.
+4. **Comment photo (D-95):** the thread's photo keeps the side margin and the app's photo radius.
+5. **Previews with edits (D-96):** every moment preview shows the moment's edits.
+6. **Jar page grid (D-97):** someone's day drops the cover band for a header and the Today-style 2 by 4 grid, cover badged.
+7. **Cover discoverable (D-98):** Set as cover is an action in the owner's moment preview, and the cover tile carries a badge.
+8. **Selfie camera (D-99):** #selfie opens on the front camera.
