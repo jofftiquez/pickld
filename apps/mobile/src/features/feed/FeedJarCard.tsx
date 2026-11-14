@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
+import { FollowButton } from '@/features/profile/FollowButton';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
@@ -17,10 +18,13 @@ export type FeedJarCardProps = {
   avatarUrl?: string | null;
   /** Opens the Jar page; without it the card isn't pressable. */
   onPress?: () => void;
+  /** Discover (D-100): a "Be a reader" button under the card for an author the viewer doesn't read yet. */
+  onRead?: () => void;
+  readDisabled?: boolean;
 };
 
 /** A followed author's jar in the Jars feed (design: Feed): header, photo mosaic, likes, comments and caption. */
-export function FeedJarCard({ jar, now, avatarUrl = null, onPress }: FeedJarCardProps) {
+export function FeedJarCard({ jar, now, avatarUrl = null, onPress, onRead, readDisabled = false }: FeedJarCardProps) {
   const { t } = useTranslation();
   const age = ageOf(jar.feed_at, now);
   const updated = t(`feed.updated.${age.unit}`, { count: age.count });
@@ -70,19 +74,42 @@ export function FeedJarCard({ jar, now, avatarUrl = null, onPress }: FeedJarCard
     </>
   );
   const testID = `feed-card-${jar.author_username}`;
-  return onPress ? (
+  // With a Be a reader button the card is a plain box: the pressable part and the button stay separate, so
+  // screen readers reach both.
+  const read = onRead !== undefined;
+  const content = onPress ? (
     <Pressable
-      testID={testID}
+      testID={read ? `${testID}-open` : testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={styles.card}
+      style={read ? styles.body : styles.card}
     >
       {body}
     </Pressable>
   ) : (
-    <View testID={testID} accessible accessibilityLabel={label} style={styles.card}>
+    <View
+      testID={read ? `${testID}-open` : testID}
+      accessible
+      accessibilityLabel={label}
+      style={read ? styles.body : styles.card}
+    >
       {body}
+    </View>
+  );
+  if (onRead === undefined) return content;
+  return (
+    <View testID={testID} style={styles.card}>
+      {content}
+      <View style={styles.read}>
+        <FollowButton
+          action="read"
+          name={jar.author_display_name}
+          onPress={onRead}
+          disabled={readDisabled}
+          testID={`${testID}-read`}
+        />
+      </View>
     </View>
   );
 }
@@ -121,5 +148,7 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   stat: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  body: { gap: space.sm + 2 },
+  read: { alignItems: 'flex-end', paddingHorizontal: space.xs },
   caption: { flex: 1, textAlign: 'right', color: colors.muted },
 });

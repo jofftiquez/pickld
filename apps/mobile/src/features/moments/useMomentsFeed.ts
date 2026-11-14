@@ -37,11 +37,12 @@ async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
   return new Map(parsed.data.data.moments.map((m) => [m.id, { full: m.full, thumb: m.thumb }]));
 }
 
-export async function fetchMomentsPage(cursor: MomentsCursor | null): Promise<MomentsPage> {
-  const { data, error } = await getSupabase().rpc(
-    'moments_feed_page',
-    cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {},
-  );
+/** One page of moments from the timeline, or from Discover (`discover_moments_page`, 0070), which returns the same rows. */
+export async function fetchMomentsPage(
+  cursor: MomentsCursor | null,
+  rpc: 'moments_feed_page' | 'discover_moments_page' = 'moments_feed_page',
+): Promise<MomentsPage> {
+  const { data, error } = await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
   if (error) throw new Error(error.message);
   const rows = z.array(momentsFeedRow).parse(data);
   const urls = await photoUrls(rows.map((r) => r.moment_id));

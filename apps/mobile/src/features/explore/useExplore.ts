@@ -1,12 +1,11 @@
-// Data for Explore (M6-08; FR-EXP-01, FR-EXP-02): people search, Suggested authors and Full jars today from the
-// 0031 RPCs, with signed photo and avatar URLs from fn:photo-urls. Contact matches join the suggestions only when
+// Data for Discover's people (M6-08, D-100; FR-EXP-01, FR-EXP-02): people search and Suggested authors from the
+// 0031 RPCs, with signed avatar URLs from fn:photo-urls (Discover's lists are in useDiscover.ts). Contact matches join the suggestions only when
 // the phone already allows contacts (Find friends asked); Explore never asks for the permission itself.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPermissionsAsync } from 'expo-contacts';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 
-import { fetchMomentRenders } from '@/features/moment/momentRenders';
 import { hashAddressBook, matchContacts } from '@/features/onboarding/findFriends';
 import { setReading } from '@/features/profile/useFollow';
 import { useAuthStore } from '@/lib/authStore';
@@ -22,30 +21,24 @@ import {
   type Explore,
   type Person,
 } from './explore';
+import { removeDiscoverAuthor } from './useDiscover';
 
 const SEARCH_DELAY_MS = 250;
 const MAX_BATCH = 100; // fn:photo-urls
 
 const urlsResponse = z.object({
-  data: z.object({
-    moments: z.array(z.object({ id: z.string(), thumb: z.string().nullable() })),
-    profiles: z.array(z.object({ id: z.string(), avatar: z.string().nullable() })).optional(),
-  }),
+  data: z.object({ profiles: z.array(z.object({ id: z.string(), avatar: z.string().nullable() })).optional() }),
 });
 
-/** Signed thumbs and avatars; a failure leaves photos on their placeholder and avatars on initials. */
-async function signedUrls(momentIds: string[], profileIds: string[]) {
-  const empty = { thumbs: new Map<string, string | null>(), avatars: new Map<string, string | null>() };
-  if (momentIds.length === 0 && profileIds.length === 0) return empty;
+/** Signed avatars; a failure leaves them on initials. */
+async function signedAvatars(profileIds: string[]): Promise<Map<string, string | null>> {
+  if (profileIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', {
-    body: { momentIds: momentIds.slice(0, MAX_BATCH), profileIds: profileIds.slice(0, MAX_BATCH) },
+    body: { profileIds: profileIds.slice(0, MAX_BATCH) },
   });
   const parsed = urlsResponse.safeParse(data);
-  if (error || !parsed.success) return empty;
-  return {
-    thumbs: new Map(parsed.data.data.moments.map((m) => [m.id, m.thumb])),
-    avatars: new Map((parsed.data.data.profiles ?? []).map((p) => [p.id, p.avatar])),
-  };
+  if (error || !parsed.success) return new Map();
+  return new Map((parsed.data.data.profiles ?? []).map((p) => [p.id, p.avatar]));
 }
 
 /** Contact matches when contacts are already allowed; nothing (and no prompt) otherwise. */
@@ -72,47 +65,32 @@ export async function fetchExplore(): Promise<Explore> {
   const fof = z.array(suggestedRow).parse(friends.data);
   const jars = z.array(fullJarRow).parse(full.data);
 
-  const withAvatar = fof.filter((f) => f.avatar_path !== null).map((f) => f.id);
-  const covers = jars.map((j) => j.cover_moment_id);
-  const [urls, renders] = await Promise.all([signedUrls(covers, withAvatar), fetchMomentRenders(covers)]);
+  const avatars = await signedAvatars(fof.filter((f) => f.avatar_path !== null).map((f) => f.id));
   const suggestions = mergeSuggestions(
     contacts,
     fof.map((f) => ({
       id: f.id,
       username: f.username,
       displayName: f.display_name,
-      avatarUrl: urls.avatars.get(f.id) ?? null,
+      avatarUrl: avatars.get(f.id) ?? null,
       reading: false,
       mutualCount: f.mutual_count,
     })),
     new Set(jars.map((j) => j.user_id)),
   );
-  return {
-    suggestions,
-    fullJars: jars.map((j) => ({
-      jarId: j.jar_id,
-      userId: j.user_id,
-      username: j.username,
-      displayName: j.display_name,
-      coverUrl: urls.thumbs.get(j.cover_moment_id) ?? null,
-      coverRender: renders.get(j.cover_moment_id) ?? null,
-    })),
-  };
+  return { suggestions };
 }
 
 export async function searchPeople(term: string): Promise<Person[]> {
   const { data, error } = await getSupabase().rpc('search_people', { query: term, max_count: 20 });
   if (error) throw new Error(error.message);
   const rows = z.array(searchRow).parse(data);
-  const urls = await signedUrls(
-    [],
-    rows.filter((r) => r.avatar_path !== null).map((r) => r.id),
-  );
+  const avatars = await signedAvatars(rows.filter((r) => r.avatar_path !== null).map((r) => r.id));
   return rows.map((r) => ({
     id: r.id,
     username: r.username,
     displayName: r.display_name,
-    avatarUrl: urls.avatars.get(r.id) ?? null,
+    avatarUrl: avatars.get(r.id) ?? null,
     reading: r.is_reading,
   }));
 }
@@ -150,8 +128,9 @@ export function usePeopleSearch(query: string) {
 }
 
 /**
- * Read / Reading from Explore. Search results flip at once (optimistic); a suggestion leaves the list once the
- * server agrees. Profiles, follow lists and the feed are read again afterwards, like Read anywhere else.
+ * Be a reader / Reading from Discover. Search results flip at once (optimistic), and an author read from a
+ * Discover card leaves both lists at once (D-102); a suggestion leaves its row once the server agrees. Profiles,
+ * follow lists, the timelines and Discover are read again afterwards, like Read anywhere else.
  */
 export function useExploreReading() {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
@@ -160,6 +139,7 @@ export function useExploreReading() {
     mutationFn: ({ authorId, reading }: { authorId: string; reading: boolean }) =>
       setReading(userId ?? '', authorId, reading),
     onMutate: async ({ authorId, reading }) => {
+      if (reading) await removeDiscoverAuthor(queryClient, authorId);
       await queryClient.cancelQueries({ queryKey: ['search'] });
       const lists = queryClient.getQueriesData<Person[]>({ queryKey: ['search'] });
       for (const [key, rows] of lists) {
@@ -176,7 +156,7 @@ export function useExploreReading() {
     },
     onSettled: () =>
       Promise.all(
-        ['explore', 'search', 'profile', 'followList', 'feed'].map((k) =>
+        ['explore', 'search', 'profile', 'followList', 'feed', 'feedAuthors', 'momentsFeed', 'discover'].map((k) =>
           queryClient.invalidateQueries({ queryKey: [k] }),
         ),
       ),

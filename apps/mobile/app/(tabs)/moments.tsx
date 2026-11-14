@@ -57,6 +57,7 @@ export default function MomentsScreen() {
         if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
       }}
       onOpenNotifications={() => router.push('/notifications')}
+      onOpenDiscover={() => router.push('/explore')}
       onOpenJar={(m) => router.push({ pathname: '/jar/[id]', params: { id: m.jar_id } })}
       onToggleLike={feed.toggleLike}
       onOpenComments={(m) =>

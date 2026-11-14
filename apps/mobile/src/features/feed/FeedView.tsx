@@ -31,6 +31,8 @@ export type FeedViewProps = {
   onRefresh: () => void;
   onEndReached: () => void;
   onOpenNotifications: () => void;
+  /** The compass next to the bell (D-101). */
+  onOpenDiscover: () => void;
   onOpenJar?: (jarId: string) => void;
   /** Opens a profile from the avatar row; `null` is the viewer's own ("You"). */
   onOpenProfile?: (username: string | null) => void;
@@ -63,6 +65,7 @@ export function FeedView({
   onRefresh,
   onEndReached,
   onOpenNotifications,
+  onOpenDiscover,
   onOpenJar,
   onOpenProfile,
   onFindPeople,
@@ -86,14 +89,23 @@ export function FeedView({
         >
           {t('jars.title')}
         </Text>
-        <View>
+        <View style={styles.headerButtons}>
           <RoundIconButton
-            icon="bell"
-            accessibilityLabel={hasUnread ? t('feed.notificationsUnread') : t('feed.notifications')}
-            onPress={onOpenNotifications}
-            testID="feed-notifications"
+            icon="compass"
+            accessibilityLabel={t('feed.discover')}
+            accessibilityHint={t('feed.discoverHint')}
+            onPress={onOpenDiscover}
+            testID="feed-discover"
           />
-          {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="feed-notifications-dot" /> : null}
+          <View>
+            <RoundIconButton
+              icon="bell"
+              accessibilityLabel={hasUnread ? t('feed.notificationsUnread') : t('feed.notifications')}
+              onPress={onOpenNotifications}
+              testID="feed-notifications"
+            />
+            {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="feed-notifications-dot" /> : null}
+          </View>
         </View>
       </View>
       {readsNobody && hasJars ? (
@@ -210,6 +222,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xl,
     paddingBottom: space.md,
   },
+  headerButtons: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   dot: {
     position: 'absolute',
     top: 10,
