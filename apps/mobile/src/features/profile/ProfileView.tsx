@@ -169,21 +169,25 @@ export function ProfileView({
             />
             <View style={styles.actions} testID="profile-actions">
               {isOwner && onEditProfile ? (
-                <BaseButton
-                  label={t('profile.edit')}
-                  onPress={onEditProfile}
-                  testID="profile-edit"
-                  tone={{
-                    background: 'surface',
-                    border: 'border',
-                    text: 'ink',
-                    height: sizes.profileButton,
-                    textVariant: 'bodySmall',
-                    textWeight: '700',
-                    paddingHorizontal: space.lg,
-                    stretch: false,
-                  }}
-                />
+                // BaseButton pins itself to the top (`alignSelf: flex-start`) unless it stretches; this
+                // wrapper is what the row centres, so the pill's middle sits on the cover edge too (D-79).
+                <View>
+                  <BaseButton
+                    label={t('profile.edit')}
+                    onPress={onEditProfile}
+                    testID="profile-edit"
+                    tone={{
+                      background: 'surface',
+                      border: 'border',
+                      text: 'ink',
+                      height: sizes.profileButton,
+                      textVariant: 'bodySmall',
+                      textWeight: '700',
+                      paddingHorizontal: space.lg,
+                      stretch: false,
+                    }}
+                  />
+                </View>
               ) : null}
               {!isOwner && onToggleReading ? (
                 <FollowButton

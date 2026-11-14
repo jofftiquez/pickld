@@ -225,8 +225,9 @@ function gridsFor(count: number): [StoryLayoutId, Grid][] {
       ];
     default:
       return [
-        ['grid2x4', rowsOf(count, 4, PORTRAIT)],
+        // The 4 by 2 grid leads: it fills about 90% of the card where the 2 by 4 grid fills 42% (D-88).
         ['grid4x2', rowsOf(count, 2, PORTRAIT)],
+        ['grid2x4', rowsOf(count, 4, PORTRAIT)],
         ['filmStrip', rowsOf(count, 1, LANDSCAPE)],
       ];
   }

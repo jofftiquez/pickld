@@ -121,8 +121,8 @@ describe('Share jar layouts (D-62)', () => {
 
     setMoments(8);
     await view.rerender(<ShareCardScreen jarId="jar-10" />);
-    expect(layoutNames()).toEqual(['Layout: 2 by 4 grid', 'Layout: 4 by 2 grid', 'Layout: Film strip']);
-    expect(checked('Layout: 2 by 4 grid')).toBe(true);
+    expect(layoutNames()).toEqual(['Layout: 4 by 2 grid', 'Layout: 2 by 4 grid', 'Layout: Film strip']);
+    expect(checked('Layout: 4 by 2 grid')).toBe(true);
   });
 
   it('counts only the moments on the card: a private one changes nothing', async () => {

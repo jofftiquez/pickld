@@ -105,8 +105,10 @@ describe('Share card layouts (D-62, D-82)', () => {
     expect(ids(4)).toEqual(['grid2x2', 'oneLargeThree']);
     expect(ids(5)).toEqual(['grid2x3', 'oneLargeStrip']);
     expect(ids(6)).toEqual(['grid2x3', 'oneLargeStrip']);
-    expect(ids(7)).toEqual(['grid2x4', 'grid4x2', 'filmStrip']);
-    expect(ids(8)).toEqual(['grid2x4', 'grid4x2', 'filmStrip']);
+    expect(ids(7)).toEqual(['grid4x2', 'grid2x4', 'filmStrip']);
+    expect(ids(8)).toEqual(['grid4x2', 'grid2x4', 'filmStrip']);
+    // A full jar is the most common card, so its default must use the Story, not leave bands empty (D-88).
+    for (const n of [7, 8]) expect(share(layoutsFor(n, 'story')[0]!.cells, 'story')).toBeGreaterThan(0.75);
     expect(layoutsFor(8, 'feed').map((l) => l.id)).toEqual(ids(8));
     expect(layoutsFor(4, 'story')[0]?.labelKey).toBe('share.layout.grid2x2');
   });
@@ -203,8 +205,8 @@ describe('Share card layouts (D-62, D-82)', () => {
     expect((footer.y + footer.height) / 1920).toBeLessThanOrEqual(0.82);
   });
 
-  it('keeps today’s 2 rows of 4 as the default for a full jar, the short row centred', () => {
-    const cells = layoutsFor(7, 'story')[0]!.cells;
+  it('centres the short row of the 2 by 4 grid', () => {
+    const cells = layoutsFor(7, 'story').find((l) => l.id === 'grid2x4')!.cells;
     const top = new Set(cells.map((c) => Math.round(c.y)));
     expect(top.size).toBe(2);
     const first = cells.slice(0, 4);
