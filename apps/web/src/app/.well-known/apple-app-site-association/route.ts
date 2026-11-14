@@ -20,6 +20,7 @@ export function GET() {
             { '/': '/stickers', exclude: true },
             { '/': '/story', exclude: true },
             { '/': '/waitlist', exclude: true },
+            { '/': '/waitlist/*', exclude: true },
             { '/': '/.well-known/*', exclude: true },
             { '/': '/j/*' },
             { '/': '/u/*' },
