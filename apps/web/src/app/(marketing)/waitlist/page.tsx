@@ -8,7 +8,8 @@ import type { WaitlistStatus } from './actions';
 
 export const metadata: Metadata = { title: t('marketing.waitlist.metaTitle'), robots: { index: false } };
 
-const statuses: WaitlistStatus[] = ['joined', 'limited', 'invalid', 'error'];
+const statuses: WaitlistStatus[] = ['joined', 'already', 'member', 'limited', 'invalid', 'captcha', 'expired', 'error'];
+const final: WaitlistStatus[] = ['joined', 'already', 'member', 'limited'];
 
 /** Join the waitlist on its own, and the answer page every waitlist form lands on. */
 export default async function Waitlist({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
@@ -21,7 +22,7 @@ export default async function Waitlist({ searchParams }: { searchParams: Promise
       <section className="mk-status" role={status ? 'status' : undefined}>
         <h1 style={{ fontSize: 'clamp(34px,8vw,52px)' }}>{title}</h1>
         <p className="mk-lead">{body}</p>
-        {status === 'joined' || status === 'limited' ? null : <WaitlistForm id="waitlist" source="waitlist" />}
+        {status && final.includes(status) ? null : <WaitlistForm id="waitlist" source="waitlist" />}
         <p>
           <Link className="mk-link" href="/">
             {t('marketing.waitlist.back')}

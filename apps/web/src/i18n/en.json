@@ -82,7 +82,7 @@
       "label": "Email address",
       "placeholder": "you@email.com",
       "submit": "Join the waitlist",
-      "note": "We’ll only email you about Pickld’s launch."
+      "note": "We’ll email you a 6-digit code to check it’s you, then only about Pickld’s launch."
     },
     "moments": {
       "title": "One jar a day. Eight moments to fill.",
@@ -162,14 +162,33 @@
       "title": "Join the waitlist",
       "body": "Be first to know when Pickld is in the App Store.",
       "joinedTitle": "You’re on the list",
-      "joinedBody": "Thank you! We’ll email you when Pickld is ready for your iPhone.",
+      "joinedBody": "Thank you! Your email is checked. We’ll let you know when it’s your turn, then sign in to the app with this same email.",
+      "alreadyTitle": "You’re already on the list",
+      "alreadyBody": "No need to join twice. We’ll email you when it’s your turn.",
+      "memberTitle": "You’re already on Pickld",
+      "memberBody": "This email already has a Pickld account. Open the app and sign in with it.",
       "limitedTitle": "Too many sign-ups from here",
       "limitedBody": "Please try again in an hour.",
       "invalidTitle": "Check your email address",
       "invalidBody": "That doesn’t look like an email address. Try again?",
+      "captchaTitle": "Please try that again",
+      "captchaBody": "We couldn’t check that you’re a person. Make sure JavaScript is on, then try again.",
+      "expiredTitle": "That took a little too long",
+      "expiredBody": "Your code is only good for a few minutes. Enter your email again and we’ll send a new one.",
       "errorTitle": "Something went wrong",
       "errorBody": "We couldn’t add you just now. Please try again in a bit.",
       "back": "Back to pickld.me"
+    },
+    "code": {
+      "metaTitle": "Check your email · Pickld",
+      "title": "Check your email",
+      "body": "We sent a 6-digit code to {{email}}. Enter it here to join the waitlist.",
+      "label": "6-digit code",
+      "submit": "Join the waitlist",
+      "wrong": "That code didn’t work. Check the latest email and try again.",
+      "note": "Didn’t get it? Look in spam, or wait a minute and use a different email.",
+      "different": "Use a different email",
+      "again": "Enter your email again"
     }
   },
   "stickers": {
