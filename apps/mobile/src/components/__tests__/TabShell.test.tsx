@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import type { ReactNode } from 'react';
+import { AccessibilityInfo } from 'react-native';
 
 import TabsLayout from '../../../app/(tabs)/_layout';
 import JarsScreen from '../../../app/(tabs)/jars';
@@ -78,5 +80,31 @@ describe('tab shell', () => {
     expect(screen.getByRole('header', { name: 'My days' })).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(screen).toHavePathname('/today');
+  });
+
+  // D-108: iOS 26+ with glass allowed gets the system's Liquid Glass tab bar; Reduce Transparency keeps the custom one.
+  describe('on iOS 26', () => {
+    beforeEach(() => {
+      jest.mocked(isLiquidGlassAvailable).mockReturnValue(true);
+      jest.mocked(isGlassEffectAPIAvailable).mockReturnValue(true);
+    });
+    afterEach(() => {
+      jest.mocked(isLiquidGlassAvailable).mockReturnValue(false);
+      jest.mocked(isGlassEffectAPIAvailable).mockReturnValue(false);
+      jest.restoreAllMocks();
+    });
+
+    it('uses the native tab bar instead of the floating one', async () => {
+      jest.spyOn(AccessibilityInfo, 'isReduceTransparencyEnabled').mockResolvedValue(false);
+      await renderRouter(routes, { initialUrl: '/today', wrapper });
+      expect(await screen.findByRole('header', { name: 'Today' })).toBeTruthy();
+      expect(screen.queryByTestId('floating-tab-bar')).toBeNull();
+    });
+
+    it('keeps the floating tab bar with Reduce Transparency on', async () => {
+      jest.spyOn(AccessibilityInfo, 'isReduceTransparencyEnabled').mockResolvedValue(true);
+      await renderRouter(routes, { initialUrl: '/today', wrapper });
+      expect(await screen.findByTestId('floating-tab-bar')).toBeTruthy();
+    });
   });
 });

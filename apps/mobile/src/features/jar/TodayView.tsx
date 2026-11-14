@@ -9,6 +9,7 @@ import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
 import { textStyle } from '@/theme/text';
+import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { colors, sizes, space, type Slot } from '@/theme/tokens';
 
 import type { Visibility } from '@/features/publish/publishJar';
@@ -111,7 +112,8 @@ export function TodayView({
   for (let i = 0; i < tiles.length; i += 2) rows.push(tiles.slice(i, i + 2));
   // Content scrolls under the floating tab bar; this keeps the last row clear of it. The day page is a stack
   // screen without the tab bar.
-  const bottomPadding = Math.max(insets.bottom, space.lg) + (day ? 0 : sizes.tabBar + space.lg);
+  const tabBarClearance = useTabBarClearance();
+  const bottomPadding = Math.max(insets.bottom, space.lg) + (day ? 0 : tabBarClearance);
   const missing = tiles.some((tile) => tile.state === 'empty');
 
   return (
