@@ -29,6 +29,10 @@ insert into t values ('stuck', tests.make_moment((select id from t where k = 'ja
 alter table public.moments disable trigger moments_bu;
 update public.moments set added_at = now() - interval '1 hour' where id = (select id from t where k = 'stuck');
 alter table public.moments enable trigger moments_bu;
+-- Just after Manila midnight that hour is yesterday, so it only counts toward "moments today" after 01:00.
+create temp table stuck_today as
+  select (added_at >= public.mod_day_start())::int as n from public.moments where id = (select id from t where k = 'stuck');
+grant select on stuck_today to authenticated, anon, service_role;
 
 -- A private moment queued 3 hours ago, an automatic removal, and two reports on the live moment.
 insert into public.moderation_items (moment_id, source, scores, decision_reason, created_at)
@@ -89,7 +93,8 @@ select ok((public.mod_overview() #>> '{queue,oldest_seconds}')::int >= 3 * 3600 
 select is(pg_temp.delta('{today,reports}'), 2, 'today: two reports');
 select is(pg_temp.delta('{today,removed_auto}'), 1, 'today: one automatic removal');
 select is(pg_temp.delta('{people,signups_today}'), 8, 'people: eight sign-ups today');
-select is(pg_temp.delta('{people,moments_today}'), 5, 'people: five moments today');
+select is(pg_temp.delta('{people,moments_today}'), 4 + (select n from stuck_today),
+          'people: five moments today (four in the first hour of a Manila day)');
 select is(pg_temp.delta('{people,posted_today}'), 1, 'people: one person posted today');
 select is(pg_temp.delta('{stuck_uploads}'), 1, 'stuck: Checking for an hour with nothing queued (the queued one is not stuck)');
 
