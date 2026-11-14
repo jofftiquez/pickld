@@ -127,13 +127,19 @@ export function buildMonthGrid(input: {
 
 export type MonthNav = { canGoPrevious: boolean; canGoNext: boolean };
 
+/** How many months before the current one My days always reaches, so earlier days can be filled. */
+export const BACKFILL_MONTHS = 12;
+
 /**
- * Previous months go back to the month of the user's first jar; next stops at the current month.
- * `firstJarMonth` is null when the user has no jar yet (or it isn't known), which allows neither.
+ * Previous months go back to the month of the user's first jar or `BACKFILL_MONTHS` before the current
+ * month, whichever is earlier, so a new user can still reach and fill days before their first jar. Next
+ * stops at the current month. `firstJarMonth` is null when the user has no jar yet (or it isn't known).
  */
 export function monthNav(month: string, currentMonth: string, firstJarMonth: string | null): MonthNav {
+  const backfill = addMonths(currentMonth, -BACKFILL_MONTHS);
+  const earliest = firstJarMonth !== null && firstJarMonth < backfill ? firstJarMonth : backfill;
   return {
-    canGoPrevious: firstJarMonth !== null && month > firstJarMonth,
+    canGoPrevious: month > earliest,
     canGoNext: month < currentMonth,
   };
 }
