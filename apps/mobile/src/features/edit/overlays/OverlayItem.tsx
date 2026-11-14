@@ -6,7 +6,7 @@ import { Icon } from '@/components/Icon';
 import { colors, radius, shadow, sizes } from '@/theme/tokens';
 
 import type { Overlay } from '../edits';
-import type { OverlayRenderer } from './registry';
+import { useAspectRevision, type OverlayRenderer } from './registry';
 import type { Size, Step, Transform } from './transform';
 
 /** The overlay a gesture is moving right now, before the change is committed to the edits. */
@@ -32,6 +32,7 @@ export type OverlayItemProps = {
  */
 export function OverlayItem({ overlay, renderer, photo, selected, live, onAction }: OverlayItemProps) {
   const { t } = useTranslation();
+  useAspectRevision();
   const aspect = renderer.aspect(overlay);
   const { id, x, y, scale, rotation } = overlay;
   // The content is laid out at the committed size; a live pinch scales it until the change is saved.

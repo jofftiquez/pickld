@@ -13,7 +13,7 @@ import { useSharedValue } from 'react-native-reanimated';
 import type { Overlay } from '../edits';
 import { hitTest, type Placed } from './hitTest';
 import { OverlayItem, type LiveTransform, type OverlayAction } from './OverlayItem';
-import { getOverlayRenderer, type OverlayRenderer } from './registry';
+import { getOverlayRenderer, useAspectRevision, type OverlayRenderer } from './registry';
 import {
   applyDelta,
   handleDelta,
@@ -79,6 +79,7 @@ export function OverlayLayer({
   onDelete,
   onGestureActiveChange,
 }: OverlayLayerProps) {
+  useAspectRevision();
   const photo = { width, height };
   const items = overlays.flatMap((overlay): Item[] => {
     const renderer = getOverlayRenderer(overlay.type);

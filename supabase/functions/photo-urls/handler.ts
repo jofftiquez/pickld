@@ -6,9 +6,13 @@
 //     blocked either way and inactive ones. A key is signed only if it is the profile's own avatars/ or
 //     covers/ key (or a local seed key); 0018 enforces the same rule in the database.
 //
-// POST { momentIds?: uuid[], profileIds?: uuid[] }   (0 to 100 each, at least one id in total)
+// POST { momentIds?: uuid[], profileIds?: uuid[], stickerArt?: true }
+//   (0 to 100 ids each, at least one id in total unless stickerArt is true)
 //   → { data: { expiresAt, moments: [{ id, full, thumb, pendingFull?, pendingThumb? }],
-//               profiles: [{ id, avatar, cover }] } }     (avatar / cover null when there is none)
+//               profiles: [{ id, avatar, cover }], stickerArtBase } }     (avatar / cover null when there is none)
+// stickerArtBase is the Worker origin that serves catalog sticker art without a token (D-25): clients draw art
+// their bundle lacks from `<stickerArtBase>/<asset_path>?v=<art_version>` (D-131). `{ stickerArt: true }` alone
+// asks for just that.
 //   → { error: { code, message } }
 // Ids the caller can't view are left out, so they can't be told apart from ids that don't exist.
 import { type SupabaseClient, z } from '../_shared/deps.ts';
@@ -23,8 +27,9 @@ export const PhotoUrlsInput = z
   .strictObject({
     momentIds: z.array(z.uuid()).max(MAX_BATCH).optional(),
     profileIds: z.array(z.uuid()).max(MAX_BATCH).optional(),
+    stickerArt: z.literal(true).optional(),
   })
-  .refine((v) => (v.momentIds?.length ?? 0) + (v.profileIds?.length ?? 0) > 0, {
+  .refine((v) => v.stickerArt === true || (v.momentIds?.length ?? 0) + (v.profileIds?.length ?? 0) > 0, {
     message: 'Ask for at least one moment or profile.',
   });
 
@@ -121,5 +126,10 @@ export async function handlePhotoUrls(req: Request, deps: PhotoUrlsDeps): Promis
     cover: p.cover_path && isProfileImageKey('cover', p.cover_path, p.id) ? await sign(p.cover_path) : null,
   })));
 
-  return ok({ expiresAt: new Date((now + PHOTO_TOKEN_TTL_SECONDS) * 1000).toISOString(), moments, profiles });
+  return ok({
+    expiresAt: new Date((now + PHOTO_TOKEN_TTL_SECONDS) * 1000).toISOString(),
+    moments,
+    profiles,
+    stickerArtBase: base.replace(/\/+$/, ''),
+  });
 }

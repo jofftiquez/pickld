@@ -1,12 +1,14 @@
 // The Stickers tool's catalog (FR-STK-02): packs and stickers with the server's usable flags, and the
 // user's onboarding answers for suggestions and My stickers order (owner-only RLS). React Query, so the persisted cache keeps
-// the sheet working offline once it has loaded; the art itself is bundled (stickerArt.ts).
+// the sheet working offline once it has loaded. Art is bundled (stickerArt.ts) or downloaded once and kept on
+// the phone (remoteStickerArt.ts, D-131).
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
 import { buildCatalog, type StickerCatalog } from './catalog';
+import { rememberStickerArt } from './remoteStickerArt';
 
 export const stickerCatalogQueryKey = (userId: string) => ['stickerCatalog', userId] as const;
 
@@ -18,8 +20,10 @@ async function fetchCatalog(userId: string): Promise<StickerCatalog> {
       .select('id, slug, name, sort, tier, store_product_id, available_from, available_to, pack_usable'),
     supabase
       .from('stickers')
-      .select('id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable')
-      // Retired stickers (0032) aren't offered; moments that use them still draw their bundled art.
+      .select(
+        'id, pack_id, label, asset_path, tags, slot_hint, stamp, milestone_key, sort, sticker_usable, art_width, art_height, art_version',
+      )
+      // Retired stickers (0032) aren't offered; moments that use them still draw their art.
       .is('retired_at', null),
     supabase
       .from('onboarding_answers')
@@ -30,6 +34,7 @@ async function fetchCatalog(userId: string): Promise<StickerCatalog> {
   ]);
   if (packs.error) throw new Error(packs.error.message);
   if (stickers.error) throw new Error(stickers.error.message);
+  rememberStickerArt(stickers.data);
   // Suggestions still work without the answers (slot hints alone).
   // Without the user's order the sheet still works, in catalog order.
   return buildCatalog(packs.data, stickers.data, answers.error ? null : answers.data, new Date(), prefs.data ?? []);
