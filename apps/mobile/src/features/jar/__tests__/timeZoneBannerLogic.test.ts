@@ -1,4 +1,4 @@
-import { shouldShowTimeZoneBanner, zoneChanged, zoneCity, type BannerJar } from '../timeZoneBanner';
+import { shouldShowTimeZoneBanner, zoneChanged, zoneCity, type BannerJar } from '../timeZoneBannerLogic';
 
 const tokyoJar: BannerJar = { id: 'jar-tokyo', tz: 'Asia/Tokyo', localDate: '2026-11-10' };
 const none: ReadonlySet<string> = new Set();
