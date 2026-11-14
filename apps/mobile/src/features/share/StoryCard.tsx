@@ -14,8 +14,9 @@ import type { ShareCard } from './shareCard';
 import {
   canvasSize,
   cardCaption,
+  frameArea,
+  overlayRects,
   paletteFor,
-  safeArea,
   storyMetrics,
   type Rect,
   type StoryBackground,
@@ -25,7 +26,7 @@ import {
 
 // The wordmark pre-coloured brand green (see PromiseView).
 const logo = require('../../../assets/brand/wordmark.png');
-/** Cells at least this wide (exported pixels) load the full photo instead of the thumbnail. */
+/** Cells that show the photo at least this wide (exported pixels) load the full photo, not the 480 px thumbnail. */
 const FULL_PHOTO_WIDTH = 360;
 
 export type StoryCardProps = {
@@ -51,9 +52,10 @@ export type StoryCardProps = {
 };
 
 /**
- * The shared image (T-509, D-62): the jar's moments, or one moment, placed in the chosen layout's
+ * The shared image (T-509, D-62, D-82): the jar's moments, or one moment, placed in the chosen layout's
  * rectangles on one of five backgrounds. Moments are drawn with their filter and overlays (MomentCover),
- * cropped to fill their cell. The author row and the footer sit at the top and bottom of the safe area.
+ * cropped to fill their cell. The photos fill the card; the author pill, the caption band and the footer
+ * row sit over them on pills, inside the safe area that a Story's bars leave uncovered.
  * Everything is placed in pixels of the exported image times `unit`, so this one view is both the preview
  * and the saved file; text never follows the system text size, because it is part of the picture.
  */
@@ -76,16 +78,26 @@ export function StoryCard(props: StoryCardProps) {
   });
   const count = card.moments.length;
   const caption = cardCaption(card, moment, includeCaption);
-  const safe = safeArea(format);
-  const pad = palette.card ? m.printPad : 0;
-  const inner = { left: px(safe.x + pad), width: px(safe.width - 2 * pad) };
-  const onLight = palette.card !== null || background === 'paper';
+  const overlays = overlayRects(format);
+  const onLight = palette.pill === colors.surface;
   const box = (r: Rect) => ({
     position: 'absolute' as const,
     left: px(r.x),
     top: px(r.y),
     width: px(r.width),
     height: px(r.height),
+  });
+  /** A pill hugging its content, anchored at the left of `r`, never wider than it. */
+  const pill = (r: Rect, height: number) => ({
+    position: 'absolute' as const,
+    left: px(r.x),
+    top: px(r.y),
+    maxWidth: px(r.width),
+    height: px(height),
+    borderRadius: px(height / 2),
+    backgroundColor: palette.pill,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
   });
 
   return (
@@ -103,59 +115,25 @@ export function StoryCard(props: StoryCardProps) {
       ) : null}
       {palette.scrim ? <View style={[StyleSheet.absoluteFill, { backgroundColor: palette.scrim }]} /> : null}
       {palette.card ? (
-        <View style={[box(safe), { backgroundColor: palette.card, borderRadius: px(48) }]} testID="share-card-print" />
-      ) : null}
-
-      <View
-        style={{
-          position: 'absolute',
-          ...inner,
-          top: px(safe.y + pad),
-          height: px(m.authorBand),
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: px(24),
-        }}
-        testID="share-card-author"
-      >
         <View
-          style={{
-            width: px(m.avatar),
-            height: px(m.avatar),
-            borderRadius: px(m.avatar / 2),
-            backgroundColor: onLight ? colors.brandTint : colors.onDarkControl,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
-          <Text allowFontScaling={false} style={font('bold', 34, onLight ? colors.brandText : palette.text)}>
-            {initialsOf(authorName)}
-          </Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
-          <Text allowFontScaling={false} numberOfLines={1} style={font('bold', 40)}>
-            {moment ? authorName : title}
-          </Text>
-          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
-          <Text allowFontScaling={false} numberOfLines={1} style={[font('medium', 30), { opacity: 0.85 }]}>
-            {moment ? date : t('share.subtitle', { date, count, max: slots.length })}
-          </Text>
-        </View>
-      </View>
+          style={[box(frameArea(format)), { backgroundColor: palette.card, borderRadius: px(40) }]}
+          testID="share-card-print"
+        />
+      ) : null}
 
       {shown.map((item, i) => {
         const cell = layout.cells[i];
         if (!cell) return null;
-        const uri = cell.width >= FULL_PHOTO_WIDTH ? (item.fullUrl ?? item.thumbUrl) : item.thumbUrl;
+        // A cell stretched taller than 3:4 crops the photo's sides, so it shows the photo at its height's width.
+        const photoWidth = Math.max(cell.width, (cell.height * 3) / 4);
+        const uri = photoWidth >= FULL_PHOTO_WIDTH ? (item.fullUrl ?? item.thumbUrl) : item.thumbUrl;
         return (
           <View
             key={item.id}
             style={[
               box(cell),
               {
-                borderRadius: px(cell.width >= FULL_PHOTO_WIDTH ? 32 : 20),
+                borderRadius: px(cell.width >= FULL_PHOTO_WIDTH ? 24 : 14),
                 overflow: 'hidden',
                 backgroundColor: colors.tileIconWell,
               },
@@ -175,53 +153,54 @@ export function StoryCard(props: StoryCardProps) {
       })}
 
       <View
-        style={{
-          position: 'absolute',
-          ...inner,
-          bottom: px(size.height - safe.y - safe.height + pad),
-          gap: px(m.captionGap),
-        }}
-        testID="share-card-footer"
+        style={[
+          pill(overlays.author, overlays.author.height),
+          { paddingLeft: px(m.pillPad), paddingRight: px(m.pillPadX), gap: px(16) },
+        ]}
+        testID="share-card-author"
       >
         <View
           style={{
-            height: px(m.logoWidth / m.logoAspect),
-            flexDirection: 'row',
+            width: px(m.avatar),
+            height: px(m.avatar),
+            borderRadius: px(m.avatar / 2),
+            backgroundColor: onLight ? colors.brandTint : colors.onDarkControl,
             alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: px(24),
+            justifyContent: 'center',
           }}
         >
-          {moment ? (
-            <View
-              style={{
-                paddingHorizontal: px(24),
-                paddingVertical: px(8),
-                borderRadius: px(32),
-                backgroundColor: onLight ? colors.brandTint : colors.onDarkControl,
-              }}
-            >
-              {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
-              <Text allowFontScaling={false} style={font('bold', 30, onLight ? colors.brandText : palette.text)}>
-                {t(`slots.${moment.slot}`)}
-              </Text>
-            </View>
-          ) : (
-            // a11y-fixed-size: drawn into the shared image at the image's scale
-            <Text allowFontScaling={false} style={font('semibold', 30)}>
-              {card.link}
-            </Text>
-          )}
-          <Image
-            source={logo}
-            style={{ width: px(m.logoWidth), height: px(m.logoWidth / m.logoAspect) }}
-            contentFit="contain"
-            tintColor={palette.logoTint ?? undefined}
-            accessible={false}
-          />
+          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
+          <Text allowFontScaling={false} style={font('bold', 26, onLight ? colors.brandText : palette.text)}>
+            {initialsOf(authorName)}
+          </Text>
         </View>
-        {caption ? (
-          // a11y-fixed-size: drawn into the shared image at the image's scale
+        <View style={{ flexShrink: 1 }}>
+          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
+          <Text allowFontScaling={false} numberOfLines={1} style={font('bold', m.nameSize)}>
+            {moment ? authorName : title}
+          </Text>
+          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
+          <Text allowFontScaling={false} numberOfLines={1} style={[font('medium', m.dateSize), { opacity: 0.85 }]}>
+            {moment ? date : t('share.subtitle', { date, count, max: slots.length })}
+          </Text>
+        </View>
+      </View>
+
+      {caption ? (
+        <View
+          style={{
+            position: 'absolute',
+            left: px(overlays.caption.x),
+            bottom: px(size.height - overlays.caption.y - overlays.caption.height),
+            maxWidth: px(overlays.caption.width),
+            padding: px(m.captionPad),
+            paddingHorizontal: px(m.pillPadX),
+            borderRadius: px(28),
+            backgroundColor: palette.pill,
+          }}
+          testID="share-card-caption-band"
+        >
+          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
           <Text
             allowFontScaling={false}
             numberOfLines={m.captionLines}
@@ -230,7 +209,48 @@ export function StoryCard(props: StoryCardProps) {
           >
             {t('share.caption', { caption })}
           </Text>
-        ) : null}
+        </View>
+      ) : null}
+
+      <View
+        style={[
+          box(overlays.footer),
+          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: px(16) },
+        ]}
+        testID="share-card-footer"
+      >
+        <View
+          style={{
+            flexShrink: 1,
+            height: px(m.footerHeight),
+            justifyContent: 'center',
+            paddingHorizontal: px(m.pillPadX),
+            borderRadius: px(m.footerHeight / 2),
+            backgroundColor: palette.pill,
+          }}
+        >
+          {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
+          <Text allowFontScaling={false} numberOfLines={1} style={font(moment ? 'bold' : 'semibold', m.footerSize)}>
+            {moment ? t(`slots.${moment.slot}`) : card.link}
+          </Text>
+        </View>
+        <View
+          style={{
+            height: px(m.footerHeight),
+            justifyContent: 'center',
+            paddingHorizontal: px(m.pillPadX),
+            borderRadius: px(m.footerHeight / 2),
+            backgroundColor: palette.pill,
+          }}
+        >
+          <Image
+            source={logo}
+            style={{ width: px(m.logoWidth), height: px(m.logoWidth / m.logoAspect) }}
+            contentFit="contain"
+            tintColor={palette.logoTint ?? undefined}
+            accessible={false}
+          />
+        </View>
       </View>
     </View>
   );

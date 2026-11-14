@@ -35,6 +35,7 @@ export type JarPageViewProps = {
   onOpenMoment?: (momentId: string) => void;
   /** Opens the author's profile from their avatar. */
   onOpenAuthor?: () => void;
+  /** Opens the share card; only offered on the viewer's own jar (D-83). */
   onShare: () => void;
   /** More options on someone else's jar: Report (M3-21). Not shown to the owner. */
   onMore?: () => void;
@@ -55,7 +56,7 @@ function formatJarDate(localDate: string, locale: string): string {
 /**
  * One person's jar for one day (Story; FR-SOC-03, FR-JAR-06): cover with author, date, count and Full jar
  * tag, the cover's caption, a 3-column grid of the other moments with "Added later" badges ending in the
- * count tile, and a floating bar with likes, comments and Share jar.
+ * count tile, and a floating bar with likes, comments and, on the viewer's own jar, Share jar (D-83).
  */
 export function JarPageView({
   data,
@@ -264,23 +265,26 @@ export function JarPageView({
           testID="jar-comments"
         />
         <View style={styles.flex} />
-        <BaseButton
-          label={t('jarPage.share')}
-          accessibilityHint={t('jarPage.shareHint')}
-          icon="share"
-          onPress={onShare}
-          testID="jar-share"
-          tone={{
-            background: 'brand',
-            text: 'surface',
-            height: sizes.minTap,
-            textVariant: 'bodyMedium',
-            textWeight: '800',
-            paddingHorizontal: space.lg + 2,
-            stretch: false,
-            icon: { size: 16, strokeWidth: 2.4 },
-          }}
-        />
+        {/* Only the owner shares their jar (D-83). */}
+        {page.isOwner ? (
+          <BaseButton
+            label={t('jarPage.share')}
+            accessibilityHint={t('jarPage.shareHint')}
+            icon="share"
+            onPress={onShare}
+            testID="jar-share"
+            tone={{
+              background: 'brand',
+              text: 'surface',
+              height: sizes.minTap,
+              textVariant: 'bodyMedium',
+              textWeight: '800',
+              paddingHorizontal: space.lg + 2,
+              stretch: false,
+              icon: { size: 16, strokeWidth: 2.4 },
+            }}
+          />
+        ) : null}
       </View>
     </View>
   );

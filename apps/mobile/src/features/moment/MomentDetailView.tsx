@@ -43,7 +43,7 @@ export type MomentDetailViewProps = {
   onOpenComments?: (momentId: string) => void;
   /** Likes or unlikes the moment on screen (FR-SOC-05). */
   onToggleLike?: (target: LikeTarget) => void;
-  /** Opens Share for the moment on screen (only offered for a live, non-private moment). */
+  /** Opens Share for the moment on screen (only offered to its owner, for a live, non-private moment; D-83). */
   onShare: (momentId: string) => void;
   /** More options on someone else's moment: Report (M3-21). Not shown to the owner. */
   onMore?: (momentId: string) => void;
@@ -274,8 +274,8 @@ export function MomentDetailView({
             testID="moment-comments"
           />
           <View style={styles.flex} />
-          {/* Only a live moment that isn't Only me can leave its owner (rule 9, D-48). */}
-          {onCard(moment) ? (
+          {/* Only the owner shares (D-83), and only a live moment that isn't Only me (rule 9, D-48). */}
+          {data.jar.user_id === data.viewerId && onCard(moment) ? (
             <RoundIconButton
               icon="share"
               accessibilityLabel={t('moment.detail.share')}

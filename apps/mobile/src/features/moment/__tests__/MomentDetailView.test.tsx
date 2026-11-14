@@ -136,8 +136,15 @@ describe('MomentDetailView', () => {
     expect(screen.queryByTestId('moment-share')).toBeNull();
   });
 
-  it('closes and shares the moment on screen', async () => {
-    const { onClose, onShare } = await setup();
+  it('offers Share only to the moment’s owner (D-83)', async () => {
+    const { onShare } = await setup();
+    expect(screen.queryByTestId('moment-share')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
+    expect(onShare).not.toHaveBeenCalled();
+  });
+
+  it('closes and shares the owner’s moment on screen', async () => {
+    const { onClose, onShare } = await setup({ data: { ...jar, viewerId: 'dale-id' } });
     await fireEvent.press(screen.getByRole('button', { name: 'Share' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     expect(onShare.mock.calls).toEqual([['ootd']]);

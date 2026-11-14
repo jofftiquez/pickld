@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { track } from '@/lib/analytics';
 import { useToastStore } from '@/lib/toast';
@@ -11,6 +11,7 @@ import type { ShareCardViewProps } from '../ShareCardView';
 // The view is replaced by its props; the jar, the card model and the phone's share actions are fakes.
 
 const mockView: { props: ShareCardViewProps | null } = { props: null };
+const mockRouter = { back: jest.fn(), replace: jest.fn(), canGoBack: () => true };
 jest.mock('../ShareCardView', () => ({
   ShareCardView: (p: ShareCardViewProps) => {
     mockView.props = p;
@@ -30,10 +31,12 @@ jest.mock('../shareCard', () => ({
   onCard: (m: { status: string; visibility: string }) => m.status === 'live' && m.visibility !== 'only_me',
 }));
 jest.mock('@/features/jar/shareJar', () => ({ jarTitle: () => 'Tuesday' }));
+const mockViewer = { id: 'dale-id' };
 jest.mock('@/features/jar/useJarPage', () => ({
   useJarPage: () => ({
     data: {
-      jar: { id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila' },
+      viewerId: mockViewer.id,
+      jar: { id: 'jar-10', user_id: 'dale-id', local_date: '2026-11-10', tz: 'Asia/Manila' },
       author: { display_name: 'Dale Cruz' },
       moments: [
         { id: 'ootd', slot: 'ootd', status: 'live', visibility: 'readers' },
@@ -43,9 +46,7 @@ jest.mock('@/features/jar/useJarPage', () => ({
   }),
 }));
 jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: jest.fn(), replace: jest.fn(), canGoBack: () => true }),
-}));
+jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
@@ -113,5 +114,29 @@ describe('Share a moment (T-509)', () => {
     await render(<ShareCardScreen jarId="jar-10" momentId="selfie" />);
     expect(mockView.props).toBeNull();
     expect(screen.getByText('This moment isn’t available to share.')).toBeTruthy();
+  });
+});
+
+describe('Only the owner shares (D-83)', () => {
+  beforeEach(() => {
+    mockView.props = null;
+    mockViewer.id = 'reader-id';
+  });
+  afterAll(() => {
+    mockViewer.id = 'dale-id';
+  });
+
+  it('refuses someone else’s jar calmly, never building the card, with a way back', async () => {
+    await render(<ShareCardScreen jarId="jar-10" />);
+    expect(mockView.props).toBeNull();
+    expect(screen.getByText('You can only share your own jars.')).toBeTruthy();
+    await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Back' })));
+    expect(mockRouter.back).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses one of their moments too, even a live one for readers', async () => {
+    await render(<ShareCardScreen jarId="jar-10" momentId="ootd" />);
+    expect(mockView.props).toBeNull();
+    expect(screen.getByText('You can only share your own jars.')).toBeTruthy();
   });
 });
