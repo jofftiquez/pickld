@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { colors } from '@/theme/tokens';
 
 import { TimeZoneBanner } from '../TimeZoneBanner';
-import type { BannerJar } from '../timeZoneBanner';
+import type { BannerJar } from '../timeZoneBannerLogic';
 import { useTimeZoneBanner } from '../useTimeZoneBanner';
 
 const mockDisk = new Map<string, string>();

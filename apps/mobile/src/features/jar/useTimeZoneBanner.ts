@@ -4,7 +4,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
 
-import { shouldShowTimeZoneBanner, zoneChanged, zoneCity, type BannerJar } from './timeZoneBanner';
+import { shouldShowTimeZoneBanner, zoneChanged, zoneCity, type BannerJar } from './timeZoneBannerLogic';
 
 // Only recent jars can be Today's jar again; older acknowledgements are dropped to keep the value small.
 const MAX_ACKS = 50;
