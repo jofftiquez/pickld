@@ -48,7 +48,7 @@ add_secret PHOTO_BASE_URL "$photo_base"
 add_secret CSAM_MATCHER hash-list
 # Optional keys: set on the GitHub environment when the account exists, and the next deploy passes them on.
 for name in SENTRY_DSN OPENAI_API_KEY OPENAI_VISION_MODEL EXPO_ACCESS_TOKEN REVENUECAT_WEBHOOK_SECRET \
-  REVENUECAT_SECRET_KEY; do
+  REVENUECAT_SECRET_KEY WAITLIST_SECRET; do
   [[ -n "${!name:-}" ]] && add_secret "$name" "${!name}"
 done
 

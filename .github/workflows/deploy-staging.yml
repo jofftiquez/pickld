@@ -49,6 +49,7 @@ jobs:
       EXPO_ACCESS_TOKEN: ${{ secrets.EXPO_ACCESS_TOKEN }}
       REVENUECAT_WEBHOOK_SECRET: ${{ secrets.REVENUECAT_WEBHOOK_SECRET }}
       REVENUECAT_SECRET_KEY: ${{ secrets.REVENUECAT_SECRET_KEY }}
+      WAITLIST_SECRET: ${{ secrets.WAITLIST_SECRET }}
     steps:
       - name: Staging configured?
         id: ready

@@ -34,9 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       >
         <FilterDefs />
         <style>{`a{color:${colors.brandLink}}a:hover{opacity:.85}`}</style>
-        <div style={{ maxWidth: 480, margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
