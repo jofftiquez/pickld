@@ -18,6 +18,7 @@ import { type CardRef, copyLink, messageLink, renderCardImage, saveImage, shareI
 import { buildShareCard } from './shareCard';
 import { ShareCardView, type ShareAction } from './ShareCardView';
 import {
+  cardCaption,
   layoutsFor,
   paletteFor,
   shareableMoment,
@@ -76,7 +77,11 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
   const date = formatDate(new Date(`${data.jar.local_date}T12:00:00Z`), 'UTC');
   // One moment alone always uses the single full layout.
   const count = moment ? 1 : card.moments.length;
-  const layouts = layoutsFor(count, format, { framed: paletteFor(background, data.author.lid_color).card !== null });
+  // The photos leave room for the caption's lines under them (D-90).
+  const layouts = layoutsFor(count, format, {
+    framed: paletteFor(background, data.author.lid_color).card !== null,
+    caption: cardCaption(card, moment, includeCaption),
+  });
   const layout = layouts.find((l) => picked?.count === count && l.id === picked.id) ?? layouts[0]!;
 
   type Notice = { text: string; error: boolean } | null;

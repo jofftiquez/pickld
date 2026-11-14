@@ -31,7 +31,7 @@ export const colors = {
   scrim: 'rgba(10,12,8,0.55)',
   glass: 'rgba(10,12,8,0.45)', // controls over photos (with blur)
   tabBarGlass: 'rgba(255,255,255,0.86)', // the tab bar's milky blur fill
-  glassStrong: 'rgba(10,12,8,0.6)', // dark pills that carry white text on share cards (D-82)
+  glassStrong: 'rgba(10,12,8,0.6)', // darkens the Blurred photo share background under white words (D-90)
   // Liquid Glass tints (iOS 26+, D-80), light enough that the glass shows; `glass` and `tabBarGlass` stay for
   // the blur fallback. Labels keep AA with their colors and the `glassGlyph` shadows.
   liquidTabBarTint: 'rgba(255,255,255,0.3)', // tab bar, moment preview action bar (light glass)
