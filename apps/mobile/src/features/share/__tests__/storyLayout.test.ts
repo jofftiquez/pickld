@@ -107,8 +107,11 @@ describe('Share card layouts (D-62, D-82)', () => {
     expect(ids(6)).toEqual(['grid2x3', 'oneLargeStrip']);
     expect(ids(7)).toEqual(['grid4x2', 'grid2x4', 'filmStrip']);
     expect(ids(8)).toEqual(['grid4x2', 'grid2x4', 'filmStrip']);
-    // A full jar is the most common card, so its default must use the Story, not leave bands empty (D-88).
-    for (const n of [7, 8]) expect(share(layoutsFor(n, 'story')[0]!.cells, 'story')).toBeGreaterThan(0.75);
+    // A full jar is the most common card, so its default draws the biggest photos on a Story (D-88).
+    for (const n of [7, 8]) {
+      const [first, ...rest] = layoutsFor(n, 'story').map((l) => share(l.cells, 'story'));
+      for (const other of rest) expect(first).toBeGreaterThan(other!);
+    }
     expect(layoutsFor(8, 'feed').map((l) => l.id)).toEqual(ids(8));
     expect(layoutsFor(4, 'story')[0]?.labelKey).toBe('share.layout.grid2x2');
   });
@@ -126,9 +129,8 @@ describe('Share card layouts (D-62, D-82)', () => {
             layout.cells.forEach((cell, i) => {
               expect(cell.width).toBeGreaterThan(50);
               expect(cell.height).toBeGreaterThan(50);
-              // Cropped, never squashed past a story's own 9:16 (or 16:9) shape.
-              expect(cell.height / cell.width).toBeGreaterThanOrEqual(9 / 16 - eps);
-              expect(cell.height / cell.width).toBeLessThanOrEqual(16 / 9 + eps);
+              // Every photo keeps its own 3:4 shape: never stretched or cropped to fill the card (D-89).
+              expect(cell.width / cell.height).toBeCloseTo(3 / 4, 6);
               expect(inside(cell, area)).toBe(true);
               layout.cells.slice(i + 1).forEach((other) => expect(overlap(cell, other)).toBe(false));
             });
@@ -159,18 +161,13 @@ describe('Share card layouts (D-62, D-82)', () => {
     expect(c!.y - (a!.y + a!.height)).toBeCloseTo(12);
   });
 
-  it('puts far more of the card into photos than the old safe-area layouts could', () => {
+  it('puts more of the card into photos than the old safe-area layouts could, at 3:4', () => {
     // The old layouts kept photos inside the safe area less the author row and footer: 936 × 1109 px, 50%
-    // of the Story, so no old layout could reach half the card (its best, one moment, was 44.5%). Now every
-    // count has a layout covering at least two thirds of the Story, and the defaults at least a third (the
-    // old defaults were 22–45%). On a post the old photo area was 936 × 985 px, 63% of the card; now every
-    // count has a layout above three quarters.
+    // of the Story, so no old layout could reach half the card. Now every count has a layout past half the
+    // Story, with every photo still whole at 3:4 (D-89).
     for (let count = 1; count <= 8; count++) {
       const shares = layoutsFor(count, 'story').map((l) => share(l.cells, 'story'));
-      expect(Math.max(...shares)).toBeGreaterThan(2 / 3);
-      expect(shares[0]).toBeGreaterThan(1 / 3);
-      const feed = layoutsFor(count, 'feed').map((l) => share(l.cells, 'feed'));
-      expect(Math.max(...feed)).toBeGreaterThan(0.75);
+      expect(Math.max(...shares)).toBeGreaterThan(0.5);
     }
   });
 
@@ -203,6 +200,22 @@ describe('Share card layouts (D-62, D-82)', () => {
     const { author, footer } = overlayRects('story');
     expect(author.y / 1920).toBeGreaterThanOrEqual(0.13);
     expect((footer.y + footer.height) / 1920).toBeLessThanOrEqual(0.82);
+  });
+
+  it('keeps names and captions over the photos when the 3:4 photos are narrower than the card', () => {
+    // A full jar's default 4 by 2 grid is a block well inside the card's width on a Story.
+    const cells = layoutsFor(8, 'story')[0]!.cells;
+    const block = {
+      x: Math.min(...cells.map((c) => c.x)),
+      y: 0,
+      width: Math.max(...cells.map((c) => c.x + c.width)) - Math.min(...cells.map((c) => c.x)),
+      height: 1920,
+    };
+    expect(block.width).toBeLessThan(safeArea('story').width);
+    for (const r of Object.values(overlayRects('story', cells))) expect(inside(r, block)).toBe(true);
+    // The film strip is too narrow to hold the footer row, so the overlays keep the card's width.
+    const strip = layoutsFor(8, 'story').find((l) => l.id === 'filmStrip')!.cells;
+    expect(overlayRects('story', strip).footer.width).toBe(safeArea('story').width);
   });
 
   it('centres the short row of the 2 by 4 grid', () => {

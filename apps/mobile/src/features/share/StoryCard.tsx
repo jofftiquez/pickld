@@ -78,7 +78,7 @@ export function StoryCard(props: StoryCardProps) {
   });
   const count = card.moments.length;
   const caption = cardCaption(card, moment, includeCaption);
-  const overlays = overlayRects(format);
+  const overlays = overlayRects(format, layout.cells);
   const onLight = palette.pill === colors.surface;
   const box = (r: Rect) => ({
     position: 'absolute' as const,
