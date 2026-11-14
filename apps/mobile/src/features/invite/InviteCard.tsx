@@ -50,6 +50,7 @@ export function InviteCard({
   const top = (
     <>
       <Text
+        // a11y-fixed-size: a decorative "#" drawn into the card's corner, hidden from screen readers.
         style={[styles.watermark, { color: grey ? invite.watermarkOnGrey : invite.watermarkOnColor }]}
         accessibilityElementsHidden
         importantForAccessibility="no"
@@ -132,7 +133,11 @@ export function InviteCard({
         testID={`invite-card-${code.code}`}
       >
         {top}
-        <Text style={[styles.code, { color: ink }]} allowFontScaling={false}>
+        <Text
+          // a11y-fixed-size: the code sits in a fixed-height card; the card's label says it's locked.
+          style={[styles.code, { color: ink }]}
+          allowFontScaling={false}
+        >
           {MASK}
         </Text>
         <View style={styles.status}>
@@ -152,6 +157,7 @@ export function InviteCard({
     >
       {top}
       <Text
+        // a11y-fixed-size: the code sits in a fixed-height card; its label spells the code out.
         style={[styles.code, { color: colors.surface }]}
         allowFontScaling={false}
         accessibilityLabel={revealed ? code.code.split('').join(' ') : t('invite.codeHidden')}

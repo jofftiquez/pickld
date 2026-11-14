@@ -72,6 +72,7 @@ export function InviteQrSheet({ code, onShare, onClose }: InviteQrSheetProps) {
                 <Path d={qr.d} fill={colors.ink} />
               </Svg>
               <Text
+                // a11y-fixed-size: printed under the QR at the QR's width; the sheet's label says the code.
                 style={styles.code}
                 allowFontScaling={false}
                 accessibilityElementsHidden
