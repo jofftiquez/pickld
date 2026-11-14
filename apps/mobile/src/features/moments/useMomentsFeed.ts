@@ -19,6 +19,7 @@ import {
   type MomentsCursor,
   type MomentsPage,
 } from './momentsModel';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const photoUrlsResponse = z.object({
   data: z.object({
@@ -39,6 +40,7 @@ type PhotoUrls = { full: string | null; medium: string | null; thumb: string | n
 async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
   return new Map(

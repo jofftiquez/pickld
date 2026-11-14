@@ -9,7 +9,13 @@ import { admin, cleanup, createUser, insert, localDate, request, type TestUser }
 const SECRET = 'photo-urls-test-secret-at-least-32-chars';
 const BASE = 'http://photos.test';
 const NOW = Math.floor(Date.now() / 1000);
-const deps = { userClient, photoBaseUrl: () => BASE, tokenSecret: () => SECRET, now: () => NOW };
+const deps = {
+  userClient,
+  serviceClient: () => db,
+  photoBaseUrl: () => BASE,
+  tokenSecret: () => SECRET,
+  now: () => NOW,
+};
 
 const call = async (body: unknown, user?: TestUser) => {
   const res = await handlePhotoUrls(request('photo-urls', { jwt: user?.jwt, body }), deps);
@@ -123,7 +129,9 @@ Deno.test('tokens last 15 minutes and open the full photo and the thumbnail thro
   assertEquals(json.data.expiresAt, new Date((NOW + PHOTO_TOKEN_TTL_SECONDS) * 1000).toISOString());
   assertEquals(PHOTO_TOKEN_TTL_SECONDS, 900);
   const [m] = json.data.moments;
-  const store = { get: (key: string) => Promise.resolve({ body: new Blob([key]).stream(), contentType: 'image/jpeg' }) };
+  const store = {
+    get: (key: string) => Promise.resolve({ body: new Blob([key]).stream(), contentType: 'image/jpeg' }),
+  };
   const medium = live.full.replace(/full\.jpg$/, 'medium.jpg');
   for (const [url, key] of [[m.full, live.full], [m.medium, medium], [m.thumb, live.thumb]]) {
     const u = new URL(url);
@@ -150,7 +158,10 @@ Deno.test('pending (unchecked) edits get tokens for the owner and moderators of 
   assertEquals(r.json.data.moments[0].pendingMedium, undefined, 'nor its medium copy');
   const o = await call({ momentIds: [livePublic.id] }, owner);
   assertEquals(new URL(o.json.data.moments[0].pendingFull).pathname.slice(1), pending);
-  assertEquals(new URL(o.json.data.moments[0].pendingMedium).pathname.slice(1), pending.replace(/full\.jpg$/, 'medium.jpg'));
+  assertEquals(
+    new URL(o.json.data.moments[0].pendingMedium).pathname.slice(1),
+    pending.replace(/full\.jpg$/, 'medium.jpg'),
+  );
   const before = await call({ momentIds: [livePublic.id] }, moderator);
   assertEquals(before.json.data.moments[0].pendingFull, undefined, 'not queued yet');
   await insert('moderation_items', { moment_id: livePublic.id, source: 'auto_check', status: 'pending' });
@@ -169,11 +180,20 @@ Deno.test('a suspended owner’s moments get no tokens for others', async () => 
 });
 
 Deno.test('input is validated and callers must be signed in', async () => {
-  for (const body of [{}, { momentIds: [] }, { momentIds: [], profileIds: [] }, { momentIds: ['nope'] },
-    { profileIds: ['nope'] }, { momentIds: [live.id], extra: 1 },
-    { stickerArt: false }, { stickerArt: 'yes' },
-    { momentIds: Array.from({ length: 101 }, () => crypto.randomUUID()) },
-    { profileIds: Array.from({ length: 101 }, () => crypto.randomUUID()) }]) {
+  for (
+    const body of [
+      {},
+      { momentIds: [] },
+      { momentIds: [], profileIds: [] },
+      { momentIds: ['nope'] },
+      { profileIds: ['nope'] },
+      { momentIds: [live.id], extra: 1 },
+      { stickerArt: false },
+      { stickerArt: 'yes' },
+      { momentIds: Array.from({ length: 101 }, () => crypto.randomUUID()) },
+      { profileIds: Array.from({ length: 101 }, () => crypto.randomUUID()) },
+    ]
+  ) {
     const { status, json } = await call(body, reader);
     assertEquals(status, 400, JSON.stringify(body).slice(0, 60));
     assertEquals(json.error.code, 'invalid_input');
@@ -196,7 +216,9 @@ Deno.test('a reader gets the owner’s avatar and cover, and they open through t
   const byId = new Map(json.data.profiles.map((p: { id: string }) => [p.id, p]));
   assertEquals(byId.get(reader.id), { id: reader.id, avatar: null, cover: null }, 'no images means nulls');
   const p = byId.get(owner.id) as { avatar: string; cover: string };
-  const store = { get: (key: string) => Promise.resolve({ body: new Blob([key]).stream(), contentType: 'image/jpeg' }) };
+  const store = {
+    get: (key: string) => Promise.resolve({ body: new Blob([key]).stream(), contentType: 'image/jpeg' }),
+  };
   for (const [url, key] of [[p.avatar, avatar], [p.cover, cover]]) {
     assertEquals(new URL(url).pathname.slice(1), key);
     const res = await handlePhotoRequest(new Request(url), store, SECRET, NOW + 1);
@@ -227,10 +249,41 @@ Deno.test('a moments-only request still works and returns an empty profiles list
 Deno.test('every answer names the Worker origin for sticker art, and stickerArt alone asks for just that', async () => {
   const alone = await call({ stickerArt: true }, outsider);
   assertEquals(alone.status, 200);
-  assertEquals(alone.json.data, { expiresAt: alone.json.data.expiresAt, moments: [], profiles: [], stickerArtBase: BASE });
+  assertEquals(alone.json.data, {
+    expiresAt: alone.json.data.expiresAt,
+    moments: [],
+    profiles: [],
+    stickerArtBase: BASE,
+  });
   const withMoments = await call({ momentIds: [livePublic.id] }, outsider);
   assertEquals(withMoments.json.data.stickerArtBase, BASE);
   assertEquals((await call({ stickerArt: true })).status, 401, 'still needs a session');
+});
+
+Deno.test('a ThumbHash comes only with a thumb URL the caller gets, and the pending one only with the pending thumb', async () => {
+  const pendingThumb = `moments/${owner.id}/${crypto.randomUUID()}/thumb.jpg`;
+  const { error } = await db.from('photo_thumbhashes').insert([
+    { thumb_path: live.thumb, user_id: owner.id, thumbhash: 'LIVEhashLIVEhash' },
+    { thumb_path: priv.thumb, user_id: owner.id, thumbhash: 'PRIVhashPRIVhash' },
+    { thumb_path: pendingThumb, user_id: owner.id, thumbhash: 'PENDhashPENDhash' },
+  ]);
+  if (error) throw new Error(error.message);
+  await db.from('moments').update({ pending_thumb_path: pendingThumb, pending_since: new Date().toISOString() })
+    .eq('id', live.id);
+
+  const r = await call({ momentIds: [live.id, priv.id, onlyMe.id] }, reader);
+  assertEquals(r.json.data.moments.length, 1, 'the reader can view only the live moment');
+  assertEquals(r.json.data.moments[0].thumbhash, 'LIVEhashLIVEhash');
+  assertEquals(r.json.data.moments[0].pendingThumbhash, undefined, 'never the unchecked photo’s placeholder');
+  const o = await call({ momentIds: [live.id, priv.id, onlyMe.id] }, owner);
+  const byId = new Map(o.json.data.moments.map((m: { id: string }) => [m.id, m]));
+  // deno-lint-ignore no-explicit-any
+  const get = (id: string) => byId.get(id) as any;
+  assertEquals(get(live.id).pendingThumbhash, 'PENDhashPENDhash');
+  assertEquals(get(priv.id).thumbhash, 'PRIVhashPRIVhash');
+  assertEquals('thumbhash' in get(onlyMe.id), false, 'a moment without a stored hash has none');
+  const outsiderView = await call({ momentIds: [priv.id] }, outsider);
+  assertEquals(outsiderView.json.data.moments, [], 'a private moment’s placeholder never reaches others');
 });
 
 Deno.test({ name: 'cleanup', fn: cleanup, sanitizeResources: false, sanitizeOps: false });

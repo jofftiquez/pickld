@@ -8,6 +8,7 @@ import { colors, radius, sizes } from '@/theme/tokens';
 
 import { fillFraction, type DayCell } from './monthGrid';
 import { photoSource } from '@/lib/image/photoCache';
+import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
 
 export type CalendarDayProps = {
   cell: DayCell;
@@ -51,6 +52,8 @@ export function CalendarDay({ cell, accessibilityLabel, selected, onPress }: Cal
           <Image
             testID="day-cover"
             source={photoSource(cover)}
+            placeholder={photoPlaceholder(cover)}
+            placeholderContentFit="cover"
             style={StyleSheet.absoluteFill}
             contentFit="cover"
             accessible={false}

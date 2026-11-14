@@ -10,6 +10,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
 import { buildProfileJars, profileRow, relationshipOf, type ProfileData, type ProfileJar } from './profileModel';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 /** Ten rows of the 3-column grid; older jars stay on My days (owner) until the grid pages (M5). */
 export const PROFILE_JAR_LIMIT = 30;
@@ -28,6 +29,7 @@ async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null
   const results = await Promise.all(
     batches.map(async (momentIds) => {
       const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
+      rememberPlaceholders(data);
       const parsed = photoUrlsResponse.safeParse(data);
       return error || !parsed.success ? [] : parsed.data.data.moments;
     }),

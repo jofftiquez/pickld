@@ -1082,6 +1082,43 @@ export type Database = {
           },
         ];
       };
+      photo_thumbhashes: {
+        Row: {
+          created_at: string;
+          thumb_path: string;
+          thumbhash: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          thumb_path: string;
+          thumbhash: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          thumb_path?: string;
+          thumbhash?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'photo_thumbhashes_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'photo_thumbhashes_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           author_count: number;

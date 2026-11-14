@@ -46,6 +46,7 @@ const deps = () => ({
   newId: () => MOMENT_ID,
   now: () => clock,
   makeMedium: async () => null,
+  makeThumbhash: async () => null,
 });
 
 beforeEach(() => {
@@ -135,6 +136,20 @@ describe('uploadItem', () => {
     );
     expect(remembered.sort()).toEqual(['full.jpg', 'medium.jpg', 'thumb.jpg']);
     expect(files.has('file:///cache/medium.webp')).toBe(false);
+  });
+
+  it('sends the thumbnail’s ThumbHash with the upload (NFR-PERF-02)', async () => {
+    const item = await queueMoment();
+    const makeThumbhash = jest.fn(async () => '3OcRJYB4d3h/iIeHeEh3eIhw+j2w');
+    expect(await uploadItem(item, { ...deps(), makeThumbhash })).toMatchObject({ kind: 'uploaded' });
+    expect(makeThumbhash).toHaveBeenCalledWith(item.thumbUri);
+    expect(backend.uploadUrlBodies[0]).toMatchObject({ thumbhash: '3OcRJYB4d3h/iIeHeEh3eIhw+j2w' });
+  });
+
+  it('still uploads, without a ThumbHash, when none could be made', async () => {
+    const item = await queueMoment();
+    expect(await uploadItem(item, deps())).toMatchObject({ kind: 'uploaded' });
+    expect(backend.uploadUrlBodies[0]).not.toHaveProperty('thumbhash');
   });
 
   it('a failed attempt deletes its medium copy too, and the next attempt makes a new one', async () => {

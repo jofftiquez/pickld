@@ -12,6 +12,7 @@ import { getSupabase } from '@/lib/supabase';
 import { slots } from '@/theme/tokens';
 
 import { commentsQueryKeys } from './useComments';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const idParam = z.uuid();
 
@@ -64,6 +65,7 @@ export async function fetchCommentMoment(jarId: string, momentId: string): Promi
     supabase.functions.invoke<unknown>('photo-urls', { body: { momentIds: [moment.id] } }),
     supabase.rpc('moment_jar', { p_jar: jarId }),
   ]);
+  rememberPlaceholders(urls.data);
   const parsed = photoUrlsResponse.safeParse(urls.data);
   const signed = parsed.success ? parsed.data.data.moments.find((m) => m.id === moment.id) : undefined;
   const tz = zone.error ? null : (z.array(zoneRow).safeParse(zone.data).data?.[0]?.tz ?? null);

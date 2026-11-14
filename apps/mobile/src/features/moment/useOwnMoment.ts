@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/authStore';
 import type { Enums } from '@/lib/database.types';
 import { getSupabase } from '@/lib/supabase';
 import { slots, type Slot } from '@/theme/tokens';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 /** The route param: a moment id. Anything else is shown as not found without a request. */
 export const momentIdParam = z.uuid();
@@ -116,6 +117,7 @@ export async function photoUrls(momentId: string): Promise<{ full: string | null
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', {
     body: { momentIds: [momentId] },
   });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   const urls = !error && parsed.success ? parsed.data.data.moments.find((m) => m.id === momentId) : undefined;
   return { full: urls?.full ?? null, thumb: urls?.thumb ?? null };

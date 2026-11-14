@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
 
 import { authorRow, jarMomentRow, jarRow, type JarPageData, type JarRow, type Liked } from './jarPage';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 const jarId = z.uuid();
 
@@ -31,6 +32,7 @@ type PhotoUrls = { full: string | null; medium: string | null; thumb: string | n
 async function photoUrls(momentIds: string[]): Promise<Map<string, PhotoUrls>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
   return new Map(

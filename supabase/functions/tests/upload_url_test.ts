@@ -6,7 +6,8 @@ import { handleUploadUrl, SIZE_LIMITS, UPLOAD_URL_TTL_SECONDS } from '../upload-
 import { admin, cleanup, createUser, insert, localDate, localS3, request, type TestUser } from './local.ts';
 
 const s3 = await localS3();
-const deps = { s3: () => s3, userClient };
+const db = await admin();
+const deps = { s3: () => s3, serviceClient: () => db, userClient };
 const call = async (body: unknown, user?: TestUser, opts: { now?: Date; method?: string } = {}) => {
   const res = await handleUploadUrl(request('upload-url', { jwt: user?.jwt, body, method: opts.method }), {
     ...deps,
@@ -123,7 +124,9 @@ Deno.test('a jar the caller does not own is refused, even a published one they c
 });
 
 Deno.test('a suspended user is refused for moments, avatars and covers', async () => {
-  for (const body of [momentBody(suspendedJar.id), { kind: 'avatar', file: { contentType: 'image/jpeg', size: 100 } }]) {
+  for (
+    const body of [momentBody(suspendedJar.id), { kind: 'avatar', file: { contentType: 'image/jpeg', size: 100 } }]
+  ) {
     const { status, json } = await call(body, suspended);
     assertEquals(status, 403);
     assertEquals(json.error.code, 'account_inactive');
@@ -143,7 +146,12 @@ Deno.test('avatar and cover URLs', async () => {
 
 Deno.test('input is validated', async () => {
   const bad: unknown[] = [
-    { kind: 'moment', jarId: 'not-a-uuid', photo: { contentType: 'image/jpeg', size: 1 }, thumb: { contentType: 'image/jpeg', size: 1 } },
+    {
+      kind: 'moment',
+      jarId: 'not-a-uuid',
+      photo: { contentType: 'image/jpeg', size: 1 },
+      thumb: { contentType: 'image/jpeg', size: 1 },
+    },
     { ...momentBody(ownJar.id), photo: { contentType: 'image/png', size: 100 } },
     { ...momentBody(ownJar.id), photo: { contentType: 'image/jpeg', size: SIZE_LIMITS.photo + 1 } },
     { ...momentBody(ownJar.id), thumb: { contentType: 'image/jpeg', size: SIZE_LIMITS.thumb + 1 } },
@@ -168,6 +176,16 @@ Deno.test('callers must be signed in and use POST', async () => {
   assertEquals((await call(momentBody(ownJar.id))).status, 401);
   assertEquals((await call(momentBody(ownJar.id), { ...owner, jwt: 'not.a.jwt' })).status, 401);
   assertEquals((await call(undefined, owner, { method: 'GET' })).status, 405);
+});
+
+Deno.test('a ThumbHash is stored under the new thumb key, and a malformed one is refused', async () => {
+  const { status, json } = await call({ ...momentBody(ownJar.id), thumbhash: '3OcRJYB4d3h/iIeHeEh3eIhw+j2w' }, owner);
+  assertEquals(status, 200);
+  const { data } = await db.from('photo_thumbhashes').select('user_id, thumbhash')
+    .eq('thumb_path', json.data.files.thumb.key).single();
+  assertEquals(data, { user_id: owner.id, thumbhash: '3OcRJYB4d3h/iIeHeEh3eIhw+j2w' });
+  const bad = await call({ ...momentBody(ownJar.id), thumbhash: '<script>' }, owner);
+  assertEquals(bad.status, 400);
 });
 
 Deno.test({ name: 'cleanup', fn: cleanup, sanitizeResources: false, sanitizeOps: false });

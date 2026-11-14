@@ -176,6 +176,8 @@ export type RecropDeps = {
   putFile?: PutFile;
   /** Bytes of a local file, for fn:upload-url's size check. */
   sizeOf?: (uri: string) => number;
+  /** The new thumbnail's ThumbHash placeholder, or null (makeThumbhash by default). */
+  thumbhashOf?: (uri: string) => Promise<string | null>;
 };
 
 /**
@@ -197,8 +199,13 @@ export async function saveRecrop(
     void requestUploads();
     return;
   }
-  const { putFile = putWithUploadTask, sizeOf = (uri: string) => new File(uri).size } = deps;
+  const {
+    putFile = putWithUploadTask,
+    sizeOf = (uri: string) => new File(uri).size,
+    thumbhashOf = (uri: string) => import('@/lib/image/photoThumbhash').then((m) => m.makeThumbhash(uri)),
+  } = deps;
   try {
+    const thumbhash = await thumbhashOf(files.thumbUri).catch(() => null);
     const { data: body, error } = await client.functions.invoke<unknown>('upload-url', {
       body: {
         kind: 'moment',
@@ -206,6 +213,7 @@ export async function saveRecrop(
         photo: { contentType: 'image/webp', size: sizeOf(files.photoUri) },
         ...(mediumUri ? { medium: { contentType: 'image/webp', size: sizeOf(mediumUri) } } : {}),
         thumb: { contentType: 'image/webp', size: sizeOf(files.thumbUri) },
+        ...(thumbhash ? { thumbhash } : {}),
       },
     });
     if (error) throw error;

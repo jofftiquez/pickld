@@ -15,6 +15,7 @@ import { getSupabase } from '@/lib/supabase';
 import type { Visibility } from '@/features/publish/publishJar';
 
 import type { QueuedMoment, ServerMoment } from './todayGrid';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 /** The phone's IANA zone (rule 7). */
 export function phoneTimeZone(): string {
@@ -69,6 +70,7 @@ const photoUrlsResponse = z.object({
 async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
   return new Map(parsed.data.data.moments.map((m) => [m.id, m.thumb]));

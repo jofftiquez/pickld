@@ -2,10 +2,13 @@
 // photo and thumbnail, or for an avatar or cover. The app uploads straight to the bucket, then writes
 // the returned keys into moments / profiles. Each call gets new keys, so nothing is overwritten.
 //
-// POST { kind: 'moment', jarId, photo: { contentType, size }, medium?: { contentType, size }, thumb: { contentType, size } }
+// POST { kind: 'moment', jarId, photo: { contentType, size }, medium?: { contentType, size }, thumb: { contentType, size },
+//        thumbhash? }
 // POST { kind: 'avatar' | 'cover', file: { contentType, size } }
 //   → { data: { kind, expiresAt, files: { photo, medium?, thumb } | { file } } }   each: { key, url, method, headers }
 // medium (NFR-PERF-02) is the 1080 × 1440 feed copy; it is optional, so older app versions keep uploading without it.
+// thumbhash (NFR-PERF-02) is the ThumbHash the phone made from the thumbnail. It is stored with the server credential
+// under the new thumb key (0121) for fn:photo-urls to return; no client can read it from the table.
 //   → { error: { code, message } }
 import { type SupabaseClient, z } from '../_shared/deps.ts';
 import { bearerToken, fail, ok, readJson } from '../_shared/http.ts';
@@ -24,6 +27,9 @@ export const SIZE_LIMITS = {
   cover: 5 * 1024 * 1024,
 } as const;
 
+/** Base64 as expo-image's generateThumbhashAsync writes it; the same rule as photo_thumbhashes (0121). */
+export const THUMBHASH_PATTERN = /^[A-Za-z0-9+/]{8,64}={0,2}$/;
+
 const file = (max: number) =>
   z.strictObject({
     contentType: z.enum(['image/webp', 'image/jpeg']),
@@ -37,6 +43,7 @@ export const UploadUrlInput = z.discriminatedUnion('kind', [
     photo: file(SIZE_LIMITS.photo),
     medium: file(SIZE_LIMITS.medium).optional(),
     thumb: file(SIZE_LIMITS.thumb),
+    thumbhash: z.string().regex(THUMBHASH_PATTERN).optional(),
   }),
   z.strictObject({ kind: z.literal('avatar'), file: file(SIZE_LIMITS.avatar) }),
   z.strictObject({ kind: z.literal('cover'), file: file(SIZE_LIMITS.cover) }),
@@ -54,6 +61,8 @@ export interface SignedUpload {
 export interface UploadUrlDeps {
   s3: () => S3Config;
   userClient: (jwt: string) => SupabaseClient;
+  /** Stores the ThumbHash (0121), which only the server may write. */
+  serviceClient: () => SupabaseClient;
   now?: () => Date;
 }
 
@@ -112,6 +121,13 @@ export async function handleUploadUrl(req: Request, deps: UploadUrlDeps): Promis
       sign(keys.thumb, input.thumb),
       input.medium ? sign(keys.medium, input.medium) : null,
     ]);
+    if (input.thumbhash) {
+      // The key is new, so this never replaces a row. A placeholder is only a nicety: failing to store it
+      // must not stop the upload.
+      const { error } = await deps.serviceClient().from('photo_thumbhashes')
+        .insert({ thumb_path: keys.thumb, user_id: userId, thumbhash: input.thumbhash });
+      if (error) console.warn(`photo_thumbhashes: ${error.message}`);
+    }
     return ok({ kind: input.kind, expiresAt, files: medium ? { photo, medium, thumb } : { photo, thumb } });
   }
   const upload = await sign(newProfileImageKey(input.kind, userId), input.file);

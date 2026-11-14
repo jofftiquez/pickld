@@ -11,6 +11,7 @@ import { todayQueryKeys } from '@/features/jar/useToday';
 import { useAuthStore } from '@/lib/authStore';
 import { listQueue, subscribeQueue } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
+import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 export type DayJar = {
   /** Null when the user has no jar for the date (Fill this jar creates it). */
@@ -36,6 +37,7 @@ const photoUrlsResponse = z.object({
 async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
+  rememberPlaceholders(data);
   const parsed = photoUrlsResponse.safeParse(data);
   if (error || !parsed.success) return new Map();
   return new Map(parsed.data.data.moments.map((m) => [m.id, m.thumb]));
