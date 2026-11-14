@@ -702,3 +702,120 @@ Added Nov 13 with items 23–26 (asked one at a time; item 26 needs no decision)
 17. **D17 Filters:** add six color-only filters (Kape, Ube, Sampaguita, Gabi, Luma, Ulan), for eleven in all. Original stays first and the old five keep their order.
 18. **D18 Crop button:** "Next: edit" / "Save crop" moves to the top right of the Crop header as a green pill, like the editor's Save. Reset joins the tools row, and the frame is sized so the sheet fits without scrolling.
 19. **D19 Mirror selfies:** a Mirror selfies switch in a new Camera section of Settings, on by default (as today and like the iPhone Camera), saved on this phone only. When it's off, new front-camera photos are flipped back; the preview stays mirrored.
+
+---
+
+# Round 2 (iPhone test of the round 1 build, Nov 14)
+
+The product owner tested the round 1 build (main at `b6664bc`) on his iPhone 14 Pro (iOS 27.0) and sent ten more items. He auto-approved my recommendations again, so every decision below is recorded in `docs/decisions.md` as auto-approved (D-79 onward). The next migration number is 0070; none of the pieces below needs one.
+
+## Why items 1 and 2 didn't show up on the phone
+
+**The installed build is right.** Pickld Local (`me.pickld.app.local`) on the phone was built and installed from `b6664bc`, and its bundle carries the round 1 code.
+
+**Item 1 (profile photo, and now the cover photo): the local storage server rejects every upload, so the round 1 app fix never got a chance.** Verified on the phone and against the server:
+
+- The phone's upload queue (`queue.db`, copied off the phone) holds 7 moments, all in state `failed` with `photo upload answered 500`. The photos are safe on the phone (rule 3), so they can retry once storage works.
+- Reproduced with a real session through the Tailscale address: `fn:upload-url` answers 200, then the signed PUT to `/storage/v1/s3/photos/...` answers HTTP 500 `DatabaseError 42P10`.
+- The cause is a version mismatch in the shared local Supabase. Its `storage` schema was migrated to storage-api **v1.90.1** (storage migrations 62–80, object versioning and lifecycle, ran at 03:18 on Nov 13). At 19:16 the storage container was re-created on the older **v1.72.1** image, which still upserts with `ON CONFLICT (bucket_id, name)`. Migration 72 (`drop-bucketid-objname-index`) removed the unique index that clause needs, so Postgres answers 42P10.
+- The newest object in `storage.objects` is from 17:05, and no failed upload wrote a row. Every upload, moments included, has failed since about 19:16. The Simulator's "Didn't upload" tiles in the round 1 report were this, not a network problem as I said then.
+- Change cover goes through the same `fn:upload-url` and PUT, so it fails the same way. The app code is fine.
+- **Fix:** re-create the `supabase_storage_pickld` container on the v1.90.1 image that matches its schema. This restarts part of the shared local Supabase, so it waits for the product owner's OK. No data is lost: storage files and the database stay as they are. The other project's storage container (`supabase_storage_pwedepa`) is left alone.
+
+**Item 2 (Liquid Glass): the phone qualifies, so the likely cause is that the glass is tinted almost opaque and looks like the old blur.** The phone is on iOS 27.0. The build used Xcode 26.4.1 (iOS 26.4 SDK), the only Xcode on the Mac. With that SDK, `expo-glass-effect` 58.0.5 turns glass on for iOS 26+ unless `UIDesignRequiresCompatibility` is set, and the built app's Info.plist doesn't set it. What's left is the `UIGlassEffect` check and Reduce Transparency, which a diagnostic build reads on the phone (results are in the item 2 section below). Meanwhile, the tints we put on the glass are heavy: `tabBarGlass` is 86% white and the dark glass is 45–60% black. On top of Liquid Glass, that reads as a solid bar, close to the old blur, which matches "I don't see it".
+
+## Item by item
+
+### R2-1 Profile photo upload, square cropper, cover upload, buttons overlapping the cover
+
+- **Today:** uploads fail for the storage reason above. Change photo and Change cover take the gallery photo and crop its centre with no say for the person (`prepareProfileImage`, 512×512 avatar, 1500×600 cover). On the profile, the Edit profile and Share buttons sit below the cover band instead of straddling its bottom edge.
+- **Change:**
+  - Environment: re-create the storage container on v1.90.1, once approved.
+  - Change photo opens the existing Crop screen in a square mode (pan and zoom, a circle guide over a square frame, no rotate or filters) before upload. Change cover opens it at the cover's 5:2 shape. Done uploads the crop; Cancel uploads nothing.
+  - The Edit profile and Share buttons move up so their vertical middle sits on the cover's bottom edge, and the name and bio below don't move.
+- **Touches:** `app/crop.tsx` (a `mode=avatar|cover` param), `src/features/profile/uploadProfileImage.ts`, `src/lib/image/profileImage.ts` (crop rect instead of centre crop), `app/settings/profile.tsx`, `src/features/profile/ProfileView.tsx`. No schema or RPC change.
+- **Design:** Crop (square mode), Profile and ProfileOther (button position).
+- **Risk:** Crop is shared with the camera's 3:4 flow, so the 3:4 path must stay unchanged (its tests must pass untouched). **Size:** M.
+
+### R2-2 Liquid Glass on compatible devices
+
+- **Today:** see above. The glass is likely on but tinted to look like the blur.
+- **Change:** confirm the flags on the phone with a throwaway diagnostic build. If they are true, lighten the glass so it reads as glass: the tab bar uses the clear style with a light tint (for example 25–35% white) and the dark controls a lighter tint (about 20–30% black). Labels stay above WCAG AA (Web Content Accessibility Guidelines) 4.5:1 over bright and dark photos, using the label colors and a soft text shadow where needed rather than a heavy tint. Fall back to today's blur exactly as now. If a flag is false, fix the check instead (for example a build setting), and record why.
+- **Touches:** `src/theme/tokens.ts` (`tabBarGlass`, `glass`, `glassStrong` tints for the glass path only), `src/components/GlassSurface.tsx`, `FloatingTabBar.tsx`, maybe `RoundIconButton.tsx`. No schema change.
+- **Design:** Main, Moment, Capture notes (tints).
+- **Risk:** contrast over bright photos, checked with Simulator captures over a white and a black photo. Building with the iOS 27 SDK would need Xcode 27, a large download, and isn't needed for glass. **Size:** S.
+
+### R2-3 Sticker previews: fill the box
+
+- **Today:** the shop's pack card shows three sample stickers spread across a wide box, leaving empty space between them.
+- **Change:** the pack card shows a tighter cluster of five or six stickers (as many as the pack has, up to six) that fill the box, slightly overlapped and rotated, in the same style. Design only, no data change.
+- **Touches:** `src/features/stickers/PackArt.tsx` (layouts per count), `useShop.ts` / `shop.ts` if the sample count comes from there. **Design:** StickerShop, Stickers. **Risk:** low; check small packs (fewer than six stickers). **Size:** S.
+
+### R2-4 Story share: use the space; Strava-style link later
+
+- **Today:** the round 1 layouts sit inside wide safe margins, so on a 9:16 story the photos leave a lot of plain background.
+- **Change:** the photos take as much of the 1080×1920 card as possible. Cells fill the width with thin gutters and small outer margins, the grid grows into the top and bottom space, and names and captions move to compact overlays that stay out of the top 13% and bottom 18% Instagram covers. The post format (1080×1350) gets the same treatment. The Strava-style tappable link back to Pickld is **future task T-512** in `docs/tasks.md` (needs a Meta App ID, T-510); not built now.
+- **Touches:** `src/features/share/storyLayout.ts`, `StoryCard.tsx`, `LayoutThumbnail.tsx`, their tests. **Design:** ShareCard. **Risk:** captions over photos must stay readable, and a single moment still shows whole at 3:4. **Size:** M.
+
+### R2-5 Only share your own moments and jars
+
+- **Today:** Share appears on other people's moments (Moment detail) and jars (Jar page), and `/share/[jarId]` makes a card for any jar the viewer can open.
+- **Change:** Share shows only on my own moments and jars. `/share/[jarId]` checks the jar is mine and otherwise shows a "You can only share your own jars" state. The profile's Share (a link to the profile) stays. Sharing is made on the phone, with no server record, so there is no server rule to add; the public web page of an Everyone jar is a public link anyway.
+- **Touches:** `MomentDetailView.tsx`, `app/moment/[id].tsx`, `JarPageView.tsx`, `app/jar/[id].tsx`, `app/share/[jarId].tsx`, `ShareCardScreen.tsx`, `en.json`. **Design:** Moment, JarPage (no Share for others). **Risk:** low. **Size:** S.
+
+### R2-6 Comments show the moment fully
+
+- **Today:** opening a moment's comments shows the thread with only a small part of the moment.
+- **Change:** a moment's comment thread starts with the whole moment at 3:4 (filter and stickers drawn, as on Moment detail) and its caption, and scrolls with the comments; the composer stays pinned above the keyboard. A jar's thread is unchanged.
+- **Touches:** `app/comments/[jarId].tsx` and its view, reusing the moment rendering from Moment detail. **Design:** Comments. **Risk:** keyboard and scroll on small phones. **Size:** S–M.
+
+### R2-7 Under 13: Go back returns to onboarding
+
+- **Today:** after a birthday under 13, the account is deleted and the phone signed out (FR-ACC-04), and Go back resets to the Welcome page.
+- **Change:** Go back resets to the first intro (onboarding) page, `/intro/1`, with no history back into setup. The deletion stays: FR-ACC-04 requires it, and it keeps a child from going back to change the birthday.
+- **Touches:** `app/setup/under13.tsx`. **Design:** Under13 (no visual change). **Size:** XS.
+
+### R2-8 "Be a reader"
+
+- **Today:** the follow button says "Read" (then "Reading", or "Read back" when they read you).
+- **Change:** "Read" becomes **"Be a reader"** wherever it is the follow action; "Reading" and "Read back" stay. The accessibility label becomes "Be {{name}}'s reader". Check the button at 200% text and in rows (Find friends, readers lists); allow two lines rather than truncating.
+- **Touches:** `en.json`, `FollowButton.tsx` (width), its tests. **Design:** Profile, ProfileOther, FindFriends. **Size:** XS.
+
+### R2-9 Empty pages with placeholders and hints
+
+- **Today:** some lists show one line when empty (Moments and Jars timelines, notifications, readers lists, the profile's grids), with no hint that pulling refreshes.
+- **Change:** each empty list shows a small illustration (the jar graphic or an icon), a title, one helpful line, and an action where one exists (Find people, Add a moment). The pull-to-refresh lists add "Pull down to refresh" under the empty text. Copy lives in `en.json`.
+- **Touches:** `app/(tabs)/moments.tsx`, `app/(tabs)/jars.tsx` and their views, notifications, readers, profile grids, a shared `EmptyState` component if one doesn't already exist. **Design:** Moments, Jars, Notifications (empty). **Size:** S–M.
+
+### R2-10 Sticker pack page: no photo in the cover
+
+- **Today:** the pack page's top section shows a photo with stickers on it.
+- **Change:** the cover section shows only the pack's stickers, larger, on the pack's color, with no photo.
+- **Touches:** `PackPreviewView.tsx`, `PackArt.tsx` (a large variant). **Design:** StickerPack. **Size:** S.
+
+## Pieces, order and parallel work
+
+| Piece | Items | Main files | Runs with |
+| --- | --- | --- | --- |
+| P-A Profile | 1 | crop, profile upload, ProfileView | C, D, F |
+| P-B Liquid Glass | 2 | tokens, GlassSurface, tab bar | after the diagnostic; with anything except files above |
+| P-C Stickers | 3, 10 | PackArt, PackPreviewView, shop | A, D, F |
+| P-D Share | 4, 5 | storyLayout, StoryCard, share route, Moment detail, Jar page | A, C |
+| P-E Comments | 6 | comments route | after D (Moment detail overlap is small) |
+| P-F Small fixes | 7, 8, 9 | under13, FollowButton, empty states, en.json | A, C |
+
+Order: A, C and D first in parallel; F and E next; B once the phone diagnostic is in. Each piece merges on a green `ci`. The phone gets a rebuild after the first batch and once more at the end. The storage fix happens whenever the product owner approves it; until then uploads (and the new cropper's upload) can't be checked end to end on the phone.
+
+## Decisions (auto-approved Nov 14, recorded as D-79 onward)
+
+1. **Profile crop (D-79):** Change photo opens Crop in a square mode with a circle guide, Change cover in a 5:2 mode; the Edit profile and Share buttons straddle the cover's bottom edge at their middle.
+2. **Liquid Glass tints (D-80):** keep `expo-glass-effect`; on the glass path use lighter tints (clear style for the tab bar) so it reads as glass, keeping AA contrast; the blur fallback is unchanged. No Xcode 27 needed.
+3. **Sticker previews (D-81):** pack cards show up to six stickers in a tight, slightly overlapped cluster; the pack page cover shows large stickers on the pack color, no photo.
+4. **Story space (D-82):** photos fill the card with thin gutters and small margins; names and captions become compact overlays outside the covered top 13% and bottom 18%. The Strava-style link is future task T-512.
+5. **Share own only (D-83):** Share appears only on my own moments and jars, and the share route refuses others' jars; profile sharing stays.
+6. **Comments (D-84):** a moment's thread opens with the whole moment at 3:4 and its caption, scrolling with the comments.
+7. **Under 13 (D-85):** Go back goes to the first intro page; the account deletion (FR-ACC-04) stays.
+8. **Follow label (D-86):** "Read" becomes "Be a reader"; "Reading" and "Read back" stay.
+9. **Empty states (D-87):** every empty list gets an illustration, title, hint and action where possible; pull-to-refresh lists say "Pull down to refresh".
+
+**Parked, needs the product owner:** re-creating the local `supabase_storage_pickld` container on storage-api v1.90.1 to fix uploads (item 1).
