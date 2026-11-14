@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PackPreviewView } from '@/features/stickers/PackPreviewView';
 import { buildPacks } from '@/features/stickers/shop';
 import { useBuyPack } from '@/features/stickers/usePackPreview';
+import { usePackThumbs } from '@/features/stickers/usePackThumbs';
 import { usePrices, useShopRows } from '@/features/stickers/useShop';
 import { WEB_BASE_URL } from '@/lib/links';
 
@@ -18,6 +19,7 @@ export default function PackPreviewScreen() {
   const { t } = useTranslation();
   const rows = useShopRows();
   const buy = useBuyPack();
+  const thumbs = usePackThumbs();
   const pack = useMemo(
     () =>
       rows.data
@@ -33,6 +35,10 @@ export default function PackPreviewScreen() {
       price={pack?.productId ? prices.get(pack.productId) : undefined}
       buying={buy.isPending}
       buyFailed={buy.isError}
+      thumbs={pack ? thumbs.thumbs?.get(pack.id) : undefined}
+      onThumb={() => {
+        if (pack) thumbs.toggle(pack.id);
+      }}
       insets={insets}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
       onRetry={() => void rows.refetch()}

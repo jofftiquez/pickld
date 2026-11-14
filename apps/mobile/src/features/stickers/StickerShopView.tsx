@@ -10,6 +10,7 @@ import { colors, radius, shadow, space, stickerShop, stickerTool } from '@/theme
 
 import { BANNER_LAYOUTS, CARD_LAYOUTS, PackArt } from './PackArt';
 import type { Shop, ShopPack } from './shop';
+import type { PackThumbs } from './usePackThumbs';
 
 export type StickerShopViewProps = {
   /** Undefined while the first load runs. */
@@ -17,6 +18,8 @@ export type StickerShopViewProps = {
   failed?: boolean;
   /** Store prices by product id; a pack without one shows no price. */
   prices: ReadonlyMap<string, string>;
+  /** Thumbs up by pack id; cards show the count when it's known. */
+  thumbs?: PackThumbs | undefined;
   query: string;
   onQuery: (query: string) => void;
   insets: EdgeInsets;
@@ -34,6 +37,7 @@ export function StickerShopView({
   shop,
   failed = false,
   prices,
+  thumbs,
   query,
   onQuery,
   insets,
@@ -112,6 +116,7 @@ export function StickerShopView({
                       key={pack.id}
                       pack={pack}
                       price={priceOf(pack)}
+                      thumbs={thumbs?.get(pack.id)?.thumbs}
                       style={{ width: stickerShop.cardWidth }}
                       onOpen={onOpenPack}
                     />
@@ -129,7 +134,13 @@ export function StickerShopView({
                   {pairs(shop.yours).map((pair) => (
                     <View key={pair.map((p) => p.id).join()} style={styles.gridRow}>
                       {pair.map((pack) => (
-                        <PackCard key={pack.id} pack={pack} style={styles.gridCard} onOpen={onOpenPack} />
+                        <PackCard
+                          key={pack.id}
+                          pack={pack}
+                          thumbs={thumbs?.get(pack.id)?.thumbs}
+                          style={styles.gridCard}
+                          onOpen={onOpenPack}
+                        />
                       ))}
                       {pair.length === 1 ? <View style={styles.gridCard} /> : null}
                     </View>
@@ -210,24 +221,29 @@ function SeasonalBanner({
 function PackCard({
   pack,
   price,
+  thumbs,
   style,
   onOpen,
 }: {
   pack: ShopPack;
   price?: string | undefined;
+  /** The pack's thumbs up; undefined while unknown. Zero shows nothing. */
+  thumbs?: number | undefined;
   style: object;
   onOpen: (pack: ShopPack) => void;
 }) {
   const { t } = useTranslation();
   const earned = pack.owned && pack.tier === 'earned';
   const status = pack.owned ? (earned ? t('stickerShop.earned') : t('stickerShop.owned')) : price;
+  const label = status
+    ? t('stickerShop.packLabel', { name: pack.name, count: pack.stickerCount, price: status })
+    : t('stickerShop.packName', { name: pack.name, count: pack.stickerCount });
+  const showThumbs = thumbs !== undefined && thumbs > 0;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
-        status
-          ? t('stickerShop.packLabel', { name: pack.name, count: pack.stickerCount, price: status })
-          : t('stickerShop.packName', { name: pack.name, count: pack.stickerCount })
+        showThumbs ? t('stickerShop.withThumbs', { label, thumbs: t('stickerShop.thumbs', { count: thumbs }) }) : label
       }
       accessibilityHint={t('stickerShop.openHint')}
       onPress={() => onOpen(pack)}
@@ -251,9 +267,17 @@ function PackCard({
           <Text style={[textStyle('bodyMedium', '700'), { color: colors.ink }]} numberOfLines={2}>
             {pack.name}
           </Text>
-          <Text style={[textStyle('caption', '500'), { color: colors.muted }]}>
-            {t('stickerShop.count', { count: pack.stickerCount })}
-          </Text>
+          <View style={styles.cardMeta}>
+            <Text style={[textStyle('caption', '500'), { color: colors.muted }]}>
+              {t('stickerShop.count', { count: pack.stickerCount })}
+            </Text>
+            {showThumbs ? (
+              <View style={styles.cardThumbs} testID={`sticker-shop-thumbs-${pack.slug}`}>
+                <Icon name="thumbsUp" size={12} strokeWidth={2.2} color="muted" />
+                <Text style={[textStyle('caption', '500'), { color: colors.muted }]}>{thumbs}</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
         {pack.owned ? (
           earned ? (
@@ -324,6 +348,8 @@ const styles = StyleSheet.create({
   cardArt: { height: stickerShop.cardArtHeight, borderRadius: stickerShop.cardRadius, overflow: 'hidden' },
   cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   cardName: { flex: 1 },
+  cardMeta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space.sm },
+  cardThumbs: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   price: { backgroundColor: colors.brand, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
   owned: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   earned: { backgroundColor: colors.brandTint, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 },

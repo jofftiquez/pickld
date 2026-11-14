@@ -35,6 +35,7 @@ jest.mock('../useShop', () => {
     usePrices: () => new Map<string, string>(),
   };
 });
+jest.mock('../usePackThumbs', () => ({ usePackThumbs: () => ({ thumbs: undefined, toggle: jest.fn() }) }));
 
 const insets = { top: 0, right: 0, bottom: 0, left: 0 };
 

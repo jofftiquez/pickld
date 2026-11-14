@@ -118,3 +118,22 @@ describe('StickerShopView', () => {
     }
   });
 });
+
+describe('thumbs up on cards (FR-STK-07)', () => {
+  it('shows a pack’s count, and nothing for zero or unknown', async () => {
+    const shop = buildShop(shopPackRows(), shopStickerRows(), answers(['barkada'], ['work']), NOV);
+    const all = [...shop.forYou, ...shop.yours];
+    const id = (slug: string) => all.find((p) => p.slug === slug)!.id;
+    await setup({
+      shop,
+      thumbs: new Map([
+        [id('pinoy-life'), { thumbs: 7, mine: false }],
+        [id('everyday'), { thumbs: 0, mine: false }],
+      ]),
+    });
+    expect(within(screen.getByTestId('sticker-shop-thumbs-pinoy-life')).getByText('7')).toBeTruthy();
+    expect(screen.getByTestId('sticker-shop-pack-pinoy-life').props.accessibilityLabel).toMatch(/, 7 thumbs up$/);
+    expect(screen.queryByTestId('sticker-shop-thumbs-everyday')).toBeNull();
+    expect(screen.queryByTestId('sticker-shop-thumbs-barkada')).toBeNull();
+  });
+});

@@ -12,6 +12,8 @@ import { colors, sizes, space, stickerShop, stickerTool } from '@/theme/tokens';
 
 import { COVER_LAYOUTS, PackArt } from './PackArt';
 import type { ShopPack } from './shop';
+import { ThumbButton } from './ThumbButton';
+import type { PackThumb } from './usePackThumbs';
 
 /** How many stickers the cloud shows before "+N more" (PackPreview). */
 export const PREVIEW_STICKERS = 12;
@@ -24,6 +26,9 @@ export type PackPreviewViewProps = {
   price?: string;
   buying?: boolean;
   buyFailed?: boolean;
+  /** The pack's thumbs up and the viewer's own; undefined while loading or offline (no button then). */
+  thumbs?: PackThumb | undefined;
+  onThumb?: () => void;
   insets: EdgeInsets;
   onBack: () => void;
   onRetry: () => void;
@@ -33,7 +38,7 @@ export type PackPreviewViewProps = {
 
 /**
  * Pack preview (PackPreview; FR-STK-07): a cover of the pack's stickers, large, on its color (no photo, D-81),
- * its story, its stickers and \"Get <pack> · <price>\". Locked tabs in the Stickers tool and every pack in the
+ * its story, a thumbs up with its count, its stickers and \"Get <pack> · <price>\". Locked tabs in the Stickers tool and every pack in the
  * shop open it.
  */
 export function PackPreviewView({
@@ -42,6 +47,8 @@ export function PackPreviewView({
   price,
   buying = false,
   buyFailed = false,
+  thumbs,
+  onThumb,
   insets,
   onBack,
   onRetry,
@@ -109,6 +116,7 @@ export function PackPreviewView({
               {pack.description ? (
                 <Text style={[textStyle('body', '400'), { color: colors.muted }]}>{pack.description}</Text>
               ) : null}
+              {thumbs && onThumb ? <ThumbButton count={thumbs.thumbs} thumbed={thumbs.mine} onPress={onThumb} /> : null}
               <View
                 style={styles.cloud}
                 accessibilityLabel={pack.labels.join(', ')}
