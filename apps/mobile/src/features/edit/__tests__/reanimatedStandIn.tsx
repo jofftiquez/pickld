@@ -51,5 +51,6 @@ export const Easing = {
   inOut: (easing: unknown) => easing,
   cubic: 'cubic',
   quad: 'quad',
+  linear: 'linear',
 };
 export const ReduceMotion = { System: 'system', Always: 'always', Never: 'never' };
