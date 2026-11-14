@@ -180,25 +180,27 @@ export function MomentTile({
           label={tag}
           blurred={blurred}
           overlayColor={state === 'failed' ? 'failedOverlay' : state === 'filled' ? undefined : 'glass'}
+          // "Added later" sits under the time it qualifies, so the time, Cover, Added later and the
+          // visibility badge never crowd one row and cut each other off.
           topLeft={
-            time || cover ? (
-              <>
-                {time ? <Pill text={time} /> : null}
-                {cover ? <Pill text={t('tile.cover')} testID="tile-cover" /> : null}
-              </>
+            time || cover || addedLater ? (
+              <View style={styles.topLeft}>
+                {time || cover ? (
+                  <View style={styles.pillRow}>
+                    {time ? <Pill text={time} /> : null}
+                    {cover ? <Pill text={t('tile.cover')} testID="tile-cover" /> : null}
+                  </View>
+                ) : null}
+                {addedLater ? <Pill text={t('tile.addedLater')} tone="badge" testID="tile-added-later" /> : null}
+              </View>
             ) : null
           }
           topRight={
-            visibility || addedLater ? (
-              <>
-                {addedLater ? <Pill text={t('tile.addedLater')} tone="badge" testID="tile-added-later" /> : null}
-                {visibility ? (
-                  <VisibilityBadge
-                    visibility={visibility}
-                    testID={visibility === 'only_me' ? 'tile-lock' : `tile-visibility-${visibility}`}
-                  />
-                ) : null}
-              </>
+            visibility ? (
+              <VisibilityBadge
+                visibility={visibility}
+                testID={visibility === 'only_me' ? 'tile-lock' : `tile-visibility-${visibility}`}
+              />
             ) : null
           }
         >
@@ -222,8 +224,11 @@ export function MomentTile({
           ) : null}
           {state === 'failed' ? (
             <>
-              <Icon name="warning" color="surface" size={24} strokeWidth={2} />
-              <OverlayText text={t('tile.failed')} />
+              {/* The icon goes beside the words, so Retry clears the slot name under it (QA round 3). */}
+              <View style={styles.failedRow}>
+                <Icon name="warning" color="surface" size={18} strokeWidth={2} />
+                <OverlayText text={t('tile.failed')} />
+              </View>
               {onRetry ? (
                 <RetryButton
                   label={t('tile.retry')}
@@ -365,7 +370,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.sm,
     flexShrink: 1,
   },
-  overlayText: { color: colors.surface, textAlign: 'center' },
+  overlayText: { color: colors.surface, textAlign: 'center', flexShrink: 1 },
+  failedRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  topLeft: { alignItems: 'flex-start', gap: space.xs },
+  pillRow: { flexDirection: 'row', gap: space.xs },
   retry: {
     minHeight: sizes.retryPill,
     minWidth: sizes.minTap,

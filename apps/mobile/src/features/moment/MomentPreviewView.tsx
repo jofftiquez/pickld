@@ -140,8 +140,11 @@ export function MomentPreviewView({
   const shareable = canShare(item);
   const note = item.kind === 'queued' ? (item.uploading ? t('preview.uploading') : t('preview.queued')) : null;
 
+  // Large text: the whole screen scrolls (photo, details, then actions) instead of only the details, which
+  // the full-width 3:4 photo and the wrapped actions squeezed to one cut-off line (NFR-A11Y-02).
+  const Screen = large ? ScrollView : View;
   return (
-    <View style={styles.screen} testID="moment-preview">
+    <Screen style={styles.screen} testID="moment-preview">
       <View style={{ height: width / photo.aspect }}>
         <View
           accessible
@@ -183,15 +186,19 @@ export function MomentPreviewView({
       </View>
 
       <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, space.xl) }]} testID="preview-sheet">
-        {/* At 200% text the details scroll; the action bar stays put (D-37). */}
-        <ScrollView style={styles.flex} contentContainerStyle={styles.details}>
+        {/* Below large text the details scroll and the action bar stays put (D-37). */}
+        <ScrollView style={large ? null : styles.flex} scrollEnabled={!large} contentContainerStyle={styles.details}>
           <View style={styles.metaRow}>
             <View style={styles.slotChip}>
               <Text style={[textStyle('bodySmall', '700'), { color: colors.brandText }]}>{slot}</Text>
             </View>
             {at ? (
               <Text style={[textStyle('bodySmall', '400'), styles.muted]} testID="preview-when">
-                {t('moment.detail.when', { time: formatTime(at, tz, locale), date: formatShortDate(at, tz, locale) })}
+                {t('moment.detail.when', {
+                  time: formatTime(at, tz, locale),
+                  // No-break spaces: when the line wraps, the date moves down whole ("Thu, Nov 12").
+                  date: formatShortDate(at, tz, locale).replace(/ /g, '\u00a0'),
+                })}
               </Text>
             ) : null}
             {item.addedLater ? (
@@ -359,7 +366,7 @@ export function MomentPreviewView({
           </GlassSurface>
         ) : null}
       </View>
-    </View>
+    </Screen>
   );
 }
 
