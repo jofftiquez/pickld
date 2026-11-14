@@ -82,6 +82,7 @@ export const colors = {
   cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
   surfaceClear: 'rgba(255,255,255,0)', // transparent end of fades into surface (the sticker grid's bottom edge)
   progressTrack: 'rgba(255,255,255,0.4)', // moments not reached yet in Moment detail's progress bars (Moment)
+  confettiGlint: '#ffffff', // light catching a Publish confetti piece as it flips (D-132); drawn at up to 50%
 } as const;
 
 // Text tool colors (Text), in the design's order. Drawn on photos with a shadow (colors.textOverlayShadow).
@@ -481,6 +482,7 @@ export const motion = {
   base: 250,
   jarLayerSettle: 450, // skip when Reduce Motion is on
   confettiFall: 900, // each confetti piece's drop (FullJar, StickerUnlock); no confetti with Reduce Motion
+  confettiBurst: 2400, // each Publish confetti piece's flight, launch to faded out (D-132); none with Reduce Motion
   celebrationPop: 400, // celebration content grows in; a plain fade (base) with Reduce Motion
 } as const;
 

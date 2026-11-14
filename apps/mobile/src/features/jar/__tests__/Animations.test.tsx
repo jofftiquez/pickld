@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 import { useReducedMotion } from 'react-native-reanimated';
 
+import { BURST_PIECES } from '../confettiPhysics';
 import { LikeButton } from '../LikeButton';
 import { buildTodayGrid, type ServerMoment } from '../todayGrid';
 import { TodayView } from '../TodayView';
@@ -74,7 +75,7 @@ describe('Today animations (D-58)', () => {
   it('a publish brings confetti, which screen readers skip', async () => {
     await renderToday({ celebratePublish: true });
     expect(screen.getByTestId('publish-burst')).toBeTruthy();
-    expect(confetti()).toHaveLength(8);
+    expect(confetti()).toHaveLength(BURST_PIECES);
     expect(screen.queryAllByTestId('confetti-piece')).toHaveLength(0);
   });
 
