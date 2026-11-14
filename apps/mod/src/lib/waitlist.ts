@@ -5,7 +5,6 @@ import { z } from 'zod';
 // The waitlist table has no client grants; these functions are the only way in, and they refuse non-moderators.
 export const STATES = ['all', 'email_only', 'waiting', 'admitted', 'member'] as const;
 export type WaitlistState = (typeof STATES)[number];
-export const PAGE = 50;
 
 const Summary = z.object({
   total: z.number(),
@@ -38,13 +37,13 @@ export async function loadWaitlist(
   client: SupabaseClient,
   query: string,
   state: WaitlistState,
-  page: number,
+  page: { size: number; offset: number },
 ): Promise<{ rows: WaitlistRow[]; total: number }> {
   const { data, error } = await client.rpc('mod_waitlist', {
     p_query: query,
     p_state: state,
-    p_limit: PAGE,
-    p_offset: page * PAGE,
+    p_limit: page.size,
+    p_offset: page.offset,
   });
   if (error) throw new Error(error.message);
   const rows = z.array(Row.extend({ total: z.number() })).parse(data);

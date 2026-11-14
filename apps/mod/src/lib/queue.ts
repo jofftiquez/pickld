@@ -7,7 +7,7 @@ export const FILTERS = ['all', 'auto_check', 'report', 'appeal', 'escalated'] as
 export type Filter = (typeof FILTERS)[number];
 export const FilterParam = z.enum(FILTERS).catch('all');
 
-// One row of public.mod_queue() (0042).
+// One row of public.mod_queue() (0042), paged by mod_queue_page() (0120).
 const Item = z.object({
   id: z.uuid(),
   source: z.enum(['auto_check', 'report', 'appeal']),
@@ -42,10 +42,33 @@ const Stats = z.object({
 });
 export type QueueStats = z.infer<typeof Stats>;
 
-export async function loadQueue(client: SupabaseClient, filter: Filter): Promise<QueueItem[]> {
-  const { data, error } = await client.rpc('mod_queue', { p_filter: filter });
+/** One page of the queue (0120), oldest first unless `newest`. */
+export async function loadQueue(
+  client: SupabaseClient,
+  filter: Filter,
+  page: { size: number; offset: number },
+  newest = false,
+): Promise<QueueItem[]> {
+  const { data, error } = await client.rpc('mod_queue_page', {
+    p_filter: filter,
+    p_limit: page.size,
+    p_offset: page.offset,
+    p_newest: newest,
+  });
   if (error) throw new Error(error.message);
   return z.array(Item).parse(data);
+}
+
+/** How many items a filter holds, from the header counts. */
+export function filterTotal(stats: QueueStats, filter: Filter): number {
+  switch (filter) {
+    case 'all':
+      return stats.all_open;
+    case 'appeal':
+      return stats.open_appeals;
+    default:
+      return stats[filter];
+  }
 }
 
 export async function loadStats(client: SupabaseClient): Promise<QueueStats> {

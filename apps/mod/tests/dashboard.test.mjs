@@ -173,7 +173,8 @@ test('Users finds an account by part of its username and by exact email', async 
   await results.getByRole('link', { name: `@${username}, Active` }).waitFor();
 
   await page.goto(`${base}/users?q=${encodeURIComponent(ownerEmail.toUpperCase())}`);
-  assert.equal(await results.getByRole('link').count(), 1);
+  assert.equal(await results.locator('tbody tr').count(), 1);
+  await results.getByRole('status').getByText('Showing 1–1 of 1').waitFor();
   await results.getByRole('link', { name: `@${username}, Active` }).click();
   await page.waitForURL(`${base}/users/${ownerId}`);
   await page.getByRole('heading', { name: `@${username}` }).waitFor();
@@ -217,7 +218,7 @@ test('suspend for 7 days, then lift early, each with a note in the audit log', a
 
   await page.goto(`${base}/audit?user=${ownerId}`);
   const log = page.getByRole('region', { name: 'Audit entries' });
-  const rows = await log.getByRole('listitem').allTextContents();
+  const rows = await log.locator('tbody tr').allTextContents();
   assert.equal(rows.length, 2, 'only actions about this account');
   assert.match(rows[0], /Lifted suspension/);
   assert.match(rows[1], /Suspended.*Note: Spam links in every caption/);

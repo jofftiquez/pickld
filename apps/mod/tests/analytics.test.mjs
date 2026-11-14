@@ -164,14 +164,14 @@ test('a sticker’s uses count Readers and Everyone moments, not Only me ones', 
   assert.deepEqual((await pack.locator('td').allTextContents()).slice(0, 5), ['Free', '—', '—', '1', '2']);
 });
 
-/** The thumbs cell's two lines: the all-time count, then the window's. */
+/** The likes cell's two lines: the all-time count, then the window's. */
 async function thumbLines(row) {
   const cell = row.locator('td').last();
   const [full, inWindow] = await Promise.all([cell.textContent(), cell.locator('span span').textContent()]);
   return [full.slice(0, full.length - inWindow.length), inWindow];
 }
 
-test('Sticker packs and the Studio list show each pack’s thumbs up, all time and in the window', async () => {
+test('Sticker packs and the Studio list show each pack’s likes, all time and in the window', async () => {
   const thumbsCell = async () => {
     await page.goto(`${base}/analytics`);
     const row = page.getByRole('region', { name: 'Sticker packs' }).getByRole('row').filter({ hasText: 'everyday ·' });
@@ -181,9 +181,9 @@ test('Sticker packs and the Studio list show each pack’s thumbs up, all time a
     await page.goto(`${base}/stickers`);
     const row = page
       .getByRole('region', { name: 'Sticker packs' })
-      .getByRole('link')
-      .filter({ hasText: /^Everyday/ });
-    return row.locator(':scope > span').last().textContent();
+      .getByRole('row')
+      .filter({ has: page.getByRole('link', { name: /^Everyday,/ }) });
+    return row.locator('td').last().textContent();
   };
   const [all, inWindow] = (await thumbsCell()).map((line) => parseInt(line, 10));
   const studio = Number(await studioCell());

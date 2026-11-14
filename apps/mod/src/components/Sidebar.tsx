@@ -14,7 +14,7 @@ export interface NavItem {
   count?: number;
 }
 
-/** The dark left rail (design: ModConsole): name, sections, and who is signed in. */
+/** The dark left rail (design: ModConsole): name, sections, and who is signed in. It stays put while pages scroll. */
 export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
   const path = usePathname();
   const filter = useSearchParams().get('filter');
@@ -30,7 +30,11 @@ export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        // Fixed while the page scrolls; scrolls on its own only when the window is shorter than the nav.
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflowY: 'auto',
       }}
     >
       <p

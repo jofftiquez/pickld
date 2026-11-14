@@ -8,7 +8,8 @@ import { QueueList } from '~/components/QueueList';
 import { t } from '~/i18n/t';
 import { defaultGuideline } from '~/lib/decide';
 import { photoUrls } from '~/lib/photos';
-import { FILTERS, FilterParam, loadQueue, loadStats, waitLabel } from '~/lib/queue';
+import { lastPage, readPaging, readSort } from '~/lib/paging';
+import { FILTERS, FilterParam, filterTotal, loadQueue, loadStats, waitLabel } from '~/lib/queue';
 import { supabase } from '~/lib/supabase';
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -29,19 +30,31 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-// The review queue (FR-MOD-02, FR-MOD-03; design: ModConsole). Oldest first; ?filter= picks a source and
-// ?item= opens one in the panel, where Keep / Remove / Escalate (and K, R, E) decide it.
-export default async function Queue({ searchParams }: { searchParams: Promise<{ filter?: string; item?: string }> }) {
+// The review queue (FR-MOD-02, FR-MOD-03; design: ModConsole). Oldest first (?dir=asc for newest first), a
+// page at a time (?page=, ?size=); ?filter= picks a source and ?item= opens one in the panel, where Keep /
+// Remove / Escalate (and K, R, E) decide it.
+export default async function Queue({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams;
   const filter = FilterParam.parse(params.filter);
+  const { dir } = readSort(params, ['waiting'], { key: 'waiting', dir: 'desc' });
   const client = await supabase();
-  const [items, stats] = await Promise.all([loadQueue(client, filter), loadStats(client)]);
+  const stats = await loadStats(client);
+  const total = filterTotal(stats, filter);
+  const paging = readPaging(params);
+  const page = Math.min(paging.page, lastPage(total, paging.size));
+  const items = await loadQueue(client, filter, { size: paging.size, offset: (page - 1) * paging.size }, dir === 'asc');
   const selected = items.find((i) => i.id === params.item) ?? items[0] ?? null;
   const momentIds = [...new Set(items.flatMap((i) => (i.moment_id ? [i.moment_id] : [])))];
   const photos = await photoUrls(client, momentIds);
   // A server render's clock; waits only need minute precision.
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
+  const query = {
+    filter: filter === 'all' ? undefined : filter,
+    page: page > 1 ? String(page) : undefined,
+    size: paging.size !== 25 ? String(paging.size) : undefined,
+    dir: dir === 'asc' ? 'asc' : undefined,
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -85,7 +98,17 @@ export default async function Queue({ searchParams }: { searchParams: Promise<{ 
         })}
       </nav>
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 16, alignItems: 'start' }}>
-        <QueueList items={items} photos={photos} selected={selected?.id ?? null} filter={filter} now={now} />
+        <QueueList
+          items={items}
+          photos={photos}
+          selected={selected?.id ?? null}
+          params={query}
+          total={total}
+          page={page}
+          size={paging.size}
+          dir={dir}
+          now={now}
+        />
         {selected ? (
           <DetailPanel
             key={selected.id}

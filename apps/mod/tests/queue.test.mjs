@@ -140,6 +140,41 @@ test('All lists open items oldest first; decided-or-not filters narrow it', asyn
   assert.equal(await rows().count(), 1);
 });
 
+test('Waiting sorts both ways, and the table counts every open item', async () => {
+  await page.goto(`${base}/queue`);
+  await page.getByRole('link', { name: 'Sort by Waiting, ascending' }).click();
+  await page.waitForURL(/dir=asc/);
+  const labels = await rows().evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+  assert.match(labels[0], /waiting 30m$/, 'newest first');
+  assert.match(labels.at(-1), /waiting 3h$/);
+  assert.equal(await page.getByRole('columnheader', { name: /Waiting/ }).getAttribute('aria-sort'), 'ascending');
+
+  // Past the last page goes to the last page; the footer counts every open item, not just this page's.
+  await page.goto(`${base}/queue?page=99`);
+  const { count } = await admin
+    .from('moderation_items')
+    .select('id', { count: 'exact', head: true })
+    .in('status', ['pending', 'escalated']);
+  const queue = page.getByRole('region', { name: 'Queue items' });
+  assert.match(await queue.getByRole('status').textContent(), new RegExp(`of ${count}$`));
+  assert.ok((await rows().count()) > 0);
+});
+
+test('the side nav stays in view while the page scrolls', async () => {
+  await page.setViewportSize({ width: 1280, height: 420 });
+  try {
+    await page.goto(`${base}/queue`);
+    await page.getByRole('heading', { name: 'Review queue' }).waitFor();
+    await page.mouse.wheel(0, 2000);
+    await page.waitForFunction(() => window.scrollY > 0);
+    const nav = page.getByRole('navigation', { name: 'Console' });
+    const box = await nav.boundingBox();
+    assert.ok(box && box.y >= 0 && box.y < 200, `the nav is still on screen (top ${box?.y})`);
+  } finally {
+    await page.setViewportSize({ width: 1280, height: 800 });
+  }
+});
+
 test('counts match the open items in the database', async () => {
   await page.goto(`${base}/queue`);
   const { count } = await admin

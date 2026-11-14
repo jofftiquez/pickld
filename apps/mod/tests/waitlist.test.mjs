@@ -112,10 +112,32 @@ test('search finds emails by part of the address and filters by state', async ()
   await page.waitForURL(/state=email_only/);
   const list = page.getByRole('region', { name: 'Emails' });
   for (const email of emails) await list.getByText(email, { exact: true }).waitFor();
-  await list.getByText('3 matching · page 1 of 1').waitFor();
+  await list.getByRole('status').getByText('Showing 1–3 of 3').waitFor();
 
   await page.goto(`${base}/waitlist?q=${domain}&state=member`);
   await list.getByText('No emails match.').waitFor();
+});
+
+test('the email list pages through matches 25 at a time', async (t) => {
+  const many = `wlp-${tag}.pickld.test`;
+  const list = Array.from({ length: 27 }, (_, i) => `p${String(i).padStart(2, '0')}@${many}`);
+  must(await admin.from('waitlist').insert(list.map((email) => ({ email, source: 'story' }))));
+  t.after(() => admin.from('waitlist').delete().in('email', list));
+
+  await page.goto(`${base}/waitlist?q=${many}`);
+  const emails = page.getByRole('region', { name: 'Emails' });
+  await emails.getByRole('status').getByText('Showing 1–25 of 27').waitFor();
+  assert.equal(await emails.locator('tbody tr').count(), 25);
+  await emails.getByRole('navigation', { name: 'Pages' }).getByRole('link', { name: 'Next' }).click();
+  await page.waitForURL(/page=2/);
+  await emails.getByRole('status').getByText('Showing 26–27 of 27').waitFor();
+  assert.equal(await emails.locator('tbody tr').count(), 2);
+  assert.equal(await emails.getByRole('link', { name: 'Page 2, current page' }).getAttribute('aria-current'), 'page');
+
+  await emails.getByLabel('Rows per page').selectOption('50');
+  await page.waitForURL(/size=50/);
+  await emails.getByRole('status').getByText('Showing 1–27 of 27').waitFor();
+  assert.ok(!page.url().includes('page='), 'changing the page size starts again at page 1');
 });
 
 test('Download CSV gives every row, with formulas defused, and is audited', async () => {
@@ -135,7 +157,7 @@ test('Download CSV gives every row, with formulas defused, and is audited', asyn
   );
 
   await page.goto(`${base}/audit`);
-  const row = page.getByRole('region', { name: 'Audit entries' }).getByRole('listitem').first();
+  const row = page.getByRole('region', { name: 'Audit entries' }).locator('tbody tr').first();
   assert.match(await row.textContent(), /Downloaded waitlist.*\d+ emails/);
 });
 
@@ -156,7 +178,7 @@ test('removing an email on request needs a note and leaves no email in the audit
   assert.equal(must(await admin.from('waitlist').select('email').eq('email', `ana@${domain}`)).length, 1);
 
   await page.goto(`${base}/audit`);
-  const row = await page.getByRole('region', { name: 'Audit entries' }).getByRole('listitem').first().textContent();
+  const row = await page.getByRole('region', { name: 'Audit entries' }).locator('tbody tr').first().textContent();
   assert.match(row, /Removed waitlist email.*joined from story.*Note: Asked by email/);
   assert.ok(!row.includes(domain), 'the audit row has no email');
 });

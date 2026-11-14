@@ -25,6 +25,10 @@ function trendText(now: number, before: number): string {
   return t(`analytics.trend.${tr.kind}`, { pct: tr.pct });
 }
 
+function groupValues(g: GroupRow): number[] {
+  return [g.people ?? -1, g.posters ?? -1, g.moments ?? -1];
+}
+
 function groupCells(g: GroupRow): string[] {
   if (g.hidden) return [t('analytics.groups.hidden'), '', ''];
   return [String(g.people ?? 0), String(g.posters ?? 0), String(g.moments ?? 0)];
@@ -127,6 +131,7 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
           rows={site.age_bands.map((g) => ({
             key: g.band,
             cells: [g.band === 'Not given' ? t('analytics.groups.notGiven') : g.band, ...groupCells(g)],
+            values: [g.band, ...groupValues(g)],
           }))}
           empty={t('analytics.groups.empty')}
         />
@@ -142,6 +147,7 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
           rows={site.zones.map((g) => ({
             key: g.zone,
             cells: [g.zone === 'Other zones' ? t('analytics.groups.otherZones') : g.zone, ...groupCells(g)],
+            values: [g.zone, ...groupValues(g)],
           }))}
           empty={t('analytics.groups.empty')}
         />
@@ -183,6 +189,16 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
         ]}
         rows={stickers.packs.map((p) => ({
           key: p.id,
+          values: [
+            p.name,
+            p.tier,
+            p.owners,
+            p.acquired,
+            p.people,
+            p.uses,
+            p.uses - p.uses_before,
+            thumbs.get(p.id)?.thumbs ?? 0,
+          ],
           cells: [
             <span key="n">
               {p.name}
@@ -221,6 +237,7 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
         ]}
         rows={stickers.stickers.map((s) => ({
           key: s.id,
+          values: [s.label, s.pack, s.uses, s.people, s.uses - s.uses_before, s.uses_total],
           cells: [
             s.retired ? t('analytics.top.retired', { label: s.label }) : s.label,
             s.pack,

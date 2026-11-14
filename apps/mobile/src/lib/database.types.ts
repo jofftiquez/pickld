@@ -1998,6 +1998,30 @@ export type Database = {
           visible: boolean;
         }[];
       };
+      mod_queue_page: {
+        Args: { p_filter?: string; p_limit?: number; p_newest?: boolean; p_offset?: number };
+        Returns: {
+          appeal_message: string;
+          caption: string;
+          comment_body: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          local_date: string;
+          moment_id: string;
+          owner_id: string;
+          owner_joined: string;
+          prior_removals: number;
+          reason: string;
+          report_count: number;
+          score: number;
+          slot: string;
+          source: Database['public']['Enums']['mod_source'];
+          status: Database['public']['Enums']['mod_status'];
+          username: string;
+          visible: boolean;
+        }[];
+      };
       mod_queue_stats: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2061,6 +2085,21 @@ export type Database = {
           status: Database['public']['Enums']['profile_status'];
           strikes: number;
           suspended_until: string;
+          username: string;
+        }[];
+      };
+      mod_user_search_page: {
+        Args: { p_limit?: number; p_offset?: number; p_query: string; p_sort?: string };
+        Returns: {
+          created_at: string;
+          display_name: string;
+          id: string;
+          moment_count: number;
+          open_reports: number;
+          status: Database['public']['Enums']['profile_status'];
+          strikes: number;
+          suspended_until: string;
+          total: number;
           username: string;
         }[];
       };

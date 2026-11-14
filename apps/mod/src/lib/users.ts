@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-// public.mod_user_search(), mod_user() and mod_user_moments() (0090). Text and ids only; photos come from
+// public.mod_user_search_page() (0120), mod_user() and mod_user_moments() (0090). Text and ids only; photos come from
 // fn:photo-urls, which signs only what the moderator may see (public or queued moments).
 const Status = z.enum(['active', 'suspended', 'deleted']);
 
@@ -99,10 +99,25 @@ const Moment = z.object({
 });
 export type UserMoment = z.infer<typeof Moment>;
 
-export async function searchUsers(client: SupabaseClient, query: string): Promise<UserRow[]> {
-  const { data, error } = await client.rpc('mod_user_search', { p_query: query.slice(0, 254), p_limit: 50 });
+export const USER_SORTS = ['newest', 'oldest', 'username', 'strikes', 'reports'] as const;
+export type UserSort = (typeof USER_SORTS)[number];
+
+/** One page of matching accounts (0120) and how many match in all. An exact username comes first. */
+export async function searchUsers(
+  client: SupabaseClient,
+  query: string,
+  sort: UserSort,
+  page: { size: number; offset: number },
+): Promise<{ rows: UserRow[]; total: number }> {
+  const { data, error } = await client.rpc('mod_user_search_page', {
+    p_query: query.slice(0, 254),
+    p_sort: sort,
+    p_limit: page.size,
+    p_offset: page.offset,
+  });
   if (error) throw new Error(error.message);
-  return z.array(Row).parse(data);
+  const rows = z.array(Row.extend({ total: z.number() })).parse(data);
+  return { rows, total: rows[0]?.total ?? 0 };
 }
 
 export async function loadUser(client: SupabaseClient, id: string): Promise<UserDetail | null> {

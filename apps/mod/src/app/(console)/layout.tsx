@@ -46,7 +46,7 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
     { href: '/help', label: t('nav.help') },
   ];
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'flex-start' }}>
       <Sidebar items={items} name={email.split('@')[0] ?? email} />
       <main style={{ flex: 1, padding: '28px 24px', minWidth: 0 }}>{children}</main>
     </div>

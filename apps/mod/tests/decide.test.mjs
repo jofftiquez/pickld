@@ -181,7 +181,7 @@ test('the audit log lists the decisions, newest first, and cannot be changed', a
   await page.goto(`${base}/audit`);
   const log = page.getByRole('region', { name: 'Audit entries' });
   await log.getByText('Escalated').first().waitFor();
-  const rows = await log.getByRole('listitem').allTextContents();
+  const rows = await log.locator('tbody tr').allTextContents();
   const mine = rows.filter((r) => r.includes(`@${MOD_NAME}`)).slice(0, 3);
   assert.match(mine[0], /Escalated/);
   assert.match(mine[1], /Removed.*Guideline: Violence or dangerous acts/);
