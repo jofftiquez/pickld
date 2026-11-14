@@ -1,9 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+
+import { parseEdits } from '@/features/edit/edits';
 
 import { buildThread, COMMENT_MAX, type CommentRow } from '../commentsModel';
 import { CommentsView, type CommentsViewProps } from '../CommentsView';
 
-// The delete Dialog only asks Reanimated whether Reduce Motion is on.
+// The delete Dialog and the list's scroll-to-end only ask Reanimated whether Reduce Motion is on.
 jest.mock('react-native-reanimated', () => ({ __esModule: true, useReducedMotion: () => false }));
 
 const insets = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -116,20 +119,94 @@ describe('CommentsView', () => {
     expect(onDelete).toHaveBeenCalledWith('c2');
   });
 
-  it('shows the moment above a moment thread (D-51)', async () => {
-    await setup({
-      jarTitle: 'Mika’s #morning',
-      count: 4,
-      moment: { thumbUrl: null, slot: '#morning', caption: 'Pandesal run.' },
-    });
+  // A sticker and a text overlay, as Moment detail draws them (D-84).
+  const momentEdits = parseEdits({
+    v: 1,
+    filter: 'original',
+    overlays: [
+      {
+        id: 's1',
+        type: 'sticker',
+        stickerId: '0b6c5c8e-6f43-2a1e-9b55-3f1a0c2d4e5f',
+        asset: 'stickers/milestones/one-year.png',
+        label: 'One year',
+        x: 0.3,
+        y: 0.2,
+        scale: 0.45,
+        rotation: 0.4,
+      },
+      {
+        id: 't1',
+        type: 'text',
+        text: 'Sunday!',
+        font: 'serif',
+        color: 'white',
+        x: 0.5,
+        y: 0.7,
+        scale: 0.5,
+        rotation: 0,
+      },
+    ],
+  });
+  const momentProps: Partial<CommentsViewProps> = {
+    jarTitle: 'Mika’s #morning',
+    count: 4,
+    moment: {
+      uri: 'https://photos.test/m1/full.webp',
+      edits: momentEdits,
+      stamp: null,
+      slot: '#morning',
+      authorName: 'Mika Reyes',
+      caption: 'Pandesal run.',
+    },
+  };
+
+  it('opens a moment thread with the whole moment at 3:4, full width, then author, caption and comments (D-84)', async () => {
+    await setup(momentProps);
     expect(screen.getByTestId('comments-subtitle')).toHaveTextContent('Mika’s #morning · 4');
-    expect(screen.getByLabelText('Comments on the #morning moment: Pandesal run.')).toBeTruthy();
-    expect(screen.getByTestId('comments-moment')).toHaveTextContent(/#morning.*Pandesal run\./);
+    // Moment detail's renderer, edge to edge at the window's width, 3:4.
+    const view = screen.getByTestId('comments-moment-view', { includeHiddenElements: true });
+    const { width, height } = StyleSheet.flatten(view.props.style) as { width: number; height: number };
+    expect(width).toBe(750);
+    expect(height).toBe(1000);
+    expect(within(view).getByTestId('moment-view-photo', { includeHiddenElements: true })).toHaveProp('source', [
+      { uri: 'https://photos.test/m1/full.webp' },
+    ]);
+    expect(within(view).getByTestId('moment-overlay-s1', { includeHiddenElements: true })).toBeTruthy();
+    expect(within(view).getByTestId('moment-overlay-t1', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByRole('image', { name: '#morning photo' })).toBeTruthy();
+    expect(screen.getByTestId('comments-moment-author')).toHaveTextContent('Mika Reyes');
+    expect(screen.getByTestId('comments-moment-caption')).toHaveTextContent('Pandesal run.');
+    // The moment heads the scrolling list, above the comments; the composer stays outside it.
+    const list = screen.getByTestId('comments-list');
+    expect(within(list).getByTestId('comments-moment')).toBeTruthy();
+    expect(within(list).getByTestId('comment-c1')).toBeTruthy();
+    expect(within(list).queryByTestId('comments-input')).toBeNull();
+    expect(screen.getByTestId('comments-input')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Send' })).toBeTruthy();
   });
 
-  it('has no moment header on the jar thread', async () => {
+  it('keeps the moment above a moment thread that is empty or still loading', async () => {
+    await setup({ ...momentProps, thread: [] });
+    expect(within(screen.getByTestId('comments-list')).getByTestId('comments-empty')).toBeTruthy();
+    await setup({ ...momentProps, thread: undefined });
+    expect(screen.getByTestId('comments-moment-view', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByLabelText('Loading comments')).toBeTruthy();
+  });
+
+  it('shows no moment, only “not available”, when the viewer can’t see it', async () => {
+    await setup({ ...momentProps, unavailable: true, thread: undefined });
+    expect(screen.getByTestId('comments-unavailable')).toBeTruthy();
+    expect(screen.queryByTestId('comments-moment-view', { includeHiddenElements: true })).toBeNull();
+    expect(screen.queryByTestId('moment-view-photo', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('has no moment header on the jar thread, and keeps the composer', async () => {
     await setup();
     expect(screen.queryByTestId('comments-moment')).toBeNull();
+    expect(screen.queryByTestId('comments-moment-view', { includeHiddenElements: true })).toBeNull();
+    expect(screen.getByTestId('comments-card')).toBeTruthy();
+    expect(screen.getByTestId('comments-input')).toBeTruthy();
   });
 
   it('shows an empty thread, and hides the input on a jar the viewer can’t see', async () => {
