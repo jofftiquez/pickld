@@ -13,7 +13,7 @@ import { slots, type Slot } from '@/theme/tokens';
 /** The route param: a moment id. Anything else is shown as not found without a request. */
 export const momentIdParam = z.uuid();
 
-/** Report reasons double as the guideline names shown on the removed notice (product.md, Report). */
+/** Report reasons double as the guideline names shown on the removed notice (the Report screen). */
 export type GuidelineKey = Exclude<Enums<'report_reason'>, 'other'>;
 
 export type OwnMoment = {

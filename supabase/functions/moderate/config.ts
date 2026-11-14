@@ -3,7 +3,7 @@
 //   OPENAI_API_KEY        set → the full check (pipeline.ts); empty → auto-approve (D-22's early version).
 //   OPENAI_BASE_URL       tests and local stand-ins only; empty means api.openai.com.
 //   OPENAI_VISION_MODEL   the second-opinion model (D-13); default gpt-4.1-mini. "off" asks none.
-//   CSAM_MATCHER          hash-list (the local stand-in; PhotoDNA once approved, docs/csam-scanning.md).
+//   CSAM_MATCHER          hash-list (the local stand-in; PhotoDNA once approved).
 //   CSAM_HASH_LIST        hash-list only: comma-separated SHA-256 hashes that count as a match.
 //
 // Production (APP_ENV=production) refuses auto-approve and the hash-list stand-in: selectProvider()
