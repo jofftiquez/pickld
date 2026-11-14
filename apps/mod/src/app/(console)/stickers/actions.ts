@@ -125,6 +125,17 @@ export async function setRetired(_prev: StickerResult | null, form: FormData): P
 }
 
 export async function uploadArt(_prev: UploadResult | null, form: FormData): Promise<UploadResult> {
+  const result = await sendArt(form);
+  revalidatePath('/stickers', 'layout');
+  return result;
+}
+
+/** One file of a bulk drop (BulkUpload): the page refreshes once when the whole drop is done, not per file. */
+export async function uploadArtBulk(form: FormData): Promise<UploadResult> {
+  return sendArt(form);
+}
+
+async function sendArt(form: FormData): Promise<UploadResult> {
   const file = form.get('file');
   if (!(file instanceof File) || file.size === 0) return 'invalid_input';
   const body = new FormData();
@@ -135,7 +146,6 @@ export async function uploadArt(_prev: UploadResult | null, form: FormData): Pro
   body.set('file', file, 'art.png');
   const client = await supabase();
   const { data, error } = await client.functions.invoke('sticker-studio', { body });
-  revalidatePath('/stickers', 'layout');
   if (!error) return resultOf(UPLOAD_RESULTS, (data as { data?: unknown } | null)?.data);
   // A refusal comes back as a non-2xx answer with { error: { code } }.
   const context = (error as { context?: unknown }).context;

@@ -116,6 +116,39 @@ export function nameFromFile(fileName: string): string {
 
 export const KEY_PART = '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$';
 
+/** fn:sticker-studio's limits, checked in the browser too so a bulk drop can refuse files before sending. */
+export const MAX_ART_BYTES = 2 * 1024 * 1024;
+export const MAX_ART_SIDE = 2048;
+export const MAX_BULK_FILES = 100;
+
+/** Why a file can't be art, from its first 24 bytes (PNG signature and IHDR size); null when it can. */
+export async function checkArt(file: Blob): Promise<'not_png' | 'bad_size' | 'too_large' | null> {
+  const head = new Uint8Array(await file.slice(0, 24).arrayBuffer());
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  const ihdr = [0x49, 0x48, 0x44, 0x52];
+  if (head.length < 24 || signature.some((b, i) => head[i] !== b) || ihdr.some((b, i) => head[12 + i] !== b)) {
+    return 'not_png';
+  }
+  const view = new DataView(head.buffer);
+  const width = view.getUint32(16);
+  const height = view.getUint32(20);
+  if (width < 1 || height < 1 || width > MAX_ART_SIDE || height > MAX_ART_SIDE) return 'bad_size';
+  if (file.size > MAX_ART_BYTES) return 'too_large';
+  return null;
+}
+
+/** `name`, or `name-2`, `name-3`… when taken, kept within the 60-character key part; adds it to `taken`. */
+export function uniqueName(name: string, taken: Set<string>): string {
+  const base = name || 'sticker';
+  let candidate = base;
+  for (let n = 2; taken.has(candidate); n++) {
+    const suffix = `-${n}`;
+    candidate = `${base.slice(0, 60 - suffix.length).replace(/-+$/, '')}${suffix}`;
+  }
+  taken.add(candidate);
+  return candidate;
+}
+
 export const PACK_RESULTS = ['created', 'saved', 'bad_slug', 'slug_taken', 'not_found', 'not_editable'] as const;
 export const PUBLISH_RESULTS = [
   'published',
