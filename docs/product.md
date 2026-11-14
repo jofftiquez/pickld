@@ -224,7 +224,7 @@ Resurfaces past jars: an “On this day” card from one year ago, a monthly rec
 
 ### Discover — “Explore”
 
-Opened from the compass button next to the bell on Moments and Jars, and from **Find people** (D-101). Search by name or @username and Suggested authors with a **Be a reader** button (D-86) stay at the top. Below them a **Moments | Jars** switch lists public moments and published jars from active people you do not read yet, newest first, with infinite scroll and pull to refresh; each card shows its author with **Be a reader**. A moment opens its thread, a jar opens its Jar page. Today's full jars are folded into the Jars list (D-100, D-102). Empty: “Nothing to discover yet.”
+Opened from the compass button next to the bell on Moments and Jars, and from **Find people** (D-101). Search by name or @username and Suggested authors with a **Be a reader** button (D-86) stay at the top. Below them a **Moments | Jars** switch lists public moments and published jars from active people you do not read yet, newest first, with infinite scroll and pull to refresh; each card shows its author with **Be a reader** (in a moment card's header, where the Moments tab has Go to jar; at a jar card's bottom right; D-118, D-121). A moment opens its thread, a jar opens its Jar page. Today's full jars are folded into the Jars list (D-100, D-102). Empty: “Nothing to discover yet.”
 
 ### Empty and first-use states
 

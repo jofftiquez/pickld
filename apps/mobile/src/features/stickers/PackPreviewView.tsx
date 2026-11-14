@@ -179,7 +179,14 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between' },
   stage: { height: stickerShop.heroStageHeight },
   content: { paddingHorizontal: space.xl, paddingTop: space.xl, gap: space.md },
-  titleRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: space.md },
+  // Wraps at large text, so the sticker count moves under the name instead of breaking it ("Olivi / a").
+  titleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    columnGap: space.md,
+  },
   title: { color: colors.ink, flexShrink: 1 },
   cloud: {
     flexDirection: 'row',

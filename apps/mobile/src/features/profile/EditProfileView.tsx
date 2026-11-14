@@ -20,7 +20,7 @@ import { JarGraphic } from '@/components/JarGraphic';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { TextField } from '@/components/TextField';
 import { hitSlopFor } from '@/lib/hitSlop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, lidColors, radius, sizes, space } from '@/theme/tokens';
 
 import { BIO_MAX, formProblems, type EditForm, type SaveError, type UsernameStatus } from './editProfileModel';
@@ -142,6 +142,8 @@ export function EditProfileView({
                 paddingHorizontal: space.md,
                 stretch: false,
                 icon: { size: 14, strokeWidth: 2 },
+                // Past 2× text it ran into the avatar at the cover's bottom left.
+                maxTextScale: maxTextScale.control,
               }}
             />
           </View>

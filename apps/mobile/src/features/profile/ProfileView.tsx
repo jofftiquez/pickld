@@ -437,7 +437,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brandTint,
   },
   bio: { color: colors.inkSoft, lineHeight: 20 },
-  counts: { flexDirection: 'row', gap: space.xl },
+  // Wraps at large text, so "Jars" moves to a second line instead of running off the right edge.
+  counts: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.xl, rowGap: space.sm },
   count: { minHeight: sizes.minTap, justifyContent: 'center' },
   rowCard: { paddingVertical: 2 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
