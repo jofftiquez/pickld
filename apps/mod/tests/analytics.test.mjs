@@ -164,6 +164,43 @@ test('a sticker’s uses count Readers and Everyone moments, not Only me ones', 
   assert.deepEqual((await pack.locator('td').allTextContents()).slice(0, 5), ['Free', '—', '—', '1', '2']);
 });
 
+/** The thumbs cell's two lines: the all-time count, then the window's. */
+async function thumbLines(row) {
+  const cell = row.locator('td').last();
+  const [full, inWindow] = await Promise.all([cell.textContent(), cell.locator('span span').textContent()]);
+  return [full.slice(0, full.length - inWindow.length), inWindow];
+}
+
+test('Sticker packs and the Studio list show each pack’s thumbs up, all time and in the window', async () => {
+  const thumbsCell = async () => {
+    await page.goto(`${base}/analytics`);
+    const row = page.getByRole('region', { name: 'Sticker packs' }).getByRole('row').filter({ hasText: 'everyday ·' });
+    return thumbLines(row);
+  };
+  const studioCell = async () => {
+    await page.goto(`${base}/stickers`);
+    const row = page
+      .getByRole('region', { name: 'Sticker packs' })
+      .getByRole('link')
+      .filter({ hasText: /^Everyday/ });
+    return row.locator(':scope > span').last().textContent();
+  };
+  const [all, inWindow] = (await thumbsCell()).map((line) => parseInt(line, 10));
+  const studio = Number(await studioCell());
+  assert.equal(studio, all, 'the Studio list shows the all-time count');
+
+  // One more thumb, from the test person (an active account): both counts go up by one.
+  const everyday = must(await admin.from('sticker_packs').select('id').eq('slug', 'everyday').single()).id;
+  must(await admin.from('pack_thumbs').insert({ user_id: ownerId, pack_id: everyday }));
+  assert.deepEqual(await thumbsCell(), [String(all + 1), `${inWindow + 1} in this window`]);
+  assert.equal(Number(await studioCell()), all + 1);
+
+  // A draft can't get thumbs, so the test's draft pack shows none.
+  const draft = page.getByRole('region', { name: 'Sticker packs' }).getByRole('row').filter({ hasText: slug });
+  await page.goto(`${base}/analytics`);
+  assert.deepEqual(await thumbLines(draft), ['0', '0 in this window']);
+});
+
 test('the window can be 7 or 90 days', async () => {
   await page.goto(`${base}/analytics`);
   await page.getByRole('link', { name: '7 days' }).click();

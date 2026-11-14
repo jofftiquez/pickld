@@ -520,6 +520,8 @@
       "people": "People using",
       "uses": "Uses",
       "trend": "vs. before",
+      "thumbs": "Thumbs up",
+      "thumbsWindow": "{{count}} in this window",
       "meta": "{{slug}} · {{count}} stickers",
       "draft": "draft",
       "empty": "No sticker packs."
@@ -559,6 +561,7 @@
       "tier": "Type",
       "status": "Status",
       "stickers": "Stickers",
+      "thumbs": "Thumbs up",
       "retiredCount": "{{count}} retired",
       "empty": "No sticker packs yet.",
       "readOnly": "Read-only here"

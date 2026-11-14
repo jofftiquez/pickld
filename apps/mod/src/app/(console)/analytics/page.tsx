@@ -11,6 +11,7 @@ import { t } from '~/i18n/t';
 import {
   type GroupRow,
   loadAnalytics,
+  loadPackThumbs,
   loadStickerAnalytics,
   parseRange,
   RANGES,
@@ -37,7 +38,11 @@ const charts = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(
 export default async function Analytics({ searchParams }: { searchParams: Promise<{ days?: string }> }) {
   const days = parseRange((await searchParams).days);
   const client = await supabase();
-  const [site, stickers] = await Promise.all([loadAnalytics(client, days), loadStickerAnalytics(client, days)]);
+  const [site, stickers, thumbs] = await Promise.all([
+    loadAnalytics(client, days),
+    loadStickerAnalytics(client, days),
+    loadPackThumbs(client, days),
+  ]);
   const tt = site.totals;
 
   return (
@@ -174,6 +179,7 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
           t('analytics.packs.people'),
           t('analytics.packs.uses'),
           t('analytics.packs.trend'),
+          t('analytics.packs.thumbs'),
         ]}
         rows={stickers.packs.map((p) => ({
           key: p.id,
@@ -191,6 +197,12 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
             String(p.people),
             String(p.uses),
             trendText(p.uses, p.uses_before),
+            <span key="th">
+              {thumbs.get(p.id)?.thumbs ?? 0}
+              <span style={{ display: 'block', fontSize: 12, fontWeight: 400, color: colors.muted }}>
+                {t('analytics.packs.thumbsWindow', { count: thumbs.get(p.id)?.thumbs_window ?? 0 })}
+              </span>
+            </span>,
           ],
         }))}
         empty={t('analytics.packs.empty')}
