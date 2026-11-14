@@ -60,6 +60,7 @@ export const colors = {
   cameraPanel: '#1a1c16', // top panel of Camera access off (CameraDenied)
   onDarkWell: 'rgba(255,255,255,0.1)', // icon square on Camera access off
   onDarkButton: 'rgba(255,255,255,0.12)', // secondary button on the camera (Choose from gallery instead)
+  onColorButton: 'rgba(255,255,255,0.18)', // Done on the invite QR sheet, over a moment color (InviteQR)
   editor: '#0b0d09', // editor screen background behind the photo (Capture)
   editorPhoto: '#2a2d26', // behind the photo and filter thumbnails while the photo loads (Capture)
   zoneTint: '#dbe8f3', // icon well on the Time zone banner (TimeZone)
@@ -603,6 +604,49 @@ export const crop = {
   toolButton: 64, // Rotate, Flip, Fit, Reset (grows with large text)
   toolRadius: 18,
   zoomIcon: 18,
+} as const;
+
+// Invite page (Invite, InviteQR; INV-07): one collectible card per code in its moment's color, white text on
+// each (all 4.5:1 or more). `morning` is new for invites; the others repeat colors used elsewhere.
+export const invite = {
+  slotColors: {
+    whereami: '#2f74a8',
+    mebusywith: '#c4521c',
+    whoamiwith: '#6f4fae',
+    ootd: '#a01d14',
+    selfie: '#3f6510',
+    morning: '#8a5a00',
+    afternoon: '#1d3a52',
+    evening: '#11140d',
+  },
+  cardHeight: 122,
+  cardRadius: 18,
+  cardGap: 10,
+  watermark: 118, // the big "#" in a card's corner
+  watermarkOnColor: 'rgba(255,255,255,0.12)',
+  watermarkOnGrey: 'rgba(17,20,13,0.05)',
+  button: 36, // eye, QR and share; hitSlop brings them to 44
+  buttonFill: 'rgba(255,255,255,0.18)',
+  greyCard: '#e9ece4', // locked and paused cards; their text is colors.muted (5.7:1; the design's #6f7568 is 4:1)
+  avatarRing: 'rgba(255,255,255,0.8)', // around a friend's photo on an Invited card
+  cardShadow: {
+    shadowColor: '#11140d',
+    shadowOpacity: 0.14,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  codeSize: 21,
+  codeSpacing: 3, // 0.14em
+  linkIcon: 42,
+  linkIconRadius: 13,
+  // QR sheet (InviteQR): white card around the code; the QR has a quiet zone of `qrMargin` modules.
+  qrCardRadius: 30,
+  qrCardPadding: 22,
+  qrSize: 230,
+  qrMargin: 2,
+  qrCodeSize: 26,
+  qrCodeSpacing: 4.7, // 0.18em
 } as const;
 
 // Speech bubbles (Bubble, FR-CAP-06). Each color's text pair meets WCAG AA (4.5:1); pickle takes ink

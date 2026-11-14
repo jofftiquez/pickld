@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { leftToGive } from '@/features/invite/invites';
+import { useInvites } from '@/features/invite/useInvites';
 import { ProfileView } from '@/features/profile/ProfileView';
 import { useFollow } from '@/features/profile/useFollow';
 import { useProfile } from '@/features/profile/useProfile';
@@ -20,6 +22,7 @@ export default function ProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const { data, failed, refresh } = useProfile(username);
   const follow = useFollow(data?.viewerId ?? null);
+  const { invites } = useInvites();
   const [reporting, setReporting] = useState(false);
   const blockFlow = useBlockFlow(() => router.replace('/jars'));
 
@@ -52,6 +55,8 @@ export default function ProfileScreen() {
         onEditProfile={() => router.push('/settings/profile')}
         onSettings={() => router.push('/settings')}
         onOpenStickers={() => router.push('/stickers')}
+        onOpenInvite={() => router.push('/invite')}
+        invitesLeft={leftToGive(invites)}
         onAddMoment={() => router.push('/camera')}
         onOpenList={(list) => {
           if (data) {

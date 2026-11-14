@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FeedView } from '@/features/feed/FeedView';
@@ -11,13 +9,11 @@ import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { useTimelineJump } from '@/features/scrubber/useTimelineJump';
 import { useUnreadNotifications } from '@/features/notifications/useNotifications';
 import { useAvatarUrls } from '@/lib/avatars';
-import { profileUrl } from '@/lib/links';
 
 const MINUTE = 60_000;
 
 // Jars tab (M3-04; FR-SOC-01, NFR-PERF-02, NFR-OFF-03): published jars from followed authors, newest first.
 export default function JarsScreen() {
-  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   // The date scrubber's jump (FR-SOC-01): the feed starts at that day and pages both ways from it.
@@ -96,10 +92,7 @@ export default function JarsScreen() {
         if (name) router.push({ pathname: '/u/[username]', params: { username: name } });
       }}
       onFindPeople={() => router.navigate('/discover')}
-      onInvite={() => {
-        const username = me.data?.username;
-        if (username) void Share.share({ message: t('feed.inviteMessage', { url: profileUrl(username) }) });
-      }}
+      onInvite={() => router.push('/invite')}
     />
   );
 }

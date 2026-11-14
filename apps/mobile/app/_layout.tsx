@@ -85,6 +85,7 @@ export default function RootLayout() {
         <Stack.Screen name="u/[username]/readers" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="settings/profile" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="settings/blocked" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        <Stack.Screen name="invite" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="comments/[jarId]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="notifications" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="my-days" options={{ animation: reduceMotion ? 'none' : 'default' }} />
