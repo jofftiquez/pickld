@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
+import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { FeedEmpty } from '@/features/feed/FeedEmpty';
 import type { FeedAuthor } from '@/features/feed/feedModel';
@@ -114,10 +115,20 @@ export function MomentsFeedView({
       ListEmptyComponent={
         readsNobody && !isLoading ? (
           <View style={styles.cardWrap}>
-            <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} timeline="moments" />
+            <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} timeline="moments" refreshable />
           </View>
         ) : isLoading ? (
           <ActivityIndicator color={colors.muted} style={styles.loading} testID="moments-loading" />
+        ) : authors !== undefined ? (
+          // Reading people who haven't added anything yet (D-87).
+          <EmptyState
+            illustration="moments"
+            title={t('moments.quietTitle')}
+            body={t('moments.quietBody')}
+            action={{ label: t('feed.findMore'), onPress: onFindPeople, testID: 'moments-find-more' }}
+            refreshable
+            testID="moments-empty"
+          />
         ) : undefined
       }
       ListFooterComponent={

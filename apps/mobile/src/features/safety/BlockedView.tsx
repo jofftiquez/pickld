@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/Avatar';
+import { EmptyState } from '@/components/EmptyState';
 import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -62,12 +63,12 @@ export function BlockedView({
         ) : rows === undefined ? (
           <ActivityIndicator color={colors.muted} style={styles.message} testID="blocked-loading" />
         ) : rows.length === 0 ? (
-          <Text
-            style={[textStyle('body'), styles.center, styles.message, { color: colors.muted }]}
+          <EmptyState
+            illustration="lock"
+            title={t('blocked.emptyTitle')}
+            body={t('blocked.empty')}
             testID="blocked-empty"
-          >
-            {t('blocked.empty')}
-          </Text>
+          />
         ) : (
           <View style={styles.card} testID="blocked-list">
             {rows.map((row, i) => (

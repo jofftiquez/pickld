@@ -129,13 +129,17 @@ describe('FeedView', () => {
     expect(onInvite).toHaveBeenCalled();
   });
 
-  it('keeps the empty state hidden while the authors load, and when the user reads someone with no jars yet', async () => {
+  it('keeps the empty state hidden while the authors load; reading someone with no jars shows the quiet state', async () => {
     await setup({ jars: undefined, authors: undefined, isLoading: true });
     expect(screen.queryByTestId('feed-empty')).toBeNull();
     await screen.unmount();
     await setup({ jars: [], authors });
     expect(screen.queryByTestId('feed-empty')).toBeNull();
     expect(screen.getByTestId('feed-authors')).toBeTruthy();
+    // Reading someone with no jars yet: the quiet state, inside the refreshable list (D-87).
+    expect(screen.getByRole('header', { name: 'No jars yet' })).toBeTruthy();
+    expect(screen.getByTestId('feed-quiet-refresh-hint')).toHaveTextContent('Pull down to refresh');
+    expect(screen.getByRole('button', { name: 'Find more people' })).toBeTruthy();
   });
 
   it('reading nobody, lists the user’s own published jars under a Find people card, not the empty state (D-53)', async () => {

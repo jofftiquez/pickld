@@ -1,6 +1,6 @@
 # M3-22: block someone from their profile (Report sheet → Block → confirm), see them on Blocked accounts,
 # and unblock. Needs the seed data and dale signed in. Afterwards dale no longer reads jun (blocking removes
-# follows both ways and unblocking doesn't restore them): re-seed, or Read jun again, before other flows.
+# follows both ways and unblocking doesn't restore them): re-seed, or Be a reader on jun again, before other flows.
 # maestro test apps/mobile/.maestro/block.yaml
 appId: me.pickld.app
 ---

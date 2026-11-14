@@ -84,7 +84,7 @@ describe('ReadersView', () => {
     expect(screen.getByText('1.2k Authors')).toBeTruthy();
     expect(screen.getByTestId('follow-row-mika-button')).toHaveTextContent('Reading');
     expect(screen.getByTestId('follow-row-jun-button')).toHaveTextContent('Read back');
-    expect(screen.getByTestId('follow-row-lola-button')).toHaveTextContent('Read');
+    expect(screen.getByTestId('follow-row-lola-button')).toHaveTextContent('Be a reader');
     expect(screen.queryByTestId('follow-row-dale-button')).toBeNull();
   });
 
@@ -114,6 +114,16 @@ describe('ReadersView', () => {
 
   it('says when a search matches nobody', async () => {
     await renderView({ query: 'zzz', rows: [] });
-    expect(screen.getByTestId('readers-empty')).toHaveTextContent('No one matches that search.');
+    expect(screen.getByTestId('readers-empty')).toHaveTextContent('No matchesNo one matches that search.');
+  });
+
+  it('your empty Authors list offers Find people; someone else’s does not (D-87)', async () => {
+    const onFindPeople = jest.fn();
+    await renderView({ list: 'authors', rows: [], onFindPeople });
+    expect(screen.getByRole('header', { name: 'Not reading anyone yet' })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Find people' }));
+    expect(onFindPeople).toHaveBeenCalledTimes(1);
+    await renderView({ list: 'authors', rows: [], onFindPeople, viewerId: 'mika-id' });
+    expect(screen.queryByRole('button', { name: 'Find people' })).toBeNull();
   });
 });

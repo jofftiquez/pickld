@@ -79,8 +79,11 @@ describe('NotificationsView', () => {
     expect(screen.queryByTestId('notifications-reminder')).toBeNull();
   });
 
-  it('shows the empty message when there is nothing', async () => {
+  it('shows the empty state, with the pull-to-refresh hint, when there is nothing (D-87)', async () => {
     await setup({}, { rows: [] });
     expect(screen.getByTestId('notifications-empty')).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'No notifications yet' })).toBeTruthy();
+    expect(screen.getByText('Likes, comments and new readers show up here.')).toBeTruthy();
+    expect(screen.getByTestId('notifications-empty-refresh-hint')).toHaveTextContent('Pull down to refresh');
   });
 });

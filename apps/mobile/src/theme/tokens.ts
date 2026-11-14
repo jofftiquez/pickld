@@ -338,6 +338,9 @@ export const sizes = {
   bannerGap: 10, // offline banner: icon to text, and banner to the jar card
   emptyTileWidth: 56, // the three tilted tiles on Jars, empty (EmptyStories)
   emptyTileHeight: 75,
+  emptyWell: 64, // tinted circle behind an empty list's icon (EmptyState, D-87)
+  emptyWellCompact: 48, // the same in a section of a page (Explore)
+  emptyJar: 64, // empty jar graphic on an empty list (EmptyState)
   storyAvatar: 58, // author ring in the Jars avatar row (Feed)
   storyRing: 2.5, // ring width around it
   storyGap: 2, // background-colored gap between the ring and the photo

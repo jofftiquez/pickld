@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { EmptyState } from '@/components/EmptyState';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
@@ -145,10 +146,20 @@ export function FeedView({
       ListEmptyComponent={
         readsNobody && !isLoading ? (
           <View style={styles.cardWrap}>
-            <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} />
+            <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} refreshable />
           </View>
         ) : isLoading ? (
           <ActivityIndicator color={colors.muted} style={styles.loading} testID="feed-loading" />
+        ) : authors !== undefined ? (
+          // Reading people who haven't published a jar yet (D-87).
+          <EmptyState
+            illustration="jar"
+            title={t('feed.quietTitle')}
+            body={t('feed.quietBody')}
+            action={{ label: t('feed.findMore'), onPress: onFindPeople, testID: 'feed-find-more' }}
+            refreshable
+            testID="feed-quiet"
+          />
         ) : undefined
       }
       ListFooterComponent={
