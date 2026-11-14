@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,16 +18,21 @@ import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
-import { MomentThumb } from '@/features/moment/MomentThumb';
-import { momentRender } from '@/features/moment/momentRenders';
+import { SegmentedControl } from '@/components/SegmentedControl';
+import { FeedJarCard } from '@/features/feed/FeedJarCard';
+import type { FeedJar } from '@/features/feed/feedModel';
+import { MomentFeedCard } from '@/features/moments/MomentFeedCard';
+import type { FeedMoment } from '@/features/moments/momentsModel';
 import { FollowButton } from '@/features/profile/FollowButton';
+import type { AvatarUrls } from '@/lib/avatars';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, explore as e, radius, space } from '@/theme/tokens';
 
-import type { Explore, FullJar, Person, Suggestion } from './explore';
+import type { Explore, Person, Suggestion } from './explore';
+import type { DiscoverTab } from './useDiscover';
 
-export type ExploreViewProps = {
-  /** Undefined while loading. */
+export type DiscoverViewProps = {
+  /** Suggested authors; undefined while loading. */
   data: Explore | undefined;
   failed?: boolean;
   insets: EdgeInsets;
@@ -36,18 +43,46 @@ export type ExploreViewProps = {
   searching: boolean;
   searchFailed?: boolean;
   busy?: boolean;
+  tab: DiscoverTab;
+  onTabChange: (tab: DiscoverTab) => void;
+  /** The Moments list (D-102); undefined until loaded. */
+  moments: FeedMoment[] | undefined;
+  /** The Jars list (D-102); undefined until loaded. */
+  jars: FeedJar[] | undefined;
+  /** The shown list's first page is loading, or failed with nothing to show. */
+  listLoading: boolean;
+  listFailed: boolean;
+  isRefreshing: boolean;
+  isFetchingNextPage: boolean;
+  viewerId: string | null;
+  /** Signed avatars by author id; initials for anyone missing. */
+  avatars?: AvatarUrls;
+  now: Date;
+  onRefresh: () => void;
+  onEndReached: () => void;
   onBack: () => void;
+  /** Loads Suggested authors again. */
   onRetry: () => void;
+  /** Loads the shown list again. */
+  onRetryList: () => void;
   onOpenProfile: (username: string) => void;
   onSetReading: (person: Person, reading: boolean) => void;
+  /** Be a reader on a card. */
+  onReadAuthor: (authorId: string) => void;
+  /** A moment card opens its thread (D-94). */
+  onOpenMoment: (moment: FeedMoment) => void;
+  onToggleLike: (moment: FeedMoment) => void;
   onOpenJar: (jarId: string) => void;
 };
 
+type Item = { kind: 'moment'; moment: FeedMoment } | { kind: 'jar'; jar: FeedJar };
+
 /**
- * Explore (FR-EXP-01, FR-EXP-02): search people by name or @username, Suggested authors with Read, and a grid of
- * Everyone jars filled today. While there's text to search, the results replace the two sections.
+ * Discover (D-100, FR-EXP-01 to FR-EXP-03): search people by name or @username and Suggested authors, then a
+ * Moments | Jars switch listing Everyone moments and jars of people the viewer doesn't read yet, newest first,
+ * with infinite scroll and pull to refresh (D-102). While there's text to search, the results replace the rest.
  */
-export function ExploreView({
+export function DiscoverView({
   data,
   failed = false,
   insets,
@@ -57,24 +92,42 @@ export function ExploreView({
   searching,
   searchFailed = false,
   busy = false,
+  tab,
+  onTabChange,
+  moments,
+  jars,
+  listLoading,
+  listFailed,
+  isRefreshing,
+  isFetchingNextPage,
+  viewerId,
+  avatars = {},
+  now,
+  onRefresh,
+  onEndReached,
   onBack,
   onRetry,
+  onRetryList,
   onOpenProfile,
   onSetReading,
+  onReadAuthor,
+  onOpenMoment,
+  onToggleLike,
   onOpenJar,
-}: ExploreViewProps) {
+}: DiscoverViewProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const tileWidth = (width - 2 * space.xl - (e.gridColumns - 1) * e.gridGap) / e.gridColumns;
+  // The moment card sits inside the screen padding and its own padding; the photo fills the rest.
+  const photoWidth = Math.max(0, width - 2 * space.xl - 2 * space.md);
   const showingSearch = searching || results !== undefined || searchFailed;
+  const items: Item[] = showingSearch
+    ? []
+    : tab === 'moments'
+      ? (moments ?? []).map((moment) => ({ kind: 'moment', moment }))
+      : (jars ?? []).map((jar) => ({ kind: 'jar', jar }));
 
-  return (
-    <ScrollView
-      style={styles.screen}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, space.lg) + space.lg }}
-      testID="explore"
-    >
+  const header = (
+    <View>
       <View style={styles.header}>
         <Text
           maxFontSizeMultiplier={maxTextScale.title}
@@ -111,23 +164,23 @@ export function ExploreView({
           onOpenProfile={onOpenProfile}
           onSetReading={onSetReading}
         />
-      ) : data === undefined ? (
-        <View style={styles.message}>
-          {failed ? (
-            <>
-              <Text style={[textStyle('body'), styles.center]}>{t('explore.failed')}</Text>
-              <SecondaryButton label={t('explore.retry')} onPress={onRetry} testID="explore-retry" />
-            </>
-          ) : (
-            <ActivityIndicator color={colors.muted} accessibilityLabel={t('explore.loading')} />
-          )}
-        </View>
       ) : (
         <>
           <Text accessibilityRole="header" style={[textStyle('sectionTitle'), styles.section]}>
             {t('explore.suggested')}
           </Text>
-          {data.suggestions.length === 0 ? (
+          {data === undefined ? (
+            <View style={styles.message}>
+              {failed ? (
+                <>
+                  <Text style={[textStyle('body'), styles.center]}>{t('explore.failed')}</Text>
+                  <SecondaryButton label={t('explore.retry')} onPress={onRetry} testID="explore-retry" />
+                </>
+              ) : (
+                <ActivityIndicator color={colors.muted} accessibilityLabel={t('explore.loading')} />
+              )}
+            </View>
+          ) : data.suggestions.length === 0 ? (
             <EmptyState
               compact
               illustration="readers"
@@ -153,29 +206,104 @@ export function ExploreView({
               ))}
             </ScrollView>
           )}
-
-          <Text accessibilityRole="header" style={[textStyle('sectionTitle'), styles.section]}>
-            {t('explore.fullJars')}
-          </Text>
-          {data.fullJars.length === 0 ? (
-            <EmptyState
-              compact
-              illustration="jar"
-              title={t('explore.fullJarsEmptyTitle')}
-              body={t('explore.fullJarsEmpty')}
-              testID="explore-full-jars-empty"
+          <View style={styles.tabs}>
+            <SegmentedControl
+              segments={[
+                { key: 'moments', label: t('explore.tabMoments') },
+                { key: 'jars', label: t('explore.tabJars') },
+              ]}
+              selected={tab}
+              onSelect={onTabChange}
+              accessibilityLabel={t('explore.tabs')}
+              testID="discover-tabs"
             />
-          ) : (
-            <View style={styles.grid} testID="explore-full-jars">
-              {data.fullJars.map((jar) => (
-                <JarTile key={jar.jarId} jar={jar} width={tileWidth} onOpen={() => onOpenJar(jar.jarId)} />
-              ))}
-            </View>
-          )}
+          </View>
         </>
       )}
-    </ScrollView>
+    </View>
   );
+
+  return (
+    <FlatList
+      style={styles.screen}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, space.lg) + space.lg }}
+      data={items}
+      keyExtractor={(item) => (item.kind === 'moment' ? `m:${item.moment.moment_id}` : `j:${item.jar.jar_id}`)}
+      renderItem={({ item }) => (
+        <View style={styles.cardWrap}>
+          {item.kind === 'moment' ? (
+            <MomentFeedCard
+              moment={item.moment}
+              photoWidth={photoWidth}
+              viewerId={viewerId}
+              avatarUrl={avatars[item.moment.author_id] ?? null}
+              onOpenJar={() => onOpenJar(item.moment.jar_id)}
+              onToggleLike={() => onToggleLike(item.moment)}
+              onOpenComments={() => onOpenMoment(item.moment)}
+              onRead={() => onReadAuthor(item.moment.author_id)}
+              readDisabled={busy}
+            />
+          ) : (
+            <FeedJarCard
+              jar={item.jar}
+              now={now}
+              avatarUrl={avatars[item.jar.author_id] ?? null}
+              onPress={() => onOpenJar(item.jar.jar_id)}
+              onRead={() => onReadAuthor(item.jar.author_id)}
+              readDisabled={busy}
+            />
+          )}
+        </View>
+      )}
+      ItemSeparatorComponent={Separator}
+      ListHeaderComponent={header}
+      ListEmptyComponent={
+        showingSearch ? undefined : listLoading ? (
+          <ActivityIndicator
+            color={colors.muted}
+            style={styles.loading}
+            accessibilityLabel={t('explore.listLoading')}
+            testID="discover-loading"
+          />
+        ) : listFailed ? (
+          <View style={styles.message}>
+            <Text style={[textStyle('body'), styles.center]}>{t('explore.listFailed')}</Text>
+            <SecondaryButton label={t('explore.retry')} onPress={onRetryList} testID="discover-retry" />
+          </View>
+        ) : (
+          <EmptyState
+            illustration="compass"
+            title={t('explore.emptyTitle')}
+            body={t('explore.emptyBody')}
+            refreshable
+            testID="discover-empty"
+          />
+        )
+      }
+      ListFooterComponent={
+        isFetchingNextPage ? <ActivityIndicator color={colors.muted} style={styles.loading} /> : undefined
+      }
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.6}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.muted}
+          progressViewOffset={insets.top}
+        />
+      }
+      // Cards hold full-width photos; a small window keeps scrolling smooth (NFR-PERF-02).
+      initialNumToRender={3}
+      windowSize={5}
+      testID="explore"
+    />
+  );
+}
+
+function Separator() {
+  return <View style={styles.separator} />;
 }
 
 function AuthorCard({
@@ -222,34 +350,6 @@ function AuthorCard({
         />
       </View>
     </View>
-  );
-}
-
-function JarTile({ jar, width, onOpen }: { jar: FullJar; width: number; onOpen: () => void }) {
-  const { t } = useTranslation();
-  const name = jar.displayName.split(/\s+/)[0] ?? jar.displayName;
-  const cover = momentRender(jar.coverRender);
-  return (
-    <Pressable
-      onPress={onOpen}
-      style={[styles.tile, { width }]}
-      accessibilityRole="button"
-      accessibilityLabel={t('explore.jarLabel', { name: jar.displayName })}
-      testID={`explore-jar-${jar.jarId}`}
-    >
-      {/* With its stickers, text and filter when it has any (D-96). */}
-      <MomentThumb
-        uri={jar.coverUrl}
-        edits={cover?.edits}
-        stamp={cover?.stamp}
-        testID={`explore-jar-${jar.jarId}-photo`}
-      />
-      <View style={styles.tileName}>
-        <Text style={[textStyle('label', '700'), { color: colors.surface }]} numberOfLines={1}>
-          {name}
-        </Text>
-      </View>
-    </Pressable>
   );
 }
 
@@ -360,22 +460,10 @@ const styles = StyleSheet.create({
   cardName: { color: colors.ink, marginTop: space.xs },
   cardReason: { color: colors.muted },
   cardButton: { alignItems: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: e.gridGap, paddingHorizontal: space.xl },
-  tile: {
-    aspectRatio: 3 / 4,
-    borderRadius: e.tileRadius,
-    overflow: 'hidden',
-    backgroundColor: colors.photoPlaceholder,
-    justifyContent: 'flex-end',
-    padding: space.sm,
-  },
-  tileName: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: space.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    backgroundColor: colors.badge,
-  },
+  tabs: { paddingHorizontal: space.xl, marginTop: space.xl, marginBottom: space.md },
+  cardWrap: { paddingHorizontal: space.xl },
+  separator: { height: space.md },
+  loading: { marginTop: space.xxl },
   message: { alignItems: 'center', gap: space.md, paddingTop: space.xl, paddingHorizontal: space.xl },
   center: { textAlign: 'center', color: colors.muted },
   results: { marginTop: space.md, marginHorizontal: space.xl },

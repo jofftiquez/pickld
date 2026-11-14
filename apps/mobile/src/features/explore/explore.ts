@@ -1,8 +1,8 @@
-// Explore (M6-08; FR-EXP-01, FR-EXP-02): the rows the 0031 RPCs return and the pure rules that turn them into
-// Suggested authors. Friends of friends come from `suggested_authors()`, contact matches from fn:contacts-match.
+// Explore, now Discover (M6-08, D-100; FR-EXP-01, FR-EXP-02): the rows the 0031 RPCs return and the pure rules
+// that turn them into Suggested authors. Friends of friends come from `suggested_authors()`, contact matches from
+// fn:contacts-match. Today's full jars (`full_jars_today`) only give a suggestion its "8/8 today" reason; the
+// jars themselves are in Discover's Jars list (D-100).
 import { z } from 'zod';
-
-import type { MomentRenderRow } from '@/features/moment/momentRenders';
 
 export const searchRow = z.object({
   id: z.string(),
@@ -23,9 +23,6 @@ export const suggestedRow = z.object({
 export const fullJarRow = z.object({
   jar_id: z.string(),
   user_id: z.string(),
-  username: z.string(),
-  display_name: z.string(),
-  cover_moment_id: z.string(),
 });
 
 export type Person = {
@@ -41,17 +38,7 @@ export type SuggestionReason = { kind: 'fullToday' } | { kind: 'friends'; count:
 
 export type Suggestion = Person & { reason: SuggestionReason };
 
-export type FullJar = {
-  jarId: string;
-  userId: string;
-  username: string;
-  displayName: string;
-  coverUrl: string | null;
-  /** The cover's edits row (D-96); null or missing (older caches) draws the plain thumbnail. */
-  coverRender?: MomentRenderRow | null;
-};
-
-export type Explore = { suggestions: Suggestion[]; fullJars: FullJar[] };
+export type Explore = { suggestions: Suggestion[] };
 
 export type ContactMatch = Person;
 export type FriendOfFriend = Person & { mutualCount: number };

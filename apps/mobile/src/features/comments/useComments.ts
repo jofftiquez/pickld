@@ -80,10 +80,11 @@ export function useComments(jarId: string | undefined, momentId?: string) {
   const refresh = () => {
     // Also the moment header's count (useCommentMoment), whose key starts with the thread's.
     void queryClient.invalidateQueries({ queryKey: key });
-    // The jar's and moments' comment_count (Jar page, Moment detail, feed) follow the visible comments.
+    // The jar's and moments' comment_count (Jar page, Moment detail, feed, Discover) follow the visible comments.
     void queryClient.invalidateQueries({ queryKey: jarPageQueryKeys.jar(viewerId ?? '', jarId ?? '') });
     void queryClient.invalidateQueries({ queryKey: ['feed', viewerId ?? ''] });
     void queryClient.invalidateQueries({ queryKey: ['momentsFeed', viewerId ?? ''] });
+    void queryClient.invalidateQueries({ queryKey: ['discover'] });
   };
 
   const add = useMutation({

@@ -62,7 +62,7 @@ The floating tab bar (Today · Capture · Jars · My days) is the spine; every o
 
 &#91;embedded content: Navigation map · onboarding, tab bar and the screens under each tab\]
 
-Indented boxes open from the box above them. Two shortcuts cross tabs: Today’s moment tiles and the day page’s empty tiles (from My days’ **Fill this jar**) both open Capture, and the empty Jars state opens Explore.
+Indented boxes open from the box above them. Two shortcuts cross tabs: Today’s moment tiles and the day page’s empty tiles (from My days’ **Fill this jar**) both open Capture, and the empty Jars state opens Discover.
 
 ## Onboarding
 
@@ -222,9 +222,9 @@ A past day’s page (`/day/[date]`, D-55), opened by **Fill this jar** on My day
 
 Resurfaces past jars: an “On this day” card from one year ago, a monthly recap (moments, full jars, top hashtag, a photo strip and **Play**), and a year summary that can later become a printed year book.
 
-### Explore — “Explore”
+### Discover — “Explore”
 
-Search by name or @username, Suggested authors with a **Be a reader** button (D-86), and a grid of “Full jars today” from public jars.
+Opened from the compass button next to the bell on Moments and Jars, and from **Find people** (D-101). Search by name or @username and Suggested authors with a **Be a reader** button (D-86) stay at the top. Below them a **Moments | Jars** switch lists public moments and published jars from active people you do not read yet, newest first, with infinite scroll and pull to refresh; each card shows its author with **Be a reader**. A moment opens its thread, a jar opens its Jar page. Today's full jars are folded into the Jars list (D-100, D-102). Empty: “Nothing to discover yet.”
 
 ### Empty and first-use states
 
@@ -478,6 +478,6 @@ The app is built with React Native (Expo) on Supabase. Build the component kit f
 - [ ] Tab names: keep “Jars” next to “My days”, or rename My days to Calendar?
 - [ ] Trademark and app store search for “Pickld” and “Jar” wording.
 - [ ] Review the new extra screens and states (feedback pending).
-- [ ] Whether “Everyone” jars appear in Explore by default or only when opted in.
+- [x] Whether “Everyone” jars appear in Explore by default or only when opted in. By default: Discover lists every Everyone jar and moment (D-102).
 - [ ] Sticker pack pricing per region (₱49 in the designs is a placeholder) and the artist revenue share.
 - [ ] Replace placeholder photos and refresh sample captions to match them.

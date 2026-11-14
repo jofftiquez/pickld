@@ -70,8 +70,10 @@ export function useLike(viewerId: string | null, jarId: string | null) {
       inFlight.delete(key);
       void queryClient.invalidateQueries({ queryKey });
       void queryClient.invalidateQueries({ queryKey: ['feed', viewerId ?? ''] });
-      if (vars.target.kind === 'moment')
+      if (vars.target.kind === 'moment') {
         void queryClient.invalidateQueries({ queryKey: ['momentsFeed', viewerId ?? ''] });
+        void queryClient.invalidateQueries({ queryKey: ['discover', 'moments'] });
+      }
     },
   });
 
