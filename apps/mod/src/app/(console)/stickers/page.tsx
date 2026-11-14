@@ -5,12 +5,13 @@ import { colors, radius } from '@/theme/tokens';
 import { CreatePackForm } from '~/components/CreatePackForm';
 import { StatusPill } from '~/components/StatusPill';
 import { t } from '~/i18n/t';
+import { loadPackThumbs } from '~/lib/analytics';
 import { EDITABLE_TIER, loadPacks } from '~/lib/stickers';
 import { supabase } from '~/lib/supabase';
 
 const grid = {
   display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) 100px 110px 120px',
+  gridTemplateColumns: 'minmax(0, 1fr) 100px 110px 90px 90px',
   gap: 12,
   alignItems: 'center',
 };
@@ -18,7 +19,8 @@ const grid = {
 // The Sticker Studio's pack list (FR-MOD-10; design: ModConsole lists "Sticker packs"): every pack, drafts
 // first, and a form for a new free draft pack.
 export default async function StickerPacks() {
-  const packs = await loadPacks(await supabase());
+  const client = await supabase();
+  const [packs, thumbs] = await Promise.all([loadPacks(client), loadPackThumbs(client, 30)]);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
       <header>
@@ -35,6 +37,7 @@ export default async function StickerPacks() {
             <span>{t('stickers.list.tier')}</span>
             <span>{t('stickers.list.status')}</span>
             <span style={{ textAlign: 'right' }}>{t('stickers.list.stickers')}</span>
+            <span style={{ textAlign: 'right' }}>{t('stickers.list.thumbs')}</span>
           </div>
           {packs.length === 0 ? (
             <p style={{ padding: 20, margin: 0, color: colors.muted }}>{t('stickers.list.empty')}</p>
@@ -65,6 +68,7 @@ export default async function StickerPacks() {
                         </span>
                       ) : null}
                     </span>
+                    <span style={{ textAlign: 'right' }}>{thumbs.get(p.id)?.thumbs ?? 0}</span>
                   </Link>
                 </li>
               ))}

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-// public.mod_analytics(), mod_analytics_stickers() and mod_user_stats() (0101). Counts only, by Manila day;
+// public.mod_analytics(), mod_analytics_stickers() and mod_user_stats() (0101), mod_sticker_thumbs() (0110). Counts only, by Manila day;
 // Only me and removed moments are never counted (rule 9). The functions refuse non-moderators.
 export const RANGES = [7, 30, 90] as const;
 export type Range = (typeof RANGES)[number];
@@ -98,6 +98,18 @@ export async function loadStickerAnalytics(client: SupabaseClient, days: Range):
   const { data, error } = await client.rpc('mod_analytics_stickers', { p_days: days });
   if (error) throw new Error(error.message);
   return Stickers.parse(data);
+}
+
+const Thumbs = z.object({
+  packs: z.array(z.object({ id: z.string(), thumbs: z.number(), thumbs_window: z.number() })),
+});
+export type PackThumbs = Map<string, { thumbs: number; thumbs_window: number }>;
+
+/** Thumbs up per pack id from active accounts: all time, and in the last `days` Manila days. */
+export async function loadPackThumbs(client: SupabaseClient, days: number): Promise<PackThumbs> {
+  const { data, error } = await client.rpc('mod_sticker_thumbs', { p_days: days });
+  if (error) throw new Error(error.message);
+  return new Map(Thumbs.parse(data).packs.map(({ id, ...counts }) => [id, counts]));
 }
 
 export async function loadUserStats(client: SupabaseClient, user: string): Promise<UserStats | null> {
