@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { Stack, type Href } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
 // After the testing library, which brings gesture-handler's jest mocks and its own Reanimated mock.
 import './mockReanimated';
@@ -128,14 +128,14 @@ const routes = {
   'edit/[momentId]': EditScreen,
 };
 
-async function push(url: string) {
+async function push(url: Href) {
   await act(async () => {
     const { router } = jest.requireActual<typeof import('expo-router')>('expo-router');
     router.push(url);
   });
 }
 
-async function openEditor(url: string) {
+async function openEditor(url: Href) {
   await renderRouter(routes, { initialUrl: '/today', wrapper });
   await push(url);
 }
@@ -267,7 +267,7 @@ describe('Editor', () => {
     expect(screen.queryByText('Camera stub')).toBeNull();
   });
 
-  it.each(['/edit/abc', '/edit/0', '/edit/1.5'])(
+  it.each<Href>(['/edit/abc', '/edit/0', '/edit/1.5'])(
     'rejects a malformed id (%s) without reading the queue',
     async (url) => {
       await openEditor(url);

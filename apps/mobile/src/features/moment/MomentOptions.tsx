@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -47,7 +47,7 @@ export type MomentOptionsProps = {
 };
 
 /** The edit route for a moment: its queue row id until it is uploaded, then its moment id. */
-function editHref(target: MomentTarget, focusCaption: boolean): string {
+function editHref(target: MomentTarget, focusCaption: boolean): Href {
   const id = target.kind === 'queued' ? String(target.queueId) : target.momentId;
   return focusCaption ? `/edit/${id}?focus=caption` : `/edit/${id}`;
 }
