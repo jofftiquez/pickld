@@ -10,7 +10,7 @@ import { supabase } from '~/lib/supabase';
 const charts = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 } as const;
 
 // Analytics charts (FR-MOD-09): the window's totals and the per-day and per-slot graphs, for moments and for
-// stickers. The breakdown tables are on /analytics/tables. All counts come from the database (0101); nothing
+// stickers. The tables are on /analytics/audience, /packs and /stickers. All counts come from the database (0101); nothing
 // here shows a photo or caption, and Only me moments aren't counted.
 export default async function AnalyticsCharts({ searchParams }: { searchParams: Promise<{ days?: string }> }) {
   const days = parseRange((await searchParams).days);

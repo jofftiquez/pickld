@@ -8,24 +8,27 @@ import { LocalTable } from './LocalTable';
 /**
  * A titled table on a white card (Analytics). The first column is the row's name; the others are numbers,
  * right-aligned. `values` are what each cell sorts by; every column sorts, and long lists page. `note` adds a
- * muted line under the title.
+ * muted line under the title; `headingHidden` keeps
+ * the title for screen readers only, for a page whose own heading already names the table.
  */
 export function DataTable({
   title,
   note,
+  headingHidden,
   columns,
   rows,
   empty,
 }: {
   title: string;
   note?: string;
+  headingHidden?: boolean;
   columns: string[];
   rows: { key: string; cells: ReactNode[]; values: (string | number)[] }[];
   empty: string;
 }) {
   return (
     <section aria-label={title} style={{ display: 'grid', gap: 6, minWidth: 0, alignContent: 'start' }}>
-      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{title}</h2>
+      {headingHidden ? null : <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{title}</h2>}
       {note ? <p style={{ margin: 0, color: colors.muted, fontSize: 13 }}>{note}</p> : null}
       <Card>
         <LocalTable
