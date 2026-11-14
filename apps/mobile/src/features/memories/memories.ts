@@ -1,6 +1,8 @@
 // Memories (FR-DAY-03): rows from the 0030 RPCs and the small date sums the screen needs.
 import { z } from 'zod';
 
+import type { MomentRenderRow } from '@/features/moment/momentRenders';
+
 export const SLOTS = [
   'whereami',
   'mebusywith',
@@ -40,9 +42,18 @@ export type OnThisDay = {
   yearsAgo: number;
   coverMomentId: string | null;
   photoUrl: string | null;
+  /** The cover's edits row (D-96); null or missing (older caches) draws the plain photo. */
+  photoRender?: MomentRenderRow | null;
 };
 
-export type RecapPhoto = { momentId: string; jarId: string; slot: Slot; thumbUrl: string | null };
+export type RecapPhoto = {
+  momentId: string;
+  jarId: string;
+  slot: Slot;
+  thumbUrl: string | null;
+  /** The moment's edits row (D-96); null or missing (older caches) draws the plain thumbnail. */
+  render?: MomentRenderRow | null;
+};
 
 export type MonthRecap = {
   /** YYYY-MM */

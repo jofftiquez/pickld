@@ -6,6 +6,7 @@ import { getPermissionsAsync } from 'expo-contacts';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 
+import { fetchMomentRenders } from '@/features/moment/momentRenders';
 import { hashAddressBook, matchContacts } from '@/features/onboarding/findFriends';
 import { setReading } from '@/features/profile/useFollow';
 import { useAuthStore } from '@/lib/authStore';
@@ -72,10 +73,8 @@ export async function fetchExplore(): Promise<Explore> {
   const jars = z.array(fullJarRow).parse(full.data);
 
   const withAvatar = fof.filter((f) => f.avatar_path !== null).map((f) => f.id);
-  const urls = await signedUrls(
-    jars.map((j) => j.cover_moment_id),
-    withAvatar,
-  );
+  const covers = jars.map((j) => j.cover_moment_id);
+  const [urls, renders] = await Promise.all([signedUrls(covers, withAvatar), fetchMomentRenders(covers)]);
   const suggestions = mergeSuggestions(
     contacts,
     fof.map((f) => ({
@@ -96,6 +95,7 @@ export async function fetchExplore(): Promise<Explore> {
       username: j.username,
       displayName: j.display_name,
       coverUrl: urls.thumbs.get(j.cover_moment_id) ?? null,
+      coverRender: renders.get(j.cover_moment_id) ?? null,
     })),
   };
 }

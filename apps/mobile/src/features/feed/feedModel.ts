@@ -2,6 +2,8 @@
 // card mosaic (one large photo, up to three small ones and a "+n" tile; design: Feed) and the card's age.
 import { z } from 'zod';
 
+import type { MomentRenderRow } from '@/features/moment/momentRenders';
+
 export const FEED_PAGE_SIZE = 20;
 /** Photos a card shows; `feed_page` returns at most this many previews. */
 export const MOSAIC_PHOTOS = 4;
@@ -34,8 +36,11 @@ export const feedAuthorRow = z.object({
 });
 export type FeedAuthor = z.infer<typeof feedAuthorRow>;
 
-/** A feed card: the row plus signed thumbnail URLs in preview order (null when signing failed). */
-export type FeedJar = FeedRow & { previewUrls: (string | null)[] };
+/**
+ * A feed card: the row plus signed thumbnail URLs in preview order (null when signing failed), and what
+ * draws each preview's edits by moment id (D-96; optional: caches from before it lack it).
+ */
+export type FeedJar = FeedRow & { previewUrls: (string | null)[]; previewRenders?: Record<string, MomentRenderRow> };
 
 export type FeedPage = { jars: FeedJar[]; nextCursor: FeedCursor | null };
 export type FeedCursor = { at: string; id: string };
@@ -46,7 +51,8 @@ export function nextCursor(rows: FeedRow[]): FeedCursor | null {
   return rows.length < FEED_PAGE_SIZE || last === undefined ? null : { at: last.feed_at, id: last.jar_id };
 }
 
-export type MosaicPhoto = { momentId: string; url: string | null };
+/** `render`: the moment's edits row (D-96); null draws the plain thumbnail. */
+export type MosaicPhoto = { momentId: string; url: string | null; render?: MomentRenderRow | null };
 
 /** Large photo, up to three small ones, and how many visible moments are left for the "+n" cell (0: none). */
 export type Mosaic = { large: MosaicPhoto | null; small: MosaicPhoto[]; more: number };
@@ -58,9 +64,13 @@ export type Mosaic = { large: MosaicPhoto | null; small: MosaicPhoto[]; more: nu
  */
 export function buildMosaic(
   jar: Pick<FeedJar, 'preview_moment_ids' | 'previewUrls' | 'visible_count'> &
-    Partial<Pick<FeedJar, 'cover_moment_id'>>,
+    Partial<Pick<FeedJar, 'cover_moment_id' | 'previewRenders'>>,
 ): Mosaic {
-  const all = jar.preview_moment_ids.map((momentId, i): MosaicPhoto => ({ momentId, url: jar.previewUrls[i] ?? null }));
+  const all = jar.preview_moment_ids.map((momentId, i): MosaicPhoto => ({
+    momentId,
+    url: jar.previewUrls[i] ?? null,
+    render: jar.previewRenders?.[momentId] ?? null,
+  }));
   const coverAt = all.findIndex((p) => p.momentId === jar.cover_moment_id);
   if (coverAt > 0) all.unshift(...all.splice(coverAt, 1));
   const photos = all.slice(0, MOSAIC_PHOTOS);

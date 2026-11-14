@@ -39,6 +39,8 @@ export type MomentTileProps = {
   visibility?: Visibility | null;
   /** Backfilled moment (server sets `is_backfilled`); shows the "Added later" badge. */
   addedLater?: boolean;
+  /** The jar's cover (D-56): a small "Cover" badge beside the time (D-98). */
+  cover?: boolean;
   /** Upload progress 0–1 for the `uploading` state; leave it out when unknown to show an indeterminate spinner. */
   progress?: number;
   onPress?: () => void;
@@ -67,6 +69,7 @@ export function MomentTile({
   time,
   visibility = null,
   addedLater = false,
+  cover = false,
   progress,
   onPress,
   accessibilityHint,
@@ -85,6 +88,7 @@ export function MomentTile({
   // "#slot, time, state": every state is spoken, never conveyed by color alone.
   const flags = hasPhoto
     ? [
+        cover ? t('tile.a11y.cover') : null,
         visibility ? t(`tile.a11y.visibility.${VISIBILITY_KEY[visibility]}`) : null,
         addedLater ? t('tile.a11y.addedLater') : null,
       ].filter((f): f is string => f !== null)
@@ -176,7 +180,14 @@ export function MomentTile({
           label={tag}
           blurred={blurred}
           overlayColor={state === 'failed' ? 'failedOverlay' : state === 'filled' ? undefined : 'glass'}
-          topLeft={time ? <Pill text={time} /> : null}
+          topLeft={
+            time || cover ? (
+              <>
+                {time ? <Pill text={time} /> : null}
+                {cover ? <Pill text={t('tile.cover')} testID="tile-cover" /> : null}
+              </>
+            ) : null
+          }
           topRight={
             visibility || addedLater ? (
               <>

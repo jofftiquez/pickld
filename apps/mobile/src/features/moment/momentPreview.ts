@@ -108,20 +108,20 @@ export function buildPreviewItems(input: {
   return items;
 }
 
-export type PreviewAction = 'edit' | 'share' | 'visibility' | 'more' | 'delete';
+export type PreviewAction = 'edit' | 'share' | 'visibility' | 'cover' | 'more' | 'delete';
 
-/** Set as cover (D-56) is under More for a live moment that isn't the cover already. */
+/** Set as cover (D-56) is offered (in the bar, D-98, and under More) for a live moment that isn't the cover already. */
 export function canSetCover(item: Pick<PreviewItem, 'kind' | 'isCover'>): boolean {
   return item.kind === 'live' && !item.isCover;
 }
 
 /**
- * The action bar (D-54): a live moment has Edit, Share, Visibility and More (Re-crop, Move, Set as cover,
- * Delete). A photo
- * still on the phone has only Edit and Delete; while it uploads it has none.
+ * The action bar (D-54): a live moment has Edit, Share, Visibility, Set as cover (D-98; a "Cover" state
+ * when it is the cover already) and More (Re-crop, Move, Set as cover, Delete). A photo still on the phone
+ * has only Edit and Delete; while it uploads it has none.
  */
 export function previewActions(item: Pick<PreviewItem, 'kind' | 'uploading'>): PreviewAction[] {
-  if (item.kind === 'live') return ['edit', 'share', 'visibility', 'more'];
+  if (item.kind === 'live') return ['edit', 'share', 'visibility', 'cover', 'more'];
   return item.uploading ? [] : ['edit', 'delete'];
 }
 

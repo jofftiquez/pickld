@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -9,6 +8,8 @@ import { Icon } from '@/components/Icon';
 import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
+import { MomentThumb } from '@/features/moment/MomentThumb';
+import { momentRender } from '@/features/moment/momentRenders';
 import { deviceLocale, formatDate } from '@/lib/format';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, memories as m, radius, space } from '@/theme/tokens';
@@ -130,6 +131,7 @@ function OnThisDayCard({
   const title = t('memories.dayTitle', { weekday });
   const ago = t('memories.yearsAgo', { count: memory.yearsAgo });
   const moments = t('memories.dayMoments', { count: memory.momentCount, total: MOMENTS_PER_JAR });
+  const cover = momentRender(memory.photoRender);
   return (
     <Pressable
       onPress={() => onOpen(memory.jarId)}
@@ -138,9 +140,12 @@ function OnThisDayCard({
       accessibilityLabel={t('memories.onThisDayLabel', { title, date: `${date}, ${ago}`, moments })}
       testID="memories-on-this-day"
     >
-      {memory.photoUrl ? (
-        <Image source={{ uri: memory.photoUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
-      ) : null}
+      <MomentThumb
+        uri={memory.photoUrl}
+        edits={cover?.edits}
+        stamp={cover?.stamp}
+        testID="memories-on-this-day-photo"
+      />
       <LinearGradient
         colors={[colors.photoFadeClear, colors.photoFade]}
         pointerEvents="none"
@@ -209,14 +214,25 @@ function RecapCard({
               accessibilityLabel={t('memories.photoLabel', { slot: t(`slots.${photo.slot}`) })}
               testID={`memories-photo-${photo.momentId}`}
             >
-              {photo.thumbUrl ? (
-                <Image source={{ uri: photo.thumbUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
-              ) : null}
+              <RecapThumb photo={photo} />
             </Pressable>
           ))}
         </View>
       ) : null}
     </Card>
+  );
+}
+
+/** A recap photo with its edits when it has any (D-96). */
+function RecapThumb({ photo }: { photo: RecapPhoto }) {
+  const render = momentRender(photo.render);
+  return (
+    <MomentThumb
+      uri={photo.thumbUrl}
+      edits={render?.edits}
+      stamp={render?.stamp}
+      testID={`memories-photo-${photo.momentId}-photo`}
+    />
   );
 }
 

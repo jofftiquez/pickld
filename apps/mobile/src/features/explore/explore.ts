@@ -2,6 +2,8 @@
 // Suggested authors. Friends of friends come from `suggested_authors()`, contact matches from fn:contacts-match.
 import { z } from 'zod';
 
+import type { MomentRenderRow } from '@/features/moment/momentRenders';
+
 export const searchRow = z.object({
   id: z.string(),
   username: z.string(),
@@ -39,7 +41,15 @@ export type SuggestionReason = { kind: 'fullToday' } | { kind: 'friends'; count:
 
 export type Suggestion = Person & { reason: SuggestionReason };
 
-export type FullJar = { jarId: string; userId: string; username: string; displayName: string; coverUrl: string | null };
+export type FullJar = {
+  jarId: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  coverUrl: string | null;
+  /** The cover's edits row (D-96); null or missing (older caches) draws the plain thumbnail. */
+  coverRender?: MomentRenderRow | null;
+};
 
 export type Explore = { suggestions: Suggestion[]; fullJars: FullJar[] };
 

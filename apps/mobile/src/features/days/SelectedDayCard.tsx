@@ -1,10 +1,10 @@
-import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { JarGraphic } from '@/components/JarGraphic';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { holdsSlot, momentCount, type GridTile } from '@/features/jar/todayGrid';
+import { MomentThumb } from '@/features/moment/MomentThumb';
 import { deviceLocale } from '@/lib/format';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { textStyle } from '@/theme/text';
@@ -95,9 +95,13 @@ export function SelectedDayCard({
             style={[styles.thumb, styles.photo]}
             testID={`selected-day-thumb-${tile.slot}`}
           >
-            {tile.uri ? (
-              <Image source={{ uri: tile.uri }} style={StyleSheet.absoluteFill} contentFit="cover" accessible={false} />
-            ) : null}
+            {/* With its stickers, text and filter when it has any (D-96). */}
+            <MomentThumb
+              uri={tile.uri}
+              edits={tile.edits}
+              stamp={tile.stamp}
+              testID={`selected-day-photo-${tile.slot}`}
+            />
           </View>
         ))}
         {missing.map((slot) => (

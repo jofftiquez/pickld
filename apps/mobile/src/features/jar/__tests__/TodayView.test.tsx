@@ -323,6 +323,25 @@ describe('TodayView: tiles open the moment preview (QA item 3, D-54)', () => {
   });
 });
 
+describe('TodayView: the cover badge (D-98)', () => {
+  it('badges only the jar’s cover tile and says so', async () => {
+    await renderToday({
+      hasAnyJar: true,
+      coverMomentId: 'm-ootd',
+      tiles: buildTodayGrid({
+        localDate: '2026-11-10',
+        nowSlot: 'afternoon',
+        jarTz: TZ,
+        moments: [live('ootd'), live('whereami')],
+        queue: [],
+      }),
+    });
+    expect(within(screen.getByTestId('tile-ootd')).getByTestId('tile-cover')).toHaveTextContent('Cover');
+    expect(within(screen.getByTestId('tile-whereami')).queryByTestId('tile-cover')).toBeNull();
+    expect(screen.getByTestId('tile-ootd').props.accessibilityLabel).toContain('cover');
+  });
+});
+
 describe('TodayView: tiles draw moments with their edits (M2-18)', () => {
   const hidden = { includeHiddenElements: true } as const;
   const sticker = {

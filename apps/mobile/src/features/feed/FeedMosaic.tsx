@@ -1,33 +1,34 @@
-import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { MomentThumb } from '@/features/moment/MomentThumb';
+import { momentRender } from '@/features/moment/momentRenders';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes } from '@/theme/tokens';
 
 import type { Mosaic, MosaicPhoto } from './feedModel';
 
 function Photo({ photo, large }: { photo: MosaicPhoto; large?: boolean }) {
+  const render = momentRender(photo.render);
   return (
     <View
       testID={`feed-mosaic-${large ? 'large' : 'small'}`}
       style={[styles.cell, large ? [styles.large, { borderRadius: radius.mosaicLarge }] : null]}
     >
-      {photo.url ? (
-        <Image
-          source={{ uri: photo.url }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          recyclingKey={photo.momentId}
-          transition={150}
-          accessible={false}
-        />
-      ) : null}
+      {/* With its stickers, text and filter when it has any (D-96). */}
+      <MomentThumb
+        uri={photo.url}
+        edits={render?.edits}
+        stamp={render?.stamp}
+        recyclingKey={photo.momentId}
+        transition={150}
+        testID={`feed-photo-${photo.momentId}`}
+      />
     </View>
   );
 }
 
-/** A feed card's photos (design: Feed): the large one spans two rows next to a 2 × 2 grid ending in "+n". */
+/** A feed card's photos (design: Feed), with their edits (D-96): the large one spans two rows next to a 2 × 2 grid ending in "+n". */
 export function FeedMosaic({ mosaic }: { mosaic: Mosaic }) {
   const { t } = useTranslation();
   if (mosaic.large === null) return null;

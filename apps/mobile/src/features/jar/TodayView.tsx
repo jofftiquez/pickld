@@ -26,6 +26,8 @@ export type TodayViewProps = {
   /** The phone's IANA zone: date, greeting and capture times are shown in it. */
   tz: string;
   tiles: readonly GridTile[];
+  /** The jar's cover (D-56): its tile gets a small "Cover" badge (D-98). */
+  coverMomentId?: string | null;
   /** The user has no jar yet (null while unknown). */
   hasAnyJar: boolean | null;
   displayName: string | null;
@@ -78,6 +80,7 @@ export function TodayView({
   now,
   tz,
   tiles,
+  coverMomentId = null,
   hasAnyJar,
   displayName,
   avatarUrl,
@@ -191,6 +194,7 @@ export function TodayView({
                         time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
                         visibility={tile.visibility}
                         addedLater={tile.addedLater}
+                        cover={tile.state === 'filled' && momentId !== null && momentId === coverMomentId}
                         onPress={
                           capturable
                             ? () => onCapture(tile.slot)

@@ -22,6 +22,8 @@ export type DayJar = {
     visibility?: Visibility;
     publishedAt?: string | null;
     likeCount?: number;
+    /** The jar's cover (0069 `resolved_cover_id`, D-56), badged on its tile (D-98); optional in older caches. */
+    coverMomentId?: string | null;
   } | null;
   moments: ServerMoment[];
 };
@@ -43,7 +45,7 @@ async function fetchDayJar(userId: string, localDate: string): Promise<DayJar> {
   const supabase = getSupabase();
   const { data: jar, error } = await supabase
     .from('jars')
-    .select('id, local_date, tz, visibility, published_at, like_count')
+    .select('id, local_date, tz, visibility, published_at, like_count, resolved_cover_id')
     .eq('user_id', userId)
     .eq('local_date', localDate)
     .maybeSingle();
@@ -63,6 +65,7 @@ async function fetchDayJar(userId: string, localDate: string): Promise<DayJar> {
       visibility: jar.visibility,
       publishedAt: jar.published_at,
       likeCount: jar.like_count,
+      coverMomentId: jar.resolved_cover_id ?? null,
     },
     moments: rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null })),
   };

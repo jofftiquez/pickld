@@ -1,4 +1,4 @@
-# M3-07: a feed card opens the author's Jar page (design: Story) with the cover, Full jar tag, grid and
+# M3-07: a feed card opens the author's Jar page (design: Story) with its plain header, Full jar tag, 2 by 4 grid (D-97) and
 # the like, comment and Share jar bar; Back returns to the feed.
 # Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
 # maestro test apps/mobile/.maestro/jar-page.yaml
@@ -23,7 +23,7 @@ appId: me.pickld.app
     id: feed-card-mika
 - extendedWaitUntil:
     visible:
-      id: jar-count-tile
+      id: jar-header
     timeout: 40000
 - assertVisible:
     id: jar-full-tag

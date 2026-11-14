@@ -20,6 +20,7 @@ import type { MomentOptionsMode } from '@/features/moment/MomentOptionsSheet';
 import { MomentPreviewView } from '@/features/moment/MomentPreviewView';
 import { deleteMoment, MomentOptionError, type OptionError } from '@/features/moment/momentActions';
 import { buildPreviewItems, canSetCover, type PreviewItem } from '@/features/moment/momentPreview';
+import { useSetJarCover } from '@/features/moment/useSetJarCover';
 import { currentSlot } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
@@ -134,6 +135,21 @@ export default function MomentPreviewScreen() {
     showToast('momentDeleted');
   };
 
+  // Set as cover from the bar (D-98): the same action as under More.
+  const setCover = useSetJarCover(userId ?? '');
+  const runSetCover = async (item: PreviewItem) => {
+    if (item.target.kind !== 'server' || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await setCover(item.target.jarId, item.target.momentId);
+    } catch (cause) {
+      captureError(cause, { area: 'moment-preview' });
+      setError(cause instanceof MomentOptionError ? cause.reason : 'failed');
+    }
+    setBusy(false);
+  };
+
   // Opening from a tile: the screen fades in (the stack's animation) and grows slightly; with Reduce Motion only
   // the fade (D-58, D-77).
   const enter = usePop(true, PREVIEW_ENTER_FROM, true);
@@ -164,6 +180,7 @@ export default function MomentPreviewScreen() {
           }}
           onVisibility={(item) => openOptions(item, 'visibility')}
           onMore={(item) => openOptions(item, 'more')}
+          onSetCover={(item) => void runSetCover(item)}
           onDelete={(item) => {
             setError(null);
             setConfirmDelete(item);
