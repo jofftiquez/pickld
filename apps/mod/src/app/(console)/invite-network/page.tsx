@@ -24,7 +24,7 @@ export default async function InviteNetwork() {
     .slice(0, TOP);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <PageHeader title={t('network.title')} subtitle={t('network.subtitle')} />
 
       <Section title={t('network.totals')}>

@@ -57,7 +57,7 @@ export default async function Invites() {
   const letIn = Math.min(LET_IN, summary.waiting);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <PageHeader title={t('invites.title')} subtitle={t('invites.subtitle')} />
 
       <Section title={t('invites.totals.title')}>

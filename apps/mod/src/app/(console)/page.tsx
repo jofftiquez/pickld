@@ -28,7 +28,7 @@ export default async function Overview() {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <header>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.52, margin: 0 }}>{t('overview.title')}</h1>
         <p style={{ color: colors.muted, margin: '4px 0 0', fontSize: 13 }}>{t('overview.subtitle', { date })}</p>
