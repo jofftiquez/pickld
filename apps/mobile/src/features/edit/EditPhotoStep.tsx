@@ -1,7 +1,7 @@
 import type { SkImage } from '@shopify/react-native-skia';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useRef, useState, type ComponentRef } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -12,7 +12,7 @@ import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 import { BubblePanel } from './bubble/BubblePanel';
 import type { Overlay } from './edits';
 import { FilteredPhoto } from './FilteredPhoto';
-import { FILTER_GAP, FILTER_LEAD, filterThumbSize } from './filterRow';
+import { FILTER_GAP, filterThumbSize } from './filterGrid';
 import { filterIdSchema, filterMatrices, type FilterId } from './filters';
 import { FilterThumbnail } from './FilterThumbnail';
 import { OverlayLayer } from './overlays/OverlayLayer';
@@ -62,6 +62,8 @@ const PHOTO_MIN_SCALE = 0.92;
 // The panel can scroll up until this much of the photo's height is left showing between the toolbar and
 // the panel; the panel is at least tall enough to allow it.
 const PHOTO_PEEK = 0.25;
+// The Stickers tool is a tray, as on Instagram: picking it slides the panel all the way up so the whole
+// pack fills the screen, and adding a sticker slides it back down to show the sticker on the photo.
 
 /**
  * The editor's first step (D-103; design: EditPhoto): the 3:4 photo as large as fits, with the filter and
@@ -95,11 +97,23 @@ export function EditPhotoStep({
   const available = window.height - toolbarHeight - PANEL_MIN_HEIGHT;
   const width = Math.min(window.width, Math.max(0, available) * photo.aspect);
   const height = width / photo.aspect;
-  const filterThumb = filterThumbSize(window.width);
+  const filterThumb = filterThumbSize(window.width - 2 * space.xl);
   const panelMinHeight = Math.max(PANEL_MIN_HEIGHT, window.height - toolbarHeight - Math.round(height * PHOTO_PEEK));
   // The screen stops scrolling while a finger moves an overlay.
   const [overlayGesture, setOverlayGesture] = useState(false);
   const selectedText = overlays.find((o): o is TextOverlay => o.type === 'text' && o.id === selectedOverlayId) ?? null;
+
+  const scroller = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
+  const scrollPanel = (to: 'top' | 'photo') =>
+    scroller.current?.scrollTo({ y: to === 'top' ? Math.round(height * (1 - PHOTO_PEEK)) : 0, animated: !reduceMotion });
+  const selectTool = (next: EditorTool) => {
+    onSelectTool(next);
+    if (next === 'stickers') scrollPanel('top');
+  };
+  const addSticker = (sticker: CatalogSticker) => {
+    onAddSticker(sticker);
+    scrollPanel('photo');
+  };
 
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((event) => {
@@ -118,6 +132,7 @@ export function EditPhotoStep({
 
   return (
     <Animated.ScrollView
+      ref={scroller}
       style={styles.root}
       contentContainerStyle={[styles.content, { paddingTop: toolbarHeight }]}
       scrollIndicatorInsets={{ top: toolbarHeight }}
@@ -161,20 +176,13 @@ export function EditPhotoStep({
         <SegmentedControl
           segments={editorTools.map((key) => ({ key, label: t(`edit.tool.${key}`) }))}
           selected={tool}
-          onSelect={onSelectTool}
+          onSelect={selectTool}
           accessibilityLabel={t('edit.tools')}
           variant="dark"
           testID="editor-tools"
         />
         {tool === 'filters' ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            accessibilityLabel={t('edit.filters')}
-            style={styles.filterRow}
-            contentContainerStyle={styles.filters}
-            testID="editor-filters"
-          >
+          <View accessibilityLabel={t('edit.filters')} style={styles.filters} testID="editor-filters">
             {filterIdSchema.options.map((id) => (
               <FilterThumbnail
                 key={id}
@@ -187,9 +195,9 @@ export function EditPhotoStep({
                 testID={`editor-filter-${id}`}
               />
             ))}
-          </ScrollView>
+          </View>
         ) : tool === 'stickers' ? (
-          <StickersPanel slot={slot} onAdd={onAddSticker} />
+          <StickersPanel slot={slot} onAdd={addSticker} />
         ) : tool === 'bubble' ? (
           <BubblePanel
             overlays={overlays}
@@ -243,9 +251,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xl,
     gap: space.md + 2,
   },
-  // The row runs to both screen edges, so the last thumbnail in view is cut by the edge (filterRow.ts).
-  filterRow: { marginHorizontal: -space.xl },
-  // 12 px between thumbnails, as designed: each thumbnail already reserves its ring and white gap.
-  filters: { gap: FILTER_GAP, paddingHorizontal: FILTER_LEAD },
+  // Every filter at once, four to a row (filterGrid.ts): 12 px between the photos, as designed; each
+  // thumbnail already reserves its ring and white gap.
+  filters: { flexDirection: 'row', flexWrap: 'wrap', columnGap: FILTER_GAP, rowGap: space.sm },
   actions: { flexDirection: 'row' },
 });

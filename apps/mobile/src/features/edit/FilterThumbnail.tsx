@@ -14,7 +14,7 @@ export type FilterThumbnailProps = {
   matrix: ColorMatrix;
   selected: boolean;
   onPress: () => void;
-  /** The thumbnail square; the editor sizes it so the row ends on half a thumbnail (filterRow.ts). */
+  /** The thumbnail square; the editor sizes it so four fill a row (filterGrid.ts). */
   size?: number;
   testID?: string;
 };
@@ -36,7 +36,7 @@ export function FilterThumbnail({
       accessibilityState={{ selected }}
       onPress={onPress}
       testID={testID}
-      // A fixed width, so the row's layout (filterRow.ts) doesn't depend on the label's length or weight.
+      // A fixed width, so the grid's layout (filterGrid.ts) doesn't depend on the label's length or weight.
       style={[styles.root, { width: size + 2 * (sizes.filterRing + sizes.filterRingGap) }]}
     >
       {/* The ring is always laid out so choosing a filter doesn't shift the row. */}

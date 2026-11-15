@@ -5,7 +5,7 @@ import { act, fireEvent, renderRouter, screen, within } from 'expo-router/testin
 // After the testing library, which brings gesture-handler's jest mocks and its own Reanimated mock.
 import './mockReanimated';
 import type { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 import EditScreen from '../../../../app/edit/[momentId]';
 import { editsSchema } from '../edits';
@@ -179,27 +179,40 @@ describe('Stickers tool', () => {
     expect(await screen.findByText('Pack preview stub christmas')).toBeTruthy();
   });
 
-  it('links to the shop under the grid while a pack is for sale', async () => {
+  it('links to the shop above the grid while a pack is for sale', async () => {
     await openStickers();
     await screen.findByTestId('stickers-panel');
+    const order = within(screen.getByTestId('stickers-panel'))
+      .getAllByTestId(/^stickers-(tabs|shop-banner|grid)$/)
+      .map((v) => v.props.testID as string);
+    expect(order).toEqual(['stickers-tabs', 'stickers-shop-banner', 'stickers-grid']);
     // The pack on sale here is premium, not seasonal, so the banner doesn't name it.
     expect(screen.getByRole('link', { name: 'More sticker packs' })).toBeTruthy();
     await fireEvent.press(screen.getByRole('link', { name: 'More sticker packs' }));
     expect(await screen.findByText('Stickers stub shop')).toBeTruthy();
   });
 
-  it('fades the grid’s bottom edge while more rows remain below, and drops the fade at the end', async () => {
+  it('shows a whole pack at once, with no scrolling of its own', async () => {
     await openStickers();
     await screen.findByTestId('stickers-panel');
     await fireEvent.press(screen.getByRole('tab', { name: 'Everyday' }));
     const grid = screen.getByTestId('stickers-grid');
-    const fade = () => screen.queryByTestId('stickers-grid-fade', { includeHiddenElements: true });
-    // Five rows of 58 behind a 145-tall window (two and a half rows).
-    await fireEvent(grid, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 320, height: 145 } } });
-    await fireEvent(grid, 'contentSizeChange', 320, 282);
-    expect(fade()).toBeTruthy();
-    await fireEvent.scroll(grid, { nativeEvent: { contentOffset: { x: 0, y: 137 } } });
-    expect(fade()).toBeNull();
+    expect(grid.type).not.toBe('RCTScrollView');
+    expect(optionLabels()).toHaveLength(15);
+    expect(screen.queryByTestId('stickers-grid-fade', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('opens as a tray: the panel slides up over the photo, and adding a sticker slides it back to show it', async () => {
+    const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => undefined);
+    await openStickers();
+    await screen.findByTestId('stickers-panel');
+    const up = scrollTo.mock.lastCall?.[0] as { y: number; animated: boolean } | undefined;
+    expect(up?.animated).toBe(true);
+    expect(up?.y).toBeGreaterThan(0);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Add the Siesta? sticker' }));
+    expect(scrollTo).toHaveBeenLastCalledWith({ y: 0, animated: true });
+    scrollTo.mockRestore();
   });
 
   it('shows the Milestones pack with only the stickers earned', async () => {
