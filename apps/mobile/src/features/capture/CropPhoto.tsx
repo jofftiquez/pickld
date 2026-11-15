@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import {
@@ -11,6 +11,8 @@ import {
 } from 'react-native-gesture-handler';
 
 import { Icon } from '@/components/Icon';
+import { SnapGuides } from '@/components/SnapGuides';
+import { selectionHaptic } from '@/lib/haptics';
 import {
   clampFitLayout,
   DEFAULT_FIT_PLACE,
@@ -20,8 +22,9 @@ import {
   type FitPlace,
   type Size,
 } from '@/lib/image/crop';
+import { snapCenter } from '@/lib/image/snap';
 import { maxTextScale, textStyle } from '@/theme/text';
-import { colors, crop, fitBorderColors, fitFrameColors, radius } from '@/theme/tokens';
+import { colors, crop, fitBorderColors, fitFrameColors, radius, sizes } from '@/theme/tokens';
 
 import { coverScale, panCrop, zoomCrop, type CropState } from './cropMath';
 
@@ -45,7 +48,8 @@ export type CropPhotoProps = {
    * Fit (D-152, D-154): the whole photo inside the frame where this layout puts it, with its border and corners,
    * on its frame style, as preparation draws it. No crop chrome; drag moves the photo, pinch resizes it and a
    * double tap puts it back whole and centred, each step clamped so it stays whole inside the frame
-   * (`onFitChange`). Null or absent: Fill, today's crop.
+   * (`onFitChange`). A drag snaps the photo's centre to the frame's centre across and/or down (D-158), with a
+   * guide line and a tick while snapped. Null or absent: Fill, today's crop.
    */
   fit?: FitLayout | null;
   onFitChange?: (place: FitPlace) => void;
@@ -122,6 +126,13 @@ export function CropPhoto({
   const panStart = useRef(state.pan);
   const zoomStart = useRef(state.zoom);
   const placeStart = useRef<FitPlace>(DEFAULT_FIT_PLACE);
+  // Fit's centre snap (D-158): which axes are snapped now, kept for the next drag step and shown as guides.
+  const snapped = useRef({ x: false, y: false });
+  const [guides, setGuides] = useState({ x: false, y: false });
+  const showGuides = (next: { x: boolean; y: boolean }) => {
+    snapped.current = next;
+    setGuides((shown) => (shown.x === next.x && shown.y === next.y ? shown : next));
+  };
   // Fit: the layout moved or resized from where the gesture started, clamped, handed up.
   const moveFit = (change: Partial<FitPlace>) => {
     const { placed: now, turned: size, onFitChange: report } = latest.current;
@@ -137,16 +148,30 @@ export function CropPhoto({
     onActivate: () => {
       panStart.current = latest.current.state.pan;
       if (latest.current.placed) placeStart.current = latest.current.placed;
+      snapped.current = { x: false, y: false };
     },
     onUpdate: (e) => {
-      if (latest.current.placed) {
+      const { placed: now, turned: size } = latest.current;
+      if (now) {
         const start = placeStart.current;
-        moveFit({ x: start.x + e.translationX / frame.width, y: start.y + e.translationY / frame.height });
+        const x = start.x + e.translationX / frame.width;
+        const y = start.y + e.translationY / frame.height;
+        // Snapped in points from the frame's centre, so the threshold is the same on any screen; only on an axis
+        // the photo can move along (one that spans the frame is always centred there, so it shows no guide).
+        const room = clampFitLayout(size, { ...now, ...start, x: 1, y: 1 }, frame);
+        const was = snapped.current;
+        const snap = snapCenter({ x: x * frame.width, y: y * frame.height }, sizes.snapThreshold, was);
+        const next = { x: snap.snappedX && room.x > 0, y: snap.snappedY && room.y > 0 };
+        if ((next.x && !was.x) || (next.y && !was.y)) selectionHaptic();
+        showGuides(next);
+        // Snapped means exactly centred: 0, the double tap's value, so the saved photo matches the preview.
+        moveFit({ x: next.x ? 0 : x, y: next.y ? 0 : y });
         return;
       }
       const next = { x: panStart.current.x + e.translationX, y: panStart.current.y + e.translationY };
       onChange(panCrop(latest.current.state, next, image, frame));
     },
+    onFinalize: () => showGuides({ x: false, y: false }),
   });
   const pinch = usePinchGesture({
     runOnJS: true,
@@ -334,6 +359,14 @@ export function CropPhoto({
             </View>
           )}
         </View>
+        {place ? (
+          <View
+            pointerEvents="none"
+            style={[styles.placed, { left: inset, top: crop.frameInsetY, width: frame.width, height: frame.height }]}
+          >
+            <SnapGuides vertical={guides.x} horizontal={guides.y} testID="crop-snap" />
+          </View>
+        ) : null}
         {place ? null : (
           <View accessible accessibilityLabel={aspectLabel} style={styles.chip} testID="crop-aspect-chip">
             <Icon name="lock" color="ink" size={crop.chipIcon} strokeWidth={2.6} />

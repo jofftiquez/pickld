@@ -17,6 +17,7 @@ import {
   MAX_ZOOM,
   maxPan,
   MIN_ZOOM,
+  MOMENT_CROP_SHEET_HEIGHT,
   panCrop,
   rotateCrop,
   zoomCrop,
@@ -52,12 +53,18 @@ describe('isThreeByFour', () => {
 });
 
 describe('cropFrame', () => {
-  // D-65: the frame takes what's left after the safe areas, the header and the tool sheet, so the sheet
-  // fits without scrolling.
-  it('on an iPhone 17 Pro (402 × 874, safe areas 62 and 34) is the designed 300 × 400', () => {
+  // D-65: the frame takes what's left after the safe areas, the header and the sheet, so the sheet fits without
+  // scrolling. D-158: with Rotate, Flip and Reset on the photo the sheet is lower, so a moment's frame grows from
+  // 255 × 340 to 321 × 428 on an iPhone 17 Pro (the design's 300 × 400 was the profile photo's sheet, then taller).
+  it('on an iPhone 17 Pro (402 × 874, safe areas 62 and 34): 321 × 428 for a moment', () => {
     expect(CROP_HEADER_HEIGHT).toBe(68);
-    expect(CROP_SHEET_HEIGHT).toBe(214);
-    expect(cropFrame({ width: 402, height: 874 }, { top: 62, bottom: 34 })).toEqual({ width: 300, height: 400 });
+    expect(CROP_SHEET_HEIGHT).toBe(126);
+    expect(MOMENT_CROP_SHEET_HEIGHT).toBe(186);
+    const window = { width: 402, height: 874 };
+    const insets = { top: 62, bottom: 34 };
+    expect(cropFrame(window, insets, CROP_RATIO.moment, MOMENT_CROP_SHEET_HEIGHT)).toEqual({ width: 321, height: 428 });
+    // Profile photos' shorter sheet leaves more height than the side insets allow: as wide as they let it be.
+    expect(cropFrame(window, insets)).toEqual({ width: 330, height: 440 });
   });
 
   it('leaves room for the header, the photo area and the sheet together', () => {

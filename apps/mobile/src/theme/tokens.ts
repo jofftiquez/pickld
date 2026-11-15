@@ -84,6 +84,10 @@ export const colors = {
   notifyDot: '#d4451f', // unread dot on the bell (Feed)
   unreadDot: '#e5262c', // red dot on a tab with something new (Moments, Jars, Discover); 4.5:1 on white (D-157)
   cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
+  // Centre snap guides (SnapGuides, D-158): pickle green darkened to clear 3:1 on both a white frame (3.4:1) and a
+  // black one (6.1:1), with a soft dark shadow so the line still reads over a busy or green photo.
+  snapGuide: '#5f9a1f',
+  snapGuideShadow: 'rgba(0,0,0,0.35)',
   galleryHeader: 'rgba(255,255,255,0.94)', // sticky day headers over the gallery grid (Choose a photo)
   peekScrim: 'rgba(10,12,8,0.72)', // behind a held photo's preview in that grid; white text on it is 8:1
   onPhotoMuted: '#e2e5dc', // date and count over a photo (Memories); 12:1 on the photo fade
@@ -353,6 +357,8 @@ export const sizes = {
   toggleHeight: 28,
   toggleThumb: 24,
   roundButton: 44,
+  snapGuideWidth: 1.5, // centre snap guides (SnapGuides, D-158)
+  snapThreshold: 6, // how close (points on screen) a dragged centre must come to snap to the photo's centre (D-158)
   cardPadding: 14, // Settings cards
   avatarSm: 32, // story header, moment options
   avatarMd: 52, // Settings profile row
@@ -647,7 +653,7 @@ export const myStickers = {
 // Crop screen (Crop, FR-CAP-03): the 3:4 frame sits this far inside the dark photo area, with the 3:4 chip
 // above it and the gesture hint below; the white tool sheet holds the zoom slider and tool buttons.
 export const crop = {
-  frameInsetX: 45, // at least this much dark photo beside the frame
+  frameInsetX: 36, // at least this much dark photo beside the frame (the tools sit on the frame, D-158)
   frameInsetY: 48, // dark photo above and below the frame, room for the 3:4 chip and the hint
   headerPaddingTop: 8, // under the safe area, as the editor's toolbar (D-65)
   noteHeight: 32, // two lines of the note under the tools, so the sheet fits on narrow phones
@@ -665,7 +671,6 @@ export const crop = {
   chipGap: 5,
   hintBottom: 22,
   headerAction: 64, // Cancel minimum width
-  toolButton: 64, // Rotate, Flip, Reset (grows with large text)
   frameSwatch: 44, // Fit's frame style swatches (D-152), each a full tap area
   // Fit's blurred-photo frame: the blur's sigma as a share of the frame's width, the same on screen and in
   // the saved 1440-pixel photo (about 50 pixels there).
