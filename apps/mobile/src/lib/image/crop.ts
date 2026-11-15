@@ -56,11 +56,32 @@ export type Size = { width: number; height: number };
 const positive = z.number().finite().positive();
 
 /**
+ * Fit's frame styles (D-152): what fills the 3:4 frame around a photo placed whole inside it. Plain colours
+ * (tokens' `fitFrameColors`) or a soft blur of the photo itself; no borders, patterns or text.
+ */
+export const fitFrames = ['white', 'offWhite', 'cream', 'black', 'blur'] as const;
+export type FitFrame = (typeof fitFrames)[number];
+
+/**
+ * Where Fit (D-152) draws a photo of `source` size inside an `out` frame (the 1440 × 1920 full photo by
+ * default): as large as it fits, centred, in whole pixels. The bars on either side are always equal; the
+ * photo's other side is rounded to keep them so (at most a pixel off the photo's own aspect).
+ */
+export function fitRect34(source: Size, out: Size = FULL_SIZE): CropRect {
+  if (!(source.width >= 1 && source.height >= 1)) throw new RangeError('Image has no pixels');
+  const scale = Math.min(out.width / source.width, out.height / source.height);
+  const barX = Math.max(0, Math.round((out.width - source.width * scale) / 2));
+  const barY = Math.max(0, Math.round((out.height - source.height * scale) / 2));
+  return { originX: barX, originY: barY, width: out.width - barX * 2, height: out.height - barY * 2 };
+}
+
+/**
  * What the Crop screen chose (M2-10), stored on the queued photo until it is prepared. The photo is turned
  * `rotate` degrees clockwise, then mirrored left to right when `flip`; `crop` is the frame in that turned
  * image's pixels, measured on an image of `cropBasis` size (the size the picker reported). Preparation
  * scales `crop` to the size it actually decodes, so a picker that reports a scaled size still crops the
- * same part of the photo.
+ * same part of the photo. With `fit` (D-152) the turned photo isn't cropped at all: it is placed whole inside
+ * the 3:4 frame (`fitRect34`) on `fit.frame`, and `crop` is ignored. Rows queued before Fit have no `fit`.
  */
 export const cropSpecSchema = z.object({
   crop: z.object({
@@ -72,6 +93,7 @@ export const cropSpecSchema = z.object({
   cropBasis: z.object({ width: positive, height: positive }),
   rotate: z.literal(rotations),
   flip: z.boolean(),
+  fit: z.object({ frame: z.enum(fitFrames) }).optional(),
 });
 export type CropSpec = z.infer<typeof cropSpecSchema>;
 

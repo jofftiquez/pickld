@@ -17,7 +17,7 @@ export type CropToolButtonProps = {
   testID?: string;
 };
 
-/** Rotate, Flip or Fit under the crop frame (Crop): icon over a label on a soft tile, 64 points tall. */
+/** Rotate, Flip or Reset under the crop frame (Crop): icon over a label on a soft tile, 64 points tall. */
 export function CropToolButton({
   icon,
   label,

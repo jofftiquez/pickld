@@ -98,6 +98,15 @@ export const textOverlayColors = {
   sky: '#dbe8f3',
 } as const;
 
+// Fit's frame colours (Crop, D-152): plain fills around a photo placed whole inside the 3:4 frame, baked into
+// the saved photo. Kept quiet so the photo stays the focus. Off-white is the app's own paper background.
+export const fitFrameColors = {
+  white: '#ffffff',
+  offWhite: '#f4f5f0',
+  cream: '#f3ecdc', // the brand cream: a warm paper tone
+  black: '#000000',
+} as const;
+
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
 export const lidColors = {
   pickle: '#7fad33',
@@ -625,7 +634,11 @@ export const crop = {
   chipGap: 5,
   hintBottom: 22,
   headerAction: 64, // Cancel minimum width
-  toolButton: 64, // Rotate, Flip, Fit, Reset (grows with large text)
+  toolButton: 64, // Rotate, Flip, Reset (grows with large text)
+  frameSwatch: 44, // Fit's frame style swatches (D-152), each a full tap area
+  // Fit's blurred-photo frame: the blur's sigma as a share of the frame's width, the same on screen and in
+  // the saved 1440-pixel photo (about 50 pixels there).
+  fitBlur: 0.035,
   toolRadius: 18,
   zoomIcon: 18,
 } as const;

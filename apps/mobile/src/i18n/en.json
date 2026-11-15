@@ -783,8 +783,21 @@
     "rotateLabel": "Rotate 90 degrees",
     "flip": "Flip",
     "flipHint": "Mirrors the photo left to right",
-    "fit": "Fit",
-    "fitHint": "Fits the whole photo to the frame",
+    "layout": {
+      "label": "Fill or fit the 3:4 frame",
+      "fill": "Fill",
+      "fit": "Fit",
+      "fitHint": "The whole photo, inside the frame"
+    },
+    "frame": {
+      "label": "Frame style",
+      "option": "Fit, {{name}} frame",
+      "white": "white",
+      "offWhite": "off-white",
+      "cream": "cream",
+      "black": "black",
+      "blur": "blurred photo"
+    },
     "note": "Every Pickld moment is 3:4, so your jars always line up.",
     "done": "Next: edit",
     "doneHint": "Adds the photo to {{slot}} and opens the editor",
