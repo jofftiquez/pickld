@@ -82,6 +82,7 @@ export const colors = {
   storyRingNew: '#d9e88a', // light end of the green ring around an author with a new jar (Feed); starts at brand
   storyRingSeen: '#d9dcd3', // grey ring around an author with nothing new (Feed)
   notifyDot: '#d4451f', // unread dot on the bell (Feed)
+  unreadDot: '#e5262c', // red dot on a tab with something new (Moments, Jars, Discover); 4.5:1 on white (D-157)
   cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
   galleryHeader: 'rgba(255,255,255,0.94)', // sticky day headers over the gallery grid (Choose a photo)
   peekScrim: 'rgba(10,12,8,0.72)', // behind a held photo's preview in that grid; white text on it is 8:1

@@ -14,6 +14,10 @@
     "moments": "Moments",
     "jars": "Jars",
     "discover": "Discover",
+    "momentsNew": "new moments",
+    "momentsUnread": "Moments, new moments",
+    "jarsNew": "new jars",
+    "jarsUnread": "Jars, new jars",
     "discoverNew": "new posts",
     "discoverUnread": "Discover, new posts"
   },
