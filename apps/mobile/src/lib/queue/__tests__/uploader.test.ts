@@ -1,10 +1,9 @@
 import { BACKOFF_MS, MAX_ATTEMPTS, OFFLINE_RETRY_MS } from '../machine';
 import {
-  EDIT_HOLD_MS,
   enqueue,
   getItem,
   listQueue,
-  releaseEditing,
+  keepAsDraft,
   replaceItem,
   saveEdits,
   savePrepared,
@@ -390,21 +389,21 @@ describe('drainQueue and the editor (M2-12)', () => {
     ]);
   });
 
-  it('uploads a photo closed without saving, as it was queued', async () => {
-    const item = await queueMoment({ caption: null, visibility: 'readers', edits: {}, editing: true });
-    clock = (item.editingSince ?? 0) + 1000;
+  it('never uploads a draft or a photo left in the editor, however long ago, until it is added', async () => {
+    const left = await queueMoment({ slot: 'ootd', editing: true });
+    const draft = await queueMoment({ slot: 'selfie', editing: true });
+    await keepAsDraft(draft.id);
+    clock = (left.editingSince ?? 0) + 7 * 24 * 60 * 60_000;
+    log.length = 0;
     expect(await drainQueue(USER, deps())).toEqual([]);
-    await releaseEditing(item.id);
-    expect(await drainQueue(USER, deps())).toEqual([expect.objectContaining({ kind: 'uploaded' })]);
-    expect(backend.moments).toEqual([expect.objectContaining({ caption: null, visibility: 'readers', edits: {} })]);
-  });
+    expect(log).toEqual([]);
 
-  it('uploads a stale editing item once the hold lapses', async () => {
-    const item = await queueMoment({ editing: true });
-    clock = (item.editingSince ?? 0) + EDIT_HOLD_MS - 1;
+    // Save draft keeps it held; Add finishes it.
+    await saveEdits(draft.id, { caption: 'later', visibility: 'readers', edits: {} }, undefined, { draft: true });
     expect(await drainQueue(USER, deps())).toEqual([]);
-    clock += 1;
-    expect(await drainQueue(USER, deps())).toEqual([{ kind: 'uploaded', itemId: item.id, momentId: MOMENT_ID }]);
+    await saveEdits(draft.id, { caption: 'later', visibility: 'readers', edits: {} });
+    expect(await drainQueue(USER, deps())).toEqual([{ kind: 'uploaded', itemId: draft.id, momentId: MOMENT_ID }]);
+    expect(await getItem(left.id)).toMatchObject({ state: 'queued', editingSince: left.editingSince });
   });
 
   it('one photo in the editor does not hold up the others', async () => {

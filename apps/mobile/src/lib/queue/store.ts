@@ -60,10 +60,10 @@ export const MIGRATIONS: readonly string[] = [
   // (is_private = visibility is only_me) but no longer sent: the server derives it.
   `ALTER TABLE queue_items ADD COLUMN visibility TEXT;
    UPDATE queue_items SET visibility = 'only_me' WHERE is_private = 1;`,
+  // 1 = a draft: a photo the user left in the editor with Save draft (or that was open in the editor when
+  // the app was killed). It stays on the phone and never uploads until the editor's Add to #slot.
+  `ALTER TABLE queue_items ADD COLUMN draft INTEGER NOT NULL DEFAULT 0;`,
 ];
-
-/** After this long an editing hold no longer stops the upload (see MIGRATIONS[3]). */
-export const EDIT_HOLD_MS = 60 * 60_000;
 
 const ianaTimeZone = z
   .string()
@@ -126,6 +126,8 @@ export interface QueueItem extends UploadStatus {
   prepared: boolean;
   /** When the editor took the item (ms), or null; see MIGRATIONS[3] and isHeldForEditing. */
   editingSince: number | null;
+  /** Saved as a draft (MIGRATIONS[7]): kept on the phone, never uploaded, until the editor adds it. */
+  draft: boolean;
   /** How preparation crops the raw photo, or null for the centred 3:4 crop (MIGRATIONS[4]). */
   crop: CropSpec | null;
   /** Upload as a replacement of the moment holding the slot (Replace, M2-22; see MIGRATIONS[5]). */
@@ -158,6 +160,7 @@ const rowSchema = z.object({
   moment_id: z.uuid().nullable(),
   prepared: z.union([z.literal(0), z.literal(1)]),
   editing_since: z.number().nullable(),
+  draft: z.union([z.literal(0), z.literal(1)]),
   crop: z
     .string()
     .transform((s) => JSON.parse(s) as unknown)
@@ -190,6 +193,7 @@ function toItem(raw: unknown): QueueItem {
     momentId: row.moment_id,
     prepared: row.prepared === 1,
     editingSince: row.editing_since,
+    draft: row.draft === 1,
     crop: row.crop,
     replace: row.replace === 1,
     state: row.state,
@@ -233,8 +237,9 @@ export function openQueue(): Promise<SQLiteDatabase> {
     const db = await openDatabaseAsync(DB_NAME);
     await migrate(db);
     await db.runAsync("UPDATE queue_items SET state = 'queued' WHERE state = 'uploading'");
-    // No editor is open at launch: photos the last run was editing upload as they are.
-    await db.runAsync('UPDATE queue_items SET editing_since = NULL WHERE editing_since IS NOT NULL');
+    // No editor is open at launch: a photo the last run was still editing was never finished, so it stays
+    // on the phone as a draft instead of uploading.
+    await db.runAsync('UPDATE queue_items SET draft = 1, editing_since = NULL WHERE editing_since IS NOT NULL');
     return db;
   })().catch((error: unknown) => {
     dbPromise = null;
@@ -382,9 +387,12 @@ export async function savePrepared(id: number, files: { photoUri: string; thumbU
   return after;
 }
 
-/** True while the editor holds the item back from upload (MIGRATIONS[3]); a hold older than EDIT_HOLD_MS has lapsed. */
-export function isHeldForEditing(item: Pick<QueueItem, 'editingSince'>, now: number = Date.now()): boolean {
-  return item.editingSince !== null && now - item.editingSince < EDIT_HOLD_MS;
+/**
+ * True while the item must not upload: the editor holds it (MIGRATIONS[3]) or it is a draft (MIGRATIONS[7]).
+ * Neither lapses: an unfinished photo never uploads; the editor's Add to #slot or Discard ends it.
+ */
+export function isHeldForEditing(item: Pick<QueueItem, 'editingSince' | 'draft'>): boolean {
+  return item.editingSince !== null || item.draft;
 }
 
 export const saveEditsInputSchema = z.object({
@@ -396,7 +404,8 @@ export type SaveEditsInput = z.infer<typeof saveEditsInputSchema>;
 
 /**
  * The editor's Add to #slot / Done: stores the caption, visibility and edits on the queued moment and ends
- * its editing hold, so the uploader sends them with it. The photo file is not touched (FR-CAP-08), unless
+ * its editing hold, so the uploader sends them with it. With `draft`, Save draft: the same, but the item
+ * stays a draft on the phone (never uploaded); without it a draft is finished and uploads. The photo file is not touched (FR-CAP-08), unless
  * the editor turned or mirrored it (`photo`: newly prepared full and thumbnail files). Those are copied into
  * app storage and swapped in by the same update as the edits, which were placed for them, so the row never
  * has one without the other; the old files are deleted after. With a photo it throws QueueItemBusyError
@@ -406,13 +415,20 @@ export async function saveEdits(
   id: number,
   input: SaveEditsInput,
   photo?: { photoUri: string; thumbUri: string },
+  { draft = false }: { draft?: boolean } = {},
 ): Promise<QueueItem> {
   const edit = saveEditsInputSchema.parse(input);
   const db = await openQueue();
-  const fields = [edit.caption, edit.visibility, edit.visibility === 'only_me' ? 1 : 0, JSON.stringify(edit.edits)];
+  const fields = [
+    edit.caption,
+    edit.visibility,
+    edit.visibility === 'only_me' ? 1 : 0,
+    JSON.stringify(edit.edits),
+    draft ? 1 : 0,
+  ];
   if (!photo) {
     const { changes } = await db.runAsync(
-      'UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, editing_since = NULL WHERE id = ?',
+      'UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, draft = ?, editing_since = NULL WHERE id = ?',
       ...fields,
       id,
     );
@@ -429,7 +445,7 @@ export async function saveEdits(
       const thumb = await copyInto(dir, photo.thumbUri, `${stem}-thumb`);
       copies.push(thumb);
       const { changes } = await db.runAsync(
-        `UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, editing_since = NULL,
+        `UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, draft = ?, editing_since = NULL,
            photo_file = ?, thumb_file = ?, prepared = 1, crop = NULL
          WHERE id = ? AND state NOT IN ('uploading', 'uploaded')`,
         ...fields,
@@ -445,16 +461,34 @@ export async function saveEdits(
     deleteQuietly(new File(before.photoUri));
     if (before.thumbUri) deleteQuietly(new File(before.thumbUri));
   }
-  notify('status');
   const item = await getItem(id);
   if (!item) throw new Error(`No queued moment ${id}`);
+  // Added: an older draft for the same slot and day (left behind when another photo was taken for it) goes.
+  if (!draft) await dropOtherDrafts(item);
+  notify('status');
   return item;
 }
 
-/** The editor closed without saving: the photo uploads as it is. Nothing happens if it is gone. */
-export async function releaseEditing(id: number): Promise<void> {
+async function dropOtherDrafts(item: QueueItem): Promise<void> {
   const db = await openQueue();
-  await db.runAsync('UPDATE queue_items SET editing_since = NULL WHERE id = ?', id);
+  const rows = await db.getAllAsync<{ id: number }>(
+    'SELECT id FROM queue_items WHERE user_id = ? AND slot = ? AND local_date = ? AND draft = 1 AND id != ?',
+    item.userId,
+    item.slot,
+    item.localDate,
+    item.id,
+  );
+  for (const { id } of rows) await removeItem(id);
+}
+
+/**
+ * The editor on an unfinished photo closed without Add, Save draft or Discard (say, the screen was torn
+ * down): the photo stays on the phone as a draft, as it is, and never uploads. Nothing happens if it is gone.
+ */
+export async function keepAsDraft(id: number): Promise<void> {
+  const db = await openQueue();
+  await db.runAsync('UPDATE queue_items SET draft = 1, editing_since = NULL WHERE id = ?', id);
+  notify('status');
 }
 
 /** The Retry button: a failed item starts again from attempt 0. */

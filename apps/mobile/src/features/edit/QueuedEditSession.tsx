@@ -12,8 +12,9 @@ import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { useIsOffline } from '@/lib/connectivity';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
-import { discardItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import { discardItem, keepAsDraft, saveEdits, type QueueItem } from '@/lib/queue/store';
 import { showToast } from '@/lib/toast';
+import type { PreparedPhoto } from '@/lib/image/pipeline';
 import type { Visibility } from '@/lib/visibility';
 
 import { EditSession } from './EditSession';
@@ -31,8 +32,9 @@ export type QueuedEditSessionProps = {
 };
 
 /**
- * The editor on a queued moment (M2-12): saves into the queue item. However the editor is left, the item's
- * editing hold ends and the upload worker is woken, so the photo is never stuck in the queue.
+ * The editor on a queued moment (M2-12): saves into the queue item. A photo not added yet (just taken,
+ * picked or shared, or a draft) uploads only on Add to #slot: leaving otherwise asks Save draft (it stays on
+ * the phone as a draft) or Discard (it is deleted), so an unfinished photo never uploads.
  */
 export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack }: QueuedEditSessionProps) {
   const { t } = useTranslation();
@@ -43,9 +45,10 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
     () => queryClient.getQueryData<Me>(todayQueryKeys.me(item.userId))?.defaultVisibility ?? null,
   );
   const offline = useIsOffline();
-  // A photo just taken is held for the editor; one that is already waiting is being edited again.
-  const [isNew] = useState(item.editingSince !== null);
-  // A photo just taken becomes a moment when this editor is left, saved or not: its analytics go once, then.
+  // A photo just taken, picked or shared is held for the editor, and a draft waits for it; one that is
+  // already waiting to upload is being edited again.
+  const [isNew] = useState(item.editingSince !== null || item.draft);
+  // A new photo becomes a moment on Add to #slot: its analytics go once, then.
   const notAdded = useRef(isNew ? item : null);
   const added = (visibility: Visibility) => {
     const moment = notAdded.current;
@@ -53,19 +56,17 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
     if (moment) void trackMomentAdded(moment, visibility);
   };
 
-  // Closing without saving (Close, back gesture) keeps the photo queued as it is, and lets it upload.
+  // The editor torn down on a new photo without Add, Save draft or Discard (the leave prompt covers every
+  // way out, so this is a fallback): it stays on the phone as a draft, as it was last saved, never uploaded.
   useEffect(() => {
     const id = item.id;
     const pending = notAdded;
     return () => {
-      const moment = pending.current;
+      if (!pending.current) return;
       pending.current = null;
-      if (moment) void trackMomentAdded(moment, moment.visibility ?? ownerDefault);
-      void releaseEditing(id)
-        .catch((error: unknown) => captureError(error, { area: 'edit' }))
-        .finally(() => void requestUploads());
+      void keepAsDraft(id).catch((error: unknown) => captureError(error, { area: 'edit' }));
     };
-  }, [item.id, ownerDefault]);
+  }, [item.id]);
 
   // Crop (the photo button) opens on the photo as the editor shows it, turned or mirrored included, and saves
   // the new crop straight into the queue row like Moment options' Re-crop (M2-23). Back in the editor the row
@@ -97,8 +98,9 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
     }, [queryClient, item.id]),
   );
 
-  // Back from a shared photo drops the draft (it never became a moment), then returns to the slot choice.
-  const back = async (leave: () => void) => {
+  // Discard (and a shared photo's Back, which returns to the slot choice) deletes the photo and its row: it
+  // never became a moment.
+  const discard = async () => {
     notAdded.current = null;
     try {
       await discardItem(item.id);
@@ -106,7 +108,25 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
       captureError(error, { area: 'edit' });
     }
     void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(item.userId) });
+  };
+  const back = async (leave: () => void) => {
+    await discard();
     leave();
+  };
+  // Save draft: what was edited is stored on the row, which stays a draft on the phone (never uploaded).
+  const saveDraft = async (input: Parameters<typeof saveEdits>[1], photo: PreparedPhoto | null) => {
+    try {
+      const saved = photo
+        ? await saveEdits(item.id, input, { photoUri: photo.full.uri, thumbUri: photo.thumb.uri }, { draft: true })
+        : await saveEdits(item.id, input, undefined, { draft: true });
+      notAdded.current = null;
+      queryClient.setQueryData(queueItemQueryKey(item.id), saved);
+      showToast('draftSaved', { slot: t(`slots.${item.slot}`) });
+    } catch (error) {
+      // The unmount fallback still keeps it as a draft, as it was.
+      captureError(error, { area: 'edit' });
+    }
+    void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(item.userId) });
   };
 
   return (
@@ -125,7 +145,9 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
       insets={insets}
       onLeave={onLeave}
       onBack={onBack && (() => void back(onBack))}
+      unfinished={isNew ? { saveDraft, discard } : undefined}
       onSave={async (input, photo) => {
+        // Without `draft`, a draft is finished here and uploads.
         const saved = photo
           ? await saveEdits(item.id, input, { photoUri: photo.full.uri, thumbUri: photo.thumb.uri })
           : await saveEdits(item.id, input);
