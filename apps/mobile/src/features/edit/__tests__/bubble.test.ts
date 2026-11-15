@@ -1,6 +1,15 @@
 import { bubbleColors } from '@/theme/tokens';
 
-import { bubbleAspect, bubbleLines, charsPerLine, clampBubbleText, countLines } from '../bubble/bubbleLayout';
+import {
+  bubbleAspect,
+  bubbleLines,
+  bubbleTailGeometry,
+  bubbleTailSide,
+  charsPerLine,
+  clampBubbleText,
+  countLines,
+  tailPathData,
+} from '../bubble/bubbleLayout';
 import { BUBBLE_TEXT_MAX, bubbleColorSchema, editsSchema, parseEdits, type Bubble, type Edits } from '../edits';
 
 // Bubbles as data (FR-CAP-06, FR-CAP-08): what the Bubble tool stores reads back unchanged, the
@@ -53,6 +62,100 @@ describe('bubble schema', () => {
     ['text that is not a string', { text: 42 }],
   ])('drops a bubble with %s', (_name, patch) => {
     expect(parseEdits({ v: 1, filter: 'original', overlays: [{ ...bubble, ...patch }] }).overlays).toEqual([]);
+  });
+});
+
+describe('bubble tail side', () => {
+  const stored = (patch: Record<string, unknown>) =>
+    parseEdits({ v: 1, filter: 'original', overlays: [{ ...bubble, ...patch }] }).overlays[0] as Bubble | undefined;
+
+  it('reads a bubble saved before tails could flip unchanged, with no side, drawn on the left', () => {
+    const old = stored({});
+    expect(old).toEqual(bubble);
+    expect(old && 'tail' in old).toBe(false); // nothing is added to old data
+    expect(old && bubbleTailSide(old)).toBe('left');
+  });
+
+  it.each(['left', 'right'] as const)('keeps a saved tail on the %s through JSON', (tail) => {
+    const edits: Edits = { v: 1, filter: 'original', overlays: [{ ...bubble, tail }] };
+    const back = JSON.parse(JSON.stringify(edits)) as unknown;
+    expect(editsSchema.parse(back)).toEqual(edits);
+    expect(parseEdits(back).overlays[0]).toMatchObject({ tail });
+    expect(bubbleTailSide({ tail })).toBe(tail);
+  });
+
+  it.each([['up'], [1], [null]])('drops a bubble whose tail is %j, keeping the others', (tail) => {
+    const overlays = parseEdits({
+      v: 1,
+      filter: 'original',
+      overlays: [
+        { ...bubble, tail },
+        { ...bubble, id: 'ok', tail: 'right' },
+      ],
+    }).overlays;
+    expect(overlays.map((o) => o.id)).toEqual(['ok']);
+  });
+});
+
+describe('bubble tail geometry', () => {
+  // Reference units: the box is 200 wide. A one-line bubble is 22 + 2 × 10 = 42 tall.
+  it('hangs a point 16 below the box on the left, its base sunk 2 into the body', () => {
+    expect(bubbleTailGeometry('speech', 'left', 42)).toEqual({
+      kind: 'point',
+      points: [
+        [16, 40],
+        [6, 58],
+        [40, 40],
+      ],
+      extent: 16,
+    });
+  });
+
+  it('mirrors the point across the middle for the right', () => {
+    expect(bubbleTailGeometry('speech', 'right', 42)).toEqual({
+      kind: 'point',
+      points: [
+        [184, 40],
+        [194, 58],
+        [160, 40],
+      ],
+      extent: 16,
+    });
+  });
+
+  it.each(['shout', 'whisper'] as const)('%s hangs the same point as speech', (shape) => {
+    expect(bubbleTailGeometry(shape, 'right', 64)).toEqual(bubbleTailGeometry('speech', 'right', 64));
+  });
+
+  it('gives a thought two dots under its flat bottom', () => {
+    // Pill radius 21 < 40, so the bottom under x = 40 is flat at 42: large dot centre 42 + 2 + 6 = 50,
+    // small dot (40 − 14, 50 + 11) = (26, 61) with radius 3.5, reaching 64.5, 22.5 below the box.
+    expect(bubbleTailGeometry('thought', 'left', 42)).toEqual({
+      kind: 'dots',
+      dots: [
+        { cx: 40, cy: 50, r: 6 },
+        { cx: 26, cy: 61, r: 3.5 },
+      ],
+      extent: 22.5,
+    });
+    const right = bubbleTailGeometry('thought', 'right', 42);
+    expect(right.kind === 'dots' && right.dots.map((d) => d.cx)).toEqual([160, 174]);
+  });
+
+  it('keeps a tall thought’s dots 2 below its round end, where the pill curves up', () => {
+    // Five lines: 5 × 22 + 20 = 130 tall, radius 65. Under x = 40: 65 + √(65² − 25²) = 65 + 60 = 125.
+    const tall = bubbleTailGeometry('thought', 'left', 130);
+    expect(tall.kind === 'dots' && tall.dots[0]).toEqual({ cx: 40, cy: 133, r: 6 });
+  });
+
+  it('writes a point as closed SVG path data', () => {
+    expect(
+      tailPathData([
+        [16, 40],
+        [6, 58],
+        [40, 40],
+      ]),
+    ).toBe('M16 40 L6 58 L40 40 Z');
   });
 });
 

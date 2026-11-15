@@ -94,6 +94,17 @@ export const BUBBLE = {
   charWidth: 0.62,
   radius: 20,
   tailRadius: 6,
+  tailStart: 16,
+  tailEnd: 40,
+  tailTipX: 6,
+  tailLength: 16,
+  tailOverlap: 2,
+  thoughtDotX: 40,
+  thoughtDotR: 6,
+  thoughtDotSmallR: 3.5,
+  thoughtDotGap: 2,
+  thoughtDotStepX: -14,
+  thoughtDotStepY: 11,
   shoutRadius: 4,
   shoutSkewDeg: -8,
   whisperRadius: 14,
@@ -178,6 +189,48 @@ export function bubbleLines(text: string, shape: string): number {
 /** Height ÷ width of a bubble's box. */
 export function bubbleAspect(text: string, shape: string): number {
   return (bubbleLines(text, shape) * BUBBLE.lineHeight + 2 * BUBBLE.paddingY) / BUBBLE.referenceWidth;
+}
+
+/** Which side a bubble's tail hangs on: its saved side, else the left (bubbles saved before it could flip). */
+export function bubbleTailSide(o: { tail?: string }): 'left' | 'right' {
+  return o.tail === 'right' ? 'right' : 'left';
+}
+
+export type TailPoint = readonly [number, number];
+export type TailDot = { readonly cx: number; readonly cy: number; readonly r: number };
+export type TailGeometry =
+  | { kind: 'point'; points: readonly [TailPoint, TailPoint, TailPoint]; extent: number }
+  | { kind: 'dots'; dots: readonly [TailDot, TailDot]; extent: number };
+
+/** A bubble's tail in reference units below a box `height` tall (bubbleTailGeometry). */
+export function bubbleTailGeometry(shape: string, side: 'left' | 'right', height: number): TailGeometry {
+  const x = (at: number) => (side === 'left' ? at : BUBBLE.referenceWidth - at);
+  if (shape !== 'thought') {
+    const base = height - BUBBLE.tailOverlap;
+    return {
+      kind: 'point',
+      points: [
+        [x(BUBBLE.tailStart), base],
+        [x(BUBBLE.tailTipX), height + BUBBLE.tailLength],
+        [x(BUBBLE.tailEnd), base],
+      ],
+      extent: BUBBLE.tailLength,
+    };
+  }
+  const r = height / 2;
+  const dx = Math.max(0, r - BUBBLE.thoughtDotX);
+  const edge = r + Math.sqrt(Math.max(0, r * r - dx * dx));
+  const large = {
+    cx: x(BUBBLE.thoughtDotX),
+    cy: edge + BUBBLE.thoughtDotGap + BUBBLE.thoughtDotR,
+    r: BUBBLE.thoughtDotR,
+  };
+  const small = {
+    cx: x(BUBBLE.thoughtDotX + BUBBLE.thoughtDotStepX),
+    cy: large.cy + BUBBLE.thoughtDotStepY,
+    r: BUBBLE.thoughtDotSmallR,
+  };
+  return { kind: 'dots', dots: [large, small], extent: small.cy + small.r - height };
 }
 
 // ---------------------------------------------------------------- text layout (textOverlay.ts)

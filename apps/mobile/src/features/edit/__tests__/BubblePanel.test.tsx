@@ -115,6 +115,7 @@ describe('BubblePanel', () => {
         shape: 'thought',
         color: 'butter',
         text: '',
+        tail: 'left', // new bubbles save their side
       },
     ]);
     expect(screen.getByTestId('overlay-nb1-selected')).toBeTruthy();
@@ -179,6 +180,62 @@ describe('BubblePanel', () => {
     expect(edits().overlays[0]).toMatchObject({ shape: 'whisper', color: 'sky', text: 'psst, over here' });
     await undo();
     expect(edits()).toEqual(saved);
+  });
+
+  it('flips the selected bubble’s tail; a bubble saved without one reads as the left; each flip is one Undo step', async () => {
+    const saved: Edits = {
+      ...EMPTY,
+      overlays: [
+        {
+          id: 'old',
+          type: 'bubble',
+          x: 0.5,
+          y: 0.5,
+          scale: 0.5,
+          rotation: 0,
+          shape: 'speech',
+          color: 'white',
+          text: 'hi',
+        },
+      ],
+    };
+    await render(<Harness initial={saved} />);
+    await fireEvent(screen.getByTestId('overlay-old'), 'accessibilityAction', {
+      nativeEvent: { actionName: 'activate' },
+    });
+    expect(screen.getByTestId('bubble-old-tail-left')).toBeTruthy();
+    const flip = () => screen.getByTestId('bubble-tail');
+    expect(flip().props.accessibilityLabel).toBe('Tail on the left, flip to the right');
+    await fireEvent.press(flip());
+    expect(edits().overlays).toEqual([{ ...saved.overlays[0], tail: 'right' }]);
+    expect(flip().props.accessibilityLabel).toBe('Tail on the right, flip to the left');
+    expect(screen.getByTestId('bubble-old-tail-right')).toBeTruthy(); // drawn on the photo
+    await fireEvent.press(flip());
+    expect(edits().overlays).toEqual([{ ...saved.overlays[0], tail: 'left' }]);
+    await undo();
+    expect(edits().overlays).toEqual([{ ...saved.overlays[0], tail: 'right' }]);
+    await undo();
+    expect(edits()).toEqual(saved);
+  });
+
+  it('with nothing selected, a flip sets the side of the next bubble', async () => {
+    await render(<Harness />);
+    await fireEvent.press(screen.getByTestId('bubble-tail'));
+    expect(edits().overlays).toEqual([]); // a flip alone adds nothing
+    expect(screen.getByTestId('bubble-tail').props.accessibilityLabel).toBe('Tail on the right, flip to the left');
+    await fireEvent.changeText(field(), 'Hello');
+    expect(edits().overlays[0]).toMatchObject({ id: 'nb1', text: 'Hello', tail: 'right' });
+  });
+
+  it('the flip button has a 44-point tall touch area and a visible label', async () => {
+    await render(<Harness />);
+    const button = screen.getByTestId('bubble-tail');
+    const height = flat(button.props.style).minHeight as number;
+    expect(height + button.props.hitSlop.top + button.props.hitSlop.bottom).toBeGreaterThanOrEqual(44);
+    expect(flat(button.props.style).minWidth).toBeGreaterThanOrEqual(44);
+    expect(within(button).getByText('Flip')).toBeTruthy();
+    expect(screen.getByText('Tail', { includeHiddenElements: true })).toBeTruthy();
+    expect(button.props.accessibilityHint).toBe('Changes the selected bubble, or the next one');
   });
 
   it('enforces the 60-character limit on pasted text and turns line breaks into spaces', async () => {

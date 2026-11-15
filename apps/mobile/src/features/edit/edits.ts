@@ -46,6 +46,11 @@ export const bubbleShapeSchema = z.enum(['speech', 'thought', 'shout', 'whisper'
 export type BubbleShape = z.infer<typeof bubbleShapeSchema>;
 export const bubbleColorSchema = z.enum(['white', 'ink', 'pickle', 'butter', 'blush', 'sky']);
 export type BubbleColor = z.infer<typeof bubbleColorSchema>;
+/** Which side a bubble's tail (its pointed end, or a thought's dots) hangs on. */
+export const bubbleTailSchema = z.enum(['left', 'right']);
+export type BubbleTail = z.infer<typeof bubbleTailSchema>;
+/** Bubbles saved before the tail could flip have no `tail`; they keep it on the left, where their sharp corner was. */
+export const DEFAULT_BUBBLE_TAIL: BubbleTail = 'left';
 
 // A bubble's content (M2-16). Each field has a default so bubbles saved before it existed (transform
 // only) still read back, as an empty white speech bubble.
@@ -53,6 +58,8 @@ const bubbleContent = {
   shape: bubbleShapeSchema.default('speech'),
   color: bubbleColorSchema.default('white'),
   text: z.string().max(BUBBLE_TEXT_MAX).default(''),
+  // Optional, not defaulted: stored bubbles without it read back unchanged; draw with `bubbleTailSide`.
+  tail: bubbleTailSchema.optional(),
 };
 
 // One member per overlay kind, discriminated on `type`. M2-13 (transforms) starts from this; the tools

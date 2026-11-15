@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react';
 
-import { parseEdits, type Overlay } from '@/features/edit/edits';
+import { bubbleTailGeometry, bubbleTailSide, tailPathData } from '@/features/edit/bubble/bubbleLayout';
+import { parseEdits, type Bubble, type Overlay } from '@/features/edit/edits';
 import { textColorValues, TEXT_REF_WIDTH } from '@/features/edit/text/textOverlay';
-import { bubbleColors, colors, radius } from '@/theme/tokens';
+import { bubble, bubbleColors, colors, radius } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
 import type { PublicMoment } from '~/lib/publicPage';
@@ -25,6 +26,39 @@ function place(o: Overlay): CSSProperties {
 }
 
 const cq = (points: number) => `${(points / TEXT_REF_WIDTH) * 100}cqw`;
+
+/**
+ * A bubble's tail hanging below it on its side, from the app's geometry (bubbleTailGeometry): a point, or
+ * a thought's two dots. It spans the bubble's width in the app's reference units, so it scales with the
+ * bubble; its top sits `tailOverlap` up into the body (a percentage margin is of the bubble's width).
+ */
+function BubbleTailArt({ overlay, fill }: { overlay: Bubble; fill: string }) {
+  const tail = bubbleTailSide(overlay);
+  const geometry = bubbleTailGeometry(overlay.shape, tail, 0);
+  const top = bubble.tailOverlap;
+  return (
+    <svg
+      aria-hidden
+      data-bubble-tail={tail}
+      viewBox={`0 ${-top} ${bubble.referenceWidth} ${top + geometry.extent}`}
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: '100%',
+        width: '100%',
+        marginTop: `${(-top / bubble.referenceWidth) * 100}%`,
+        overflow: 'visible',
+        display: 'block',
+      }}
+    >
+      {geometry.kind === 'dots' ? (
+        geometry.dots.map((d, i) => <circle key={i} cx={d.cx} cy={d.cy} r={d.r} fill={fill} />)
+      ) : (
+        <path d={tailPathData(geometry.points)} fill={fill} />
+      )}
+    </svg>
+  );
+}
 
 function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: string }) {
   if (overlay.type === 'sticker') {
@@ -66,6 +100,7 @@ function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: stri
       }}
     >
       {overlay.text}
+      <BubbleTailArt overlay={overlay} fill={style.fill} />
     </span>
   );
 }
