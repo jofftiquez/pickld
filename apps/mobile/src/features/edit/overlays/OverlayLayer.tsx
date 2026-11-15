@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   GestureDetector,
@@ -9,6 +9,11 @@ import {
   useTapGesture,
 } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
+
+import { SnapGuides } from '@/components/SnapGuides';
+import { selectionHaptic } from '@/lib/haptics';
+import { snapCenter } from '@/lib/image/snap';
+import { sizes } from '@/theme/tokens';
 
 import type { Overlay } from '../edits';
 import { hitTest, type Placed } from './hitTest';
@@ -57,7 +62,12 @@ type Session = {
   /** Where the finger went down and where it is now (handle mode). */
   from: Point;
   to: Point;
+  /** Which axes the dragged centre is snapped to the photo's centre on (D-158). */
+  snapped: Axes;
 };
+
+type Axes = { x: boolean; y: boolean };
+const NOT_SNAPPED: Axes = { x: false, y: false };
 
 type Item = { overlay: Overlay; renderer: OverlayRenderer; aspect: number };
 
@@ -66,7 +76,8 @@ type Item = { overlay: Overlay; renderer: OverlayRenderer; aspect: number };
  * overlay's delete circle); drag moves; pinch resizes; two-finger twist rotates; the corner handle
  * resizes and rotates with one finger. The overlay follows the fingers live and the change is reported
  * once, when the last finger lifts, so each gesture is one Undo step. Nothing animates on its own, so
- * Reduce Motion has nothing to turn off.
+ * Reduce Motion has nothing to turn off. A drag snaps the overlay's centre to the photo's centre line
+ * across or down (D-158), with a guide line and a light tick, and lets go as the finger moves on.
  */
 export function OverlayLayer({
   overlays,
@@ -93,15 +104,23 @@ export function OverlayLayer({
   const live = useSharedValue<LiveTransform | null>(null);
   const session = useRef<Session | null>(null);
   const panStart = useRef<Point>({ x: 0, y: 0 });
+  // Changes only when an axis snaps in or lets go, not on every frame.
+  const [guides, setGuides] = useState<Axes>(NOT_SNAPPED);
+  const showGuides = (next: Axes) => setGuides((was) => (was.x === next.x && was.y === next.y ? was : next));
 
   // The committed edits now show the gesture's result (or Undo changed them): stop drawing the live copy.
   useLayoutEffect(() => {
     if (session.current === null) live.set(null);
   }, [overlays, live]);
 
+  const moved = (s: Session): Transform =>
+    applyDelta(s.start, { dx: s.dx, dy: s.dy, scale: s.pinch, rotation: s.rotation }, photo);
+
   const current = (s: Session): Transform => {
-    if (s.mode === 'move')
-      return applyDelta(s.start, { dx: s.dx, dy: s.dy, scale: s.pinch, rotation: s.rotation }, photo);
+    if (s.mode === 'move') {
+      const t = moved(s);
+      return { ...t, x: s.snapped.x ? 0.5 : t.x, y: s.snapped.y ? 0.5 : t.y };
+    }
     const box = toPixels(s.start, photo, s.aspect);
     return applyDelta(s.start, handleDelta({ x: box.cx, y: box.cy }, s.from, s.to), photo);
   };
@@ -129,6 +148,7 @@ export function OverlayLayer({
         rotation: 0,
         from: at,
         to: at,
+        snapped: NOT_SNAPPED,
       };
       session.current = s;
       onSelect(s.id);
@@ -138,8 +158,21 @@ export function OverlayLayer({
     return s;
   };
 
+  // While a finger drags the overlay's body, snap its centre to the photo's centre lines. The offset is in
+  // display points, so the snap zone feels the same at any photo size.
+  const snap = (s: Session) => {
+    if (s.mode !== 'move' || !s.active.has('pan')) return;
+    const t = moved(s);
+    const hit = snapCenter({ x: (t.x - 0.5) * width, y: (t.y - 0.5) * height }, sizes.snapThreshold, s.snapped);
+    const next = { x: hit.snappedX, y: hit.snappedY };
+    if ((next.x && !s.snapped.x) || (next.y && !s.snapped.y)) selectionHaptic();
+    s.snapped = next;
+    showGuides(next);
+  };
+
   const update = (s: Session | null) => {
     if (s === null) return;
+    snap(s);
     live.set({ id: s.id, ...current(s) });
   };
 
@@ -147,6 +180,7 @@ export function OverlayLayer({
     const s = session.current;
     if (s === null || !s.active.delete(kind) || s.active.size > 0) return;
     session.current = null;
+    showGuides(NOT_SNAPPED);
     onGestureActiveChange?.(false);
     const next = current(s);
     if (sameTransform(next, s.start)) live.set(null);
@@ -252,6 +286,7 @@ export function OverlayLayer({
             onAction={(action) => act(item, action)}
           />
         ))}
+        <SnapGuides vertical={guides.x} horizontal={guides.y} testID="overlay-snap" />
       </View>
     </GestureDetector>
   );
