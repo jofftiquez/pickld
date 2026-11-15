@@ -5,6 +5,8 @@ import {
   bubbleLines as serverBubbleLines,
   bubbleTailGeometry as serverBubbleTailGeometry,
   bubbleTailSide as serverBubbleTailSide,
+  cloudGeometry as serverCloudGeometry,
+  isCloud as serverIsCloud,
   FILTER_MATRICES,
   INK,
   layoutText as serverLayoutText,
@@ -16,7 +18,14 @@ import {
 } from '../../../../../../supabase/functions/_shared/moment_layout';
 import { bubble, bubbleColors, colors, stickerTool, textOverlayColors } from '@/theme/tokens';
 
-import { bubbleAspect, bubbleLines, bubbleTailGeometry, bubbleTailSide } from '../bubble/bubbleLayout';
+import {
+  bubbleAspect,
+  bubbleLines,
+  bubbleTailGeometry,
+  bubbleTailSide,
+  cloudGeometry,
+  isCloud,
+} from '../bubble/bubbleLayout';
 import { filterMatrices } from '../filters';
 import { stampText } from '../stickers/stamps';
 import { layoutText } from '../text/textOverlay';
@@ -62,6 +71,9 @@ describe('the export renderer matches the app', () => {
         'thoughtDotGap',
         'thoughtDotStepX',
         'thoughtDotStepY',
+        'cloudPuffR',
+        'cloudPuffStep',
+        'cloudPuffSizes',
       ]),
     );
     expect(`${BUBBLE.shoutSkewDeg}deg`).toBe(shoutSkew);
@@ -92,6 +104,22 @@ describe('the export renderer matches the app', () => {
     ['thought', 'right', 130],
   ] as const)('draws the %s tail on the %s of a %d-unit box the same way', (shape, side, height) => {
     expect(serverBubbleTailGeometry(shape, side, height)).toEqual(bubbleTailGeometry(shape, side, height));
+  });
+
+  it.each([42, 64, 130])('draws a %d-unit-tall cloud thought and its dots the same way', (height) => {
+    expect(serverCloudGeometry(height)).toEqual(cloudGeometry(height));
+    for (const side of ['left', 'right'] as const) {
+      expect(serverBubbleTailGeometry('thought', side, height, true)).toEqual(
+        bubbleTailGeometry('thought', side, height, true),
+      );
+    }
+    for (const o of [
+      { shape: 'thought' as const, cloud: true },
+      { shape: 'thought' as const },
+      { shape: 'speech' as const, cloud: true },
+    ]) {
+      expect(serverIsCloud(o)).toBe(isCloud(o));
+    }
   });
 
   it('puts the tail of a bubble saved without a side on the same side', () => {

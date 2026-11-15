@@ -1,6 +1,13 @@
 import type { CSSProperties } from 'react';
 
-import { bubbleTailGeometry, bubbleTailSide, tailPathData } from '@/features/edit/bubble/bubbleLayout';
+import {
+  bubbleAspect,
+  bubbleTailGeometry,
+  bubbleTailSide,
+  cloudGeometry,
+  isCloud,
+  tailPathData,
+} from '@/features/edit/bubble/bubbleLayout';
 import { parseEdits, type Bubble, type Overlay } from '@/features/edit/edits';
 import { textColorValues, TEXT_REF_WIDTH } from '@/features/edit/text/textOverlay';
 import { bubble, bubbleColors, colors, radius } from '@/theme/tokens';
@@ -34,13 +41,16 @@ const cq = (points: number) => `${(points / TEXT_REF_WIDTH) * 100}cqw`;
  */
 function BubbleTailArt({ overlay, fill }: { overlay: Bubble; fill: string }) {
   const tail = bubbleTailSide(overlay);
-  const geometry = bubbleTailGeometry(overlay.shape, tail, 0);
+  // A cloud's dots follow its puffs, so they are placed below its box's real height; the rest only need
+  // the part below the box.
+  const height = isCloud(overlay) ? cloudHeight(overlay) : 0;
+  const geometry = bubbleTailGeometry(overlay.shape, tail, height, isCloud(overlay));
   const top = bubble.tailOverlap;
   return (
     <svg
       aria-hidden
       data-bubble-tail={tail}
-      viewBox={`0 ${-top} ${bubble.referenceWidth} ${top + geometry.extent}`}
+      viewBox={`0 ${height - top} ${bubble.referenceWidth} ${top + geometry.extent}`}
       style={{
         position: 'absolute',
         left: 0,
@@ -56,6 +66,28 @@ function BubbleTailArt({ overlay, fill }: { overlay: Bubble; fill: string }) {
       ) : (
         <path d={tailPathData(geometry.points)} fill={fill} />
       )}
+    </svg>
+  );
+}
+
+/** A cloud thought's box height in the app's reference units (its width is bubble.referenceWidth). */
+const cloudHeight = (o: Bubble) => bubbleAspect(o) * bubble.referenceWidth;
+
+/** A cloud thought's body (the app's cloudGeometry), filling the bubble's box behind its text. */
+function CloudArt({ overlay, fill }: { overlay: Bubble; fill: string }) {
+  const height = cloudHeight(overlay);
+  const { core, puffs } = cloudGeometry(height);
+  return (
+    <svg
+      aria-hidden
+      data-bubble-cloud
+      viewBox={`0 0 ${bubble.referenceWidth} ${height}`}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: -1, display: 'block' }}
+    >
+      <rect x={core.x} y={core.y} width={core.width} height={core.height} fill={fill} />
+      {puffs.map((p, i) => (
+        <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill={fill} />
+      ))}
     </svg>
   );
 }
@@ -84,11 +116,22 @@ function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: stri
     );
   }
   const style = bubbleColors[overlay.color];
+  const cloud = isCloud(overlay);
   return (
     <span
       style={{
         ...place(overlay),
-        background: style.fill,
+        ...(cloud
+          ? {
+              // The cloud fills a box shaped as in the app, with the text centred in it.
+              aspectRatio: `${bubble.referenceWidth} / ${cloudHeight(overlay)}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              isolation: 'isolate',
+            }
+          : null),
+        background: cloud ? 'transparent' : style.fill,
         color: style.text,
         borderRadius: cq(24),
         padding: `${cq(10)} ${cq(14)}`,
@@ -99,6 +142,7 @@ function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: stri
         overflowWrap: 'anywhere',
       }}
     >
+      {cloud ? <CloudArt overlay={overlay} fill={style.fill} /> : null}
       {overlay.text}
       <BubbleTailArt overlay={overlay} fill={style.fill} />
     </span>

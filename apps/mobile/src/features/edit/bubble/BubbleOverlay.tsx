@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { fontFamilies } from '@/theme/fontFamilies';
 import { bubble, bubbleColors } from '@/theme/tokens';
@@ -11,6 +11,8 @@ import {
   bubbleLines,
   bubbleTailGeometry,
   bubbleTailSide,
+  cloudGeometry,
+  isCloud,
   paddingXFor,
   tailPathData,
 } from './bubbleLayout';
@@ -37,6 +39,7 @@ function shapeStyle(shape: BubbleShape, tail: BubbleTail, k: number, height: num
 function BubbleTailArt({
   shape,
   tail,
+  cloud,
   k,
   height,
   fill,
@@ -45,6 +48,7 @@ function BubbleTailArt({
 }: {
   shape: BubbleShape;
   tail: BubbleTail;
+  cloud: boolean;
   k: number;
   height: number;
   fill: string;
@@ -52,7 +56,7 @@ function BubbleTailArt({
   testID: string;
 }) {
   const h = height / k;
-  const geometry = bubbleTailGeometry(shape, tail, h);
+  const geometry = bubbleTailGeometry(shape, tail, h, cloud);
   const bw = bubble.whisperBorder;
   return (
     <Svg
@@ -83,6 +87,27 @@ function BubbleTailArt({
   );
 }
 
+/** A cloud thought's body (cloudGeometry): its middle and the puffs round it, in one fill. */
+function CloudArt({ k, height, fill, testID }: { k: number; height: number; fill: string; testID: string }) {
+  const h = height / k;
+  const { core, puffs } = cloudGeometry(h);
+  return (
+    <Svg
+      width={bubble.referenceWidth * k}
+      height={height}
+      viewBox={`0 0 ${bubble.referenceWidth} ${h}`}
+      style={styles.tail}
+      pointerEvents="none"
+      testID={testID}
+    >
+      <Rect x={core.x} y={core.y} width={core.width} height={core.height} fill={fill} />
+      {puffs.map((p, i) => (
+        <Circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill={fill} />
+      ))}
+    </Svg>
+  );
+}
+
 /**
  * A speech bubble (design: Bubble): the shape filled with its color and the user's text, laid out at the
  * reference width and scaled to fill the overlay's box, with its tail hanging below the box on its side.
@@ -91,6 +116,7 @@ function BubbleTailArt({
 export function BubbleOverlay({ overlay, width, height }: OverlayContentProps<'bubble'>) {
   const { shape, color, text } = overlay;
   const tail = bubbleTailSide(overlay);
+  const cloud = isCloud(overlay);
   const k = width / bubble.referenceWidth;
   const pair = bubbleColors[color];
   return (
@@ -99,18 +125,19 @@ export function BubbleOverlay({ overlay, width, height }: OverlayContentProps<'b
       style={[styles.bubble, { width, height }, shape === 'shout' ? styles.shout : null]}
       testID={`bubble-${overlay.id}-shape`}
     >
+      {cloud ? <CloudArt k={k} height={height} fill={pair.fill} testID={`bubble-${overlay.id}-cloud`} /> : null}
       <View
         style={[
           styles.body,
           {
             width,
             height,
-            backgroundColor: pair.fill,
+            backgroundColor: cloud ? 'transparent' : pair.fill,
             borderColor: pair.text,
             paddingHorizontal: paddingXFor(shape) * k,
             paddingVertical: bubble.paddingY * k,
           },
-          shapeStyle(shape, tail, k, height),
+          cloud ? null : shapeStyle(shape, tail, k, height),
         ]}
         testID={`bubble-${overlay.id}`}
       >
@@ -138,6 +165,7 @@ export function BubbleOverlay({ overlay, width, height }: OverlayContentProps<'b
       <BubbleTailArt
         shape={shape}
         tail={tail}
+        cloud={cloud}
         k={k}
         height={height}
         fill={pair.fill}

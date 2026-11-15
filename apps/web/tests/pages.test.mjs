@@ -96,6 +96,7 @@ const CAPTIONED = {
     // Saved before the tail could flip: no side, so its tail hangs on the left.
     { id: 'b1', type: 'bubble', text: 'Busog na', x: 0.35, y: 0.2, scale: 0.5, rotation: 0 },
     { id: 'b2', type: 'bubble', text: 'Tara na', tail: 'right', x: 0.6, y: 0.4, scale: 0.5, rotation: 0 },
+    { id: 'b3', type: 'bubble', shape: 'thought', cloud: true, text: 'Hmm', x: 0.5, y: 0.8, scale: 0.5, rotation: 0 },
   ],
 };
 
@@ -342,6 +343,21 @@ test('a bubble’s tail hangs below it on its saved side; one saved without a si
     assert.ok(t.y < b.y + b.height && t.y > b.y + b.height - 2, `base at ${t.y}, bubble ends at ${b.y + b.height}`);
     assert.ok(Math.abs(t.y + t.height - (b.y + b.height + (16 / 200) * b.width)) < 1, 'the tip');
   }
+  await page.close();
+});
+
+test('a cloud thought draws its puffs in its fill behind the text, with its dots below it', async () => {
+  const { page } = await open(`/j/${EVERYONE}`);
+  const bubble = page.locator('span', { hasText: 'Hmm' }).filter({ has: page.locator('svg[data-bubble-cloud]') });
+  await bubble.waitFor();
+  const b = await bubble.boundingBox();
+  const cloud = await bubble.locator('svg[data-bubble-cloud]').boundingBox();
+  assert.deepEqual([cloud.width, cloud.height].map(Math.round), [b.width, b.height].map(Math.round));
+  // One line of text: 42 of the bubble's 200 units tall, as in the app.
+  assert.ok(Math.abs(b.height - (42 / 200) * b.width) < 1, `${b.height} tall at ${b.width} wide`);
+  assert.ok((await bubble.locator('svg[data-bubble-cloud] circle').count()) >= 8, 'puffs round the edge');
+  assert.equal(await bubble.locator('svg[data-bubble-tail] circle').count(), 2);
+  assert.equal(await bubble.locator('svg[data-bubble-tail]').getAttribute('data-bubble-tail'), 'left');
   await page.close();
 });
 

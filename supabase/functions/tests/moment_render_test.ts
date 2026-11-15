@@ -258,6 +258,19 @@ Deno.test('a thought’s dots trail on its saved side', async () => {
   assertEquals(await isWhite(right, 125, 190), false);
 });
 
+// A cloud thought's top edge dips between its corner puff (centre 18, 18; radius 18) and the next one
+// (centre 45.3, 14; radius 14): at 31 units in and 3 down, (114, 135) on the photo, the cloud shows the
+// photo where an old pill thought, flat along its top, is white. Its dots still trail on its side.
+Deno.test('a cloud thought dips between its puffs; a thought saved without `cloud` stays a pill', async () => {
+  const cloud = await bubbleRender({ shape: 'thought', cloud: true });
+  assertEquals(await isWhite(cloud, 114, 135), false, 'the cloud dips between puffs');
+  assert(await isWhite(cloud, 195, 156), 'the body');
+  assert(await isWhite(cloud, 125, 188), 'the large dot on the left');
+  assertEquals(await isWhite(cloud, 265, 188), false);
+  const pill = await bubbleRender({ shape: 'thought' });
+  assert(await isWhite(pill, 114, 135), 'the pill is flat along the top');
+});
+
 Deno.test('readEdits keeps a bubble’s tail side and drops one with an unknown side', () => {
   const b = { type: 'bubble', x: 0.5, y: 0.5, scale: 0.5, rotation: 0 };
   const e = readEdits({

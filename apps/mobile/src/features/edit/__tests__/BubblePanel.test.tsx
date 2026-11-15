@@ -90,6 +90,51 @@ describe('BubblePanel', () => {
     expect(screen.getByText('0 / 60')).toBeTruthy();
   });
 
+  it('leads with the text, then the styles, the flip and the colors', async () => {
+    await render(<Harness />);
+    const order = ['bubble-text', 'bubble-styles', 'bubble-tail', 'bubble-colors'];
+    type Node = { props: Record<string, unknown>; children: (Node | string)[] | null };
+    const found: string[] = [];
+    const walk = (n: Node | Node[] | string | null) => {
+      if (n === null || typeof n === 'string') return;
+      if (Array.isArray(n)) return n.forEach(walk);
+      const id = n.props.testID;
+      if (typeof id === 'string' && order.includes(id)) found.push(id);
+      n.children?.forEach(walk);
+    };
+    walk(screen.toJSON() as Node | Node[] | null);
+    expect([...new Set(found)]).toEqual(order);
+  });
+
+  it('typing the first letter shows a speech bubble with it on the photo straight away', async () => {
+    await render(<Harness />);
+    await fireEvent.changeText(field(), 'K');
+    expect(edits().overlays).toMatchObject([{ id: 'nb1', shape: 'speech', color: 'white', text: 'K', tail: 'left' }]);
+    expect(edits().overlays[0]).not.toHaveProperty('cloud');
+    expect(screen.getByRole('button', { name: 'Speech bubble: K' })).toBeTruthy();
+  });
+
+  it('picking Thought for an older pill thought turns it into a cloud', async () => {
+    const old = {
+      id: 'p1',
+      type: 'bubble' as const,
+      x: 0.5,
+      y: 0.5,
+      scale: 0.5,
+      rotation: 0,
+      shape: 'thought' as const,
+      color: 'white' as const,
+      text: 'Hmm',
+    };
+    await render(<Harness initial={{ v: 1, filter: 'original', overlays: [old] }} />);
+    expect(screen.queryByTestId('bubble-p1-cloud')).toBeNull();
+    await fireEvent(screen.getByTestId('overlay-p1'), 'accessibilityAction', {
+      nativeEvent: { actionName: 'activate' },
+    });
+    await fireEvent.press(styleButton('Thought'));
+    expect(edits().overlays[0]).toMatchObject({ id: 'p1', shape: 'thought', cloud: true, text: 'Hmm' });
+  });
+
   it('every choice has a 44 × 44 touch area', async () => {
     await render(<Harness />);
     const swatch = colorButton('Yellow');
@@ -116,10 +161,12 @@ describe('BubblePanel', () => {
         color: 'butter',
         text: '',
         tail: 'left', // new bubbles save their side
+        cloud: true, // new thoughts are clouds
       },
     ]);
     expect(screen.getByTestId('overlay-nb1-selected')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Thought bubble, no text yet' })).toBeTruthy();
+    expect(screen.getByTestId('bubble-nb1-cloud')).toBeTruthy();
     await undo();
     expect(edits().overlays).toEqual([]);
   });

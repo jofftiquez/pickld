@@ -750,6 +750,12 @@ export const bubble = {
   thoughtDotGap: 2, // between the body and the large dot
   thoughtDotStepX: -14, // from the large dot's centre to the small one's
   thoughtDotStepY: 11,
+  // A cloud thought (FR-CAP-06): round puffs around its edge, each touching the box from inside, so the
+  // cloud fills the same box as the old pill. Corner puffs are cloudPuffR; between them, along each edge,
+  // puffs about cloudPuffStep radii apart cycle through the cloudPuffSizes (fractions of cloudPuffR).
+  cloudPuffR: 18,
+  cloudPuffStep: 1.6,
+  cloudPuffSizes: [0.78, 1, 0.86, 0.96],
   shoutRadius: 4,
   shoutSkew: '-8deg',
   whisperRadius: 14,
@@ -769,7 +775,6 @@ export const bubble = {
   previewHeight: 24,
   previewRadius: 14,
   previewTailRadius: 4,
-  previewThoughtRadius: 20,
   swatch: 32, // color circle; hitSlop brings it to 44
   swatchBorder: '#d5d9cf',
   swatchRing: 2, // white gap, then an ink ring, around the selected color

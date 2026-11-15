@@ -135,6 +135,9 @@ export const BUBBLE = {
   thoughtDotGap: 2,
   thoughtDotStepX: -14,
   thoughtDotStepY: 11,
+  cloudPuffR: 18,
+  cloudPuffStep: 1.6,
+  cloudPuffSizes: [0.78, 1, 0.86, 0.96],
   shoutRadius: 4,
   shoutSkewDeg: -8,
   whisperRadius: 14,
@@ -232,8 +235,60 @@ export type TailGeometry =
   | { kind: 'point'; points: readonly [TailPoint, TailPoint, TailPoint]; extent: number }
   | { kind: 'dots'; dots: readonly [TailDot, TailDot]; extent: number };
 
+/** Whether a bubble is drawn as a cloud (isCloud): thoughts saved with `cloud`, others stay as they were. */
+export function isCloud(o: { shape: string; cloud?: boolean }): boolean {
+  return o.shape === 'thought' && o.cloud === true;
+}
+
+export type CloudGeometry = {
+  core: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+  puffs: readonly TailDot[];
+};
+
+/** A cloud thought's body in reference units: its middle and the puffs round its edge (cloudGeometry). */
+export function cloudGeometry(height: number): CloudGeometry {
+  const w = BUBBLE.referenceWidth;
+  const big = Math.min(BUBBLE.cloudPuffR, height / 2);
+  const sizes = BUBBLE.cloudPuffSizes;
+  const between = (length: number, stagger: boolean, place: (t: number, r: number) => TailDot) => {
+    const n = Math.max(1, Math.round(length / (BUBBLE.cloudPuffStep * big)));
+    const count = stagger ? n : n - 1;
+    return Array.from({ length: count }, (_, i) =>
+      place((i + (stagger ? 0.5 : 1)) / n, big * (sizes[(i + (stagger ? 2 : 0)) % sizes.length] ?? 1)),
+    );
+  };
+  const across = w - 2 * big;
+  const down = height - 2 * big;
+  const corner = (cx: number, cy: number): TailDot => ({ cx, cy, r: big });
+  const puffs: TailDot[] = [
+    corner(big, big),
+    ...between(across, false, (t, r) => ({ cx: big + across * t, cy: r, r })),
+    corner(w - big, big),
+    ...between(down, false, (t, r) => ({ cx: w - r, cy: big + down * t, r })),
+    corner(w - big, height - big),
+    ...between(across, true, (t, r) => ({ cx: w - big - across * t, cy: height - r, r })),
+    corner(big, height - big),
+    ...between(down, true, (t, r) => ({ cx: r, cy: height - big - down * t, r })),
+  ];
+  return { core: { x: big, y: big, width: across, height: down }, puffs };
+}
+
+function cloudBottom(height: number, x: number): number {
+  let bottom = height - Math.min(BUBBLE.cloudPuffR, height / 2);
+  for (const p of cloudGeometry(height).puffs) {
+    const dx = x - p.cx;
+    if (Math.abs(dx) < p.r) bottom = Math.max(bottom, p.cy + Math.sqrt(p.r * p.r - dx * dx));
+  }
+  return bottom;
+}
+
 /** A bubble's tail in reference units below a box `height` tall (bubbleTailGeometry). */
-export function bubbleTailGeometry(shape: string, side: 'left' | 'right', height: number): TailGeometry {
+export function bubbleTailGeometry(
+  shape: string,
+  side: 'left' | 'right',
+  height: number,
+  cloud = false,
+): TailGeometry {
   const x = (at: number) => (side === 'left' ? at : BUBBLE.referenceWidth - at);
   if (shape !== 'thought') {
     const base = height - BUBBLE.tailOverlap;
@@ -249,7 +304,7 @@ export function bubbleTailGeometry(shape: string, side: 'left' | 'right', height
   }
   const r = height / 2;
   const dx = Math.max(0, r - BUBBLE.thoughtDotX);
-  const edge = r + Math.sqrt(Math.max(0, r * r - dx * dx));
+  const edge = cloud ? cloudBottom(height, BUBBLE.thoughtDotX) : r + Math.sqrt(Math.max(0, r * r - dx * dx));
   const large = {
     cx: x(BUBBLE.thoughtDotX),
     cy: edge + BUBBLE.thoughtDotGap + BUBBLE.thoughtDotR,
