@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
 
-import { colors } from '@/theme/tokens';
-
 import { t } from '~/i18n/t';
-import { globalCss } from '~/lib/css';
+import { themeCss } from '~/lib/css';
+
+import './globals.css';
 
 const jakarta = localFont({
   src: [
@@ -25,11 +25,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={jakarta.className}
-        style={{ margin: 0, background: colors.background, color: colors.ink, fontWeight: 500, minHeight: '100vh' }}
-      >
-        <style>{globalCss}</style>
+      <body className={`${jakarta.className} min-h-screen font-medium antialiased`}>
+        <style>{themeCss}</style>
         {children}
       </body>
     </html>

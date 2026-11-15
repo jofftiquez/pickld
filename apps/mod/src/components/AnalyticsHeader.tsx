@@ -1,7 +1,4 @@
-import Link from 'next/link';
-
-import { colors, radius } from '@/theme/tokens';
-
+import { Segmented } from './Segmented';
 import { t } from '~/i18n/t';
 import { RANGES, type Range } from '~/lib/analytics';
 
@@ -11,38 +8,20 @@ export type AnalyticsPage = 'charts' | 'audience' | 'packs' | 'stickers';
 export function AnalyticsHeader({ page, days }: { page: AnalyticsPage; days: Range }) {
   const base = `/analytics/${page}`;
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16 }}>
+    <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p style={{ margin: 0, color: colors.muted, fontSize: 13, fontWeight: 700 }}>{t('analytics.title')}</p>
-        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.52, margin: 0 }}>
-          {t(`analytics.pages.${page}`)}
-        </h1>
-        <p style={{ color: colors.muted, margin: '4px 0 0', fontSize: 13 }}>{t('analytics.subtitle')}</p>
+        <p className="m-0 text-[13px] font-bold text-muted-foreground">{t('analytics.title')}</p>
+        <h1 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">{t(`analytics.pages.${page}`)}</h1>
+        <p className="mt-1 mb-0 text-[13px] text-muted-foreground">{t('analytics.subtitle')}</p>
       </div>
-      <nav aria-label={t('analytics.range.label')} style={{ display: 'flex', gap: 6 }}>
-        {RANGES.map((r) => (
-          <Link
-            key={r}
-            href={r === 30 ? base : `${base}?days=${r}`}
-            aria-current={r === days ? 'page' : undefined}
-            style={{
-              padding: '10px 14px',
-              minHeight: 44,
-              boxSizing: 'border-box',
-              display: 'inline-flex',
-              alignItems: 'center',
-              borderRadius: radius.pill,
-              fontSize: 14,
-              fontWeight: 700,
-              textDecoration: 'none',
-              background: r === days ? colors.ink : colors.surface,
-              color: r === days ? colors.surface : colors.ink,
-            }}
-          >
-            {t('analytics.range.days', { count: r })}
-          </Link>
-        ))}
-      </nav>
+      <Segmented
+        label={t('analytics.range.label')}
+        items={RANGES.map((r) => ({
+          href: r === 30 ? base : `${base}?days=${r}`,
+          label: t('analytics.range.days', { count: r }),
+          active: r === days,
+        }))}
+      />
     </header>
   );
 }

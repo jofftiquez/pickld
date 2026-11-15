@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 
-import { colors } from '@/theme/tokens';
-
 import { Card } from './Card';
 import { LocalTable } from './LocalTable';
 
@@ -27,9 +25,9 @@ export function DataTable({
   empty: string;
 }) {
   return (
-    <section aria-label={title} style={{ display: 'grid', gap: 6, minWidth: 0, alignContent: 'start' }}>
-      {headingHidden ? null : <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{title}</h2>}
-      {note ? <p style={{ margin: 0, color: colors.muted, fontSize: 13 }}>{note}</p> : null}
+    <section aria-label={title} className="grid min-w-0 content-start gap-1.5">
+      {headingHidden ? null : <h2 className="m-0 text-[17px] font-extrabold">{title}</h2>}
+      {note ? <p className="m-0 text-[13px] text-muted-foreground">{note}</p> : null}
       <Card>
         <LocalTable
           columns={columns.map((label, i) => ({

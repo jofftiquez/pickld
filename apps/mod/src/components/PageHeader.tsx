@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 
-import { colors } from '@/theme/tokens';
-
 /** A page's title and one-line description, with stat tiles or actions on the right (design: ModConsole). */
 export function PageHeader({
   title,
@@ -13,12 +11,10 @@ export function PageHeader({
   children?: ReactNode;
 }) {
   return (
-    <header
-      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}
-    >
+    <header className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.52, margin: 0 }}>{title}</h1>
-        {subtitle ? <div style={{ color: colors.muted, margin: '4px 0 0', fontSize: 13 }}>{subtitle}</div> : null}
+        <h1 className="m-0 text-[26px] font-extrabold tracking-[-0.02em]">{title}</h1>
+        {subtitle ? <div className="mt-1 text-[13px] text-muted-foreground">{subtitle}</div> : null}
       </div>
       {children}
     </header>

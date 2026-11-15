@@ -1,5 +1,6 @@
-import { colors, radius } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
+import { Badge } from '~/components/ui/badge';
 import { t } from '~/i18n/t';
 import type { QueueItem } from '~/lib/queue';
 
@@ -15,17 +16,8 @@ export function SourceBadge({ item }: { item: Pick<QueueItem, 'source' | 'status
   const key = item.status === 'escalated' ? 'escalated' : item.source;
   const label = key === 'report' ? t('source.report', { count: item.report_count }) : t(`source.${key}`);
   return (
-    <span
-      style={{
-        ...tones[key],
-        borderRadius: radius.pill,
-        padding: '3px 8px',
-        fontSize: 12,
-        fontWeight: 700,
-        whiteSpace: 'nowrap',
-      }}
-    >
+    <Badge className="font-bold" style={tones[key]}>
       {label}
-    </span>
+    </Badge>
   );
 }

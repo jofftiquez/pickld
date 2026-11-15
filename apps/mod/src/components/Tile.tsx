@@ -1,28 +1,27 @@
-import { colors, radius } from '@/theme/tokens';
+import { cn } from '~/lib/utils';
 
 /**
- * One number with its label, in the queue header's style (design: ModConsole): the number on top, the label
- * under it. Goes inside a <dl>. `alert` tints it when the number needs attention; `hint` adds a short line.
+ * A stat tile (shadcn/ui card surface): the number on top, its label under it (design: ModConsole). Goes inside a
+ * <dl>. `alert` tints it when the number needs attention; `hint` adds a short line.
  */
 export function Tile({ label, value, hint, alert }: { label: string; value: string; hint?: string; alert?: boolean }) {
   return (
     <div
-      style={{
-        background: alert ? colors.dangerTint : colors.surface,
-        borderRadius: radius.thumbLg,
-        padding: '12px 14px',
-        display: 'flex',
-        flexDirection: 'column-reverse',
-        justifyContent: 'flex-end',
-        gap: 2,
-        minWidth: 0,
-      }}
+      data-slot="card"
+      className={cn(
+        'flex min-w-0 flex-col-reverse justify-end gap-1 rounded-tile border px-4 py-3.5 shadow-xs',
+        alert ? 'border-transparent bg-destructive-tint' : 'bg-card',
+      )}
     >
-      <dt style={{ color: alert ? colors.likeText : colors.muted, fontSize: 12, fontWeight: 600 }}>
+      <dt className={cn('text-xs font-semibold', alert ? 'text-destructive-text' : 'text-muted-foreground')}>
         {label}
-        {hint ? <span style={{ display: 'block', fontWeight: 400 }}>{hint}</span> : null}
+        {hint ? <span className="block font-normal">{hint}</span> : null}
       </dt>
-      <dd style={{ margin: 0, fontSize: 24, fontWeight: 800, color: alert ? colors.likeText : colors.ink }}>{value}</dd>
+      <dd
+        className={cn('m-0 text-2xl font-extrabold tabular-nums', alert ? 'text-destructive-text' : 'text-foreground')}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
