@@ -174,8 +174,14 @@ describe('makeBurstPieces', () => {
       expect(p.x0).toBeLessThanOrEqual(0.7);
       expect(p.delay).toBeLessThanOrEqual(BURST_MAX_DELAY_S);
       expect(p.life).toBeLessThanOrEqual(BURST_FLIGHT_S);
-      expect(Math.max(p.width, p.height)).toBeLessThanOrEqual(11);
-      if (p.shape === 'strip') expect(p.width).toBeLessThanOrEqual(3);
+      // 1.5× the first sizes (D-160): strips 3–4.5 × 10.5–16.5 pt, squares 6–9 pt, dots 4.5–6 pt.
+      expect(Math.max(p.width, p.height)).toBeLessThanOrEqual(16.5);
+      expect(Math.min(p.width, p.height)).toBeGreaterThanOrEqual(3);
+      if (p.shape === 'strip') {
+        expect(p.width).toBeLessThanOrEqual(4.5);
+        expect(p.height).toBeGreaterThanOrEqual(10.5);
+      }
+      if (p.shape === 'square') expect(p.width).toBeGreaterThanOrEqual(6);
     }
     expect(pieces.filter((p) => p.shape === 'strip').length).toBeGreaterThan(15);
     expect(pieces.some((p) => p.shape === 'square')).toBe(true);
