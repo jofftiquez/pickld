@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { RoundIconButton } from '@/components/RoundIconButton';
+import { pastDayLabel } from '@/features/days/pastDay';
 import { MomentEditSession } from '@/features/edit/MomentEditSession';
 import { QueuedEditSession, queueItemQueryKey } from '@/features/edit/QueuedEditSession';
 import { StampMomentProvider } from '@/features/edit/stickers/stamps';
@@ -80,6 +81,20 @@ export default function EditScreen() {
     else if (via === 'share' || (via === 'crop' && cameraBelow())) router.dismiss(2);
     else router.back();
   };
+  // After Add on a new photo: the page of the day it went into (FR-CAP-04). Today's jar is the Today tab,
+  // reached by leaving as Close does. A past day's photo (share sheet, a past day's gallery, an older
+  // gallery photo from the camera) lands on that day's page: straight back to it when it is below the
+  // editor, otherwise leaving as Close does and opening it there, so Back from it goes to Today.
+  const addedTo = (localDate: string, tz: string) => {
+    if (pastDayLabel(localDate, new Date(), tz) === null) return close();
+    const state = navigation.getState();
+    const below = state?.routes[state.index - 1];
+    if (below?.name === 'day/[date]' && (below.params as { date?: string } | undefined)?.date === localDate) {
+      return router.back();
+    }
+    close();
+    router.push({ pathname: '/day/[date]', params: { date: localDate } });
+  };
 
   const missing =
     !parsed.success ||
@@ -124,6 +139,7 @@ export default function EditScreen() {
         focusCaption={focusCaption}
         insets={insets}
         onLeave={close}
+        onAdded={addedTo}
         onBack={via === 'share' && router.canGoBack() ? () => router.back() : undefined}
       />
     </StampMomentProvider>

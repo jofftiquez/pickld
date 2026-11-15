@@ -52,6 +52,11 @@ export type EditSessionProps = {
   insets: EdgeInsets;
   /** Leaves the editor (back to Today, or wherever it was opened from). */
   onLeave: () => void;
+  /**
+   * After Add on a new photo, instead of onLeave: lands on the page of the day the photo went into
+   * (FR-CAP-04). Without it, Add leaves like Close.
+   */
+  onAdded?: () => void;
   /** When set, the photo step's Close becomes Back to choose another slot (a shared photo). */
   onBack?: () => void;
   /**
@@ -101,6 +106,7 @@ export function EditSession({
   focusCaption = false,
   insets,
   onLeave,
+  onAdded,
   onBack,
   onSave,
   unfinished,
@@ -170,7 +176,7 @@ export function EditSession({
   const navigation = useNavigation();
   type LeaveAction = Parameters<typeof navigation.dispatch>[0];
   const blocked = useRef<LeaveAction | null>(null);
-  const [leaving, setLeaving] = useState<{ action: LeaveAction | null; then: boolean } | null>(null);
+  const [leaving, setLeaving] = useState<{ action: LeaveAction | null; then: boolean; added?: boolean } | null>(null);
   const [asking, setAsking] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   usePreventRemove(unfinished !== undefined && leaving === null, ({ data }) => {
@@ -182,8 +188,9 @@ export function EditSession({
     if (leaving === null || left.current) return;
     left.current = true;
     if (leaving.action) navigation.dispatch(leaving.action);
+    else if (leaving.added && onAdded) onAdded();
     else if (leaving.then) onLeave();
-  }, [leaving, navigation, onLeave]);
+  }, [leaving, navigation, onLeave, onAdded]);
   /** Decided: the guard comes off; `then` leaves (by the blocked removal, if any, or onLeave). */
   const decide = (then: boolean) => {
     const action = blocked.current;
@@ -223,8 +230,11 @@ export function EditSession({
       setSaveFailed(true);
       return;
     }
-    if (unfinished) decide(true);
-    else onLeave();
+    if (unfinished) {
+      blocked.current = null;
+      setAsking(false);
+      setLeaving({ action: null, then: true, added: true });
+    } else onLeave();
   };
 
   return (
