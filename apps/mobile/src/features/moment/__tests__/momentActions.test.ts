@@ -231,13 +231,20 @@ describe('queued moments', () => {
     await moveMoment(client, queued, 'selfie');
     await deleteMoment(client, queued);
     await saveMomentEdits(client, queued, { caption: 'x', visibility: 'only_me', edits: {} });
-    await saveRecrop(client, queued, { photoUri: 'file:///c/a.webp', thumbUri: 'file:///c/b.webp' });
+    const fit = {
+      crop: { originX: 0, originY: 0, width: 1440, height: 1920 },
+      cropBasis: { width: 1440, height: 1920 },
+      rotate: 0,
+      flip: false,
+      fit: { frame: 'black' },
+    } as const;
+    await saveRecrop(client, queued, { photoUri: 'file:///c/a.webp', thumbUri: 'file:///c/b.webp' }, {}, fit);
     expect(calls).toEqual([]);
     expect(saveOptions).toHaveBeenNthCalledWith(1, 21, { visibility: 'only_me' });
     expect(saveOptions).toHaveBeenNthCalledWith(2, 21, { slot: 'selfie' });
     expect(discardItem).toHaveBeenCalledWith(21);
     expect(saveEdits).toHaveBeenCalledWith(21, { caption: 'x', visibility: 'only_me', edits: {} });
-    expect(saveRecropped).toHaveBeenCalledWith(21, { photoUri: 'file:///c/a.webp', thumbUri: 'file:///c/b.webp' });
+    expect(saveRecropped).toHaveBeenCalledWith(21, { photoUri: 'file:///c/a.webp', thumbUri: 'file:///c/b.webp' }, fit);
   });
 
   it('a photo uploading right now is busy; any other queue failure is failed', async () => {

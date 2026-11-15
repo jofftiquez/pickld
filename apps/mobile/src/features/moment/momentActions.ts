@@ -11,6 +11,7 @@ import { File } from 'expo-file-system';
 import { z } from 'zod';
 
 import type { Database, Json } from '@/lib/database.types';
+import type { CropSpec } from '@/lib/image/crop';
 import { requestUploads } from '@/lib/queue/runner';
 import {
   discardItem,
@@ -192,10 +193,12 @@ export async function saveRecrop(
   target: MomentTarget,
   files: { photoUri: string; thumbUri: string; mediumUri?: string | null },
   deps: RecropDeps = {},
+  /** The crop choices, kept on a queued moment so a photo framed by Fit stays known as framed. */
+  crop: CropSpec | null = null,
 ): Promise<void> {
   const { mediumUri, ...queueFiles } = files;
   if (target.kind === 'queued') {
-    await onQueue(() => saveRecropped(target.queueId, queueFiles));
+    await onQueue(() => saveRecropped(target.queueId, queueFiles, crop));
     void requestUploads();
     return;
   }
