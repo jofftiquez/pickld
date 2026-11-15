@@ -2084,6 +2084,7 @@ export type Database = {
       discover_jars_page: {
         Args: { cursor_at?: string; cursor_id?: string };
         Returns: {
+          added_later: boolean;
           author_avatar_path: string;
           author_display_name: string;
           author_id: string;
@@ -2174,6 +2175,7 @@ export type Database = {
       feed_page: {
         Args: { cursor_at?: string; cursor_id?: string };
         Returns: {
+          added_later: boolean;
           author_avatar_path: string;
           author_display_name: string;
           author_id: string;
@@ -2196,6 +2198,7 @@ export type Database = {
       feed_page_newer: {
         Args: { cursor_at: string; cursor_id: string };
         Returns: {
+          added_later: boolean;
           author_avatar_path: string;
           author_display_name: string;
           author_id: string;

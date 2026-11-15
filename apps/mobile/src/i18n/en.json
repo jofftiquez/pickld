@@ -147,6 +147,7 @@
       "days_one": "Updated yesterday",
       "days_other": "Updated {{count}} days ago"
     },
+    "updatedAddedLater": "For {{date}} · Added later · {{updated}}",
     "count": "{{count}}/{{max}}",
     "more": "+{{count}}",
     "caption": "“{{caption}}”",
@@ -162,6 +163,7 @@
     "quietTitle": "Nothing new yet",
     "quietBody": "When the people you read add moments, they show up here.",
     "meta": "{{slot}} · {{when}}",
+    "metaAddedLater": "{{slot}} · {{when}} · Added later",
     "cardLabel": "{{name}}, {{slot}}, {{when}}",
     "private": "Only you can see it",
     "openHint": "Opens the moment’s comments",

@@ -90,6 +90,22 @@ describe('FeedView', () => {
     ).toBeTruthy();
   });
 
+  it('says which day a backfilled jar is and that it was added later, and only then', async () => {
+    await setup({
+      jars: [
+        { ...mika, local_date: '2023-03-03', added_later: true },
+        { ...mika, jar_id: 'jar-2' },
+      ],
+    });
+    expect(screen.getByText('For Mar 3, 2023 · Added later · Updated 2h ago')).toBeTruthy();
+    expect(screen.getByText('Updated 2h ago')).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        'Mika Reyes’s jar, 6 of 8 moments. For Mar 3, 2023 · Added later · Updated 2h ago. 21 likes, 3 comments',
+      ),
+    ).toBeTruthy();
+  });
+
   it('lists "You" first, then authors with a green ring when they have a new jar', async () => {
     await setup();
     expect(screen.getByTestId('feed-author-me-seen')).toBeTruthy();

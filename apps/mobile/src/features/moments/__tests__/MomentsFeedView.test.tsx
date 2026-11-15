@@ -93,6 +93,15 @@ describe('MomentsFeedView', () => {
     );
   });
 
+  it('a backfilled moment shows its date with the year and says it was added later', async () => {
+    const old = moment({ moment_id: 'm3', captured_at: '2023-03-02T23:30:00Z', is_backfilled: true });
+    await setup({ moments: [old, mika] });
+    expect(screen.getByText(/#ootd · 7:30.*Mar 3, 2023 · Added later$/)).toBeTruthy();
+    expect(screen.getByTestId('moments-open-m3').props.accessibilityLabel).toMatch(/Mar\s3,\s2023\. Added later$/);
+    // A moment added on its own day keeps the short date and no badge.
+    expect(screen.getByTestId('moments-open-m1').props.accessibilityLabel).not.toMatch(/Added later/);
+  });
+
   it('marks only the viewer’s own Only me moment with a lock, and says so to screen readers', async () => {
     await setup();
     expect(screen.getAllByTestId('moments-private', { includeHiddenElements: true })).toHaveLength(1);
