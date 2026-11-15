@@ -8,13 +8,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { pastDayLabel } from '@/features/days/pastDay';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
-import type { CropSpec, FitFrame } from '@/lib/image/crop';
+import {
+  clampFitLayout,
+  DEFAULT_FIT_PLACE,
+  rotatedSize,
+  type CropSpec,
+  type FitPlace,
+  type FitStyle,
+} from '@/lib/image/crop';
 import { captureError } from '@/lib/monitoring';
 import { prepareItem } from '@/lib/queue/prepare';
 import { getSupabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
 
-import { DEFAULT_FIT_FRAME, getFitFrame, setFitFrame } from './cropPrefs';
+import { DEFAULT_FIT_STYLE, getFitStyle, setFitStyle } from './cropPrefs';
 import { CropView, type CropLayout } from './CropView';
 import {
   clampCrop,
@@ -39,7 +46,9 @@ import { saveGalleryPhoto } from './saveCapture';
 // (see features/moment/recrop.ts) and goes back; Cancel changes nothing.
 // Fill / Fit (D-152): every photo opens on Fill (today's crop). Fit places the whole photo inside the frame on
 // a plain frame style; the choice travels in the crop spec, so preparation bakes the frame into the saved
-// photo and the editor, which opens on that file, shows exactly it. The last frame style is remembered.
+// photo and the editor, which opens on that file, shows exactly it. Fit is a layout step (D-154): the photo
+// starts whole and centred and can be moved and made smaller, with an optional border and rounded corners.
+// The look (frame style, border, corners) is remembered; the position starts centred for every photo.
 export function MomentCropScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -50,7 +59,8 @@ export function MomentCropScreen() {
   const setPending = usePendingCrop((s) => s.setPending);
   const [state, setState] = useState<CropState>(initialCrop);
   const [layout, setLayout] = useState<CropLayout>('fill');
-  const [fitFrame, setFrame] = useState<FitFrame>(DEFAULT_FIT_FRAME);
+  const [fitStyle, setStyle] = useState<FitStyle>(DEFAULT_FIT_STYLE);
+  const [fitPlace, setPlace] = useState<FitPlace>(DEFAULT_FIT_PLACE);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -67,8 +77,8 @@ export function MomentCropScreen() {
   }, []);
   useEffect(() => {
     let alive = true;
-    void getFitFrame().then((frame) => {
-      if (alive) setFrame(frame);
+    void getFitStyle().then((style) => {
+      if (alive) setStyle(style);
     });
     return () => {
       alive = false;
@@ -80,12 +90,14 @@ export function MomentCropScreen() {
   const image = { width: photo.width, height: photo.height };
   // The same frame CropView draws, so the rectangle matches what the user sees.
   const frame = cropFrame(window, insets, CROP_RATIO.moment, MOMENT_CROP_SHEET_HEIGHT);
+  // Fit's layout, kept whole inside the frame for the photo as it is turned now (a quarter turn changes its shape).
+  const fit = clampFitLayout(rotatedSize(image, state.rotation), { ...fitStyle, ...fitPlace });
   const spec = (): CropSpec => ({
     crop: cropRectFor(state, image, frame),
     cropBasis: image,
     rotate: state.rotation,
     flip: state.flip,
-    ...(layout === 'fit' ? { fit: { frame: fitFrame } } : null),
+    ...(layout === 'fit' ? { fit } : null),
   });
 
   const onCancel = () => {
@@ -166,18 +178,24 @@ export function MomentCropScreen() {
       insets={insets}
       onChange={setState}
       onZoom={(zoom) => setState((s) => zoomCrop(s, zoom, image, frame))}
-      onRotate={() => setState((s) => clampCrop(rotateCrop(s), image, frame))}
+      onRotate={() => {
+        setState((s) => clampCrop(rotateCrop(s), image, frame));
+        // A quarter turn starts again from the whole photo, centred, as Fill's Rotate does.
+        setPlace(DEFAULT_FIT_PLACE);
+      }}
       onFlip={() => setState((s) => clampCrop(flipCrop(s), image, frame))}
       layout={layout}
-      frame={fitFrame}
+      fit={fit}
       onLayout={setLayout}
-      onFrame={(next) => {
-        setFrame(next);
-        void setFitFrame(next);
+      onFitStyle={(patch) => {
+        setStyle((current) => ({ ...current, ...patch }));
+        void setFitStyle(patch);
       }}
+      onFitPlace={setPlace}
       onReset={() => {
         setState(initialCrop);
-        setLayout('fill');
+        // In Fit, Reset puts the photo back whole, centred and unturned, and stays on Fit (D-154); the look stays.
+        setPlace(DEFAULT_FIT_PLACE);
       }}
       onCancel={onCancel}
       onDone={() => void onDone()}

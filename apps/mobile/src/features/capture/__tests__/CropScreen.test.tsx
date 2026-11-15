@@ -6,7 +6,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
 import '../../edit/__tests__/mockReanimated';
 import type { ReactNode } from 'react';
-import { Dimensions, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
 import CropScreen from '../../../../app/crop';
@@ -361,22 +361,41 @@ describe('Fill / Fit (D-152)', () => {
     }
   });
 
-  it('Fit shows the whole photo centred on the frame style, with labelled 44-point swatches instead of zoom', async () => {
+  it('Fit is a layout, not a crop (D-154): no crop chrome, the whole photo centred, Frame / Border / Corners tabs', async () => {
     await openCrop();
     await fireEvent.press(tab('Fit'));
     expect(tab('Fit').props.accessibilityState).toEqual({ selected: true });
     expect(screen.queryByRole('adjustable', { name: 'Zoom' })).toBeNull();
+    // No frame outline, thirds grid, corner marks or lock chip over the photo.
+    expect(screen.queryByTestId('crop-frame', { includeHiddenElements: true })).toBeNull();
+    expect(screen.queryByLabelText('Crop locked to 3:4')).toBeNull();
+    expect(screen.getByText('Drag to move · pinch to resize · double tap to center')).toBeTruthy();
+    for (const [name, selected] of [
+      ['Frame', true],
+      ['Border', false],
+      ['Corners', false],
+    ] as const) {
+      expect(screen.getByRole('tab', { name }).props.accessibilityState).toEqual({ selected });
+    }
     const names = ['white', 'off-white', 'cream', 'black', 'blurred photo'].map((n) => `Fit, ${n} frame`);
     for (const name of names) {
       expect(swatch(name)).toHaveStyle({ width: 44, height: 44 });
     }
     expect(swatch('Fit, white frame').props.accessibilityState).toEqual({ checked: true });
-    expect(screen.getByText('The whole photo, inside the frame')).toBeTruthy();
     // The 2:1 photo, contained: as wide as the frame, half as tall, centred on the white backdrop.
     const f = frame();
-    const photo = screen.getByTestId('crop-photo');
-    expect(photo.props.style).toMatchObject({ width: f.width, height: f.width / 2 });
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({
+      width: f.width,
+      height: f.width / 2,
+      top: 48 + (f.height - f.width / 2) / 2,
+      borderRadius: 0,
+    });
+    expect(screen.getByTestId('crop-fit-box')).not.toHaveStyle({ backgroundColor: '#ffffff' });
     expect(screen.getByTestId('crop-fit-backdrop-white')).toHaveStyle({ width: f.width, height: f.height });
+    // Fill has none of this.
+    await fireEvent.press(tab('Fill'));
+    expect(screen.queryByLabelText('Fit options')).toBeNull();
+    expect(screen.getByTestId('crop-frame', { includeHiddenElements: true })).toBeTruthy();
   });
 
   it('a chosen frame style reaches the queued crop, and is remembered for the next photo', async () => {
@@ -397,29 +416,156 @@ describe('Fill / Fit (D-152)', () => {
     expect(swatch('Fit, cream frame').props.accessibilityState).toEqual({ checked: true });
   });
 
-  it('in Fit, drag and pinch do nothing; Fill brings back the crop as it was; Reset returns to Fill', async () => {
-    await openCrop();
-    const slider = () => screen.getByRole('adjustable', { name: 'Zoom' });
-    await act(() => slider().props.onAccessibilityAction({ nativeEvent: { actionName: 'increment' } }));
-    await fireEvent.press(tab('Fit'));
+  const drag = async (dx: number, dy: number) => {
     const pan = createGestureController('crop-pan');
     await act(() => {
       pan.begin({ x: 100, y: 100, translationX: 0, translationY: 0 });
       pan.activate({ x: 100, y: 100, translationX: 0, translationY: 0 });
-      pan.update({ x: 5000, y: 100, translationX: 4900, translationY: 0 });
-      pan.end({ x: 5000, y: 100, translationX: 4900, translationY: 0 });
+      pan.update({ x: 100 + dx, y: 100 + dy, translationX: dx, translationY: dy });
+      pan.end({ x: 100 + dx, y: 100 + dy, translationX: dx, translationY: dy });
     });
+  };
+  const pinchTo = async (scale: number) => {
+    const pinch = createGestureController('crop-pinch');
+    await act(() => {
+      pinch.begin({ focalX: 100, focalY: 100, scale: 1 });
+      pinch.activate({ focalX: 100, focalY: 100, scale: 1 });
+      pinch.update({ focalX: 100, focalY: 100, scale });
+      pinch.end({ focalX: 100, focalY: 100, scale });
+    });
+  };
+  const doubleTap = async () => {
+    const tapper = createGestureController('crop-double-tap');
+    await act(() => {
+      tapper.begin({ x: 100, y: 100 });
+      tapper.activate({ x: 100, y: 100 });
+      tapper.end({ x: 100, y: 100 });
+    });
+  };
+
+  it('in Fit, drag moves the photo and pinch makes it smaller, always whole inside the frame (D-154)', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    const f = frame();
+    // At full size the 2:1 photo spans the frame's width: it only moves up and down, at most to the bottom edge.
+    await drag(5000, 5000);
+    const bottom = (f.height - f.width / 2) / 2 / f.height;
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: 45, top: 48 + f.height - f.width / 2 });
+    // Pinched past the smallest: 30% of the size that fits. Pinched up again: never past whole.
+    await pinchTo(0.01);
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ width: f.width * 0.3 });
+    await pinchTo(50);
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ width: f.width });
+    // Half size, then dragged far left: the photo stops at the frame's left edge, a quarter of the frame from centre.
+    await pinchTo(0.5);
+    await drag(-5000, 0);
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: 45, width: f.width / 2 });
+    await done();
+    const fit = queuedCrop()?.fit;
+    expect(fit).toMatchObject({ frame: 'white', scale: 0.5, border: 'none', corners: 'none' });
+    expect(fit?.x).toBeCloseTo(-0.25, 9);
+    // Made smaller, it kept the place it was dragged to: still against the bottom edge it reached at full size.
+    expect(fit?.y).toBeCloseTo(bottom, 9);
+  });
+
+  it('a double tap or Reset puts the photo back whole and centred; Reset stays on Fit', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    await pinchTo(0.5);
+    await drag(-5000, -5000);
+    await doubleTap();
+    const f = frame();
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({
+      left: 45,
+      width: f.width,
+      top: 48 + (f.height - f.width / 2) / 2,
+    });
+    await pinchTo(0.5);
+    await press('Rotate 90 degrees');
+    await press('Reset');
+    expect(tab('Fit').props.accessibilityState).toEqual({ selected: true });
+    expect(screen.getByRole('button', { name: 'Reset' }).props.accessibilityHint).toBe(
+      'Puts the photo back whole and centered, unturned',
+    );
+    await done();
+    expect(queuedCrop()).toMatchObject({ rotate: 0, fit: { scale: 1, x: 0, y: 0 } });
+  });
+
+  it('a double tap does nothing in Fill; Fit’s moves leave Fill’s crop as it was', async () => {
+    await openCrop();
+    const slider = () => screen.getByRole('adjustable', { name: 'Zoom' });
+    await act(() => slider().props.onAccessibilityAction({ nativeEvent: { actionName: 'increment' } }));
+    await doubleTap();
+    expect(slider().props.accessibilityValue.now).toBe(110);
+    await fireEvent.press(tab('Fit'));
+    await drag(4900, 0);
+    await pinchTo(0.5);
     await fireEvent.press(tab('Fill'));
     expect(slider().props.accessibilityValue.now).toBe(110);
     await done();
     // Zoomed to 110% about the centre and not dragged.
     expect(queuedCrop()?.crop).toEqual(cropRectFor({ ...initialCrop, zoom: 1.1 }, image, frame()));
+    expect(queuedCrop()).not.toHaveProperty('fit');
+  });
 
+  it('Border: none by default; widths and colours as labelled radios; the preview and queued crop follow', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Border' }));
+    expect(screen.getByLabelText('Border width')).toBeTruthy();
+    expect(screen.getByLabelText('Border color')).toBeTruthy();
+    const widths = ['no', 'thin', 'medium', 'thick'].map((n) => `Fit, ${n} border`);
+    for (const name of widths) expect(swatch(name)).toHaveStyle({ width: 44, height: 44 });
+    expect(swatch('Fit, no border').props.accessibilityState).toEqual({ checked: true });
+    // With no border, no colour shows as chosen; picking one adds a thin border.
+    for (const name of ['white', 'cream', 'black']) {
+      expect(swatch(`Fit, ${name} border`).props.accessibilityState).toEqual({ checked: false });
+    }
+    await fireEvent.press(swatch('Fit, cream border'));
+    expect(swatch('Fit, thin border').props.accessibilityState).toEqual({ checked: true });
+    expect(swatch('Fit, cream border').props.accessibilityState).toEqual({ checked: true });
+    await fireEvent.press(swatch('Fit, thick border'));
+    await fireEvent.press(swatch('Fit, black border'));
+    const f = frame();
+    // Thick: 24 / 480 of the frame's width on every side, in black, around the photo (smaller to make room).
+    const border = (24 / 480) * f.width;
+    expect(screen.getByTestId('crop-fit-box')).toHaveStyle({ backgroundColor: '#000000', width: f.width });
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: 45 + border, width: f.width - border * 2 });
+    await done();
+    expect(queuedCrop()?.fit).toMatchObject({ border: 'thick', borderColor: 'black' });
+  });
+
+  it('Corners: square by default; rounded corners on the photo and its border; remembered with the look', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Corners' }));
+    expect(screen.getByLabelText('Corner shape')).toBeTruthy();
+    const names = ['square', 'small rounded', 'medium rounded', 'large rounded'].map((n) => `Fit, ${n} corners`);
+    for (const name of names) expect(swatch(name)).toHaveStyle({ width: 44, height: 44 });
+    expect(swatch('Fit, square corners').props.accessibilityState).toEqual({ checked: true });
+    await fireEvent.press(swatch('Fit, medium rounded corners'));
+    expect(swatch('Fit, medium rounded corners').props.accessibilityState).toEqual({ checked: true });
+    const f = frame();
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ borderRadius: (30 / 480) * f.width });
+    await fireEvent.press(screen.getByRole('tab', { name: 'Border' }));
+    await fireEvent.press(swatch('Fit, medium border'));
+    // The border's outer corners are the photo's plus the border, so it is even all round.
+    expect(StyleSheet.flatten(screen.getByTestId('crop-fit-box').props.style).borderRadius).toBeCloseTo(
+      (42 / 480) * f.width,
+      9,
+    );
+    await pinchTo(0.6);
+    await done();
+    expect(queuedCrop()?.fit).toMatchObject({ corners: 'medium', border: 'medium', borderColor: 'white', scale: 0.6 });
+    expect(mockStorage.get('crop:fitCorners')).toBe('medium');
+    expect(mockStorage.get('crop:fitBorder')).toBe('medium');
+
+    // The next photo keeps the look but starts whole and centred.
     usePendingCrop.setState({ pending });
     await openCrop();
     await fireEvent.press(tab('Fit'));
-    await press('Reset');
-    expect(tab('Fill').props.accessibilityState).toEqual({ selected: true });
+    await done();
+    expect(queuedCrop()?.fit).toMatchObject({ corners: 'medium', border: 'medium', scale: 1, x: 0, y: 0 });
   });
 
   it('Rotate and Flip still apply in Fit and reach the queued crop', async () => {

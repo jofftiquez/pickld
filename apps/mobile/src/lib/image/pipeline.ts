@@ -9,7 +9,16 @@
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
-import { cropRect34, fitRect34, FULL_SIZE, MEDIUM_SIZE, scaleRect, THUMB_SIZE, type CropSpec } from './crop';
+import {
+  cropRect34,
+  fitLayoutOf,
+  fitPixels,
+  FULL_SIZE,
+  MEDIUM_SIZE,
+  scaleRect,
+  THUMB_SIZE,
+  type CropSpec,
+} from './crop';
 import { assertNoLocationMetadata } from './exif';
 import { composeFit } from './fitFrame';
 
@@ -30,8 +39,9 @@ export type PrepareOptions = Partial<CropSpec>;
  * in the cache directory. The photo is first turned `rotate` degrees clockwise and mirrored when `flip`;
  * `crop` is the Crop screen's frame in that image's pixels (scaled from `cropBasis` when given); without
  * it the largest centred 3:4 area is used. With `fit` (D-152) nothing is cropped: the turned photo is scaled
- * straight from the decoded source to fit inside 1440 × 1920 and drawn on its frame (`composeFit`), so every
- * output (full, thumbnail, and the medium copy made from full) carries the same framed picture. Throws
+ * straight from the decoded source to the size the Crop screen chose (`fitPixels`, D-154) and drawn on its frame
+ * with its border and corners (`composeFit`), so every output (full, thumbnail and the medium copy, both resized
+ * from full) carries the same framed picture in the same proportions. Throws
  * `LocationMetadataError` (and deletes both outputs) if an output still carries location metadata.
  */
 export async function preparePhoto(uri: string, options: PrepareOptions = {}): Promise<PreparedPhoto> {
@@ -50,13 +60,13 @@ export async function preparePhoto(uri: string, options: PrepareOptions = {}): P
 
     let full: Awaited<ReturnType<typeof turned.renderAsync>>;
     if (options.fit) {
-      const box = fitRect34(source);
-      const photo = track(
-        await track(ImageManipulator.manipulate(source)).resize({ width: box.width, height: box.height }).renderAsync(),
-      );
+      const layout = fitLayoutOf(options.fit);
+      const place = fitPixels(source, FULL_SIZE, layout);
+      const size = { width: place.photo.width, height: place.photo.height };
+      const photo = track(await track(ImageManipulator.manipulate(source)).resize(size).renderAsync());
       const photoOut = await photo.saveAsync({ format: SaveFormat.PNG });
       scratch.push(photoOut.uri);
-      const framed = await composeFit(photoOut.uri, box, options.fit.frame, FULL_SIZE);
+      const framed = await composeFit(photoOut.uri, place, layout, FULL_SIZE);
       scratch.push(framed);
       full = track(await track(ImageManipulator.manipulate(framed)).resize(FULL_SIZE).renderAsync());
     } else {

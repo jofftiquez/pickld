@@ -123,6 +123,17 @@ export const fitFrameColors = {
   black: '#000000',
 } as const;
 
+// Fit's layout (Crop, D-154): an optional plain border and rounded corners around the photo placed in the frame,
+// baked into the saved photo. Sizes are shares of the frame's width, so the screen (in points) and the saved
+// 1440 × 1920 photo and its 480 × 640 thumbnail (in pixels) keep the same proportions; at 480 each is whole.
+export const fitBorderColors = {
+  white: fitFrameColors.white,
+  cream: fitFrameColors.cream,
+  black: fitFrameColors.black,
+} as const;
+export const fitBorderWidths = { thin: 6 / 480, medium: 12 / 480, thick: 24 / 480 } as const; // 18, 36, 72 px at 1440
+export const fitCornerRadii = { small: 12 / 480, medium: 30 / 480, large: 60 / 480 } as const; // 36, 90, 180 px at 1440
+
 // Jar lid choices (onboarding + Edit profile). Layers always stay brand green.
 export const lidColors = {
   pickle: '#7fad33',
@@ -659,6 +670,12 @@ export const crop = {
   // Fit's blurred-photo frame: the blur's sigma as a share of the frame's width, the same on screen and in
   // the saved 1440-pixel photo (about 50 pixels there).
   fitBlur: 0.035,
+  // Fit's layout (D-154): the smallest the photo may be pinched, as a share of the largest size that fits whole.
+  fitMinScale: 0.3,
+  fitTile: 44, // Fit's border and corner choices, each a full tap area
+  fitTileGlyph: 22, // the little photo drawn on each choice
+  fitTileBorder: { none: 1, thin: 2, medium: 4, thick: 6 }, // the glyph's outline for each border width (none: dashed)
+  fitTileRadius: { none: 0, small: 3, medium: 6, large: 10 }, // the glyph's corners for each corner choice
   toolRadius: 18,
   zoomIcon: 18,
 } as const;

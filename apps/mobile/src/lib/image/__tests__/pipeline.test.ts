@@ -224,8 +224,13 @@ describe('preparePhoto with Fit (D-152)', () => {
     ]);
     expect(mockCompose).toHaveBeenCalledWith(
       'file:///cache/out-0.webp',
-      { originX: 0, originY: 555, width: 1440, height: 810 },
-      'blur',
+      {
+        box: { originX: 0, originY: 555, width: 1440, height: 810 },
+        photo: { originX: 0, originY: 555, width: 1440, height: 810 },
+        border: 0,
+        radius: 0,
+      },
+      expect.objectContaining({ frame: 'blur', border: 'none', corners: 'none' }),
       { width: 1440, height: 1920 },
     );
     expect(mockState.saves.map((s) => s.options)).toEqual([
@@ -246,7 +251,29 @@ describe('preparePhoto with Fit (D-152)', () => {
     ]);
     // 2160 × 3840 at 1920 / 3840 = 0.5: 1080 × 1920, bars of 180 left and right.
     expect(mockState.ops[1]).toEqual([['resize', { width: 1080, height: 1920 }]]);
-    expect(mockCompose.mock.calls[0]?.[1]).toEqual({ originX: 180, originY: 0, width: 1080, height: 1920 });
+    expect(mockCompose.mock.calls[0]?.[1]).toMatchObject({
+      photo: { originX: 180, originY: 0, width: 1080, height: 1920 },
+    });
+  });
+
+  it('D-154: resizes the source straight to the laid-out photo size, and hands composeFit its place and look', async () => {
+    await preparePhoto('file:///picked.jpg', {
+      fit: { frame: 'cream', scale: 0.6, x: 0.1, y: 0.2, border: 'medium', borderColor: 'black', corners: 'small' },
+    });
+    // 3840 × 2160 at 0.21375 (crop.test): 820 × 462 after rounding each edge, from the full-resolution source.
+    expect(mockState.ops[1]).toEqual([['resize', { width: 820, height: 462 }]]);
+    expect(mockCompose.mock.calls[0]?.[1]).toEqual({
+      box: { originX: 418, originY: 1077, width: 892, height: 534 },
+      photo: { originX: 454, originY: 1113, width: 820, height: 462 },
+      border: 36,
+      radius: 72,
+    });
+    expect(mockCompose.mock.calls[0]?.[2]).toMatchObject({ frame: 'cream', borderColor: 'black' });
+    // Full and thumbnail are still resizes of the framed 1440 × 1920 picture.
+    expect(mockState.ops.slice(2)).toEqual([
+      [['resize', { width: 1440, height: 1920 }]],
+      [['resize', { width: 480, height: 640 }]],
+    ]);
   });
 
   it('a framed photo still goes through the location check, and nothing is left behind', async () => {
