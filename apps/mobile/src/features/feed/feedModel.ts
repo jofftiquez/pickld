@@ -15,6 +15,8 @@ export const feedRow = z.object({
   author_display_name: z.string(),
   author_avatar_path: z.string().nullable(),
   local_date: z.string(),
+  /** Null only for a jar not published yet, which the timelines never send; absent in caches from before it. */
+  published_at: z.string().nullish(),
   feed_at: z.string(),
   visible_count: z.number(),
   like_count: z.number(),

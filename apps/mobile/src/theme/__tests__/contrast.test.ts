@@ -39,6 +39,11 @@ describe('text contrast', () => {
     expect(contrast(colors.pastDayInk, colors.pastDayWell)).toBeGreaterThanOrEqual(4.5);
   });
 
+  it('the tabs’ unread dot stands out on the white and milky tab bars (3:1 non-text minimum, D-157)', () => {
+    expect(contrast(colors.unreadDot, colors.surface)).toBeGreaterThanOrEqual(3);
+    expect(contrast(colors.unreadDot, colors.background)).toBeGreaterThanOrEqual(3);
+  });
+
   it('computes known ratios (black on white is 21:1; white on brand is the documented exception)', () => {
     expect(contrast('#000000', '#ffffff')).toBeCloseTo(21, 5);
     expect(contrast('#ffffff', colors.brand)).toBeLessThan(4.5);

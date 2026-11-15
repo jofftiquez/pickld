@@ -85,11 +85,39 @@ describe('FloatingTabBar', () => {
     expect(screen.queryAllByTestId(/^tab-.*-dot$/)).toHaveLength(1);
     expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue).toEqual({ text: 'new posts' });
     expect(screen.getByRole('tab', { name: 'Today' }).props.accessibilityValue?.text).toBeUndefined();
-    expect(flatStyle(screen.getByTestId('tab-discover-dot'))).toMatchObject({ backgroundColor: colors.notifyDot });
+    expect(flatStyle(screen.getByTestId('tab-discover-dot'))).toMatchObject({ backgroundColor: colors.unreadDot });
 
     await view.rerender(<FloatingTabBar {...props} />);
     expect(screen.queryByTestId('tab-discover-dot')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue?.text).toBeUndefined();
+  });
+
+  it('shows the same red dot on Moments, Jars and Discover, each read after its own name (D-157)', async () => {
+    const { props } = setup({ index: 0 });
+    const view = await render(
+      <FloatingTabBar {...props} badges={{ moments: 'new moments', jars: 'new jars', discover: 'new posts' }} />,
+    );
+    expect(screen.queryAllByTestId(/^tab-.*-dot$/).map((dot) => dot.props.testID)).toEqual([
+      'tab-moments-dot',
+      'tab-jars-dot',
+      'tab-discover-dot',
+    ]);
+    expect(screen.getByRole('tab', { name: 'Moments' }).props.accessibilityValue).toEqual({ text: 'new moments' });
+    expect(screen.getByRole('tab', { name: 'Jars' }).props.accessibilityValue).toEqual({ text: 'new jars' });
+    expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue).toEqual({ text: 'new posts' });
+    expect(screen.getByRole('tab', { name: 'Today' }).props.accessibilityValue?.text).toBeUndefined();
+    for (const name of ['moments', 'jars', 'discover']) {
+      expect(flatStyle(screen.getByTestId(`tab-${name}-dot`))).toMatchObject({
+        backgroundColor: colors.unreadDot,
+        borderColor: colors.surface,
+      });
+    }
+
+    // Opening Moments clears only its dot.
+    await view.rerender(<FloatingTabBar {...props} badges={{ jars: 'new jars', discover: 'new posts' }} />);
+    expect(screen.queryByTestId('tab-moments-dot')).toBeNull();
+    expect(screen.getByRole('tab', { name: 'Moments' }).props.accessibilityValue?.text).toBeUndefined();
+    expect(screen.getByTestId('tab-jars-dot')).toBeTruthy();
   });
 
   it('pressing an unfocused tab emits tabPress and navigates to that route', async () => {

@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pillActive: { backgroundColor: colors.brandTint },
-  // Like the bell's unread dot (Moments), at the icon's top right corner.
+  // A red dot at the icon's top right corner, ringed in white so it reads on the glass and the milky bar (D-157).
   dot: {
     position: 'absolute',
     top: 0,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     width: sizes.notifyDot + 4,
     height: sizes.notifyDot + 4,
     borderRadius: radius.pill,
-    backgroundColor: colors.notifyDot,
+    backgroundColor: colors.unreadDot,
     borderWidth: 2,
     borderColor: colors.surface,
   },
