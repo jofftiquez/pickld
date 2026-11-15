@@ -1,9 +1,9 @@
+import { BlurView } from 'expo-blur';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DISABLED_OPACITY, PRESSED_OPACITY } from '@/components/BaseButton';
-import { GlassSurface } from '@/components/GlassSurface';
 import { Icon } from '@/components/Icon';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { useLargeText } from '@/lib/useLargeText';
@@ -24,7 +24,7 @@ export type SlotPillProps = {
 };
 
 /**
- * The camera's moment control (D-151): "#afternoon ⌄ / Today · 2:14 PM" on glass over the top of the
+ * The camera's moment control (D-151): "#afternoon ⌄ / Today · 2:14 PM" frosted over the top of the
  * viewfinder. It reads like the slot tag it replaced and opens the moment picker.
  */
 export function SlotPill({ slot, time, date, onPress, disabled = false }: SlotPillProps) {
@@ -54,16 +54,20 @@ export function SlotPill({ slot, time, date, onPress, disabled = false }: SlotPi
         disabled ? { opacity: DISABLED_OPACITY } : pressed ? { opacity: PRESSED_OPACITY } : null,
       ]}
     >
-      <GlassSurface
-        tone="dark"
-        radius={corner}
-        tint={colors.liquidDarkTint}
-        interactive
-        fallbackColor={colors.glass}
-        style={StyleSheet.absoluteFill}
-      />
+      {/* The slot tag's dark frosted blur, not Liquid Glass: its light tint washes out the white time line
+          over a bright scene. */}
+      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
       <View style={styles.slotRow}>
-        <Text style={[textStyle('body', '700'), styles.slot]}>{slot}</Text>
+        {/* One line: at the largest text sizes a hashtag broken mid-word ("#aftern / oon") reads badly, so
+            it shrinks to fit the space between Close and flash instead. */}
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.5}
+          style={[textStyle('body', '700'), styles.slot]}
+        >
+          {slot}
+        </Text>
         <Icon name="chevronDown" color="surface" size={sizes.slotPillChevron} strokeWidth={2.4} />
       </View>
       <Text style={[textStyle('caption', '500'), styles.when]}>{when}</Text>
@@ -78,10 +82,14 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     minHeight: sizes.minTap,
     overflow: 'hidden',
+    backgroundColor: colors.glass,
+    // A faint edge, so it reads as a control and not a caption.
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.onDarkControl,
     paddingVertical: space.xs + 3,
     paddingHorizontal: space.lg,
   },
-  slotRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: space.xs },
+  slotRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs },
   slot: { color: colors.surface, textAlign: 'center', flexShrink: 1 },
   // Centered under the slot when it wraps at large text.
   when: { color: colors.onDarkMuted, textAlign: 'center' },

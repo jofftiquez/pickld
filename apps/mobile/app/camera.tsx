@@ -87,6 +87,27 @@ export default function CameraScreen() {
   // route) it is the Now slot, else the first empty one. The moment pill then changes it to another free slot
   // of the same day (D-151); from then on that choice is the slot, and everything saved goes there.
   const [chosen, setChosen] = useState<Slot | null>(null);
+  // #selfie opens on the front lens (D-99); flip still switches. `autoFront` is true while the front lens
+  // is the one #selfie chose, not the user: leaving #selfie then goes back to the rear lens (D-151).
+  const [facing, setFacing] = useState<CameraFacing>(() =>
+    parseSlotParam(params.slot) === 'selfie' ? 'front' : 'back',
+  );
+  const [autoFront, setAutoFront] = useState(() => parseSlotParam(params.slot) === 'selfie');
+  // A new link into the open camera (another slot or day) starts from its own slot again, and the lens
+  // follows it as it does for a picked moment.
+  const target = `${String(params.slot)}|${String(params.date)}`;
+  const [chosenFor, setChosenFor] = useState(target);
+  if (chosenFor !== target) {
+    setChosenFor(target);
+    setChosen(null);
+    if (parseSlotParam(params.slot) === 'selfie') {
+      setFacing('front');
+      setAutoFront(true);
+    } else if (autoFront) {
+      setFacing('back');
+      setAutoFront(false);
+    }
+  }
   const fillSlot = fill ? fillCameraSlot({ param: parseSlotParam(params.slot), taken }) : null;
   const slot =
     chosen ??
@@ -94,13 +115,6 @@ export default function CameraScreen() {
   // A full past jar has nothing to fill.
   const fillFull = fill !== null && fillSlot === null;
   const [picking, setPicking] = useState(false);
-
-  // #selfie opens on the front lens (D-99); flip still switches. `autoFront` is true while the front lens
-  // is the one #selfie chose, not the user: leaving #selfie then goes back to the rear lens (D-151).
-  const [facing, setFacing] = useState<CameraFacing>(() =>
-    parseSlotParam(params.slot) === 'selfie' ? 'front' : 'back',
-  );
-  const [autoFront, setAutoFront] = useState(() => parseSlotParam(params.slot) === 'selfie');
   const [flash, setFlash] = useState<FlashSetting>('off');
   const [flashSupported, setFlashSupported] = useState(false);
   const [busy, setBusy] = useState(false);

@@ -1297,6 +1297,33 @@ describe('Change the moment from the camera (D-151)', () => {
     expect(cameraZoom()).toBe(1);
   });
 
+  it('a new link into the open camera starts from its own slot, not the one picked before', async () => {
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    await pick('evening');
+    expect(tagText()).toMatch(/^#evening, /);
+    await act(async () => router.setParams({ slot: 'ootd' }));
+    expect(tagText()).toMatch(/^#ootd, today at /);
+    await shoot();
+    expect(saveCapture).toHaveBeenLastCalledWith(expect.objectContaining({ slot: 'ootd' }));
+  });
+
+  it('a new link follows the lens rule: off a picked #selfie it goes back to the rear lens, onto #selfie the front', async () => {
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    await pick('selfie');
+    // The rear camera's four zoom buttons; the front lens has none.
+    const zoomButtons = () => screen.queryAllByRole('button', { name: /^Zoom .* times$/ });
+    expect(zoomButtons()).toEqual([]);
+    // Rear lens again for #ootd, because the front one was #selfie's choice.
+    await act(async () => router.setParams({ slot: 'ootd' }));
+    expect(zoomButtons()).toHaveLength(4);
+    await act(async () => router.setParams({ slot: 'selfie' }));
+    expect(tagText()).toMatch(/^#selfie, /);
+    await shoot();
+    expect(takeMockPhoto).toHaveBeenLastCalledWith('front');
+  });
+
   it('when every other slot is done, the picker still opens with only the current slot to tap, which closes it', async () => {
     mockToday.queue = ['whereami', 'mebusywith', 'whoamiwith', 'ootd', 'selfie', 'morning', 'evening'].map((slot) =>
       queued(slot as QueuedMoment['slot']),

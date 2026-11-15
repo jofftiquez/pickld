@@ -96,7 +96,15 @@ function SlotPickerRow({ slot, selected, done, divider, onPress }: SlotPickerRow
       <View style={styles.well}>
         <Icon name={slot} color="ink" size={20} />
       </View>
-      <Text style={[textStyle('body', '600'), styles.label]}>{label}</Text>
+      {/* One line, shrunk to fit at the largest text sizes, as in the pill: never "#mebusyw / ith". */}
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.5}
+        style={[textStyle('body', '600'), styles.label]}
+      >
+        {label}
+      </Text>
       {done && !selected ? (
         <Text style={[textStyle('label', '600'), styles.muted]}>{t('camera.slotPicker.done')}</Text>
       ) : null}
