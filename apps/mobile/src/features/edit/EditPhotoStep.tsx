@@ -105,7 +105,10 @@ export function EditPhotoStep({
 
   const scroller = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const scrollPanel = (to: 'top' | 'photo') =>
-    scroller.current?.scrollTo({ y: to === 'top' ? Math.round(height * (1 - PHOTO_PEEK)) : 0, animated: !reduceMotion });
+    scroller.current?.scrollTo({
+      y: to === 'top' ? Math.round(height * (1 - PHOTO_PEEK)) : 0,
+      animated: !reduceMotion,
+    });
   const selectTool = (next: EditorTool) => {
     onSelectTool(next);
     if (next === 'stickers') scrollPanel('top');
@@ -207,10 +210,13 @@ export function EditPhotoStep({
           />
         ) : (
           <TextPanel
-            key={selectedText ? `${selectedText.id}:${selectedText.text}` : 'new'}
             selected={selectedText}
+            textCount={overlays.filter((o) => o.type === 'text').length}
             onAdd={onAddOverlay}
-            onChange={(id, patch) => onUpdateOverlay(id, (o) => (o.type === 'text' ? applyTextChange(o, patch) : o))}
+            onChange={(id, patch, group) =>
+              onUpdateOverlay(id, (o) => (o.type === 'text' ? applyTextChange(o, patch) : o), group)
+            }
+            onDeselect={() => onSelectOverlay(null)}
           />
         )}
         {canUndo ? (

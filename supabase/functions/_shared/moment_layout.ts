@@ -159,10 +159,18 @@ export const BUBBLE_COLORS: Record<string, { fill: string; text: string }> = {
 export const TEXT_COLORS: Record<string, string> = {
   white: '#ffffff',
   ink: '#11140d',
+  gray: '#8e8e93',
+  red: '#ed4956',
+  orange: '#fd8d32',
+  yellow: '#fdcb5c',
   pickle: '#7fad33',
+  teal: '#2ec4b6',
+  blue: '#3897f0',
+  purple: '#a307ba',
+  pink: '#e1306c',
+  sky: '#dbe8f3',
   butter: '#ffe08a',
   blush: '#fdeceb',
-  sky: '#dbe8f3',
 };
 
 /** colors.textOverlayShadow and colors.textOverlayShadowOnDark (under ink text). */
@@ -171,8 +179,47 @@ export const TEXT_SHADOW = { light: 'rgba(0,0,0,0.45)', onDark: 'rgba(255,255,25
 /** TextOverlayView: the design's shadow at 30-point text is 0 2px 10px. */
 export const TEXT_SHADOW_AT_30 = { offset: 2, radius: 10 } as const;
 
-/** textFonts.ts: Bold is tightened by 0.02 em. */
-export const TEXT_TRACKING: Record<string, number> = { clean: 0, bold: -0.02, type: 0, serif: 0 };
+/** textFonts.ts: Bold is tightened by 0.02 em, Strong opened up by as much. */
+export const TEXT_TRACKING: Record<string, number> = {
+  clean: 0,
+  bold: -0.02,
+  type: 0,
+  serif: 0,
+  script: 0,
+  strong: 0.02,
+  marker: 0,
+  hand: 0,
+};
+
+/**
+ * textOverlay.ts: the outline is the words drawn STEPS times round a circle WIDTH em out, under the fill;
+ * a background's corners are RADIUS em; a soft background is the contrasting color at SOFT_ALPHA.
+ */
+export const TEXT_STYLE = { outlineWidth: 0.07, outlineSteps: 16, backgroundRadius: 0.25, softAlpha: 0.6 } as const;
+
+/** textOverlay.ts outlineOffsets: where the outline's copies of the words go, in font sizes. */
+export function outlineOffsets(): { dx: number; dy: number }[] {
+  return Array.from({ length: TEXT_STYLE.outlineSteps }, (_, i) => {
+    const a = (2 * Math.PI * i) / TEXT_STYLE.outlineSteps;
+    return { dx: TEXT_STYLE.outlineWidth * Math.cos(a), dy: TEXT_STYLE.outlineWidth * Math.sin(a) };
+  });
+}
+
+function luminance(hex: string): number {
+  const channel = (i: number) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+/** textOverlay.ts contrastColor: white or ink, whichever has the higher contrast ratio on the color. */
+export function contrastColor(color: string): 'white' | 'ink' {
+  const l = luminance(TEXT_COLORS[color] ?? SURFACE);
+  const onWhite = 1.05 / (l + 0.05);
+  const onInk = (l + 0.05) / (luminance(INK) + 0.05);
+  return onInk >= onWhite ? 'ink' : 'white';
+}
 
 /** tokens.stickerTool.stamp: fractions of the stamp's height. */
 export const STAMP = { ring: 0.025, inset: 0.07, border: 0.05, radius: 0.16, text: 0.3, padding: 0.2 } as const;
@@ -253,8 +300,9 @@ export function cloudGeometry(height: number): CloudGeometry {
   const between = (length: number, stagger: boolean, place: (t: number, r: number) => TailDot) => {
     const n = Math.max(1, Math.round(length / (BUBBLE.cloudPuffStep * big)));
     const count = stagger ? n : n - 1;
-    return Array.from({ length: count }, (_, i) =>
-      place((i + (stagger ? 0.5 : 1)) / n, big * (sizes[(i + (stagger ? 2 : 0)) % sizes.length] ?? 1)),
+    return Array.from(
+      { length: count },
+      (_, i) => place((i + (stagger ? 0.5 : 1)) / n, big * (sizes[(i + (stagger ? 2 : 0)) % sizes.length] ?? 1)),
     );
   };
   const across = w - 2 * big;
@@ -323,8 +371,19 @@ export function bubbleTailGeometry(
 const LINE_HEIGHT = 1.25;
 const PAD_X = 0.3;
 const PAD_Y = 0.15;
+const BACKGROUND_PAD_X = 0.4;
+const BACKGROUND_PAD_Y = 0.25;
 const MAX_LINE_WIDTH = 0.8 * REF_WIDTH;
-const GLYPH = { clean: 0.6, bold: 0.64, type: 0.62, serif: 0.54 } as const;
+const GLYPH = {
+  clean: 0.6,
+  bold: 0.64,
+  type: 0.62,
+  serif: 0.54,
+  script: 0.57,
+  strong: 0.5,
+  marker: 0.6,
+  hand: 0.45,
+} as const;
 
 function glyphWidth(ch: string, font: string): number {
   if (font === 'type') return GLYPH.type;
@@ -349,7 +408,17 @@ export interface TextLayout {
 }
 
 /** The app's line breaks and box for a text overlay, in points on the 390-point photo. */
-export function layoutText({ text, font, size }: { text: string; font: string; size: number }): TextLayout {
+export function layoutText({
+  text,
+  font,
+  size,
+  background,
+}: {
+  text: string;
+  font: string;
+  size: number;
+  background?: string;
+}): TextLayout {
   const maxEm = MAX_LINE_WIDTH / size;
   const lines: string[] = [];
   for (const paragraph of text.split('\n')) {
@@ -373,8 +442,9 @@ export function layoutText({ text, font, size }: { text: string; font: string; s
     lines.push(line);
   }
   const widest = Math.max(...lines.map((l) => measure(l, font)));
-  const padX = PAD_X * size;
-  const padY = PAD_Y * size;
+  const boxed = background !== undefined && background !== 'none';
+  const padX = (boxed ? BACKGROUND_PAD_X : PAD_X) * size;
+  const padY = (boxed ? BACKGROUND_PAD_Y : PAD_Y) * size;
   return {
     lines,
     width: widest * size + 2 * padX,

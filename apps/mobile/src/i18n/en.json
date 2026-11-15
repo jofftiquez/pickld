@@ -423,28 +423,51 @@
   "editText": {
     "field": "Your text",
     "placeholder": "Type something",
+    "fieldHint": "Shows on the photo as you type. Return starts a new line",
     "fieldHintSelected": "Edits the selected text",
-    "add": "Add text",
+    "newText": "New text",
+    "newTextHint": "Starts another text on the photo",
+    "done": "Done",
+    "doneHint": "Closes the keyboard",
     "fonts": "Fonts",
     "fontLabel": "{{font}} font",
     "font": {
       "clean": "Clean",
       "bold": "Bold",
       "type": "Type",
-      "serif": "Serif"
+      "serif": "Serif",
+      "script": "Script",
+      "strong": "Strong",
+      "marker": "Marker",
+      "hand": "Hand"
     },
-    "color": "Color",
     "colors": "Text color",
     "colorName": {
       "white": "White",
       "ink": "Black",
+      "gray": "Gray",
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
       "pickle": "Pickle green",
+      "teal": "Teal",
+      "blue": "Blue",
+      "purple": "Purple",
+      "pink": "Pink",
+      "sky": "Sky blue",
       "butter": "Butter yellow",
-      "blush": "Blush pink",
-      "sky": "Sky blue"
+      "blush": "Blush pink"
     },
-    "size": "Size",
-    "sizeLabel": "Text size",
+    "backgroundShort": "Background",
+    "backgroundGlyph": "A",
+    "background": {
+      "none": "No background",
+      "solid": "Solid background",
+      "soft": "Soft background"
+    },
+    "backgroundHint": "Changes to {{next}}",
+    "outline": "Outline",
+    "outlineColors": "Outline color",
     "align": {
       "left": "Align left",
       "center": "Align center"

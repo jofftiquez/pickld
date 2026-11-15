@@ -640,19 +640,19 @@ describe('Bubble tool (M2-16)', () => {
 });
 
 describe('Text tool (M2-17)', () => {
-  it('Text tab: type, Add text, restyle, Undo, and Done saves the text and its style as data', async () => {
+  it('Text tab: typing shows the text, restyle, Undo, and Done saves the text and its style as data', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(screen.getByRole('tab', { name: 'Text' }));
     expect(screen.getByTestId('editor-panel-text')).toBeTruthy();
 
     await fireEvent.changeText(screen.getByLabelText('Your text'), 'sinigang szn');
-    await fireEvent.press(screen.getByRole('button', { name: 'Add text' }));
     const drawn = screen.getByRole('button', { name: 'Text: sinigang szn' });
     expect(within(drawn).getByText('sinigang szn')).toBeTruthy();
     expect(screen.getByTestId(`${drawn.props.testID as string}-selected`)).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Serif font' }));
+    await fireEvent.press(screen.getByTestId('editor-text-background'));
     await fireEvent.press(screen.getByRole('radio', { name: 'Sky blue' }));
     await fireEvent.press(screen.getByTestId('editor-undo')); // takes back the color only
     expect(screen.getByRole('radio', { name: 'Sky blue' }).props.accessibilityState).toMatchObject({ checked: false });
@@ -667,6 +667,7 @@ describe('Text tool (M2-17)', () => {
         text: 'sinigang szn',
         font: 'serif',
         color: 'white',
+        background: 'solid',
         size: 30,
         align: 'center',
         x: 0.5,

@@ -1,7 +1,7 @@
 // Gesture-handler's own jest mocks for its native module (not in the shared jest setup).
 import 'react-native-gesture-handler/jestSetup';
 
-import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -188,6 +188,16 @@ describe('BubblePanel', () => {
     expect(screen.getByText('Hi!')).toBeTruthy(); // drawn on the photo
     await undo();
     expect(edits().overlays.map((o) => o.id)).toEqual(['nb1']);
+  });
+
+  it('fast typing before the new bubble comes back selected still makes one bubble', async () => {
+    await render(<Harness />);
+    // Both keystrokes land before the panel re-renders with the bubble it added.
+    await act(() => {
+      field().props.onChangeText('H');
+      field().props.onChangeText('Hey');
+    });
+    expect(edits().overlays).toMatchObject([{ id: 'nb1', text: 'Hey' }]);
   });
 
   it('with a bubble selected, the panel shows and edits it in place', async () => {

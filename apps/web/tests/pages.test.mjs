@@ -100,12 +100,48 @@ const CAPTIONED = {
   ],
 };
 
+/** Texts in the newer styles: a pinched-up font on a solid background over two lines, and an outline. */
+const STYLED = {
+  v: 1,
+  filter: 'original',
+  overlays: [
+    {
+      id: 'solid',
+      type: 'text',
+      text: 'GAME DAY\nlet’s go',
+      font: 'strong',
+      color: 'yellow',
+      background: 'solid',
+      size: 30,
+      align: 'center',
+      x: 0.5,
+      y: 0.3,
+      scale: 0.6,
+      rotation: 0,
+    },
+    {
+      id: 'outlined',
+      type: 'text',
+      text: 'tara',
+      font: 'marker',
+      color: 'white',
+      outline: 'ink',
+      size: 30,
+      align: 'left',
+      x: 0.5,
+      y: 0.7,
+      scale: 0.5,
+      rotation: 0,
+    },
+  ],
+};
+
 function pages(url) {
   // Out of slot order on purpose: the page sorts them.
   const moments = [
     moment(url, 3, 'evening', { caption: 'Early night. Ordinary and good.', edits: CAPTIONED }),
     moment(url, 1, 'morning', { caption: 'older caption', edits: { v: 1, filter: 'mono', overlays: [] } }),
-    moment(url, 2, 'whereami'),
+    moment(url, 2, 'whereami', { edits: STYLED }),
   ];
   return {
     jars: {
@@ -358,6 +394,49 @@ test('a cloud thought draws its puffs in its fill behind the text, with its dots
   assert.ok((await bubble.locator('svg[data-bubble-cloud] circle').count()) >= 8, 'puffs round the edge');
   assert.equal(await bubble.locator('svg[data-bubble-tail] circle').count(), 2);
   assert.equal(await bubble.locator('svg[data-bubble-tail]').getAttribute('data-bubble-tail'), 'left');
+  await page.close();
+});
+
+test('text draws as the app lays it out: its lines, its font, sized with its box, on its background or outline', async () => {
+  const { page } = await open(`/j/${EVERYONE}`);
+  const read = (id) =>
+    page.locator(`[data-text-overlay="${id}"]`).evaluate(async (el) => {
+      const s = getComputedStyle(el);
+      const photo = el.closest('[data-overlays]').getBoundingClientRect().width;
+      return {
+        text: el.textContent,
+        width: el.getBoundingClientRect().width / photo,
+        fontSize: parseFloat(s.fontSize) / photo,
+        family: s.fontFamily,
+        background: s.backgroundColor,
+        color: s.color,
+        shadows: s.textShadow === 'none' ? 0 : s.textShadow.split(/,(?![^(]*\))/).length,
+        whiteSpace: s.whiteSpace,
+        // The bundled face behind the family, fetched for these words.
+        loaded: (await document.fonts.load(`30px ${s.fontFamily}`, el.textContent)).some(
+          (f) => f.status === 'loaded' && !f.family.includes('Fallback'),
+        ),
+      };
+    });
+  await page.locator('[data-text-overlay="solid"]').waitFor();
+  const solid = await read('solid');
+  assert.equal(solid.text, 'GAME DAY\nlet’s go');
+  assert.equal(solid.whiteSpace, 'pre');
+  // Anton letters are 0.5 em on average, a space 0.3: each line is 7 × 0.5 + 0.3 = 3.8 em, plus 0.4 em
+  // padding each side on a background: a 4.6 em (138-point) box, 0.6 of the photo, so 30 points is
+  // 0.6 × 30 / 138 of it.
+  assert.ok(Math.abs(solid.width - 0.6) < 0.005, `${solid.width} of the photo wide`);
+  assert.ok(Math.abs(solid.fontSize - (0.6 * 30) / 138) < 0.0005, `font size ${solid.fontSize}`);
+  assert.equal(solid.background, 'rgb(253, 203, 92)'); // yellow fills the box
+  assert.equal(solid.color, 'rgb(17, 20, 13)'); // in black, which reads on yellow
+  assert.equal(solid.shadows, 0);
+  assert.ok(solid.loaded, `${solid.family} is loaded`);
+
+  const outlined = await read('outlined');
+  assert.equal(outlined.background, 'rgba(0, 0, 0, 0)');
+  assert.equal(outlined.color, 'rgb(255, 255, 255)');
+  assert.equal(outlined.shadows, 16, 'sixteen copies of the words round them');
+  assert.ok(outlined.loaded, `${outlined.family} is loaded`);
   await page.close();
 });
 

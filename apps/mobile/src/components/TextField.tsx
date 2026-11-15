@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentRef, ReactNode, Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
@@ -13,6 +13,8 @@ export type TextFieldProps = {
   onChangeText: (value: string) => void;
   /** Typing is finished: the field lost focus or Return was pressed. */
   onEndEditing?: () => void;
+  /** The field got focus (the keyboard is coming up). */
+  onFocus?: () => void;
   /** Shows "n / max" under the field and stops input past max. */
   maxLength?: number;
   /** Multi-line bio-style field (74 px tall). */
@@ -33,6 +35,8 @@ export type TextFieldProps = {
   testID?: string;
   /** Shown inside the field on the right, such as "✓ Available" (About). */
   trailing?: ReactNode;
+  /** The input, to focus it later (the editor's New text). */
+  inputRef?: Ref<ComponentRef<typeof TextInput>>;
 };
 
 /** Labelled text input from EditProfile, with an optional character counter. */
@@ -41,6 +45,7 @@ export function TextField({
   value,
   onChangeText,
   onEndEditing,
+  onFocus,
   maxLength,
   multiline = false,
   placeholder,
@@ -55,6 +60,7 @@ export function TextField({
   autoFocus,
   testID,
   trailing,
+  inputRef,
 }: TextFieldProps) {
   const { t } = useTranslation();
   const count = value.length;
@@ -68,11 +74,13 @@ export function TextField({
       </Text>
       <View>
         <TextInput
+          ref={inputRef}
           accessibilityLabel={label}
           accessibilityHint={accessibilityHint}
           value={value}
           onChangeText={onChangeText}
           onEndEditing={onEndEditing}
+          onFocus={onFocus}
           maxLength={maxLength}
           multiline={multiline}
           placeholder={placeholder}
