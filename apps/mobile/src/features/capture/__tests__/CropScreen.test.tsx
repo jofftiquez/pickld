@@ -6,6 +6,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
 import '../../edit/__tests__/mockReanimated';
 import type { ReactNode } from 'react';
+import * as Haptics from 'expo-haptics';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
@@ -18,6 +19,7 @@ import { prepareItem } from '@/lib/queue/prepare';
 import type { QueueItem } from '@/lib/queue/store';
 import { cropProfilePhoto, useProfileCrop } from '@/features/profile/profileCrop';
 import type { ProfileCrop } from '@/lib/image/profileImage';
+import { crop, space } from '@/theme/tokens';
 
 // Crop screen (FR-CAP-03, FR-CAP-02; design: Crop): buttons, gestures and the zoom slider change what Done
 // queues; Reset undoes; Fill / Fit (D-152) and the frame styles reach the queued crop; Cancel returns to the camera with nothing queued; Done queues the raw photo
@@ -46,6 +48,8 @@ const pending: PendingCrop = {
 // A moment's sheet has the Fill / Fit row (D-152).
 const frame = () =>
   cropFrame(Dimensions.get('window'), { top: 0, bottom: 0 }, CROP_RATIO.moment, MOMENT_CROP_SHEET_HEIGHT);
+// The frame's left edge in the photo area, which spans the window.
+const frameLeft = () => (Dimensions.get('window').width - frame().width) / 2;
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
@@ -153,7 +157,7 @@ describe('Crop screen', () => {
     expect(screen.getByText('Every Pickld moment is 3:4, so your jars always line up.')).toBeTruthy();
   });
 
-  it('puts Next: edit in the header as a pill and Reset with the tools (D-65); the frame fits the sheet', async () => {
+  it('puts Next: edit in the header as a pill (D-65); Rotate, Flip and Reset down the frame’s top right (D-158)', async () => {
     await openCrop();
     const header = screen.getByTestId('crop-header');
     expect(within(header).getByRole('button', { name: 'Cancel' })).toBeTruthy();
@@ -161,11 +165,25 @@ describe('Crop screen', () => {
       'Adds the photo to #afternoon and opens the editor',
     );
     expect(within(header).queryByRole('button', { name: 'Reset' })).toBeNull();
-    const tools = within(screen.getByTestId('crop-tools')).getAllByRole('button');
+    // A column of round glass buttons over the photo, as in the editor; none of them in the sheet any more.
+    const column = screen.getByTestId('crop-tools');
+    expect(column).toHaveStyle({
+      position: 'absolute',
+      top: crop.frameInsetY + space.md,
+      right: frameLeft() + space.md,
+    });
+    const tools = within(column).getAllByRole('button');
     expect(tools.map((tool) => tool.props.accessibilityLabel)).toEqual(['Rotate 90 degrees', 'Flip', 'Reset']);
-    expect(screen.getByRole('button', { name: 'Reset' }).props.accessibilityHint).toBe(
+    expect(within(column).getAllByTestId('glass')).toHaveLength(3);
+    expect(tools.map((tool) => tool.props.accessibilityHint)).toEqual([
+      undefined,
+      'Mirrors the photo left to right',
       'Undoes every change to the crop',
-    );
+    ]);
+    const sheet = screen.getByTestId('crop-sheet');
+    for (const name of ['Rotate 90 degrees', 'Flip', 'Reset']) {
+      expect(within(sheet).queryByRole('button', { name })).toBeNull();
+    }
     // The drawn frame is the one Done crops to.
     const drawn = screen.getByTestId('crop-frame', { includeHiddenElements: true });
     expect(drawn).toHaveStyle({ width: frame().width, height: frame().height });
@@ -450,7 +468,7 @@ describe('Fill / Fit (D-152)', () => {
     // At full size the 2:1 photo spans the frame's width: it only moves up and down, at most to the bottom edge.
     await drag(5000, 5000);
     const bottom = (f.height - f.width / 2) / 2 / f.height;
-    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: 45, top: 48 + f.height - f.width / 2 });
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: frameLeft(), top: 48 + f.height - f.width / 2 });
     // Pinched past the smallest: 30% of the size that fits. Pinched up again: never past whole.
     await pinchTo(0.01);
     expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ width: f.width * 0.3 });
@@ -459,7 +477,7 @@ describe('Fill / Fit (D-152)', () => {
     // Half size, then dragged far left: the photo stops at the frame's left edge, a quarter of the frame from centre.
     await pinchTo(0.5);
     await drag(-5000, 0);
-    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: 45, width: f.width / 2 });
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: frameLeft(), width: f.width / 2 });
     await done();
     const fit = queuedCrop()?.fit;
     expect(fit).toMatchObject({ frame: 'white', scale: 0.5, border: 'none', corners: 'none' });
@@ -476,7 +494,7 @@ describe('Fill / Fit (D-152)', () => {
     await doubleTap();
     const f = frame();
     expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({
-      left: 45,
+      left: frameLeft(),
       width: f.width,
       top: 48 + (f.height - f.width / 2) / 2,
     });
@@ -489,6 +507,96 @@ describe('Fill / Fit (D-152)', () => {
     );
     await done();
     expect(queuedCrop()).toMatchObject({ rotate: 0, fit: { scale: 1, x: 0, y: 0 } });
+  });
+
+  // D-158: dragged near the frame's centre, the photo's centre snaps to it across and/or down, with a guide line and
+  // a tick; it lets go only 1.5 × the threshold away. Half size, so the 2:1 photo can move both ways.
+  describe('centre snap in Fit', () => {
+    const guide = (axis: 'vertical' | 'horizontal') =>
+      screen.getByTestId(`crop-snap-${axis}`, { includeHiddenElements: true });
+    const guides = () => ({
+      vertical: StyleSheet.flatten(guide('vertical').props.style).opacity,
+      horizontal: StyleSheet.flatten(guide('horizontal').props.style).opacity,
+    });
+    // One drag through these points (offsets in points from where the photo started: the frame's centre).
+    const dragThrough = async (points: [number, number][], check?: (step: number) => void) => {
+      const pan = createGestureController('crop-pan');
+      await act(() => {
+        pan.begin({ x: 100, y: 100, translationX: 0, translationY: 0 });
+        pan.activate({ x: 100, y: 100, translationX: 0, translationY: 0 });
+      });
+      for (const [i, [dx, dy]] of points.entries()) {
+        await act(() => pan.update({ x: 100 + dx, y: 100 + dy, translationX: dx, translationY: dy }));
+        check?.(i);
+      }
+      const [dx, dy] = points.at(-1) ?? [0, 0];
+      await act(() => pan.end({ x: 100 + dx, y: 100 + dy, translationX: dx, translationY: dy }));
+    };
+    const openHalf = async () => {
+      await openCrop();
+      await fireEvent.press(tab('Fit'));
+      await pinchTo(0.5);
+      jest.mocked(Haptics.selectionAsync).mockClear();
+    };
+
+    it('a drag ending within 6 points of the centre lands exactly centred, as a double tap does', async () => {
+      await openHalf();
+      expect(guides()).toEqual({ vertical: 0, horizontal: 0 });
+      // Moved away first, then back to 4 points right and 5 up of the centre.
+      await dragThrough([[60, 40]]);
+      const seen: ReturnType<typeof guides>[] = [];
+      await dragThrough([[-56, -45]], () => seen.push(guides()));
+      expect(seen).toEqual([{ vertical: 1, horizontal: 1 }]);
+      // Both axes snapped in on the same step: one tick.
+      expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+      // The guides go when the finger lifts; the preview is exactly centred.
+      expect(guides()).toEqual({ vertical: 0, horizontal: 0 });
+      const f = frame();
+      expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({
+        left: frameLeft() + f.width / 4,
+        top: 48 + (f.height - f.width / 4) / 2,
+      });
+      await done();
+      const fit = queuedCrop()?.fit;
+      expect(fit?.x).toBe(0);
+      expect(fit?.y).toBe(0);
+    });
+
+    it('holds the snap up to 9 points, lets go past it, and snaps again only within 6', async () => {
+      await openHalf();
+      const shown: number[] = [];
+      // Across: 40 away, 4 (snaps in), 8 and 9 (held), 10 (lets go), 7 (not again: outside 6). Down: 30 away.
+      await dragThrough(
+        [
+          [40, 30],
+          [4, 30],
+          [8, 30],
+          [9, 30],
+          [10, 30],
+          [7, 30],
+        ],
+        () => shown.push(guides().vertical),
+      );
+      expect(shown).toEqual([0, 1, 1, 1, 0, 0]);
+      expect(guides().horizontal).toBe(0);
+      // A tick when it snapped in; none when it let go.
+      expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+      await done();
+      const f = frame();
+      const fit = queuedCrop()?.fit;
+      expect(fit?.x).toBeCloseTo(7 / f.width, 9);
+      expect(fit?.y).toBeCloseTo(30 / f.height, 9);
+    });
+
+    it('no guide on an axis the photo spans: at full size it is always centred across', async () => {
+      await openCrop();
+      await fireEvent.press(tab('Fit'));
+      jest.mocked(Haptics.selectionAsync).mockClear();
+      const shown: ReturnType<typeof guides>[] = [];
+      await dragThrough([[2, 40]], () => shown.push(guides()));
+      expect(shown).toEqual([{ vertical: 0, horizontal: 0 }]);
+      expect(Haptics.selectionAsync).not.toHaveBeenCalled();
+    });
   });
 
   it('a double tap does nothing in Fill; Fit’s moves leave Fill’s crop as it was', async () => {
@@ -530,7 +638,10 @@ describe('Fill / Fit (D-152)', () => {
     // Thick: 24 / 480 of the frame's width on every side, in black, around the photo (smaller to make room).
     const border = (24 / 480) * f.width;
     expect(screen.getByTestId('crop-fit-box')).toHaveStyle({ backgroundColor: '#000000', width: f.width });
-    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({ left: 45 + border, width: f.width - border * 2 });
+    expect(screen.getByTestId('crop-fit-photo')).toHaveStyle({
+      left: frameLeft() + border,
+      width: f.width - border * 2,
+    });
     await done();
     expect(queuedCrop()?.fit).toMatchObject({ border: 'thick', borderColor: 'black' });
   });
@@ -628,6 +739,32 @@ describe('Crop screen for profile photos', () => {
     for (const name of ['Cancel', 'Reset', 'Use photo']) expect(screen.getByRole('button', { name })).toBeTruthy();
     expect(screen.getByRole('adjustable', { name: 'Zoom' })).toBeTruthy();
     expect(screen.queryByText('#afternoon · from gallery')).toBeNull();
+    // Reset alone at the square's top right corner (D-158).
+    const column = screen.getByTestId('crop-tools');
+    expect(
+      within(column)
+        .getAllByRole('button')
+        .map((b) => b.props.accessibilityLabel),
+    ).toEqual(['Reset']);
+    expect(column).toHaveStyle({ right: (Dimensions.get('window').width - square.width) / 2 + space.md });
+  });
+
+  it('Reset at the corner puts a dragged profile photo back in the middle', async () => {
+    const { result } = await openProfileCrop('avatar');
+    const pan = createGestureController('crop-pan');
+    await act(() => {
+      pan.begin({ x: 100, y: 100, translationX: 0, translationY: 0 });
+      pan.activate({ x: 100, y: 100, translationX: 0, translationY: 0 });
+      pan.update({ x: 100, y: 5000, translationX: 0, translationY: 4900 });
+      pan.end({ x: 100, y: 5000, translationX: 0, translationY: 4900 });
+    });
+    await press('Reset');
+    await press('Use photo');
+    await act(async () => {});
+    await expect(result).resolves.toEqual({
+      rect: { originX: 0, originY: 500, width: 3000, height: 3000 },
+      basis: { width: 3000, height: 4000 },
+    });
   });
 
   it('cover: the 5:2 frame, no circle guide', async () => {

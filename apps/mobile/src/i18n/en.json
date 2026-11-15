@@ -829,7 +829,6 @@
     "hint": "Drag to reposition · pinch to zoom",
     "photo": "Photo in the crop frame",
     "zoom": "Zoom",
-    "rotate": "Rotate",
     "rotateLabel": "Rotate 90 degrees",
     "flip": "Flip",
     "flipHint": "Mirrors the photo left to right",

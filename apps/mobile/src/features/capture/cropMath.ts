@@ -32,10 +32,9 @@ export const initialCrop: CropState = { rotation: 0, flip: false, zoom: MIN_ZOOM
  * title and the main button, its bottom padding and the gap above the photo (CropView). */
 export const CROP_HEADER_HEIGHT = crop.headerPaddingTop + sizes.minTap + space.sm + space.sm;
 
-/** The tool sheet at normal text sizes, without the bottom safe area: its top padding, the zoom slider,
- * the tools row, the note and the bottom padding, with the gaps between them (CropView). */
-export const CROP_SHEET_HEIGHT =
-  crop.sheetPaddingTop + sizes.minTap + space.lg + crop.toolButton + space.lg + crop.noteHeight + space.xxl;
+/** The sheet at normal text sizes, without the bottom safe area: its top padding, the zoom slider, the note and
+ * the bottom padding, with the gap between them (CropView). Rotate, Flip and Reset sit on the photo (D-158). */
+export const CROP_SHEET_HEIGHT = crop.sheetPaddingTop + sizes.minTap + space.lg + crop.noteHeight + space.lg;
 
 /** A moment's tool sheet: the same, with the Fill / Fit row on top (D-152). */
 export const MOMENT_CROP_SHEET_HEIGHT = CROP_SHEET_HEIGHT + sizes.minTap + space.lg;
