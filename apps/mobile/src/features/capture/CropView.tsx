@@ -311,7 +311,7 @@ export function CropView(props: CropViewProps) {
           {profile ? null : (
             <>
               <CropToolButton
-                icon="rotate"
+                icon="rotateRight"
                 label={t('crop.rotate')}
                 accessibilityLabel={t('crop.rotateLabel')}
                 onPress={() => props.onRotate?.()}
