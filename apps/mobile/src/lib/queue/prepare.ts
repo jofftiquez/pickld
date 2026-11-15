@@ -16,8 +16,24 @@ function deleteQuietly(uri: string): void {
   }
 }
 
-export async function prepareItem(item: QueueItem): Promise<QueueItem> {
-  if (item.prepared) return item;
+/** Preparations running now, by queue id: the editor waits for the one Crop or the shutter started. */
+const running = new Map<number, Promise<QueueItem>>();
+
+/**
+ * Prepares `item` unless it already is. A second call while one is running for the same item waits for
+ * that one instead of decoding the photo again (the first swaps in the prepared files and deletes the raw
+ * one the second would still be reading).
+ */
+export function prepareItem(item: QueueItem): Promise<QueueItem> {
+  if (item.prepared) return Promise.resolve(item);
+  const existing = running.get(item.id);
+  if (existing) return existing;
+  const job = prepare(item).finally(() => running.delete(item.id));
+  running.set(item.id, job);
+  return job;
+}
+
+async function prepare(item: QueueItem): Promise<QueueItem> {
   const prepared = await preparePhoto(item.photoUri, item.crop ?? {});
   try {
     return await savePrepared(item.id, { photoUri: prepared.full.uri, thumbUri: prepared.thumb.uri });

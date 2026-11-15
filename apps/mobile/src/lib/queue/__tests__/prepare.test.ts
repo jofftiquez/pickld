@@ -54,3 +54,13 @@ it('an already prepared item is left alone', async () => {
   await prepareItem({ ...raw, prepared: true });
   expect(preparePhoto).not.toHaveBeenCalled();
 });
+
+it('a second call while the first is running waits for it instead of decoding the photo again', async () => {
+  const [a, b] = await Promise.all([prepareItem(raw), prepareItem(raw)]);
+  expect(preparePhoto).toHaveBeenCalledTimes(1);
+  expect(savePrepared).toHaveBeenCalledTimes(1);
+  expect(b).toBe(a);
+  // Once it has finished, a raw row (e.g. a retry after a failure) is prepared again.
+  await prepareItem(raw);
+  expect(preparePhoto).toHaveBeenCalledTimes(2);
+});

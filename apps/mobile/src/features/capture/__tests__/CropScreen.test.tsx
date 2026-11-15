@@ -14,6 +14,8 @@ import { CROP_RATIO, cropFrame, cropRectFor, initialCrop } from '../cropMath';
 import { usePendingCrop, type PendingCrop } from '../pendingCrop';
 import { saveGalleryPhoto } from '../saveCapture';
 import { captureError } from '@/lib/monitoring';
+import { prepareItem } from '@/lib/queue/prepare';
+import type { QueueItem } from '@/lib/queue/store';
 import { cropProfilePhoto, useProfileCrop } from '@/features/profile/profileCrop';
 import type { ProfileCrop } from '@/lib/image/profileImage';
 
@@ -22,6 +24,7 @@ import type { ProfileCrop } from '@/lib/image/profileImage';
 // with the crop through the queue-first path and opens the editor. saveGalleryPhoto has its own test.
 jest.mock('../saveCapture', () => ({ saveGalleryPhoto: jest.fn() }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+jest.mock('@/lib/queue/prepare', () => ({ prepareItem: jest.fn() }));
 
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
 const image = { width: 4000, height: 2000 };
@@ -84,6 +87,8 @@ beforeEach(() => {
     .mocked(saveGalleryPhoto)
     .mockImplementation(async () => ({ id: 9 }) as Awaited<ReturnType<typeof saveGalleryPhoto>>);
   jest.mocked(captureError).mockClear();
+  jest.mocked(prepareItem).mockReset();
+  jest.mocked(prepareItem).mockImplementation(async (item) => ({ ...item, prepared: true }));
 });
 
 describe('Crop screen', () => {
@@ -137,6 +142,36 @@ describe('Crop screen', () => {
       disabled: true,
     });
     await act(async () => finish({ id: 9 } as Awaited<ReturnType<typeof saveGalleryPhoto>>));
+    expect(screen).toHavePathname('/edit/9');
+  });
+
+  it('Done waits for the cropped file before opening the editor, so the editor draws the frame chosen here (D-150)', async () => {
+    let finish: (value: QueueItem) => void = () => {};
+    jest.mocked(prepareItem).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    await openCrop();
+    await done();
+    // Queued (rule 3), but the raw photo is not what the editor may draw: still on Crop, Done busy.
+    expect(prepareItem).toHaveBeenCalledWith({ id: 9 });
+    expect(screen).toHavePathname('/crop');
+    expect(screen.getByRole('button', { name: 'Next: edit' }).props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
+    await act(async () => finish({ id: 9, prepared: true } as QueueItem));
+    expect(screen).toHavePathname('/edit/9');
+  });
+
+  it('if preparing fails, the queued photo still opens in the editor and the error is reported', async () => {
+    jest.mocked(prepareItem).mockRejectedValueOnce(new Error('decode failed'));
+    await openCrop();
+    await done();
+    expect(captureError).toHaveBeenCalledWith(expect.objectContaining({ message: 'decode failed' }), {
+      area: 'gallery',
+    });
     expect(screen).toHavePathname('/edit/9');
   });
 

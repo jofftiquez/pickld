@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
 import { captureError } from '@/lib/monitoring';
+import { prepareItem } from '@/lib/queue/prepare';
 import { getSupabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
 
@@ -29,7 +30,7 @@ import { saveGalleryPhoto } from './saveCapture';
 // Crop for moments (M2-10; FR-CAP-02, FR-CAP-03; design: Crop): /crop without a mode. The camera opens it
 // on a gallery photo that isn't 3:4.
 // Done queues the raw photo with the chosen frame, rotation and flip (preparation applies them and writes
-// 1440 × 1920), then opens the editor on it, as the shutter does. Cancel queues nothing.
+// 1440 × 1920), waits for that cropped file, then opens the editor on it. Cancel queues nothing.
 // Moment options' Re-crop (M2-23) opens it on a saved moment's photo: Save crop replaces the moment's photo
 // (see features/moment/recrop.ts) and goes back; Cancel changes nothing.
 export function MomentCropScreen() {
@@ -111,6 +112,11 @@ export function MomentCropScreen() {
         visibility: queryClient.getQueryData<Me>(todayQueryKeys.me(pending.userId))?.defaultVisibility ?? null,
       });
       queuedId = item.id;
+      // The editor must draw the cropped file, not the raw photo: drawn to cover its 3:4 canvas, the raw
+      // photo is its centred middle, so overlays placed on it would land elsewhere on the posted photo
+      // (D-150). Queueing started the preparation; wait for it here, with Done busy. If it fails the photo
+      // is still queued (rule 3) and the upload worker prepares it again.
+      await prepareItem(item).catch((error: unknown) => captureError(error, { area: 'gallery' }));
     } catch (error) {
       captureError(error, { area: 'gallery' });
     }

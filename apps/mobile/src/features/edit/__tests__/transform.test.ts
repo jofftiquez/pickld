@@ -16,6 +16,7 @@ import {
   toPixels,
   type Transform,
 } from '../overlays/transform';
+import { PHOTO_ASPECT } from '../../../../../../supabase/functions/_shared/moment_layout';
 
 // Overlay transform math (FR-CAP-05, FR-CAP-08). Expected values are worked out by hand; photo sizes are
 // deliberately not square and differ between cases so a swapped width/height shows up.
@@ -218,5 +219,31 @@ describe('stepTransform (accessibility actions)', () => {
     expect(stepTransform({ ...t, y: 0.02 }, 'up').y).toBe(0);
     expect(stepTransform({ ...t, scale: 1.9 }, 'bigger').scale).toBe(MAX_SCALE);
     expect(stepTransform({ ...t, scale: 0.11 }, 'smaller').scale).toBe(MIN_SCALE);
+  });
+});
+
+describe('an overlay sits on the same photo pixel in the editor, the posted moment and the export (D-150)', () => {
+  // The editor draws the prepared 3:4 file over its whole 3:4 canvas, so an overlay's fractions of the
+  // canvas are fractions of the posted photo. Worked by hand: a 360 × 480 pt canvas, a 90 pt sticker centred
+  // at (252, 132) pt.
+  const canvas = { width: 360, height: 480 };
+  const placed = fromPixels({ cx: 252, cy: 132, width: 90, rotation: 0 }, canvas);
+
+  it('is stored as fractions of the photo', () => {
+    expectTransform(placed, { x: 0.7, y: 0.275, scale: 0.25, rotation: 0 });
+  });
+
+  it('the moment view draws it on the posted 1440 × 1920 photo at (1008, 528), 360 px wide', () => {
+    const box = toPixels(placed, full, 1);
+    expect(box.cx).toBeCloseTo(1008, 6);
+    expect(box.cy).toBeCloseTo(528, 6);
+    expect(box.width).toBeCloseTo(360, 6);
+  });
+
+  it('the export renderer puts its centre on the same pixel (x × W, y × round(W ÷ 3:4))', () => {
+    const W = full.width;
+    const H = Math.round(W / PHOTO_ASPECT);
+    expect(placed.x * W).toBeCloseTo(1008, 6);
+    expect(placed.y * H).toBeCloseTo(528, 6);
   });
 });
