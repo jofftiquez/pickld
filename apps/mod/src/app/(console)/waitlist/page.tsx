@@ -5,6 +5,7 @@ import { DayBars } from '~/components/DayBars';
 import { PageHeader } from '~/components/PageHeader';
 import { Pagination } from '~/components/Pagination';
 import { RemoveEmailForm } from '~/components/RemoveEmailForm';
+import { SendCodesForm } from '~/components/SendCodesForm';
 import { Section } from '~/components/Section';
 import { Table } from '~/components/Table';
 import { Tile } from '~/components/Tile';
@@ -14,12 +15,12 @@ import { when } from '~/lib/audit';
 import { lastPage, readPaging } from '~/lib/paging';
 import { input, secondaryButton } from '~/lib/styles';
 import { supabase } from '~/lib/supabase';
-import { loadSummary, loadWaitlist, STATES, type WaitlistState } from '~/lib/waitlist';
+import { loadCodes, loadSummary, loadWaitlist, STATES, type WaitlistState } from '~/lib/waitlist';
 
 const link = { color: colors.brandLink, fontWeight: 700, fontSize: 14 } as const;
 
 // The launch waitlist (FR-MOD-08): how many joined, from where, and who. Moderators can search it, download
-// it as CSV and remove an email when someone asks. Admitting people (INV-08) is not done here.
+// it as CSV and remove an email when someone asks. Founders email codes to the oldest from here (INV-09).
 export default async function Waitlist({
   searchParams,
 }: {
@@ -30,7 +31,11 @@ export default async function Waitlist({
   const state = (STATES as readonly string[]).includes(params.state ?? '') ? (params.state as WaitlistState) : 'all';
   const paging = readPaging(params);
   const client = await supabase();
-  const [summary, first] = await Promise.all([loadSummary(client), loadWaitlist(client, q, state, paging)]);
+  const [summary, codes, first] = await Promise.all([
+    loadSummary(client),
+    loadCodes(client),
+    loadWaitlist(client, q, state, paging),
+  ]);
   let list = first;
   const page = Math.min(paging.page, lastPage(list.total, paging.size));
   if (page !== paging.page) {
@@ -101,6 +106,24 @@ export default async function Waitlist({
           )}
         </section>
       </div>
+
+      <Section title={t('waitlist.codes.title')}>
+        <Tile label={t('waitlist.codes.ready')} value={String(codes.ready)} />
+        <Tile label={t('waitlist.codes.sent')} value={String(codes.sent)} />
+        <Tile label={t('waitlist.codes.used')} value={String(codes.used)} />
+        <Tile
+          label={t('waitlist.codes.expired')}
+          value={String(codes.expired)}
+          hint={t('waitlist.codes.expiredHint')}
+        />
+      </Section>
+      <section aria-label={t('waitlist.codes.send')} style={{ display: 'grid', gap: 10 }}>
+        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{t('waitlist.codes.send')}</h2>
+        <p style={{ margin: 0, color: colors.muted, fontSize: 13, maxWidth: 640 }}>{t('waitlist.codes.body')}</p>
+        <div style={{ background: colors.surface, borderRadius: radius.card, padding: 16 }}>
+          <SendCodesForm ready={codes.ready} />
+        </div>
+      </section>
 
       <section style={{ display: 'grid', gap: 10 }}>
         <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{t('waitlist.list.title')}</h2>

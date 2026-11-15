@@ -1790,6 +1790,8 @@ export type Database = {
           admitted_at: string | null;
           created_at: string;
           email: string;
+          invite_code: string | null;
+          invited_at: string | null;
           ip_hash: string | null;
           joined_at: string | null;
           notified_at: string | null;
@@ -1801,6 +1803,8 @@ export type Database = {
           admitted_at?: string | null;
           created_at?: string;
           email: string;
+          invite_code?: string | null;
+          invited_at?: string | null;
           ip_hash?: string | null;
           joined_at?: string | null;
           notified_at?: string | null;
@@ -1811,13 +1815,23 @@ export type Database = {
           admitted_at?: string | null;
           created_at?: string;
           email?: string;
+          invite_code?: string | null;
+          invited_at?: string | null;
           ip_hash?: string | null;
           joined_at?: string | null;
           notified_at?: string | null;
           source?: string;
           user_id?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'waitlist_invite_code_fkey';
+            columns: ['invite_code'];
+            isOneToOne: true;
+            referencedRelation: 'invite_codes';
+            referencedColumns: ['code'];
+          },
+        ];
       };
     };
     Views: {
@@ -2220,6 +2234,7 @@ export type Database = {
       in_quiet_hours: { Args: { at: string; p_user: string }; Returns: boolean };
       invite_add_set: { Args: { p_owner: string; p_set_no: number }; Returns: undefined };
       invite_check: { Args: { p_ip_hash: string; p_token: string }; Returns: Json };
+      invite_founder: { Args: Record<PropertyKey, never>; Returns: string };
       invite_freeze: { Args: { p_note: string; p_user: string }; Returns: Json };
       invite_grant_set: { Args: { p_user: string }; Returns: Json };
       invite_joined: { Args: { p_invitee: string; p_owner: string }; Returns: undefined };
@@ -2465,6 +2480,7 @@ export type Database = {
           total: number;
         }[];
       };
+      mod_waitlist_codes: { Args: Record<PropertyKey, never>; Returns: Json };
       mod_waitlist_export: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2792,6 +2808,15 @@ export type Database = {
       waitlist_join:
         | { Args: { p_email: string; p_ip_hash: string; p_source?: string }; Returns: string }
         | { Args: { p_source?: string }; Returns: string };
+      waitlist_mark_sent: { Args: { p_emails: string[] }; Returns: number };
+      waitlist_release: {
+        Args: { p_count: number; p_resend_expired?: boolean };
+        Returns: {
+          code: string;
+          email: string;
+          expires_at: string;
+        }[];
+      };
     };
     Enums: {
       account_job_kind: 'export' | 'delete';

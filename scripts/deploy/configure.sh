@@ -46,9 +46,11 @@ add_secret S3_ACCESS_KEY_ID "$R2_ACCESS_KEY_ID"
 add_secret S3_SECRET_ACCESS_KEY "$R2_SECRET_ACCESS_KEY"
 add_secret PHOTO_BASE_URL "$photo_base"
 add_secret CSAM_MATCHER hash-list
+# Links in emails (fn:waitlist-send) point at this environment's web site.
+add_secret SITE_URL "${WEB_URL:-https://pickld.me}"
 # Optional keys: set on the GitHub environment when the account exists, and the next deploy passes them on.
 for name in SENTRY_DSN OPENAI_API_KEY OPENAI_VISION_MODEL EXPO_ACCESS_TOKEN REVENUECAT_WEBHOOK_SECRET \
-  REVENUECAT_SECRET_KEY WAITLIST_SECRET; do
+  REVENUECAT_SECRET_KEY WAITLIST_SECRET RESEND_API_KEY EMAIL_FROM; do
   [[ -n "${!name:-}" ]] && add_secret "$name" "${!name}"
 done
 
