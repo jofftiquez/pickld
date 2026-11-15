@@ -12,16 +12,25 @@ export type SlotTagProps = {
   /** The editor, for a photo taken on another day: that day (already formatted), so the tag reads
    * "9:00 AM · Thu, Nov 12" instead of "Today · 9:00 AM". */
   shotOn?: string | null;
+  /** The editor, for a photo going into a past day's jar (D-156): that day (already formatted), so the tag
+   * reads "For Sun, Sep 27", the day being filled, never the photo's own date or "Today". Wins over `shotOn`. */
+  forDay?: string | null;
 };
 
 /** "#afternoon / Today · 2:14 PM" over the top of the viewfinder (Camera). */
-export function SlotTag({ slot, time, shotOn }: SlotTagProps) {
+export function SlotTag({ slot, time, shotOn, forDay }: SlotTagProps) {
   const { t } = useTranslation();
-  const label = shotOn ? t('camera.slotTagOn', { slot, time, date: shotOn }) : t('camera.slotTag', { slot, time });
-  const when = shotOn
-    ? // No-break spaces: when the tag wraps at large text, the date moves down whole.
-      t('camera.whenOn', { time, date: shotOn.replace(/ /g, '\u00a0') })
-    : t('camera.when', { time });
+  const label = forDay
+    ? t('camera.slotTagFor', { slot, date: forDay })
+    : shotOn
+      ? t('camera.slotTagOn', { slot, time, date: shotOn })
+      : t('camera.slotTag', { slot, time });
+  // No-break spaces: when the tag wraps at large text, the date moves down whole.
+  const when = forDay
+    ? t('camera.forDay', { date: forDay.replace(/ /g, '\u00a0') })
+    : shotOn
+      ? t('camera.whenOn', { time, date: shotOn.replace(/ /g, '\u00a0') })
+      : t('camera.when', { time });
   return (
     <View accessible accessibilityRole="header" accessibilityLabel={label} style={styles.tag} testID="camera-slot-tag">
       <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />

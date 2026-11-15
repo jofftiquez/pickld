@@ -26,6 +26,8 @@ export type CropViewProps = {
   image: Size;
   /** Already translated, e.g. "#afternoon". Not shown for `avatar` and `cover`. */
   slotLabel: string;
+  /** A gallery photo going into a past day's jar (D-156), formatted: the subtitle names that day. */
+  forDay?: string | null;
   state: CropState;
   busy: boolean;
   /** Queueing the photo failed: say so above the tools. */
@@ -69,7 +71,7 @@ const PERCENT = 100;
  */
 export function CropView(props: CropViewProps) {
   const { uri, image, slotLabel, state, busy, failed, insets, onChange, onZoom, mode = 'gallery' } = props;
-  const { layout = 'fill', frame: fitFrame = 'white' } = props;
+  const { layout = 'fill', frame: fitFrame = 'white', forDay = null } = props;
   const { t } = useTranslation();
   const profile = mode === 'avatar' || mode === 'cover';
   const copy = COPY[mode];
@@ -91,7 +93,11 @@ export function CropView(props: CropViewProps) {
       >
         {t('crop.title')}
       </Text>
-      <Text style={[textStyle('label', '500'), styles.subtitle]}>{t(`${copy}.subtitle`, { slot: slotLabel })}</Text>
+      <Text style={[textStyle('label', '500'), styles.subtitle]}>
+        {mode === 'gallery' && forDay
+          ? t('crop.subtitleFor', { slot: slotLabel, date: forDay })
+          : t(`${copy}.subtitle`, { slot: slotLabel })}
+      </Text>
     </View>
   );
 

@@ -16,7 +16,15 @@ function contrast(a: string, b: string): number {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-const lightSurfaces = ['background', 'surface', 'subtle', 'segmentTrack', 'brandTint', 'dangerTint'] as const;
+const lightSurfaces = [
+  'background',
+  'surface',
+  'subtle',
+  'segmentTrack',
+  'brandTint',
+  'dangerTint',
+  'pastDayPaper',
+] as const;
 const bodyText = ['ink', 'inkSoft', 'muted', 'brandText', 'brandLink', 'danger', 'likeText'] as const;
 
 describe('text contrast', () => {
@@ -28,6 +36,7 @@ describe('text contrast', () => {
     expect(contrast(colors.dayFuture, colors.surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(colors.slotLabelEmpty, colors.surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(colors.zoneText, colors.zoneTint)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(colors.pastDayInk, colors.pastDayWell)).toBeGreaterThanOrEqual(4.5);
   });
 
   it('computes known ratios (black on white is 21:1; white on brand is the documented exception)', () => {

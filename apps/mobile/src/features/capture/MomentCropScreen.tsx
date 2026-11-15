@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { pastDayLabel } from '@/features/days/pastDay';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
 import type { CropSpec, FitFrame } from '@/lib/image/crop';
@@ -156,6 +157,8 @@ export function MomentCropScreen() {
       uri={photo.uri}
       image={image}
       slotLabel={t(`slots.${pending.slot}`)}
+      // D-156: a photo for a past day's jar names that day.
+      forDay={pending.recrop ? null : pastDayLabel(pending.target.localDate, new Date(), pending.target.tz)}
       state={state}
       busy={busy}
       failed={failed}

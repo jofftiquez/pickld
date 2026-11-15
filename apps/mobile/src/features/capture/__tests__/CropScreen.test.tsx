@@ -91,6 +91,8 @@ async function done() {
 const queuedCrop = () => jest.mocked(saveGalleryPhoto).mock.calls.at(-1)?.[0].crop;
 
 beforeEach(() => {
+  // Evening of Nov 8 in Manila: the pending photo's jar day is today.
+  jest.useFakeTimers({ now: new Date('2026-11-08T12:00:00Z'), advanceTimers: true });
   mockStorage.clear();
   usePendingCrop.setState({ pending });
   jest.mocked(saveGalleryPhoto).mockReset();
@@ -102,7 +104,36 @@ beforeEach(() => {
   jest.mocked(prepareItem).mockImplementation(async (item) => ({ ...item, prepared: true }));
 });
 
+afterEach(() => jest.useRealTimers());
+
 describe('Crop screen', () => {
+  // D-156: a photo for a past day's jar names that day; the photo was shot on another day still (Nov 2), so
+  // using its shot date would fail.
+  it('names the past day being filled: "#afternoon · for Thu, Nov 5"', async () => {
+    usePendingCrop.setState({
+      pending: {
+        ...pending,
+        target: { localDate: '2026-11-05', tz: 'Asia/Manila', capturedAt: '2026-11-02T09:00:00+08:00' },
+      },
+    });
+    await openCrop();
+    expect(screen.getByText('#afternoon · for Thu, Nov 5')).toBeTruthy();
+    expect(screen.queryByText(/from gallery/)).toBeNull();
+    expect(screen.queryByText(/Nov 2/)).toBeNull();
+  });
+
+  it('a photo for today’s jar keeps "from gallery", even when it was shot on an earlier day', async () => {
+    usePendingCrop.setState({
+      pending: {
+        ...pending,
+        target: { localDate: '2026-11-08', tz: 'Asia/Manila', capturedAt: '2026-11-04T09:00:00+08:00' },
+      },
+    });
+    await openCrop();
+    expect(screen.getByText('#afternoon · from gallery')).toBeTruthy();
+    expect(screen.queryByText(/ for /)).toBeNull();
+  });
+
   it('shows the design: title, slot, 3:4 lock chip, grid frame, hint, zoom and tools', async () => {
     await openCrop();
     expect(screen.getByRole('header', { name: 'Crop photo' })).toBeTruthy();

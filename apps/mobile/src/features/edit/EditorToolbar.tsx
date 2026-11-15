@@ -17,6 +17,8 @@ export type EditorToolbarProps = {
   time: string;
   /** The capture day when it isn't today, formatted for the slot tag. */
   shotOn: string | null;
+  /** A past day's jar the photo is going into (D-156), formatted: the tag says "For <day>". */
+  forDay?: string | null;
   /** Close leaves the editor; Back returns from the details step to the photo step (D-103); `slots` returns
    * a shared photo to its slot choice. */
   leading: 'close' | 'back' | 'slots';
@@ -42,6 +44,7 @@ export function EditorToolbar({
   slot,
   time,
   shotOn,
+  forDay,
   leading,
   onLeading,
   actionLabel,
@@ -53,7 +56,7 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
   const { t } = useTranslation();
   const largeText = useLargeText();
-  const tag = <SlotTag slot={slot} time={time} shotOn={shotOn} />;
+  const tag = <SlotTag slot={slot} time={time} shotOn={shotOn} forDay={forDay} />;
   return (
     <View
       accessibilityRole="toolbar"

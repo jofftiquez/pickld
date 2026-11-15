@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import { filterMatrices } from '@/features/edit/filters';
-import { sizes, space } from '@/theme/tokens';
+import { colors, sizes, space } from '@/theme/tokens';
 
 import { buildTodayGrid, type ServerMoment } from '../todayGrid';
 import { TodayView, type TodayViewProps } from '../TodayView';
@@ -479,7 +479,7 @@ describe('TodayView for a past day', () => {
     expect(screen.getByLabelText('This day’s moments')).toBeTruthy();
   });
 
-  it('says "in this jar", never shows the first-day card, and notes "Added later" while slots are empty', async () => {
+  it('says "in this jar", never shows the first-day card, and the banner says "Added later" while slots are empty', async () => {
     await renderToday({
       hasAnyJar: false,
       readerCount: 12,
@@ -489,9 +489,62 @@ describe('TodayView for a past day', () => {
     expect(screen.queryByText('Your first jar')).toBeNull();
     expect(screen.getByText('0 of 8 moments')).toBeTruthy();
     expect(screen.getByText('in this jar · 12 readers')).toBeTruthy();
-    expect(screen.getByTestId('day-added-later-note')).toHaveTextContent(
-      'Moments added now show an “Added later” badge.',
-    );
+    expect(screen.getByTestId('past-day-title')).toHaveTextContent('Filling in Sun, Nov 8 · Added later');
+    expect(screen.getByLabelText(/Moments you add here show as “Added later”/)).toBeTruthy();
+    // The banner says it, so the note under the grid doesn't repeat it.
+    expect(screen.queryByTestId('day-added-later-note')).toBeNull();
+  });
+
+  // D-156: a past day never passes for Today.
+  it('sits on warm paper with the past-day banner and Back to Today; Today has neither', async () => {
+    const onBackToToday = jest.fn();
+    await renderToday({
+      hasAnyJar: true,
+      tiles: pastTiles(),
+      day: { date: '2026-11-08', onBack: jest.fn(), onBackToToday },
+    });
+    expect(screen.getByTestId('past-day-screen')).toHaveStyle({ backgroundColor: colors.pastDayPaper });
+    expect(screen.getByTestId('past-day-banner')).toBeTruthy();
+    const back = screen.getByRole('button', { name: 'Back to Today' });
+    expect(back.props.accessibilityHint).toBe('Opens today’s jar');
+    await fireEvent.press(back);
+    expect(onBackToToday).toHaveBeenCalledTimes(1);
+
+    await renderToday();
+    expect(screen.queryByTestId('past-day-banner')).toBeNull();
+    expect(screen.queryByTestId('past-day-screen')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Back to Today' })).toBeNull();
+  });
+
+  it('a full past day reads "Looking back", without "Filling in"', async () => {
+    const slots = [
+      'whereami',
+      'mebusywith',
+      'whoamiwith',
+      'ootd',
+      'selfie',
+      'morning',
+      'afternoon',
+      'evening',
+    ] as const;
+    await renderToday({
+      hasAnyJar: true,
+      tiles: buildTodayGrid({ localDate: '2026-11-08', moments: slots.map((s) => live(s)), queue: [], nowSlot: null }),
+      day: { date: '2026-11-08', onBack: jest.fn(), onBackToToday: jest.fn() },
+    });
+    expect(screen.getByTestId('past-day-title')).toHaveTextContent('Sun, Nov 8 · Added later');
+    expect(screen.queryByText(/Filling/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Back to Today' })).toBeTruthy();
+  });
+
+  it('guards today’s date: no past-day look even on the day page', async () => {
+    await renderToday({
+      hasAnyJar: true,
+      tiles: buildTodayGrid({ localDate: '2026-11-10', moments: [], queue: [], nowSlot: null }),
+      day: { date: '2026-11-10', onBack: jest.fn(), onBackToToday: jest.fn() },
+    });
+    expect(screen.queryByTestId('past-day-banner')).toBeNull();
+    expect(screen.queryByTestId('past-day-screen')).toBeNull();
   });
 
   it('offers Publish only when given one, and pads the bottom without the tab bar', async () => {

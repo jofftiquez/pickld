@@ -35,6 +35,8 @@ export type EditorViewProps = {
   time: string;
   /** The capture day when it isn't today, formatted for the slot tag. */
   shotOn: string | null;
+  /** A past day's jar the photo is going into (D-156), formatted: the slot tag says "For <day>". */
+  forDay?: string | null;
   edits: Edits;
   filter: FilterId;
   tool: EditorTool;
@@ -94,6 +96,7 @@ export function EditorView({
   slot,
   time,
   shotOn,
+  forDay,
   edits,
   filter,
   tool,
@@ -175,6 +178,7 @@ export function EditorView({
         slot={t(`slots.${slot}`)}
         time={time}
         shotOn={shotOn}
+        forDay={forDay}
         leading={onDetails ? 'back' : onBack ? 'slots' : 'close'}
         onLeading={onDetails ? back : (onBack ?? onClose)}
         actionLabel={onDetails ? saveLabel : t('edit.next')}
