@@ -443,13 +443,16 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
       ) : visible.length === 0 && range !== null && targetDay !== null ? (
         <View style={[styles.center, styles.dayEmpty]} testID="gallery-day-empty">
           <Text style={[textStyle('body'), styles.dayEmptyText]}>{t('gallery.dayEmpty', { date: targetDay })}</Text>
-          <PillButton
-            label={t('gallery.showAll')}
-            accessibilityHint={t('gallery.showAllHint')}
-            variant="subtle"
-            onPress={showAll}
-            testID="gallery-show-all"
-          />
+          {/* Its own row: the pill keeps to its label (flex-start) and is centred here. */}
+          <View>
+            <PillButton
+              label={t('gallery.showAll')}
+              accessibilityHint={t('gallery.showAllHint')}
+              variant="subtle"
+              onPress={showAll}
+              testID="gallery-show-all"
+            />
+          </View>
         </View>
       ) : visible.length === 0 ? (
         <View style={styles.center}>
