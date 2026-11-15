@@ -4,6 +4,7 @@ import 'react-native-gesture-handler/jestSetup';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
 import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
 import { editsSchema, type Edits } from '../edits';
@@ -172,6 +173,61 @@ describe('OverlayLayer', () => {
     await render(<Harness />);
     await drag({ x: 180, y: 240 }, { x: 900, y: -900 });
     expect(overlay('b')).toMatchObject({ x: 1, y: 0 });
+  });
+
+  // b's centre (180, 240) is 30 right of and 40 below the photo's centre (150, 200). The snap zone is 6
+  // points; once snapped, an axis lets go only beyond 9.
+  const guide = (axis: 'vertical' | 'horizontal') =>
+    // Decorative, so hidden from VoiceOver.
+    screen.getByTestId(`overlay-snap-${axis}`, { includeHiddenElements: true });
+
+  it('snaps the dragged centre to the photo centre lines with guides and one tick, saved exactly centred', async () => {
+    jest.mocked(Haptics.selectionAsync).mockClear();
+    await render(<Harness />);
+    const pan = createGestureController('overlay-pan');
+    const at = { x: 180, y: 240, translationX: 0, translationY: 0 };
+    await act(() => {
+      pan.begin(at);
+      pan.activate(at);
+      // 3 right of and 2 below the centre: both axes snap.
+      pan.update({ ...at, translationX: -27, translationY: -38 });
+      pan.update({ ...at, translationX: -26, translationY: -37 });
+    });
+    expect(guide('vertical')).toHaveStyle({ opacity: 1 });
+    expect(guide('horizontal')).toHaveStyle({ opacity: 1 });
+    // One tick when it snaps in (both axes on the same frame), none while it stays snapped.
+    expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+    await act(() => pan.end({ ...at, translationX: -26, translationY: -37 }));
+    expect(overlay('b')).toMatchObject({ x: 0.5, y: 0.5 });
+    expect(guide('vertical')).toHaveStyle({ opacity: 0 });
+    expect(guide('horizontal')).toHaveStyle({ opacity: 0 });
+  });
+
+  it('holds a snapped axis to 1.5× the zone, then lets the overlay follow the finger again', async () => {
+    jest.mocked(Haptics.selectionAsync).mockClear();
+    await render(<Harness />);
+    const pan = createGestureController('overlay-pan');
+    const at = { x: 180, y: 240, translationX: 0, translationY: 0 };
+    await act(() => {
+      pan.begin(at);
+      pan.activate(at);
+      // 8 right of the centre before any snap: outside the 6-point zone, so it follows the finger.
+      pan.update({ ...at, translationX: -22 });
+    });
+    expect(guide('vertical')).toHaveStyle({ opacity: 0 });
+    await act(() => {
+      pan.update({ ...at, translationX: -28 }); // 2 right: snaps
+      pan.update({ ...at, translationX: -22 }); // 8 right: still held (≤ 9)
+    });
+    expect(guide('vertical')).toHaveStyle({ opacity: 1 });
+    // Far from the horizontal centre line the whole time.
+    expect(guide('horizontal')).toHaveStyle({ opacity: 0 });
+    await act(() => pan.update({ ...at, translationX: -18 })); // 12 right: lets go
+    expect(guide('vertical')).toHaveStyle({ opacity: 0 });
+    await act(() => pan.end({ ...at, translationX: -18 }));
+    expect(overlay('b')?.x).toBeCloseTo(162 / 300, 10);
+    expect(overlay('b')?.y).toBeCloseTo(0.6, 10);
+    expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
   });
 
   it('a drag that starts on empty photo moves nothing', async () => {
