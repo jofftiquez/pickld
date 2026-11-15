@@ -1,5 +1,7 @@
 import { colors } from '@/theme/tokens';
 
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
 import { Card } from '~/components/Card';
 import { PageHeader } from '~/components/PageHeader';
 import { Pagination } from '~/components/Pagination';
@@ -8,7 +10,6 @@ import { Toolbar } from '~/components/Toolbar';
 import { t } from '~/i18n/t';
 import { type Dir, lastPage, readPaging, readSort, withParams } from '~/lib/paging';
 import { monthLabel } from '~/lib/queue';
-import { input, secondaryButton } from '~/lib/styles';
 import { supabase } from '~/lib/supabase';
 import { searchUsers, type UserRow, type UserSort } from '~/lib/users';
 
@@ -56,18 +57,18 @@ export default async function Users({ searchParams }: { searchParams: Promise<Re
       <Card label={t('users.label')}>
         <Toolbar>
           <form role="search" action="/users" style={{ display: 'flex', gap: 10, flex: '1 1 auto', maxWidth: 560 }}>
-            <input
+            <Input
               type="search"
               name="q"
               defaultValue={q}
               maxLength={254}
               aria-label={t('users.search.label')}
               placeholder={t('users.search.placeholder')}
-              style={{ ...input, flex: 1, minWidth: 0, padding: '10px 14px' }}
+              className="flex-1"
             />
-            <button type="submit" style={{ ...secondaryButton, minHeight: 44 }}>
+            <Button type="submit" variant="secondary">
               {t('users.search.button')}
-            </button>
+            </Button>
           </form>
         </Toolbar>
         <Table

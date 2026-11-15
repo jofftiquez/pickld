@@ -6,10 +6,10 @@ import { colors } from '@/theme/tokens';
 
 import { CenterCard } from '~/components/CenterCard';
 import { ConsoleHeader, type NavItem, Sidebar } from '~/components/Sidebar';
+import { Button } from '~/components/ui/button';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { t } from '~/i18n/t';
 import { loadStats } from '~/lib/queue';
-import { secondaryButton } from '~/lib/styles';
 import { isModerator, supabase } from '~/lib/supabase';
 
 // Every console page sits behind this check (FR-MOD-01). Postgres enforces the same rule on every query
@@ -27,9 +27,9 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
       <CenterCard title={t('denied.title')}>
         <p style={{ color: colors.muted, margin: '0 0 20px' }}>{t('denied.body', { email })}</p>
         <form action="/sign-out" method="post">
-          <button type="submit" style={secondaryButton}>
+          <Button type="submit" variant="secondary">
             {t('denied.signOut')}
-          </button>
+          </Button>
         </form>
       </CenterCard>
     );

@@ -2,12 +2,13 @@
 
 import { useActionState } from 'react';
 
-import { colors } from '@/theme/tokens';
-
 import { sendCodes } from '~/app/(console)/waitlist/actions';
 import { t } from '~/i18n/t';
-import { input, primaryButton } from '~/lib/styles';
 import type { SendResult } from '~/lib/waitlist';
+
+import { Field, FormNote } from './Field';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 /**
  * Email a code to the oldest N people on the waitlist (INV-09). Shown to every moderator; only founders can
@@ -16,43 +17,38 @@ import type { SendResult } from '~/lib/waitlist';
 export function SendCodesForm({ ready }: { ready: number }) {
   const [state, action, pending] = useActionState<SendResult | null, FormData>(sendCodes, null);
   return (
-    <form action={action} style={{ display: 'grid', gap: 10, justifyItems: 'start' }}>
-      <label style={{ display: 'grid', gap: 6, fontSize: 13, fontWeight: 700 }}>
-        {t('waitlist.codes.count')}
-        <input
+    <form action={action} className="grid justify-items-start gap-2.5">
+      <Field label={t('waitlist.codes.count')}>
+        <Input
           type="number"
           name="count"
           required
           min={1}
           max={500}
           defaultValue={Math.min(Math.max(ready, 1), 500)}
-          style={{ ...input, width: 140 }}
+          className="w-36"
         />
-      </label>
-      <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, minHeight: 44 }}>
-        <input type="checkbox" name="resendExpired" style={{ width: 20, height: 20 }} />
+      </Field>
+      <label className="flex min-h-11 items-center gap-2 text-sm">
+        <input type="checkbox" name="resendExpired" className="size-5 accent-primary" />
         {t('waitlist.codes.resendExpired')}
       </label>
-      <button
-        type="submit"
-        disabled={pending}
-        style={{ ...primaryButton, fontSize: 14, minHeight: 44, opacity: pending ? 0.6 : 1 }}
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? t('waitlist.codes.sending') : t('waitlist.codes.button')}
-      </button>
-      <p style={{ margin: 0, color: colors.muted, fontSize: 12 }}>{t('waitlist.codes.founders')}</p>
+      </Button>
+      <p className="m-0 text-xs text-muted-foreground">{t('waitlist.codes.founders')}</p>
       {state?.result === 'sent' ? (
-        <p role="status" style={{ margin: 0, color: colors.brandText, fontSize: 13, fontWeight: 600 }}>
+        <FormNote tone="ok">
           {state.total === 0
             ? t('waitlist.codes.results.none')
             : t('waitlist.codes.results.sent', { count: state.sent })}
-        </p>
+        </FormNote>
       ) : state ? (
-        <p role="alert" style={{ margin: 0, color: colors.danger, fontSize: 13 }}>
+        <FormNote tone="error">
           {state.result === 'send_failed'
             ? t('waitlist.codes.results.send_failed', { sent: state.sent, total: state.total })
             : t(`waitlist.codes.results.${state.result}`)}
-        </p>
+        </FormNote>
       ) : null}
     </form>
   );

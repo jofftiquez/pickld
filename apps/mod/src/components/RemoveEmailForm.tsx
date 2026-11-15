@@ -2,47 +2,38 @@
 
 import { useActionState } from 'react';
 
-import { colors } from '@/theme/tokens';
-
 import { removeFromWaitlist } from '~/app/(console)/waitlist/actions';
 import { t } from '~/i18n/t';
-import { input, secondaryButton } from '~/lib/styles';
 import type { RemoveResult } from '~/lib/waitlist';
+
+import { Field, FormNote } from './Field';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 
 /** Remove one email on that person's request (FR-MOD-08). The note goes to the audit log; the email doesn't. */
 export function RemoveEmailForm() {
   const [result, action, pending] = useActionState<RemoveResult | null, FormData>(removeFromWaitlist, null);
   return (
-    <form action={action} style={{ display: 'grid', gap: 10, maxWidth: 560 }}>
-      <label style={{ display: 'grid', gap: 6, fontSize: 13, fontWeight: 700 }}>
-        {t('waitlist.remove.email')}
-        <input type="email" name="email" required maxLength={254} autoComplete="off" style={input} />
-      </label>
-      <label style={{ display: 'grid', gap: 6, fontSize: 13, fontWeight: 700 }}>
-        {t('waitlist.remove.note')}
-        <textarea
+    <form action={action} className="grid max-w-[560px] gap-2.5">
+      <Field label={t('waitlist.remove.email')}>
+        <Input type="email" name="email" required maxLength={254} autoComplete="off" />
+      </Field>
+      <Field label={t('waitlist.remove.note')}>
+        <Textarea
           name="note"
           required
           maxLength={500}
           rows={2}
           placeholder={t('waitlist.remove.notePlaceholder')}
-          style={{ ...input, fontSize: 14, resize: 'vertical' }}
+          className="resize-y"
         />
-      </label>
-      <button
-        type="submit"
-        disabled={pending}
-        style={{ ...secondaryButton, minHeight: 44, justifySelf: 'start', opacity: pending ? 0.6 : 1 }}
-      >
+      </Field>
+      <Button type="submit" disabled={pending} variant="secondary" className="justify-self-start">
         {t('waitlist.remove.button')}
-      </button>
+      </Button>
       {result ? (
-        <p
-          role={result === 'removed' ? 'status' : 'alert'}
-          style={{ margin: 0, color: result === 'removed' ? colors.muted : colors.danger, fontSize: 13 }}
-        >
-          {t(`waitlist.remove.results.${result}`)}
-        </p>
+        <FormNote tone={result === 'removed' ? 'muted' : 'error'}>{t(`waitlist.remove.results.${result}`)}</FormNote>
       ) : null}
     </form>
   );

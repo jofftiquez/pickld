@@ -11,6 +11,7 @@ import {
   type SimulationLinkDatum,
   type SimulationNodeDatum,
 } from 'd3-force';
+import { Minus, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   type PointerEvent as ReactPointerEvent,
@@ -26,7 +27,8 @@ import { colors, radius } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
 import { type GraphEdge, type GraphNode, nodeName } from '~/lib/inviteGraph';
-import { secondaryButton } from '~/lib/styles';
+
+import { Button } from './ui/button';
 
 type SimNode = SimulationNodeDatum & { id: string; r: number; level: number };
 type SimLink = SimulationLinkDatum<SimNode>;
@@ -302,7 +304,6 @@ export function InviteGraph({
   }
 
   const info = lit ? byId.get(lit) : undefined;
-  const tool = { ...secondaryButton, minHeight: 36, minWidth: 44, padding: '6px 12px', fontSize: 13 } as const;
 
   return (
     <div style={{ display: 'grid', gap: 8 }}>
@@ -446,22 +447,29 @@ export function InviteGraph({
           </g>
         </svg>
         <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
-          <button type="button" style={tool} aria-label={t('graph.zoomIn')} onClick={() => zoomBy(1.3)}>
-            +
-          </button>
-          <button type="button" style={tool} aria-label={t('graph.zoomOut')} onClick={() => zoomBy(1 / 1.3)}>
-            −
-          </button>
-          <button
+          <Button type="button" size="sm" variant="outline" aria-label={t('graph.zoomIn')} onClick={() => zoomBy(1.3)}>
+            <Plus aria-hidden />
+          </Button>
+          <Button
             type="button"
-            style={tool}
+            size="sm"
+            variant="outline"
+            aria-label={t('graph.zoomOut')}
+            onClick={() => zoomBy(1 / 1.3)}
+          >
+            <Minus aria-hidden />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
             onClick={() => {
               touched.current = true;
               fit();
             }}
           >
             {t('graph.fit')}
-          </button>
+          </Button>
         </div>
       </div>
       <p aria-live="polite" style={{ margin: 0, fontSize: 13, minHeight: 18, color: info ? colors.ink : colors.muted }}>

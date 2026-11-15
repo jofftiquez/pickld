@@ -2,24 +2,20 @@
 
 import { useActionState } from 'react';
 
-import { colors, radius } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
 import { editSticker, setRetired } from '~/app/(console)/stickers/actions';
 import { t } from '~/i18n/t';
 import { SLOTS, type Sticker, type StickerResult, stickerName } from '~/lib/stickers';
-import { input, secondaryButton } from '~/lib/styles';
+import { cn } from '~/lib/utils';
 
 import { ResultNote } from './ResultNote';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { NativeSelect, NativeSelectOption } from './ui/native-select';
 
-const field = { display: 'grid', gap: 4, fontSize: 12, fontWeight: 700, color: colors.muted } as const;
-const small = {
-  ...input,
-  fontSize: 14,
-  padding: '9px 10px',
-  width: '100%',
-  minWidth: 0,
-  boxSizing: 'border-box',
-} as const;
+const field = 'grid min-w-0 gap-1 text-xs font-bold text-muted-foreground';
 
 /** One sticker in the Studio: its art, size and version, and (free packs) its label, tags, slot and retirement. */
 export function StickerRow({ sticker, art, editable }: { sticker: Sticker; art: string | null; editable: boolean }) {
@@ -30,131 +26,107 @@ export function StickerRow({ sticker, art, editable }: { sticker: Sticker; art: 
   return (
     <li
       aria-label={sticker.label}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '96px minmax(0, 1fr)',
-        gap: 14,
-        padding: 14,
-        background: colors.surface,
-        borderRadius: radius.card,
-        opacity: isRetired ? 0.7 : 1,
-      }}
+      className={cn(
+        'grid grid-cols-[96px_minmax(0,1fr)] gap-3.5 rounded-card border bg-card p-3.5 shadow-xs',
+        isRetired && 'opacity-70',
+      )}
     >
       <div
+        className="grid size-24 place-items-center overflow-hidden rounded-tile"
+        // A light checkerboard shows the art's transparent edges.
         style={{
-          width: 96,
-          height: 96,
-          borderRadius: radius.thumbLg,
-          // A light checkerboard shows the art's transparent edges.
           background: `repeating-conic-gradient(${colors.subtle} 0% 25%, ${colors.surface} 0% 50%) 0 0 / 16px 16px`,
-          display: 'grid',
-          placeItems: 'center',
-          overflow: 'hidden',
         }}
       >
         {art ? (
           <img
             src={art}
             alt={t('stickers.sticker.artLabel', { label: sticker.label })}
-            style={{ maxWidth: 88, maxHeight: 88, objectFit: 'contain' }}
+            className="max-h-[88px] max-w-[88px] object-contain"
           />
         ) : (
-          <span style={{ fontSize: 11, color: colors.muted, textAlign: 'center' }}>{t('stickers.sticker.noArt')}</span>
+          <span className="text-center text-[11px] text-muted-foreground">{t('stickers.sticker.noArt')}</span>
         )}
       </div>
-      <div style={{ display: 'grid', gap: 8, minWidth: 0 }}>
-        <p style={{ margin: 0, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'baseline', fontSize: 13 }}>
-          <span style={{ fontWeight: 800, fontSize: 15 }}>{name}</span>
-          <span style={{ color: colors.muted }}>
+      <div className="grid min-w-0 gap-2">
+        <p className="m-0 flex flex-wrap items-baseline gap-2 text-[13px]">
+          <span className="text-[15px] font-extrabold">{name}</span>
+          <span className="text-muted-foreground">
             {sticker.art_width && sticker.art_height
               ? t('stickers.sticker.size', { w: sticker.art_width, h: sticker.art_height })
               : t('stickers.sticker.noSize')}
           </span>
-          <span style={{ color: colors.muted }}>{t('stickers.sticker.version', { v: sticker.art_version })}</span>
+          <span className="text-muted-foreground">{t('stickers.sticker.version', { v: sticker.art_version })}</span>
           {isRetired ? (
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: colors.likeText,
-                background: colors.dangerTint,
-                borderRadius: radius.pill,
-                padding: '3px 8px',
-              }}
-            >
+            <Badge className="border-transparent bg-destructive-tint text-destructive-text">
               {t('stickers.sticker.retired')}
-            </span>
+            </Badge>
           ) : null}
         </p>
         {editable ? (
           <>
             <form
               action={save}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) auto',
-                gap: 8,
-                alignItems: 'end',
-              }}
+              className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto] items-end gap-2"
             >
               <input type="hidden" name="sticker" value={sticker.id} />
-              <label style={field}>
+              <label className={field}>
                 {t('stickers.sticker.label')}
-                <input name="label" required maxLength={40} defaultValue={sticker.label} style={small} />
+                <Input name="label" required maxLength={40} defaultValue={sticker.label} className="text-foreground" />
               </label>
-              <label style={field}>
+              <label className={field}>
                 {t('stickers.sticker.tags')}
-                <input name="tags" maxLength={400} defaultValue={sticker.tags.join(', ')} style={small} />
+                <Input name="tags" maxLength={400} defaultValue={sticker.tags.join(', ')} className="text-foreground" />
               </label>
-              <label style={field}>
+              <label className={field}>
                 {t('stickers.sticker.slot')}
-                <select name="slot" defaultValue={sticker.slot_hint ?? ''} style={small}>
-                  <option value="">{t('stickers.sticker.noSlot')}</option>
+                <NativeSelect
+                  name="slot"
+                  defaultValue={sticker.slot_hint ?? ''}
+                  wrapperClassName="w-full"
+                  className="text-foreground"
+                >
+                  <NativeSelectOption value="">{t('stickers.sticker.noSlot')}</NativeSelectOption>
                   {SLOTS.map((s) => (
-                    <option key={s} value={s}>
+                    <NativeSelectOption key={s} value={s}>
                       {t(`stickers.slot.${s}`)}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               </label>
-              <button
+              <Button
                 type="submit"
+                variant="secondary"
                 disabled={saving}
                 aria-label={`${t('stickers.sticker.save')} ${sticker.label}`}
-                style={{ ...secondaryButton, minHeight: 42, opacity: saving ? 0.6 : 1 }}
               >
                 {t('stickers.sticker.save')}
-              </button>
+              </Button>
             </form>
-            <form action={retire} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <form action={retire} className="flex flex-wrap items-center gap-2.5">
               <input type="hidden" name="sticker" value={sticker.id} />
               <input type="hidden" name="retired" value={isRetired ? '0' : '1'} />
-              <button
+              <Button
                 type="submit"
+                variant="link"
                 disabled={retiring}
                 aria-label={`${t(isRetired ? 'stickers.sticker.restore' : 'stickers.sticker.retire')} ${sticker.label}`}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: '10px 0',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: isRetired ? colors.brandLink : colors.danger,
-                  opacity: retiring ? 0.6 : 1,
-                }}
+                className={cn('h-11 px-0 text-[13px]', isRetired ? 'text-link' : 'text-destructive')}
               >
                 {t(isRetired ? 'stickers.sticker.restore' : 'stickers.sticker.retire')}
-              </button>
+              </Button>
               <ResultNote result={saved} />
               <ResultNote result={retired} />
             </form>
           </>
         ) : (
-          <p style={{ margin: 0, fontSize: 14 }}>
+          <p className="m-0 text-sm">
             <strong>{sticker.label}</strong>
-            {sticker.tags.length > 0 ? <span style={{ color: colors.muted }}> · {sticker.tags.join(', ')}</span> : null}
+            {sticker.tags.length > 0 ? (
+              <span className="text-muted-foreground"> · {sticker.tags.join(', ')}</span>
+            ) : null}
             {sticker.slot_hint ? (
-              <span style={{ color: colors.muted }}> · {t(`stickers.slot.${sticker.slot_hint}`)}</span>
+              <span className="text-muted-foreground"> · {t(`stickers.slot.${sticker.slot_hint}`)}</span>
             ) : null}
           </p>
         )}

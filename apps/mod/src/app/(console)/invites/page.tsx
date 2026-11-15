@@ -1,5 +1,6 @@
 import { colors, radius } from '@/theme/tokens';
 
+import { Button } from '~/components/ui/button';
 import { Card } from '~/components/Card';
 import { LetInForm } from '~/components/LetInForm';
 import { MakeCodeForm } from '~/components/MakeCodeForm';
@@ -9,7 +10,6 @@ import { Table } from '~/components/Table';
 import { Tile } from '~/components/Tile';
 import { t } from '~/i18n/t';
 import { type AdminCode, loadCodes, loadInviteSummary, shortDay } from '~/lib/invites';
-import { secondaryButton } from '~/lib/styles';
 import { supabase } from '~/lib/supabase';
 
 import { switchCode } from './actions';
@@ -35,13 +35,14 @@ function StateCell({ c }: { c: AdminCode }) {
         <form action={switchCode}>
           <input type="hidden" name="code" value={c.code} />
           <input type="hidden" name="enabled" value={on ? '0' : '1'} />
-          <button
+          <Button
             type="submit"
+            size="sm"
+            variant="secondary"
             aria-label={t(on ? 'invites.switchOffLabel' : 'invites.switchOnLabel', { code: c.code })}
-            style={{ ...secondaryButton, fontSize: 12, padding: '6px 12px', minHeight: 32 }}
           >
             {t(on ? 'invites.switchOff' : 'invites.switchOn')}
-          </button>
+          </Button>
         </form>
       ) : null}
     </span>

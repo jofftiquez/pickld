@@ -1,5 +1,8 @@
 import { colors, radius } from '@/theme/tokens';
 
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '~/components/ui/native-select';
 import { Card } from '~/components/Card';
 import { DayBars } from '~/components/DayBars';
 import { PageHeader } from '~/components/PageHeader';
@@ -13,7 +16,6 @@ import { Toolbar } from '~/components/Toolbar';
 import { t } from '~/i18n/t';
 import { when } from '~/lib/audit';
 import { lastPage, readPaging } from '~/lib/paging';
-import { input, secondaryButton } from '~/lib/styles';
 import { supabase } from '~/lib/supabase';
 import { loadCodes, loadSummary, loadWaitlist, STATES, type WaitlistState } from '~/lib/waitlist';
 
@@ -134,30 +136,25 @@ export default async function Waitlist({
               action="/waitlist"
               style={{ display: 'flex', gap: 10, flexWrap: 'wrap', flex: '1 1 auto' }}
             >
-              <input
+              <Input
                 type="search"
                 name="q"
                 defaultValue={q}
                 maxLength={254}
                 aria-label={t('waitlist.list.search')}
                 placeholder={t('waitlist.list.placeholder')}
-                style={{ ...input, flex: '1 1 260px', minWidth: 0, maxWidth: 420 }}
+                className="max-w-[420px] flex-[1_1_260px]"
               />
-              <select
-                name="state"
-                defaultValue={state}
-                aria-label={t('waitlist.list.state')}
-                style={{ ...input, minHeight: 44 }}
-              >
+              <NativeSelect name="state" defaultValue={state} aria-label={t('waitlist.list.state')}>
                 {STATES.map((s) => (
-                  <option key={s} value={s}>
+                  <NativeSelectOption key={s} value={s}>
                     {t(`waitlist.states.${s}`)}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
-              <button type="submit" style={{ ...secondaryButton, minHeight: 44 }}>
+              </NativeSelect>
+              <Button type="submit" variant="secondary">
                 {t('waitlist.list.button')}
-              </button>
+              </Button>
             </form>
           </Toolbar>
           <Table

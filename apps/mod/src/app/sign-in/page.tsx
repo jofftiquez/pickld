@@ -5,9 +5,11 @@ import { z } from 'zod';
 import { colors, radius } from '@/theme/tokens';
 
 import { CenterCard } from '~/components/CenterCard';
+import { Field } from '~/components/Field';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
 import { t } from '~/i18n/t';
 import { originOf } from '~/lib/env';
-import { input, primaryButton, secondaryButton } from '~/lib/styles';
 import { supabase } from '~/lib/supabase';
 
 // Two steps (D-60): the email, then the 6-digit code from the email. The address waits between them in a
@@ -79,8 +81,6 @@ function Notice({ tone, text }: { tone: 'ok' | 'error'; text: string }) {
   );
 }
 
-const labelStyle = { display: 'grid', gap: 6, fontSize: 13, fontWeight: 700 } as const;
-
 export default async function SignIn({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const { notice } = Search.parse(await searchParams);
   const pending = Email.safeParse((await cookies()).get(EMAIL_COOKIE)?.value);
@@ -91,9 +91,8 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<R
         <Notice tone="ok" text={t('signIn.sent', { email: pending.data })} />
         {notice === 'code' ? <Notice tone="error" text={t('signIn.wrongCode')} /> : null}
         <form action={verifyCode} style={{ display: 'grid', gap: 12 }}>
-          <label style={labelStyle}>
-            {t('signIn.code')}
-            <input
+          <Field label={t('signIn.code')}>
+            <Input
               name="code"
               type="text"
               inputMode="numeric"
@@ -102,17 +101,17 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<R
               maxLength={6}
               required
               autoFocus
-              style={{ ...input, fontSize: 22, letterSpacing: 6, fontVariantNumeric: 'tabular-nums' }}
+              className="h-12 text-[22px] tracking-[6px] tabular-nums md:text-[22px]"
             />
-          </label>
-          <button type="submit" style={primaryButton}>
+          </Field>
+          <Button type="submit" size="lg">
             {t('signIn.verify')}
-          </button>
+          </Button>
         </form>
         <form action={differentEmail} style={{ display: 'grid', marginTop: 12 }}>
-          <button type="submit" style={secondaryButton}>
+          <Button type="submit" variant="secondary">
             {t('signIn.different')}
-          </button>
+          </Button>
         </form>
       </CenterCard>
     );
@@ -123,13 +122,12 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<R
       <p style={{ color: colors.muted, margin: '0 0 20px' }}>{t('signIn.body')}</p>
       {notice === 'invalid' ? <Notice tone="error" text={t('signIn.invalid')} /> : null}
       <form action={sendCode} style={{ display: 'grid', gap: 12 }}>
-        <label style={labelStyle}>
-          {t('signIn.email')}
-          <input name="email" type="email" required autoComplete="email" style={input} />
-        </label>
-        <button type="submit" style={primaryButton}>
+        <Field label={t('signIn.email')}>
+          <Input name="email" type="email" required autoComplete="email" />
+        </Field>
+        <Button type="submit" size="lg">
           {t('signIn.send')}
-        </button>
+        </Button>
       </form>
     </CenterCard>
   );

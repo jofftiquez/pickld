@@ -8,7 +8,9 @@ import { colors, radius } from '@/theme/tokens';
 import { uploadArtBulk } from '~/app/(console)/stickers/actions';
 import { t } from '~/i18n/t';
 import { checkArt, MAX_BULK_FILES, nameFromFile, uniqueName, type UploadResult } from '~/lib/stickers';
-import { secondaryButton } from '~/lib/styles';
+import { cn } from '~/lib/utils';
+
+import { buttonVariants } from './ui/button';
 
 type Row = {
   file: string;
@@ -104,15 +106,11 @@ export function BulkUpload({ pack, taken }: { pack: string; taken: string[] }) {
       <p style={{ margin: 0, fontSize: 14 }}>{t('stickers.bulk.body')}</p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <label
-          style={{
-            ...secondaryButton,
-            position: 'relative',
-            minHeight: 44,
-            display: 'inline-flex',
-            alignItems: 'center',
-            cursor: busy ? 'default' : 'pointer',
-            opacity: busy ? 0.6 : 1,
-          }}
+          className={cn(
+            buttonVariants({ variant: 'secondary' }),
+            'relative',
+            busy ? 'cursor-default opacity-60' : 'cursor-pointer',
+          )}
         >
           {t('stickers.bulk.choose')}
           <input
