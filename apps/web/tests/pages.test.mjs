@@ -412,8 +412,9 @@ test('text draws as the app lays it out: its lines, its font, sized with its box
         color: s.color,
         shadows: s.textShadow === 'none' ? 0 : s.textShadow.split(/,(?![^(]*\))/).length,
         whiteSpace: s.whiteSpace,
-        // The bundled face behind the family, fetched for these words.
-        loaded: (await document.fonts.load(`30px ${s.fontFamily}`, el.textContent)).some(
+        // The bundled face, first in the family, fetched for these words. Only that one: the fallback
+        // after it is a local() font that a machine without it fails to load.
+        loaded: (await document.fonts.load(`30px ${s.fontFamily.split(',')[0]}`, el.textContent)).some(
           (f) => f.status === 'loaded' && !f.family.includes('Fallback'),
         ),
       };
