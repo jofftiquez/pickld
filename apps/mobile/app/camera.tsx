@@ -15,12 +15,20 @@ import {
 import { CameraView } from '@/features/capture/CameraView';
 import { defaultCameraSlot, parseSlotParam } from '@/features/capture/cameraSlot';
 import { fillCameraSlot } from '@/features/capture/fillTarget';
+import type { LensInfo, Point } from '@/features/capture/cameraZoom';
 import { MockCameraPreview } from '@/features/capture/MockCameraPreview';
 import { isThreeByFour } from '@/features/capture/cropMath';
-import { parseDevPhotoParam, parseMockAccessParam, pickDevPhoto, takeMockPhoto } from '@/features/capture/mockCamera';
+import {
+  mockLenses,
+  parseDevPhotoParam,
+  parseMockAccessParam,
+  pickDevPhoto,
+  takeMockPhoto,
+} from '@/features/capture/mockCamera';
 import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { galleryTarget, saveCapture, saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
+import { useCameraZoom } from '@/features/capture/useCameraZoom';
 import { useFillCapture } from '@/features/capture/useFillCapture';
 import { useGalleryPicker } from '@/features/capture/useGalleryPicker';
 import { useReplaceConfirm } from '@/features/capture/useReplaceConfirm';
@@ -91,6 +99,14 @@ export default function CameraScreen() {
   const [busy, setBusy] = useState(false);
   const camera = useRef<CameraHandle>(null);
   const replaceConfirm = useReplaceConfirm();
+
+  // Zoom and tap to focus (D-144), for the lenses the camera in use has. Each camera starts at 1× (the wide
+  // lens), so a flip resets the zoom.
+  const [liveLens, setLiveLens] = useState<LensInfo | null>(null);
+  const lens = access === 'mock' ? mockLenses[facing] : access === 'granted' ? liveLens : null;
+  const onLiveZoom = useCallback((next: number) => camera.current?.setZoom(next), []);
+  const zoom = useCameraZoom(lens, onLiveZoom);
+  const onFocus = useCallback((point: Point) => camera.current?.focus(point), []);
 
   // The camera runs only while this screen is visible and the app is in the foreground.
   const [focused, setFocused] = useState(false);
@@ -204,13 +220,15 @@ export default function CameraScreen() {
 
   const preview =
     access === 'mock' ? (
-      <MockCameraPreview facing={facing} />
+      <MockCameraPreview facing={facing} factor={zoom.factor} />
     ) : access === 'granted' ? (
       <CameraPreview
         ref={camera}
         facing={facing}
         isActive={focused && foreground && !gallery.open}
         onFlashSupport={setFlashSupported}
+        onLens={setLiveLens}
+        zoom={zoom.request}
       />
     ) : null;
 
@@ -223,6 +241,9 @@ export default function CameraScreen() {
       flash={flash}
       flashSupported={access === 'mock' || flashSupported}
       shutterDisabled={busy || userId === null || fillFull || (access !== 'mock' && access !== 'granted')}
+      zoom={zoom}
+      canFocus={lens?.supportsFocus ?? false}
+      onFocus={onFocus}
       insets={insets}
       onClose={leave}
       onToggleFlash={() => setFlash((f) => (f === 'on' ? 'off' : 'on'))}
