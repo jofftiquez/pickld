@@ -3,7 +3,12 @@ import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-
 import { useCallback, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { parseFillDateParam } from '@/features/capture/fillTarget';
+import { isThreeByFour } from '@/features/capture/cropMath';
+import { fillTarget, parseFillDateParam } from '@/features/capture/fillTarget';
+import { parseDevPhotoParam, pickDevPhoto } from '@/features/capture/mockCamera';
+import { usePendingCrop } from '@/features/capture/pendingCrop';
+import { galleryTarget, saveGalleryPhoto } from '@/features/capture/saveCapture';
+import { useGalleryPicker } from '@/features/capture/useGalleryPicker';
 import { useDayJar } from '@/features/days/useDayJar';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TodayView } from '@/features/jar/TodayView';
@@ -16,18 +21,25 @@ import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
 import { localDateIn } from '@/lib/jars';
+import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
+import type { Slot } from '@/theme/tokens';
 
-// /day/YYYY-MM-DD: the day page (D-55; FR-DAY-02, FR-JAR-06). My days → a past day → Fill this jar opens it.
-// It works like Today for that date: the same jar card and 8 tiles, built from that day's jar and the offline
-// queue. An empty tile opens the camera in Fill mode (`/camera?date=&slot=`), so the server marks the moment
-// "Added later" (rule 6); a filled one opens the moment preview for that day. Publish reviews that day's jar.
-// Only past days have a page: today (or a future or malformed date) goes to the Today tab.
+// /day/YYYY-MM-DD: the day page (D-55; FR-DAY-02, FR-JAR-06). Tapping a past date in My days (or Go to a
+// date) opens it (D-153). It works like Today for that date: the same jar card and 8 tiles, built from that
+// day's jar and the offline queue. A past day is filled from the gallery only, never the camera (D-153): an
+// empty tile opens the in-app gallery on "Only <that day>" (asking for Photos access once while undecided;
+// without access, Apple's picker), and the photo goes into that day's jar for the tapped slot, through Crop
+// when it isn't 3:4, then the editor, which comes back here. The server marks it "Added later" (rule 6) and
+// refuses a slot taken meanwhile (a conflict, never an overwrite). A filled tile opens the moment preview for
+// that day; Publish reviews that day's jar, and a published one has View jar. Only past days have a page:
+// today (or a future or malformed date) goes to the Today tab. Dev-only `?devPhoto=` picks a bundled photo
+// instead of the gallery, as on the camera, so Maestro can fill a day.
 export default function DayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const params = useLocalSearchParams<{ date?: string }>();
+  const params = useLocalSearchParams<{ date?: string; devPhoto?: string }>();
   const [now] = useState(() => new Date());
   const phoneTz = phoneTimeZone();
   const date = parseFillDateParam(params.date, localDateIn(now, phoneTz));
@@ -36,7 +48,7 @@ export default function DayScreen() {
   const { me } = useToday(now);
   const offline = useIsOffline();
 
-  // Coming back (from the camera, the editor, the preview or Publish) re-reads the day, the queue and the
+  // Coming back (from Crop, the editor, the preview or Publish) re-reads the day, the queue and the
   // calendar behind it; the first focus is the initial load.
   const focusedOnce = useRef(false);
   useFocusEffect(
@@ -73,6 +85,35 @@ export default function DayScreen() {
   const poppingSlots = useFillPops(tiles, date !== null && day !== undefined && queueLoaded ? date : null);
   const celebratePublish = usePublishCelebration(jar?.id ?? null);
 
+  // An empty tile: a photo from the gallery for that day and slot, as the camera's gallery button saves one.
+  const gallery = useGalleryPicker({ tz: phoneTz, target: date, insets, askOnce: true });
+  const devPhoto = parseDevPhotoParam(params.devPhoto, __DEV__);
+  const setPendingCrop = usePendingCrop((s) => s.setPending);
+  const [busy, setBusy] = useState(false);
+  const onFill = async (slot: Slot) => {
+    if (busy || date === null || userId === null) return;
+    setBusy(true);
+    try {
+      const photo = devPhoto ? await pickDevPhoto(devPhoto) : await gallery.pick();
+      if (photo === null) return;
+      const fill = fillTarget(date, jar, phoneTz);
+      const target = galleryTarget({ exif: photo.exif, tz: phoneTz, now: new Date(), openJar: null, fill });
+      if (!isThreeByFour(photo)) {
+        setPendingCrop({ photo, slot, userId, target });
+        router.push('/crop');
+        return;
+      }
+      const visibility = me?.defaultVisibility ?? null; // D-48: a new moment starts at the owner's default
+      const item = await saveGalleryPhoto({ uri: photo.uri, slot, userId, target, crop: null, visibility });
+      void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
+      router.push(`/edit/${item.id}`);
+    } catch (error) {
+      captureError(error, { area: 'gallery' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (date === null) return <Redirect href="/today" />;
 
   const tz = jar?.tz ?? phoneTz;
@@ -95,7 +136,7 @@ export default function DayScreen() {
         lidColor={me?.lidColor}
         insets={insets}
         offlineCount={offlineBannerCount(queue, offline)}
-        onCapture={(slot) => router.push({ pathname: '/camera', params: { date, slot } })}
+        onCapture={(slot) => void onFill(slot)}
         onRetry={(queueId) => void retryUpload(queueId)}
         suspension={
           me?.suspendedUntil !== undefined ? <SuspensionBanner until={me.suspendedUntil} tz={phoneTz} /> : null
@@ -109,7 +150,13 @@ export default function DayScreen() {
           changeVisibility.reset();
           setVisibilityOpen(true);
         }}
-        day={{ date, onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-days')) }}
+        day={{
+          date,
+          onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-days')),
+          // D-153: in place of the removed My days card's link.
+          onViewJar:
+            published && jar ? () => router.push({ pathname: '/jar/[id]', params: { id: jar.id } }) : undefined,
+        }}
         poppingSlots={poppingSlots}
         celebratePublish={celebratePublish}
       />
@@ -131,6 +178,7 @@ export default function DayScreen() {
           pastDay
         />
       ) : null}
+      {gallery.modal}
     </>
   );
 }

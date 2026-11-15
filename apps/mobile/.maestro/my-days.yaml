@@ -1,9 +1,12 @@
-# M2-25: open My days, screenshot the month (design: Calendar), then go to the previous month and back.
+# M2-25, D-153: open My days, screenshot the month (design: Calendar), tap a past date (its page opens
+# straight away, no summary card) and come back, then go to the previous month and back.
 # Run on the iOS Simulator: maestro test apps/mobile/.maestro/my-days.yaml
 # Sign in as a user with jars in the current month (seed user dale: today, yesterday and 3 days ago).
 # Previous month is enabled only back to the month of the first jar; the flow covers both cases.
 appId: me.pickld.app
 ---
+# Three days ago in Manila (the seed's zone), as the calendar's testID: day-YYYY-MM-DD.
+- evalScript: '${output.day = new Date(Date.now() + 8 * 3600000 - 3 * 86400000).toISOString().slice(0, 10)}'
 - launchApp
 - extendedWaitUntil:
     visible:
@@ -26,6 +29,36 @@ appId: me.pickld.app
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: Calendar-ios
+
+# A past date opens its page directly (D-153); Back returns to the calendar on that month.
+- runFlow:
+    when:
+      notVisible:
+        id: day-${output.day}
+    commands:
+      - tapOn:
+          id: my-days-previous
+- tapOn:
+    id: day-${output.day}
+- extendedWaitUntil:
+    visible:
+      id: day-scroll
+    timeout: 10000
+- tapOn:
+    id: day-back
+- extendedWaitUntil:
+    visible:
+      id: day-${output.day}
+    timeout: 10000
+# Back to this month for the Previous and Next checks below.
+- runFlow:
+    when:
+      visible:
+        id: my-days-next
+        enabled: true
+    commands:
+      - tapOn:
+          id: my-days-next
 
 # Previous month and back, when there is an earlier month to go to.
 - runFlow:

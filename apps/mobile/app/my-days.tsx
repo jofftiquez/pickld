@@ -5,7 +5,6 @@ import { useCallback, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MyDaysView } from '@/features/days/MyDaysView';
-import { SelectedDayCard } from '@/features/days/SelectedDayCard';
 import {
   addMonths,
   buildMonthGrid,
@@ -20,29 +19,34 @@ import {
 } from '@/features/days/monthGrid';
 import { useDayJar } from '@/features/days/useDayJar';
 import { useMonthJars } from '@/features/days/useMonthJars';
-import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
-import { phoneTimeZone } from '@/features/jar/useToday';
+import { openTodayJar } from '@/features/jar/rollover';
+import { phoneTimeZone, useToday } from '@/features/jar/useToday';
 import { localDateIn } from '@/lib/jars';
 
-// My days (M2-25, M2-26; FR-DAY-01, FR-DAY-02): the month calendar and the selected day with Fill this jar,
-// which opens that day's page (D-55). A stack screen opened from the calendar button on Today, not a tab (D-52).
+// My days (M2-25, M2-26; FR-DAY-01, FR-DAY-02): the month calendar. Tapping a past date opens that day's page
+// straight away (D-153), as Go to a date does; there it is filled from the gallery. A stack screen opened
+// from the calendar button on Today, not a tab (D-52).
 export default function MyDaysScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const today = localDateIn(new Date(), phoneTimeZone());
+  const now = new Date();
+  const today = localDateIn(now, phoneTimeZone());
   const currentMonth = monthOf(today);
   const [month, setMonth] = useState(currentMonth);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // The day last opened, marked on the calendar when coming back to it.
+  const [openedDate, setOpenedDate] = useState<string | null>(null);
   const { userId, jars, firstJarMonth, birthday } = useMonthJars(month);
-  const { day, queue } = useDayJar(selectedDate);
+  const { queue } = useDayJar(null);
+  // The jar Today shows: today's, or yesterday's while it is still open after flying west (travel rule).
+  const openJarDate = openTodayJar(useToday(now).jar, now)?.jar?.localDate ?? null;
   // The month's jars plus photos still waiting to upload, so a day just filled shows at once (rule 3, D-148).
   const monthJars = withQueued(
     jars ?? [],
     queue.filter((item) => monthOf(item.localDate) === month),
   );
 
-  // Coming back to the screen (e.g. after a capture) re-reads the months; the first focus is the initial load.
+  // Coming back to the screen (e.g. after filling a day) re-reads the months; the first focus is the initial load.
   const focusedOnce = useRef(false);
   useFocusEffect(
     useCallback(() => {
@@ -69,54 +73,33 @@ export default function MyDaysScreen() {
     weekStart: weekStartFrom(getCalendars()[0]?.firstWeekday),
     jars: monthJars,
   });
-  // A date from the date picker opens that day's page (D-55), as Fill this jar does; today is the Today tab.
-  // The calendar moves to that day too, so Back lands on it.
-  const onPickDate = (date: string) => {
+  // A date from the calendar or the date picker opens that day's page (D-55, D-153). Today, and the open
+  // jar Today still shows (travel rule), are the Today tab; future dates open nothing. The calendar moves to
+  // that month, so Back lands on it.
+  const openDay = (date: string) => {
     if (date > today || !pickableMonths.includes(monthOf(date))) return;
     setMonth(monthOf(date));
-    setSelectedDate(date);
-    if (date === today) router.navigate('/today');
+    setOpenedDate(date);
+    if (date === today || date === openJarDate) router.navigate('/today');
     else router.push({ pathname: '/day/[date]', params: { date } });
   };
-
-  // The selected day's slots: its server moments merged with photos still in the queue.
-  const tiles = selectedDate
-    ? buildTodayGrid({ localDate: selectedDate, moments: day?.moments ?? [], queue, nowSlot: null })
-    : [];
-  const onFill = () => {
-    if (selectedDate === null || !tiles.some((tile) => !holdsSlot(tile))) return;
-    router.push({ pathname: '/day/[date]', params: { date: selectedDate } });
-  };
-
-  const jarId = day?.jar?.id ?? null;
 
   return (
     <MyDaysView
       grid={grid}
       momentCount={monthMomentCount(monthJars)}
       nav={nav}
-      selectedDate={selectedDate}
+      selectedDate={openedDate}
       insets={insets}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
       onPrevious={() => nav.canGoPrevious && setMonth(addMonths(month, -1))}
       onNext={() => nav.canGoNext && setMonth(addMonths(month, 1))}
       pickableMonths={pickableMonths}
       onPickMonth={(picked) => pickableMonths.includes(picked) && setMonth(picked)}
-      onPickDate={onPickDate}
+      onPickDate={openDay}
       today={today}
-      onSelectDay={setSelectedDate}
+      onSelectDay={openDay}
       onMemories={() => router.push('/memories')}
-      selectedDay={
-        selectedDate ? (
-          <SelectedDayCard
-            date={selectedDate}
-            tiles={tiles}
-            isPast={selectedDate < today}
-            onFill={onFill}
-            onViewJar={jarId ? () => router.push({ pathname: '/jar/[id]', params: { id: jarId } }) : undefined}
-          />
-        ) : null
-      }
     />
   );
 }

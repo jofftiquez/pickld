@@ -1,6 +1,7 @@
-// The camera's Fill this jar mode (FR-DAY-02): opened as `/camera?date=YYYY-MM-DD&slot=…` from an empty tile
-// on a past day's page (`/day/[date]`, D-55), which My days' Fill this jar opens.
-// Null for a normal capture (no date, or one that isn't in the past), which keeps the open-jar path and
+// A photo shared from Photos for an earlier day (app/shared-photo.tsx; FR-DAY-02): that day's jar, the slots
+// it already holds and its label. The camera no longer fills past days (D-153); a past day's own page fills
+// it from the gallery with `fillTarget` and its tiles.
+// Null for a photo from today (no date, or one that isn't in the past), which keeps the open-jar path and
 // the travel rule untouched.
 import { useDayJar } from '@/features/days/useDayJar';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
@@ -13,7 +14,7 @@ export type FillCapture = {
   target: FillTarget;
   /** Slots already held in that day's jar (server moments and queued photos): not selectable. */
   taken: ReadonlySet<Slot>;
-  /** The day for the slot tag, e.g. "Sat, Nov 7". */
+  /** The day for the share sheet's line, e.g. "Sat, Nov 7". */
   dateLabel: string;
 };
 

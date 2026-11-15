@@ -30,8 +30,6 @@ export type SaveCaptureInput = {
   shotAt: Date;
   /** The open jar from Today, if known: a moment joins it even after a zone change (travel rule). */
   openJar: OpenJar | null;
-  /** Fill this jar: queue under this past date and zone instead of the open jar (FR-DAY-02). */
-  fill?: FillTarget | null;
   /** The slot is filled and the user chose Replace (M2-22): upload as a replacement of its moment. */
   replace?: boolean;
   /** Mirror selfies is off and this is a front-camera photo (D-66): flip it left to right first. */
@@ -75,23 +73,23 @@ export function captureJarDate(input: { tz: string; shotAt: Date; openJar: OpenJ
 }
 
 /**
- * The queue row's jar date and zone. Fill this jar uses its past date and that jar's zone (the server sets
- * is_backfilled); a normal capture goes through `captureJarDate`.
+ * The queue row's jar date and zone for a camera photo: always the open jar (`captureJarDate`). The camera
+ * never fills a past day (D-153); a past day takes gallery photos only (`galleryTarget` with its `fill`).
  */
-export function queueTarget(input: Pick<SaveCaptureInput, 'tz' | 'shotAt' | 'openJar' | 'fill'>): {
+export function queueTarget(input: Pick<SaveCaptureInput, 'tz' | 'shotAt' | 'openJar'>): {
   localDate: string;
   tz: string;
   capturedAt: string;
 } {
-  const target = captureJarDate(input);
-  return input.fill ? { localDate: input.fill.localDate, tz: input.fill.tz, capturedAt: target.capturedAt } : target;
+  return captureJarDate(input);
 }
 
 export type QueueTarget = ReturnType<typeof queueTarget>;
 
 /**
  * The queue row's jar date and zone for a gallery photo (FR-CAP-02; AGENTS "Which jar" point 3). Its capture
- * time comes from its EXIF (`captureInfo`). Fill this jar wins: the photo goes to that past date. Otherwise a
+ * time comes from its EXIF (`captureInfo`). `fill` (a past day's page, or Photos' Share for a past day) wins:
+ * the photo goes to that past date. Otherwise a
  * photo taken on an earlier day than today in the phone zone goes to that day's jar, in the phone zone
  * (ensure_jar returns an existing jar for that date unchanged; the server sets is_backfilled). A photo from
  * today, from the future (a wrong camera clock) or without an EXIF time joins the open jar exactly as a

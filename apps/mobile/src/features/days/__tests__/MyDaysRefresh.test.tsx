@@ -30,6 +30,7 @@ jest.mock('@gorhom/bottom-sheet', () => ({
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
+  useToday: () => ({ jar: undefined }),
 }));
 
 let mockServerJars: MonthJarRow[] = [];

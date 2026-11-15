@@ -1,6 +1,6 @@
-// One day's jar for the selected-day card and the day page (FR-DAY-02, D-55): the jar (id, zone, published
-// state) and its moments with thumbnail URLs, read as the owner so RLS decides, plus the offline queue so photos waiting to upload
-// show in the card at once (rule 3). React Query, so the persisted cache keeps it readable offline.
+// One day's jar for the day page (FR-DAY-02, D-55): the jar (id, zone, published state) and its moments
+// with thumbnail URLs, read as the owner so RLS decides, plus the offline queue so photos waiting to upload
+// show at once (rule 3); My days reads only the queue (a null date). React Query, so the persisted cache keeps it readable offline.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { z } from 'zod';
@@ -14,7 +14,7 @@ import { getSupabase } from '@/lib/supabase';
 import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
 
 export type DayJar = {
-  /** Null when the user has no jar for the date (Fill this jar creates it). */
+  /** Null when the user has no jar for the date (the first photo added there creates it). */
   jar: {
     id: string;
     localDate: string;

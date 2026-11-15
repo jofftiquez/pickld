@@ -15,7 +15,7 @@ export function parseSlotParam(raw: unknown): Slot | null {
 
 /**
  * The slot the camera opens on:
- * 1. the `slot` param (a tile on Today, or Fill this jar), even if taken;
+ * 1. the `slot` param (a tile on Today), even if taken;
  * 2. else the current time slot (morning, afternoon, evening) while it is still open;
  * 3. else the first open slot in jar order;
  * 4. else (a full jar) the current slot, or the first slot.

@@ -25,8 +25,6 @@ export type CameraViewProps = {
   slot: Slot;
   /** Current time, formatted for the slot tag. */
   time: string;
-  /** Fill this jar: the past day being filled, formatted for the slot tag. */
-  date?: string;
   flash: FlashSetting;
   flashSupported: boolean;
   shutterDisabled: boolean;
@@ -39,8 +37,6 @@ export type CameraViewProps = {
   onClose: () => void;
   /** Opens the moment picker. */
   onChangeSlot: () => void;
-  /** Nothing to change to (a full past jar): the pill is disabled. */
-  slotDisabled?: boolean;
   onToggleFlash: () => void;
   onFlip: () => void;
   onGallery: () => void;
@@ -57,7 +53,6 @@ export function CameraView({
   preview,
   slot,
   time,
-  date,
   flash,
   flashSupported,
   shutterDisabled,
@@ -67,7 +62,6 @@ export function CameraView({
   insets,
   onClose,
   onChangeSlot,
-  slotDisabled = false,
   onToggleFlash,
   onFlip,
   onGallery,
@@ -96,7 +90,7 @@ export function CameraView({
             onPress={onClose}
             testID="camera-close"
           />
-          <SlotPill slot={tag} time={time} date={date} onPress={onChangeSlot} disabled={slotDisabled} />
+          <SlotPill slot={tag} time={time} onPress={onChangeSlot} />
           <RoundIconButton
             icon={flash === 'on' ? 'flash' : 'flashOff'}
             variant="glass"

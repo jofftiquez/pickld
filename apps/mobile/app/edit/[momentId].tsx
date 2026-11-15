@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
@@ -18,7 +18,8 @@ import { colors, space } from '@/theme/tokens';
 // A queued photo is edited by its queue row id (it has no server id until uploaded); an uploaded moment by
 // its moment id (Moment options, M2-23). `focus=caption` is Moment options' Edit caption: it opens on the
 // details step (D-104). `via=crop`: Crop
-// opened it on a gallery photo, replacing itself, so the camera is still below (Camera → Crop → Editor).
+// opened it on a gallery photo, replacing itself, so what opened Crop is still below: the camera (Camera →
+// Crop → Editor) or a past day's page (Day → Crop → Editor, D-153).
 // `via=share`: a photo from Photos' Share, with the slot choice below (Add to Pickld → Editor, Crop having
 // replaced itself if it was shown); the editor's Back drops the draft and returns there to choose again.
 const paramsSchema = z.object({
@@ -65,12 +66,18 @@ export default function EditScreen() {
 
   const via = parsed.success ? parsed.data.via : undefined;
 
-  // Back to where the camera was opened from (Today, or a past day's page): after a gallery photo through
-  // Crop, the camera is still below the editor, so it goes too, as after the shutter (which replaces itself).
-  // A shared photo's slot choice goes too once the moment is saved.
+  // Back to where the photo came from: after a gallery photo through Crop from the camera, the camera is
+  // still below the editor, so it goes too, back to Today, as after the shutter (which replaces itself).
+  // From a past day's page (D-153) the day page is below: just back to it. A shared photo's slot choice goes
+  // too once the moment is saved.
+  const navigation = useNavigation();
+  const cameraBelow = () => {
+    const state = navigation.getState();
+    return state?.routes[state.index - 1]?.name === 'camera';
+  };
   const close = () => {
     if (!router.canGoBack()) router.replace('/today');
-    else if (via === 'crop' || via === 'share') router.dismiss(2);
+    else if (via === 'share' || (via === 'crop' && cameraBelow())) router.dismiss(2);
     else router.back();
   };
 

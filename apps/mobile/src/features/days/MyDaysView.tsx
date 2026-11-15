@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -27,9 +27,8 @@ export type MyDaysViewProps = {
   onBack?: () => void;
   onPrevious: () => void;
   onNext: () => void;
+  /** Opens a tapped day (D-153): its page for a past day, the Today tab for today. */
   onSelectDay: (date: string) => void;
-  /** The selected-day card, under the calendar. */
-  selectedDay?: ReactNode;
   /** Opens Memories (FR-DAY-03). */
   onMemories?: () => void;
   /** The months the month picker offers, oldest first: the range Previous and Next reach (`monthsBetween`). */
@@ -74,7 +73,6 @@ export function MyDaysView({
   onPrevious,
   onNext,
   onSelectDay,
-  selectedDay,
   onMemories,
   pickableMonths = [],
   onPickMonth,
@@ -200,6 +198,7 @@ export function MyDaysView({
                     key={cell.date}
                     cell={cell}
                     accessibilityLabel={labelFor(cell)}
+                    accessibilityHint={cell.isFuture ? undefined : t('myDays.dayHint')}
                     selected={cell.date === selectedDate}
                     onPress={() => onSelectDay(cell.date)}
                   />
@@ -232,7 +231,6 @@ export function MyDaysView({
           />
         </View>
       ) : null}
-      {selectedDay}
       {onPickDate && today ? (
         <DatePickerSheet
           visible={datePickerOpen}

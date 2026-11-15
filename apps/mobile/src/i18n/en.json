@@ -74,7 +74,9 @@
     "inJarReaders_one": "in this jar · {{count}} reader",
     "inJarReaders_other": "in this jar · {{count}} readers",
     "publishHint": "Review this day’s jar and choose who can see it",
-    "addedLaterNote": "Moments added now show an “Added later” badge."
+    "addedLaterNote": "Moments added now show an “Added later” badge.",
+    "viewJar": "View jar",
+    "viewJarHint": "Opens this day’s jar page"
   },
   "jarVisibility": {
     "title": "Who can see this jar",
@@ -274,23 +276,7 @@
     "day": "{{date}}, {{count}} of {{total}} moments",
     "dayToday": "{{date}}, today, {{count}} of {{total}} moments",
     "dayFuture": "{{date}}, not yet",
-    "selected": {
-      "label": "Selected day",
-      "count": "{{count}} of {{total}} moments",
-      "addedLater": " · {{count}} added later",
-      "thumbAddedLater": "{{slot}}, added later",
-      "missing": "Missing: {{slots}}",
-      "addSlot": "+ {{slot}}",
-      "fill": "Fill this jar",
-      "fillHint": "Opens {{date}} to add the missing moments",
-      "fillNote": "Moments added now show an “Added later” badge.",
-      "viewJar": "View jar",
-      "viewJarHint": "Opens the jar page for {{date}}"
-    },
-    "camera": {
-      "when": "For {{date}}",
-      "slotTag": "{{slot}}, for {{date}}"
-    },
+    "dayHint": "Opens this day",
     "memories": "Memories"
   },
   "brand": {
@@ -743,7 +729,7 @@
     "title": "Choose a photo",
     "forDate": "For {{date}}",
     "close": "Close",
-    "closeHint": "Goes back to the camera without a photo",
+    "closeHint": "Closes the gallery without a photo",
     "today": "Today",
     "yesterday": "Yesterday",
     "noDate": "No date",
@@ -1621,7 +1607,7 @@
       },
       {
         "q": "Why does a moment say “Added later”?",
-        "a": "A moment added after its day ended, from your gallery or with Fill this jar, carries an “Added later” badge. Pickld’s server decides this from its own clock, not your phone’s."
+        "a": "A moment added after its day ended, from your gallery or from My days, carries an “Added later” badge. Pickld’s server decides this from its own clock, not your phone’s."
       },
       {
         "q": "Who can see my jars?",

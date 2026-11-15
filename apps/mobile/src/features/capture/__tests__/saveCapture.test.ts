@@ -172,18 +172,6 @@ describe('saveCapture', () => {
     expect(requestUploads).not.toHaveBeenCalled();
     expect(mockDeleted).toEqual([]);
   });
-
-  it("Fill this jar queues under the past date in that jar's zone, with the real capture time", async () => {
-    await saveCapture({ ...input, tz: 'Pacific/Honolulu', fill: { localDate: '2026-11-08', tz: 'Asia/Manila' } });
-    expect(enqueue).toHaveBeenCalledWith(
-      expect.objectContaining({
-        localDate: '2026-11-08',
-        tz: 'Asia/Manila',
-        // Taken now, in the phone's zone; the server compares added_at with the jar's end (rule 6).
-        capturedAt: '2026-11-10T20:14:05-10:00',
-      }),
-    );
-  });
 });
 
 describe('queueTarget', () => {
@@ -198,12 +186,6 @@ describe('queueTarget', () => {
       tz: 'Asia/Manila',
       capturedAt: '2026-11-11T07:00:00-10:00',
     });
-    expect(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar, fill: null }).localDate).toBe('2026-11-12');
-  });
-
-  it('a Fill after flying west goes to the past date, not the open jar', () => {
-    const fill = { localDate: '2026-11-09', tz: 'Asia/Manila' };
-    expect(queueTarget({ tz: 'Pacific/Honolulu', shotAt: at, openJar, fill })).toMatchObject(fill);
   });
 });
 
@@ -271,7 +253,7 @@ describe('galleryTarget (FR-CAP-02; AGENTS "Which jar" point 3)', () => {
     });
   });
 
-  it('Fill this jar wins over the photo date, in that jar zone', () => {
+  it('a past day’s page wins over the photo date, in that jar zone', () => {
     const fill = { localDate: '2026-11-05', tz: 'Asia/Tokyo' };
     expect(
       galleryTarget({ exif: exif('2026:11:08 19:30:00', '+08:00'), tz: 'Asia/Manila', now, openJar, fill }),

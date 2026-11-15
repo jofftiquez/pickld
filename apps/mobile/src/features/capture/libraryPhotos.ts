@@ -1,6 +1,7 @@
-// The phone's photo library for the in-app gallery grid (FR-CAP-02). iOS only, and only with the Photos
-// access the user already gave during setup: this never asks for it. Without it (or on Android) the camera
-// keeps the system picker, which needs no access.
+// The phone's photo library for the in-app gallery grid (FR-CAP-02). iOS only. The camera's gallery button
+// uses Photos access only when it was already given and never asks; filling a past day (the day page, D-153)
+// asks once with Apple's prompt while access was never decided (`askLibraryAccess`). Without access (or on
+// Android) the system picker opens instead, which needs none.
 import { File, Paths } from 'expo-file-system';
 import {
   addListener,
@@ -10,6 +11,8 @@ import {
   MediaType,
   presentPermissionsPicker,
   Query,
+  requestPermissionsAsync,
+  type PermissionResponse,
 } from 'expo-media-library';
 import { Platform } from 'react-native';
 
@@ -21,7 +24,21 @@ export type LibraryAccess = 'all' | 'limited';
 /** The Photos access Pickld has now: all photos, the ones the user chose (limited), or none (null). */
 export async function libraryAccess(): Promise<LibraryAccess | null> {
   if (Platform.OS !== 'ios') return null;
+  return accessOf(await getPermissionsAsync(false, ['photo']));
+}
+
+/**
+ * Like `libraryAccess`, but while Photos access was never decided it first asks once with Apple's prompt
+ * (photos only). Once decided (granted, limited or denied) it never asks again.
+ */
+export async function askLibraryAccess(): Promise<LibraryAccess | null> {
+  if (Platform.OS !== 'ios') return null;
   const permission = await getPermissionsAsync(false, ['photo']);
+  if (permission.status !== 'undetermined') return accessOf(permission);
+  return accessOf(await requestPermissionsAsync(false, ['photo']));
+}
+
+function accessOf(permission: PermissionResponse): LibraryAccess | null {
   if (!permission.granted) return null;
   return permission.accessPrivileges === 'limited' ? 'limited' : 'all';
 }
