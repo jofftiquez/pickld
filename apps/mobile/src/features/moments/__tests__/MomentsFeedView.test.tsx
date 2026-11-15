@@ -93,11 +93,20 @@ describe('MomentsFeedView', () => {
     );
   });
 
-  it('a backfilled moment shows its date with the year and says it was added later', async () => {
-    const old = moment({ moment_id: 'm3', captured_at: '2023-03-02T23:30:00Z', is_backfilled: true });
+  it('a backfilled moment names its jar’s day with the year and says it was added later', async () => {
+    // No capture time (a gallery photo without one): the day still comes from the jar, not from when it was added.
+    const old = moment({
+      moment_id: 'm3',
+      captured_at: null,
+      added_at: '2026-11-15T05:00:00Z',
+      jar_local_date: '2023-03-03',
+      is_backfilled: true,
+    });
     await setup({ moments: [old, mika] });
-    expect(screen.getByText(/#ootd · 7:30.*Mar 3, 2023 · Added later$/)).toBeTruthy();
-    expect(screen.getByTestId('moments-open-m3').props.accessibilityLabel).toMatch(/Mar\s3,\s2023\. Added later$/);
+    expect(screen.getByText(/^#ootd · For Mar\s3,\s2023 · Added later$/)).toBeTruthy();
+    expect(screen.getByTestId('moments-open-m3').props.accessibilityLabel).toMatch(
+      /^Mika Reyes, #ootd, Mar\s3,\s2023\. Added later$/,
+    );
     // A moment added on its own day keeps the short date and no badge.
     expect(screen.getByTestId('moments-open-m1').props.accessibilityLabel).not.toMatch(/Added later/);
   });

@@ -57,14 +57,16 @@ export function MomentFeedCard({
   const { t } = useTranslation();
   const at = new Date(moment.captured_at ?? moment.added_at);
   const slot = t(`slots.${moment.slot}`);
-  // A backfilled moment sits with the day it was added (the timeline is ordered by added_at), so its own date
-  // carries the year and the line says it was added later.
+  // A backfilled moment sits with the day it was added (the timeline is ordered by added_at), so the line names
+  // the day it belongs to, its jar's (a gallery photo may have no capture time), with the year, and says it was
+  // added later. No-break spaces: when the line wraps beside Be a reader, the date moves down whole.
   const addedLater = moment.is_backfilled;
-  const when = t('moment.detail.when', {
-    time: formatTime(at, moment.jar_tz, locale),
-    // No-break spaces: when the line wraps beside Be a reader, the date moves down whole.
-    date: (addedLater ? formatDate : formatShortDate)(at, moment.jar_tz, locale).replace(/ /g, '\u00a0'),
-  });
+  const when = addedLater
+    ? formatDate(new Date(`${moment.jar_local_date}T12:00:00Z`), 'UTC', locale).replace(/ /g, '\u00a0')
+    : t('moment.detail.when', {
+        time: formatTime(at, moment.jar_tz, locale),
+        date: formatShortDate(at, moment.jar_tz, locale).replace(/ /g, '\u00a0'),
+      });
   const caption = moment.caption?.trim() ? moment.caption.trim() : null;
   // At large text the name and the button no longer fit side by side (the name shrank to "J."): stack them.
   const large = useLargeText();
