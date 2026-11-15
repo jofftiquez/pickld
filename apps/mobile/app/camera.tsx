@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Linking } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { AccessibilityInfo, AppState, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CameraAccessOff } from '@/features/capture/CameraAccessOff';
@@ -27,6 +28,7 @@ import {
 } from '@/features/capture/mockCamera';
 import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { galleryTarget, saveCapture, saveGalleryPhoto } from '@/features/capture/saveCapture';
+import { SlotPicker } from '@/features/capture/SlotPicker';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
 import { useCameraZoom } from '@/features/capture/useCameraZoom';
 import { useFillCapture } from '@/features/capture/useFillCapture';
@@ -81,19 +83,38 @@ export default function CameraScreen() {
         .filter(holdsSlot)
         .map((tile) => tile.slot),
     );
-  // The tile that opened the camera picks the slot; there is no switcher (QA item 5). Without a slot param
-  // (the hidden Capture route) it is the Now slot, else the first empty one.
-  const fillSlot = fill ? fillCameraSlot({ param: parseSlotParam(params.slot), taken }) : null;
-  const slot = fill
-    ? (fillSlot ?? slots[0])
-    : defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken });
-  // A full past jar has nothing to fill.
-  const fillFull = fill !== null && fillSlot === null;
-
-  // #selfie opens on the front lens (D-99); flip still switches. Read once, from the tile's slot param.
+  // The tile that opened the camera picks the slot it opens on. Without a slot param (the hidden Capture
+  // route) it is the Now slot, else the first empty one. The moment pill then changes it to another free slot
+  // of the same day (D-151); from then on that choice is the slot, and everything saved goes there.
+  const [chosen, setChosen] = useState<Slot | null>(null);
+  // #selfie opens on the front lens (D-99); flip still switches. `autoFront` is true while the front lens
+  // is the one #selfie chose, not the user: leaving #selfie then goes back to the rear lens (D-151).
   const [facing, setFacing] = useState<CameraFacing>(() =>
     parseSlotParam(params.slot) === 'selfie' ? 'front' : 'back',
   );
+  const [autoFront, setAutoFront] = useState(() => parseSlotParam(params.slot) === 'selfie');
+  // A new link into the open camera (another slot or day) starts from its own slot again, and the lens
+  // follows it as it does for a picked moment.
+  const target = `${String(params.slot)}|${String(params.date)}`;
+  const [chosenFor, setChosenFor] = useState(target);
+  if (chosenFor !== target) {
+    setChosenFor(target);
+    setChosen(null);
+    if (parseSlotParam(params.slot) === 'selfie') {
+      setFacing('front');
+      setAutoFront(true);
+    } else if (autoFront) {
+      setFacing('back');
+      setAutoFront(false);
+    }
+  }
+  const fillSlot = fill ? fillCameraSlot({ param: parseSlotParam(params.slot), taken }) : null;
+  const slot =
+    chosen ??
+    (fill ? (fillSlot ?? slots[0]) : defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken }));
+  // A full past jar has nothing to fill.
+  const fillFull = fill !== null && fillSlot === null;
+  const [picking, setPicking] = useState(false);
   const [flash, setFlash] = useState<FlashSetting>('off');
   const [flashSupported, setFlashSupported] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -107,6 +128,23 @@ export default function CameraScreen() {
   const onLiveZoom = useCallback((next: number) => camera.current?.setZoom(next), []);
   const zoom = useCameraZoom(lens, onLiveZoom);
   const onFocus = useCallback((point: Point) => camera.current?.focus(point), []);
+
+  // Change the moment (D-151): same day, new slot. #selfie turns to the front lens; leaving it turns back
+  // to the rear one unless the user flipped by hand; any other change keeps the lens. Zoom starts at 1×.
+  const { t } = useTranslation();
+  const onPickSlot = (next: Slot) => {
+    setPicking(false);
+    setChosen(next);
+    zoom.reset();
+    if (next === 'selfie') {
+      setFacing('front');
+      setAutoFront(true);
+    } else if (autoFront) {
+      setFacing('back');
+      setAutoFront(false);
+    }
+    AccessibilityInfo.announceForAccessibility(t('camera.slotChanged', { slot: t(`slots.${next}`) }));
+  };
 
   // The camera runs only while this screen is visible and the app is in the foreground.
   const [focused, setFocused] = useState(false);
@@ -246,14 +284,27 @@ export default function CameraScreen() {
       onFocus={onFocus}
       insets={insets}
       onClose={leave}
+      onChangeSlot={() => setPicking(true)}
+      slotDisabled={fillFull}
       onToggleFlash={() => setFlash((f) => (f === 'on' ? 'off' : 'on'))}
-      onFlip={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+      onFlip={() => {
+        setFacing((f) => (f === 'back' ? 'front' : 'back'));
+        setAutoFront(false);
+      }}
       onGallery={() => void onGallery()}
       onShutter={() => void onShutter()}
       overlay={
         <>
           {replaceConfirm.dialog}
           {gallery.modal}
+          <SlotPicker
+            visible={picking}
+            current={slot}
+            taken={taken}
+            date={fill?.dateLabel}
+            onPick={onPickSlot}
+            onClose={() => setPicking(false)}
+          />
         </>
       }
     />

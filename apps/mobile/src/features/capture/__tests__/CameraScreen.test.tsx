@@ -5,7 +5,7 @@ import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
 import '../../edit/__tests__/mockReanimated';
 import type { ReactNode } from 'react';
-import { AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'react-native';
+import { AccessibilityInfo, AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'react-native';
 import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
@@ -21,7 +21,7 @@ import type { DayJar } from '@/features/days/useDayJar';
 import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
 
 // Camera screen wiring (FR-CAP-01, FR-CAP-11): permission branch and Camera access off, dev mock camera,
-// the read-only slot tag, flash and flip, the shutter path, and zoom and tap to focus (D-144). vision-camera's
+// the moment pill and its picker (D-151), flash and flip, the shutter path, and zoom and tap to focus (D-144). vision-camera's
 // native module and the save path are mocked; its permission hook is the real one (it re-reads the status when
 // the app becomes active). saveCapture has its own test; the zoom rules have cameraZoom.test.
 
@@ -138,6 +138,27 @@ jest.mock('../libraryPhotos', () => ({
 const mockMirror = { on: true };
 jest.mock('../cameraPrefs', () => ({ getMirrorSelfies: async () => mockMirror.on }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+// The moment picker is the kit sheet; gorhom's sheet renders its content straight away here, and closing it
+// reports back as a real sheet does.
+jest.mock('@gorhom/bottom-sheet', () => {
+  const actual = jest.requireActual('@gorhom/bottom-sheet/mock');
+  const { forwardRef, useImperativeHandle } = jest.requireActual<typeof import('react')>('react');
+  const Sheet = forwardRef<{ close: () => void }, { onClose: () => void; children: ReactNode }>(
+    function Sheet(props, ref) {
+      useImperativeHandle(ref, () => ({ close: () => props.onClose() }));
+      return <>{props.children}</>;
+    },
+  );
+  return {
+    ...actual,
+    __esModule: true,
+    default: Sheet,
+    BottomSheetView: ({ children }: { children: ReactNode }) => children,
+    BottomSheetScrollView: ({ children }: { children: ReactNode }) => children,
+    BottomSheetBackdrop: () => null,
+    useBottomSheetTimingConfigs: (config: object) => config,
+  };
+});
 // The Replace dialog (kit Dialog) reads Reduce Motion from Reanimated. expo-router's testing library mocks
 // Reanimated with `react-native-reanimated/mock`, which can't load here; give it the hook it needs, and the
 // two functions the gallery grid's gesture detector looks for.
@@ -330,7 +351,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(screen).toHavePathname('/edit/1');
   });
 
-  it('the tile’s slot is fixed: no slot switcher, and the shutter queues the mock photo there and returns', async () => {
+  it('opens on the tile’s slot, and the shutter queues the mock photo there and returns', async () => {
     await openCamera('/camera?slot=selfie');
     expect(tagText()).toMatch(/^#selfie,/);
     expect(screen.queryByRole('tab')).toBeNull();
@@ -1071,5 +1092,312 @@ describe('Fill this jar (?date=, FR-DAY-02)', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
     await act(async () => {});
     expect(saveCapture).toHaveBeenCalledWith(expect.objectContaining({ openJar: mockToday.jar, fill: null }));
+  });
+});
+
+describe('Change the moment from the camera (D-151)', () => {
+  const queued = (slot: QueuedMoment['slot'], localDate = '2026-11-11'): QueuedMoment => ({
+    id: Math.floor(Math.random() * 1e6),
+    slot,
+    state: 'queued',
+    localDate,
+    photoUri: 'file:///q/x.webp',
+    thumbUri: null,
+    capturedAt: null,
+    visibility: 'readers',
+  });
+  const pill = () => screen.getByTestId('camera-slot-tag');
+  const row = (slot: string) => screen.getByTestId(`camera-slot-picker-${slot}`);
+  const rowState = (slot: string) => row(slot).props.accessibilityState as { selected: boolean; disabled: boolean };
+  const pickerHeader = () => screen.queryByRole('header', { name: 'Change the moment' });
+  const lastLens = () => jest.mocked(useCameraDevice).mock.calls.at(-1)?.[0];
+  const openPicker = async () => {
+    await fireEvent.press(screen.getByRole('button', { name: /^#\w+, (today at|for) / }));
+    expect(screen.getByRole('header', { name: 'Change the moment' })).toBeTruthy();
+  };
+  const pick = async (slot: string) => {
+    await fireEvent.press(row(slot));
+    await act(async () => {});
+  };
+  const shoot = async () => {
+    await fireEvent.press(screen.getByRole('button', { name: 'Take photo' }));
+    await act(async () => {});
+  };
+
+  it('the slot is a button that says it changes the moment, and opens the picker on the day’s 8 slots', async () => {
+    await openCamera('/camera?slot=afternoon');
+    expect(pill().props.accessibilityRole).toBe('button');
+    expect(tagText()).toMatch(/^#afternoon, today at /);
+    expect(pill().props.accessibilityHint).toBe('Changes the moment');
+    expect(pill().props.accessibilityState).toEqual({ disabled: false });
+    // It looks like a control: the slot with a chevron.
+    expect(within(pill()).getByTestId('icon-chevronDown', { includeHiddenElements: true })).toBeTruthy();
+    expect(pickerHeader()).toBeNull();
+
+    await openPicker();
+    expect(screen.getByText('For today’s jar')).toBeTruthy();
+    const rows = screen.getAllByTestId(/^camera-slot-picker-[a-z]+$/).map((r) => r.props.accessibilityLabel as string);
+    expect(rows).toEqual([
+      '#whereami',
+      '#mebusywith',
+      '#whoamiwith',
+      '#ootd',
+      '#selfie',
+      '#morning',
+      '#afternoon',
+      '#evening',
+    ]);
+    // Only the current slot is selected; nothing is taken yet, so every row can be picked.
+    expect(rowState('afternoon')).toEqual({ selected: true, disabled: false });
+    expect(screen.getByTestId('camera-slot-picker-afternoon-check')).toBeTruthy();
+    expect(rowState('ootd')).toEqual({ selected: false, disabled: false });
+    expect(row('ootd').props.accessibilityHint).toBe('Takes the photo for #ootd');
+    expect(row('afternoon').props.accessibilityHint).toBeUndefined();
+  });
+
+  it('slots already in the jar are done and can’t be picked', async () => {
+    mockToday.queue = [queued('whereami'), queued('ootd')];
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    expect(row('whereami').props.accessibilityLabel).toBe('#whereami, done');
+    expect(rowState('whereami')).toEqual({ selected: false, disabled: true });
+    expect(rowState('ootd')).toEqual({ selected: false, disabled: true });
+    expect(within(row('ootd')).getByText('Done')).toBeTruthy();
+    expect(rowState('selfie')).toEqual({ selected: false, disabled: false });
+
+    await pick('ootd');
+    expect(tagText()).toMatch(/^#afternoon, /);
+    expect(pickerHeader()).toBeTruthy();
+  });
+
+  it('picking a free slot switches the tag, the shutter hint and what the shutter saves, on the camera', async () => {
+    jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => undefined);
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    await pick('evening');
+    expect(pickerHeader()).toBeNull();
+    expect(screen).toHavePathname('/camera');
+    expect(tagText()).toMatch(/^#evening, today at /);
+    expect(screen.getByRole('button', { name: 'Take photo' }).props.accessibilityHint).toBe(
+      'Adds the photo to #evening',
+    );
+    expect(AccessibilityInfo.announceForAccessibility).toHaveBeenLastCalledWith('Now taking #evening');
+
+    await shoot();
+    expect(saveCapture).toHaveBeenCalledTimes(1);
+    expect(saveCapture).toHaveBeenCalledWith(
+      expect.objectContaining({ slot: 'evening', replace: false, openJar: mockToday.jar, fill: null }),
+    );
+    expect(takeMockPhoto).toHaveBeenCalledWith('back');
+  });
+
+  it('a gallery photo after the switch goes to the new slot too', async () => {
+    jest.mocked(pickFromGallery).mockResolvedValue({
+      uri: 'file:///picker/portrait.jpg',
+      width: 3024,
+      height: 4032,
+      exif: null,
+    });
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    await pick('whoamiwith');
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose from gallery' }));
+    await act(async () => {});
+    expect(saveGalleryPhoto).toHaveBeenCalledWith(expect.objectContaining({ slot: 'whoamiwith' }));
+  });
+
+  it('opened on a filled slot to replace it, a switch to a free slot no longer asks to Replace', async () => {
+    mockToday.queue = [queued('afternoon')];
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    // The current slot stays selected and pressable, read as done.
+    expect(row('afternoon').props.accessibilityLabel).toBe('#afternoon, done');
+    expect(rowState('afternoon')).toEqual({ selected: true, disabled: false });
+    await pick('morning');
+    await shoot();
+    expect(screen.queryByRole('header', { name: /Replace/ })).toBeNull();
+    expect(saveCapture).toHaveBeenCalledWith(expect.objectContaining({ slot: 'morning', replace: false }));
+  });
+
+  it('switching to #selfie turns to the front camera; leaving it turns back to the rear one', async () => {
+    await openCamera('/camera?slot=ootd');
+    await openPicker();
+    await pick('selfie');
+    expect(tagText()).toMatch(/^#selfie, /);
+    await shoot();
+    expect(takeMockPhoto).toHaveBeenLastCalledWith('front');
+    expect(saveCapture).toHaveBeenLastCalledWith(expect.objectContaining({ slot: 'selfie' }));
+  });
+
+  it('leaving the #selfie it opened on goes to the rear camera', async () => {
+    await openCamera('/camera?slot=selfie');
+    await openPicker();
+    await pick('ootd');
+    await shoot();
+    expect(takeMockPhoto).toHaveBeenLastCalledWith('back');
+    expect(saveCapture).toHaveBeenLastCalledWith(expect.objectContaining({ slot: 'ootd' }));
+  });
+
+  it('a lens the user flipped to by hand is kept when the moment changes', async () => {
+    // Flipped twice on #selfie: the front lens is now the user's choice, so #ootd keeps it.
+    await openCamera('/camera?slot=selfie');
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    await openPicker();
+    await pick('ootd');
+    await shoot();
+    expect(takeMockPhoto).toHaveBeenLastCalledWith('front');
+  });
+
+  it('a change between two other slots keeps the lens', async () => {
+    await openCamera('/camera?slot=ootd');
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    await openPicker();
+    await pick('whereami');
+    await shoot();
+    expect(takeMockPhoto).toHaveBeenLastCalledWith('front');
+  });
+
+  it('on a phone, #selfie switches the live camera to the front lens and back', async () => {
+    mockCamera.isDevice = true;
+    await openCamera('/camera?slot=afternoon');
+    expect(lastLens()).toBe('back');
+    await openPicker();
+    await pick('selfie');
+    expect(lastLens()).toBe('front');
+    await openPicker();
+    await pick('evening');
+    expect(lastLens()).toBe('back');
+  });
+
+  it('zoom goes back to 1× on a change of moment, as on a flip', async () => {
+    mockCamera.isDevice = true;
+    const zoomButton = (factor: string) => screen.getByRole('button', { name: `Zoom ${factor} times` });
+    const selected = () =>
+      screen
+        .queryAllByRole('button', { name: /^Zoom .* times$/ })
+        .filter((b) => b.props.accessibilityState?.selected)
+        .map((b) => b.props.accessibilityLabel as string);
+    const cameraZoom = () => screen.getByTestId('camera-live-preview').props.zoom as number;
+
+    await openCamera('/camera?slot=afternoon');
+    await fireEvent.press(zoomButton('3'));
+    // The 3× telephoto is zoom 6 on the iPhone 14 Pro's back camera.
+    expect(cameraZoom()).toBe(6);
+    // Same rear camera, new moment: back to 1×, the wide lens at zoom 2.
+    await openPicker();
+    await pick('morning');
+    expect(selected()).toEqual(['Zoom 1 times']);
+    expect(cameraZoom()).toBe(2);
+    // To #selfie: the front lens, which has no zoom buttons, at its own 1× (zoom 1).
+    await fireEvent.press(zoomButton('2'));
+    await openPicker();
+    await pick('selfie');
+    expect(screen.queryAllByRole('button', { name: /^Zoom .* times$/ })).toEqual([]);
+    expect(cameraZoom()).toBe(1);
+  });
+
+  it('a new link into the open camera starts from its own slot, not the one picked before', async () => {
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    await pick('evening');
+    expect(tagText()).toMatch(/^#evening, /);
+    await act(async () => router.setParams({ slot: 'ootd' }));
+    expect(tagText()).toMatch(/^#ootd, today at /);
+    await shoot();
+    expect(saveCapture).toHaveBeenLastCalledWith(expect.objectContaining({ slot: 'ootd' }));
+  });
+
+  it('a new link follows the lens rule: off a picked #selfie it goes back to the rear lens, onto #selfie the front', async () => {
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    await pick('selfie');
+    // The rear camera's four zoom buttons; the front lens has none.
+    const zoomButtons = () => screen.queryAllByRole('button', { name: /^Zoom .* times$/ });
+    expect(zoomButtons()).toEqual([]);
+    // Rear lens again for #ootd, because the front one was #selfie's choice.
+    await act(async () => router.setParams({ slot: 'ootd' }));
+    expect(zoomButtons()).toHaveLength(4);
+    await act(async () => router.setParams({ slot: 'selfie' }));
+    expect(tagText()).toMatch(/^#selfie, /);
+    await shoot();
+    expect(takeMockPhoto).toHaveBeenLastCalledWith('front');
+  });
+
+  it('when every other slot is done, the picker still opens with only the current slot to tap, which closes it', async () => {
+    mockToday.queue = ['whereami', 'mebusywith', 'whoamiwith', 'ootd', 'selfie', 'morning', 'evening'].map((slot) =>
+      queued(slot as QueuedMoment['slot']),
+    );
+    await openCamera('/camera?slot=afternoon');
+    await openPicker();
+    expect(screen.getByText('Every other moment is already done for this day')).toBeTruthy();
+    const enabled = screen
+      .getAllByTestId(/^camera-slot-picker-[a-z]+$/)
+      .filter((r) => !r.props.accessibilityState.disabled)
+      .map((r) => r.props.accessibilityLabel as string);
+    expect(enabled).toEqual(['#afternoon']);
+    await pick('afternoon');
+    expect(pickerHeader()).toBeNull();
+    expect(tagText()).toMatch(/^#afternoon, /);
+  });
+
+  describe('Fill this jar', () => {
+    const dayMoment = (slot: ServerMoment['slot']): ServerMoment => ({
+      id: `m-${slot}`,
+      slot,
+      status: 'live',
+      visibility: 'readers',
+      is_backfilled: false,
+      captured_at: null,
+      added_at: '2026-11-08T01:00:00Z',
+      thumbUrl: null,
+    });
+
+    beforeEach(() => {
+      mockDay.day = {
+        jar: { id: 'jar-8', localDate: '2026-11-08', tz: 'Asia/Tokyo' },
+        moments: [dayMoment('whereami'), dayMoment('morning')],
+      };
+    });
+
+    it('lists the past day’s slots and keeps the day: the new slot is queued for Nov 8 in that jar’s zone', async () => {
+      // Today's jar has #ootd; the day being filled doesn't, so it can be picked there.
+      mockToday.queue = [queued('ootd')];
+      await openCamera('/camera?date=2026-11-08&slot=selfie');
+      await openPicker();
+      // The subtitle under the picker's title (the pill also reads "For Sun, Nov 8").
+      expect(screen.getAllByText('For Sun, Nov 8')).toHaveLength(2);
+      expect(rowState('whereami')).toEqual({ selected: false, disabled: true });
+      expect(rowState('morning')).toEqual({ selected: false, disabled: true });
+      expect(rowState('selfie')).toEqual({ selected: true, disabled: false });
+      expect(rowState('ootd')).toEqual({ selected: false, disabled: false });
+
+      await pick('ootd');
+      expect(tagText()).toBe('#ootd, for Sun, Nov 8');
+      await shoot();
+      expect(saveCapture).toHaveBeenCalledWith(
+        expect.objectContaining({ slot: 'ootd', replace: false, fill: { localDate: '2026-11-08', tz: 'Asia/Tokyo' } }),
+      );
+      // Leaving #selfie turned to the rear camera.
+      expect(takeMockPhoto).toHaveBeenLastCalledWith('back');
+    });
+
+    it('a full past jar has nothing to change to: the pill is disabled', async () => {
+      const all = [
+        'whereami',
+        'mebusywith',
+        'whoamiwith',
+        'ootd',
+        'selfie',
+        'morning',
+        'afternoon',
+        'evening',
+      ] as const;
+      mockDay.day = { jar: { id: 'jar-8', localDate: '2026-11-08', tz: 'Asia/Tokyo' }, moments: all.map(dayMoment) };
+      await openCamera('/camera?date=2026-11-08');
+      expect(pill().props.accessibilityState).toEqual({ disabled: true });
+      await fireEvent.press(pill());
+      expect(pickerHeader()).toBeNull();
+    });
   });
 });
