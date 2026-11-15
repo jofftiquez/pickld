@@ -5,7 +5,7 @@ import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-rout
 import './mockReanimated';
 import type { ReactNode } from 'react';
 import { Skia, type SkData } from '@shopify/react-native-skia';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import EditScreen from '../../../../app/edit/[momentId]';
 import { editsSchema } from '../edits';
@@ -989,7 +989,7 @@ describe('Two steps: photo, then details (D-103)', () => {
     expect(screen.getByTestId('editor-next').props.accessibilityLabel).toBe('Next');
   });
 
-  it('Next opens the details step with the edited photo drawn small, the slot hashtag and Back', async () => {
+  it('Next opens the details step with the edited photo at the photo step’s size, the slot hashtag and Back', async () => {
     rows.set(7, {
       ...item,
       edits: {
@@ -1001,8 +1001,19 @@ describe('Two steps: photo, then details (D-103)', () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Mono'));
+    const size = (testID: string) => {
+      const { width, height } = StyleSheet.flatten(screen.getByTestId(testID).props.style) as {
+        width: number;
+        height: number;
+      };
+      return { width, height };
+    };
+    const photoStepSize = size('editor-photo-frame');
     await goToDetails();
 
+    // The caption keeps the photo at the size the photo step shows it, not a small copy.
+    expect(size('editor-preview-frame')).toEqual(photoStepSize);
+    expect(size('editor-preview')).toEqual(photoStepSize);
     // The photo step is behind the details step, out of reach of touch and screen readers.
     expect(screen.queryByTestId('editor-screen')).toBeNull();
     expect(screen.queryByTestId('editor-tools')).toBeNull();
