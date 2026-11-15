@@ -99,6 +99,27 @@ export function profileMoments(jars: ProfileJar[]): { jar: JarRow; moment: JarMo
   );
 }
 
+/** One day on the Moments tab: the jar's local date and its moments, latest first (D-146). */
+export type ProfileMomentDay = { localDate: string; moments: { jar: JarRow; moment: JarMoment }[] };
+
+/**
+ * The Moments tab in days, newest first (D-146). A moment sits under its jar's local date, the day it
+ * belongs to, so a backfilled moment shows under its own day and not the day it was added. The same date
+ * merges wherever it appears, so a later page that repeats a day adds to that day instead of opening a
+ * second header.
+ */
+export function profileMomentDays(moments: readonly { jar: JarRow; moment: JarMoment }[]): ProfileMomentDay[] {
+  const days = new Map<string, ProfileMomentDay['moments']>();
+  for (const item of moments) {
+    const list = days.get(item.jar.local_date);
+    if (list) list.push(item);
+    else days.set(item.jar.local_date, [item]);
+  }
+  return [...days.entries()]
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([localDate, list]) => ({ localDate, moments: list }));
+}
+
 /** "312", "1.2k", "48k": readers, authors and jars in the header (ProfileOther shows 1.2k). */
 export function compactCount(n: number, locale: string): { value: string; thousands: boolean } {
   if (n < 1000) return { value: new Intl.NumberFormat(locale).format(n), thousands: false };

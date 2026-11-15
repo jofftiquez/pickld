@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -15,13 +16,15 @@ import { SegmentedControl } from '@/components/SegmentedControl';
 import { parseEdits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
 import type { JarMoment } from '@/features/jar/jarPage';
-import { deviceLocale } from '@/lib/format';
+import { phoneTimeZone } from '@/features/jar/useToday';
+import { deviceLocale, formatDate, formatShortDate } from '@/lib/format';
+import { addDays, localDateIn } from '@/lib/jars';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, slots, space } from '@/theme/tokens';
 
 import { FollowButton } from './FollowButton';
-import { compactCount, followAction, isOwnProfile, profileMoments } from './profileModel';
+import { compactCount, followAction, isOwnProfile, profileMomentDays, profileMoments } from './profileModel';
 import { ProfileGridTile } from './ProfileGridTile';
 import type { FollowList } from './useFollowList';
 import type { ProfilePage } from './useProfile';
@@ -61,6 +64,8 @@ export type ProfileViewProps = {
   onMore?: () => void;
   onRetry: () => void;
   locale?: string;
+  /** Today in the phone's zone (YYYY-MM-DD), for the Today and Yesterday day headers; defaults to now. */
+  today?: string;
 };
 
 const MAX_MOMENTS = slots.length;
@@ -80,9 +85,22 @@ function formatTileDate(localDate: string, locale: string): string {
 }
 
 /**
+ * A day header on the Moments tab, as the in-app gallery labels its days: Today, Yesterday, "Fri, Nov 13",
+ * or "Nov 13, 2023" for an earlier year. The date is the jar's own calendar date, whatever the phone zone.
+ */
+function dayHeaderLabel(localDate: string, today: string, locale: string, t: TFunction): string {
+  if (localDate === today) return t('profile.dayToday');
+  if (localDate === addDays(today, -1)) return t('profile.dayYesterday');
+  const date = new Date(`${localDate}T12:00:00Z`);
+  return localDate.slice(0, 4) === today.slice(0, 4)
+    ? formatShortDate(date, 'UTC', locale)
+    : formatDate(date, 'UTC', locale);
+}
+
+/**
  * My profile and Other profile (Profile, ProfileOther; FR-SOC-08): cover, avatar, name and @username with
  * "Reads you" beside the readers / authors / jars counts (D-142), bio, and a Jars / Moments switch over a
- * 3-column grid.
+ * 3-column grid. The Moments tab groups its tiles under a header per day (D-146).
  */
 export function ProfileView({
   data,
@@ -104,11 +122,14 @@ export function ProfileView({
   onMore,
   onRetry,
   locale = deviceLocale(),
+  today: todayProp,
 }: ProfileViewProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const large = useLargeText();
   const [tab, setTab] = useState<ProfileTab>('jars');
+  const [nowToday] = useState(() => localDateIn(new Date(), phoneTimeZone()));
+  const today = todayProp ?? nowToday;
 
   const backButton = (
     <RoundIconButton
@@ -159,6 +180,7 @@ export function ProfileView({
     { key: 'jars', n: profile.jar_count },
   ] as const;
   const moments = tab === 'moments' ? profileMoments(jars) : [];
+  const momentDays = profileMomentDays(moments);
   const empty = tab === 'jars' ? jars.length === 0 : moments.length === 0;
 
   return (
@@ -364,46 +386,60 @@ export function ProfileView({
               }
               testID="profile-empty"
             />
+          ) : tab === 'jars' ? (
+            <View style={styles.grid} testID="profile-grid-jars">
+              {jars.map(({ jar, count, cover }) => {
+                const date = formatTileDate(jar.local_date, locale);
+                return (
+                  <ProfileGridTile
+                    key={jar.id}
+                    uri={cover.thumbUrl}
+                    edits={parseEdits(cover.edits)}
+                    stamp={stampOf(cover, jar.tz)}
+                    width={tileWidth}
+                    title={date}
+                    detail={t('profile.jarCount', { count, max: MAX_MOMENTS })}
+                    accessibilityLabel={t('profile.jarTile', { date, count, max: MAX_MOMENTS })}
+                    accessibilityHint={t('profile.openJarHint')}
+                    onPress={() => onOpenJar(jar.id)}
+                    testID={`profile-jar-${jar.local_date}`}
+                  />
+                );
+              })}
+            </View>
           ) : (
-            <View style={styles.grid} testID={`profile-grid-${tab}`}>
-              {tab === 'jars'
-                ? jars.map(({ jar, count, cover }) => {
-                    const date = formatTileDate(jar.local_date, locale);
-                    return (
-                      <ProfileGridTile
-                        key={jar.id}
-                        uri={cover.thumbUrl}
-                        edits={parseEdits(cover.edits)}
-                        stamp={stampOf(cover, jar.tz)}
-                        width={tileWidth}
-                        title={date}
-                        detail={t('profile.jarCount', { count, max: MAX_MOMENTS })}
-                        accessibilityLabel={t('profile.jarTile', { date, count, max: MAX_MOMENTS })}
-                        accessibilityHint={t('profile.openJarHint')}
-                        onPress={() => onOpenJar(jar.id)}
-                        testID={`profile-jar-${jar.local_date}`}
-                      />
-                    );
-                  })
-                : moments.map(({ jar, moment }) => {
-                    const slot = t(`slots.${moment.slot}`);
-                    const date = formatTileDate(jar.local_date, locale);
-                    return (
-                      <ProfileGridTile
-                        key={moment.id}
-                        uri={moment.thumbUrl}
-                        edits={parseEdits(moment.edits)}
-                        stamp={stampOf(moment, jar.tz)}
-                        width={tileWidth}
-                        title={slot}
-                        detail={date}
-                        accessibilityLabel={t('profile.momentTile', { slot, date })}
-                        accessibilityHint={t('profile.openMomentHint')}
-                        onPress={() => onOpenMoment(moment.id, jar.id)}
-                        testID={`profile-moment-${moment.id}`}
-                      />
-                    );
-                  })}
+            <View style={styles.days} testID="profile-grid-moments">
+              {momentDays.map(({ localDate, moments: dayMoments }) => (
+                <View key={localDate} style={styles.day} testID={`profile-day-${localDate}`}>
+                  <Text
+                    style={[textStyle('bodySmall', '700'), styles.dayHeader]}
+                    accessibilityRole="header"
+                    testID={`profile-day-header-${localDate}`}
+                  >
+                    {dayHeaderLabel(localDate, today, locale, t)}
+                  </Text>
+                  <View style={styles.grid}>
+                    {dayMoments.map(({ jar, moment }) => {
+                      const slot = t(`slots.${moment.slot}`);
+                      const date = formatTileDate(jar.local_date, locale);
+                      return (
+                        <ProfileGridTile
+                          key={moment.id}
+                          uri={moment.thumbUrl}
+                          edits={parseEdits(moment.edits)}
+                          stamp={stampOf(moment, jar.tz)}
+                          width={tileWidth}
+                          title={slot}
+                          accessibilityLabel={t('profile.momentTile', { slot, date })}
+                          accessibilityHint={t('profile.openMomentHint')}
+                          onPress={() => onOpenMoment(moment.id, jar.id)}
+                          testID={`profile-moment-${moment.id}`}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+              ))}
             </View>
           )}
         </View>
@@ -481,4 +517,7 @@ const styles = StyleSheet.create({
   count: { minHeight: sizes.minTap, justifyContent: 'center' },
   rowCard: { paddingVertical: 2 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
+  days: { gap: space.lg },
+  day: { gap: space.sm },
+  dayHeader: { color: colors.ink },
 });

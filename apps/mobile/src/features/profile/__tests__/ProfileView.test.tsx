@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { Dimensions } from 'react-native';
 
 import type { ProfileMoment } from '../profileModel';
@@ -182,6 +182,42 @@ describe('ProfileView', () => {
     expect(screen.getByText('Your jars show up here once you add a moment.')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Add a moment' }));
     expect(onAddMoment).toHaveBeenCalledTimes(1);
+  });
+
+  it('groups the Moments tab under day headers with the header role (D-146)', async () => {
+    const jars = [
+      { ...mikaJar, id: 'j15', local_date: '2026-11-15' },
+      { ...mikaJar, id: 'j14', local_date: '2026-11-14' },
+      { ...mikaJar, id: 'j13', local_date: '2026-11-13' },
+      { ...mikaJar, id: 'j02', local_date: '2023-03-02' },
+    ];
+    const data: ProfilePage = {
+      ...page('mika-id', false),
+      jars: buildProfileJars(
+        jars,
+        [
+          moment({ id: 'a', jar_id: 'j15', slot: 'morning' }),
+          moment({ id: 'b', jar_id: 'j14', slot: 'evening' }),
+          moment({ id: 'c', jar_id: 'j13', slot: 'evening' }),
+          moment({ id: 'd', jar_id: 'j13', slot: 'morning' }),
+          moment({ id: 'e', jar_id: 'j02', slot: 'evening', is_backfilled: true, added_at: '2026-11-15T02:00:00Z' }),
+        ],
+        'mika-id',
+      ),
+    };
+    await renderView({ data, today: '2026-11-15' });
+    await fireEvent.press(screen.getByText('Moments'));
+    const list = within(screen.getByTestId('profile-grid-moments'));
+    expect(list.getAllByRole('header').map((h) => h.props.children)).toEqual([
+      'Today',
+      'Yesterday',
+      'Fri, Nov 13',
+      'Mar 2, 2023',
+    ]);
+    expect(screen.getByTestId('profile-day-2026-11-13')).toContainElement(screen.getByTestId('profile-moment-c'));
+    expect(screen.getByTestId('profile-day-2026-11-13')).toContainElement(screen.getByTestId('profile-moment-d'));
+    expect(screen.getByTestId('profile-day-2023-03-02')).toContainElement(screen.getByTestId('profile-moment-e'));
+    expect(screen.getByRole('button', { name: '#evening, Nov 13' })).toBeTruthy();
   });
 
   it('says the profile is not available when RLS returns nothing', async () => {

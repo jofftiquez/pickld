@@ -891,6 +891,8 @@
     "jarCount": "{{count}}/{{max}}",
     "jarTile": "{{date}}, {{count}} of {{max}} moments",
     "momentTile": "{{slot}}, {{date}}",
+    "dayToday": "Today",
+    "dayYesterday": "Yesterday",
     "openJarHint": "Opens the jar",
     "openMomentHint": "Opens the moment",
     "emptyJarsTitleMine": "No jars yet",

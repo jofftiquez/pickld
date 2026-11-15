@@ -4,6 +4,7 @@ import {
   buildProfileJars,
   compactCount,
   followAction,
+  profileMomentDays,
   profileMoments,
   relationshipOf,
   withReading,
@@ -89,6 +90,82 @@ describe('profileMoments', () => {
       'dale',
     );
     expect(profileMoments(jars).map((m) => m.moment.id)).toEqual(['late', 'early', 'prev']);
+  });
+});
+
+describe('profileMomentDays (D-146)', () => {
+  const days = (items: ReturnType<typeof profileMoments>) =>
+    profileMomentDays(items).map((d) => [d.localDate, d.moments.map((m) => m.moment.id)]);
+
+  it('keeps one header for a day that a page boundary splits', () => {
+    const first = profileMoments(
+      buildProfileJars(
+        [jar('j3', '2026-11-08'), jar('j2', '2026-11-07')],
+        [
+          moment({ id: 'a', jar_id: 'j3', slot: 'evening' }),
+          moment({ id: 'b', jar_id: 'j2', slot: 'evening', captured_at: '2026-11-07T12:00:00Z' }),
+        ],
+        'dale',
+      ),
+    );
+    // The next page starts inside Nov 7 (the same jar again with its older moment), then Nov 6.
+    const next = profileMoments(
+      buildProfileJars(
+        [jar('j2', '2026-11-07'), jar('j1', '2026-11-06')],
+        [
+          moment({ id: 'c', jar_id: 'j2', slot: 'morning', captured_at: '2026-11-07T00:00:00Z' }),
+          moment({ id: 'd', jar_id: 'j1', slot: 'evening' }),
+        ],
+        'dale',
+      ),
+    );
+    expect(days([...first, ...next])).toEqual([
+      ['2026-11-08', ['a']],
+      ['2026-11-07', ['b', 'c']],
+      ['2026-11-06', ['d']],
+    ]);
+  });
+
+  it('puts a backfilled moment under its own day, not the day it was added', () => {
+    const items = profileMoments(
+      buildProfileJars(
+        [jar('today', '2026-11-15'), jar('old', '2023-03-02')],
+        [
+          moment({ id: 'new', jar_id: 'today', slot: 'morning', added_at: '2026-11-15T01:00:00Z' }),
+          moment({
+            id: 'backfilled',
+            jar_id: 'old',
+            slot: 'evening',
+            is_backfilled: true,
+            captured_at: '2023-03-02T11:00:00Z',
+            added_at: '2026-11-15T02:00:00Z',
+          }),
+        ],
+        'dale',
+      ),
+    );
+    expect(days(items)).toEqual([
+      ['2026-11-15', ['new']],
+      ['2023-03-02', ['backfilled']],
+    ]);
+  });
+
+  it('uses the jar date in its own zone near midnight, whatever the UTC or phone date', () => {
+    // 00:30 on Nov 15 in Manila is still Nov 14 in UTC (and in Los Angeles); 23:50 on Nov 14 in Manila too.
+    const items = profileMoments(
+      buildProfileJars(
+        [jar('j15', '2026-11-15'), jar('j14', '2026-11-14')],
+        [
+          moment({ id: 'after', jar_id: 'j15', slot: 'evening', captured_at: '2026-11-14T16:30:00Z' }),
+          moment({ id: 'before', jar_id: 'j14', slot: 'evening', captured_at: '2026-11-14T15:50:00Z' }),
+        ],
+        'dale',
+      ),
+    );
+    expect(days(items)).toEqual([
+      ['2026-11-15', ['after']],
+      ['2026-11-14', ['before']],
+    ]);
   });
 });
 
