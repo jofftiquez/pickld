@@ -207,6 +207,10 @@ async function goToDetails() {
   expect(screen.getByTestId('editor-details')).toBeTruthy();
 }
 
+// The fixture photo is for today's jar: the clock reads 3:00 PM on Wed, Nov 11 in Manila, the photo's day.
+beforeEach(() => jest.useFakeTimers({ now: new Date('2026-11-11T07:00:00Z'), advanceTimers: true }));
+afterEach(() => jest.useRealTimers());
+
 beforeEach(() => {
   queryClient = new QueryClient();
   rows.clear();
@@ -249,9 +253,6 @@ describe('Editor', () => {
   });
 
   describe('the slot tag (D-156)', () => {
-    // 3:00 PM on Wed, Nov 11 in Manila.
-    beforeEach(() => jest.useFakeTimers({ now: new Date('2026-11-11T07:00:00Z'), advanceTimers: true }));
-    afterEach(() => jest.useRealTimers());
     const tag = () => screen.getByTestId('camera-slot-tag');
 
     it('a photo taken today for today’s jar says "Today · 2:14 PM"', async () => {
@@ -416,6 +417,7 @@ describe('Editor', () => {
   });
 
   it('opened by Crop from a past day’s page (D-153), saving goes back to that day', async () => {
+    rows.set(7, { ...item, localDate: '2026-11-08' });
     await renderRouter(routes, { initialUrl: '/today', wrapper });
     await push('/day/2026-11-08');
     await push('/edit/7?via=crop');
@@ -495,6 +497,45 @@ describe('Editor', () => {
     expect(screen).toHavePathname('/shared-photo');
     // It never became a moment.
     expect(trackMomentAdded).not.toHaveBeenCalled();
+  });
+
+  it('a shared photo for a past day lands on that day’s page after Add, with Today under it', async () => {
+    rows.set(7, { ...item, localDate: '2026-11-08' });
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await push('/shared-photo');
+    await push('/edit/7?via=share');
+    await screen.findByTestId('editor-screen');
+    await goToDetails();
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+    expect(screen).toHavePathname('/day/2026-11-08');
+    expect(screen.queryByText('Slot choice stub')).toBeNull();
+    await act(async () => {
+      jest.requireActual<typeof import('expo-router')>('expo-router').router.back();
+    });
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('a camera gallery photo from an earlier day lands on that day’s page after Add', async () => {
+    rows.set(7, { ...item, localDate: '2026-11-08' });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await goToDetails();
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(screen).toHavePathname('/day/2026-11-08');
+  });
+
+  it('Discard on a past day’s photo still goes back where it came from, not to its day', async () => {
+    rows.set(7, { ...item, localDate: '2026-11-08' });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Discard photo' }));
+    await act(async () => {});
+    expect(discardItem).toHaveBeenCalledWith(7);
+    expect(screen).toHavePathname('/today');
   });
 
   it('opened from a share, saving leaves the slot choice too', async () => {

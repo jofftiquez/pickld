@@ -27,6 +27,8 @@ export type QueuedEditSessionProps = {
   focusCaption?: boolean;
   insets: EdgeInsets;
   onLeave: () => void;
+  /** After Add on a new photo: lands on the page of the photo's day (its local date and zone). */
+  onAdded?: (localDate: string, tz: string) => void;
   /** A shared photo's way back to its slot choice: the draft is dropped first, so another slot can be chosen. */
   onBack?: () => void;
 };
@@ -36,7 +38,7 @@ export type QueuedEditSessionProps = {
  * picked or shared, or a draft) uploads only on Add to #slot: leaving otherwise asks Save draft (it stays on
  * the phone as a draft) or Discard (it is deleted), so an unfinished photo never uploads.
  */
-export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack }: QueuedEditSessionProps) {
+export function QueuedEditSession({ item, focusCaption, insets, onLeave, onAdded, onBack }: QueuedEditSessionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   // A photo queued before the profile loaded has no visibility yet: it would go up at the owner's default
@@ -144,6 +146,7 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
       focusCaption={focusCaption}
       insets={insets}
       onLeave={onLeave}
+      onAdded={isNew && onAdded ? () => onAdded(item.localDate, item.tz) : undefined}
       onBack={onBack && (() => void back(onBack))}
       unfinished={isNew ? { saveDraft, discard } : undefined}
       onSave={async (input, photo) => {
