@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, type Href } from 'expo-router';
-import { act, fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
 // After the testing library, which brings gesture-handler's jest mocks and its own Reanimated mock.
 import './mockReanimated';
 import type { ReactNode } from 'react';
@@ -12,7 +12,7 @@ import { filterIdSchema, filterMatrices } from '../filters';
 import { kape } from './stickerFixture';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
-import { getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import { discardItem, getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 import { saveMomentEdits } from '@/features/moment/momentActions';
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
 import { editableMomentQueryKey } from '@/features/moment/useEditableMoment';
@@ -46,7 +46,18 @@ jest.mock('@shopify/react-native-skia', () => {
   };
 });
 
-jest.mock('@/lib/queue/store', () => ({ getItem: jest.fn(), saveEdits: jest.fn(), releaseEditing: jest.fn() }));
+/** Who listens to queue changes (the store's notify), so a test can announce one. */
+const mockQueueListeners = new Set<(change: 'added' | 'status' | 'removed') => void>();
+jest.mock('@/lib/queue/store', () => ({
+  getItem: jest.fn(),
+  saveEdits: jest.fn(),
+  releaseEditing: jest.fn(),
+  discardItem: jest.fn(),
+  subscribeQueue: (listener: (change: 'added' | 'status' | 'removed') => void) => {
+    mockQueueListeners.add(listener);
+    return () => mockQueueListeners.delete(listener);
+  },
+}));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => undefined) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 jest.mock('@/features/capture/momentAnalytics', () => ({ trackMomentAdded: jest.fn(async () => undefined) }));
@@ -125,6 +136,11 @@ const routes = {
       <Text>Camera stub</Text>
     </View>
   ),
+  'shared-photo': () => (
+    <View>
+      <Text>Slot choice stub</Text>
+    </View>
+  ),
   'edit/[momentId]': EditScreen,
 };
 
@@ -167,6 +183,10 @@ beforeEach(() => {
   jest.mocked(releaseEditing).mockImplementation(async (id) => {
     const row = rows.get(id);
     if (row) rows.set(id, { ...row, editingSince: null });
+  });
+  jest.mocked(discardItem).mockReset();
+  jest.mocked(discardItem).mockImplementation(async (id) => {
+    rows.delete(id);
   });
   jest.mocked(requestUploads).mockClear();
   jest.mocked(captureError).mockClear();
@@ -265,6 +285,53 @@ describe('Editor', () => {
     expect(saveEdits).toHaveBeenCalledTimes(1);
     expect(screen).toHavePathname('/today');
     expect(screen.queryByText('Camera stub')).toBeNull();
+  });
+
+  it('moves to the prepared photo when background preparation replaces the raw file it opened on', async () => {
+    const rawUri = 'file:///docs/queue/7-raw.jpg';
+    rows.set(7, { ...item, photoUri: rawUri, prepared: false });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    const drawn = () =>
+      within(screen.getByTestId('editor-photo')).getByTestId('skia-image').props.accessibilityHint as string;
+    expect(drawn()).toBe(rawUri);
+    // Preparation swaps in the cropped WebP and deletes the raw file, then announces the change.
+    rows.set(7, { ...item, prepared: true });
+    await act(async () => mockQueueListeners.forEach((listener) => listener('status')));
+    await waitFor(() => expect(drawn()).toBe(item.photoUri));
+    expect(within(screen.getByTestId('editor-filter-mono')).getByTestId('skia-image').props.accessibilityHint).toBe(
+      item.photoUri,
+    );
+    await goToDetails();
+    expect(screen.getByTestId('moment-view-photo').props.source).toEqual([{ uri: item.photoUri }]);
+  });
+
+  it('opened from a share (`via=share`), Back drops the draft and returns to the slot choice', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await push('/shared-photo');
+    await push('/edit/7?via=share');
+    await screen.findByTestId('editor-screen');
+    expect(screen.queryByTestId('editor-close')).toBeNull();
+    await fireEvent.press(screen.getByTestId('editor-choose-slot'));
+    await act(async () => {});
+    expect(discardItem).toHaveBeenCalledWith(7);
+    expect(screen).toHavePathname('/shared-photo');
+    // It never became a moment.
+    expect(trackMomentAdded).not.toHaveBeenCalled();
+  });
+
+  it('opened from a share, saving leaves the slot choice too', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await push('/shared-photo');
+    await push('/edit/7?via=share');
+    await screen.findByTestId('editor-screen');
+    await goToDetails();
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+    expect(discardItem).not.toHaveBeenCalled();
+    expect(screen).toHavePathname('/today');
+    expect(screen.queryByText('Slot choice stub')).toBeNull();
   });
 
   it.each<Href>(['/edit/abc', '/edit/0', '/edit/1.5'])(

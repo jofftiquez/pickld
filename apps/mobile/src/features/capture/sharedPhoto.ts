@@ -93,6 +93,24 @@ export function takeSharedPhoto(id: string): Promise<PickedPhoto> {
   return photo;
 }
 
+/** A copy of the shared photo for the queue or Crop, which delete what they are given: the slot choice
+ * keeps the original, so Back from the editor can choose again. */
+export async function copySharedPhoto(photo: PickedPhoto): Promise<PickedPhoto> {
+  const ext = /\.([a-z0-9]{1,5})$/i.exec(photo.uri)?.[1] ?? 'jpg';
+  const copy = new File(
+    Paths.cache,
+    `shared-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`,
+  );
+  await new File(photo.uri).copy(copy);
+  return { ...photo, uri: copy.uri };
+}
+
+/** Deletes the shared photo and its copies once the slot choice is left; the id can't be taken again. */
+export function releaseSharedPhoto(id: string, uris: readonly string[]): void {
+  taken.delete(id);
+  uris.forEach((uri) => deleteQuietly(new File(uri)));
+}
+
 export type SharedPhotoDay =
   /** Taken later than now (a wrong camera clock): refused, ensure_jar takes no future dates. */
   | { kind: 'future' }

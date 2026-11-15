@@ -11,7 +11,15 @@ import type { PickedPhoto } from './pickFromGallery';
 import type { QueueTarget } from './saveCapture';
 
 export type PendingCrop =
-  | { photo: PickedPhoto; slot: Slot; userId: string; target: QueueTarget; recrop?: undefined }
+  | {
+      photo: PickedPhoto;
+      slot: Slot;
+      userId: string;
+      target: QueueTarget;
+      /** From Photos' Share: the editor's Back returns to the slot choice below Crop. */
+      shared?: boolean;
+      recrop?: undefined;
+    }
   | {
       /** The moment's saved 3:4 photo; `temporary` when it was downloaded for this crop (deleted after). */
       photo: { uri: string; width: number; height: number; temporary: boolean };

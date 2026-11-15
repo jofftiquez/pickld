@@ -1,14 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import type { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import SharedPhotoScreen from '../../../../app/shared-photo';
 import { usePendingCrop } from '../pendingCrop';
 import type { PickedPhoto } from '../pickFromGallery';
 import { saveGalleryPhoto } from '../saveCapture';
-import { parseSharedPhotoId, takeSharedPhoto } from '../sharedPhoto';
+import { copySharedPhoto, parseSharedPhotoId, releaseSharedPhoto, takeSharedPhoto } from '../sharedPhoto';
 import type { QueuedMoment } from '@/features/jar/todayGrid';
 
 // Add to Pickld (FR-CAP-02): a photo shared from Photos goes to the day it was taken, only into a slot that day
@@ -18,6 +18,8 @@ import type { QueuedMoment } from '@/features/jar/todayGrid';
 jest.mock('../sharedPhoto', () => ({
   ...jest.requireActual<typeof import('../sharedPhoto')>('../sharedPhoto'),
   takeSharedPhoto: jest.fn(),
+  copySharedPhoto: jest.fn(),
+  releaseSharedPhoto: jest.fn(),
 }));
 jest.mock('../saveCapture', () => ({
   ...jest.requireActual<typeof import('../saveCapture')>('../saveCapture'),
@@ -70,17 +72,24 @@ const routes = {
   crop: function CropStub() {
     const pending = usePendingCrop((s) => s.pending);
     const target = pending && !pending.recrop ? pending.target.localDate : null;
+    const shared = pending && !pending.recrop && pending.shared ? 'shared' : '';
     return (
       <View>
         <Text>
-          Crop stub {pending?.slot} {target}
+          Crop stub {pending?.slot} {target} {pending?.photo.uri} {shared}
         </Text>
       </View>
     );
   },
   'edit/[momentId]': function EditStub() {
-    const { momentId } = useLocalSearchParams<{ momentId: string }>();
-    return <Text>Editor stub {String(momentId)}</Text>;
+    const { momentId, via } = useLocalSearchParams<{ momentId: string; via?: string }>();
+    return (
+      <Pressable accessibilityLabel="Editor back" onPress={() => router.back()}>
+        <Text>
+          Editor stub {String(momentId)} {String(via)}
+        </Text>
+      </Pressable>
+    );
   },
 };
 
@@ -99,6 +108,9 @@ beforeEach(() => {
   usePendingCrop.setState({ pending: null });
   jest.mocked(takeSharedPhoto).mockReset();
   jest.mocked(saveGalleryPhoto).mockReset();
+  jest.mocked(releaseSharedPhoto).mockReset();
+  let copies = 0;
+  jest.mocked(copySharedPhoto).mockImplementation(async (p) => ({ ...p, uri: `file:///cache/copy-${++copies}.jpg` }));
   jest
     .mocked(saveGalleryPhoto)
     .mockImplementation(async () => ({ id: 4 }) as Awaited<ReturnType<typeof saveGalleryPhoto>>);
@@ -117,7 +129,8 @@ it('sends a photo from an earlier day to that day, offers only its free slots, a
 
   await act(async () => fireEvent.press(screen.getByLabelText('#selfie')));
   expect(screen).toHavePathname('/crop');
-  expect(screen.getByText('Crop stub selfie 2026-11-07')).toBeTruthy();
+  // Crop gets its own copy (it deletes what it's given) and knows the photo came from the share sheet.
+  expect(screen.getByText('Crop stub selfie 2026-11-07 file:///cache/copy-1.jpg shared')).toBeTruthy();
   expect(saveGalleryPhoto).not.toHaveBeenCalled();
 });
 
@@ -132,11 +145,22 @@ it('queues a 3:4 photo taken today into the open jar and opens the editor, skipp
   expect(saveGalleryPhoto).toHaveBeenCalledWith(
     expect.objectContaining({
       slot: 'whereami',
+      uri: 'file:///cache/copy-1.jpg',
       crop: null,
       target: { localDate: '2026-11-11', tz: 'Asia/Manila', capturedAt: '2026-11-11T08:00:00+08:00' },
     }),
   );
   expect(screen).toHavePathname('/edit/4');
+  expect(screen.getByText('Editor stub 4 share')).toBeTruthy();
+
+  // Back from the editor lands on the slot choice again, still holding the photo for another slot.
+  await act(async () => fireEvent.press(screen.getByLabelText('Editor back')));
+  expect(screen).toHavePathname('/shared-photo');
+  await act(async () => fireEvent.press(screen.getByLabelText('#ootd')));
+  expect(saveGalleryPhoto).toHaveBeenLastCalledWith(
+    expect.objectContaining({ slot: 'ootd', uri: 'file:///cache/copy-2.jpg' }),
+  );
+  expect(releaseSharedPhoto).not.toHaveBeenCalled();
 });
 
 it('refuses a photo dated after today', async () => {

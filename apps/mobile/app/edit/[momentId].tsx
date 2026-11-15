@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +11,7 @@ import { MomentEditSession } from '@/features/edit/MomentEditSession';
 import { QueuedEditSession, queueItemQueryKey } from '@/features/edit/QueuedEditSession';
 import { StampMomentProvider } from '@/features/edit/stickers/stamps';
 import { useEditableMoment } from '@/features/moment/useEditableMoment';
-import { getItem } from '@/lib/queue/store';
+import { getItem, subscribeQueue } from '@/lib/queue/store';
 import { textStyle } from '@/theme/text';
 import { colors, space } from '@/theme/tokens';
 
@@ -18,10 +19,12 @@ import { colors, space } from '@/theme/tokens';
 // its moment id (Moment options, M2-23). `focus=caption` is Moment options' Edit caption: it opens on the
 // details step (D-104). `via=crop`: Crop
 // opened it on a gallery photo, replacing itself, so the camera is still below (Camera → Crop → Editor).
+// `via=share`: a photo from Photos' Share, with the slot choice below (Add to Pickld → Editor, Crop having
+// replaced itself if it was shown); the editor's Back drops the draft and returns there to choose again.
 const paramsSchema = z.object({
   momentId: z.union([z.coerce.number().int().positive(), z.uuid()]),
   focus: z.literal('caption').optional(),
-  via: z.literal('crop').optional(),
+  via: z.enum(['crop', 'share']).optional(),
 });
 
 // Editor (M2-11, M2-12, M2-23; FR-CAP-04, FR-CAP-08, FR-CAP-09, FR-CAP-10; designs: EditPhoto, EditDetails),
@@ -31,6 +34,7 @@ const paramsSchema = z.object({
 export default function EditScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const parsed = paramsSchema.safeParse(useLocalSearchParams());
   const queueId = parsed.success && typeof parsed.data.momentId === 'number' ? parsed.data.momentId : null;
@@ -45,13 +49,28 @@ export default function EditScreen() {
   });
   const server = useEditableMoment(momentId);
 
-  const viaCrop = parsed.success && parsed.data.via === 'crop';
+  // A photo just queued is prepared in the background (cropped, WebP), and preparing deletes the raw file:
+  // the row is read again when it changes, so the editor and the caption preview move to the prepared file.
+  const raw = item.data ? !item.data.prepared : false;
+  useEffect(() => {
+    if (queueId === null || !raw) return;
+    const refresh = () => void queryClient.invalidateQueries({ queryKey: queueItemQueryKey(queueId) });
+    const unsubscribe = subscribeQueue((change) => {
+      if (change === 'status') refresh();
+    });
+    // Preparation may have finished between the first read and this subscription.
+    refresh();
+    return unsubscribe;
+  }, [queueId, raw, queryClient]);
+
+  const via = parsed.success ? parsed.data.via : undefined;
 
   // Back to where the camera was opened from (Today, or a past day's page): after a gallery photo through
   // Crop, the camera is still below the editor, so it goes too, as after the shutter (which replaces itself).
+  // A shared photo's slot choice goes too once the moment is saved.
   const close = () => {
     if (!router.canGoBack()) router.replace('/today');
-    else if (viaCrop) router.dismiss(2);
+    else if (via === 'crop' || via === 'share') router.dismiss(2);
     else router.back();
   };
 
@@ -98,6 +117,7 @@ export default function EditScreen() {
         focusCaption={focusCaption}
         insets={insets}
         onLeave={close}
+        onBack={via === 'share' && router.canGoBack() ? () => router.back() : undefined}
       />
     </StampMomentProvider>
   );

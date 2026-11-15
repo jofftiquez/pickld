@@ -40,6 +40,8 @@ export type EditorViewProps = {
   tool: EditorTool;
   insets: EdgeInsets;
   onClose: () => void;
+  /** When set, the photo step leads with Back to the slot choice instead of Close (a shared photo). */
+  onBack?: () => void;
   onSelectFilter: (filter: FilterId) => void;
   overlays: readonly Overlay[];
   selectedOverlayId: string | null;
@@ -97,6 +99,7 @@ export function EditorView({
   tool,
   insets,
   onClose,
+  onBack,
   onSelectFilter,
   overlays,
   selectedOverlayId,
@@ -172,8 +175,8 @@ export function EditorView({
         slot={t(`slots.${slot}`)}
         time={time}
         shotOn={shotOn}
-        leading={onDetails ? 'back' : 'close'}
-        onLeading={onDetails ? back : onClose}
+        leading={onDetails ? 'back' : onBack ? 'slots' : 'close'}
+        onLeading={onDetails ? back : (onBack ?? onClose)}
         actionLabel={onDetails ? saveLabel : t('edit.next')}
         actionHint={onDetails ? undefined : t('edit.nextHint')}
         actionTestID={onDetails ? 'editor-save' : 'editor-next'}

@@ -121,8 +121,11 @@ export function MomentCropScreen() {
       return;
     }
     setPending(null);
-    // The editor knows the camera is below it, so leaving goes back past it.
-    router.replace({ pathname: '/edit/[momentId]', params: { momentId: String(queuedId), via: 'crop' } });
+    // The editor knows the camera (or a shared photo's slot choice) is below it, so leaving goes back past it.
+    router.replace({
+      pathname: '/edit/[momentId]',
+      params: { momentId: String(queuedId), via: pending.shared ? 'share' : 'crop' },
+    });
   };
 
   return (
