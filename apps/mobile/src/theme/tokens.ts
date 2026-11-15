@@ -400,6 +400,9 @@ export const sizes = {
   shutterInner: 68,
   shutterRing: 4,
   cameraSideButton: 52, // gallery shortcut and flip button beside the shutter
+  zoomButton: 36, // 0.5× / 1× / 2× / 3× lens buttons over the viewfinder (D-144); hitSlop brings them to 44
+  focusMark: 72, // square drawn where the viewfinder was tapped to focus (D-144)
+  focusMarkBorder: 1.5,
   accessOffIconWell: 72, // camera-off icon square (CameraDenied)
   accessOffPanel: 520 / 844, // top panel's share of the screen height (CameraDenied)
   filterThumb: 58, // filter thumbnail square (Capture)
@@ -492,6 +495,7 @@ export const motion = {
   jarLayerSettle: 450, // skip when Reduce Motion is on
   confettiFall: 900, // each confetti piece's drop (FullJar, StickerUnlock); no confetti with Reduce Motion
   confettiBurst: 4200, // the longest Publish confetti piece's flight, launch to faded out (D-132, D-133); none with Reduce Motion
+  focusMarkHold: 800, // the tap to focus square stays this long between its fade in (fast) and out (base)
   celebrationPop: 400, // celebration content grows in; a plain fade (base) with Reduce Motion
 } as const;
 

@@ -6,11 +6,28 @@ import { File, Paths } from 'expo-file-system';
 import { Image } from 'react-native';
 
 import type { CameraFacing } from './CameraPreview';
+import type { LensInfo } from './cameraZoom';
 import type { PickedPhoto } from './pickFromGallery';
 
 export const mockPhotos: Record<CameraFacing, number> = {
   back: require('../../../assets/dev/whereami.jpg'),
   front: require('../../../assets/dev/selfie.jpg'),
+};
+
+/**
+ * The mock camera's lenses, so the zoom buttons and tap to focus show on a Simulator (D-144): the back is
+ * an iPhone 14 Pro's (ultra-wide, wide, 3× telephoto, as its virtual camera reports them), the front a
+ * single lens that can't focus on a point.
+ */
+export const mockLenses: Record<CameraFacing, LensInfo> = {
+  back: {
+    lenses: ['ultra-wide-angle', 'wide-angle', 'telephoto'],
+    minZoom: 1,
+    maxZoom: 123,
+    switchFactors: [2, 6],
+    supportsFocus: true,
+  },
+  front: { lenses: ['wide-angle'], minZoom: 1, maxZoom: 16, switchFactors: [], supportsFocus: false },
 };
 
 /**

@@ -109,6 +109,8 @@
     "shutter": "Take photo",
     "shutterHint": "Adds the photo to {{slot}}",
     "mockPreview": "Simulator camera preview",
+    "zoomFactor": "{{factor}}×",
+    "zoomButton": "Zoom {{factor}} times",
     "permissionDescription": "Pickld uses the camera to take the photos for your daily jar."
   },
   "cameraAccessOff": {

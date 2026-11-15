@@ -1,8 +1,12 @@
+// Gesture-handler's own jest mocks for its native module (tap to focus and pinch to zoom).
+import 'react-native-gesture-handler/jestSetup';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import '../../edit/__tests__/mockReanimated';
 import type { ReactNode } from 'react';
 import { AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'react-native';
+import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 import CameraScreen from '../../../../app/camera';
@@ -16,15 +20,55 @@ import type { DayJar } from '@/features/days/useDayJar';
 import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
 
 // Camera screen wiring (FR-CAP-01, FR-CAP-11): permission branch and Camera access off, dev mock camera,
-// the read-only slot tag, flash and flip, and the shutter path. vision-camera's native module and the save path
-// are mocked; its permission hook is the real one (it re-reads the status when the app becomes active).
-// saveCapture has its own test.
+// the read-only slot tag, flash and flip, the shutter path, and zoom and tap to focus (D-144). vision-camera's
+// native module and the save path are mocked; its permission hook is the real one (it re-reads the status when
+// the app becomes active). saveCapture has its own test; the zoom rules have cameraZoom.test.
+
+// A camera device as vision-camera reports it, with just what the screen reads.
+type MockDevice = {
+  id: string;
+  hasFlash: boolean;
+  type: string;
+  physicalDevices: { type: string }[];
+  minZoom: number;
+  maxZoom: number;
+  zoomLensSwitchFactors: number[];
+  supportsFocusMetering: boolean;
+};
+// An iPhone 14 Pro: the back is one virtual camera over three lenses (zoom 1 = ultra-wide, 2 = wide, 6 = the
+// 3× telephoto); the front is a single lens that can't focus on a point.
+const triple: MockDevice = {
+  id: 'back',
+  hasFlash: true,
+  type: 'triple',
+  physicalDevices: [{ type: 'ultra-wide-angle' }, { type: 'wide-angle' }, { type: 'telephoto' }],
+  minZoom: 1,
+  maxZoom: 123,
+  zoomLensSwitchFactors: [2, 6],
+  supportsFocusMetering: true,
+};
+const frontLens: MockDevice = {
+  id: 'front',
+  hasFlash: false,
+  type: 'wide-angle',
+  physicalDevices: [],
+  minZoom: 1,
+  maxZoom: 16,
+  zoomLensSwitchFactors: [],
+  supportsFocusMetering: false,
+};
+// A phone with only a wide lens on the back.
+const singleBack: MockDevice = { ...frontLens, id: 'back-wide', hasFlash: true, supportsFocusMetering: true };
 
 const mockCamera = {
   isDevice: false,
   permission: 'authorized' as 'authorized' | 'not-determined' | 'denied',
   capturePhotoToFile: jest.fn(async (..._args: unknown[]) => ({ filePath: '/tmp/vc-shot.jpg' })),
   requestPermission: jest.fn(async () => true),
+  // The same object for every render, as vision-camera's hook returns.
+  devices: { back: triple, front: frontLens } as Record<string, MockDevice>,
+  focusTo: jest.fn(async (..._args: unknown[]) => {}),
+  setZoom: jest.fn(async (..._args: unknown[]) => {}),
 };
 
 jest.mock('expo-device', () => ({
@@ -44,14 +88,21 @@ jest.mock('react-native-vision-camera/lib/VisionCamera', () => ({
 
 jest.mock('react-native-vision-camera', () => {
   const { View: MockView } = jest.requireActual<typeof import('react-native')>('react-native');
+  const { useImperativeHandle } = jest.requireActual<typeof import('react')>('react');
   const { useCameraPermission: realUseCameraPermission } = jest.requireActual<
     typeof import('react-native-vision-camera/lib/hooks/usePermission')
   >('react-native-vision-camera/lib/hooks/usePermission');
   const photoOutput = { capturePhotoToFile: (...args: unknown[]) => mockCamera.capturePhotoToFile(...args) };
   return {
-    Camera: (props: { isActive: boolean }) => <MockView testID="camera-live-preview" {...props} />,
+    Camera: ({ ref, ...props }: { isActive: boolean; ref?: import('react').Ref<unknown> }) => {
+      useImperativeHandle(ref, () => ({
+        focusTo: (...args: unknown[]) => mockCamera.focusTo(...args),
+        controller: { setZoom: (...args: unknown[]) => mockCamera.setZoom(...args) },
+      }));
+      return <MockView testID="camera-live-preview" {...props} />;
+    },
     CommonResolutions: { FHD_4_3: { width: 1440, height: 1920 } },
-    useCameraDevice: jest.fn((position: string) => ({ id: position, hasFlash: position === 'back' })),
+    useCameraDevice: jest.fn((position: string, _filter?: unknown) => mockCamera.devices[position]),
     usePhotoOutput: () => photoOutput,
     useCameraPermission: jest.fn(() => realUseCameraPermission()),
     VisionCamera: { createDeviceFactory: async () => ({ cameraDevices: [{ id: 'back' }] }) },
@@ -201,6 +252,9 @@ beforeEach(() => {
   mockCamera.permission = 'authorized';
   mockCamera.capturePhotoToFile.mockClear();
   mockCamera.requestPermission.mockClear();
+  mockCamera.devices = { back: triple, front: frontLens };
+  mockCamera.focusTo.mockClear();
+  mockCamera.setZoom.mockClear();
   jest.mocked(useCameraDevice).mockClear();
   jest.mocked(useCameraPermission).mockClear();
   jest.mocked(takeMockPhoto).mockClear();
@@ -551,13 +605,13 @@ describe('Camera on a phone', () => {
   it('flip switches to the front lens, whose missing flash disables the flash button', async () => {
     await openCamera();
     await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
-    expect(jest.mocked(useCameraDevice)).toHaveBeenLastCalledWith('front');
+    expect(jest.mocked(useCameraDevice)).toHaveBeenLastCalledWith('front', undefined);
     expect(screen.getByRole('button', { name: 'Flash off' }).props.accessibilityState).toEqual({ disabled: true });
   });
 
   it('#selfie opens on the front lens (D-99)', async () => {
     await openCamera('/camera?slot=selfie');
-    expect(jest.mocked(useCameraDevice)).toHaveBeenLastCalledWith('front');
+    expect(jest.mocked(useCameraDevice)).toHaveBeenLastCalledWith('front', undefined);
   });
 
   it('a failed capture stays on the camera with the shutter enabled again', async () => {
@@ -568,6 +622,176 @@ describe('Camera on a phone', () => {
     expect(screen).toHavePathname('/camera');
     expect(saveCapture).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Take photo' }).props.accessibilityState).toEqual({ disabled: false });
+  });
+});
+
+describe('Zoom and tap to focus (D-144)', () => {
+  beforeEach(() => {
+    mockCamera.isDevice = true;
+  });
+
+  const zoomButton = (factor: string) => screen.getByRole('button', { name: `Zoom ${factor} times` });
+  const zoomLabels = () =>
+    screen.queryAllByRole('button', { name: /^Zoom .* times$/ }).map((b) => b.props.accessibilityLabel as string);
+  const selectedZoom = () =>
+    screen
+      .queryAllByRole('button', { name: /^Zoom .* times$/ })
+      .filter((b) => b.props.accessibilityState?.selected)
+      .map((b) => b.props.accessibilityLabel as string);
+  // The zoom shown while pinching.
+  const readout = () => screen.getByTestId('camera-zoom-readout', { includeHiddenElements: true });
+  const cameraZoom = () => screen.getByTestId('camera-live-preview').props.zoom as number;
+  const layOut = async () =>
+    act(() => {
+      fireEvent(screen.getByTestId('camera-touch-area'), 'layout', {
+        nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 520 } },
+      });
+    });
+  const tapAt = async (x: number, y: number) => {
+    const tap = createGestureController('camera-tap');
+    await act(() => {
+      tap.begin({ x, y, absoluteX: x, absoluteY: y });
+      tap.activate({ x, y, absoluteX: x, absoluteY: y });
+      tap.end({ x, y, absoluteX: x, absoluteY: y });
+    });
+  };
+  const pinchTo = async (...scales: number[]) => {
+    const pinch = createGestureController('camera-pinch');
+    // The pinch runs as a worklet; its steps reach React a microtask later (expo-router's worklets mock).
+    await act(() => {
+      pinch.begin({ focalX: 100, focalY: 100, scale: 1 });
+      pinch.activate({ focalX: 100, focalY: 100, scale: 1 });
+      for (const scale of scales) pinch.update({ focalX: 100, focalY: 100, scale });
+      // The suite's fake clock holds microtasks; let the pinch steps through.
+      jest.runAllTicks();
+    });
+    return async () => {
+      const last = scales[scales.length - 1];
+      await act(() => {
+        pinch.end({ focalX: 100, focalY: 100, scale: last });
+        jest.runAllTicks();
+      });
+    };
+  };
+
+  it('opens the back camera over all its lenses, at 1× (the wide lens), with a button per lens', async () => {
+    await openCamera();
+    expect(jest.mocked(useCameraDevice)).toHaveBeenLastCalledWith('back', {
+      physicalDevices: ['ultra-wide-angle', 'wide-angle', 'telephoto'],
+    });
+    expect(zoomLabels()).toEqual(['Zoom 0.5 times', 'Zoom 1 times', 'Zoom 2 times', 'Zoom 3 times']);
+    expect(screen.getByText('0.5×')).toBeTruthy();
+    expect(screen.getByText('3×')).toBeTruthy();
+    expect(selectedZoom()).toEqual(['Zoom 1 times']);
+    // The wide lens sits at zoom 2 on the triple camera (1 is the ultra-wide).
+    expect(cameraZoom()).toBe(2);
+  });
+
+  it.each([
+    ['0.5', 1],
+    ['2', 4],
+    ['3', 6],
+    ['1', 2],
+  ])('the %s× button sets zoom %d and is shown selected', async (factor, zoom) => {
+    await openCamera();
+    await fireEvent.press(zoomButton(factor));
+    expect(cameraZoom()).toBe(zoom);
+    expect(selectedZoom()).toEqual([`Zoom ${factor} times`]);
+  });
+
+  it('pinching zooms the camera live, shows the zoom, and keeps it when the fingers lift', async () => {
+    await openCamera();
+    const end = await pinchTo(1.5);
+    // From 1× (zoom 2) by 1.5: zoom 3, read as 1.5×.
+    expect(mockCamera.setZoom).toHaveBeenLastCalledWith(3);
+    expect(readout()).toHaveTextContent('1.5×', { exact: true });
+    expect(selectedZoom()).toEqual(['Zoom 1 times']);
+    await end();
+    expect(screen.queryByTestId('camera-zoom-readout', { includeHiddenElements: true })).toBeNull();
+    expect(cameraZoom()).toBe(3);
+  });
+
+  it('pinch stops at 10× (zoom 20) and at the ultra-wide (zoom 1)', async () => {
+    await openCamera();
+    const end = await pinchTo(100);
+    expect(mockCamera.setZoom).toHaveBeenLastCalledWith(20);
+    expect(readout()).toHaveTextContent('10×', { exact: true });
+    expect(selectedZoom()).toEqual(['Zoom 3 times']);
+    await end();
+    expect(cameraZoom()).toBe(20);
+
+    const endOut = await pinchTo(0.01);
+    expect(mockCamera.setZoom).toHaveBeenLastCalledWith(1);
+    expect(readout()).toHaveTextContent('0.5×', { exact: true });
+    await endOut();
+    expect(cameraZoom()).toBe(1);
+    expect(selectedZoom()).toEqual(['Zoom 0.5 times']);
+  });
+
+  it('tapping the preview focuses there and draws the focus square around the tap, inside the frame', async () => {
+    await openCamera();
+    await layOut();
+    await tapAt(100, 200);
+    expect(mockCamera.focusTo).toHaveBeenLastCalledWith({ x: 100, y: 200 });
+    // 72 pt square centred on the tap.
+    expect(screen.getByTestId('camera-focus-mark', { includeHiddenElements: true })).toHaveStyle({
+      left: 64,
+      top: 164,
+    });
+    // Near the bottom-left corner: focus on the tap, the square stays inside the 390 × 520 preview.
+    await tapAt(5, 510);
+    expect(mockCamera.focusTo).toHaveBeenLastCalledWith({ x: 5, y: 510 });
+    expect(screen.getByTestId('camera-focus-mark', { includeHiddenElements: true })).toHaveStyle({
+      left: 0,
+      top: 448,
+    });
+  });
+
+  it('flip to the front lens: no zoom buttons, no tap to focus, zoom at 1×; flipping back starts at 1× again', async () => {
+    await openCamera();
+    await fireEvent.press(zoomButton('3'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    expect(zoomLabels()).toEqual([]);
+    expect(cameraZoom()).toBe(1);
+    await layOut();
+    await tapAt(100, 200);
+    expect(mockCamera.focusTo).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('camera-focus-mark', { includeHiddenElements: true })).toBeNull();
+    // Pinch still zooms the front lens.
+    const end = await pinchTo(2);
+    expect(mockCamera.setZoom).toHaveBeenLastCalledWith(2);
+    await end();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    expect(selectedZoom()).toEqual(['Zoom 1 times']);
+    expect(cameraZoom()).toBe(2);
+  });
+
+  it('a phone with one back lens shows no zoom buttons but still pinches and focuses', async () => {
+    mockCamera.devices = { back: singleBack, front: frontLens };
+    await openCamera();
+    expect(zoomLabels()).toEqual([]);
+    expect(cameraZoom()).toBe(1);
+    const end = await pinchTo(3);
+    expect(mockCamera.setZoom).toHaveBeenLastCalledWith(3);
+    expect(readout()).toHaveTextContent('3×', { exact: true });
+    await end();
+    await layOut();
+    await tapAt(50, 60);
+    expect(mockCamera.focusTo).toHaveBeenLastCalledWith({ x: 50, y: 60 });
+  });
+
+  it('on the Simulator the mock camera has an iPhone 14 Pro’s buttons, and zooming enlarges its photo', async () => {
+    mockCamera.isDevice = false;
+    await openCamera();
+    expect(zoomLabels()).toEqual(['Zoom 0.5 times', 'Zoom 1 times', 'Zoom 2 times', 'Zoom 3 times']);
+    await fireEvent.press(zoomButton('2'));
+    expect(screen.getByTestId('camera-mock-preview')).toHaveStyle({ transform: [{ scale: 2 }] });
+    // A flip there and back starts at 1× again, as on a phone.
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip camera' }));
+    expect(selectedZoom()).toEqual(['Zoom 1 times']);
+    expect(screen.getByTestId('camera-mock-preview')).toHaveStyle({ transform: [{ scale: 1 }] });
   });
 });
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { RoundIconButton } from '@/components/RoundIconButton';
@@ -9,9 +10,13 @@ import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import { CameraSideButton } from './CameraSideButton';
 import type { FlashSetting } from './CameraPreview';
+import { CameraTouchArea } from './CameraTouchArea';
+import type { Point } from './cameraZoom';
 import { ShutterButton } from './ShutterButton';
 import { SlotTag } from './SlotTag';
+import type { CameraZoom } from './useCameraZoom';
 import { ViewfinderGrid } from './ViewfinderGrid';
+import { ZoomControls } from './ZoomControls';
 
 export type CameraViewProps = {
   /** The live preview (vision-camera) or the dev mock; fills the 3:4 viewfinder. */
@@ -25,6 +30,11 @@ export type CameraViewProps = {
   flash: FlashSetting;
   flashSupported: boolean;
   shutterDisabled: boolean;
+  /** Pinch to zoom and the lens buttons (D-144). */
+  zoom: Pick<CameraZoom, 'plan' | 'selected' | 'pinchFactor' | 'select' | 'pinch'>;
+  /** Whether tapping the viewfinder focuses there (the lens supports it). */
+  canFocus: boolean;
+  onFocus: (point: Point) => void;
   insets: EdgeInsets;
   onClose: () => void;
   onToggleFlash: () => void;
@@ -47,6 +57,9 @@ export function CameraView({
   flash,
   flashSupported,
   shutterDisabled,
+  zoom,
+  canFocus,
+  onFocus,
   insets,
   onClose,
   onToggleFlash,
@@ -61,10 +74,13 @@ export function CameraView({
   const available = window.height - insets.top - insets.bottom - CONTROLS_MIN_HEIGHT;
   const width = Math.min(window.width, Math.max(0, available) * photo.aspect);
 
+  // The camera is a full-screen modal, outside the app's root gesture view; pinch and tap need their own.
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]} testID="camera-screen">
+    <GestureHandlerRootView style={[styles.root, { paddingTop: insets.top }]} testID="camera-screen">
       <View style={[styles.viewfinder, { width, height: width / photo.aspect }]} testID="camera-viewfinder">
-        {preview}
+        <CameraTouchArea pinch={zoom.pinch} canFocus={canFocus} onFocus={onFocus}>
+          {preview}
+        </CameraTouchArea>
         <ViewfinderGrid />
         <View style={styles.topRow}>
           <RoundIconButton
@@ -85,8 +101,21 @@ export function CameraView({
             testID="camera-flash"
           />
         </View>
-        <View style={styles.aspect} accessible={false} importantForAccessibility="no-hide-descendants">
-          <Text style={[textStyle('caption'), { color: colors.surface }]}>{t('camera.aspect')}</Text>
+        <View style={styles.bottom} pointerEvents="box-none">
+          <ZoomControls
+            stops={zoom.plan?.stops ?? []}
+            selected={zoom.selected}
+            pinchFactor={zoom.pinchFactor}
+            onSelect={zoom.select}
+          />
+          <View
+            style={styles.aspect}
+            pointerEvents="none"
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+          >
+            <Text style={[textStyle('caption'), { color: colors.surface }]}>{t('camera.aspect')}</Text>
+          </View>
         </View>
       </View>
 
@@ -113,7 +142,7 @@ export function CameraView({
         />
       </View>
       {overlay}
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -136,10 +165,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: space.sm,
   },
-  aspect: {
+  bottom: {
     position: 'absolute',
     bottom: space.md,
     alignSelf: 'center',
+    alignItems: 'center',
+    gap: space.md,
+  },
+  aspect: {
     backgroundColor: colors.badge,
     borderRadius: radius.pill,
     paddingVertical: sizes.pillPaddingY,
