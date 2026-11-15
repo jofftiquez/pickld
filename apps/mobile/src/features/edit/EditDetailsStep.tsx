@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextField } from '@/components/TextField';
@@ -27,6 +27,8 @@ export type EditDetailsStepProps = {
   visibility: Visibility;
   onChangeVisibility: (visibility: Visibility) => void;
   saveFailed: boolean;
+  /** Goes back to the photo step, as the toolbar's Back does. */
+  onEditPhoto: () => void;
 };
 
 export const CAPTION_MAX = 150;
@@ -53,6 +55,7 @@ export function EditDetailsStep({
   visibility,
   onChangeVisibility,
   saveFailed,
+  onEditPhoto,
 }: EditDetailsStepProps) {
   const { t } = useTranslation();
   const window = useWindowDimensions();
@@ -69,9 +72,17 @@ export function EditDetailsStep({
       automaticallyAdjustKeyboardInsets
       testID="editor-details"
     >
-      <View style={styles.preview}>
+      {/* As on Instagram, tapping the photo goes back to editing it. */}
+      <Pressable
+        style={styles.preview}
+        onPress={onEditPhoto}
+        accessibilityRole="button"
+        accessibilityLabel={t('edit.editPhoto')}
+        accessibilityHint={t('edit.editPhotoHint')}
+        testID="editor-preview-edit"
+      >
         <MomentView uri={photoUri} edits={edits} width={previewWidth} stamp={stamp} testID="editor-preview" />
-      </View>
+      </Pressable>
       <View style={[styles.sheet, { paddingBottom: bottomInset + space.xxl }]}>
         <TextField
           label={t('edit.caption')}
@@ -82,7 +93,8 @@ export function EditDetailsStep({
           multiline
           returnKeyType="done"
           submitBehavior="blurAndSubmit"
-          placeholder={t('edit.captionPlaceholder')}
+          // The slot's own question, so there is something to answer.
+          placeholder={t(`edit.captionPrompt.${slot}`)}
           autoFocus={focusCaption}
           testID="editor-caption"
         />
