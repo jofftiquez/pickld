@@ -40,6 +40,8 @@ export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
   const reduceMotion = useReduceMotion();
   const signedIn = useAuthStore((s) => s.status === 'signedIn');
+  // The splash's jar fills until the stored session is read: the first screen can't be chosen before then.
+  const authReady = useAuthStore((s) => s.status !== 'loading');
 
   useEffect(() => startTelemetry(), []);
   useEffect(() => configurePhotoCache(), []);
@@ -117,7 +119,7 @@ export default function RootLayout() {
         <Stack.Screen name="sticker-unlocked" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
       </Stack>
       <ToastHost />
-      {splashVisible ? <SplashOverlay ready onHidden={hideSplash} /> : null}
+      {splashVisible ? <SplashOverlay ready={authReady} onHidden={hideSplash} /> : null}
     </PersistQueryClientProvider>
   );
 }

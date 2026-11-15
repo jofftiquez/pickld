@@ -1,9 +1,9 @@
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
-  type SharedValue,
+  Easing,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -11,25 +11,27 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { colors, motion, slots, space } from '@/theme/tokens';
+import { MAX_LAYERS, VIEW_H, VIEW_W } from './JarGraphic';
+import { SplashJar } from './SplashJar';
+import { colors, motion, splash } from '@/theme/tokens';
 
 const logo = require('../../assets/brand/splash-logo.png');
 
-// Matches the native splash (same image, width and background) so the hand-off is invisible.
-const LOGO_WIDTH = 220;
-const LOGO_ASPECT = 1200 / 496;
-// Eight squares fill like moments; each one takes half of motion.fast so the whole run stays under a second.
-export const SQUARE_STEP_MS = motion.fast / 2;
+// Same canvas as the native launch image (assets/brand/splash.png): centered on screen, the jar in its middle
+// and the logo on its bottom edge, so the hand-off from the launch screen doesn't move anything.
+const JAR_HEIGHT = (splash.jarWidth * VIEW_H) / VIEW_W;
+const LOGO_HEIGHT = (splash.logoWidth * 496) / 1200;
 
-type SquareProps = { index: number; filled: SharedValue<number> };
-
-function Square({ index, filled }: SquareProps) {
-  const style = useAnimatedStyle(() => ({ opacity: filled.value > index ? 1 : 0.4 }));
-  return <Animated.View style={[styles.square, style]} />;
-}
+// While the app loads, one layer lands every SPLASH_LOADING_STEP_MS up to SPLASH_HOLD_LAYERS; the last layer
+// waits for loading to finish. Once it has, whatever is left fills in SPLASH_COMPLETE_MS and the splash fades
+// out in motion.base, so an app that is ready at once hands over in half a second.
+export const SPLASH_LOADING_STEP_MS = motion.fast;
+export const SPLASH_HOLD_LAYERS = MAX_LAYERS - 1;
+export const SPLASH_COMPLETE_MS = motion.base;
+export const SPLASH_FADE_MS = motion.base;
 
 type Props = {
-  /** The overlay starts fading once the app is ready and every square is filled. */
+  /** The app has finished loading: the jar fills the rest of the way and the overlay fades out. */
   ready: boolean;
   onHidden: () => void;
 };
@@ -37,23 +39,37 @@ type Props = {
 export function SplashOverlay({ ready, onHidden }: Props) {
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
-  const filled = useSharedValue(reduceMotion ? slots.length : 0);
+  // Layers in the jar, 0–8. Starts empty, like the native launch image.
+  const level = useSharedValue(0);
   const opacity = useSharedValue(1);
-  const [squaresDone, setSquaresDone] = useState(reduceMotion);
 
   useEffect(() => {
-    if (reduceMotion) return;
-    filled.value = withTiming(slots.length, { duration: SQUARE_STEP_MS * slots.length }, (finished) => {
-      if (finished) scheduleOnRN(setSquaresDone, true);
-    });
-  }, [filled, reduceMotion]);
-
-  useEffect(() => {
-    if (!ready || !squaresDone) return;
-    opacity.value = withTiming(0, { duration: motion.base }, (finished) => {
-      if (finished) scheduleOnRN(onHidden);
-    });
-  }, [ready, squaresDone, opacity, onHidden]);
+    const fadeOut = () => {
+      'worklet';
+      opacity.value = withTiming(0, { duration: SPLASH_FADE_MS }, (finished) => {
+        if (finished) scheduleOnRN(onHidden);
+      });
+    };
+    // Reduce Motion: the jar stays still; the splash only cross-fades to the app.
+    if (reduceMotion) {
+      if (ready) fadeOut();
+      return;
+    }
+    if (!ready) {
+      level.value = withTiming(SPLASH_HOLD_LAYERS, {
+        duration: SPLASH_HOLD_LAYERS * SPLASH_LOADING_STEP_MS,
+        easing: Easing.linear,
+      });
+      return;
+    }
+    level.value = withTiming(
+      MAX_LAYERS,
+      { duration: SPLASH_COMPLETE_MS, easing: Easing.out(Easing.cubic) },
+      (finished) => {
+        if (finished) fadeOut();
+      },
+    );
+  }, [ready, reduceMotion, level, opacity, onHidden]);
 
   const fade = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
@@ -65,16 +81,11 @@ export function SplashOverlay({ ready, onHidden }: Props) {
       accessibilityRole="progressbar"
       testID="splash-overlay"
     >
-      <Image source={logo} style={styles.logo} contentFit="contain" accessible={false} />
-      <View style={styles.footer}>
-        <View style={styles.squares}>
-          {slots.map((slot, i) => (
-            <Square key={slot} index={i} filled={filled} />
-          ))}
+      <View style={styles.canvas}>
+        <View style={styles.jar}>
+          <SplashJar level={level} />
         </View>
-        <Text className="font-jakarta-700 text-body" style={styles.tagline}>
-          {t('brand.tagline')}
-        </Text>
+        <Image source={logo} style={styles.logo} contentFit="contain" accessible={false} testID="splash-logo" />
       </View>
     </Animated.View>
   );
@@ -82,9 +93,17 @@ export function SplashOverlay({ ready, onHidden }: Props) {
 
 const styles = StyleSheet.create({
   root: { backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: LOGO_WIDTH, height: LOGO_WIDTH / LOGO_ASPECT },
-  footer: { position: 'absolute', bottom: space.xxxl * 3, alignItems: 'center', gap: space.md },
-  squares: { flexDirection: 'row', gap: space.xs + 2 },
-  square: { width: space.md, height: space.md, borderRadius: space.xs - 1, backgroundColor: colors.surface },
-  tagline: { color: colors.surface },
+  canvas: { width: splash.canvasWidth, height: splash.canvasHeight },
+  jar: {
+    position: 'absolute',
+    left: (splash.canvasWidth - splash.jarWidth) / 2,
+    top: (splash.canvasHeight - JAR_HEIGHT) / 2,
+  },
+  logo: {
+    position: 'absolute',
+    left: (splash.canvasWidth - splash.logoWidth) / 2,
+    bottom: 0,
+    width: splash.logoWidth,
+    height: LOGO_HEIGHT,
+  },
 });
