@@ -37,18 +37,22 @@ export const CROP_HEADER_HEIGHT = crop.headerPaddingTop + sizes.minTap + space.s
 export const CROP_SHEET_HEIGHT =
   crop.sheetPaddingTop + sizes.minTap + space.lg + crop.toolButton + space.lg + crop.noteHeight + space.xxl;
 
+/** A moment's tool sheet: the same, with the Fill / Fit row on top (D-152). */
+export const MOMENT_CROP_SHEET_HEIGHT = CROP_SHEET_HEIGHT + sizes.minTap + space.lg;
+
 /**
  * The frame (3:4 unless `ratio` says otherwise) on a screen of `window` size with these safe areas (D-65):
  * as wide as the side insets allow, but short enough that the header, the photo area (the frame plus
- * `crop.frameInsetY` above and below) and the tool sheet fit on screen together, so the sheet doesn't
- * scroll at normal text sizes.
+ * `crop.frameInsetY` above and below) and the tool sheet (`sheet` tall) fit on screen together, so the sheet
+ * doesn't scroll at normal text sizes.
  */
 export function cropFrame(
   window: Size,
   insets: { top: number; bottom: number },
   ratio: Size = CROP_RATIO.moment,
+  sheet: number = CROP_SHEET_HEIGHT,
 ): Size {
-  const area = window.height - insets.top - CROP_HEADER_HEIGHT - CROP_SHEET_HEIGHT - insets.bottom;
+  const area = window.height - insets.top - CROP_HEADER_HEIGHT - sheet - insets.bottom;
   const tallest = area - crop.frameInsetY * 2;
   const width = Math.max(1, Math.min(window.width - crop.frameInsetX * 2, (tallest * ratio.width) / ratio.height));
   return { width, height: (width * ratio.height) / ratio.width };
@@ -63,6 +67,12 @@ export function isThreeByFour(image: Size): boolean {
 export function coverScale(image: Size, frame: Size, rotation: Rotation): number {
   const turned = rotatedSize(image, rotation);
   return Math.max(frame.width / turned.width, frame.height / turned.height);
+}
+
+/** Points per photo pixel in Fit (D-152): the whole turned photo inside the frame. */
+export function containScale(image: Size, frame: Size, rotation: Rotation): number {
+  const turned = rotatedSize(image, rotation);
+  return Math.min(frame.width / turned.width, frame.height / turned.height);
 }
 
 export function clampZoom(zoom: number): number {
@@ -110,11 +120,6 @@ export function rotateCrop(state: CropState): CropState {
 /** Flip: mirror left to right; the same part of the photo stays in the frame. */
 export function flipCrop(state: CropState): CropState {
   return { ...state, flip: !state.flip, pan: { x: state.pan.x === 0 ? 0 : -state.pan.x, y: state.pan.y } };
-}
-
-/** Fit: the whole photo as large as it can be while covering the frame, centred; rotation and flip stay. */
-export function fitCrop(state: CropState): CropState {
-  return { ...state, zoom: MIN_ZOOM, pan: { x: 0, y: 0 } };
 }
 
 /**

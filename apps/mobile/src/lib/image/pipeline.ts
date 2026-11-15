@@ -9,8 +9,9 @@
 import { File } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
-import { cropRect34, FULL_SIZE, MEDIUM_SIZE, scaleRect, THUMB_SIZE, type CropSpec } from './crop';
+import { cropRect34, fitRect34, FULL_SIZE, MEDIUM_SIZE, scaleRect, THUMB_SIZE, type CropSpec } from './crop';
 import { assertNoLocationMetadata } from './exif';
+import { composeFit } from './fitFrame';
 
 export type PreparedImage = { uri: string; width: number; height: number };
 export type PreparedPhoto = { full: PreparedImage; thumb: PreparedImage };
@@ -28,8 +29,10 @@ export type PrepareOptions = Partial<CropSpec>;
  * Crops `uri` (a local file or `data:` URI) to 3:4 and writes the full photo and thumbnail as WebP
  * in the cache directory. The photo is first turned `rotate` degrees clockwise and mirrored when `flip`;
  * `crop` is the Crop screen's frame in that image's pixels (scaled from `cropBasis` when given); without
- * it the largest centred 3:4 area is used. Throws `LocationMetadataError` (and deletes both outputs) if
- * an output still carries location metadata.
+ * it the largest centred 3:4 area is used. With `fit` (D-152) nothing is cropped: the turned photo is scaled
+ * straight from the decoded source to fit inside 1440 × 1920 and drawn on its frame (`composeFit`), so every
+ * output (full, thumbnail, and the medium copy made from full) carries the same framed picture. Throws
+ * `LocationMetadataError` (and deletes both outputs) if an output still carries location metadata.
  */
 export async function preparePhoto(uri: string, options: PrepareOptions = {}): Promise<PreparedPhoto> {
   const refs: Releasable[] = [];
@@ -38,15 +41,30 @@ export async function preparePhoto(uri: string, options: PrepareOptions = {}): P
     return ref;
   };
   const written: string[] = [];
+  const scratch: string[] = [];
   try {
     const turned = track(ImageManipulator.manipulate(uri));
     if (options.rotate) turned.rotate(options.rotate);
     if (options.flip) turned.flip('horizontal');
     const source = track(await turned.renderAsync());
-    const area = options.crop && options.cropBasis ? scaleRect(options.crop, options.cropBasis, source) : options.crop;
-    const rect = cropRect34(source.width, source.height, area);
 
-    const full = track(await track(ImageManipulator.manipulate(source)).crop(rect).resize(FULL_SIZE).renderAsync());
+    let full: Awaited<ReturnType<typeof turned.renderAsync>>;
+    if (options.fit) {
+      const box = fitRect34(source);
+      const photo = track(
+        await track(ImageManipulator.manipulate(source)).resize({ width: box.width, height: box.height }).renderAsync(),
+      );
+      const photoOut = await photo.saveAsync({ format: SaveFormat.PNG });
+      scratch.push(photoOut.uri);
+      const framed = await composeFit(photoOut.uri, box, options.fit.frame, FULL_SIZE);
+      scratch.push(framed);
+      full = track(await track(ImageManipulator.manipulate(framed)).resize(FULL_SIZE).renderAsync());
+    } else {
+      const area =
+        options.crop && options.cropBasis ? scaleRect(options.crop, options.cropBasis, source) : options.crop;
+      const rect = cropRect34(source.width, source.height, area);
+      full = track(await track(ImageManipulator.manipulate(source)).crop(rect).resize(FULL_SIZE).renderAsync());
+    }
     const fullOut = await full.saveAsync({ format: SaveFormat.WEBP, compress: FULL_QUALITY });
     written.push(fullOut.uri);
 
@@ -71,6 +89,13 @@ export async function preparePhoto(uri: string, options: PrepareOptions = {}): P
     throw error;
   } finally {
     for (const ref of refs) ref.release();
+    for (const uri of scratch) {
+      try {
+        new File(uri).delete();
+      } catch {
+        // A leftover cache file wastes space but loses nothing.
+      }
+    }
   }
 }
 

@@ -10,7 +10,7 @@ import { Dimensions, Text, View } from 'react-native';
 import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
 import CropScreen from '../../../../app/crop';
-import { CROP_RATIO, cropFrame, cropRectFor, initialCrop } from '../cropMath';
+import { CROP_RATIO, cropFrame, cropRectFor, initialCrop, MOMENT_CROP_SHEET_HEIGHT } from '../cropMath';
 import { usePendingCrop, type PendingCrop } from '../pendingCrop';
 import { saveGalleryPhoto } from '../saveCapture';
 import { captureError } from '@/lib/monitoring';
@@ -20,11 +20,19 @@ import { cropProfilePhoto, useProfileCrop } from '@/features/profile/profileCrop
 import type { ProfileCrop } from '@/lib/image/profileImage';
 
 // Crop screen (FR-CAP-03, FR-CAP-02; design: Crop): buttons, gestures and the zoom slider change what Done
-// queues; Reset and Fit undo; Cancel returns to the camera with nothing queued; Done queues the raw photo
+// queues; Reset undoes; Fill / Fit (D-152) and the frame styles reach the queued crop; Cancel returns to the camera with nothing queued; Done queues the raw photo
 // with the crop through the queue-first path and opens the editor. saveGalleryPhoto has its own test.
 jest.mock('../saveCapture', () => ({ saveGalleryPhoto: jest.fn() }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 jest.mock('@/lib/queue/prepare', () => ({ prepareItem: jest.fn() }));
+const mockStorage = new Map<string, string>();
+jest.mock('expo-sqlite/kv-store', () => ({
+  __esModule: true,
+  default: {
+    getItem: async (key: string) => mockStorage.get(key) ?? null,
+    setItem: async (key: string, value: string) => void mockStorage.set(key, value),
+  },
+}));
 
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
 const image = { width: 4000, height: 2000 };
@@ -35,7 +43,9 @@ const pending: PendingCrop = {
   target: { localDate: '2026-11-08', tz: 'Asia/Manila', capturedAt: '2026-11-08T19:30:00+08:00' },
 };
 // The test renderer has no safe areas, so the screen sizes the frame with zero insets.
-const frame = () => cropFrame(Dimensions.get('window'), { top: 0, bottom: 0 });
+// A moment's sheet has the Fill / Fit row (D-152).
+const frame = () =>
+  cropFrame(Dimensions.get('window'), { top: 0, bottom: 0 }, CROP_RATIO.moment, MOMENT_CROP_SHEET_HEIGHT);
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
@@ -81,6 +91,7 @@ async function done() {
 const queuedCrop = () => jest.mocked(saveGalleryPhoto).mock.calls.at(-1)?.[0].crop;
 
 beforeEach(() => {
+  mockStorage.clear();
   usePendingCrop.setState({ pending });
   jest.mocked(saveGalleryPhoto).mockReset();
   jest
@@ -104,9 +115,10 @@ describe('Crop screen', () => {
       max: 300,
       now: 100,
     });
-    for (const name of ['Cancel', 'Reset', 'Rotate 90 degrees', 'Flip', 'Fit', 'Next: edit']) {
+    for (const name of ['Cancel', 'Reset', 'Rotate 90 degrees', 'Flip', 'Next: edit']) {
       expect(screen.getByRole('button', { name })).toBeTruthy();
     }
+    expect(screen.getByLabelText('Fill or fit the 3:4 frame')).toBeTruthy();
     expect(screen.getByText('Every Pickld moment is 3:4, so your jars always line up.')).toBeTruthy();
   });
 
@@ -119,7 +131,7 @@ describe('Crop screen', () => {
     );
     expect(within(header).queryByRole('button', { name: 'Reset' })).toBeNull();
     const tools = within(screen.getByTestId('crop-tools')).getAllByRole('button');
-    expect(tools.map((tool) => tool.props.accessibilityLabel)).toEqual(['Rotate 90 degrees', 'Flip', 'Fit', 'Reset']);
+    expect(tools.map((tool) => tool.props.accessibilityLabel)).toEqual(['Rotate 90 degrees', 'Flip', 'Reset']);
     expect(screen.getByRole('button', { name: 'Reset' }).props.accessibilityHint).toBe(
       'Undoes every change to the crop',
     );
@@ -237,7 +249,7 @@ describe('Crop screen', () => {
     expect(queuedCrop()?.crop).toMatchObject({ width: 500, originX: 1750 });
   });
 
-  it('the zoom slider steps with a screen reader; Fit goes back to the whole photo, keeping the turn', async () => {
+  it('the zoom slider steps with a screen reader; Rotate starts again from zoom 1', async () => {
     await openCrop();
     const slider = screen.getByRole('adjustable', { name: 'Zoom' });
     await act(() => slider.props.onAccessibilityAction({ nativeEvent: { actionName: 'increment' } }));
@@ -248,13 +260,6 @@ describe('Crop screen', () => {
     );
     expect(screen.getByRole('adjustable', { name: 'Zoom' }).props.accessibilityValue.now).toBe(120);
     await press('Rotate 90 degrees');
-    expect(screen.getByRole('adjustable', { name: 'Zoom' }).props.accessibilityValue.now).toBe(100);
-    await act(() =>
-      screen.getByRole('adjustable', { name: 'Zoom' }).props.onAccessibilityAction({
-        nativeEvent: { actionName: 'increment' },
-      }),
-    );
-    await press('Fit');
     expect(screen.getByRole('adjustable', { name: 'Zoom' }).props.accessibilityValue.now).toBe(100);
     await done();
     expect(queuedCrop()).toMatchObject({ rotate: 90, flip: false });
@@ -308,6 +313,101 @@ describe('Crop screen', () => {
 
 // Edit profile's photos (D-79): /crop?mode=avatar|cover, pan and zoom only. Done hands the frame back to
 // Edit profile (which prepares and uploads it); Cancel hands back nothing.
+describe('Fill / Fit (D-152)', () => {
+  const tab = (name: 'Fill' | 'Fit') => screen.getByRole('tab', { name });
+  const swatch = (name: string) => screen.getByRole('radio', { name });
+
+  it('every photo opens on Fill, portrait and landscape alike: the zoom slider shows, no frame styles', async () => {
+    for (const size of [image, { width: 2000, height: 4000 }]) {
+      usePendingCrop.setState({ pending: { ...pending, photo: { ...pending.photo, ...size } } });
+      await openCrop();
+      expect(tab('Fill').props.accessibilityState).toEqual({ selected: true });
+      expect(tab('Fit').props.accessibilityState).toEqual({ selected: false });
+      expect(screen.getByRole('adjustable', { name: 'Zoom' })).toBeTruthy();
+      expect(screen.queryByRole('radiogroup', { name: 'Frame style' })).toBeNull();
+      await done();
+      expect(queuedCrop()).not.toHaveProperty('fit');
+    }
+  });
+
+  it('Fit shows the whole photo centred on the frame style, with labelled 44-point swatches instead of zoom', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    expect(tab('Fit').props.accessibilityState).toEqual({ selected: true });
+    expect(screen.queryByRole('adjustable', { name: 'Zoom' })).toBeNull();
+    const names = ['white', 'off-white', 'cream', 'black', 'blurred photo'].map((n) => `Fit, ${n} frame`);
+    for (const name of names) {
+      expect(swatch(name)).toHaveStyle({ width: 44, height: 44 });
+    }
+    expect(swatch('Fit, white frame').props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByText('The whole photo, inside the frame')).toBeTruthy();
+    // The 2:1 photo, contained: as wide as the frame, half as tall, centred on the white backdrop.
+    const f = frame();
+    const photo = screen.getByTestId('crop-photo');
+    expect(photo.props.style).toMatchObject({ width: f.width, height: f.width / 2 });
+    expect(screen.getByTestId('crop-fit-backdrop-white')).toHaveStyle({ width: f.width, height: f.height });
+  });
+
+  it('a chosen frame style reaches the queued crop, and is remembered for the next photo', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    await fireEvent.press(swatch('Fit, cream frame'));
+    expect(swatch('Fit, cream frame').props.accessibilityState).toEqual({ checked: true });
+    expect(swatch('Fit, white frame').props.accessibilityState).toEqual({ checked: false });
+    await done();
+    expect(queuedCrop()).toMatchObject({ rotate: 0, flip: false, fit: { frame: 'cream' } });
+    expect(mockStorage.get('crop:fitFrame')).toBe('cream');
+
+    usePendingCrop.setState({ pending });
+    await openCrop();
+    // The next photo still opens on Fill; its Fit starts on cream.
+    expect(tab('Fill').props.accessibilityState).toEqual({ selected: true });
+    await fireEvent.press(tab('Fit'));
+    expect(swatch('Fit, cream frame').props.accessibilityState).toEqual({ checked: true });
+  });
+
+  it('in Fit, drag and pinch do nothing; Fill brings back the crop as it was; Reset returns to Fill', async () => {
+    await openCrop();
+    const slider = () => screen.getByRole('adjustable', { name: 'Zoom' });
+    await act(() => slider().props.onAccessibilityAction({ nativeEvent: { actionName: 'increment' } }));
+    await fireEvent.press(tab('Fit'));
+    const pan = createGestureController('crop-pan');
+    await act(() => {
+      pan.begin({ x: 100, y: 100, translationX: 0, translationY: 0 });
+      pan.activate({ x: 100, y: 100, translationX: 0, translationY: 0 });
+      pan.update({ x: 5000, y: 100, translationX: 4900, translationY: 0 });
+      pan.end({ x: 5000, y: 100, translationX: 4900, translationY: 0 });
+    });
+    await fireEvent.press(tab('Fill'));
+    expect(slider().props.accessibilityValue.now).toBe(110);
+    await done();
+    // Zoomed to 110% about the centre and not dragged.
+    expect(queuedCrop()?.crop).toEqual(cropRectFor({ ...initialCrop, zoom: 1.1 }, image, frame()));
+
+    usePendingCrop.setState({ pending });
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    await press('Reset');
+    expect(tab('Fill').props.accessibilityState).toEqual({ selected: true });
+  });
+
+  it('Rotate and Flip still apply in Fit and reach the queued crop', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    await press('Rotate 90 degrees');
+    await press('Flip');
+    // Turned, the 2:1 photo is 1:2: as tall as the frame (its unturned view is sized before the turn).
+    const f = frame();
+    expect(screen.getByTestId('crop-photo').props.style).toMatchObject({
+      width: f.height,
+      height: f.height / 2,
+      transform: [{ scaleX: -1 }, { rotate: '90deg' }],
+    });
+    await done();
+    expect(queuedCrop()).toMatchObject({ rotate: 90, flip: true, fit: { frame: 'white' } });
+  });
+});
+
 describe('Crop screen for profile photos', () => {
   const photo = { uri: 'file:///picker/portrait.jpg', width: 3000, height: 4000 };
   const profileRoutes = {
@@ -346,7 +446,8 @@ describe('Crop screen for profile photos', () => {
     expect(square.width).toBe(square.height);
     expect(drawn).toHaveStyle({ width: square.width, height: square.height });
     expect(screen.getByTestId('crop-circle', { includeHiddenElements: true })).toBeTruthy();
-    for (const name of ['Rotate 90 degrees', 'Flip', 'Fit']) expect(screen.queryByRole('button', { name })).toBeNull();
+    for (const name of ['Rotate 90 degrees', 'Flip']) expect(screen.queryByRole('button', { name })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Fit' })).toBeNull();
     for (const name of ['Cancel', 'Reset', 'Use photo']) expect(screen.getByRole('button', { name })).toBeTruthy();
     expect(screen.getByRole('adjustable', { name: 'Zoom' })).toBeTruthy();
     expect(screen.queryByText('#afternoon · from gallery')).toBeNull();

@@ -7,19 +7,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
+import type { CropSpec, FitFrame } from '@/lib/image/crop';
 import { captureError } from '@/lib/monitoring';
 import { prepareItem } from '@/lib/queue/prepare';
 import { getSupabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
 
-import { CropView } from './CropView';
+import { DEFAULT_FIT_FRAME, getFitFrame, setFitFrame } from './cropPrefs';
+import { CropView, type CropLayout } from './CropView';
 import {
   clampCrop,
+  CROP_RATIO,
   cropFrame,
   cropRectFor,
-  fitCrop,
   flipCrop,
   initialCrop,
+  MOMENT_CROP_SHEET_HEIGHT,
   rotateCrop,
   zoomCrop,
   type CropState,
@@ -33,6 +36,9 @@ import { saveGalleryPhoto } from './saveCapture';
 // 1440 × 1920), waits for that cropped file, then opens the editor on it. Cancel queues nothing.
 // Moment options' Re-crop (M2-23) opens it on a saved moment's photo: Save crop replaces the moment's photo
 // (see features/moment/recrop.ts) and goes back; Cancel changes nothing.
+// Fill / Fit (D-152): every photo opens on Fill (today's crop). Fit places the whole photo inside the frame on
+// a plain frame style; the choice travels in the crop spec, so preparation bakes the frame into the saved
+// photo and the editor, which opens on that file, shows exactly it. The last frame style is remembered.
 export function MomentCropScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -42,6 +48,8 @@ export function MomentCropScreen() {
   const pending = usePendingCrop((s) => s.pending);
   const setPending = usePendingCrop((s) => s.setPending);
   const [state, setState] = useState<CropState>(initialCrop);
+  const [layout, setLayout] = useState<CropLayout>('fill');
+  const [fitFrame, setFrame] = useState<FitFrame>(DEFAULT_FIT_FRAME);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -56,12 +64,28 @@ export function MomentCropScreen() {
     if (usePendingCrop.getState().pending === null) leave();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    let alive = true;
+    void getFitFrame().then((frame) => {
+      if (alive) setFrame(frame);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   if (pending === null) return null;
 
   const { photo } = pending;
   const image = { width: photo.width, height: photo.height };
   // The same frame CropView draws, so the rectangle matches what the user sees.
-  const frame = cropFrame(window, insets);
+  const frame = cropFrame(window, insets, CROP_RATIO.moment, MOMENT_CROP_SHEET_HEIGHT);
+  const spec = (): CropSpec => ({
+    crop: cropRectFor(state, image, frame),
+    cropBasis: image,
+    rotate: state.rotation,
+    flip: state.flip,
+    ...(layout === 'fit' ? { fit: { frame: fitFrame } } : null),
+  });
 
   const onCancel = () => {
     discardRecropPhoto(pending);
@@ -73,14 +97,8 @@ export function MomentCropScreen() {
     if (busy) return;
     setBusy(true);
     setFailed(false);
-    const rect = cropRectFor(state, image, frame);
     try {
-      await finishRecrop(getSupabase(), recrop, {
-        crop: rect,
-        cropBasis: image,
-        rotate: state.rotation,
-        flip: state.flip,
-      });
+      await finishRecrop(getSupabase(), recrop, spec());
     } catch (error) {
       captureError(error, { area: 'recrop' });
       setBusy(false);
@@ -99,7 +117,6 @@ export function MomentCropScreen() {
     if (busy) return;
     setBusy(true);
     setFailed(false);
-    const rect = cropRectFor(state, image, frame);
     let queuedId: number | null = null;
     try {
       const item = await saveGalleryPhoto({
@@ -107,7 +124,7 @@ export function MomentCropScreen() {
         slot: pending.slot,
         userId: pending.userId,
         target: pending.target,
-        crop: { crop: rect, cropBasis: image, rotate: state.rotation, flip: state.flip },
+        crop: spec(),
         // D-48: a new moment starts at the owner's default (Today's cached profile); null lets the server decide.
         visibility: queryClient.getQueryData<Me>(todayQueryKeys.me(pending.userId))?.defaultVisibility ?? null,
       });
@@ -148,8 +165,17 @@ export function MomentCropScreen() {
       onZoom={(zoom) => setState((s) => zoomCrop(s, zoom, image, frame))}
       onRotate={() => setState((s) => clampCrop(rotateCrop(s), image, frame))}
       onFlip={() => setState((s) => clampCrop(flipCrop(s), image, frame))}
-      onFit={() => setState(fitCrop)}
-      onReset={() => setState(initialCrop)}
+      layout={layout}
+      frame={fitFrame}
+      onLayout={setLayout}
+      onFrame={(next) => {
+        setFrame(next);
+        void setFitFrame(next);
+      }}
+      onReset={() => {
+        setState(initialCrop);
+        setLayout('fill');
+      }}
       onCancel={onCancel}
       onDone={() => void onDone()}
     />

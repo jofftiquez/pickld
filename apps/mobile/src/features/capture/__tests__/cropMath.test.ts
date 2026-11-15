@@ -11,7 +11,6 @@ import {
   CROP_SHEET_HEIGHT,
   cropFrame,
   cropRectFor,
-  fitCrop,
   flipCrop,
   initialCrop,
   isThreeByFour,
@@ -245,12 +244,6 @@ describe('state changes', () => {
     expect(s).toEqual(at({ flip: true, pan: { x: -120, y: -40 }, zoom: 2 }));
     expect(flipCrop(s).flip).toBe(false);
     expect(flipCrop(initialCrop).pan).toEqual({ x: 0, y: 0 });
-  });
-
-  it('fitCrop recentres at zoom 1 and keeps rotation and flip', () => {
-    expect(fitCrop(at({ rotation: 270, flip: true, zoom: 2.5, pan: { x: 9, y: 9 } }))).toEqual(
-      at({ rotation: 270, flip: true }),
-    );
   });
 
   it('clampCrop leaves a valid state alone', () => {

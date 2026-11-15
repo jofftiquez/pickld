@@ -17,6 +17,7 @@ import {
   type Transform,
 } from '../overlays/transform';
 import { PHOTO_ASPECT } from '../../../../../../supabase/functions/_shared/moment_layout';
+import { fitRect34, FULL_SIZE, THUMB_SIZE } from '@/lib/image/crop';
 
 // Overlay transform math (FR-CAP-05, FR-CAP-08). Expected values are worked out by hand; photo sizes are
 // deliberately not square and differ between cases so a swapped width/height shows up.
@@ -245,5 +246,48 @@ describe('an overlay sits on the same photo pixel in the editor, the posted mome
     const H = Math.round(W / PHOTO_ASPECT);
     expect(placed.x * W).toBeCloseTo(1008, 6);
     expect(placed.y * H).toBeCloseTo(528, 6);
+  });
+});
+
+describe('on a Fit photo, an overlay over the photo near its edge sits on the same source pixel everywhere (D-152)', () => {
+  // A 3840 × 2160 (16:9) photo fitted: preparation draws it 1440 × 810 at y 555 on the 1440 × 1920 frame, and
+  // the editor opens on that framed file over its 360 × 480 pt canvas (a quarter of it). Worked by hand: a
+  // 60 pt sticker over the source pixel (3600, 300), near the photo's top-right corner, is at
+  // (3600 × 0.375, 555 + 300 × 0.375) = (1350, 667.5) px, so (337.5, 166.875) pt.
+  const source = { width: 3840, height: 2160 };
+  const canvas = { width: 360, height: 480 };
+  const placed = fromPixels({ cx: 337.5, cy: 166.875, width: 60, rotation: 0 }, canvas);
+  const toSource = (point: { x: number; y: number }, size: { width: number; height: number }) => {
+    const box = fitRect34(source, size);
+    const scale = box.width / source.width;
+    return { x: (point.x - box.originX) / scale, y: (point.y - box.originY) / scale };
+  };
+
+  it('the editor shows the photo where preparation draws it', () => {
+    expect(fitRect34(source)).toEqual({ originX: 0, originY: 555, width: 1440, height: 810 });
+    expectTransform(placed, { x: 0.9375, y: 0.34765625, scale: 60 / 360, rotation: 0 });
+  });
+
+  it('the moment view draws it at (1350, 667.5) on the full photo: source pixel (3600, 300)', () => {
+    const box = toPixels(placed, FULL_SIZE, 1);
+    expect(box.cx).toBeCloseTo(1350, 6);
+    expect(box.cy).toBeCloseTo(667.5, 6);
+    const at = toSource({ x: box.cx, y: box.cy }, FULL_SIZE);
+    expect(at.x).toBeCloseTo(3600, 6);
+    expect(at.y).toBeCloseTo(300, 6);
+  });
+
+  it('the thumbnail, a resize of full, lands on the same source pixel', () => {
+    const box = toPixels(placed, THUMB_SIZE, 1);
+    const at = toSource({ x: box.cx, y: box.cy }, THUMB_SIZE);
+    expect(at.x).toBeCloseTo(3600, 6);
+    expect(at.y).toBeCloseTo(300, 6);
+  });
+
+  it('the export renderer puts its centre on the same pixel (x × W, y × round(W ÷ 3:4))', () => {
+    const W = FULL_SIZE.width;
+    const H = Math.round(W / PHOTO_ASPECT);
+    expect(placed.x * W).toBeCloseTo(1350, 6);
+    expect(placed.y * H).toBeCloseTo(667.5, 6);
   });
 });

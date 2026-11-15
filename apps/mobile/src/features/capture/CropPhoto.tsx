@@ -5,11 +5,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { GestureDetector, usePanGesture, usePinchGesture, useSimultaneousGestures } from 'react-native-gesture-handler';
 
 import { Icon } from '@/components/Icon';
-import type { Size } from '@/lib/image/crop';
+import type { FitFrame, Size } from '@/lib/image/crop';
 import { textStyle } from '@/theme/text';
-import { colors, crop, radius } from '@/theme/tokens';
+import { colors, crop, fitFrameColors, radius } from '@/theme/tokens';
 
-import { coverScale, panCrop, zoomCrop, type CropState } from './cropMath';
+import { containScale, coverScale, panCrop, zoomCrop, type CropState } from './cropMath';
 
 export type CropPhotoProps = {
   uri: string;
@@ -27,7 +27,20 @@ export type CropPhotoProps = {
   aspectLabel: string;
   /** The avatar's circle guide instead of the thirds grid (D-79): the corners outside it are dimmed. */
   circle?: boolean;
+  /**
+   * Fit (D-152): the whole photo inside the frame on this frame style, as preparation draws it; drag and pinch
+   * do nothing. Null or absent: Fill, today's crop.
+   */
+  fit?: FitFrame | null;
 };
+
+/**
+ * expo-image's blur radius that looks like the saved photo's blur (sigma `crop.fitBlur` of the frame's width):
+ * expo-image halves the radius and SDWebImage blurs with a Gaussian of that sigma, in points.
+ */
+export function previewBlurRadius(frameWidth: number): number {
+  return crop.fitBlur * frameWidth * 2;
+}
 
 const THIRDS = ['33.333%', '66.666%'] as const;
 const CORNERS = [
@@ -76,13 +89,16 @@ export function CropPhoto({
   aspect,
   aspectLabel,
   circle = false,
+  fit = null,
 }: CropPhotoProps) {
   const { t } = useTranslation();
   // Gesture callbacks read the latest state, not the one from when they were made.
   const latest = useRef(state);
+  const fitting = useRef(fit !== null);
   useEffect(() => {
     latest.current = state;
-  }, [state]);
+    fitting.current = fit !== null;
+  }, [state, fit]);
   const panStart = useRef(state.pan);
   const zoomStart = useRef(state.zoom);
 
@@ -94,6 +110,7 @@ export function CropPhoto({
       panStart.current = latest.current.pan;
     },
     onUpdate: (e) => {
+      if (fitting.current) return;
       const next = { x: panStart.current.x + e.translationX, y: panStart.current.y + e.translationY };
       onChange(panCrop(latest.current, next, image, frame));
     },
@@ -105,6 +122,7 @@ export function CropPhoto({
       zoomStart.current = latest.current.zoom;
     },
     onUpdate: (e) => {
+      if (fitting.current) return;
       onChange(zoomCrop(latest.current, zoomStart.current * e.scale, image, frame));
     },
   });
@@ -113,14 +131,50 @@ export function CropPhoto({
   const width = areaWidth;
   const inset = (areaWidth - frame.width) / 2;
   const height = frame.height + crop.frameInsetY * 2;
-  const scale = coverScale(image, frame, state.rotation) * state.zoom;
+  // Fit: the whole photo, centred, whatever the zoom and pan say (they come back on Fill).
+  const scale = fit
+    ? containScale(image, frame, state.rotation)
+    : coverScale(image, frame, state.rotation) * state.zoom;
   const shown = { width: image.width * scale, height: image.height * scale };
-  const centre = { x: width / 2 + state.pan.x, y: height / 2 + state.pan.y };
+  const centre = fit ? { x: width / 2, y: height / 2 } : { x: width / 2 + state.pan.x, y: height / 2 + state.pan.y };
   const bottom = crop.frameInsetY + frame.height;
+  // Turned first, then mirrored on screen: the order the image pipeline applies them.
+  const turn = [{ scaleX: state.flip ? -1 : 1 }, { rotate: `${state.rotation}deg` }];
+  const cover = coverScale(image, frame, state.rotation);
 
   return (
     <GestureDetector gesture={gesture}>
       <View style={[styles.root, { height }]} testID="crop-area">
+        {fit ? (
+          // Fit's frame style fills the frame behind the photo: a plain colour, or the photo itself covering the
+          // frame, blurred. Decoded at its shown size, so the blur matches the saved photo's.
+          <View
+            pointerEvents="none"
+            style={[
+              styles.backdrop,
+              { left: inset, top: crop.frameInsetY, width: frame.width, height: frame.height },
+              fit === 'blur' ? null : { backgroundColor: fitFrameColors[fit] },
+            ]}
+            testID={`crop-fit-backdrop-${fit}`}
+          >
+            {fit === 'blur' ? (
+              <Image
+                source={{ uri }}
+                cachePolicy="memory"
+                contentFit="fill"
+                blurRadius={previewBlurRadius(frame.width)}
+                style={{
+                  position: 'absolute',
+                  left: frame.width / 2 - (image.width * cover) / 2,
+                  top: frame.height / 2 - (image.height * cover) / 2,
+                  width: image.width * cover,
+                  height: image.height * cover,
+                  transform: turn,
+                }}
+              />
+            ) : null}
+          </View>
+        ) : null}
         {/* Full resolution, held in memory: the view's size changes on every pinch step, and expo-image would
             otherwise shrink the photo to each size with a fresh decode from disk, cancelled by the next step,
             so the photo showed a smaller copy stretched up while zooming (D-139). */}
@@ -137,8 +191,7 @@ export function CropPhoto({
             top: centre.y - shown.height / 2,
             width: shown.width,
             height: shown.height,
-            // Turned first, then mirrored on screen: the order the image pipeline applies them.
-            transform: [{ scaleX: state.flip ? -1 : 1 }, { rotate: `${state.rotation}deg` }],
+            transform: turn,
           }}
           testID="crop-photo"
         />
@@ -193,7 +246,7 @@ export function CropPhoto({
           <Icon name="lock" color="ink" size={crop.chipIcon} strokeWidth={2.6} />
           <Text style={[textStyle('label', '700'), styles.chipText]}>{aspect}</Text>
         </View>
-        <Text style={[textStyle('bodySmall'), styles.hint]}>{t('crop.hint')}</Text>
+        <Text style={[textStyle('bodySmall'), styles.hint]}>{t(fit ? 'crop.layout.fitHint' : 'crop.hint')}</Text>
       </View>
     </GestureDetector>
   );
@@ -202,6 +255,7 @@ export function CropPhoto({
 const styles = StyleSheet.create({
   root: { overflow: 'hidden', backgroundColor: colors.editor },
   scrim: { position: 'absolute', backgroundColor: colors.cropScrim },
+  backdrop: { position: 'absolute', overflow: 'hidden' },
   frame: { position: 'absolute', borderWidth: crop.frameOutline, borderColor: colors.cropOutline },
   vertical: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: colors.cropGrid },
   horizontal: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: colors.cropGrid },

@@ -1,4 +1,47 @@
-import { cropRect34, cropRectRatio } from '../crop';
+import { cropRect34, cropRectRatio, cropSpecSchema, fitRect34, FULL_SIZE, MEDIUM_SIZE, THUMB_SIZE } from '../crop';
+
+describe('fitRect34 (Fit, D-152)', () => {
+  it('a 16:9 landscape gets the full width, centred, with equal bars top and bottom', () => {
+    // 3840 × 2160 at 1440 / 3840 = 0.375: 1440 × 810; (1920 − 810) ÷ 2 = 555 above and below.
+    expect(fitRect34({ width: 3840, height: 2160 })).toEqual({ originX: 0, originY: 555, width: 1440, height: 810 });
+  });
+
+  it('a very tall 9:21 gets the full height, with equal bars left and right', () => {
+    // 900 × 2100 at 1920 / 2100: 822.86 × 1920; the bars round to 309 each, so the photo is 822 wide.
+    expect(fitRect34({ width: 900, height: 2100 })).toEqual({ originX: 309, originY: 0, width: 822, height: 1920 });
+  });
+
+  it('a 3:4 photo fills the frame: no bars', () => {
+    expect(fitRect34({ width: 3024, height: 4032 })).toEqual({ originX: 0, originY: 0, ...FULL_SIZE });
+  });
+
+  it('the same framing at every output size: full, medium and thumbnail', () => {
+    const source = { width: 3840, height: 2160 };
+    expect(fitRect34(source, FULL_SIZE)).toEqual({ originX: 0, originY: 555, width: 1440, height: 810 });
+    // Medium is made from full (1440 → 1080, × 0.75): bars of 416.25 resampled; worked here at its own size.
+    expect(fitRect34(source, MEDIUM_SIZE)).toEqual({ originX: 0, originY: 416, width: 1080, height: 608 });
+    expect(fitRect34(source, THUMB_SIZE)).toEqual({ originX: 0, originY: 185, width: 480, height: 270 });
+  });
+
+  it('refuses an image with no pixels', () => {
+    expect(() => fitRect34({ width: 0, height: 10 })).toThrow(RangeError);
+  });
+});
+
+describe('cropSpecSchema', () => {
+  const spec = {
+    crop: { originX: 0, originY: 0, width: 3, height: 4 },
+    cropBasis: { width: 3, height: 4 },
+    rotate: 0,
+    flip: false,
+  };
+
+  it('keeps Fit and its frame style; rows queued before Fit (no `fit`) still read as Fill', () => {
+    expect(cropSpecSchema.parse({ ...spec, fit: { frame: 'cream' } }).fit).toEqual({ frame: 'cream' });
+    expect(cropSpecSchema.parse(spec)).not.toHaveProperty('fit');
+    expect(() => cropSpecSchema.parse({ ...spec, fit: { frame: 'polka' } })).toThrow();
+  });
+});
 
 describe('cropRect34', () => {
   it.each([
