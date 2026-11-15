@@ -386,6 +386,8 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     const field = screen.getByLabelText('Caption');
     expect(field.props.value).toBe('');
     expect(field.props.maxLength).toBe(150);
+    // The slot's own question gives the empty caption something to answer.
+    expect(field.props.placeholder).toBe('How’s your afternoon going?');
     expect(screen.getByText('0 / 150')).toBeTruthy();
     // Starts at the queued visibility (the owner's default, D-48).
     expect(screen.getByTestId('editor-visibility').props.accessibilityLabel).toBe('Who can see this moment');
@@ -886,6 +888,20 @@ describe('Two steps: photo, then details (D-103)', () => {
       edits: { v: 1, filter: 'luma', overlays: [] },
     });
     expect(screen).toHavePathname('/today');
+  });
+
+  it('tapping the photo on the details step goes back to editing it, keeping the caption', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await goToDetails();
+    await fireEvent.changeText(screen.getByLabelText('Caption'), 'rainy commute');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Edit photo' }));
+    expect(screen.getByTestId('editor-screen')).toBeTruthy();
+    expect(screen.queryByTestId('editor-details')).toBeNull();
+    await goToDetails();
+    expect(screen.getByLabelText('Caption').props.value).toBe('rainy commute');
+    expect(saveEdits).not.toHaveBeenCalled();
   });
 
   it('`focus=caption` on a queued photo opens on the details step with the caption focused; Back goes to the photo step', async () => {

@@ -234,6 +234,7 @@ export function EditorView({
               visibility={visibility}
               onChangeVisibility={onChangeVisibility}
               saveFailed={saveFailed}
+              onEditPhoto={back}
             />
           </Animated.View>
         </GestureDetector>
