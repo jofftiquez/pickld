@@ -14,7 +14,14 @@ jest.mock('@shopify/react-native-skia', () => {
       createElement(View, { testID: 'skia-image', accessibilityHint: image?.uri }, children),
     ColorMatrix: ({ matrix }: { matrix: number[] }) =>
       createElement(View, { testID: 'color-matrix', accessibilityValue: { text: JSON.stringify(matrix) } }),
-    useImage: (uri: string | undefined) => (uri ? { uri } : null),
+    // Like Skia, no HEIC decoder.
+    useImage: (uri: string | undefined) => (uri && !/\.heic$/i.test(uri) ? { uri } : null),
+    Skia: {
+      Data: { fromURI: async (uri: string) => ({ uri }) },
+      Image: {
+        MakeImageFromEncoded: ({ uri }: { uri: string }) => (/\.heic$/i.test(uri) ? null : { uri }),
+      },
+    },
   };
 });
 

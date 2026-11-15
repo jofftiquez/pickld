@@ -28,6 +28,10 @@ jest.mock('@shopify/react-native-skia', () => {
     Image: ({ children }: { children?: ReactNode }) => <MockView>{children}</MockView>,
     ColorMatrix: () => <MockView />,
     useImage: jest.fn((uri: string | undefined) => (uri ? { uri } : null)),
+    Skia: {
+      Data: { fromURI: async (uri: string) => ({ uri }) },
+      Image: { MakeImageFromEncoded: (data: { uri: string }) => data },
+    },
   };
 });
 
