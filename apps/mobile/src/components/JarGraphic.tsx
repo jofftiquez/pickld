@@ -16,15 +16,19 @@ import { colors, jar, lidColors, motion, sizes, slots } from '@/theme/tokens';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
-// Geometry from the design's 48×60 jar (Main, JarLid, FullJar).
-const VIEW_W = 48;
-const VIEW_H = 60;
-const BODY = { x: 5, y: 15, width: 38, height: 42, rx: 10 };
-const LAYER = { x: 6, width: 36, height: 5.3, bottomY: 51, step: 5 };
+// Geometry from the design's 48×60 jar (Main, JarLid, FullJar). The splash (SplashJar) draws the same jar.
+export const VIEW_W = 48;
+export const VIEW_H = 60;
+export const BODY = { x: 5, y: 15, width: 38, height: 42, rx: 10 };
+export const LAYER = { x: 6, width: 36, height: 5.3, bottomY: 51, step: 5 };
+export const NECK = { x: 13, y: 10, width: 22, height: 5, rx: 1.5 };
+// The shine: a round-capped vertical line on the glass's left side.
+export const HIGHLIGHT = { x: 11, top: 24, bottom: 42, width: 2.5 };
+export const STROKE_WIDTH = 2;
 // The newest layer drops from this far above its resting place.
 const SETTLE_DROP = 24;
 // Publishing (D-77): the lid starts this far above the jar and drops shut.
-const LID = { x: 10, y: 2, width: 28, height: 8, rx: 3 };
+export const LID = { x: 10, y: 2, width: 28, height: 8, rx: 3 };
 const LID_LIFT = 10;
 // The easter egg's lid hop (D-131): how far the lid jumps, and the loose spring that lets it rattle shut.
 const LID_HOP = 7;
@@ -159,8 +163,8 @@ export function JarGraphic({
             />
           ) : null}
         </G>
-        <Rect {...BODY} fill="none" stroke={stroke} strokeWidth={2} />
-        <Rect x={13} y={10} width={22} height={5} rx={1.5} fill="none" stroke={stroke} strokeWidth={2} />
+        <Rect {...BODY} fill="none" stroke={stroke} strokeWidth={STROKE_WIDTH} />
+        <Rect {...NECK} fill="none" stroke={stroke} strokeWidth={STROKE_WIDTH} />
         <AnimatedRect
           testID="jar-lid"
           x={LID.x}
@@ -170,7 +174,12 @@ export function JarGraphic({
           fill={lidColor}
           animatedProps={lidProps}
         />
-        <Path d="M11 24v18" stroke={jar.highlight} strokeWidth={2.5} strokeLinecap="round" />
+        <Path
+          d={`M${HIGHLIGHT.x} ${HIGHLIGHT.top}V${HIGHLIGHT.bottom}`}
+          stroke={jar.highlight}
+          strokeWidth={HIGHLIGHT.width}
+          strokeLinecap="round"
+        />
       </Svg>
     </View>
   );

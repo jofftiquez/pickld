@@ -116,6 +116,22 @@ export const jar = {
   highlight: 'rgba(255,255,255,0.55)',
 } as const;
 
+// Launch screen (D-147): a white jar fills on brand green, with the white logo below it. The native launch
+// image (assets/brand/splash.png, from scripts/gen-brand-assets.sh) is this same canvas, centered on screen,
+// so the animated splash's first frame matches it. Colors are white at these opacities (the launch image
+// bakes them onto brand green).
+export const splash = {
+  canvasWidth: 200,
+  canvasHeight: 560, // also app.config.ts imageWidth: the native box is canvasHeight square, image fitted
+  jarWidth: 120, // height follows the jar's 4:5 shape (150), centered in the canvas
+  logoWidth: 150, // height 62 (the logo is 75:31), sitting on the canvas bottom
+  glassOpacity: 0.14,
+  highlightOpacity: 0.55,
+  // Layers alternate from the bottom, like brand / brandLayer in the app's jar.
+  layer: colors.surface,
+  layerAlt: colors.brandTint,
+} as const;
+
 // Sticker colors used with white text — darkened to pass 4.5:1.
 export const stickerOnWhiteText = {
   orange: '#c4521c',

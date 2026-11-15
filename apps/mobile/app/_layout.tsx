@@ -37,9 +37,14 @@ export default function RootLayout() {
   const [loaded] = useFonts(fontFiles);
   const [splashVisible, setSplashVisible] = useState(true);
   const hideSplash = useCallback(() => setSplashVisible(false), []);
+  // The native launch screen hides once the splash overlay (mounted after the fonts load) is on screen
+  // behind it, not as soon as the fonts load: hiding it earlier showed a blank frame between the two.
+  const hideNativeSplash = useCallback(() => SplashScreen.hideAsync(), []);
   const [queryClient] = useState(createQueryClient);
   const reduceMotion = useReduceMotion();
   const signedIn = useAuthStore((s) => s.status === 'signedIn');
+  // The splash's jar fills until the stored session is read: the first screen can't be chosen before then.
+  const authReady = useAuthStore((s) => s.status !== 'loading');
 
   useEffect(() => startTelemetry(), []);
   useEffect(() => configurePhotoCache(), []);
@@ -47,10 +52,6 @@ export default function RootLayout() {
   useEffect(() => startUploadRunner(getSupabase, { network: deviceNetwork }), []);
   // After the stack has mounted (fonts loaded) and only signed in.
   usePushTaps(loaded && signedIn);
-
-  useEffect(() => {
-    if (loaded) void SplashScreen.hideAsync();
-  }, [loaded]);
 
   if (!loaded) return null;
   return (
@@ -117,7 +118,7 @@ export default function RootLayout() {
         <Stack.Screen name="sticker-unlocked" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
       </Stack>
       <ToastHost />
-      {splashVisible ? <SplashOverlay ready onHidden={hideSplash} /> : null}
+      {splashVisible ? <SplashOverlay ready={authReady} onShown={hideNativeSplash} onHidden={hideSplash} /> : null}
     </PersistQueryClientProvider>
   );
 }

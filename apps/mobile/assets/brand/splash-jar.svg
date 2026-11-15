@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 60" width="48" height="60">
+  <!-- The launch screen's empty jar (D-147): SplashJar at level 0. Geometry from JarGraphic, colors from tokens.splash. -->
+  <rect x="5" y="15" width="38" height="42" rx="10" fill="#ffffff" fill-opacity="0.14"/>
+  <rect x="5" y="15" width="38" height="42" rx="10" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <rect x="13" y="10" width="22" height="5" rx="1.5" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <rect x="10" y="2" width="28" height="8" rx="3" fill="#ffffff"/>
+  <rect x="9.75" y="22.75" width="2.5" height="20.5" rx="1.25" fill="#ffffff" fill-opacity="0.55"/>
+</svg>

@@ -7,6 +7,9 @@ const tokens = readFileSync(join(__dirname, 'src/theme/tokens.ts'), 'utf8');
 const brand = /^\s*brand: '(#[0-9a-f]{6})'/m.exec(tokens)?.[1];
 if (!brand) throw new Error('colors.brand not found in src/theme/tokens.ts');
 const colors = { brand };
+// The native launch image's box (D-147): splash.canvasHeight square, so the image shows at its point size.
+const splashCanvasHeight = Number(/^\s*canvasHeight: (\d+),/m.exec(tokens)?.[1]);
+if (!splashCanvasHeight) throw new Error('splash.canvasHeight not found in src/theme/tokens.ts');
 
 // Permission prompts use the app's copy from en.json (AGENTS rule 13).
 const en = JSON.parse(readFileSync(join(__dirname, 'src/i18n/en.json'), 'utf8')) as {
@@ -129,9 +132,12 @@ const config: ExpoConfig = {
       'expo-splash-screen',
       {
         backgroundColor: colors.brand,
-        image: './assets/brand/splash-logo.png',
-        imageWidth: 220,
+        // The empty jar centered with the logo below it; SplashOverlay starts from this same frame.
+        image: './assets/brand/splash.png',
+        imageWidth: splashCanvasHeight,
         resizeMode: 'contain',
+        // Android 12+ crops the launch image to a small circle, which would cut the jar: keep the logo there.
+        android: { image: './assets/brand/splash-logo.png', imageWidth: 220 },
       },
     ],
   ],
