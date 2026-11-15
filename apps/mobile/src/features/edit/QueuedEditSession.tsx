@@ -135,7 +135,8 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onAdded
     <EditSession
       photoUri={item.photoUri}
       // Rotate, Flip and Crop work on the prepared 3:4 photo: off for the moment a just-taken one is prepared.
-      photoTools={{ ready: item.prepared, onCrop: (uri) => void openCrop(uri) }}
+      // A photo framed by Fit keeps only Flip: Rotate and a re-crop would cut its frame away.
+      photoTools={{ ready: item.prepared, framed: item.crop?.fit !== undefined, onCrop: (uri) => void openCrop(uri) }}
       slot={item.slot}
       shotAt={new Date(item.capturedAt ?? item.createdAt)}
       tz={item.tz}

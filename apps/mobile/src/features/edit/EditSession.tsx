@@ -34,9 +34,10 @@ export type EditSessionProps = {
   photoUri: string;
   /**
    * The quick photo buttons (Rotate, Flip, and Crop with `onCrop`), for a queued photo: on once `ready` (the
-   * 3:4 photo is prepared). `onCrop` opens Crop on the photo file as it looks now.
+   * 3:4 photo is prepared). `onCrop` opens Crop on the photo file as it looks now. A photo `framed` by Fit
+   * keeps only Flip: its file already holds the frame, so a quarter turn or a re-crop would cut it away.
    */
-  photoTools?: { ready: boolean; onCrop?: (photoUri: string) => void };
+  photoTools?: { ready: boolean; framed?: boolean; onCrop?: (photoUri: string) => void };
   slot: Slot;
   /** When the photo was taken, shown in its jar's zone. */
   shotAt: Date;
@@ -284,9 +285,9 @@ export function EditSession({
           photoTools && {
             busy: adjusting,
             disabled: !photoTools.ready,
-            onRotate: () => void adjustTo(rotatedClockwise(editor.adjust)),
+            onRotate: photoTools.framed ? undefined : () => void adjustTo(rotatedClockwise(editor.adjust)),
             onFlip: () => void adjustTo(flipped(editor.adjust)),
-            onCrop: photoTools.onCrop && (() => photoTools.onCrop?.(shownUri)),
+            onCrop: photoTools.onCrop && !photoTools.framed ? () => photoTools.onCrop?.(shownUri) : undefined,
           }
         }
         adjustFailed={adjustFailed}
