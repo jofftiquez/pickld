@@ -2331,7 +2331,9 @@ export type Database = {
       mod_invite_code_create: { Args: { p_ends_at?: string; p_note: string; p_uses: number }; Returns: Json };
       mod_invite_code_set: { Args: { p_code: string; p_enabled: boolean }; Returns: Json };
       mod_invite_codes: { Args: Record<PropertyKey, never>; Returns: Json };
+      mod_invite_network: { Args: { p_limit?: number }; Returns: Json };
       mod_invite_summary: { Args: Record<PropertyKey, never>; Returns: Json };
+      mod_invite_tree: { Args: { p_depth?: number; p_limit?: number; p_user: string }; Returns: Json };
       mod_lift_suspension: { Args: { p_note: string; p_user: string }; Returns: Json };
       mod_manual_suspension: {
         Args: { p_user: string };
