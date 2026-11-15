@@ -19,7 +19,7 @@ export default async function AnalyticsCharts({ searchParams }: { searchParams: 
   const tt = site.totals;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <AnalyticsHeader page="charts" days={days} />
 
       <Section title={t('analytics.usage.title', { count: days })}>

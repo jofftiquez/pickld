@@ -12,7 +12,7 @@ export default async function AnalyticsTopStickers({ searchParams }: { searchPar
   const stickers = await loadStickerAnalytics(client, days);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <AnalyticsHeader page="stickers" days={days} />
 
       <DataTable

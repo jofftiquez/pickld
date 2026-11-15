@@ -48,7 +48,7 @@ export default async function Waitlist({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <PageHeader title={t('waitlist.title')} subtitle={t('waitlist.subtitle')} />
 
       <Section

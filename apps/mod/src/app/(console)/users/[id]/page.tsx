@@ -264,7 +264,7 @@ export default async function User({
   const { profile, suspension, strikes } = user;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <nav style={{ fontSize: 14 }}>
         <Link href="/users" style={{ color: colors.brandLink, fontWeight: 700 }}>
           {t('users.back')}
@@ -299,7 +299,7 @@ export default async function User({
 
       <dl
         aria-label={t('users.summary')}
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, margin: 0 }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, margin: 0 }}
       >
         <Tile
           label={t('users.tiles.moments')}

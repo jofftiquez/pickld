@@ -35,7 +35,7 @@ export default async function StickerPack({ params }: { params: Promise<{ id: st
   const live = stickers.filter((s) => s.retired_at === null).length;
   const retired = stickers.length - live;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <Link href="/stickers" style={{ color: colors.muted, fontSize: 13, fontWeight: 600 }}>
         ← {t('stickers.pack.back')}
       </Link>

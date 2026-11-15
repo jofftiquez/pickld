@@ -22,7 +22,7 @@ export default async function AnalyticsAudience({ searchParams }: { searchParams
   const site = await loadAnalytics(client, days);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <AnalyticsHeader page="audience" days={days} />
 
       <div style={pair}>

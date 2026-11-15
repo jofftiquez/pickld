@@ -14,7 +14,7 @@ export default async function AnalyticsPacks({ searchParams }: { searchParams: P
   const [stickers, thumbs] = await Promise.all([loadStickerAnalytics(client, days), loadPackThumbs(client, days)]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1100 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <AnalyticsHeader page="packs" days={days} />
 
       <DataTable
