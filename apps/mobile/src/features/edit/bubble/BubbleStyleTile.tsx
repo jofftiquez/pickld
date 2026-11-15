@@ -1,9 +1,11 @@
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import Svg, { Circle, Rect } from 'react-native-svg';
 
 import { textStyle } from '@/theme/text';
 import { bubble, colors, space } from '@/theme/tokens';
 
 import type { BubbleShape } from '../edits';
+import { cloudGeometry } from './bubbleLayout';
 
 export type BubbleStyleTileProps = {
   shape: BubbleShape;
@@ -17,9 +19,8 @@ export type BubbleStyleTileProps = {
   testID?: string;
 };
 
-const previews: Record<BubbleShape, ViewStyle> = {
+const previews: Record<Exclude<BubbleShape, 'thought'>, ViewStyle> = {
   speech: { borderRadius: bubble.previewRadius, borderBottomLeftRadius: bubble.previewTailRadius },
-  thought: { borderRadius: bubble.previewThoughtRadius },
   shout: { borderRadius: bubble.shoutRadius, transform: [{ skewX: bubble.shoutSkew }] },
   whisper: {
     borderRadius: bubble.previewRadius,
@@ -29,6 +30,27 @@ const previews: Record<BubbleShape, ViewStyle> = {
     backgroundColor: 'transparent',
   },
 };
+
+// Thought's preview is a small cloud, drawn from the same geometry as the bubble on the photo.
+const previewCloudHeight = (bubble.referenceWidth * bubble.previewHeight) / bubble.previewWidth;
+const previewCloud = cloudGeometry(previewCloudHeight);
+
+function CloudPreview() {
+  const { core, puffs } = previewCloud;
+  return (
+    <Svg
+      width={bubble.previewWidth}
+      height={bubble.previewHeight}
+      viewBox={`0 0 ${bubble.referenceWidth} ${previewCloudHeight}`}
+      testID="bubble-preview-cloud"
+    >
+      <Rect x={core.x} y={core.y} width={core.width} height={core.height} fill={colors.subtle} />
+      {puffs.map((p, i) => (
+        <Circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill={colors.subtle} />
+      ))}
+    </Svg>
+  );
+}
 
 /** One bubble style choice: a small preview of the shape over its name (Bubble). */
 export function BubbleStyleTile({
@@ -50,7 +72,7 @@ export function BubbleStyleTile({
       testID={testID}
       style={[styles.tile, wide ? styles.wide : styles.narrow, selected ? styles.selected : styles.unselected]}
     >
-      <View style={[styles.preview, previews[shape]]} />
+      {shape === 'thought' ? <CloudPreview /> : <View style={[styles.preview, previews[shape]]} />}
       <Text style={[textStyle('label'), styles.label]}>{label}</Text>
     </Pressable>
   );

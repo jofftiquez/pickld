@@ -7,7 +7,9 @@ import {
   bubbleTailSide,
   charsPerLine,
   clampBubbleText,
+  cloudGeometry,
   countLines,
+  isCloud,
   tailPathData,
 } from '../bubble/bubbleLayout';
 import { BUBBLE_TEXT_MAX, bubbleColorSchema, editsSchema, parseEdits, type Bubble, type Edits } from '../edits';
@@ -148,6 +150,16 @@ describe('bubble tail geometry', () => {
     expect(tall.kind === 'dots' && tall.dots[0]).toEqual({ cx: 40, cy: 133, r: 6 });
   });
 
+  it('under a cloud, hangs the dots 2 below the puff at x = 40, not the pill’s flat bottom', () => {
+    // One line, 42 tall. The bottom puff at x = 31.67 has radius 17.28 and centre 24.72 down, so its edge
+    // under x = 40 is 24.72 + √(17.28² − 8.33²) = 39.86: large dot centre 39.86 + 2 + 6 = 47.86.
+    const cloud = bubbleTailGeometry('thought', 'left', 42, true);
+    expect(cloud.kind === 'dots' && cloud.dots[0].cy).toBeCloseTo(47.86, 2);
+    const right = bubbleTailGeometry('thought', 'right', 42, true);
+    expect(right.kind === 'dots' && right.dots.map((d) => d.cx)).toEqual([160, 174]);
+    expect(bubbleTailGeometry('speech', 'left', 42, true)).toEqual(bubbleTailGeometry('speech', 'left', 42));
+  });
+
   it('writes a point as closed SVG path data', () => {
     expect(
       tailPathData([
@@ -156,6 +168,52 @@ describe('bubble tail geometry', () => {
         [40, 40],
       ]),
     ).toBe('M16 40 L6 58 L40 40 Z');
+  });
+});
+
+describe('cloud thought', () => {
+  const W = 200;
+  it.each([42, 64, 130])('fills exactly its %d-unit-tall box with puffs round the edge', (h) => {
+    const { core, puffs } = cloudGeometry(h);
+    const eps = 1e-9;
+    for (const p of puffs) {
+      expect(p.cx - p.r).toBeGreaterThanOrEqual(-eps);
+      expect(p.cx + p.r).toBeLessThanOrEqual(W + eps);
+      expect(p.cy - p.r).toBeGreaterThanOrEqual(-eps);
+      expect(p.cy + p.r).toBeLessThanOrEqual(h + eps);
+      const touches = [p.cx - p.r, W - p.cx - p.r, p.cy - p.r, h - p.cy - p.r].some((d) => Math.abs(d) < eps);
+      expect(touches).toBe(true);
+    }
+    // It reaches all four sides, and the middle closes the gap between the puffs.
+    expect(Math.min(...puffs.map((p) => p.cx - p.r))).toBeCloseTo(0, 9);
+    expect(Math.max(...puffs.map((p) => p.cx + p.r))).toBeCloseTo(W, 9);
+    expect(Math.min(...puffs.map((p) => p.cy - p.r))).toBeCloseTo(0, 9);
+    expect(Math.max(...puffs.map((p) => p.cy + p.r))).toBeCloseTo(h, 9);
+    expect(core.x + core.width).toBeCloseTo(W - core.x, 9);
+    expect(core.y + core.height).toBeCloseTo(h - core.y, 9);
+  });
+
+  it('staggers the bottom puffs against the top ones, so it reads as a cloud and not a scalloped bar', () => {
+    const h = 42;
+    const { puffs } = cloudGeometry(h);
+    const top = puffs.filter((p) => Math.abs(p.cy - p.r) < 1e-9).map((p) => p.cx);
+    const bottom = puffs.filter((p) => Math.abs(h - p.cy - p.r) < 1e-9).map((p) => p.cx);
+    const corners = [18, 182];
+    const inner = (xs: number[]) => xs.filter((x) => !corners.some((c) => Math.abs(x - c) < 1e-9));
+    expect(inner(top).length).toBeGreaterThan(2);
+    for (const x of inner(bottom)) expect(inner(top).every((t) => Math.abs(t - x) > 5)).toBe(true);
+    expect(new Set(puffs.map((p) => p.r)).size).toBeGreaterThan(2); // puffs of several sizes
+  });
+
+  it('only thoughts saved as clouds are clouds; older thoughts stay pills', () => {
+    expect(isCloud({ shape: 'thought', cloud: true })).toBe(true);
+    expect(isCloud({ shape: 'thought' })).toBe(false);
+    expect(isCloud({ shape: 'speech', cloud: true })).toBe(false);
+    const stored = { ...bubble, shape: 'thought' as const };
+    expect(parseEdits({ v: 1, filter: 'original', overlays: [stored] }).overlays[0]).not.toHaveProperty('cloud');
+    expect(parseEdits({ v: 1, filter: 'original', overlays: [{ ...stored, cloud: true }] }).overlays[0]).toMatchObject({
+      cloud: true,
+    });
   });
 });
 

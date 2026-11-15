@@ -60,6 +60,9 @@ const bubbleContent = {
   text: z.string().max(BUBBLE_TEXT_MAX).default(''),
   // Optional, not defaulted: stored bubbles without it read back unchanged; draw with `bubbleTailSide`.
   tail: bubbleTailSchema.optional(),
+  // A thought drawn as a cloud (made since the cloud existed); thoughts without it stay a pill. Optional
+  // for the same reason as `tail`; draw with `isCloud`.
+  cloud: z.boolean().optional(),
 };
 
 // One member per overlay kind, discriminated on `type`. M2-13 (transforms) starts from this; the tools

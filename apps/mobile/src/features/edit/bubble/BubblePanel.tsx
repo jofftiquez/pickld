@@ -41,8 +41,8 @@ const randomId = () => `bubble-${Date.now().toString(36)}-${Math.random().toStri
 const textGroup = (id: string) => `bubble-text:${id}`;
 
 /**
- * The Bubble tool (FR-CAP-06, design: Bubble): Speech, Thought, Shout and Whisper, six colors and up to
- * 60 characters of text, and a tail flipped left or right. With a bubble selected on the photo, the
+ * The Bubble tool (FR-CAP-06, design: Bubble): the text first (up to 60 characters), then Speech, Thought
+ * (a cloud), Shout and Whisper, the tail flipped left or right, and six colors. With a bubble selected on the photo, the
  * panel edits it; otherwise a style tap, or typing, adds a new bubble with the chosen style, color and
  * tail side (the left until flipped).
  */
@@ -58,17 +58,19 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
   const color = selected?.color ?? nextColor;
   const tail = selected ? bubbleTailSide(selected) : nextTail;
 
-  type Content = Pick<Bubble, 'shape' | 'color' | 'text' | 'tail'>;
-  const add = (content: Required<Content>, group?: (id: string) => string) => {
+  type Content = Pick<Bubble, 'shape' | 'color' | 'text' | 'tail' | 'cloud'>;
+  // New thoughts are clouds; older thoughts stay pills until their style is picked again.
+  const cloudFor = (s: BubbleShape) => (s === 'thought' ? { cloud: true } : null);
+  const add = (content: Required<Omit<Content, 'cloud'>>, group?: (id: string) => string) => {
     const id = newId();
-    onAdd({ id, type: 'bubble', ...NEW_BUBBLE, ...content }, group?.(id));
+    onAdd({ id, type: 'bubble', ...NEW_BUBBLE, ...content, ...cloudFor(content.shape) }, group?.(id));
   };
   const update = (id: string, patch: Partial<Content>, group?: string) =>
     onUpdate(id, (o) => (o.type === 'bubble' ? { ...o, ...patch } : o), group);
 
   const chooseShape = (next: BubbleShape) => {
     setNextShape(next);
-    if (selected) update(selected.id, { shape: next });
+    if (selected) update(selected.id, { shape: next, ...cloudFor(next) });
     else add({ shape: next, color, text: '', tail });
   };
   const chooseColor = (next: BubbleColor) => {
@@ -88,6 +90,15 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
 
   return (
     <View style={styles.root} testID="editor-panel-bubble">
+      <TextField
+        label={t('editBubble.text')}
+        value={selected?.text ?? ''}
+        onChangeText={changeText}
+        maxLength={BUBBLE_TEXT_MAX}
+        accessibilityHint={t('editBubble.textHint')}
+        autoCapitalize="sentences"
+        testID="bubble-text"
+      />
       <View style={styles.styles} accessibilityLabel={t('editBubble.styles')} testID="bubble-styles">
         {bubbleShapeSchema.options.map((s) => (
           <BubbleStyleTile
@@ -99,25 +110,6 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
             onPress={() => chooseShape(s)}
             wide={wide}
             testID={`bubble-style-${s}`}
-          />
-        ))}
-      </View>
-      <View style={styles.colorRow} accessibilityLabel={t('editBubble.colors')} testID="bubble-colors">
-        <Text
-          style={[textStyle('label'), styles.colorLabel]}
-          importantForAccessibility="no"
-          accessibilityElementsHidden
-        >
-          {t('editBubble.color')}
-        </Text>
-        {bubbleColorSchema.options.map((c) => (
-          <BubbleSwatch
-            key={c}
-            color={c}
-            label={t(`editBubble.colorName.${c}`)}
-            selected={c === color}
-            onPress={() => chooseColor(c)}
-            testID={`bubble-color-${c}`}
           />
         ))}
       </View>
@@ -138,15 +130,25 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
           testID="bubble-tail"
         />
       </View>
-      <TextField
-        label={t('editBubble.text')}
-        value={selected?.text ?? ''}
-        onChangeText={changeText}
-        maxLength={BUBBLE_TEXT_MAX}
-        accessibilityHint={t('editBubble.textHint')}
-        autoCapitalize="sentences"
-        testID="bubble-text"
-      />
+      <View style={styles.colorRow} accessibilityLabel={t('editBubble.colors')} testID="bubble-colors">
+        <Text
+          style={[textStyle('label'), styles.colorLabel]}
+          importantForAccessibility="no"
+          accessibilityElementsHidden
+        >
+          {t('editBubble.color')}
+        </Text>
+        {bubbleColorSchema.options.map((c) => (
+          <BubbleSwatch
+            key={c}
+            color={c}
+            label={t(`editBubble.colorName.${c}`)}
+            selected={c === color}
+            onPress={() => chooseColor(c)}
+            testID={`bubble-color-${c}`}
+          />
+        ))}
+      </View>
     </View>
   );
 }

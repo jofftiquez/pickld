@@ -10,7 +10,7 @@
 // is built on; Gelasio, made to Georgia's metrics). Glyphs none of them has (emoji) are left out.
 //
 // The output is a JPEG at the stored photo's width, 3:4.
-import type { Canvas, CanvasKit, Image, Paragraph, TypefaceFontProvider } from 'npm:canvaskit-wasm@0.42.0';
+import type { Canvas, CanvasKit, Image, Paragraph, Path, TypefaceFontProvider } from 'npm:canvaskit-wasm@0.42.0';
 import { z } from './deps.ts';
 import { FONTS } from './fonts/fonts.ts';
 import {
@@ -21,7 +21,9 @@ import {
   bubblePaddingX,
   bubbleTailGeometry,
   bubbleTailSide,
+  cloudGeometry,
   FILTER_MATRICES,
+  isCloud,
   INK,
   layoutText,
   PHOTO_ASPECT,
@@ -62,6 +64,7 @@ const overlaySchema = z.discriminatedUnion('type', [
     color: colorName.default('white'),
     text: z.string().max(60).default(''),
     tail: z.enum(['left', 'right']).optional(),
+    cloud: z.boolean().optional(),
   }),
   z.object({
     type: z.literal('text'),
@@ -455,17 +458,29 @@ function drawBubble(
     ? [BUBBLE.shoutRadius * s, BUBBLE.shoutRadius * s, BUBBLE.shoutRadius * s, BUBBLE.shoutRadius * s]
     : [BUBBLE.whisperRadius * s, BUBBLE.whisperRadius * s, BUBBLE.whisperRadius * s, BUBBLE.whisperRadius * s];
   const body = rrect(0, 0, w, h, radii);
+  const cloud = isCloud(o);
+  const build = keep(new ck.PathBuilder());
+  // A cloud's body is its middle and its puffs (cloudGeometry), joined into one shape.
+  let cloudBody: Path | null = null;
+  if (cloud) {
+    const { core, puffs } = cloudGeometry(h / s);
+    let joined = keep(build.addRect(ck.XYWHRect(core.x * s, core.y * s, core.width * s, core.height * s)).detach());
+    for (const p of puffs) {
+      const puff = keep(build.addCircle(p.cx * s, p.cy * s, p.r * s).detach());
+      joined = keep(ck.Path.MakeFromOp(joined, puff, ck.PathOp.Union) ?? joined);
+    }
+    cloudBody = joined;
+  }
 
   // The tail below the box on its side (bubbleTailGeometry, in reference units scaled by s).
-  const geometry = bubbleTailGeometry(o.shape, side, h / s);
-  const build = keep(new ck.PathBuilder());
+  const geometry = bubbleTailGeometry(o.shape, side, h / s, cloud);
   if (geometry.kind === 'point') {
     build.addPolygon(geometry.points.flatMap(([px, py]) => [px * s, py * s]), true);
   } else {
     for (const d of geometry.dots) build.addCircle(d.cx * s, d.cy * s, d.r * s);
   }
   const tail = keep(build.detach());
-  const outline = keep(build.addRRect(body).detach());
+  const outline = cloudBody ?? keep(build.addRRect(body).detach());
   // One shape for the shadow, so the tail's shadow doesn't darken the body's where they overlap.
   const whole = keep(ck.Path.MakeFromOp(outline, tail, ck.PathOp.Union) ?? outline.copy());
 
@@ -483,7 +498,8 @@ function drawBubble(
   const fill = keep(new ck.Paint());
   fill.setAntiAlias(true);
   fill.setColor(color(ck, pair.fill));
-  canvas.drawRRect(body, fill);
+  if (cloudBody) canvas.drawPath(cloudBody, fill);
+  else canvas.drawRRect(body, fill);
   const bw = BUBBLE.whisperBorder * s;
   const line = keep(new ck.Paint());
   line.setAntiAlias(true);

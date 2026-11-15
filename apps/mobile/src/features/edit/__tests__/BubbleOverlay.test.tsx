@@ -58,6 +58,24 @@ describe('BubbleOverlay', () => {
     expect(body.paddingHorizontal).toBe(bubble.thoughtPaddingX * 2);
   });
 
+  it('Cloud thought: puffs round the edge in the fill, behind its text, with no rounded box of its own', async () => {
+    const { body } = await draw({ shape: 'thought', cloud: true, color: 'sky' });
+    expect(body.backgroundColor).toBe('transparent');
+    expect(body.borderRadius).toBeUndefined();
+    expect(body.paddingHorizontal).toBe(bubble.thoughtPaddingX * 2);
+    const cloud = screen.getByTestId('bubble-b1-cloud');
+    expect(cloud.props).toMatchObject({ vbWidth: bubble.referenceWidth, vbHeight: H / 2 });
+    const puffs = svgNodes('RNSVGCircle');
+    expect(puffs.length).toBeGreaterThanOrEqual(8);
+    for (const p of puffs) expect(p.fill).toEqual(filled(bubbleColors.sky.fill));
+    expect(screen.getByText(base.text)).toBeTruthy();
+  });
+
+  it('a thought saved before clouds stays a pill', async () => {
+    await draw({ shape: 'thought' });
+    expect(screen.queryByTestId('bubble-b1-cloud')).toBeNull();
+  });
+
   it('Shout: square-ish, slanted with its tail, in the heaviest weight', async () => {
     const { body, whole } = await draw({ shape: 'shout' });
     expect(body.borderRadius).toBe(bubble.shoutRadius * 2);
