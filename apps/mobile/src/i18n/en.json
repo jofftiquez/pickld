@@ -370,6 +370,16 @@
     },
     "notFound": "This photo is no longer waiting to be edited.",
     "momentNotFound": "Couldn’t open this moment. Check your connection and try again.",
+    "adjust": {
+      "rotate": "Rotate photo",
+      "rotateHint": "Turns it a quarter turn clockwise and keeps the middle",
+      "flip": "Flip photo",
+      "flipHint": "Mirrors it left to right",
+      "crop": "Crop photo",
+      "cropHint": "Opens Crop on the photo as it looks now",
+      "working": "Changing the photo",
+      "failed": "Couldn’t change the photo. Try again."
+    },
     "caption": "Caption",
     "captionPrompt": {
       "whereami": "Where are you right now?",

@@ -1,9 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Image } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
+import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { pastDayLabel } from '@/features/days/pastDay';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { useIsOffline } from '@/lib/connectivity';
@@ -64,6 +67,36 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
     };
   }, [item.id, ownerDefault]);
 
+  // Crop (the photo button) opens on the photo as the editor shows it, turned or mirrored included, and saves
+  // the new crop straight into the queue row like Moment options' Re-crop (M2-23). Back in the editor the row
+  // is read again, so the editor moves to the new photo.
+  const router = useRouter();
+  const setPendingCrop = usePendingCrop((s) => s.setPending);
+  const cropOpened = useRef(false);
+  const openCrop = async (photoUri: string) => {
+    try {
+      const size = await Image.getSize(photoUri);
+      setPendingCrop({
+        photo: { uri: photoUri, ...size, temporary: false },
+        slot: item.slot,
+        userId: item.userId,
+        recrop: { kind: 'queued', queueId: item.id },
+      });
+    } catch (error) {
+      captureError(error, { area: 'edit' });
+      return;
+    }
+    cropOpened.current = true;
+    router.push('/crop');
+  };
+  useFocusEffect(
+    useCallback(() => {
+      if (!cropOpened.current) return;
+      cropOpened.current = false;
+      void queryClient.invalidateQueries({ queryKey: queueItemQueryKey(item.id) });
+    }, [queryClient, item.id]),
+  );
+
   // Back from a shared photo drops the draft (it never became a moment), then returns to the slot choice.
   const back = async (leave: () => void) => {
     notAdded.current = null;
@@ -79,6 +112,8 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
   return (
     <EditSession
       photoUri={item.photoUri}
+      // Rotate, Flip and Crop work on the prepared 3:4 photo: off for the moment a just-taken one is prepared.
+      photoTools={{ ready: item.prepared, onCrop: (uri) => void openCrop(uri) }}
       slot={item.slot}
       shotAt={new Date(item.capturedAt ?? item.createdAt)}
       tz={item.tz}
@@ -90,8 +125,10 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
       insets={insets}
       onLeave={onLeave}
       onBack={onBack && (() => void back(onBack))}
-      onSave={async (input) => {
-        const saved = await saveEdits(item.id, input);
+      onSave={async (input, photo) => {
+        const saved = photo
+          ? await saveEdits(item.id, input, { photoUri: photo.full.uri, thumbUri: photo.thumb.uri })
+          : await saveEdits(item.id, input);
         added(input.visibility);
         // Reopening the editor starts from what was saved, not a cached copy from before.
         queryClient.setQueryData(queueItemQueryKey(item.id), saved);

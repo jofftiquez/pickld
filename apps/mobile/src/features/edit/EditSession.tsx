@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { File } from 'expo-file-system';
+import { useEffect, useRef, useState } from 'react';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { formatShortDate, formatTime } from '@/lib/format';
+import { preparePhoto, type PreparedPhoto } from '@/lib/image/pipeline';
 import { localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { newMomentId } from '@/lib/queue/uploader';
@@ -11,6 +13,7 @@ import type { Slot } from '@/theme/tokens';
 
 import { parseEdits } from './edits';
 import { EditorView, type EditorStep, type EditorTool } from './EditorView';
+import { flipped, isAdjusted, rotatedClockwise, type PhotoAdjust } from './photoAdjust';
 import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
 import { registerOverlayRenderers } from './overlays/registerRenderers';
 import { stickerOverlay } from './stickers/catalog';
@@ -25,8 +28,13 @@ if (__DEV__) registerPlaceholderRenderers();
 
 export type EditSessionProps = {
   /** The photo being edited (a queued file or an uploaded moment's signed URL). Never changed here; a
-   * queued photo's file is swapped once it is prepared. */
+   * queued photo's file is swapped once it is prepared (and by Re-crop). */
   photoUri: string;
+  /**
+   * The quick photo buttons (Rotate, Flip, and Crop with `onCrop`), for a queued photo: on once `ready` (the
+   * 3:4 photo is prepared). `onCrop` opens Crop on the photo file as it looks now.
+   */
+  photoTools?: { ready: boolean; onCrop?: (photoUri: string) => void };
   slot: Slot;
   /** When the photo was taken, shown in its jar's zone. */
   shotAt: Date;
@@ -44,18 +52,35 @@ export type EditSessionProps = {
   onLeave: () => void;
   /** When set, the photo step's Close becomes Back to choose another slot (a shared photo). */
   onBack?: () => void;
-  /** Stores what was edited; a rejection keeps the editor open and says the save failed. */
-  onSave: (input: SaveEditsInput) => Promise<void>;
+  /**
+   * Stores what was edited; a rejection keeps the editor open and says the save failed. `photo` is the
+   * turned or mirrored photo (full and thumbnail, in the cache) to save in place of `photoUri`, if any.
+   */
+  onSave: (input: SaveEditsInput, photo: PreparedPhoto | null) => Promise<void>;
 };
+
+function deleteQuietly(uri: string): void {
+  try {
+    const file = new File(uri);
+    if (file.exists) file.delete();
+  } catch {
+    // A leftover cache file wastes space but loses nothing.
+  }
+}
+
+const adjustKey = (photoUri: string, adjust: PhotoAdjust) => `${adjust.rotate}${adjust.flip ? 'f' : ''}|${photoUri}`;
 
 /**
  * One editing session on a moment (FR-CAP-04, FR-CAP-05, FR-CAP-08, FR-CAP-09) over the editor's two steps
  * (D-103): the filter and overlays with Undo on the photo step, then the caption and the visibility choice
  * (D-48) on the details step, saved together through `onSave` by Add to #slot / Done. Going between the
- * steps keeps everything; nothing is saved before that. Edits are data; the photo is never changed.
+ * steps keeps everything; nothing is saved before that. Edits are data; only Rotate and Flip change the
+ * photo: each makes the changed 3:4 photo at once (the preparation pipeline, so what shows is what is saved),
+ * and Done saves it with the edits.
  */
 export function EditSession({
   photoUri,
+  photoTools,
   slot,
   shotAt,
   tz,
@@ -68,8 +93,30 @@ export function EditSession({
   onBack,
   onSave,
 }: EditSessionProps) {
-  const image = useEditorImage(useCachedPhotoFile(photoUri));
   const editor = useEditorState(parseEdits(initial.edits));
+  // Photos made by Rotate and Flip, by adjust and the photo they were made from, kept so Undo shows them
+  // again at once. Each is a cache file, deleted when the editor closes (Done copies the one it saves).
+  const [adjusted, setAdjusted] = useState<ReadonlyMap<string, PreparedPhoto>>(() => new Map());
+  const made = useRef<string[]>([]);
+  const [adjusting, setAdjusting] = useState(false);
+  const [adjustFailed, setAdjustFailed] = useState(false);
+  const shownPhoto = isAdjusted(editor.adjust) ? (adjusted.get(adjustKey(photoUri, editor.adjust)) ?? null) : null;
+  const shownUri = shownPhoto?.full.uri ?? photoUri;
+  const image = useEditorImage(useCachedPhotoFile(shownUri));
+  // Re-crop replaced the photo, with the adjust shown at the time already in it: the adjust starts over.
+  const [base, setBase] = useState(photoUri);
+  if (base !== photoUri) {
+    setBase(photoUri);
+    editor.rebasePhoto();
+  }
+  const latestBase = useRef(photoUri);
+  useEffect(() => {
+    latestBase.current = photoUri;
+  }, [photoUri]);
+  useEffect(() => {
+    const files = made.current;
+    return () => files.forEach(deleteQuietly);
+  }, []);
   const [step, setStep] = useState<EditorStep>(focusCaption ? 'details' : 'photo');
   const [tool, setTool] = useState<EditorTool>('filters');
   const [caption, setCaption] = useState(initial.caption ?? '');
@@ -77,13 +124,36 @@ export function EditSession({
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
 
+  const adjustTo = async (next: PhotoAdjust) => {
+    if (adjusting) return;
+    setAdjustFailed(false);
+    const from = photoUri;
+    if (!isAdjusted(next) || adjusted.has(adjustKey(from, next))) {
+      editor.adjustPhoto(next);
+      return;
+    }
+    setAdjusting(true);
+    try {
+      const out = await preparePhoto(from, next);
+      made.current.push(out.full.uri, out.thumb.uri);
+      setAdjusted((all) => new Map(all).set(adjustKey(from, next), out));
+      // Re-crop may have replaced the photo meanwhile; this one was made from the old photo.
+      if (latestBase.current === from) editor.adjustPhoto(next);
+    } catch (error) {
+      captureError(error, { area: 'edit' });
+      setAdjustFailed(true);
+    } finally {
+      setAdjusting(false);
+    }
+  };
+
   const save = async () => {
     if (saving) return;
     setSaving(true);
     setSaveFailed(false);
     try {
       const trimmed = caption.trim();
-      await onSave({ caption: trimmed === '' ? null : trimmed, visibility, edits: editor.edits });
+      await onSave({ caption: trimmed === '' ? null : trimmed, visibility, edits: editor.edits }, shownPhoto);
     } catch (error) {
       captureError(error, { area: 'edit' });
       setSaving(false);
@@ -98,7 +168,7 @@ export function EditSession({
       step={step}
       onChangeStep={setStep}
       image={image}
-      photoUri={photoUri}
+      photoUri={shownUri}
       slot={slot}
       time={formatTime(shotAt, tz)}
       // A photo from another day says which day, not "Today".
@@ -128,6 +198,16 @@ export function EditSession({
       onChangeVisibility={setVisibility}
       canUndo={editor.canUndo}
       onUndo={editor.undo}
+      photoTools={
+        photoTools && {
+          busy: adjusting,
+          disabled: !photoTools.ready,
+          onRotate: () => void adjustTo(rotatedClockwise(editor.adjust)),
+          onFlip: () => void adjustTo(flipped(editor.adjust)),
+          onCrop: photoTools.onCrop && (() => photoTools.onCrop?.(shownUri)),
+        }
+      }
+      adjustFailed={adjustFailed}
       saveLabel={saveLabel}
       saving={saving}
       saveFailed={saveFailed}

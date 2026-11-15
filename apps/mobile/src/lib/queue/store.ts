@@ -396,20 +396,55 @@ export type SaveEditsInput = z.infer<typeof saveEditsInputSchema>;
 
 /**
  * The editor's Add to #slot / Done: stores the caption, visibility and edits on the queued moment and ends
- * its editing hold, so the uploader sends them with it. The photo file is not touched (FR-CAP-08).
+ * its editing hold, so the uploader sends them with it. The photo file is not touched (FR-CAP-08), unless
+ * the editor turned or mirrored it (`photo`: newly prepared full and thumbnail files). Those are copied into
+ * app storage and swapped in by the same update as the edits, which were placed for them, so the row never
+ * has one without the other; the old files are deleted after. With a photo it throws QueueItemBusyError
+ * (and keeps everything as it was) while uploading or once uploaded.
  */
-export async function saveEdits(id: number, input: SaveEditsInput): Promise<QueueItem> {
+export async function saveEdits(
+  id: number,
+  input: SaveEditsInput,
+  photo?: { photoUri: string; thumbUri: string },
+): Promise<QueueItem> {
   const edit = saveEditsInputSchema.parse(input);
   const db = await openQueue();
-  const { changes } = await db.runAsync(
-    'UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, editing_since = NULL WHERE id = ?',
-    edit.caption,
-    edit.visibility,
-    edit.visibility === 'only_me' ? 1 : 0,
-    JSON.stringify(edit.edits),
-    id,
-  );
-  if (changes === 0) throw new Error(`No queued moment ${id}`);
+  const fields = [edit.caption, edit.visibility, edit.visibility === 'only_me' ? 1 : 0, JSON.stringify(edit.edits)];
+  if (!photo) {
+    const { changes } = await db.runAsync(
+      'UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, editing_since = NULL WHERE id = ?',
+      ...fields,
+      id,
+    );
+    if (changes === 0) throw new Error(`No queued moment ${id}`);
+  } else {
+    const before = await getItem(id);
+    if (!before) throw new QueueItemBusyError(id);
+    const dir = queueDir();
+    const stem = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    const copies: File[] = [];
+    try {
+      const full = await copyInto(dir, photo.photoUri, stem);
+      copies.push(full);
+      const thumb = await copyInto(dir, photo.thumbUri, `${stem}-thumb`);
+      copies.push(thumb);
+      const { changes } = await db.runAsync(
+        `UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, editing_since = NULL,
+           photo_file = ?, thumb_file = ?, prepared = 1, crop = NULL
+         WHERE id = ? AND state NOT IN ('uploading', 'uploaded')`,
+        ...fields,
+        full.name,
+        thumb.name,
+        id,
+      );
+      if (changes === 0) throw new QueueItemBusyError(id);
+    } catch (error) {
+      copies.forEach(deleteQuietly);
+      throw error;
+    }
+    deleteQuietly(new File(before.photoUri));
+    if (before.thumbUri) deleteQuietly(new File(before.thumbUri));
+  }
   notify('status');
   const item = await getItem(id);
   if (!item) throw new Error(`No queued moment ${id}`);

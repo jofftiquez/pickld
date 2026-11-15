@@ -15,6 +15,7 @@ import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
 import { discardItem, getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 import { saveMomentEdits } from '@/features/moment/momentActions';
+import { preparePhoto } from '@/lib/image/pipeline';
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
 import { editableMomentQueryKey } from '@/features/moment/useEditableMoment';
 import { useAuthStore } from '@/lib/authStore';
@@ -82,6 +83,16 @@ jest.mock('@/lib/queue/store', () => ({
     mockQueueListeners.add(listener);
     return () => mockQueueListeners.delete(listener);
   },
+}));
+// Rotate and Flip make the changed photo with the preparation pipeline: here it names the file after the adjust.
+jest.mock('@/lib/image/pipeline', () => ({
+  preparePhoto: jest.fn(async (_uri: string, a: { rotate: number; flip: boolean }) => {
+    const name = `file:///cache/turned-${a.rotate}${a.flip ? 'f' : ''}`;
+    return {
+      full: { uri: `${name}.webp`, width: 1440, height: 1920 },
+      thumb: { uri: `${name}-thumb.webp`, width: 480, height: 640 },
+    };
+  }),
 }));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => undefined) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
@@ -881,6 +892,8 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
     await openEditor(`/edit/${MOMENT}`);
     await screen.findByTestId('editor-screen');
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.mono);
+    // Its photo is changed with Moment options' Re-crop, not here.
+    expect(screen.queryByTestId('editor-photo-tools')).toBeNull();
     await fireEvent.press(filterButton('Ube'));
     await goToDetails();
     expect(matrixIn('editor-preview')).toEqual(filterMatrices.ube);
@@ -1009,5 +1022,101 @@ describe('Two steps: photo, then details (D-103)', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     expect(screen).toHavePathname('/today');
     expect(saveEdits).not.toHaveBeenCalled();
+  });
+});
+
+describe('Quick photo buttons (FR-CAP-04)', () => {
+  const shown = (testID: string) =>
+    within(screen.getByTestId(testID)).getByTestId('skia-image').props.accessibilityHint as string;
+
+  beforeEach(() => jest.mocked(preparePhoto).mockClear());
+
+  it('Rotate turns the photo at once with the overlays on it; Undo turns it back; Done saves the turned files with the edits', async () => {
+    rows.set(7, {
+      ...item,
+      edits: {
+        v: 1,
+        filter: 'original',
+        overlays: [{ id: 's1', type: 'sticker', ...kape, x: 0.5, y: 0.375, scale: 0.3, rotation: 0 }],
+      },
+    });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Rotate photo' }));
+    await act(async () => {});
+
+    expect(preparePhoto).toHaveBeenCalledWith(item.photoUri, { rotate: 90, flip: false });
+    expect(shown('editor-photo')).toBe('file:///cache/turned-90.webp');
+    expect(shown('editor-filter-mono')).toBe('file:///cache/turned-90.webp');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Undo' }));
+    expect(shown('editor-photo')).toBe(item.photoUri);
+    // Made once: turning again shows the same photo without making it again.
+    await fireEvent.press(screen.getByRole('button', { name: 'Rotate photo' }));
+    await act(async () => {});
+    expect(preparePhoto).toHaveBeenCalledTimes(1);
+    expect(shown('editor-photo')).toBe('file:///cache/turned-90.webp');
+
+    await goToDetails();
+    expect(within(screen.getByTestId('editor-preview')).getByTestId('moment-view-photo')).toHaveProp('source', [
+      { uri: 'file:///cache/turned-90.webp' },
+    ]);
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+    const [id, input, photo] = jest.mocked(saveEdits).mock.calls[0]!;
+    expect(id).toBe(7);
+    expect(photo).toEqual({ photoUri: 'file:///cache/turned-90.webp', thumbUri: 'file:///cache/turned-90-thumb.webp' });
+    // The sticker above the middle is now right of the middle, still level.
+    const sticker = (input.edits as { overlays: { x: number; y: number; rotation: number }[] }).overlays[0]!;
+    expect(sticker.x).toBeCloseTo(0.5 + 320 / 1440);
+    expect(sticker.y).toBeCloseTo(0.5);
+    expect(sticker.rotation).toBe(0);
+  });
+
+  it('Flip after Rotate makes the photo from the opened one, with both', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Rotate photo' }));
+    await act(async () => {});
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip photo' }));
+    await act(async () => {});
+    expect(jest.mocked(preparePhoto).mock.calls.at(-1)).toEqual([item.photoUri, { rotate: 90, flip: true }]);
+    expect(shown('editor-photo')).toBe('file:///cache/turned-90f.webp');
+  });
+
+  it('a photo that wasn’t changed saves without new files', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip photo' }));
+    await act(async () => {});
+    await fireEvent.press(screen.getByRole('button', { name: 'Flip photo' }));
+    await goToDetails();
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(jest.mocked(saveEdits).mock.calls[0]).toHaveLength(2);
+  });
+
+  it('says so and keeps the photo when it can’t be changed', async () => {
+    jest.mocked(preparePhoto).mockRejectedValueOnce(new Error('decode failed'));
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Rotate photo' }));
+    await act(async () => {});
+    expect(screen.getByText('Couldn’t change the photo. Try again.')).toBeTruthy();
+    expect(shown('editor-photo')).toBe(item.photoUri);
+    expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+  });
+
+  it('waits for a just-taken photo to be prepared', async () => {
+    rows.set(7, { ...item, photoUri: 'file:///cache/raw.jpg', prepared: false });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    expect(screen.getByRole('button', { name: 'Rotate photo' }).props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
+    expect(screen.getByRole('button', { name: 'Crop photo' }).props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
   });
 });

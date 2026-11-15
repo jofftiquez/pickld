@@ -252,3 +252,45 @@ describe('useEditorState updateOverlay for text (FR-CAP-07)', () => {
     expect(result.current.edits.overlays[0]).toMatchObject({ id: 't' });
   });
 });
+
+describe('useEditorState photo adjust (FR-CAP-04)', () => {
+  it('a photo Rotate is one Undo step that puts the photo and its overlays back together', async () => {
+    const { result } = await renderHook(() => useEditorState(saved));
+    const sticker = { ...saved.overlays[0]!, x: 0.2, y: 0.3, rotation: 0.4 };
+    await act(() => result.current.transformOverlay('s1', sticker));
+    const placed = result.current.edits.overlays[0];
+    await act(() => result.current.adjustPhoto({ rotate: 0, flip: true }));
+    expect(result.current.adjust).toEqual({ rotate: 0, flip: true });
+    const flippedSticker = result.current.edits.overlays[0]!;
+    expect(flippedSticker.x).toBeCloseTo(0.8);
+    expect(flippedSticker.y).toBeCloseTo(0.3);
+    expect(flippedSticker.scale).toBe(0.3);
+    expect(flippedSticker.rotation).toBeCloseTo(-0.4);
+    expect(result.current.edits.filter).toBe('merienda');
+
+    await act(() => result.current.undo());
+    expect(result.current.adjust).toEqual({ rotate: 0, flip: false });
+    expect(result.current.edits.overlays[0]).toEqual(placed);
+
+    await act(() => result.current.adjustPhoto({ rotate: 0, flip: false })); // already so: no step
+    await act(() => result.current.undo());
+    expect(result.current.edits).toEqual(saved);
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it('a replaced photo keeps the steps made on the adjust it shows, on no adjust', async () => {
+    const { result } = await renderHook(() => useEditorState(saved));
+    await act(() => result.current.selectFilter('mono'));
+    await act(() => result.current.adjustPhoto({ rotate: 90, flip: false }));
+    await act(() => result.current.selectFilter('dusk'));
+    await act(() => result.current.rebasePhoto());
+    expect(result.current.adjust).toEqual({ rotate: 0, flip: false });
+    expect(result.current.filter).toBe('dusk');
+
+    // Back to the step after the turn, then nothing: the steps before it were placed on the old photo.
+    await act(() => result.current.undo());
+    expect(result.current.filter).toBe('mono');
+    expect(result.current.adjust).toEqual({ rotate: 0, flip: false });
+    expect(result.current.canUndo).toBe(false);
+  });
+});

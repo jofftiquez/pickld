@@ -99,6 +99,8 @@ export const icons = {
   cameraOff: [p('M4 8h3l2-3h6l2 3h3v11H4z'), c(12, 13, 3.5), p('M3 3l18 18')],
   // Crop
   rotate: [p('M3 12a9 9 0 1 0 3-6.7L3 8'), p('M3 3v5h5')],
+  rotateRight: [p('M21 12a9 9 0 1 1-3-6.7L21 8'), p('M21 3v5h-5')],
+  crop: [p('M6 2v14a2 2 0 0 0 2 2h14'), p('M18 22V8a2 2 0 0 0-2-2H2')],
   mirror: [p('M12 3v18M8 7l-5 5 5 5M16 7l5 5-5 5')],
   fit: [p('M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5')],
   reset: [p('M9 14 4 9l5-5'), p('M4 9h10.5a5.5 5.5 0 0 1 0 11H11')],
