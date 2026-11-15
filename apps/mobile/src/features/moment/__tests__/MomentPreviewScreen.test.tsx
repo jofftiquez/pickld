@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react-native';
 
 import type { DayJar } from '@/features/days/useDayJar';
+import type { JarPageData } from '@/features/jar/jarPage';
 import type { ServerMoment } from '@/features/jar/todayGrid';
 import type { TodayJar } from '@/features/jar/useToday';
 
@@ -21,9 +22,10 @@ jest.mock('../MomentOptions', () => ({ MomentOptions: () => null }));
 jest.mock('@/components/Dialog', () => ({ Dialog: () => null }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 jest.mock('@/lib/supabase', () => ({ getSupabase: () => ({}) }));
+const mockJarPage: { data: JarPageData | undefined; refresh: jest.Mock } = { data: undefined, refresh: jest.fn() };
 jest.mock('@/features/jar/useJarPage', () => ({
   jarPageQueryKeys: { jar: (userId: string, jarId: string) => ['jarPage', userId, jarId] },
-  useJarPage: () => ({ data: undefined }),
+  useJarPage: () => mockJarPage,
 }));
 
 const moment = (id: string, slot: ServerMoment['slot']): ServerMoment => ({
@@ -83,6 +85,8 @@ beforeEach(() => {
   mockView.props = null;
   mockDayJar.mockClear();
   jest.clearAllMocks();
+  mockJarPage.data = undefined;
+  mockJarPage.refresh = jest.fn(() => Promise.resolve());
 });
 afterEach(() => jest.useRealTimers());
 
@@ -115,5 +119,48 @@ describe('/moment/preview', () => {
       const props = await renderScreen();
       expect(props.items?.map((item) => item.key)).toEqual(['m-today']);
     }
+  });
+
+  it('re-reads a jar page that lacks a moment posted since, so the photo isn’t its stretched thumbnail', async () => {
+    mockParams = { slot: 'whereami' };
+    const pageWith = (ids: string[]): JarPageData => ({
+      jar: {
+        id: 'jar-11',
+        user_id: 'u-1',
+        local_date: '2026-11-11',
+        tz: 'Asia/Manila',
+        moment_count: ids.length,
+        visible_count: ids.length,
+        like_count: 0,
+        comment_count: 0,
+      },
+      author: { username: 'joff', display_name: 'Joff' },
+      moments: ids.map((id) => ({
+        id,
+        slot: 'whereami' as const,
+        status: 'live',
+        visibility: 'readers' as const,
+        is_backfilled: false,
+        caption: null,
+        captured_at: null,
+        added_at: '2026-11-11T01:00:00Z',
+        edits: null,
+        like_count: 0,
+        thumbUrl: `https://x/thumb-${id}`,
+        fullUrl: `https://x/full-${id}`,
+      })),
+      viewerId: 'u-1',
+    });
+    // Read before m-today was posted: m-today shows its thumbnail, so the page is read again, once.
+    mockJarPage.data = pageWith([]);
+    const before = await renderScreen();
+    expect(before.items?.[0]?.uri).toBeNull();
+    expect(mockJarPage.refresh).toHaveBeenCalledTimes(1);
+    // Read with it: its full photo shows and nothing is read again.
+    mockJarPage.refresh.mockClear();
+    mockJarPage.data = pageWith(['m-today']);
+    const after = await renderScreen();
+    expect(after.items?.[0]?.uri).toBe('https://x/full-m-today');
+    expect(mockJarPage.refresh).not.toHaveBeenCalled();
   });
 });
