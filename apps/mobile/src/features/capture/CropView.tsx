@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,10 +9,22 @@ import { Icon } from '@/components/Icon';
 import { PillButton } from '@/components/PillButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextSizeSlider } from '@/features/edit/text/TextSizeSlider';
-import { fitFrames, type FitFrame, type Size } from '@/lib/image/crop';
+import {
+  fitBorderColorNames,
+  fitBorders,
+  fitCorners,
+  fitFrames,
+  type FitBorder,
+  type FitBorderColor,
+  type FitCorners,
+  type FitLayout,
+  type FitPlace,
+  type FitStyle,
+  type Size,
+} from '@/lib/image/crop';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
-import { colors, crop, fitFrameColors, radius, sizes, space } from '@/theme/tokens';
+import { colors, crop, fitBorderColors, fitFrameColors, radius, sizes, space } from '@/theme/tokens';
 
 import { CropHeaderAction } from './CropHeaderAction';
 import { CropPhoto } from './CropPhoto';
@@ -38,11 +51,15 @@ export type CropViewProps = {
    * 5:2 band; pan and zoom only, so Fill / Fit, Rotate and Flip are hidden (Reset stays).
    */
   mode?: 'gallery' | 'recrop' | 'avatar' | 'cover';
-  /** Moments only (D-152): Fill or Fit, and the frame style Fit draws around the photo. */
+  /**
+   * Moments only (D-152, D-154): Fill or Fit, and Fit's layout: where the photo sits, its frame style, border and
+   * corners. `onFitStyle` gets the part of the look that changed; `onFitPlace` every drag, pinch or double tap.
+   */
   layout?: CropLayout;
-  frame?: FitFrame;
+  fit?: FitLayout;
   onLayout?: (layout: CropLayout) => void;
-  onFrame?: (frame: FitFrame) => void;
+  onFitStyle?: (style: Partial<FitStyle>) => void;
+  onFitPlace?: (place: FitPlace) => void;
   insets: EdgeInsets;
   onChange: (state: CropState) => void;
   onZoom: (zoom: number) => void;
@@ -56,6 +73,9 @@ export type CropViewProps = {
 
 /** Each mode's copy under `crop` in en.json. */
 const COPY = { gallery: 'crop', recrop: 'crop.recrop', avatar: 'crop.avatar', cover: 'crop.cover' } as const;
+
+/** Fit's option groups (D-154), one row at a time under their own tabs, so the sheet keeps its height. */
+type FitTab = 'frame' | 'border' | 'corners';
 
 /** The zoom slider works in percent (100–300), as the design's range input does. */
 const PERCENT = 100;
@@ -71,8 +91,9 @@ const PERCENT = 100;
  */
 export function CropView(props: CropViewProps) {
   const { uri, image, slotLabel, state, busy, failed, insets, onChange, onZoom, mode = 'gallery' } = props;
-  const { layout = 'fill', frame: fitFrame = 'white', forDay = null } = props;
+  const { layout = 'fill', fit: fitLayout = null, forDay = null } = props;
   const { t } = useTranslation();
+  const [fitTab, setFitTab] = useState<FitTab>('frame');
   const profile = mode === 'avatar' || mode === 'cover';
   const copy = COPY[mode];
   // The frame's shape (lock chip, note): the moment copy unless it's a profile photo.
@@ -82,7 +103,7 @@ export function CropView(props: CropViewProps) {
   const frame = profile
     ? cropFrame(window, insets, CROP_RATIO[mode])
     : cropFrame(window, insets, CROP_RATIO.moment, MOMENT_CROP_SHEET_HEIGHT);
-  const fit = !profile && layout === 'fit' ? fitFrame : null;
+  const fit = !profile && layout === 'fit' ? fitLayout : null;
   const title = (
     <View style={styles.title}>
       <Text
@@ -135,6 +156,7 @@ export function CropView(props: CropViewProps) {
         aspectLabel={t(`${shape}.aspectLabel`)}
         circle={mode === 'avatar'}
         fit={fit}
+        onFitChange={props.onFitPlace}
       />
       <ScrollView
         style={styles.sheet}
@@ -160,32 +182,114 @@ export function CropView(props: CropViewProps) {
           />
         )}
         {fit ? (
-          <View
-            accessibilityRole="radiogroup"
-            accessibilityLabel={t('crop.frame.label')}
-            style={styles.swatches}
-            testID="crop-frames"
-          >
-            {fitFrames.map((key) => {
-              const selected = key === fit;
-              return (
-                <Pressable
-                  key={key}
-                  accessibilityRole="radio"
-                  accessibilityLabel={t('crop.frame.option', { name: t(`crop.frame.${key}`) })}
-                  accessibilityState={{ checked: selected }}
-                  onPress={() => props.onFrame?.(key)}
-                  style={[styles.swatch, selected && styles.swatchSelected]}
-                  testID={`crop-frame-${key}`}
-                >
-                  <View style={[styles.swatchFill, key === 'blur' ? null : { backgroundColor: fitFrameColors[key] }]}>
+          <View style={styles.fitOptions}>
+            <SegmentedControl
+              segments={[
+                { key: 'frame', label: t('crop.fitTabs.frame') },
+                { key: 'border', label: t('crop.fitTabs.border') },
+                { key: 'corners', label: t('crop.fitTabs.corners') },
+              ]}
+              selected={fitTab}
+              onSelect={setFitTab}
+              accessibilityLabel={t('crop.fitTabs.label')}
+              testID="crop-fit-tabs"
+            />
+            {fitTab === 'frame' ? (
+              <View
+                accessibilityRole="radiogroup"
+                accessibilityLabel={t('crop.frame.label')}
+                style={styles.swatches}
+                testID="crop-frames"
+              >
+                {fitFrames.map((key) => (
+                  <Choice
+                    key={key}
+                    label={t('crop.frame.option', { name: t(`crop.frame.${key}`) })}
+                    selected={key === fit.frame}
+                    onPress={() => props.onFitStyle?.({ frame: key })}
+                    round
+                    testID={`crop-frame-${key}`}
+                  >
                     {key === 'blur' ? (
                       <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={6} />
-                    ) : null}
-                  </View>
-                </Pressable>
-              );
-            })}
+                    ) : (
+                      <View style={[StyleSheet.absoluteFill, { backgroundColor: fitFrameColors[key] }]} />
+                    )}
+                  </Choice>
+                ))}
+              </View>
+            ) : fitTab === 'border' ? (
+              <View style={styles.swatches}>
+                <View
+                  accessibilityRole="radiogroup"
+                  accessibilityLabel={t('crop.border.label')}
+                  style={styles.group}
+                  testID="crop-borders"
+                >
+                  {fitBorders.map((key: FitBorder) => (
+                    <Choice
+                      key={key}
+                      label={t(`crop.border.${key}`)}
+                      selected={key === fit.border}
+                      onPress={() => props.onFitStyle?.({ border: key })}
+                      testID={`crop-border-${key}`}
+                    >
+                      <View
+                        style={[
+                          styles.glyph,
+                          key === 'none' ? styles.glyphNone : null,
+                          { borderWidth: crop.fitTileBorder[key] },
+                        ]}
+                      />
+                    </Choice>
+                  ))}
+                </View>
+                <View
+                  accessibilityRole="radiogroup"
+                  accessibilityLabel={t('crop.borderColor.label')}
+                  style={styles.group}
+                  testID="crop-border-colors"
+                >
+                  {fitBorderColorNames.map((key: FitBorderColor) => (
+                    <Choice
+                      key={key}
+                      label={t('crop.borderColor.option', { name: t(`crop.borderColor.${key}`) })}
+                      // Only a border has a colour: none shows no colour chosen.
+                      selected={fit.border !== 'none' && key === fit.borderColor}
+                      // Picking a colour with no border adds a thin one, so the choice shows at once.
+                      onPress={() =>
+                        props.onFitStyle?.(
+                          fit.border === 'none' ? { borderColor: key, border: 'thin' } : { borderColor: key },
+                        )
+                      }
+                      round
+                      testID={`crop-border-color-${key}`}
+                    >
+                      <View style={[StyleSheet.absoluteFill, { backgroundColor: fitBorderColors[key] }]} />
+                    </Choice>
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <View
+                accessibilityRole="radiogroup"
+                accessibilityLabel={t('crop.corners.label')}
+                style={styles.swatches}
+                testID="crop-corners"
+              >
+                {fitCorners.map((key: FitCorners) => (
+                  <Choice
+                    key={key}
+                    label={t(`crop.corners.${key}`)}
+                    selected={key === fit.corners}
+                    onPress={() => props.onFitStyle?.({ corners: key })}
+                    testID={`crop-corners-${key}`}
+                  >
+                    <View style={[styles.glyph, styles.glyphFilled, { borderRadius: crop.fitTileRadius[key] }]} />
+                  </Choice>
+                ))}
+              </View>
+            )}
           </View>
         ) : (
           <View style={styles.zoomRow}>
@@ -226,14 +330,44 @@ export function CropView(props: CropViewProps) {
           <CropToolButton
             icon="reset"
             label={t('crop.reset')}
-            accessibilityHint={t('crop.resetHint')}
+            accessibilityHint={t(fit ? 'crop.layout.resetHint' : 'crop.resetHint')}
             onPress={props.onReset}
             testID="crop-reset"
           />
         </View>
-        <Text style={[textStyle('label', '400'), styles.note]}>{t(`${shape}.note`)}</Text>
+        {/* Fit's options take the note's place, so the sheet keeps its height (MOMENT_CROP_SHEET_HEIGHT). */}
+        {fit ? null : <Text style={[textStyle('label', '400'), styles.note]}>{t(`${shape}.note`)}</Text>}
       </ScrollView>
     </GestureHandlerRootView>
+  );
+}
+
+type ChoiceProps = {
+  /** Already translated, e.g. "Fit, cream frame". */
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  /** A round colour swatch; otherwise a rounded tile around a little picture of the choice. */
+  round?: boolean;
+  testID: string;
+  children: ReactNode;
+};
+
+/** One of Fit's choices (D-152, D-154): a 44-point radio with an ink ring when chosen. */
+function Choice({ label, selected, onPress, round = false, testID, children }: ChoiceProps) {
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: selected }}
+      onPress={onPress}
+      style={[styles.swatch, round ? styles.round : styles.tile, selected && styles.swatchSelected]}
+      testID={testID}
+    >
+      <View style={[styles.swatchFill, round ? styles.round : styles.tileFill, round ? null : styles.tileCentre]}>
+        {children}
+      </View>
+    </Pressable>
   );
 }
 
@@ -274,22 +408,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: sizes.minTap,
   },
+  // Fit's tabs and the row under them, close together: as tall as the zoom row plus the note they replace.
+  fitOptions: { gap: space.xs },
+  group: { flexDirection: 'row', gap: space.xs },
   swatch: {
     width: crop.frameSwatch,
     height: crop.frameSwatch,
-    borderRadius: crop.frameSwatch / 2,
     padding: 3,
     borderWidth: 2,
     borderColor: 'transparent',
   },
+  round: { borderRadius: crop.frameSwatch / 2 },
+  tile: { borderRadius: crop.toolRadius / 2 },
   swatchSelected: { borderColor: colors.ink },
   swatchFill: {
     flex: 1,
-    borderRadius: crop.frameSwatch / 2,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
   },
+  tileFill: { borderRadius: crop.toolRadius / 2 - 3, backgroundColor: colors.subtle, borderWidth: 0 },
+  tileCentre: { alignItems: 'center', justifyContent: 'center' },
+  // A little photo on each border and corner choice: its outline as thick as the border, its corners as round.
+  glyph: { width: crop.fitTileGlyph, height: crop.fitTileGlyph, borderColor: colors.ink, borderRadius: 2 },
+  glyphNone: { borderStyle: 'dashed', borderColor: colors.muted },
+  glyphFilled: { backgroundColor: colors.ink },
   note: { color: colors.muted, textAlign: 'center', minHeight: crop.noteHeight },
   error: { color: colors.danger, textAlign: 'center' },
 });

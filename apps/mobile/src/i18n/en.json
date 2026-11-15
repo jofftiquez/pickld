@@ -823,7 +823,14 @@
       "label": "Fill or fit the 3:4 frame",
       "fill": "Fill",
       "fit": "Fit",
-      "fitHint": "The whole photo, inside the frame"
+      "fitHint": "Drag to move · pinch to resize · double tap to center",
+      "resetHint": "Puts the photo back whole and centered, unturned"
+    },
+    "fitTabs": {
+      "label": "Fit options",
+      "frame": "Frame",
+      "border": "Border",
+      "corners": "Corners"
     },
     "frame": {
       "label": "Frame style",
@@ -833,6 +840,27 @@
       "cream": "cream",
       "black": "black",
       "blur": "blurred photo"
+    },
+    "border": {
+      "label": "Border width",
+      "none": "Fit, no border",
+      "thin": "Fit, thin border",
+      "medium": "Fit, medium border",
+      "thick": "Fit, thick border"
+    },
+    "borderColor": {
+      "label": "Border color",
+      "option": "Fit, {{name}} border",
+      "white": "white",
+      "cream": "cream",
+      "black": "black"
+    },
+    "corners": {
+      "label": "Corner shape",
+      "none": "Fit, square corners",
+      "small": "Fit, small rounded corners",
+      "medium": "Fit, medium rounded corners",
+      "large": "Fit, large rounded corners"
     },
     "note": "Every Pickld moment is 3:4, so your jars always line up.",
     "done": "Next: edit",

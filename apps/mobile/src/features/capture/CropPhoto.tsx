@@ -2,14 +2,28 @@ import { Image } from 'expo-image';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
-import { GestureDetector, usePanGesture, usePinchGesture, useSimultaneousGestures } from 'react-native-gesture-handler';
+import {
+  GestureDetector,
+  usePanGesture,
+  usePinchGesture,
+  useSimultaneousGestures,
+  useTapGesture,
+} from 'react-native-gesture-handler';
 
 import { Icon } from '@/components/Icon';
-import type { FitFrame, Size } from '@/lib/image/crop';
+import {
+  clampFitLayout,
+  DEFAULT_FIT_PLACE,
+  fitPlacement,
+  rotatedSize,
+  type FitLayout,
+  type FitPlace,
+  type Size,
+} from '@/lib/image/crop';
 import { textStyle } from '@/theme/text';
-import { colors, crop, fitFrameColors, radius } from '@/theme/tokens';
+import { colors, crop, fitBorderColors, fitFrameColors, radius } from '@/theme/tokens';
 
-import { containScale, coverScale, panCrop, zoomCrop, type CropState } from './cropMath';
+import { coverScale, panCrop, zoomCrop, type CropState } from './cropMath';
 
 export type CropPhotoProps = {
   uri: string;
@@ -28,10 +42,13 @@ export type CropPhotoProps = {
   /** The avatar's circle guide instead of the thirds grid (D-79): the corners outside it are dimmed. */
   circle?: boolean;
   /**
-   * Fit (D-152): the whole photo inside the frame on this frame style, as preparation draws it; drag and pinch
-   * do nothing. Null or absent: Fill, today's crop.
+   * Fit (D-152, D-154): the whole photo inside the frame where this layout puts it, with its border and corners,
+   * on its frame style, as preparation draws it. No crop chrome; drag moves the photo, pinch resizes it and a
+   * double tap puts it back whole and centred, each step clamped so it stays whole inside the frame
+   * (`onFitChange`). Null or absent: Fill, today's crop.
    */
-  fit?: FitFrame | null;
+  fit?: FitLayout | null;
+  onFitChange?: (place: FitPlace) => void;
 };
 
 /**
@@ -77,7 +94,8 @@ const CORNERS = [
 /**
  * The dark photo area of the Crop screen (FR-CAP-03): the photo under a fixed frame with rule-of-thirds
  * grid (or the avatar's circle guide) and corner marks, the aspect lock chip and the gesture hint. Drag moves the photo, pinch zooms it about
- * the frame's centre; both stay clamped so the frame is always filled. Nothing animates (Reduce Motion).
+ * the frame's centre; both stay clamped so the frame is always filled. In Fit (D-154) the frame shows its style
+ * with the photo laid out on it and no crop chrome. Nothing animates (Reduce Motion).
  */
 export function CropPhoto({
   uri,
@@ -90,57 +108,109 @@ export function CropPhoto({
   aspectLabel,
   circle = false,
   fit = null,
+  onFitChange,
 }: CropPhotoProps) {
   const { t } = useTranslation();
+  // The turned photo's size, and Fit's layout pulled back inside the frame: what is drawn, and where gestures start.
+  const turned = rotatedSize(image, state.rotation);
+  const placed = fit ? clampFitLayout(turned, fit, frame) : null;
   // Gesture callbacks read the latest state, not the one from when they were made.
-  const latest = useRef(state);
-  const fitting = useRef(fit !== null);
+  const latest = useRef({ state, placed, turned, onFitChange });
   useEffect(() => {
-    latest.current = state;
-    fitting.current = fit !== null;
-  }, [state, fit]);
+    latest.current = { state, placed, turned, onFitChange };
+  });
   const panStart = useRef(state.pan);
   const zoomStart = useRef(state.zoom);
+  const placeStart = useRef<FitPlace>(DEFAULT_FIT_PLACE);
+  // Fit: the layout moved or resized from where the gesture started, clamped, handed up.
+  const moveFit = (change: Partial<FitPlace>) => {
+    const { placed: now, turned: size, onFitChange: report } = latest.current;
+    if (!now) return;
+    const next = clampFitLayout(size, { ...now, ...placeStart.current, ...change }, frame);
+    report?.({ scale: next.scale, x: next.x, y: next.y });
+  };
 
   const pan = usePanGesture({
     runOnJS: true,
     maxPointers: 1,
     testID: 'crop-pan',
     onActivate: () => {
-      panStart.current = latest.current.pan;
+      panStart.current = latest.current.state.pan;
+      if (latest.current.placed) placeStart.current = latest.current.placed;
     },
     onUpdate: (e) => {
-      if (fitting.current) return;
+      if (latest.current.placed) {
+        const start = placeStart.current;
+        moveFit({ x: start.x + e.translationX / frame.width, y: start.y + e.translationY / frame.height });
+        return;
+      }
       const next = { x: panStart.current.x + e.translationX, y: panStart.current.y + e.translationY };
-      onChange(panCrop(latest.current, next, image, frame));
+      onChange(panCrop(latest.current.state, next, image, frame));
     },
   });
   const pinch = usePinchGesture({
     runOnJS: true,
     testID: 'crop-pinch',
     onActivate: () => {
-      zoomStart.current = latest.current.zoom;
+      zoomStart.current = latest.current.state.zoom;
+      if (latest.current.placed) placeStart.current = latest.current.placed;
     },
     onUpdate: (e) => {
-      if (fitting.current) return;
-      onChange(zoomCrop(latest.current, zoomStart.current * e.scale, image, frame));
+      if (latest.current.placed) {
+        moveFit({ scale: placeStart.current.scale * e.scale });
+        return;
+      }
+      onChange(zoomCrop(latest.current.state, zoomStart.current * e.scale, image, frame));
     },
   });
-  const gesture = useSimultaneousGestures(pan, pinch);
+  // Fit only: a double tap puts the photo back whole and centred.
+  const recentre = useTapGesture({
+    runOnJS: true,
+    numberOfTaps: 2,
+    enabled: fit !== null,
+    testID: 'crop-double-tap',
+    onActivate: () => {
+      if (!latest.current.placed) return;
+      placeStart.current = DEFAULT_FIT_PLACE;
+      moveFit({});
+    },
+  });
+  const gesture = useSimultaneousGestures(pan, pinch, recentre);
 
   const width = areaWidth;
   const inset = (areaWidth - frame.width) / 2;
   const height = frame.height + crop.frameInsetY * 2;
-  // Fit: the whole photo, centred, whatever the zoom and pan say (they come back on Fill).
-  const scale = fit
-    ? containScale(image, frame, state.rotation)
-    : coverScale(image, frame, state.rotation) * state.zoom;
-  const shown = { width: image.width * scale, height: image.height * scale };
-  const centre = fit ? { x: width / 2, y: height / 2 } : { x: width / 2 + state.pan.x, y: height / 2 + state.pan.y };
   const bottom = crop.frameInsetY + frame.height;
   // Turned first, then mirrored on screen: the order the image pipeline applies them.
   const turn = [{ scaleX: state.flip ? -1 : 1 }, { rotate: `${state.rotation}deg` }];
   const cover = coverScale(image, frame, state.rotation);
+  // Fit: where the layout puts the photo in the frame, in points (zoom and pan come back on Fill).
+  const place = placed ? fitPlacement(turned, frame, placed) : null;
+  const scale = place ? place.photo.width / turned.width : cover * state.zoom;
+  const shown = { width: image.width * scale, height: image.height * scale };
+  const centre = { x: width / 2 + state.pan.x, y: height / 2 + state.pan.y };
+  const photo = (
+    // Full resolution, held in memory: the view's size changes on every pinch step, and expo-image would
+    // otherwise shrink the photo to each size with a fresh decode from disk, cancelled by the next step, so the
+    // photo showed a smaller copy stretched up while zooming (D-139).
+    <Image
+      source={{ uri }}
+      allowDownscaling={false}
+      cachePolicy="memory"
+      contentFit="fill"
+      accessible
+      accessibilityLabel={t('crop.photo')}
+      style={{
+        position: 'absolute',
+        left: place ? place.photo.width / 2 - shown.width / 2 : centre.x - shown.width / 2,
+        top: place ? place.photo.height / 2 - shown.height / 2 : centre.y - shown.height / 2,
+        width: shown.width,
+        height: shown.height,
+        transform: turn,
+      }}
+      testID="crop-photo"
+    />
+  );
 
   return (
     <GestureDetector gesture={gesture}>
@@ -153,11 +223,11 @@ export function CropPhoto({
             style={[
               styles.backdrop,
               { left: inset, top: crop.frameInsetY, width: frame.width, height: frame.height },
-              fit === 'blur' ? null : { backgroundColor: fitFrameColors[fit] },
+              fit.frame === 'blur' ? null : { backgroundColor: fitFrameColors[fit.frame] },
             ]}
-            testID={`crop-fit-backdrop-${fit}`}
+            testID={`crop-fit-backdrop-${fit.frame}`}
           >
-            {fit === 'blur' ? (
+            {fit.frame === 'blur' ? (
               <Image
                 source={{ uri }}
                 cachePolicy="memory"
@@ -175,26 +245,45 @@ export function CropPhoto({
             ) : null}
           </View>
         ) : null}
-        {/* Full resolution, held in memory: the view's size changes on every pinch step, and expo-image would
-            otherwise shrink the photo to each size with a fresh decode from disk, cancelled by the next step,
-            so the photo showed a smaller copy stretched up while zooming (D-139). */}
-        <Image
-          source={{ uri }}
-          allowDownscaling={false}
-          cachePolicy="memory"
-          contentFit="fill"
-          accessible
-          accessibilityLabel={t('crop.photo')}
-          style={{
-            position: 'absolute',
-            left: centre.x - shown.width / 2,
-            top: centre.y - shown.height / 2,
-            width: shown.width,
-            height: shown.height,
-            transform: turn,
-          }}
-          testID="crop-photo"
-        />
+        {place && placed ? (
+          <>
+            {/* The border: a rounded box of its colour under the photo, as wide on every side. */}
+            <View
+              pointerEvents="none"
+              style={[
+                styles.placed,
+                {
+                  left: inset + place.box.x,
+                  top: crop.frameInsetY + place.box.y,
+                  width: place.box.width,
+                  height: place.box.height,
+                  borderRadius: place.radius,
+                },
+                place.border > 0 ? { backgroundColor: fitBorderColors[placed.borderColor] } : null,
+              ]}
+              testID="crop-fit-box"
+            />
+            {/* The photo, clipped to its own corners inside the border. */}
+            <View
+              pointerEvents="none"
+              style={[
+                styles.placed,
+                {
+                  left: inset + place.photo.x,
+                  top: crop.frameInsetY + place.photo.y,
+                  width: place.photo.width,
+                  height: place.photo.height,
+                  borderRadius: Math.max(0, place.radius - place.border),
+                },
+              ]}
+              testID="crop-fit-photo"
+            >
+              {photo}
+            </View>
+          </>
+        ) : (
+          photo
+        )}
         <View
           pointerEvents="none"
           style={StyleSheet.absoluteFill}
@@ -205,47 +294,52 @@ export function CropPhoto({
           <View style={[styles.scrim, { left: 0, right: 0, top: bottom, bottom: 0 }]} />
           <View style={[styles.scrim, { left: 0, width: inset, top: crop.frameInsetY, height: frame.height }]} />
           <View style={[styles.scrim, { right: 0, width: inset, top: crop.frameInsetY, height: frame.height }]} />
-          <View
-            style={[styles.frame, { left: inset, top: crop.frameInsetY, width: frame.width, height: frame.height }]}
-            testID="crop-frame"
-          >
-            {circle ? (
-              <View style={styles.circleClip} testID="crop-circle">
-                {/* A ring as thick as the radius: its inner edge is the guide, its body dims the corners. */}
-                <View
-                  style={[
-                    styles.circleRing,
-                    {
-                      left: -frame.width / 2,
-                      top: -frame.height / 2,
-                      width: frame.width * 2,
-                      height: frame.height * 2,
-                      borderRadius: frame.width,
-                      borderWidth: frame.width / 2,
-                    },
-                  ]}
-                />
-                <View style={[styles.circleGuide, { borderRadius: frame.width / 2 }]} />
-              </View>
-            ) : (
-              <>
-                {THIRDS.map((at) => (
-                  <View key={`v${at}`} style={[styles.vertical, { left: at }]} />
-                ))}
-                {THIRDS.map((at) => (
-                  <View key={`h${at}`} style={[styles.horizontal, { top: at }]} />
-                ))}
-              </>
-            )}
-            {CORNERS.map((corner, i) => (
-              <View key={i} style={[styles.corner, corner]} />
-            ))}
+          {/* Fit is a layout, not a crop: no frame outline, grid or corner marks over it (D-154). */}
+          {place ? null : (
+            <View
+              style={[styles.frame, { left: inset, top: crop.frameInsetY, width: frame.width, height: frame.height }]}
+              testID="crop-frame"
+            >
+              {circle ? (
+                <View style={styles.circleClip} testID="crop-circle">
+                  {/* A ring as thick as the radius: its inner edge is the guide, its body dims the corners. */}
+                  <View
+                    style={[
+                      styles.circleRing,
+                      {
+                        left: -frame.width / 2,
+                        top: -frame.height / 2,
+                        width: frame.width * 2,
+                        height: frame.height * 2,
+                        borderRadius: frame.width,
+                        borderWidth: frame.width / 2,
+                      },
+                    ]}
+                  />
+                  <View style={[styles.circleGuide, { borderRadius: frame.width / 2 }]} />
+                </View>
+              ) : (
+                <>
+                  {THIRDS.map((at) => (
+                    <View key={`v${at}`} style={[styles.vertical, { left: at }]} />
+                  ))}
+                  {THIRDS.map((at) => (
+                    <View key={`h${at}`} style={[styles.horizontal, { top: at }]} />
+                  ))}
+                </>
+              )}
+              {CORNERS.map((corner, i) => (
+                <View key={i} style={[styles.corner, corner]} />
+              ))}
+            </View>
+          )}
+        </View>
+        {place ? null : (
+          <View accessible accessibilityLabel={aspectLabel} style={styles.chip} testID="crop-aspect-chip">
+            <Icon name="lock" color="ink" size={crop.chipIcon} strokeWidth={2.6} />
+            <Text style={[textStyle('label', '700'), styles.chipText]}>{aspect}</Text>
           </View>
-        </View>
-        <View accessible accessibilityLabel={aspectLabel} style={styles.chip} testID="crop-aspect-chip">
-          <Icon name="lock" color="ink" size={crop.chipIcon} strokeWidth={2.6} />
-          <Text style={[textStyle('label', '700'), styles.chipText]}>{aspect}</Text>
-        </View>
+        )}
         <Text style={[textStyle('bodySmall'), styles.hint]}>{t(fit ? 'crop.layout.fitHint' : 'crop.hint')}</Text>
       </View>
     </GestureDetector>
@@ -256,6 +350,7 @@ const styles = StyleSheet.create({
   root: { overflow: 'hidden', backgroundColor: colors.editor },
   scrim: { position: 'absolute', backgroundColor: colors.cropScrim },
   backdrop: { position: 'absolute', overflow: 'hidden' },
+  placed: { position: 'absolute', overflow: 'hidden' },
   frame: { position: 'absolute', borderWidth: crop.frameOutline, borderColor: colors.cropOutline },
   vertical: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: colors.cropGrid },
   horizontal: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: colors.cropGrid },
