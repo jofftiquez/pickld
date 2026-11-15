@@ -87,8 +87,14 @@ const mockMirror = { on: true };
 jest.mock('../cameraPrefs', () => ({ getMirrorSelfies: async () => mockMirror.on }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 // The Replace dialog (kit Dialog) reads Reduce Motion from Reanimated. expo-router's testing library mocks
-// Reanimated with `react-native-reanimated/mock`, which can't load here; give it the one hook it needs.
-jest.mock('react-native-reanimated/mock', () => ({ __esModule: true, default: {}, useReducedMotion: () => false }));
+// Reanimated with `react-native-reanimated/mock`, which can't load here; give it the hook it needs, and the
+// two functions the gallery grid's gesture detector looks for.
+jest.mock('react-native-reanimated/mock', () => ({
+  __esModule: true,
+  default: { createAnimatedComponent: <T,>(component: T) => component },
+  isSharedValue: () => false,
+  useReducedMotion: () => false,
+}));
 
 const userId = '7b0b6a2e-3c1f-4f53-9a51-0c9a0b1d2e3f';
 const mockToday = {

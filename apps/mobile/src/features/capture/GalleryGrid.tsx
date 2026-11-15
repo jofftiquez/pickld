@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -14,11 +14,13 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
+import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-native-gesture-handler';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { formatDate, formatShortDate, formatTime } from '@/lib/format';
+import { selectionHaptic, tapHaptic } from '@/lib/haptics';
 import { addDays, localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { useLargeText } from '@/lib/useLargeText';
@@ -31,10 +33,12 @@ import {
   galleryItems,
   itemOffsets,
   needsOlder,
+  photoAt,
   targetIndex,
   type GalleryItem,
   type LibraryPhoto,
 } from './galleryDays';
+import { GalleryPeek } from './GalleryPeek';
 import {
   chooseMorePhotos,
   libraryPhotoFile,
@@ -51,6 +55,11 @@ const MAX_SEEK_PAGES = 25;
 /** How long the date pill stays after scrolling stops. */
 const PILL_HOLD_MS = 1200;
 const PILL_FADE_MS = 150;
+/** How long a finger rests on a photo before its preview opens. */
+const PEEK_HOLD_MS = 300;
+
+type Peek = { photo: LibraryPhoto; pinned: boolean };
+type Rect = { x: number; y: number; width: number; height: number };
 
 export type GalleryGridProps = {
   access: LibraryAccess;
@@ -69,7 +78,8 @@ export type GalleryGridProps = {
  * Choose a photo (FR-CAP-02; no design, after the Crop and Camera screens): the phone's photos grouped by
  * the day they were taken, with sticky day headers and a date pill while scrolling, so someone backdating
  * can see which day they are in. The day being filled is tinted, tagged Filling and outlined, and the grid
- * opens on it. Uses only the Photos access the user already gave.
+ * opens on it. Holding a photo previews it large with its date (`GalleryPeek`). Uses only the Photos access
+ * the user already gave.
  */
 export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUnavailable }: GalleryGridProps) {
   const { t } = useTranslation();
@@ -175,6 +185,7 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
   };
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = event.nativeEvent.contentOffset.y;
+    scrollY.current = y;
     let lo = 0;
     let hi = items.length - 1;
     while (lo < hi) {
@@ -185,6 +196,7 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
     const day = items[lo]?.localDate;
     if (day !== topDay) setTopDay(day);
   };
+  const scrollY = useRef(0);
   const pillDay = topDay !== undefined ? topDay : items[initialIndex ?? 0]?.localDate;
 
   const pickPhoto = async (photo: LibraryPhoto) => {
@@ -200,6 +212,61 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
       setOpening(null);
     }
   };
+
+  // The preview: a held photo opens it; letting go closes it, or picks the photo over Use this photo.
+  const [peek, setPeek] = useState<Peek | null>(null);
+  const [overUse, setOverUse] = useState(false);
+  const held = useRef<LibraryPhoto | null>(null);
+  const useButton = useRef<ComponentRef<typeof View>>(null);
+  const useRect = useRef<Rect | null>(null);
+  const finger = useRef({ x: 0, y: 0 });
+  const onUse = (x: number, y: number) => {
+    const r = useRect.current;
+    const slop = space.sm;
+    return r !== null && x >= r.x - slop && x <= r.x + r.width + slop && y >= r.y - slop && y <= r.y + r.height + slop;
+  };
+  const trackFinger = (x: number, y: number) => {
+    finger.current = { x, y };
+    useButton.current?.measureInWindow((rx, ry, rw, rh) => {
+      useRect.current = { x: rx, y: ry, width: rw, height: rh };
+      const over = held.current !== null && onUse(finger.current.x, finger.current.y);
+      setOverUse((was) => {
+        if (over && !was) selectionHaptic();
+        return over;
+      });
+    });
+  };
+  const closePeek = () => {
+    held.current = null;
+    useRect.current = null;
+    setOverUse(false);
+    setPeek(null);
+  };
+  const hold = usePanGesture({
+    runOnJS: true,
+    maxPointers: 1,
+    activateAfterLongPress: PEEK_HOLD_MS,
+    testID: 'gallery-peek-hold',
+    onActivate: (e) => {
+      // The sticky day header covers the top of the list.
+      if (opening !== null || e.y < dayHeight) return;
+      const photo = photoAt(items, offsets, e.x, e.y + scrollY.current, cell, sizes.galleryGap);
+      if (photo === null) return;
+      tapHaptic();
+      held.current = photo;
+      setPeek({ photo, pinned: false });
+    },
+    onUpdate: (e) => {
+      if (held.current !== null) trackFinger(e.absoluteX, e.absoluteY);
+    },
+    onDeactivate: (e) => {
+      const photo = held.current;
+      if (photo !== null && !e.canceled && onUse(e.absoluteX, e.absoluteY)) void pickPhoto(photo);
+    },
+    onFinalize: () => {
+      if (held.current !== null) closePeek();
+    },
+  });
 
   const renderItem: ListRenderItem<GalleryItem> = ({ item }) => {
     const isTarget = item.localDate !== null && item.localDate === target;
@@ -242,6 +309,10 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
             }
             accessibilityHint={t('gallery.photoHint')}
             accessibilityState={{ busy: opening === photo.id }}
+            accessibilityActions={[{ name: 'preview', label: t('gallery.preview') }]}
+            onAccessibilityAction={(e) => {
+              if (e.nativeEvent.actionName === 'preview') setPeek({ photo, pinned: true });
+            }}
             onPress={() => void pickPhoto(photo)}
             style={[
               styles.cell,
@@ -270,8 +341,16 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
   const filling = target === null ? null : formatShortDate(new Date(`${target}T00:00:00Z`), 'UTC');
   const pillIsTarget = pillDay !== undefined && pillDay !== null && pillDay === target;
 
+  const peekWhen = (photo: LibraryPhoto) =>
+    photo.creationTime === null
+      ? t('gallery.noDate')
+      : t('gallery.previewWhen', {
+          date: dayLabel(localDateIn(new Date(photo.creationTime), tz)),
+          time: formatTime(new Date(photo.creationTime), tz),
+        });
+
   return (
-    <View style={styles.root} testID="gallery-grid">
+    <GestureHandlerRootView style={styles.root} testID="gallery-grid">
       <View style={[styles.bar, { paddingTop: insets.top + space.sm }]}>
         <RoundIconButton
           icon="close"
@@ -322,48 +401,73 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
           <Text style={[textStyle('body'), { color: colors.muted }]}>{t('gallery.empty')}</Text>
         </View>
       ) : (
-        <View style={styles.list}>
-          <FlatList
-            data={items}
-            keyExtractor={(item) => item.key}
-            renderItem={renderItem}
-            getItemLayout={(_, index) => ({
-              length: (offsets[index + 1] ?? 0) - (offsets[index] ?? 0),
-              offset: offsets[index] ?? 0,
-              index,
-            })}
-            stickyHeaderIndices={sticky}
-            initialScrollIndex={initialIndex ?? undefined}
-            onEndReached={loadMore}
-            onEndReachedThreshold={2}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-            onScrollBeginDrag={showPill}
-            onScrollEndDrag={hidePillSoon}
-            onMomentumScrollBegin={showPill}
-            onMomentumScrollEnd={hidePillSoon}
-            contentContainerStyle={{ paddingBottom: insets.bottom + space.xxl }}
-            testID="gallery-list"
-          />
-          {pillDay !== undefined ? (
-            <Animated.View
-              pointerEvents="none"
-              accessible={false}
-              importantForAccessibility="no-hide-descendants"
-              style={[
-                styles.pill,
-                { bottom: insets.bottom + space.lg, opacity: pill },
-                pillIsTarget ? styles.pillTarget : null,
-              ]}
-            >
-              <Text style={[textStyle('label'), { color: colors.surface }]} numberOfLines={1}>
-                {dayLabel(pillDay)}
-              </Text>
-            </Animated.View>
-          ) : null}
-        </View>
+        <GestureDetector gesture={hold}>
+          <View style={styles.list}>
+            <FlatList
+              data={items}
+              keyExtractor={(item) => item.key}
+              renderItem={renderItem}
+              getItemLayout={(_, index) => ({
+                length: (offsets[index + 1] ?? 0) - (offsets[index] ?? 0),
+                offset: offsets[index] ?? 0,
+                index,
+              })}
+              stickyHeaderIndices={sticky}
+              initialScrollIndex={initialIndex ?? undefined}
+              onEndReached={loadMore}
+              onEndReachedThreshold={2}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
+              onScrollBeginDrag={showPill}
+              onScrollEndDrag={hidePillSoon}
+              onMomentumScrollBegin={showPill}
+              onMomentumScrollEnd={hidePillSoon}
+              contentContainerStyle={{ paddingBottom: insets.bottom + space.xxl }}
+              testID="gallery-list"
+            />
+            {pillDay !== undefined ? (
+              <Animated.View
+                pointerEvents="none"
+                accessible={false}
+                importantForAccessibility="no-hide-descendants"
+                style={[
+                  styles.pill,
+                  { bottom: insets.bottom + space.lg, opacity: pill },
+                  pillIsTarget ? styles.pillTarget : null,
+                ]}
+              >
+                <Text style={[textStyle('label'), { color: colors.surface }]} numberOfLines={1}>
+                  {dayLabel(pillDay)}
+                </Text>
+              </Animated.View>
+            ) : null}
+          </View>
+        </GestureDetector>
       )}
-    </View>
+
+      {peek !== null ? (
+        <GalleryPeek
+          photo={peek.photo}
+          when={peekWhen(peek.photo)}
+          isTarget={
+            target !== null &&
+            peek.photo.creationTime !== null &&
+            localDateIn(new Date(peek.photo.creationTime), tz) === target
+          }
+          pinned={peek.pinned}
+          overUse={overUse}
+          useRef={useButton}
+          insets={insets}
+          reduceMotion={reduceMotion}
+          onUse={() => {
+            const photo = peek.photo;
+            closePeek();
+            void pickPhoto(photo);
+          }}
+          onClose={closePeek}
+        />
+      ) : null}
+    </GestureHandlerRootView>
   );
 }
 
