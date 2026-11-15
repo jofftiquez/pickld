@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
@@ -29,28 +29,64 @@ export const SPLASH_LOADING_STEP_MS = motion.fast;
 export const SPLASH_HOLD_LAYERS = MAX_LAYERS - 1;
 export const SPLASH_COMPLETE_MS = motion.base;
 export const SPLASH_FADE_MS = motion.base;
+// The native launch screen stays up until this overlay is on screen with its logo drawn, so the hand-over
+// shows no blank frame. If the logo never reports in, the overlay takes over anyway after this long.
+export const SPLASH_SHOW_TIMEOUT_MS = motion.base * 2;
 
 type Props = {
   /** The app has finished loading: the jar fills the rest of the way and the overlay fades out. */
   ready: boolean;
+  /**
+   * The overlay is on screen behind the native launch screen, which can now hide. The jar starts filling once
+   * the returned promise settles (the native screen is going), so the fill isn't spent out of sight.
+   */
+  onShown: () => Promise<void> | void;
   onHidden: () => void;
 };
 
-export function SplashOverlay({ ready, onHidden }: Props) {
+export function SplashOverlay({ ready, onShown, onHidden }: Props) {
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   // Layers in the jar, 0–8. Starts empty, like the native launch image.
   const level = useSharedValue(0);
   const opacity = useSharedValue(1);
+  const [laidOut, setLaidOut] = useState(false);
+  const [logoShown, setLogoShown] = useState(false);
+  const showLogo = useCallback(() => setLogoShown(true), []);
+  // Until then the overlay sits under the native launch screen: nothing animates out of sight.
+  const shown = laidOut && logoShown;
+  const [uncovered, setUncovered] = useState(false);
 
   useEffect(() => {
+    if (!laidOut || logoShown) return;
+    const timer = setTimeout(showLogo, SPLASH_SHOW_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [laidOut, logoShown, showLogo]);
+
+  useEffect(() => {
+    if (!shown) return;
+    let live = true;
+    void Promise.resolve()
+      .then(onShown)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setUncovered(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [shown, onShown]);
+
+  useEffect(() => {
+    if (!uncovered) return;
     const fadeOut = () => {
       'worklet';
       opacity.value = withTiming(0, { duration: SPLASH_FADE_MS }, (finished) => {
         if (finished) scheduleOnRN(onHidden);
       });
     };
-    // Reduce Motion: the jar stays still; the splash only cross-fades to the app.
+    // Reduce Motion: the jar stays still and the splash goes once ready. Reanimated follows the system setting
+    // and skips the fade's timing, so it is a cut to the app.
     if (reduceMotion) {
       if (ready) fadeOut();
       return;
@@ -69,7 +105,7 @@ export function SplashOverlay({ ready, onHidden }: Props) {
         if (finished) fadeOut();
       },
     );
-  }, [ready, reduceMotion, level, opacity, onHidden]);
+  }, [uncovered, ready, reduceMotion, level, opacity, onHidden]);
 
   const fade = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
@@ -80,12 +116,21 @@ export function SplashOverlay({ ready, onHidden }: Props) {
       accessibilityLabel={t('brand.loading')}
       accessibilityRole="progressbar"
       testID="splash-overlay"
+      onLayout={() => setLaidOut(true)}
     >
       <View style={styles.canvas}>
         <View style={styles.jar}>
           <SplashJar level={level} />
         </View>
-        <Image source={logo} style={styles.logo} contentFit="contain" accessible={false} testID="splash-logo" />
+        <Image
+          source={logo}
+          style={styles.logo}
+          contentFit="contain"
+          accessible={false}
+          testID="splash-logo"
+          onDisplay={showLogo}
+          onError={showLogo}
+        />
       </View>
     </Animated.View>
   );
