@@ -163,7 +163,7 @@
     "quietTitle": "Nothing new yet",
     "quietBody": "When the people you read add moments, they show up here.",
     "meta": "{{slot}} · {{when}}",
-    "metaAddedLater": "{{slot}} · {{when}} · Added later",
+    "metaAddedLater": "{{slot}} · For {{when}} · Added\u00a0later",
     "cardLabel": "{{name}}, {{slot}}, {{when}}",
     "private": "Only you can see it",
     "openHint": "Opens the moment’s comments",
