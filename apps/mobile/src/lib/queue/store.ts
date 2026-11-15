@@ -408,8 +408,9 @@ export type SaveEditsInput = z.infer<typeof saveEditsInputSchema>;
  * stays a draft on the phone (never uploaded); without it a draft is finished and uploads. The photo file is not touched (FR-CAP-08), unless
  * the editor turned or mirrored it (`photo`: newly prepared full and thumbnail files). Those are copied into
  * app storage and swapped in by the same update as the edits, which were placed for them, so the row never
- * has one without the other; the old files are deleted after. With a photo it throws QueueItemBusyError
- * (and keeps everything as it was) while uploading or once uploaded.
+ * has one without the other; the old files are deleted after. The crop choices stay: they no longer prepare
+ * anything, but a photo framed by Fit stays known as framed, so the editor keeps its frame (Flip only). With a
+ * photo it throws QueueItemBusyError (and keeps everything as it was) while uploading or once uploaded.
  */
 export async function saveEdits(
   id: number,
@@ -446,7 +447,7 @@ export async function saveEdits(
       copies.push(thumb);
       const { changes } = await db.runAsync(
         `UPDATE queue_items SET caption = ?, visibility = ?, is_private = ?, edits = ?, draft = ?, editing_since = NULL,
-           photo_file = ?, thumb_file = ?, prepared = 1, crop = NULL
+           photo_file = ?, thumb_file = ?, prepared = 1
          WHERE id = ? AND state NOT IN ('uploading', 'uploaded')`,
         ...fields,
         full.name,

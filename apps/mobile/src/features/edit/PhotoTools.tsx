@@ -9,7 +9,8 @@ export type PhotoToolsProps = {
   busy: boolean;
   /** Turned off until the photo is ready to change (a just-taken photo still being prepared). */
   disabled?: boolean;
-  onRotate: () => void;
+  /** Left out for a photo framed by Fit: a quarter turn would cut the frame's sides away. */
+  onRotate?: () => void;
   onFlip: () => void;
   /** Opens Crop on the photo as it looks now; left out where the photo can't be re-cropped here. */
   onCrop?: () => void;
@@ -24,15 +25,17 @@ export function PhotoTools({ busy, disabled = false, onRotate, onFlip, onCrop }:
   const off = busy || disabled;
   return (
     <View style={styles.column} testID="editor-photo-tools">
-      <RoundIconButton
-        icon="rotateRight"
-        variant="glass"
-        accessibilityLabel={t('edit.adjust.rotate')}
-        accessibilityHint={t('edit.adjust.rotateHint')}
-        disabled={off}
-        onPress={onRotate}
-        testID="editor-rotate"
-      />
+      {onRotate ? (
+        <RoundIconButton
+          icon="rotateRight"
+          variant="glass"
+          accessibilityLabel={t('edit.adjust.rotate')}
+          accessibilityHint={t('edit.adjust.rotateHint')}
+          disabled={off}
+          onPress={onRotate}
+          testID="editor-rotate"
+        />
+      ) : null}
       <RoundIconButton
         icon="mirror"
         variant="glass"

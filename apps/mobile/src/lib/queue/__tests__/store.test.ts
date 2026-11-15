@@ -470,6 +470,27 @@ describe('editing hold and saved edits (M2-12)', () => {
     expect(queuedFiles().sort()).toEqual([saved.photoUri, saved.thumbUri].sort());
   });
 
+  it('saveEdits with a mirrored photo keeps a Fit frame known, so the editor still offers only Flip', async () => {
+    const store = loadStore();
+    const crop = {
+      crop: { originX: 0, originY: 0, width: 4000, height: 2000 },
+      cropBasis: { width: 4000, height: 2000 },
+      rotate: 0,
+      flip: false,
+      fit: { frame: 'white' },
+    } as const;
+    const item = await store.enqueue({ ...input, editing: true, crop });
+    mockFs.set('file:///cache/flip.webp', 'flip-full');
+    mockFs.set('file:///cache/flip-thumb.webp', 'flip-thumb');
+    const saved = await store.saveEdits(
+      item.id,
+      { caption: null, visibility: 'readers', edits },
+      { photoUri: 'file:///cache/flip.webp', thumbUri: 'file:///cache/flip-thumb.webp' },
+    );
+    expect(saved).toMatchObject({ prepared: true, crop });
+    expect(await store.getItem(item.id)).toMatchObject({ crop });
+  });
+
   it('saveEdits with a turned photo refuses while uploading, keeping the photo and edits as they were', async () => {
     const store = loadStore();
     const item = await store.enqueue(input);

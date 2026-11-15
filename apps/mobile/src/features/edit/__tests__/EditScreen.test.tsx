@@ -1158,6 +1158,24 @@ describe('Quick photo buttons (FR-CAP-04)', () => {
 
   beforeEach(() => jest.mocked(preparePhoto).mockClear());
 
+  it('a photo framed by Fit keeps only Flip: Rotate and Crop would cut the frame away', async () => {
+    rows.set(7, {
+      ...item,
+      crop: {
+        crop: { originX: 0, originY: 0, width: 300, height: 400 },
+        cropBasis: { width: 300, height: 400 },
+        rotate: 0,
+        flip: false,
+        fit: { frame: 'white' },
+      },
+    });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    expect(screen.getByRole('button', { name: 'Flip photo' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Rotate photo' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Crop photo' })).toBeNull();
+  });
+
   it('Rotate turns the photo at once with the overlays on it; Undo turns it back; Done saves the turned files with the edits', async () => {
     rows.set(7, {
       ...item,
