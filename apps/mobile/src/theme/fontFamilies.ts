@@ -7,3 +7,11 @@ export const fontFamilies = {
   bold: 'PlusJakartaSans_700Bold',
   extrabold: 'PlusJakartaSans_800ExtraBold',
 } as const;
+
+/** The text tool's display faces (Pacifico, Anton, Permanent Marker, Caveat Brush). */
+export const textFontFamilies = {
+  script: 'Pacifico_400Regular',
+  strong: 'Anton_400Regular',
+  marker: 'PermanentMarker_400Regular',
+  hand: 'CaveatBrush_400Regular',
+} as const;

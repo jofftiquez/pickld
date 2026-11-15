@@ -9,12 +9,16 @@ import {
   isCloud as serverIsCloud,
   FILTER_MATRICES,
   INK,
+  contrastColor as serverContrastColor,
   layoutText as serverLayoutText,
+  outlineOffsets as serverOutlineOffsets,
   STAMP,
   stampText as serverStampText,
   SURFACE,
   TEXT_COLORS,
   TEXT_SHADOW,
+  TEXT_STYLE,
+  TEXT_TRACKING,
 } from '../../../../../../supabase/functions/_shared/moment_layout';
 import { bubble, bubbleColors, colors, stickerTool, textOverlayColors } from '@/theme/tokens';
 
@@ -28,7 +32,18 @@ import {
 } from '../bubble/bubbleLayout';
 import { filterMatrices } from '../filters';
 import { stampText } from '../stickers/stamps';
-import { layoutText } from '../text/textOverlay';
+import { textFontStyle } from '../text/textFonts';
+import {
+  BACKGROUND_RADIUS,
+  contrastColor,
+  layoutText,
+  OUTLINE_STEPS,
+  OUTLINE_WIDTH,
+  outlineOffsets,
+  SOFT_BACKGROUND_ALPHA,
+  textColorSchema,
+  textFontSchema,
+} from '../text/textOverlay';
 
 // The data export draws finished photos on the server (T-508, supabase/functions/_shared/moment_render.ts)
 // from copies of the app's filters, styles and layout. This fails when either side changes without the
@@ -133,8 +148,26 @@ describe('the export renderer matches the app', () => {
     { text: 'serif and mono\nsecond line', font: 'serif', size: 24 },
     { text: 'averyveryverylongwordthatcannotfitononeline', font: 'type', size: 64 },
     { text: '今日は良い天気 and some words', font: 'clean', size: 30 },
+    { text: 'kape muna sa umaga bago ang lahat', font: 'script', size: 36 },
+    { text: 'GAME DAY\nlet’s go', font: 'strong', size: 48, background: 'solid' },
+    { text: 'marker on a wash', font: 'marker', size: 30, background: 'soft' },
+    { text: 'hand written note', font: 'hand', size: 28, background: 'none' },
   ] as const)('lays out the text $text the same way', (o) => {
     expect(serverLayoutText(o)).toEqual(layoutText(o));
+  });
+
+  it('styles text the same way: tracking, outline, background corners, soft wash, contrast', () => {
+    for (const font of textFontSchema.options) {
+      expect(TEXT_TRACKING[font]).toBeCloseTo(Number(textFontStyle(font, 1).letterSpacing), 10);
+    }
+    expect(TEXT_STYLE).toEqual({
+      outlineWidth: OUTLINE_WIDTH,
+      outlineSteps: OUTLINE_STEPS,
+      backgroundRadius: BACKGROUND_RADIUS,
+      softAlpha: SOFT_BACKGROUND_ALPHA,
+    });
+    expect(serverOutlineOffsets()).toEqual(outlineOffsets());
+    for (const color of textColorSchema.options) expect(serverContrastColor(color)).toBe(contrastColor(color));
   });
 
   it.each(['time', 'date', 'weekday', 'jar_number'] as const)('words the %s stamp the same way', (kind) => {

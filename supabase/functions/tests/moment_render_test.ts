@@ -279,3 +279,90 @@ Deno.test('readEdits keeps a bubble’s tail side and drops one with an unknown 
   });
   assertEquals(e.overlays.map((o) => [o.id, 'tail' in o ? o.tail : 'none']), [['r', 'right'], ['old', 'none']]);
 });
+
+// A text overlay 0.6 of a 390 × 520 photo wide (234 px), centred at (195, 260). "hi" in Bold at 30 on a
+// background is 2 × 0.64 em of letters with 0.4 em either side: a 62.4 × 52.5 point box, drawn 3.75 times
+// that, so the box runs x 78..312, y 161.56..358.44 and its left padding is x 78..123.
+async function textRender(patch: Record<string, unknown>) {
+  const r = finishedRenderer(() => Promise.resolve(null));
+  const photo = await solid(390, 520, [40, 90, 160]);
+  const out = await r.render({
+    photo,
+    edits: {
+      filter: 'original',
+      overlays: [
+        {
+          id: 't',
+          type: 'text',
+          x: 0.5,
+          y: 0.5,
+          scale: 0.6,
+          rotation: 0,
+          text: 'hi',
+          font: 'bold',
+          size: 30,
+          ...patch,
+        },
+      ],
+    },
+    ...at,
+  });
+  r.close();
+  return out;
+}
+
+Deno.test('a solid text background fills its box with the color; a soft one is a wash of black or white', async () => {
+  const solidBg = await textRender({ color: 'yellow', background: 'solid' });
+  near((await pixelAt(solidBg, 90, 260)).rgb, [0xfd, 0xcb, 0x5c]);
+  near((await pixelAt(solidBg, 60, 260)).rgb, [40, 90, 160]); // outside the box
+  // Yellow is light, so its wash is ink #11140d at 0.6 over the photo.
+  const soft = await textRender({ color: 'yellow', background: 'soft' });
+  near((await pixelAt(soft, 90, 260)).rgb, [26, 48, 72]);
+});
+
+Deno.test('an outline draws the words in its color round them', async () => {
+  const red = (out: Uint8Array) => countNear(out, [0xed, 0x49, 0x56]);
+  assertEquals(await red(await textRender({ color: 'white' })), 0);
+  assert((await red(await textRender({ color: 'white', outline: 'red' }))) > 300, 'the red outline');
+});
+
+Deno.test('the Script, Strong, Marker and Hand fonts are bundled and draw', async () => {
+  for (const font of ['script', 'strong', 'marker', 'hand']) {
+    const white = await countNear(await textRender({ font, color: 'white', text: 'MMMM' }), [255, 255, 255], 30);
+    assert(white > 300, `${font} draws`);
+  }
+});
+
+Deno.test('readEdits keeps a text’s background, outline and new fonts and drops unknown ones', () => {
+  const t = { type: 'text', x: 0.5, y: 0.5, scale: 0.5, rotation: 0, text: 'hi' };
+  const e = readEdits({
+    filter: 'original',
+    overlays: [
+      { ...t, id: 'ok', font: 'marker', color: 'teal', background: 'soft', outline: 'ink' },
+      { ...t, id: 'old', color: 'butter' },
+      { ...t, id: 'bad', background: 'glow' },
+    ],
+  });
+  assertEquals(e.overlays.map((o) => o.id), ['ok', 'old']);
+  const ok = e.overlays[0] as Record<string, unknown>;
+  assertEquals([ok.font, ok.color, ok.background, ok.outline], ['marker', 'teal', 'soft', 'ink']);
+});
+
+/** How many pixels of a 390 × 520 render are within tol of rgb. */
+async function countNear(bytes: Uint8Array, rgb: number[], tol = 40) {
+  const { ck } = await skia();
+  const img = ck.MakeImageFromEncoded(bytes)!;
+  const all = img.readPixels(0, 0, {
+    width: 390,
+    height: 520,
+    colorType: ck.ColorType.RGBA_8888,
+    alphaType: ck.AlphaType.Unpremul,
+    colorSpace: ck.ColorSpace.SRGB,
+  }) as Uint8Array;
+  img.delete();
+  let n = 0;
+  for (let i = 0; i < all.length; i += 4) {
+    if (Math.abs(all[i] - rgb[0]) + Math.abs(all[i + 1] - rgb[1]) + Math.abs(all[i + 2] - rgb[2]) <= tol) n++;
+  }
+  return n;
+}

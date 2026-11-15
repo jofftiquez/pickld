@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
@@ -61,8 +61,15 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
   type Content = Pick<Bubble, 'shape' | 'color' | 'text' | 'tail' | 'cloud'>;
   // New thoughts are clouds; older thoughts stay pills until their style is picked again.
   const cloudFor = (s: BubbleShape) => (s === 'thought' ? { cloud: true } : null);
+  // The bubble just added, until it comes back selected. Fast typing can send the next keystroke
+  // first, and that one must edit it rather than add a second bubble.
+  const justAdded = useRef<string | null>(null);
+  useEffect(() => {
+    justAdded.current = null;
+  }, [selected?.id]);
   const add = (content: Required<Omit<Content, 'cloud'>>, group?: (id: string) => string) => {
     const id = newId();
+    justAdded.current = id;
     onAdd({ id, type: 'bubble', ...NEW_BUBBLE, ...content, ...cloudFor(content.shape) }, group?.(id));
   };
   const update = (id: string, patch: Partial<Content>, group?: string) =>
@@ -84,7 +91,8 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
   };
   const changeText = (raw: string) => {
     const text = clampBubbleText(raw, BUBBLE_TEXT_MAX);
-    if (selected) update(selected.id, { text }, textGroup(selected.id));
+    const target = selected?.id ?? justAdded.current;
+    if (target) update(target, { text }, textGroup(target));
     else if (text.trim() !== '') add({ shape, color, text, tail }, textGroup);
   };
 

@@ -88,14 +88,24 @@ export const colors = {
   confettiGlint: '#ffffff', // light catching a Publish confetti piece as it flips (D-132); drawn at up to 50%
 } as const;
 
-// Text tool colors (Text), in the design's order. Drawn on photos with a shadow (colors.textOverlayShadow).
+// Text tool colors (Text). Drawn on photos with a shadow (colors.textOverlayShadow), or as a background.
+// The panel offers textPalette, bright and plain enough to read on most photos; butter and blush are
+// kept so texts saved with them still draw.
 export const textOverlayColors = {
   white: '#ffffff',
   ink: '#11140d',
+  gray: '#8e8e93',
+  red: '#ed4956',
+  orange: '#fd8d32',
+  yellow: '#fdcb5c',
   pickle: '#7fad33',
+  teal: '#2ec4b6',
+  blue: '#3897f0',
+  purple: '#a307ba',
+  pink: '#e1306c',
+  sky: '#dbe8f3',
   butter: '#ffe08a',
   blush: '#fdeceb',
-  sky: '#dbe8f3',
 } as const;
 
 // Fit's frame colours (Crop, D-152): plain fills around a photo placed whole inside the 3:4 frame, baked into

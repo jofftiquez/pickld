@@ -1,13 +1,17 @@
 import { kape } from './stickerFixture';
 import { editsSchema, overlaySchema, parseEdits, type Edits } from '../edits';
 import { MAX_SCALE } from '../overlays/transform';
+import { textOverlayColors } from '@/theme/tokens';
+
 import {
   applyTextChange,
+  contrastColor,
   DEFAULT_TEXT_STYLE,
   layoutText,
   naturalScale,
   newTextOverlay,
   TEXT_MAX,
+  TEXT_PALETTE,
   TEXT_REF_WIDTH,
   textAspect,
   type TextOverlay,
@@ -25,6 +29,27 @@ describe('text overlay schema', () => {
     const stored: unknown = JSON.parse(JSON.stringify(edits));
     expect(editsSchema.parse(stored)).toEqual(edits);
     expect(parseEdits(stored)).toEqual(edits);
+  });
+
+  it('round-trips a background and an outline, and leaves them out of texts saved without them', () => {
+    const styled: TextOverlay = { ...overlay, font: 'marker', color: 'red', background: 'soft', outline: 'white' };
+    const edits: Edits = { v: 1, filter: 'mono', overlays: [styled] };
+    expect(editsSchema.parse(JSON.parse(JSON.stringify(edits)))).toEqual(edits);
+    expect(editsSchema.parse({ v: 1, filter: 'mono', overlays: [overlay] }).overlays[0]).not.toHaveProperty(
+      'background',
+    );
+    expect(overlaySchema.safeParse({ ...overlay, background: 'glow' }).success).toBe(false);
+    expect(overlaySchema.safeParse({ ...overlay, font: 'comic' }).success).toBe(false);
+  });
+
+  it('still reads the colors the panel no longer offers, and offers twelve', () => {
+    expect(TEXT_PALETTE).toHaveLength(12);
+    expect(TEXT_PALETTE).not.toContain('butter');
+    expect(TEXT_PALETTE).not.toContain('blush');
+    for (const color of ['butter', 'blush', 'sky'] as const) {
+      expect(overlaySchema.safeParse({ ...overlay, color }).success).toBe(true);
+    }
+    expect(Object.keys(textOverlayColors).sort()).toEqual([...TEXT_PALETTE, 'butter', 'blush'].sort());
   });
 
   it('accepts exactly 80 characters and refuses 81', () => {
@@ -99,6 +124,20 @@ describe('layoutText', () => {
     expect(layout.width - 2 * layout.padX).toBeLessThanOrEqual(0.8 * TEXT_REF_WIDTH);
   });
 
+  it('starts a new line at each Return, even in short text', () => {
+    expect(layoutText({ ...overlay, text: 'sinigang\nszn' }).lines).toEqual(['sinigang', 'szn']);
+    expect(layoutText({ ...overlay, text: 'a\n\nb' }).lines).toEqual(['a', '', 'b']);
+  });
+
+  it('gives a text on a background more room round the words', () => {
+    const plain = layoutText(overlay);
+    const boxed = layoutText({ ...overlay, background: 'solid' });
+    expect(boxed.lines).toEqual(plain.lines);
+    expect(boxed.width).toBeGreaterThan(plain.width);
+    expect(boxed.height).toBeGreaterThan(plain.height);
+    expect(layoutText({ ...overlay, background: 'none' })).toEqual(plain);
+  });
+
   it('measures Type (monospace) wider than Serif for the same words', () => {
     const type = layoutText({ text: 'sinigang', font: 'type', size: 30 });
     const serif = layoutText({ text: 'sinigang', font: 'serif', size: 30 });
@@ -118,6 +157,31 @@ describe('newTextOverlay and applyTextChange', () => {
     expect(created).toMatchObject({ font: 'clean', color: 'pickle', size: 24, align: 'left' });
     expect(created.scale).toBeCloseTo(naturalScale(created), 10);
     expect(overlaySchema.safeParse(created).success).toBe(true);
+  });
+
+  it('each text already on the photo moves the next one down, cycling after four', () => {
+    const at = (n: number) => newTextOverlay('n', 'hi', DEFAULT_TEXT_STYLE, n).y;
+    expect([0, 1, 2, 3, 4].map(at).map((y) => Math.round(y * 10) / 10)).toEqual([0.4, 0.5, 0.6, 0.7, 0.4]);
+  });
+
+  it('saves a background or outline only when set, and taking either off removes the field', () => {
+    expect(newTextOverlay('n', 'hi', { ...DEFAULT_TEXT_STYLE, background: 'none' })).not.toHaveProperty('background');
+    const outlined = applyTextChange(overlay, { outline: 'ink', background: 'solid' });
+    expect(outlined).toMatchObject({ outline: 'ink', background: 'solid' });
+    expect(outlined.scale).toBeGreaterThan(overlay.scale); // the background's room
+    const plain = applyTextChange(outlined, { outline: undefined, background: 'none' });
+    expect(plain).not.toHaveProperty('outline');
+    expect(plain).not.toHaveProperty('background');
+    expect(plain.scale).toBeCloseTo(overlay.scale, 10);
+  });
+
+  it('picks whichever of white and black has the higher contrast ratio on the color', () => {
+    expect(contrastColor('white')).toBe('ink');
+    expect(contrastColor('yellow')).toBe('ink');
+    expect(contrastColor('ink')).toBe('white');
+    expect(contrastColor('purple')).toBe('white');
+    // Blue is mid-bright: black is 6:1 on it, white only 3:1.
+    expect(contrastColor('blue')).toBe('ink');
   });
 
   it('returns the same overlay when nothing changes', () => {

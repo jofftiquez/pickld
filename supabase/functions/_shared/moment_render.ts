@@ -6,8 +6,9 @@
 // Skia color matrix the app's React Native Skia applies. Sticker art comes from the public stickers/ keys
 // by the asset path saved in the overlay, so retired stickers (0032) and packs the owner no longer has
 // still draw (FR-STK-04). Fonts are bundled (fonts/fonts.ts): Plus Jakarta Sans as the app bundles it,
-// and free stand-ins for the phone faces the Type and Serif text styles use (DejaVu Sans Mono, which Menlo
-// is built on; Gelasio, made to Georgia's metrics). Glyphs none of them has (emoji) are left out.
+// the display faces the app bundles for the Script, Strong, Marker and Hand text styles, and free stand-ins
+// for the phone faces the Type and Serif ones use (DejaVu Sans Mono, which Menlo is built on; Gelasio,
+// made to Georgia's metrics). Glyphs none of them has (emoji) are left out.
 //
 // The output is a JPEG at the stored photo's width, 3:4.
 import type { Canvas, CanvasKit, Image, Paragraph, Path, TypefaceFontProvider } from 'npm:canvaskit-wasm@0.42.0';
@@ -22,10 +23,12 @@ import {
   bubbleTailGeometry,
   bubbleTailSide,
   cloudGeometry,
+  contrastColor,
   FILTER_MATRICES,
-  isCloud,
   INK,
+  isCloud,
   layoutText,
+  outlineOffsets,
   PHOTO_ASPECT,
   REF_WIDTH,
   STAMP,
@@ -35,6 +38,7 @@ import {
   TEXT_COLORS,
   TEXT_SHADOW,
   TEXT_SHADOW_AT_30,
+  TEXT_STYLE,
   TEXT_TRACKING,
 } from './moment_layout.ts';
 
@@ -50,6 +54,22 @@ const base = {
   rotation: z.number().min(-2 * Math.PI).max(2 * Math.PI),
 };
 const colorName = z.enum(['white', 'ink', 'pickle', 'butter', 'blush', 'sky']);
+const textColorName = z.enum([
+  'white',
+  'ink',
+  'gray',
+  'red',
+  'orange',
+  'yellow',
+  'pickle',
+  'teal',
+  'blue',
+  'purple',
+  'pink',
+  'sky',
+  'butter',
+  'blush',
+]);
 const overlaySchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('sticker'),
@@ -70,10 +90,12 @@ const overlaySchema = z.discriminatedUnion('type', [
     type: z.literal('text'),
     ...base,
     text: z.string().max(80).refine((s) => s.trim().length > 0),
-    font: z.enum(['clean', 'bold', 'type', 'serif']).default('bold'),
-    color: colorName.default('white'),
+    font: z.enum(['clean', 'bold', 'type', 'serif', 'script', 'strong', 'marker', 'hand']).default('bold'),
+    color: textColorName.default('white'),
     size: z.number().int().min(12).max(64).default(30),
     align: z.enum(['left', 'center']).default('center'),
+    background: z.enum(['none', 'solid', 'soft']).optional(),
+    outline: textColorName.optional(),
   }),
 ]);
 type Overlay = z.infer<typeof overlaySchema>;
@@ -131,7 +153,16 @@ interface Kit {
   fonts: TypefaceFontProvider;
 }
 
-const TEXT_FONT: Record<string, string> = { clean: 'jakarta-600', bold: 'jakarta-800', type: 'mono', serif: 'serif' };
+const TEXT_FONT: Record<string, string> = {
+  clean: 'jakarta-600',
+  bold: 'jakarta-800',
+  type: 'mono',
+  serif: 'serif',
+  script: 'script',
+  strong: 'strong',
+  marker: 'marker',
+  hand: 'hand',
+};
 
 // Skia is fetched when a worker first draws instead of bundled: npm:canvaskit-wasm carries every build
 // (about 25 MB), past the 20 MB a deployed function may weigh. Both files are pinned by hash.
@@ -542,26 +573,50 @@ function drawBubble(
 }
 
 function drawText(k: Kit, canvas: Canvas, keep: Keep, o: Extract<Overlay, { type: 'text' }>, w: number) {
+  const { ck } = k;
   const layout = layoutText(o);
   const s = w / layout.width;
   const size = layout.fontSize * s;
   const shadow = size / 30;
+  const bg = o.background ?? 'none';
+  const contrast = TEXT_COLORS[contrastColor(o.color)];
+  // As TextOverlayView: a solid background is the color with the words in white or ink on it; a soft one a
+  // see-through wash of the contrasting color under the colored words; an outline the words drawn round a
+  // circle under them. Only plain text gets the shadow.
+  if (bg !== 'none') {
+    const fill = keep(new ck.Paint());
+    fill.setAntiAlias(true);
+    fill.setColor(
+      bg === 'solid' ? color(ck, TEXT_COLORS[o.color]) : color(ck, contrast, TEXT_STYLE.softAlpha),
+    );
+    const r = TEXT_STYLE.backgroundRadius * size;
+    canvas.drawRRect(rrect(0, 0, w, layout.height * s, [r, r, r, r]), fill);
+  }
+  const plain = bg === 'none' && o.outline === undefined;
   // Lines are broken by the layout, never by the text engine: lay out wide, then place.
   const wide = 1e5;
-  const p = paragraph(k, keep, layout.lines.join('\n'), {
-    family: TEXT_FONT[o.font],
-    size,
-    lineHeight: layout.lineHeight * s,
-    color: TEXT_COLORS[o.color],
-    align: o.align,
-    letterSpacing: (TEXT_TRACKING[o.font] ?? 0) * size,
-    shadow: {
-      color: o.color === 'ink' ? TEXT_SHADOW.onDark : TEXT_SHADOW.light,
-      offsetY: TEXT_SHADOW_AT_30.offset * shadow,
-      sigma: (TEXT_SHADOW_AT_30.radius * shadow) / 2,
-    },
-    width: wide,
-  });
+  const words = (fill: string, withShadow: boolean) =>
+    paragraph(k, keep, layout.lines.join('\n'), {
+      family: TEXT_FONT[o.font],
+      size,
+      lineHeight: layout.lineHeight * s,
+      color: fill,
+      align: o.align,
+      letterSpacing: (TEXT_TRACKING[o.font] ?? 0) * size,
+      shadow: withShadow
+        ? {
+          color: o.color === 'ink' ? TEXT_SHADOW.onDark : TEXT_SHADOW.light,
+          offsetY: TEXT_SHADOW_AT_30.offset * shadow,
+          sigma: (TEXT_SHADOW_AT_30.radius * shadow) / 2,
+        }
+        : undefined,
+      width: wide,
+    });
   const x = o.align === 'left' ? layout.padX * s : w / 2 - wide / 2;
-  canvas.drawParagraph(p, x, layout.padY * s);
+  const y = layout.padY * s;
+  if (o.outline !== undefined) {
+    const outline = words(TEXT_COLORS[o.outline], false);
+    for (const { dx, dy } of outlineOffsets()) canvas.drawParagraph(outline, x + dx * size, y + dy * size);
+  }
+  canvas.drawParagraph(words(bg === 'solid' ? contrast : TEXT_COLORS[o.color], plain), x, y);
 }

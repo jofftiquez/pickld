@@ -9,7 +9,18 @@ import {
   tailPathData,
 } from '@/features/edit/bubble/bubbleLayout';
 import { parseEdits, type Bubble, type Overlay } from '@/features/edit/edits';
-import { textColorValues, TEXT_REF_WIDTH } from '@/features/edit/text/textOverlay';
+import {
+  BACKGROUND_RADIUS,
+  layoutText,
+  outlineOffsets,
+  textBoxColors,
+  textColorValues,
+  TEXT_REF_WIDTH,
+  TEXT_TRACKING,
+  textStyleOf,
+  type TextFont,
+  type TextOverlay,
+} from '@/features/edit/text/textOverlay';
 import { bubble, bubbleColors, colors, radius } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
@@ -19,7 +30,8 @@ import { LoadedPhoto } from './LoadedPhoto';
 
 // One 3:4 moment with its edits drawn over it, as the app draws them (FR-CAP-08: edits are data, never
 // burned into the photo). Overlay positions are fractions of the photo, so they scale with the tile;
-// sizes measured on the 390-point reference photo use container query units.
+// sizes measured on the 390-point reference photo use container query units. Text is laid out as in the
+// app (layoutText), so its lines and size match the moment detail.
 
 function place(o: Overlay): CSSProperties {
   return {
@@ -92,29 +104,73 @@ function CloudArt({ overlay, fill }: { overlay: Bubble; fill: string }) {
   );
 }
 
+// The text tool's faces: the bundled ones by the variables layout.tsx sets, and the phone faces Type and
+// Serif use, with the free faces the export draws them in as stand-ins.
+const TEXT_FAMILY: Record<TextFont, string> = {
+  clean: 'var(--font-jakarta)',
+  bold: 'var(--font-jakarta)',
+  type: 'Menlo, "DejaVu Sans Mono", monospace',
+  serif: 'Georgia, Gelasio, serif',
+  script: 'var(--font-script)',
+  strong: 'var(--font-strong)',
+  marker: 'var(--font-marker)',
+  hand: 'var(--font-hand)',
+};
+const TEXT_WEIGHT: Partial<Record<TextFont, number>> = { clean: 600, bold: 800 };
+
+/**
+ * A text overlay as the app's TextOverlayView draws it: the lines layoutText chose (never wrapped here),
+ * sized with its box so a pinch zoom shows, on its background, with its outline (copies of the words
+ * round a circle, as text shadows) or, when plain, the legibility shadow.
+ */
+function TextArt({ overlay }: { overlay: TextOverlay }) {
+  const style = textStyleOf(overlay);
+  const layout = layoutText(overlay);
+  // Reference points to container width: the box is overlay.scale of the photo and layout.width points.
+  const u = (points: number) => `${((points * overlay.scale) / layout.width) * 100}cqw`;
+  const size = layout.fontSize;
+  const { words, box } = textBoxColors(style);
+  const { outline } = style;
+  const shadow =
+    outline !== undefined
+      ? outlineOffsets()
+          .map(({ dx, dy }) => `${u(dx * size)} ${u(dy * size)} 0 ${textColorValues[outline]}`)
+          .join(', ')
+      : style.background === 'none'
+        ? `0 ${u((2 * size) / 30)} ${u((10 * size) / 30)} ${style.color === 'ink' ? colors.textOverlayShadowOnDark : colors.textOverlayShadow}`
+        : undefined;
+  return (
+    <span
+      data-text-overlay={overlay.id}
+      style={{
+        ...place(overlay),
+        boxSizing: 'border-box',
+        padding: `${u(layout.padY)} ${u(layout.padX)}`,
+        background: box,
+        borderRadius: box ? u(BACKGROUND_RADIUS * size) : undefined,
+        color: words,
+        fontFamily: TEXT_FAMILY[style.font],
+        fontWeight: TEXT_WEIGHT[style.font] ?? 400,
+        fontStyle: style.font === 'serif' ? 'italic' : 'normal',
+        fontSize: u(size),
+        lineHeight: u(layout.lineHeight),
+        letterSpacing: u(TEXT_TRACKING[style.font] * size),
+        textAlign: style.align,
+        textShadow: shadow,
+        whiteSpace: 'pre',
+      }}
+    >
+      {layout.lines.join('\n')}
+    </span>
+  );
+}
+
 function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: string }) {
   if (overlay.type === 'sticker') {
     // Sticker art is public catalog data, served without a token (D-25).
     return <img src={`${assetBase}/${overlay.asset}`} alt={overlay.label} style={place(overlay)} />;
   }
-  if (overlay.type === 'text') {
-    return (
-      <span
-        style={{
-          ...place(overlay),
-          color: textColorValues[overlay.color],
-          fontSize: cq(overlay.size),
-          fontWeight: 800,
-          textAlign: overlay.align,
-          lineHeight: 1.25,
-          whiteSpace: 'pre-wrap',
-          overflowWrap: 'anywhere',
-        }}
-      >
-        {overlay.text}
-      </span>
-    );
-  }
+  if (overlay.type === 'text') return <TextArt overlay={overlay} />;
   const style = bubbleColors[overlay.color];
   const cloud = isCloud(overlay);
   return (

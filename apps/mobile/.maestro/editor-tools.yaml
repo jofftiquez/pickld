@@ -63,15 +63,13 @@ appId: me.pickld.app
     timeout: 3000
 - takeScreenshot: Bubble-ios
 
-# Text: type and add.
+# Text: typing shows it on the photo; Return starts a new line, so Done closes the keyboard.
 - tapOn: Text
 - tapOn:
     id: editor-text-field
 - inputText: Monday fit
 - tapOn:
-    id: editor-text-add
-# Return closes the keyboard (Maestro's hideKeyboard is unreliable on iOS).
-- pressKey: Enter
+    id: editor-text-done
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: Text-ios
