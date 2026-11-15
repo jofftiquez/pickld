@@ -4,6 +4,7 @@ import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-rout
 // After the testing library, which brings gesture-handler's jest mocks and its own Reanimated mock.
 import './mockReanimated';
 import type { ReactNode } from 'react';
+import { Skia, type SkData } from '@shopify/react-native-skia';
 import { Text, View } from 'react-native';
 
 import EditScreen from '../../../../app/edit/[momentId]';
@@ -42,9 +43,33 @@ jest.mock('@shopify/react-native-skia', () => {
     ColorMatrix: ({ matrix }: { matrix: number[] }) => (
       <MockView testID="color-matrix" accessibilityValue={{ text: JSON.stringify(matrix) }} />
     ),
-    useImage: jest.fn((uri: string | undefined) => (uri ? { uri } : null)),
+    // Like Skia: no HEIC decoder.
+    useImage: jest.fn((uri: string | undefined) => (uri && mockDecodable(uri) ? { uri } : null)),
+    Skia: {
+      Data: { fromURI: jest.fn(async (uri: string) => ({ uri })) },
+      Image: { MakeImageFromEncoded: ({ uri }: { uri: string }) => (mockDecodable(uri) ? { uri } : null) },
+    },
   };
 });
+const mockDecodable = (uri: string) => !/\.heic$/i.test(uri);
+
+// The editor's JPEG copy of a photo Skia can't decode: `<name>-editor.jpg` next to it.
+jest.mock('expo-image-manipulator', () => ({
+  SaveFormat: { JPEG: 'jpeg' },
+  ImageManipulator: {
+    manipulate: (uri: string) => {
+      const context = {
+        resize: () => context,
+        renderAsync: async () => ({
+          saveAsync: async () => ({ uri: uri.replace(/\.heic$/i, '-editor.jpg') }),
+          release: () => undefined,
+        }),
+        release: () => undefined,
+      };
+      return context;
+    },
+  },
+}));
 
 /** Who listens to queue changes (the store's notify), so a test can announce one. */
 const mockQueueListeners = new Set<(change: 'added' | 'status' | 'removed') => void>();
@@ -195,6 +220,7 @@ beforeEach(() => {
   });
   jest.mocked(requestUploads).mockClear();
   jest.mocked(captureError).mockClear();
+  jest.mocked(Skia.Data.fromURI).mockImplementation(async (uri) => ({ uri }) as unknown as SkData);
   jest.mocked(trackMomentAdded).mockClear();
 });
 
@@ -351,6 +377,42 @@ describe('Editor', () => {
     );
     await goToDetails();
     expect(screen.getByTestId('moment-view-photo').props.source).toEqual([{ uri: item.photoUri }]);
+  });
+
+  it("draws a raw HEIC photo (Photos' original, 3:4 so it skipped Crop) from a JPEG copy until it is prepared", async () => {
+    const rawUri = 'file:///docs/queue/7-raw.HEIC';
+    rows.set(7, { ...item, photoUri: rawUri, prepared: false });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    const drawn = (testID: string) =>
+      within(screen.getByTestId(testID)).queryByTestId('skia-image')?.props.accessibilityHint as string | undefined;
+    // Skia can't decode HEIC: without the copy the canvas and every thumbnail stayed blank.
+    await waitFor(() => expect(drawn('editor-photo')).toBe('file:///docs/queue/7-raw-editor.jpg'));
+    expect(drawn('editor-filter-mono')).toBe('file:///docs/queue/7-raw-editor.jpg');
+    rows.set(7, { ...item, prepared: true });
+    await act(async () => mockQueueListeners.forEach((listener) => listener('status')));
+    await waitFor(() => expect(drawn('editor-photo')).toBe(item.photoUri));
+  });
+
+  it('a late load of the raw file never replaces the prepared photo (D-155)', async () => {
+    const rawUri = 'file:///docs/queue/7-raw.jpg';
+    const loads = new Map<string, () => void>();
+    jest
+      .mocked(Skia.Data.fromURI)
+      .mockImplementation(
+        (uri) => new Promise<SkData>((resolve) => loads.set(uri, () => resolve({ uri } as unknown as SkData))),
+      );
+    rows.set(7, { ...item, photoUri: rawUri, prepared: false });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    rows.set(7, { ...item, prepared: true });
+    await act(async () => mockQueueListeners.forEach((listener) => listener('status')));
+    await waitFor(() => expect(loads.has(item.photoUri)).toBe(true));
+    await act(async () => loads.get(item.photoUri)?.());
+    await act(async () => loads.get(rawUri)?.());
+    expect(within(screen.getByTestId('editor-photo')).getByTestId('skia-image').props.accessibilityHint).toBe(
+      item.photoUri,
+    );
   });
 
   it('opened from a share (`via=share`), Back drops the draft and returns to the slot choice', async () => {

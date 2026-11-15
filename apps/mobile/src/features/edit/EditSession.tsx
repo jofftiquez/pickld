@@ -1,4 +1,3 @@
-import { useImage } from '@shopify/react-native-skia';
 import { useState } from 'react';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
@@ -15,6 +14,7 @@ import { EditorView, type EditorStep, type EditorTool } from './EditorView';
 import { registerPlaceholderRenderers } from './overlays/PlaceholderOverlay';
 import { registerOverlayRenderers } from './overlays/registerRenderers';
 import { stickerOverlay } from './stickers/catalog';
+import { useEditorImage } from './useEditorImage';
 import { useEditorState } from './useEditorState';
 import { useCachedPhotoFile } from '@/lib/image/photoCache';
 
@@ -68,7 +68,7 @@ export function EditSession({
   onBack,
   onSave,
 }: EditSessionProps) {
-  const image = useImage(useCachedPhotoFile(photoUri) ?? undefined);
+  const image = useEditorImage(useCachedPhotoFile(photoUri));
   const editor = useEditorState(parseEdits(initial.edits));
   const [step, setStep] = useState<EditorStep>(focusCaption ? 'details' : 'photo');
   const [tool, setTool] = useState<EditorTool>('filters');
