@@ -185,3 +185,54 @@ test('a moderator who is not a founder cannot let people in early', async () => 
   const [profile] = must(await admin.from('profiles').select('status').eq('id', waiting.id));
   assert.equal(profile.status, 'waiting');
 });
+
+async function brought(inviter, invitee) {
+  const [{ code: used }] = must(
+    await admin.from('invite_codes').select('code').eq('owner_id', inviter.id).order('slot').limit(1),
+  );
+  must(await admin.from('invite_redemptions').insert({ code: used, invitee_id: invitee.id }));
+}
+
+test('a user page shows their invite tree; a person in it opens their page; the network page lists them', async () => {
+  const top = await person(`top_${tag}`);
+  const mid = await person(`mid_${tag}`, { status: 'suspended' });
+  const low = await person(`low_${tag}`);
+  await brought(top, mid);
+  await brought(mid, low);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`${base}/users/${top.id}`);
+  const card = page.getByRole('region', { name: 'Invite tree' });
+  const counts = card.locator('dl');
+  assert.equal(await counts.locator('dt:has-text("Brought in directly") + dd').textContent(), '1');
+  assert.equal(await counts.locator('dt:has-text("Everyone below them") + dd').textContent(), '2');
+  const graph = card.getByRole('group', { name: `Invite tree of @top_${tag}` });
+  await graph.getByRole('link', { name: new RegExp(`^@mid_${tag} .* Suspended`) }).waitFor();
+
+  // One level down hides the grandchild and says there is more below.
+  await card.getByRole('link', { name: '1 level down' }).click();
+  await card.getByText('There are more people below level 1.', { exact: false }).waitFor();
+  assert.equal(await graph.getByRole('link', { name: new RegExp(`^@low_${tag}`) }).count(), 0);
+
+  await card.getByRole('link', { name: '3 levels down' }).click();
+  const lowNode = graph.getByRole('link', { name: new RegExp(`^@low_${tag}`) });
+  await lowNode.focus();
+  await page.keyboard.press('Enter');
+  await page.waitForURL(`${base}/users/${low.id}`);
+  const lowTree = page.getByRole('region', { name: 'Invite tree' });
+  assert.equal(await lowTree.locator('dt:has-text("People above them") + dd').textContent(), '2');
+
+  await page.goto(`${base}/invite-network`);
+  await page.getByRole('heading', { name: 'Invite network', level: 1 }).waitFor();
+  assert.equal(
+    await page
+      .getByRole('navigation', { name: 'Console' })
+      .getByRole('link', { name: 'Invite network' })
+      .getAttribute('aria-current'),
+    'page',
+  );
+  await page
+    .getByRole('group', { name: 'The whole invite network' })
+    .getByRole('link', { name: new RegExp(`^@top_${tag}`) })
+    .waitFor();
+});

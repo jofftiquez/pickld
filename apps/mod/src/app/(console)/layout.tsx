@@ -40,6 +40,7 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
     { href: '/queue?filter=appeal', label: t('nav.appeals'), count: stats.open_appeals },
     { href: '/users', label: t('nav.users') },
     { href: '/invites', label: t('nav.invites') },
+    { href: '/invite-network', label: t('nav.inviteNetwork') },
     { href: '/stickers', label: t('nav.stickers') },
     { href: '/waitlist', label: t('nav.waitlist') },
     {

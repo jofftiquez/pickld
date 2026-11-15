@@ -8,12 +8,14 @@ import { colors, radius } from '@/theme/tokens';
 import { BarList } from '~/components/BarList';
 import { BlurredPhoto } from '~/components/BlurredPhoto';
 import { DayBars } from '~/components/DayBars';
+import { InviteGraph } from '~/components/InviteGraph';
 import { GrantSetForm, InviteFreezeForm } from '~/components/InviteTools';
 import { SuspendForm } from '~/components/SuspendForm';
 import { Tile } from '~/components/Tile';
 import { t } from '~/i18n/t';
 import { loadUserStats } from '~/lib/analytics';
 import { actionLabel, details, when } from '~/lib/audit';
+import { type InviteTree, loadInviteTree, TREE_DEPTHS, treeDepth } from '~/lib/inviteGraph';
 import { loadUserInvites, type UserInviteInfo } from '~/lib/invites';
 import { photoUrls } from '~/lib/photos';
 import { dayLabel, monthLabel, reasonLabel } from '~/lib/queue';
@@ -54,7 +56,14 @@ function inviterText(by: NonNullable<UserInviteInfo['invited_by']>): ReactNode {
 function InvitesCard({ user, invites }: { user: string; invites: UserInviteInfo }) {
   const { invited_by: by, frozen } = invites;
   return (
-    <Card title={t('users.invites.title')}>
+    <Card
+      title={t('users.invites.title')}
+      action={
+        <a href="#invite-tree" style={{ color: colors.brandLink, fontWeight: 700, fontSize: 14 }}>
+          {t('users.tree.see')}
+        </a>
+      }
+    >
       <dl style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '6px 12px', margin: 0, fontSize: 13 }}>
         <dt style={{ color: colors.muted }}>{t('users.invites.invitedBy')}</dt>
         <dd style={{ margin: 0 }}>
@@ -134,6 +143,91 @@ function InvitesCard({ user, invites }: { user: string; invites: UserInviteInfo 
   );
 }
 
+// Their invite tree (console only, rules 9 and 10): everyone above them up to whoever started the chain and
+// everyone they brought in, `depth` levels down, as a graph to pan, zoom and click through (0145).
+function TreeCard({ tree, username, depth }: { tree: InviteTree; username: string; depth: number }) {
+  const me = tree.nodes.find((n) => n.id === tree.focus);
+  const above = tree.nodes.filter((n) => n.type === 'person' && (n.level ?? 0) < 0).length;
+  const below = tree.nodes.filter((n) => (n.level ?? 0) > 0).length;
+  return (
+    <div id="invite-tree" style={{ scrollMarginTop: 16 }}>
+      <Card
+        title={t('users.tree.title')}
+        action={
+          <Link href="/invite-network" style={{ color: colors.brandLink, fontWeight: 700, fontSize: 14 }}>
+            {t('users.tree.network')}
+          </Link>
+        }
+      >
+        <p style={{ margin: 0, color: colors.muted, fontSize: 13 }}>{t('users.tree.subtitle')}</p>
+        <div
+          style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16, justifyContent: 'space-between' }}
+        >
+          <dl style={{ display: 'flex', gap: 20, margin: 0, fontSize: 13 }}>
+            {[
+              [t('users.tree.direct'), me?.direct ?? 0],
+              [t('users.tree.total'), me?.total ?? 0],
+              [t('users.tree.above'), above],
+            ].map(([label, value]) => (
+              <div key={String(label)}>
+                <dt style={{ color: colors.muted }}>{label}</dt>
+                <dd style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <nav
+            aria-label={t('users.tree.depth')}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}
+          >
+            <span style={{ color: colors.muted, marginRight: 4 }}>{t('users.tree.depth')}</span>
+            {TREE_DEPTHS.map((d) => (
+              <Link
+                key={d}
+                href={`/users/${tree.focus}?depth=${d}#invite-tree`}
+                scroll={false}
+                aria-label={t('users.tree.depthLink', { count: d })}
+                aria-current={d === depth ? 'true' : undefined}
+                style={{
+                  display: 'inline-grid',
+                  placeItems: 'center',
+                  minWidth: 32,
+                  minHeight: 32,
+                  borderRadius: radius.pill,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  background: d === depth ? colors.brandTint : colors.subtle,
+                  color: d === depth ? colors.brandText : colors.ink,
+                }}
+              >
+                {d}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        {above === 0 && below === 0 && tree.nodes.length <= 1 ? (
+          <Empty>{t('users.tree.empty')}</Empty>
+        ) : (
+          <InviteGraph
+            nodes={tree.nodes}
+            edges={tree.edges}
+            focus={tree.focus}
+            layered
+            height={480}
+            label={t('users.tree.label', { username })}
+          />
+        )}
+        {tree.truncated ? (
+          <p style={{ margin: 0, color: colors.muted, fontSize: 12 }}>
+            {below >= tree.limit
+              ? t('users.tree.truncated', { count: below })
+              : t('users.tree.deeper', { depth: tree.depth })}
+          </p>
+        ) : null}
+      </Card>
+    </div>
+  );
+}
+
 function statusText(u: UserDetail): string {
   const s = u.suspension;
   if (!s) return t(`users.status.${u.profile.status}`);
@@ -144,15 +238,23 @@ function statusText(u: UserDetail): string {
 // One account (FR-MOD-07): who they are, whether they're suspended and why, their strikes, moments (blurred),
 // reports, and every moderation action about them. Suspend and lift go through mod_suspend() and
 // mod_lift_suspension() as the moderator (D-132).
-export default async function User({ params }: { params: Promise<{ id: string }> }) {
+export default async function User({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const id = z.uuid().safeParse((await params).id).data;
   if (!id) notFound();
+  const depth = treeDepth((await searchParams).depth);
   const client = await supabase();
-  const [user, moments, usage, invites] = await Promise.all([
+  const [user, moments, usage, invites, tree] = await Promise.all([
     loadUser(client, id),
     loadUserMoments(client, id),
     loadUserStats(client, id),
     loadUserInvites(client, id),
+    loadInviteTree(client, id, depth),
   ]);
   if (!user) notFound();
   const photos = await photoUrls(
@@ -441,6 +543,8 @@ export default async function User({ params }: { params: Promise<{ id: string }>
           {invites ? <InvitesCard user={profile.id} invites={invites} /> : null}
         </div>
       </div>
+
+      {tree ? <TreeCard tree={tree} username={profile.username} depth={depth} /> : null}
     </div>
   );
 }

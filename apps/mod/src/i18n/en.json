@@ -39,7 +39,8 @@
     "analyticsPacks": "Packs",
     "analyticsStickers": "Top stickers",
     "stickers": "Sticker packs",
-    "invites": "Invite codes"
+    "invites": "Invite codes",
+    "inviteNetwork": "Invite network"
   },
   "queue": {
     "title": "Review queue",
@@ -461,6 +462,22 @@
       },
       "uses_one": "{{count}} use",
       "uses_other": "{{count}} uses"
+    },
+    "tree": {
+      "title": "Invite tree",
+      "see": "See their invite tree",
+      "subtitle": "Who brought them in, up to whoever started the chain, and everyone they brought in.",
+      "label": "Invite tree of @{{username}}",
+      "depth": "Levels down",
+      "depthLink_one": "{{count}} level down",
+      "depthLink_other": "{{count}} levels down",
+      "direct": "Brought in directly",
+      "total": "Everyone below them",
+      "above": "People above them",
+      "truncated": "Showing the nearest {{count}} people below them. Pick fewer levels, or open someone further down to see their part.",
+      "deeper": "There are more people below level {{depth}}. Pick more levels down to see them.",
+      "empty": "No invite links yet: nobody brought them in with a code, and they haven't brought anyone in.",
+      "network": "Open the whole invite network"
     }
   },
   "chart": {
@@ -855,5 +872,49 @@
     "page": "Page {{n}}",
     "current": "Page {{n}}, current page",
     "gap": "More pages"
+  },
+  "graph": {
+    "waitlist": "Waitlist",
+    "admin": "Code {{code}}",
+    "paused": "Invites paused",
+    "direct_one": "{{count}} brought in directly",
+    "direct_other": "{{count}} brought in directly",
+    "total_one": "{{count}} below in total",
+    "total_other": "{{count}} below in total",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Fit",
+    "hint": "Drag to pan · scroll or use + and − to zoom · drag a person to move them · click a person to open their page",
+    "legend": {
+      "title": "Legend",
+      "active": "Active",
+      "suspended": "Suspended",
+      "paused": "Invites paused",
+      "deleted": "Deleted",
+      "waitlist": "Waitlist",
+      "admin": "Console code",
+      "link": "Joined by invite link",
+      "size": "Bigger dot: more people below them"
+    }
+  },
+  "network": {
+    "title": "Invite network",
+    "subtitle": "Everyone who joined with an invite and who brought them in · moderators only, never in the app or analytics",
+    "label": "The whole invite network",
+    "people": "People in the network",
+    "roots": "Joined from the waitlist or a console code",
+    "biggest": "Biggest reach",
+    "suspended": "Suspended in the network",
+    "truncated": "Showing the {{count}} earliest people. The counts cover everyone.",
+    "empty": "Nobody has joined with an invite yet.",
+    "top": "Biggest inviters",
+    "columns": {
+      "person": "Person",
+      "direct": "Directly",
+      "total": "In total",
+      "status": "Status"
+    },
+    "none": "—",
+    "totals": "Totals"
   }
 }
