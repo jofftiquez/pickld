@@ -2,44 +2,31 @@
 
 import { useActionState } from 'react';
 
-import { colors } from '@/theme/tokens';
-
 import { editPack } from '~/app/(console)/stickers/actions';
 import { t } from '~/i18n/t';
 import type { PackResult } from '~/lib/stickers';
-import { input, secondaryButton } from '~/lib/styles';
 
+import { Field } from './Field';
 import { ResultNote } from './ResultNote';
-
-const field = { display: 'grid', gap: 6, fontSize: 13, fontWeight: 700 } as const;
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 
 /** A free pack's name and description. The short name is its key prefix, so it never changes. */
 export function PackDetailsForm({ pack, name, description }: { pack: string; name: string; description: string }) {
   const [result, action, pending] = useActionState<PackResult | null, FormData>(editPack, null);
   return (
-    <form action={action} style={{ display: 'grid', gap: 10 }}>
+    <form action={action} className="grid gap-2.5">
       <input type="hidden" name="pack" value={pack} />
-      <label style={field}>
-        {t('stickers.create.name')}
-        <input name="name" required maxLength={40} defaultValue={name} autoComplete="off" style={input} />
-      </label>
-      <label style={field}>
-        {t('stickers.create.description')}
-        <textarea
-          name="description"
-          maxLength={200}
-          rows={2}
-          defaultValue={description}
-          style={{ ...input, fontSize: 14, resize: 'vertical', color: colors.ink }}
-        />
-      </label>
-      <button
-        type="submit"
-        disabled={pending}
-        style={{ ...secondaryButton, minHeight: 44, justifySelf: 'start', opacity: pending ? 0.6 : 1 }}
-      >
+      <Field label={t('stickers.create.name')}>
+        <Input name="name" required maxLength={40} defaultValue={name} autoComplete="off" />
+      </Field>
+      <Field label={t('stickers.create.description')}>
+        <Textarea name="description" maxLength={200} rows={2} defaultValue={description} className="resize-y" />
+      </Field>
+      <Button type="submit" disabled={pending} variant="secondary" className="justify-self-start">
         {t('stickers.pack.save')}
-      </button>
+      </Button>
       <ResultNote result={result} />
     </form>
   );

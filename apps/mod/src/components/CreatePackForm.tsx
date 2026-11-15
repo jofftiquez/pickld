@@ -2,16 +2,15 @@
 
 import { useActionState } from 'react';
 
-import { colors, radius } from '@/theme/tokens';
-
 import { createPack } from '~/app/(console)/stickers/actions';
 import { t } from '~/i18n/t';
 import { KEY_PART, type PackResult } from '~/lib/stickers';
-import { input, primaryButton } from '~/lib/styles';
 
+import { Field } from './Field';
 import { ResultNote } from './ResultNote';
-
-const field = { display: 'grid', gap: 6, fontSize: 13, fontWeight: 700 } as const;
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 
 /** A new free draft pack (FR-MOD-10). On success the action opens the pack. */
 export function CreatePackForm() {
@@ -20,16 +19,14 @@ export function CreatePackForm() {
     <form
       action={action}
       aria-label={t('stickers.create.title')}
-      style={{ background: colors.surface, borderRadius: radius.card, padding: 16, display: 'grid', gap: 12 }}
+      className="grid gap-3 rounded-card border bg-card p-4 shadow-xs"
     >
-      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{t('stickers.create.title')}</h2>
-      <label style={field}>
-        {t('stickers.create.name')}
-        <input name="name" required maxLength={40} autoComplete="off" style={input} />
-      </label>
-      <label style={field}>
-        {t('stickers.create.slug')}
-        <input
+      <h2 className="m-0 text-[17px] font-extrabold">{t('stickers.create.title')}</h2>
+      <Field label={t('stickers.create.name')}>
+        <Input name="name" required maxLength={40} autoComplete="off" />
+      </Field>
+      <Field label={t('stickers.create.slug')} hint={t('stickers.create.slugHint')}>
+        <Input
           name="slug"
           required
           maxLength={40}
@@ -37,21 +34,14 @@ export function CreatePackForm() {
           autoComplete="off"
           spellCheck={false}
           placeholder="summer-2027"
-          style={input}
         />
-        <span style={{ fontWeight: 400, color: colors.muted }}>{t('stickers.create.slugHint')}</span>
-      </label>
-      <label style={field}>
-        {t('stickers.create.description')}
-        <textarea name="description" maxLength={200} rows={2} style={{ ...input, fontSize: 14, resize: 'vertical' }} />
-      </label>
-      <button
-        type="submit"
-        disabled={pending}
-        style={{ ...primaryButton, fontSize: 14, minHeight: 44, justifySelf: 'start', opacity: pending ? 0.6 : 1 }}
-      >
+      </Field>
+      <Field label={t('stickers.create.description')}>
+        <Textarea name="description" maxLength={200} rows={2} className="resize-y" />
+      </Field>
+      <Button type="submit" disabled={pending} className="justify-self-start">
         {t('stickers.create.button')}
-      </button>
+      </Button>
       <ResultNote result={result} />
     </form>
   );

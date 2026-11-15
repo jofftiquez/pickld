@@ -1,31 +1,23 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type CSSProperties, useCallback, useEffect, useRef, useState, useTransition } from 'react';
-
-import { colors, radius } from '@/theme/tokens';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { decide } from '~/app/(console)/actions';
 import { t } from '~/i18n/t';
 import { type Action, allowed, GUIDELINES, type Guideline } from '~/lib/decide';
 import type { Filter, QueueItem } from '~/lib/queue';
-import { input } from '~/lib/styles';
+import { cn } from '~/lib/utils';
 
-const base: CSSProperties = {
-  font: 'inherit',
-  fontSize: 14,
-  fontWeight: 800,
-  minHeight: 44,
-  borderRadius: radius.input,
-  border: `1px solid ${colors.divider}`,
-  background: colors.surface,
-  color: colors.ink,
-};
-const tone: Record<Action, CSSProperties> = {
-  keep: { ...base, fontSize: 15, border: 'none', background: colors.brand, color: colors.surface },
-  remove: { ...base, fontSize: 15, border: 'none', background: colors.danger, color: colors.surface },
-  remove_warn: base,
-  escalate: base,
+import { Button } from './ui/button';
+import { NativeSelect, NativeSelectOption } from './ui/native-select';
+
+// Keep and Remove lead in solid green and red; the other two sit quietly beside them.
+const tone: Record<Action, 'default' | 'destructive' | 'outline'> = {
+  keep: 'default',
+  remove: 'destructive',
+  remove_warn: 'outline',
+  escalate: 'outline',
 };
 const label: Record<Action, string> = {
   keep: 'decide.keep',
@@ -105,40 +97,42 @@ export function Decisions({
   }, [run]);
 
   const button = (action: Action) => (
-    <button
+    <Button
       type="button"
+      variant={tone[action]}
       onClick={() => run(action)}
       disabled={pending || !can[action]}
       title={t(hint[action])}
       aria-keyshortcuts={Object.keys(SHORTCUTS)
         .find((k) => SHORTCUTS[k] === action)
         ?.toUpperCase()}
-      style={{ ...tone[action], opacity: can[action] ? 1 : 0.4, cursor: can[action] ? 'pointer' : 'default' }}
+      className={cn('rounded-input disabled:opacity-40', tone[action] !== 'outline' && 'text-[15px] font-extrabold')}
     >
       {t(label[action])}
-    </button>
+    </Button>
   );
 
   return (
-    <div ref={group} role="group" aria-label={t('decide.label')} style={{ display: 'grid', gap: 8, marginTop: 'auto' }}>
+    <div ref={group} role="group" aria-label={t('decide.label')} className="mt-auto grid gap-2">
       {can.remove ? (
-        <label style={{ display: 'grid', gap: 4, fontSize: 12, color: colors.muted }}>
+        <label className="grid gap-1 text-xs text-muted-foreground">
           {t('decide.guideline')}
-          <select
+          <NativeSelect
             value={guideline}
             onChange={(e) => setGuideline(e.target.value as Guideline | '')}
-            style={{ ...input, fontSize: 14, padding: '9px 10px' }}
+            wrapperClassName="w-full"
+            className="text-foreground"
           >
-            <option value="">{t('decide.guidelinePick')}</option>
+            <NativeSelectOption value="">{t('decide.guidelinePick')}</NativeSelectOption>
             {GUIDELINES.map((g) => (
-              <option key={g} value={g}>
+              <NativeSelectOption key={g} value={g}>
                 {t(`guideline.${g}`)}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       ) : null}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      <div className="grid grid-cols-2 gap-2">
         {button('keep')}
         {button('remove')}
         {button('remove_warn')}
@@ -147,7 +141,7 @@ export function Decisions({
       <p
         role="status"
         aria-live="polite"
-        style={{ margin: 0, minHeight: 18, fontSize: 12, color: message ? colors.danger : colors.muted }}
+        className={cn('m-0 min-h-[18px] text-xs', message ? 'text-destructive' : 'text-muted-foreground')}
       >
         {pending ? t('decide.working') : (message ?? t('decide.shortcuts'))}
       </p>

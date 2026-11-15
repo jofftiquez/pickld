@@ -2,17 +2,14 @@
 
 import { useActionState, useRef } from 'react';
 
-import { colors, radius } from '@/theme/tokens';
-
 import { uploadArt } from '~/app/(console)/stickers/actions';
 import { t } from '~/i18n/t';
 import { KEY_PART, nameFromFile, type UploadResult } from '~/lib/stickers';
-import { input, primaryButton } from '~/lib/styles';
 
+import { Field } from './Field';
 import { ResultNote } from './ResultNote';
-
-const field = { display: 'grid', gap: 6, fontSize: 13, fontWeight: 700 } as const;
-const hint = { fontWeight: 400, color: colors.muted } as const;
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 /**
  * One PNG to the pack (FR-MOD-10). The name, which becomes the file name, starts as the chosen file's name.
@@ -25,15 +22,14 @@ export function UploadArtForm({ pack, draft }: { pack: string; draft: boolean })
     <form
       action={action}
       aria-label={t(draft ? 'stickers.upload.titleDraft' : 'stickers.upload.title')}
-      style={{ background: colors.surface, borderRadius: radius.card, padding: 16, display: 'grid', gap: 12 }}
+      className="grid gap-3 rounded-card border bg-card p-4 shadow-xs"
     >
-      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>
+      <h2 className="m-0 text-[17px] font-extrabold">
         {t(draft ? 'stickers.upload.titleDraft' : 'stickers.upload.title')}
       </h2>
       <input type="hidden" name="pack" value={pack} />
-      <label style={field}>
-        {t('stickers.upload.file')}
-        <input
+      <Field label={t('stickers.upload.file')} hint={t('stickers.upload.fileHint')}>
+        <Input
           type="file"
           name="file"
           required
@@ -43,13 +39,11 @@ export function UploadArtForm({ pack, draft }: { pack: string; draft: boolean })
             if (file && nameRef.current && nameRef.current.value === '')
               nameRef.current.value = nameFromFile(file.name);
           }}
-          style={{ fontSize: 14 }}
+          className="pt-2"
         />
-        <span style={hint}>{t('stickers.upload.fileHint')}</span>
-      </label>
-      <label style={field}>
-        {t('stickers.upload.name')}
-        <input
+      </Field>
+      <Field label={t('stickers.upload.name')} hint={draft ? t('stickers.upload.nameHint') : undefined}>
+        <Input
           ref={nameRef}
           name="name"
           required
@@ -57,21 +51,14 @@ export function UploadArtForm({ pack, draft }: { pack: string; draft: boolean })
           pattern={KEY_PART}
           autoComplete="off"
           spellCheck={false}
-          style={input}
         />
-        {draft ? <span style={hint}>{t('stickers.upload.nameHint')}</span> : null}
-      </label>
-      <label style={field}>
-        {t('stickers.upload.label')}
-        <input name="label" maxLength={40} autoComplete="off" style={input} />
-      </label>
-      <button
-        type="submit"
-        disabled={pending}
-        style={{ ...primaryButton, fontSize: 14, minHeight: 44, justifySelf: 'start', opacity: pending ? 0.6 : 1 }}
-      >
+      </Field>
+      <Field label={t('stickers.upload.label')}>
+        <Input name="label" maxLength={40} autoComplete="off" />
+      </Field>
+      <Button type="submit" disabled={pending} className="justify-self-start">
         {t('stickers.upload.button')}
-      </button>
+      </Button>
       <ResultNote result={result} />
     </form>
   );

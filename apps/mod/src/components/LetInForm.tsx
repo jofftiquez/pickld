@@ -2,12 +2,12 @@
 
 import { useActionState } from 'react';
 
-import { colors } from '@/theme/tokens';
-
 import { letIn } from '~/app/(console)/invites/actions';
 import { t } from '~/i18n/t';
 import type { LetInResult } from '~/lib/invites';
-import { primaryButton } from '~/lib/styles';
+
+import { FormNote } from './Field';
+import { Button } from './ui/button';
 
 /**
  * Let the oldest N waiting accounts in (design: ModInviteCodes). Shown to every moderator; Postgres lets only
@@ -16,24 +16,16 @@ import { primaryButton } from '~/lib/styles';
 export function LetInForm({ count }: { count: number }) {
   const [state, action, pending] = useActionState<LetInResult | null, FormData>(letIn, null);
   return (
-    <form action={action} style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
+    <form action={action} className="grid justify-items-start gap-2">
       <input type="hidden" name="count" value={count} />
-      <button
-        type="submit"
-        disabled={pending || count < 1}
-        style={{ ...primaryButton, fontSize: 14, minHeight: 44, opacity: pending || count < 1 ? 0.6 : 1 }}
-      >
+      <Button type="submit" disabled={pending || count < 1}>
         {t('invites.letIn.button', { count })}
-      </button>
-      <p style={{ margin: 0, color: colors.muted, fontSize: 12 }}>{t('invites.letIn.founders')}</p>
+      </Button>
+      <p className="m-0 text-xs text-muted-foreground">{t('invites.letIn.founders')}</p>
       {state?.result === 'done' ? (
-        <p role="status" style={{ margin: 0, color: colors.brandText, fontSize: 13, fontWeight: 600 }}>
-          {t('invites.letIn.done', { count: state.count })}
-        </p>
+        <FormNote tone="ok">{t('invites.letIn.done', { count: state.count })}</FormNote>
       ) : state ? (
-        <p role="alert" style={{ margin: 0, color: colors.danger, fontSize: 13 }}>
-          {t(`invites.letIn.errors.${state.result}`)}
-        </p>
+        <FormNote tone="error">{t(`invites.letIn.errors.${state.result}`)}</FormNote>
       ) : null}
     </form>
   );
