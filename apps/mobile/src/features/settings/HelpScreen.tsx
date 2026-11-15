@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
@@ -6,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Linking, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { appVersion } from '@/lib/appVersion';
 import { GUIDELINES_URL, SUPPORT_EMAIL } from '@/lib/links';
 
 import { mailtoUrl } from './helpModel';
@@ -20,7 +20,7 @@ export function HelpScreen() {
 
   async function email(subject: string) {
     const body = t('help.mail.body', {
-      version: Constants.expoConfig?.version ?? '',
+      version: appVersion(),
       platform: Platform.OS,
       os: String(Platform.Version),
     });

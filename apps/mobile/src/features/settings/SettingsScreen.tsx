@@ -1,5 +1,4 @@
 import { useQueryClient } from '@tanstack/react-query';
-import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +8,7 @@ import { leftToGive } from '@/features/invite/invites';
 import { useInvites } from '@/features/invite/useInvites';
 import { usePendingUploads } from '@/features/pending/usePendingUploads';
 import { useBlockedAccounts } from '@/features/safety/block';
+import { appVersion } from '@/lib/appVersion';
 import { openLegal } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
 import { resetTo } from '@/lib/navigation';
@@ -46,7 +46,7 @@ export function SettingsScreen() {
       reminders={reminders.data}
       prefs={prefs.data}
       blockedCount={blocked.rows?.length}
-      version={Constants.expoConfig?.version ?? ''}
+      version={appVersion()}
       failed={account.isError || reminders.isError || prefs.isError}
       saveFailed={saveFailed}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
