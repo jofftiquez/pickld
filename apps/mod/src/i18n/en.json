@@ -916,5 +916,17 @@
     },
     "none": "—",
     "totals": "Totals"
+  },
+  "ui": {
+    "more": "More",
+    "previous": "Previous",
+    "next": "Next",
+    "previousPage": "Go to the previous page",
+    "nextPage": "Go to the next page",
+    "morePages": "More pages",
+    "close": "Close",
+    "sidebar": "Navigation",
+    "sidebarDescription": "The console sections.",
+    "toggleSidebar": "Show or hide the navigation"
   }
 }

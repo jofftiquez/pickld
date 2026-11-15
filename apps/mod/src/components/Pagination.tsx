@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
 
-import { colors } from '@/theme/tokens';
+import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 
+import { buttonVariants } from '~/components/ui/button';
+import { NativeSelect, NativeSelectOption } from '~/components/ui/native-select';
+import { Pagination as PaginationNav, PaginationContent, PaginationItem } from '~/components/ui/pagination';
 import { t } from '~/i18n/t';
 import { lastPage, SIZES, withParams } from '~/lib/paging';
-import { input } from '~/lib/styles';
+import { cn } from '~/lib/utils';
 
 /** 1 … 4 5 6 … 12: the first, the last, and the pages next to the current one. */
 function pageList(page: number, pages: number): (number | 'gap')[] {
@@ -50,11 +54,17 @@ export function Pagination({
     withParams(path ?? '', params, { page: p === 1 ? null : p, size: s === SIZES[0] ? null : s });
   const go = (p: number, s = size) => (onChange ? onChange(p, s) : router.push(href(p, s), { scroll: false }));
 
-  const pageButton = (p: number, label: string, text: string, current = false, disabled = false) =>
-    onChange ? (
+  const pageButton = (p: number, label: string, text: ReactNode, current = false, disabled = false) => {
+    const className = cn(
+      buttonVariants({ variant: current ? 'default' : 'outline', size: 'icon-sm' }),
+      'relative min-w-9 rounded-full before:absolute before:-inset-1 before:content-[""]',
+      current && 'bg-foreground text-background hover:bg-foreground/90',
+      disabled && 'pointer-events-none opacity-40',
+    );
+    return onChange ? (
       <button
         type="button"
-        className="pg-link"
+        className={className}
         aria-label={label}
         aria-current={current ? 'page' : undefined}
         aria-disabled={disabled ? 'true' : undefined}
@@ -67,7 +77,7 @@ export function Pagination({
       <Link
         href={href(p)}
         scroll={false}
-        className="pg-link"
+        className={className}
         aria-label={label}
         aria-current={current ? 'page' : undefined}
         aria-disabled={disabled ? 'true' : undefined}
@@ -76,59 +86,64 @@ export function Pagination({
         {text}
       </Link>
     );
+  };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 12,
-        padding: '10px 14px',
-        borderTop: `1px solid ${colors.divider}`,
-        fontSize: 13,
-        color: colors.muted,
-      }}
-    >
-      <p role="status" style={{ margin: 0 }}>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-2.5 text-[13px] text-muted-foreground">
+      <p role="status" className="m-0">
         {total === 0 ? t('pagination.none') : t('pagination.showing', { from, to, total })}
       </p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2">
           {t('pagination.size')}
-          <select
-            value={size}
-            onChange={(e) => go(1, Number(e.target.value))}
-            style={{ ...input, fontSize: 13, padding: '6px 10px', minHeight: 36 }}
-          >
+          <NativeSelect size="sm" value={size} onChange={(e) => go(1, Number(e.target.value))}>
             {SIZES.map((s) => (
-              <option key={s} value={s}>
+              <NativeSelectOption key={s} value={s}>
                 {s}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </label>
-        <nav aria-label={t('pagination.label')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {pageButton(Math.max(1, page - 1), t('pagination.previous'), '‹', false, page <= 1)}
-          {pageList(page, pages).map((p, i) =>
-            p === 'gap' ? (
-              <span key={`gap${i}`} aria-label={t('pagination.gap')} style={{ padding: '0 4px' }}>
-                …
-              </span>
-            ) : (
-              <span key={p}>
-                {pageButton(
-                  p,
-                  p === page ? t('pagination.current', { n: p }) : t('pagination.page', { n: p }),
-                  String(p),
-                  p === page,
-                )}
-              </span>
-            ),
-          )}
-          {pageButton(Math.min(pages, page + 1), t('pagination.next'), '›', false, page >= pages)}
-        </nav>
+        <PaginationNav className="mx-0 w-auto">
+          <PaginationContent className="gap-1.5">
+            <PaginationItem>
+              {pageButton(
+                Math.max(1, page - 1),
+                t('pagination.previous'),
+                <ChevronLeft aria-hidden />,
+                false,
+                page <= 1,
+              )}
+            </PaginationItem>
+            {pageList(page, pages).map((p, i) =>
+              p === 'gap' ? (
+                <PaginationItem key={`gap${i}`}>
+                  <span aria-label={t('pagination.gap')} className="flex size-9 items-center justify-center">
+                    <MoreHorizontal aria-hidden className="size-4" />
+                  </span>
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={p}>
+                  {pageButton(
+                    p,
+                    p === page ? t('pagination.current', { n: p }) : t('pagination.page', { n: p }),
+                    String(p),
+                    p === page,
+                  )}
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              {pageButton(
+                Math.min(pages, page + 1),
+                t('pagination.next'),
+                <ChevronRight aria-hidden />,
+                false,
+                page >= pages,
+              )}
+            </PaginationItem>
+          </PaginationContent>
+        </PaginationNav>
       </div>
     </div>
   );

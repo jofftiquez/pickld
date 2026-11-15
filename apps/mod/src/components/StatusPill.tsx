@@ -1,24 +1,18 @@
-import { colors, radius } from '@/theme/tokens';
-
+import { Badge } from '~/components/ui/badge';
 import { t } from '~/i18n/t';
+import { cn } from '~/lib/utils';
 
-/** Draft or Published, as a pill (design: ModConsole's source badges). */
+/** Draft or Published, as a badge (design: ModConsole's source badges). */
 export function StatusPill({ status }: { status: 'draft' | 'published' }) {
   const draft = status === 'draft';
   return (
-    <span
-      style={{
-        fontSize: 11,
-        fontWeight: 700,
-        borderRadius: radius.pill,
-        padding: '3px 8px',
-        whiteSpace: 'nowrap',
-        color: draft ? colors.ink : colors.brandText,
-        background: draft ? colors.subtle : colors.brandTint,
-        border: draft ? `1px dashed ${colors.dashed}` : 'none',
-      }}
+    <Badge
+      className={cn(
+        'font-bold',
+        draft ? 'border-dashed border-input bg-secondary text-foreground' : 'bg-brand-tint text-brand-text',
+      )}
     >
       {t(`stickers.status.${status}`)}
-    </span>
+    </Badge>
   );
 }

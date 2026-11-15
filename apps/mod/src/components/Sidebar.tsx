@@ -1,31 +1,78 @@
 'use client';
 
+import {
+  ChartColumn,
+  CircleHelp,
+  Flag,
+  Inbox,
+  LayoutDashboard,
+  ListOrdered,
+  LogOut,
+  type LucideIcon,
+  Network,
+  Scale,
+  ScrollText,
+  Sticker,
+  Ticket,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
-import { colors, radius } from '@/theme/tokens';
-
 import { Mark } from './Mark';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from '~/components/ui/breadcrumb';
+import { Separator } from '~/components/ui/separator';
+import {
+  Sidebar as ShadSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarTrigger,
+} from '~/components/ui/sidebar';
 import { t } from '~/i18n/t';
+
+const icons = {
+  overview: LayoutDashboard,
+  queue: Inbox,
+  reports: Flag,
+  appeals: Scale,
+  users: Users,
+  invites: Ticket,
+  network: Network,
+  stickers: Sticker,
+  waitlist: ListOrdered,
+  analytics: ChartColumn,
+  audit: ScrollText,
+  help: CircleHelp,
+} satisfies Record<string, LucideIcon>;
 
 export interface NavItem {
   href: string;
   label: string;
+  /** An icon name (the layout is a server component, so it can't pass the icon itself). */
+  icon?: keyof typeof icons;
   count?: number;
   /** Pages nested under this item; the item itself is then a heading, not a link. */
   children?: NavItem[];
 }
 
-/** The dark left rail (design: ModConsole): name, sections, and who is signed in. It stays put while pages scroll. */
-export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
+/** Which nav link is the current page. Reports and Appeals are queue filters, so Queue lights up only for the others. */
+function useActive(items: NavItem[]) {
   const path = usePathname();
   const params = useSearchParams();
   const filter = params.get('filter');
   const here = filter && filter !== 'all' ? `${path}?filter=${filter}` : path;
-  // Analytics' window (?days=) carries over between its pages.
-  const days = path.startsWith('/analytics') ? params.get('days') : null;
-  // Reports and Appeals are queue filters, so Queue lights up only for the other filters.
-  const isActive = (item: NavItem) =>
+  return (item: NavItem) =>
     item.href === '/'
       ? path === '/'
       : item.href.includes('?')
@@ -33,109 +80,142 @@ export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
         : item.href === '/queue'
           ? path === '/queue' && !items.some((other) => other.href.includes('?') && other.href === here)
           : path.startsWith(item.href);
+}
+
+// The design's rail: brand green under the current page with ink text, 44 px rows.
+const row =
+  'h-11 text-[15px] font-semibold text-sidebar-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:font-extrabold data-[active=true]:text-sidebar-primary-foreground';
+
+/**
+ * The dark left rail (design: ModConsole), built on shadcn/ui's Sidebar: name, sections with their open counts,
+ * and who is signed in. It stays fixed while pages scroll, hides with the header's button (or Ctrl/⌘ B), and
+ * becomes a sheet on narrow screens.
+ */
+export function Sidebar({ items, name }: { items: NavItem[]; name: string }) {
+  const params = useSearchParams();
+  const path = usePathname();
+  const isActive = useActive(items);
+  // Analytics' window (?days=) carries over between its pages.
+  const days = path.startsWith('/analytics') ? params.get('days') : null;
   return (
-    <aside
-      style={{
-        background: colors.ink,
-        color: colors.surface,
-        width: 234,
-        flexShrink: 0,
-        padding: '24px 14px 20px',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        // Fixed while the page scrolls; scrolls on its own only when the window is shorter than the nav.
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        overflowY: 'auto',
-      }}
-    >
-      <p
-        style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 10px 24px', fontWeight: 800, fontSize: 17 }}
-      >
-        <Mark />
-        {t('site.name')}
-      </p>
-      <nav aria-label={t('nav.label')} style={{ display: 'grid', gap: 4 }}>
-        {items.map((item) =>
-          item.children ? (
-            <div key={item.href} role="group" aria-labelledby={`nav-${item.href}`} style={{ display: 'grid', gap: 2 }}>
-              <span
-                id={`nav-${item.href}`}
-                style={{ padding: '12px 10px 6px', fontWeight: 600, fontSize: 15, color: colors.surface }}
-              >
-                {item.label}
-              </span>
-              {item.children.map((child) => (
-                <NavLink
-                  key={child.href}
-                  item={child}
-                  href={days ? `${child.href}?days=${days}` : child.href}
-                  active={path.startsWith(child.href)}
-                  nested
-                />
-              ))}
-            </div>
-          ) : (
-            <NavLink key={item.href} item={item} href={item.href} active={isActive(item)} />
-          ),
-        )}
-      </nav>
-      <div style={{ marginTop: 'auto', padding: '0 8px' }}>
-        <p style={{ margin: '0 0 8px', fontWeight: 700, fontSize: 14 }}>{t('nav.role', { name })}</p>
+    <ShadSidebar collapsible="offcanvas">
+      <SidebarHeader className="px-4 pt-6 pb-4">
+        <p className="m-0 flex items-center gap-2.5 text-[17px] font-extrabold">
+          <Mark />
+          {t('site.name')}
+        </p>
+      </SidebarHeader>
+      <SidebarContent>
+        <nav aria-label={t('nav.label')}>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {items.map((item) => {
+                  const Icon = item.icon ? icons[item.icon] : null;
+                  if (item.children) {
+                    return (
+                      <SidebarMenuItem key={item.href} role="group" aria-labelledby={`nav-${item.href}`}>
+                        <SidebarGroupLabel
+                          id={`nav-${item.href}`}
+                          className="h-11 gap-2 px-2 text-[15px] font-semibold text-sidebar-foreground"
+                        >
+                          {Icon ? <Icon aria-hidden /> : null}
+                          {item.label}
+                        </SidebarGroupLabel>
+                        <SidebarMenuSub className="mr-0 border-sidebar-border pr-0">
+                          {item.children.map((child) => (
+                            <SidebarMenuSubItem key={child.href}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={path.startsWith(child.href)}
+                                className="h-10 text-sm font-semibold text-sidebar-muted data-[active=true]:bg-sidebar-primary data-[active=true]:font-extrabold data-[active=true]:text-sidebar-primary-foreground"
+                              >
+                                <Link
+                                  href={days ? `${child.href}?days=${days}` : child.href}
+                                  aria-current={path.startsWith(child.href) ? 'page' : undefined}
+                                >
+                                  {child.label}
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </SidebarMenuItem>
+                    );
+                  }
+                  const active = isActive(item);
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={active} className={row}>
+                        <Link href={item.href} aria-current={active ? 'page' : undefined}>
+                          {Icon ? <Icon aria-hidden /> : null}
+                          <span>{item.label}</span>
+                          {item.count !== undefined ? (
+                            <SidebarMenuBadge
+                              aria-label={t('nav.count', { count: item.count })}
+                              className={
+                                active
+                                  ? 'top-3 bg-sidebar text-sidebar-foreground'
+                                  : 'top-3 rounded-full bg-sidebar-accent text-sidebar-foreground'
+                              }
+                            >
+                              {item.count}
+                            </SidebarMenuBadge>
+                          ) : null}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </nav>
+      </SidebarContent>
+      <SidebarFooter className="px-4 pb-5">
+        <p className="m-0 text-sm font-bold">{t('nav.role', { name })}</p>
         <form action="/sign-out" method="post">
           <button
             type="submit"
-            style={{ background: 'none', border: 'none', padding: 0, color: colors.onDarkMuted, fontSize: 13 }}
+            className="-ml-1 flex min-h-11 items-center gap-2 rounded-md px-1 text-[13px] text-sidebar-muted hover:text-sidebar-foreground"
           >
+            <LogOut aria-hidden className="size-4" />
             {t('nav.signOut')}
           </button>
         </form>
-      </div>
-    </aside>
+      </SidebarFooter>
+    </ShadSidebar>
   );
 }
 
-function NavLink({ item, href, active, nested }: { item: NavItem; href: string; active: boolean; nested?: boolean }) {
+/** The bar above every page: the button that hides the rail, and where you are. It stays at the top while pages scroll. */
+export function ConsoleHeader({ items }: { items: NavItem[] }) {
+  const isActive = useActive(items);
+  const path = usePathname();
+  const flat: (NavItem & { parent?: NavItem })[] = items.flatMap((item) =>
+    item.children ? item.children.map((child) => ({ ...child, parent: item })) : [item],
+  );
+  const current = flat.find((item) => (item.parent ? path.startsWith(item.href) : isActive(item)));
+  const parent = current?.parent;
   return (
-    <Link
-      href={href}
-      aria-current={active ? 'page' : undefined}
-      style={{
-        padding: nested ? '10px 10px 10px 24px' : '12px 10px',
-        minHeight: 44,
-        boxSizing: 'border-box',
-        borderRadius: radius.thumbLg,
-        background: active ? colors.brand : 'transparent',
-        color: active ? colors.ink : nested ? colors.onDarkMuted : colors.surface,
-        fontWeight: active ? 800 : 600,
-        fontSize: nested ? 14 : 15,
-        textDecoration: 'none',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}
-    >
-      {item.label}
-      {item.count !== undefined ? (
-        <span
-          aria-label={t('nav.count', { count: item.count })}
-          style={{
-            minWidth: 22,
-            padding: '2px 7px',
-            borderRadius: radius.pill,
-            background: active ? colors.ink : colors.onDarkControl,
-            color: colors.surface,
-            fontSize: 12,
-            fontWeight: 700,
-            textAlign: 'center',
-            boxSizing: 'border-box',
-          }}
-        >
-          {item.count}
-        </span>
+    <header className="sticky top-0 z-20 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur">
+      <SidebarTrigger className="-ml-1 size-11" />
+      <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-5" />
+      {current ? (
+        <Breadcrumb>
+          <BreadcrumbList>
+            {parent ? (
+              <>
+                <BreadcrumbItem>{parent.label}</BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            ) : null}
+            <BreadcrumbItem>
+              <span className="font-bold text-foreground">{current.label}</span>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       ) : null}
-    </Link>
+    </header>
   );
 }
