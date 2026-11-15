@@ -13,7 +13,7 @@ import {
 } from 'expo-media-library';
 import { Platform } from 'react-native';
 
-import { exifFromCreationTime, type LibraryPhoto } from './galleryDays';
+import { exifFromCreationTime, type DayRange, type LibraryPhoto } from './galleryDays';
 import type { PickedPhoto } from './pickFromGallery';
 
 export type LibraryAccess = 'all' | 'limited';
@@ -26,10 +26,15 @@ export async function libraryAccess(): Promise<LibraryAccess | null> {
   return permission.accessPrivileges === 'limited' ? 'limited' : 'all';
 }
 
-/** A page of the library's photos, newest first. */
-export async function loadLibraryPhotos(offset: number, limit: number): Promise<LibraryPhoto[]> {
-  const rows = await new Query()
-    .eq(AssetField.MEDIA_TYPE, MediaType.IMAGE)
+/** A page of the library's photos, newest first; with `range`, only the ones taken within it. */
+export async function loadLibraryPhotos(
+  offset: number,
+  limit: number,
+  range: DayRange | null = null,
+): Promise<LibraryPhoto[]> {
+  let query = new Query().eq(AssetField.MEDIA_TYPE, MediaType.IMAGE);
+  if (range !== null) query = query.gte(AssetField.CREATION_TIME, range.from).lt(AssetField.CREATION_TIME, range.to);
+  const rows = await query
     .orderBy({ key: AssetField.CREATION_TIME, ascending: false })
     .offset(offset)
     .limit(limit)

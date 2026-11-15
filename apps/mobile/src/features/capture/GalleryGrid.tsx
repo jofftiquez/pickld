@@ -19,7 +19,8 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { PillButton } from '@/components/PillButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
-import { formatDate, formatShortDate, formatTime } from '@/lib/format';
+import { SegmentedControl } from '@/components/SegmentedControl';
+import { formatDate, formatMonthDay, formatShortDate, formatTime } from '@/lib/format';
 import { selectionHaptic, tapHaptic } from '@/lib/haptics';
 import { addDays, localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
@@ -29,11 +30,13 @@ import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import {
+  dayRange,
   GALLERY_COLUMNS,
   galleryItems,
   itemOffsets,
   needsOlder,
   photoAt,
+  photosOnDay,
   targetIndex,
   type GalleryItem,
   type LibraryPhoto,
@@ -59,6 +62,7 @@ const PILL_FADE_MS = 150;
 const PEEK_HOLD_MS = 300;
 
 type Peek = { photo: LibraryPhoto; pinned: boolean };
+type Shown = 'day' | 'all';
 type Rect = { x: number; y: number; width: number; height: number };
 
 export type GalleryGridProps = {
@@ -78,8 +82,9 @@ export type GalleryGridProps = {
  * Choose a photo (FR-CAP-02; no design, after the Crop and Camera screens): the phone's photos grouped by
  * the day they were taken, with sticky day headers and a date pill while scrolling, so someone backdating
  * can see which day they are in. The day being filled is tinted, tagged Filling and outlined, and the grid
- * opens on it. Holding a photo previews it large with its date (`GalleryPeek`). Uses only the Photos access
- * the user already gave.
+ * opens on it. Holding a photo previews it large with its date (`GalleryPeek`). When filling a past day the
+ * grid starts on only that day's photos (Only Nov 13), with All photos one tap away. Uses only the Photos
+ * access the user already gave.
  */
 export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUnavailable }: GalleryGridProps) {
   const { t } = useTranslation();
@@ -94,7 +99,24 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
   const [failed, setFailed] = useState(false);
   const loadingMore = useRef(false);
 
-  // First load: newest first, and when filling, on until the day being filled is loaded.
+  // Filling a past day starts on only its photos, asked of the library by that day's times in `tz`, so a
+  // day far back loads at once and matches its day header in the full grid.
+  const [shown, setShown] = useState<Shown>(target === null ? 'all' : 'day');
+  const range = useMemo(() => (target !== null && shown === 'day' ? dayRange(target, tz) : null), [target, tz, shown]);
+  const showAll = () => {
+    if (shown === 'all') return;
+    setPhotos(null);
+    setEnd(false);
+    setShown('all');
+  };
+  const showDay = () => {
+    if (shown === 'day') return;
+    setPhotos(null);
+    setEnd(false);
+    setShown('day');
+  };
+
+  // First load: newest first, and when filling all photos, on until the day being filled is loaded.
   useEffect(() => {
     let alive = true;
     void (async () => {
@@ -102,10 +124,10 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
         const loaded: LibraryPhoto[] = [];
         let more = true;
         for (let pages = 0; more && pages < MAX_SEEK_PAGES; pages++) {
-          const page = await loadLibraryPhotos(loaded.length, PAGE);
+          const page = await loadLibraryPhotos(loaded.length, PAGE, range);
           loaded.push(...page);
           more = page.length === PAGE;
-          if (target === null || !needsOlder(loaded, target, tz)) break;
+          if (target === null || range !== null || !needsOlder(loaded, target, tz)) break;
         }
         if (!alive) return;
         setPhotos(loaded);
@@ -118,14 +140,14 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
     return () => {
       alive = false;
     };
-  }, [target, tz, onUnavailable]);
+  }, [target, tz, range, onUnavailable]);
 
   // Photos added, removed or shared with Pickld (Choose more) show up without reopening.
   useEffect(() => {
     if (photos === null) return;
     const count = Math.max(photos.length, PAGE);
     return onLibraryChange(() => {
-      loadLibraryPhotos(0, count).then(
+      loadLibraryPhotos(0, count, range).then(
         (page) => {
           setPhotos(page);
           setEnd(page.length < count);
@@ -133,14 +155,15 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
         (error: unknown) => captureError(error, { area: 'gallery' }),
       );
     });
-  }, [photos]);
+  }, [photos, range]);
 
   const loadMore = () => {
     if (photos === null || end || loadingMore.current) return;
     loadingMore.current = true;
-    loadLibraryPhotos(photos.length, PAGE)
+    loadLibraryPhotos(photos.length, PAGE, range)
       .then((page) => {
-        setPhotos((current) => [...(current ?? []), ...page]);
+        // Switching between Only this day and All photos meanwhile starts a new list.
+        setPhotos((current) => (current === null ? null : [...current, ...page]));
         if (page.length < PAGE) setEnd(true);
       })
       .catch((error: unknown) => captureError(error, { area: 'gallery' }))
@@ -152,7 +175,12 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
   const cell = (width - sizes.galleryGap * (GALLERY_COLUMNS - 1)) / GALLERY_COLUMNS;
   const rowHeight = cell + sizes.galleryGap;
   const dayHeight = Math.ceil(sizes.galleryDayHeader * Math.max(1, fontScale));
-  const items = useMemo(() => (photos === null ? [] : galleryItems(photos, tz)), [photos, tz]);
+  // The query already keeps to the day; this keeps the grid to exactly that day's header if a zone edge differs.
+  const visible = useMemo(
+    () => (photos === null || target === null || range === null ? photos : photosOnDay(photos, target, tz)),
+    [photos, target, range, tz],
+  );
+  const items = useMemo(() => (visible === null ? [] : galleryItems(visible, tz)), [visible, tz]);
   const offsets = useMemo(() => itemOffsets(items, dayHeight, rowHeight), [items, dayHeight, rowHeight]);
   const sticky = useMemo(() => items.flatMap((item, i) => (item.kind === 'day' ? [i] : [])), [items]);
   const initialIndex = useMemo(() => (target === null ? null : targetIndex(items, target)), [items, target]);
@@ -339,6 +367,7 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
   };
 
   const filling = target === null ? null : formatShortDate(new Date(`${target}T00:00:00Z`), 'UTC');
+  const targetDay = target === null ? null : formatMonthDay(new Date(`${target}T00:00:00Z`), 'UTC');
   const pillIsTarget = pillDay !== undefined && pillDay !== null && pillDay === target;
 
   const peekWhen = (photo: LibraryPhoto) =>
@@ -386,17 +415,43 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
         </View>
       ) : null}
 
+      {targetDay !== null ? (
+        <View style={styles.shown}>
+          <SegmentedControl<Shown>
+            segments={[
+              { key: 'day', label: t('gallery.onlyDay', { date: targetDay }) },
+              { key: 'all', label: t('gallery.allPhotos') },
+            ]}
+            selected={shown}
+            onSelect={(key) => (key === 'day' ? showDay() : showAll())}
+            accessibilityLabel={t('gallery.shownLabel')}
+            testID="gallery-shown"
+          />
+        </View>
+      ) : null}
+
       {failed ? (
         <Text style={[textStyle('bodySmall'), styles.failed]} accessibilityRole="alert">
           {t('gallery.photoFailed')}
         </Text>
       ) : null}
 
-      {photos === null ? (
+      {visible === null ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.muted} />
         </View>
-      ) : photos.length === 0 ? (
+      ) : visible.length === 0 && range !== null && targetDay !== null ? (
+        <View style={[styles.center, styles.dayEmpty]} testID="gallery-day-empty">
+          <Text style={[textStyle('body'), styles.dayEmptyText]}>{t('gallery.dayEmpty', { date: targetDay })}</Text>
+          <PillButton
+            label={t('gallery.showAll')}
+            accessibilityHint={t('gallery.showAllHint')}
+            variant="subtle"
+            onPress={showAll}
+            testID="gallery-show-all"
+          />
+        </View>
+      ) : visible.length === 0 ? (
         <View style={styles.center}>
           <Text style={[textStyle('body'), { color: colors.muted }]}>{t('gallery.empty')}</Text>
         </View>
@@ -404,6 +459,7 @@ export function GalleryGrid({ access, tz, target, insets, onPick, onClose, onUna
         <GestureDetector gesture={hold}>
           <View style={styles.list}>
             <FlatList
+              key={shown}
               data={items}
               keyExtractor={(item) => item.key}
               renderItem={renderItem}
@@ -498,6 +554,9 @@ const styles = StyleSheet.create({
   },
   bannerStacked: { flexDirection: 'column', alignItems: 'flex-start' },
   bannerText: { flexShrink: 1, color: colors.inkSoft },
+  shown: { paddingHorizontal: space.md, paddingTop: space.sm },
+  dayEmpty: { gap: space.md },
+  dayEmptyText: { color: colors.muted, textAlign: 'center' },
   failed: { color: colors.danger, paddingHorizontal: space.lg, paddingVertical: space.sm },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xxl },
   list: { flex: 1 },

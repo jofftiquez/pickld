@@ -2,10 +2,12 @@
 import { captureInfo } from '@/lib/image/captureTime';
 
 import {
+  dayRange,
   exifFromCreationTime,
   galleryItems,
   itemOffsets,
   needsOlder,
+  photosOnDay,
   targetIndex,
   type LibraryPhoto,
 } from '../galleryDays';
@@ -77,5 +79,40 @@ describe('exifFromCreationTime', () => {
       DateTimeOriginal: '2026:11:11 22:30:00',
       OffsetTimeOriginal: '-03:30',
     });
+  });
+});
+
+describe('one day of photos (Only Nov 8)', () => {
+  it('runs from local midnight to the next, in the phone zone', () => {
+    expect(dayRange('2026-11-08', MANILA)).toEqual({
+      from: Date.parse('2026-11-07T16:00:00Z'),
+      to: Date.parse('2026-11-08T16:00:00Z'),
+    });
+    // New York's clocks go back on Nov 1, 2026: a 25-hour day, EDT midnight to EST midnight.
+    expect(dayRange('2026-11-01', 'America/New_York')).toEqual({
+      from: Date.parse('2026-11-01T04:00:00Z'),
+      to: Date.parse('2026-11-02T05:00:00Z'),
+    });
+    // And forward on Mar 8: 23 hours.
+    expect(dayRange('2026-03-08', 'America/New_York')).toEqual({
+      from: Date.parse('2026-03-08T05:00:00Z'),
+      to: Date.parse('2026-03-09T04:00:00Z'),
+    });
+  });
+
+  it('keeps the photos under that day header: 23:50 and 00:10 on its side of each midnight', () => {
+    const photos = [
+      photo('after', '2026-11-08T16:10:00Z'), // Nov 9, 00:10 in Manila
+      photo('late', '2026-11-08T15:50:00Z'), // Nov 8, 23:50
+      photo('early', '2026-11-07T16:10:00Z'), // Nov 8, 00:10
+      photo('before', '2026-11-07T15:50:00Z'), // Nov 7, 23:50
+      photo('undated', null),
+    ];
+    expect(photosOnDay(photos, '2026-11-08', MANILA).map((p) => p.id)).toEqual(['late', 'early']);
+    const { from, to } = dayRange('2026-11-08', MANILA);
+    const inRange = photos.filter((p) => p.creationTime !== null && p.creationTime >= from && p.creationTime < to);
+    expect(inRange.map((p) => p.id)).toEqual(['late', 'early']);
+    const section = galleryItems(photos, MANILA).filter((i) => i.localDate === '2026-11-08' && i.kind === 'row');
+    expect(section.flatMap((i) => (i.kind === 'row' ? i.photos.map((p) => p.id) : []))).toEqual(['late', 'early']);
   });
 });
