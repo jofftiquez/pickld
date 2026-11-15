@@ -578,9 +578,15 @@ export async function saveOptions(
 /**
  * Re-crop of a queued moment (M2-23): swaps in the newly prepared full and thumbnail files (copied into
  * app storage) and deletes the old ones only after the row points at the new files. Edits, caption and
- * privacy stay. Throws QueueItemBusyError (and keeps the old photo) while uploading or once uploaded.
+ * privacy stay. `crop` (the new crop choices) replaces the old ones: it prepares nothing, but a photo framed
+ * by Fit is then known as framed, so the editor keeps its frame (Flip only). Throws QueueItemBusyError (and
+ * keeps the old photo) while uploading or once uploaded.
  */
-export async function saveRecropped(id: number, files: { photoUri: string; thumbUri: string }): Promise<QueueItem> {
+export async function saveRecropped(
+  id: number,
+  files: { photoUri: string; thumbUri: string },
+  crop: CropSpec | null = null,
+): Promise<QueueItem> {
   const before = await getItem(id);
   if (!before) throw new QueueItemBusyError(id);
   const db = await openQueue();
@@ -593,10 +599,11 @@ export async function saveRecropped(id: number, files: { photoUri: string; thumb
     const thumb = await copyInto(dir, files.thumbUri, `${stem}-thumb`);
     copies.push(thumb);
     const { changes } = await db.runAsync(
-      `UPDATE queue_items SET photo_file = ?, thumb_file = ?, prepared = 1, crop = NULL
+      `UPDATE queue_items SET photo_file = ?, thumb_file = ?, prepared = 1, crop = ?
        WHERE id = ? AND state NOT IN ('uploading', 'uploaded')`,
       photo.name,
       thumb.name,
+      crop === null ? null : JSON.stringify(cropSpecSchema.parse(crop)),
       id,
     );
     if (changes === 0) throw new QueueItemBusyError(id);

@@ -791,6 +791,27 @@ describe('Moment options on a queued moment (M2-23)', () => {
     expect(await loadStore().getItem(item.id)).toEqual(done);
   });
 
+  it('Re-crop with Fit keeps the new crop choices, so the editor knows the photo is framed', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    mockFs.set('file:///cache/fit.webp', 'fit-full');
+    mockFs.set('file:///cache/fit-thumb.webp', 'fit-thumb');
+    const crop = {
+      crop: { originX: 0, originY: 0, width: 1440, height: 1920 },
+      cropBasis: { width: 1440, height: 1920 },
+      rotate: 0,
+      flip: false,
+      fit: { frame: 'black' },
+    } as const;
+    const done = await store.saveRecropped(
+      item.id,
+      { photoUri: 'file:///cache/fit.webp', thumbUri: 'file:///cache/fit-thumb.webp' },
+      crop,
+    );
+    expect(done).toMatchObject({ prepared: true, crop });
+    expect(await loadStore().getItem(item.id)).toMatchObject({ crop });
+  });
+
   it('Delete drops the row and both files', async () => {
     const store = loadStore();
     const item = await store.enqueue(input);

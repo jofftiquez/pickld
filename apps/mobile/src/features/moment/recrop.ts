@@ -75,11 +75,13 @@ export async function finishRecrop(
         () => null,
       );
     }
-    await saveRecrop(client, pending.recrop, {
-      photoUri: prepared.full.uri,
-      thumbUri: prepared.thumb.uri,
-      mediumUri,
-    });
+    await saveRecrop(
+      client,
+      pending.recrop,
+      { photoUri: prepared.full.uri, thumbUri: prepared.thumb.uri, mediumUri },
+      {},
+      crop,
+    );
   } catch (error) {
     throw error instanceof MomentOptionError ? error : new MomentOptionError('failed', error);
   } finally {
