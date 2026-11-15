@@ -5,12 +5,9 @@ import type { ReactNode } from 'react';
 import { Pressable, Text } from 'react-native';
 
 import MyDaysScreen from '../../../../app/my-days';
-import type { ServerMoment } from '@/features/jar/todayGrid';
 
-import type { DayJar } from '../useDayJar';
-
-// My days wiring for M2-26: selecting a day shows its card, and Fill this jar opens that day's page (D-55).
-// Data hooks are mocked; the card and the day page have their own tests.
+// My days wiring (M2-26, D-153): tapping a past date opens that day's page straight away; today, and the open
+// jar Today still shows (travel rule), go to the Today tab. Data hooks are mocked; the day page has its own tests.
 jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
 // The month picker's kit sheet reads Reduce Motion from Reanimated. expo-router's testing library mocks
 // Reanimated with `react-native-reanimated/mock`, which can't load here; give it what the sheet needs.
@@ -43,32 +40,20 @@ jest.mock('@gorhom/bottom-sheet', () => {
     useBottomSheetTimingConfigs: (config: object) => config,
   };
 });
-jest.mock('@/features/jar/useToday', () => ({ phoneTimeZone: () => 'Asia/Manila' }));
+// The jar Today shows; tests set it to yesterday's jar that is still open after a flight west.
+let mockTodayJar: { localDate: string; tz: string; endsAt: string } | null = null;
+jest.mock('@/features/jar/useToday', () => ({
+  phoneTimeZone: () => 'Asia/Manila',
+  useToday: () => ({
+    jar: { hasAnyJar: true, jar: mockTodayJar ? { id: 'jar-open', ...mockTodayJar } : null, moments: [] },
+  }),
+}));
 jest.mock('../useMonthJars', () => ({
   useMonthJars: () => ({ userId: 'u-1', jars: [], firstJarMonth: '2026-11', birthday: '2023-05-20' }),
 }));
 
-const mockDays: Record<string, DayJar> = {};
-jest.mock('../useDayJar', () => ({
-  useDayJar: (date: string | null) => ({ userId: 'u-1', day: date ? mockDays[date] : undefined, queue: [] }),
-}));
-
-const moment = (slot: ServerMoment['slot'], extra: Partial<ServerMoment> = {}): ServerMoment => ({
-  id: `m-${slot}`,
-  slot,
-  status: 'live',
-  visibility: 'readers',
-  is_backfilled: false,
-  captured_at: null,
-  added_at: '2026-11-08T01:00:00Z',
-  thumbUrl: null,
-  ...extra,
-});
-
-mockDays['2026-11-08'] = {
-  jar: { id: 'jar-8', localDate: '2026-11-08', tz: 'Asia/Manila' },
-  moments: [moment('whereami'), moment('mebusywith'), moment('evening', { is_backfilled: true })],
-};
+// My days reads only the offline queue (a null date).
+jest.mock('../useDayJar', () => ({ useDayJar: () => ({ userId: 'u-1', day: undefined, queue: [] }) }));
 
 function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
@@ -94,43 +79,61 @@ const routes = {
 beforeEach(() => {
   // 12:00 on 2026-11-11 in Manila.
   jest.useFakeTimers({ now: new Date('2026-11-11T04:00:00Z'), advanceTimers: true });
+  mockTodayJar = null;
 });
 afterEach(() => jest.useRealTimers());
 
-describe('My days selected day', () => {
-  it('shows no card until a day is selected', async () => {
+describe('My days opening a day', () => {
+  it('a tapped past date opens that day’s page with no summary card, and Back keeps the month', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
-    expect(screen.queryByTestId('selected-day-card')).toBeNull();
-  });
-
-  it('Fill this jar on a past day opens that day’s page, then comes back', async () => {
-    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
-    await fireEvent.press(screen.getByTestId('day-2026-11-08'));
-    expect(screen.getByRole('header', { name: /Nov 8/ })).toBeTruthy();
-    expect(screen.getByTestId('selected-day-count')).toHaveTextContent('3 of 8 moments · 1 added later');
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Fill this jar' }));
-    expect(screen).toHavePathname('/day/2026-11-08');
-    expect(screen.getByText('day 2026-11-08')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Previous month' }));
+    await fireEvent.press(screen.getByTestId('day-2026-10-20'));
+    expect(screen).toHavePathname('/day/2026-10-20');
+    expect(screen.getByText('day 2026-10-20')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Back from day' }));
     await act(async () => {});
     expect(screen).toHavePathname('/my-days');
-    expect(screen.getByTestId('selected-day-card')).toBeTruthy();
+    expect(screen.getByText('October 2026')).toBeTruthy();
+    expect(screen.queryByTestId('selected-day-card')).toBeNull();
   });
 
-  it('a past day without a jar can be filled from its page', async () => {
+  it('calendar days say what a tap does', async () => {
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    expect(screen.getByTestId('day-2026-11-08').props.accessibilityHint).toBe('Opens this day');
+  });
+
+  it('a past day without a jar opens its page too', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
     await fireEvent.press(screen.getByTestId('day-2026-11-03'));
-    await fireEvent.press(screen.getByRole('button', { name: 'Fill this jar' }));
     expect(screen.getByText('day 2026-11-03')).toBeTruthy();
   });
 
-  it('today shows its card without Fill this jar', async () => {
+  it('today goes to the Today tab', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
     await fireEvent.press(screen.getByTestId('day-2026-11-11'));
-    expect(screen.getByTestId('selected-day-card')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Fill this jar' })).toBeNull();
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('a future date opens nothing', async () => {
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByTestId('day-2026-11-20'));
+    expect(screen).toHavePathname('/my-days');
+  });
+
+  // Travel rule: yesterday's jar, still open, is the one Today shows, so it opens there and not as a past day.
+  it('yesterday’s jar that is still open goes to the Today tab', async () => {
+    mockTodayJar = { localDate: '2026-11-10', tz: 'America/Los_Angeles', endsAt: '2026-11-11T08:00:00Z' };
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByTestId('day-2026-11-10'));
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('yesterday’s jar once closed opens as a past day', async () => {
+    mockTodayJar = { localDate: '2026-11-10', tz: 'Asia/Manila', endsAt: '2026-11-10T16:00:00Z' };
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByTestId('day-2026-11-10'));
+    expect(screen).toHavePathname('/day/2026-11-10');
   });
 });
 
@@ -172,7 +175,7 @@ describe('My days month picker', () => {
   });
 });
 
-// FR-DAY-02, D-141: Go to a date opens any past day's page, the one Fill this jar opens.
+// FR-DAY-02, D-141: Go to a date opens any past day's page, as tapping it on the calendar does.
 describe('My days date picker', () => {
   it('opens a day years back, and the calendar is on it when coming back', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
@@ -187,13 +190,20 @@ describe('My days date picker', () => {
     await act(async () => {});
     expect(screen).toHavePathname('/my-days');
     expect(screen.getByText('June 2023')).toBeTruthy();
-    expect(screen.getByTestId('selected-day-card')).toBeTruthy();
   });
 
   it('today goes to the Today tab', async () => {
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
     await fireEvent.press(screen.getByRole('button', { name: 'Go to a date' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Wednesday, November 11, 2026, today' }));
+    expect(screen).toHavePathname('/today');
+  });
+
+  it('the open jar Today shows (travel rule) goes to the Today tab', async () => {
+    mockTodayJar = { localDate: '2026-11-10', tz: 'America/Los_Angeles', endsAt: '2026-11-11T08:00:00Z' };
+    await renderRouter(routes, { initialUrl: '/my-days', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'Go to a date' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Tuesday, November 10, 2026' }));
     expect(screen).toHavePathname('/today');
   });
 });

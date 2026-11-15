@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '../../database.types';
-import { queueTarget } from '../../../features/capture/saveCapture';
+import { galleryTarget } from '../../../features/capture/saveCapture';
 import { fillTarget } from '../../../features/capture/fillTarget';
 import { localDateIn } from '../../jars';
 import { enqueue, getItem, listQueue, replaceItem } from '../store';
@@ -25,7 +25,7 @@ import { nodeFetch } from './nodeFetch';
 
 jest.mock('expo-sqlite', () => jest.requireActual('./fakes').expoSqlite);
 jest.mock('expo-file-system', () => jest.requireActual('./fakes').expoFileSystem);
-// saveCapture (for queueTarget) loads Sentry (ESM) through monitoring.
+// saveCapture (for galleryTarget) loads Sentry (ESM) through monitoring.
 jest.mock('../../monitoring', () => ({ captureError: jest.fn() }));
 
 const enabled = process.env.PICKLD_INTEGRATION === '1';
@@ -205,12 +205,12 @@ describeLocal('upload worker against local Supabase', () => {
     }
   }, 90_000);
 
-  it('Fill this jar: a moment queued for a past date lands in that date’s jar with Added later (M2-26)', async () => {
+  it('a past day’s page: a moment queued for a past date lands in that date’s jar with Added later (M2-26)', async () => {
     const now = new Date();
     const today = localDateIn(now, TZ);
     const past = localDateIn(new Date(now.getTime() - 3 * 86_400_000), TZ);
-    // The camera's path: no jar for that day yet, so the phone zone; the open jar is today's.
-    const target = queueTarget({ tz: TZ, shotAt: now, openJar: null, fill: fillTarget(past, null, TZ) });
+    // The day page's gallery path (D-153): no jar for that day yet, so the phone zone.
+    const target = galleryTarget({ exif: null, tz: TZ, now, openJar: null, fill: fillTarget(past, null, TZ) });
     expect(target).toMatchObject({ localDate: past, tz: TZ });
     const item = await enqueue({ userId, ...capturedFiles('fill'), slot: 'selfie', ...target });
 

@@ -67,8 +67,9 @@ export type TodayViewProps = {
   /**
    * A past day instead of today: the day page (D-55, FR-DAY-02; app/day/[date].tsx). The header shows that
    * date and Back instead of the greeting, nothing is the Now tile, and the page sits above the tab bar.
+   * `onViewJar` (a published jar, D-153) puts View jar on the jar card.
    */
-  day?: { date: string; onBack: () => void } | null;
+  day?: { date: string; onBack: () => void; onViewJar?: () => void } | null;
   /** Slots that just filled: their tiles pop in (D-58; `useFillPops`). */
   poppingSlots?: ReadonlySet<Slot>;
   /** The jar was just published (D-58; `usePublishCelebration`): confetti and the lid closing on the card. */
@@ -154,6 +155,7 @@ export function TodayView({
             lidColor={lidColor}
             firstDay={!day && hasAnyJar === false && count === 0}
             pastDay={day !== null}
+            onViewJar={day?.onViewJar}
             onPublish={onPublish}
             published={
               published

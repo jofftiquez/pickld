@@ -136,6 +136,11 @@ const routes = {
       <Text>Camera stub</Text>
     </View>
   ),
+  'day/[date]': () => (
+    <View>
+      <Text>Day stub</Text>
+    </View>
+  ),
   'shared-photo': () => (
     <View>
       <Text>Slot choice stub</Text>
@@ -285,6 +290,19 @@ describe('Editor', () => {
     expect(saveEdits).toHaveBeenCalledTimes(1);
     expect(screen).toHavePathname('/today');
     expect(screen.queryByText('Camera stub')).toBeNull();
+  });
+
+  it('opened by Crop from a past day’s page (D-153), saving goes back to that day', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await push('/day/2026-11-08');
+    await push('/edit/7?via=crop');
+    await screen.findByTestId('editor-screen');
+    await goToDetails();
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+    expect(screen).toHavePathname('/day/2026-11-08');
+    expect(screen.getByText('Day stub')).toBeTruthy();
   });
 
   it('moves to the prepared photo when background preparation replaces the raw file it opened on', async () => {

@@ -28,6 +28,8 @@ export type JarCardProps = {
   onOpenVisibility?: () => void;
   /** A past day's jar on the day page (D-55): "in this jar" instead of "in today’s jar". */
   pastDay?: boolean;
+  /** The day page, once that day's jar is published (D-153): View jar opens its Jar page. */
+  onViewJar?: () => void;
   /** Just published (D-58): the jar's lid closes. */
   closeLid?: boolean;
 };
@@ -43,6 +45,7 @@ export function JarCard({
   published = null,
   onOpenVisibility,
   pastDay = false,
+  onViewJar,
   closeLid = false,
 }: JarCardProps) {
   const { t } = useTranslation();
@@ -96,6 +99,17 @@ export function JarCard({
       testID="today-publish"
     />
   );
+  const viewJar = onViewJar ? (
+    <PillButton
+      variant="onDark"
+      label={t('day.viewJar')}
+      accessibilityLabel={t('day.viewJar')}
+      accessibilityHint={t('day.viewJarHint')}
+      onPress={onViewJar}
+      testID="view-jar"
+    />
+  ) : null;
+  const below = large && pill ? pill : null;
   return (
     <View style={styles.card} testID={firstDay ? 'jar-card-first-day' : 'jar-card'}>
       {/* Large text: the jar sits above the words and the pill under them, so the words get the card's
@@ -125,7 +139,12 @@ export function JarCard({
         )}
         {large ? null : pill}
       </View>
-      {large && pill ? <View style={styles.pillBelow}>{pill}</View> : null}
+      {below || viewJar ? (
+        <View style={styles.pillsBelow}>
+          {below}
+          {viewJar}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -141,6 +160,6 @@ const styles = StyleSheet.create({
   text: { flex: 1, gap: space.xs },
   stack: { alignItems: 'flex-start', gap: space.md },
   textStacked: { alignSelf: 'stretch', gap: space.xs },
-  pillBelow: { alignSelf: 'flex-start', marginTop: space.md },
+  pillsBelow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md },
   publishedLine: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.xs },
 });

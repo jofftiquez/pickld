@@ -187,7 +187,7 @@ export function findOpenJar<J extends JarRef>(jars: readonly J[], now: Date): J 
 
 /**
  * Which jar a new moment joins (AGENTS "Key logic", FR-JAR-04, FR-JAR-05, D-1).
- * 1. A past `targetDate` (gallery photo from an earlier day, Fill this jar) goes to that date's jar.
+ * 1. A past `targetDate` (gallery photo from an earlier day, or a past day's page) goes to that date's jar.
  * 2. An open jar wins, even if the phone changed zone (travel rule).
  * 3. Otherwise today's date in the phone zone: an existing jar for that date in another zone is a
  *    westward collision and is re-zoned; else a new jar, flagged when the zone differs from the

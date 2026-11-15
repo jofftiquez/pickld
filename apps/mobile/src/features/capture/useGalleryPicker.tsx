@@ -6,7 +6,7 @@ import { captureError } from '@/lib/monitoring';
 import { useReduceMotion } from '@/lib/useReduceMotion';
 
 import { GalleryGrid } from './GalleryGrid';
-import { libraryAccess, type LibraryAccess } from './libraryPhotos';
+import { askLibraryAccess, libraryAccess, type LibraryAccess } from './libraryPhotos';
 import { pickFromGallery, type PickedPhoto } from './pickFromGallery';
 
 type Resolve = (photo: PickedPhoto | null) => void;
@@ -15,12 +15,13 @@ type Resolve = (photo: PickedPhoto | null) => void;
 const DISMISS_MS = 600;
 
 /**
- * The camera's gallery (FR-CAP-02): `pick()` resolves with the chosen photo, or null on Close or cancel.
- * With Photos access already given (iOS), it opens the in-app grid with dates (`GalleryGrid`); without it,
- * on Android, or when the library can't be read, it opens the system picker as before. It never asks for
- * access. Render `modal` next to the screen; `open` is true while the grid shows.
+ * The gallery of the camera and of a past day's page (FR-CAP-02, D-153): `pick()` resolves with the chosen
+ * photo, or null on Close or cancel. With Photos access (iOS), it opens the in-app grid with dates
+ * (`GalleryGrid`); without it, on Android, or when the library can't be read, it opens the system picker.
+ * The camera never asks for access; with `askOnce` (the day page) Apple's prompt is shown once while access
+ * was never decided. Render `modal` next to the screen; `open` is true while the grid shows.
  */
-export function useGalleryPicker(input: { tz: string; target: string | null; insets: EdgeInsets }): {
+export function useGalleryPicker(input: { tz: string; target: string | null; insets: EdgeInsets; askOnce?: boolean }): {
   pick: () => Promise<PickedPhoto | null>;
   open: boolean;
   modal: ReactElement;
@@ -31,11 +32,12 @@ export function useGalleryPicker(input: { tz: string; target: string | null; ins
   const answer = useRef<Resolve | null>(null);
   const afterDismiss = useRef<(() => void) | null>(null);
 
-  // Leaving the camera with the grid open counts as Close.
+  // Leaving the screen with the grid open counts as Close.
   useEffect(() => () => answer.current?.(null), []);
 
+  const askOnce = input.askOnce ?? false;
   const pick = useCallback(async (): Promise<PickedPhoto | null> => {
-    const granted = await libraryAccess().catch((error: unknown) => {
+    const granted = await (askOnce ? askLibraryAccess() : libraryAccess()).catch((error: unknown) => {
       captureError(error, { area: 'gallery' });
       return null;
     });
@@ -46,7 +48,7 @@ export function useGalleryPicker(input: { tz: string; target: string | null; ins
       setAccess(granted);
       setOpen(true);
     });
-  }, []);
+  }, [askOnce]);
 
   // Closes the grid, then settles once it has gone, so the next screen isn't presented over a closing one.
   const finish = useCallback((next: (resolve: Resolve) => void) => {

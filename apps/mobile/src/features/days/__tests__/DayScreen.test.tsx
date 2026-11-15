@@ -1,18 +1,26 @@
+// Gesture-handler's own jest mocks for its native module (the gallery grid's press and hold).
+import 'react-native-gesture-handler/jestSetup';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import '../../edit/__tests__/mockReanimated';
 import type { ReactNode } from 'react';
 import { Pressable, Text } from 'react-native';
 
 import DayScreen from '../../../../app/day/[date]';
+import { askLibraryAccess, libraryPhotoFile, loadLibraryPhotos } from '@/features/capture/libraryPhotos';
+import { usePendingCrop } from '@/features/capture/pendingCrop';
+import { pickFromGallery } from '@/features/capture/pickFromGallery';
+import { saveGalleryPhoto } from '@/features/capture/saveCapture';
 import type { ServerMoment } from '@/features/jar/todayGrid';
 import { markJarPublished } from '@/features/publish/publishCelebration';
 
 import type { DayJar } from '../useDayJar';
 
 // The day page (D-55, FR-DAY-02): only past dates have one; it is Today's grid and jar card for that date.
-// Empty tiles open the camera in Fill mode, filled ones the moment preview for that day, and Publish that
-// day's review. Data hooks are mocked; TodayView, the camera, the preview and Publish have their own tests.
+// Empty tiles open the gallery for that day, never the camera (D-153); filled ones the moment preview for
+// that day, and Publish that day's review. Data hooks and the photo library are mocked; TodayView, the
+// gallery grid, Crop, the editor, the preview and Publish have their own tests.
 // The tiles' pop and the publish burst (D-58) use Reanimated, which the router test harness can't load; they
 // have their own tests.
 jest.mock('@/features/jar/TilePop', () => ({ TilePop: ({ children }: { children: React.ReactNode }) => children }));
@@ -26,10 +34,32 @@ jest.mock('@/features/jar/JarTapReaction', () => ({ JarTapReaction: () => null }
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
 jest.mock('@/features/jar/retryUpload', () => ({ retryUpload: jest.fn() }));
 jest.mock('@/lib/connectivity', () => ({ useIsOffline: () => false }));
+jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
+// The gallery grid's gesture detector looks for these two.
+jest.mock('react-native-reanimated/mock', () => ({
+  __esModule: true,
+  default: { createAnimatedComponent: <T,>(component: T) => component },
+  isSharedValue: () => false,
+  useReducedMotion: () => false,
+}));
+jest.mock('@/features/capture/saveCapture', () => ({
+  ...jest.requireActual<typeof import('@/features/capture/saveCapture')>('@/features/capture/saveCapture'),
+  saveGalleryPhoto: jest.fn(),
+}));
+jest.mock('@/features/capture/pickFromGallery', () => ({ pickFromGallery: jest.fn() }));
+// Photos access and the library (iOS); askLibraryAccess asks Apple once while undecided (libraryPhotos).
+jest.mock('@/features/capture/libraryPhotos', () => ({
+  askLibraryAccess: jest.fn(),
+  libraryAccess: jest.fn(),
+  loadLibraryPhotos: jest.fn(),
+  libraryPhotoFile: jest.fn(),
+  onLibraryChange: () => () => {},
+  chooseMorePhotos: jest.fn(),
+}));
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
-  useToday: () => ({ me: { readerCount: 12, lidColor: 'brand' } }),
+  useToday: () => ({ me: { readerCount: 12, lidColor: 'brand', defaultVisibility: 'private' } }),
 }));
 
 const mockDays: Record<string, DayJar> = {};
@@ -93,14 +123,64 @@ const routes = {
   'my-days': () => <Text>My days stub</Text>,
   'day/[date]': DayScreen,
   camera: stub('camera'),
+  crop: function CropStub() {
+    const pending = usePendingCrop((s) => s.pending);
+    return (
+      <Text>{`crop ${pending?.slot ?? 'none'} ${pending && 'target' in pending ? pending.target.localDate : 'none'}`}</Text>
+    );
+  },
+  'edit/[momentId]': function EditStub() {
+    const { momentId } = useLocalSearchParams<{ momentId: string }>();
+    return <Text>{`editor ${momentId}`}</Text>;
+  },
+  'jar/[id]': function JarStub() {
+    const { id } = useLocalSearchParams<{ id: string }>();
+    return <Text>{`jar ${id}`}</Text>;
+  },
   publish: stub('publish'),
   'moment/preview': stub('preview'),
 };
+
+// Library photos: one taken on Nov 8, one on Nov 10 (outside "Only Nov 8").
+const libraryPhoto = (iso: string, id: string, width = 4032, height = 3024) => ({
+  id,
+  width,
+  height,
+  creationTime: Date.parse(iso),
+});
 
 beforeEach(() => {
   // 12:00 on 2026-11-11 in Manila.
   jest.useFakeTimers({ now: new Date('2026-11-11T04:00:00Z'), advanceTimers: true });
   mockDayJar.mockClear();
+  usePendingCrop.setState({ pending: null });
+  jest.mocked(askLibraryAccess).mockReset().mockResolvedValue('all');
+  jest
+    .mocked(loadLibraryPhotos)
+    .mockReset()
+    .mockImplementation(async (_offset, _limit, range) =>
+      [
+        libraryPhoto('2026-11-10T09:00:00+08:00', 'ph://later'),
+        libraryPhoto('2026-11-08T21:00:00+08:00', 'ph://day'),
+      ].filter(
+        (photo) =>
+          range === null || range === undefined || (photo.creationTime >= range.from && photo.creationTime < range.to),
+      ),
+    );
+  jest
+    .mocked(libraryPhotoFile)
+    .mockReset()
+    .mockResolvedValue({
+      uri: 'file:///cache/gallery-1.jpg',
+      width: 4032,
+      height: 3024,
+      exif: { DateTimeOriginal: '2026:11:08 21:00:00', OffsetTimeOriginal: '+08:00' },
+    });
+  jest.mocked(pickFromGallery).mockReset().mockResolvedValue(null);
+  jest
+    .mocked(saveGalleryPhoto)
+    .mockReset()
+    .mockResolvedValue({ id: 41 } as Awaited<ReturnType<typeof saveGalleryPhoto>>);
 });
 afterEach(() => jest.useRealTimers());
 
@@ -129,14 +209,80 @@ describe('Day page route', () => {
     expect(screen.getByTestId('day-added-later-note')).toBeTruthy();
   });
 
-  it('an empty tile opens the camera in Fill mode for that date and slot, and comes back to the day', async () => {
+  it('an empty tile opens the gallery on that day, never the camera, and its photo goes to Crop for that slot', async () => {
     await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
     await fireEvent.press(screen.getByTestId('tile-ootd'));
-    expect(screen).toHavePathname('/camera');
-    expect(screen.getByText('camera 2026-11-08 ootd')).toBeTruthy();
+    expect(await screen.findByTestId('gallery-grid')).toBeTruthy();
+    expect(screen).toHavePathname('/day/2026-11-08');
+    expect(screen.getByRole('tab', { name: 'Only Nov 8' }).props.accessibilityState).toEqual({ selected: true });
+    expect(screen.queryByTestId('gallery-photo-ph://later')).toBeNull();
+    expect(pickFromGallery).not.toHaveBeenCalled();
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Close camera' }));
-    await act(async () => {});
+    await fireEvent.press(screen.getByTestId('gallery-photo-ph://day'));
+    await waitFor(() => expect(screen).toHavePathname('/crop'));
+    expect(screen.getByText('crop ootd 2026-11-08')).toBeTruthy();
+    // Nov 8's jar is in Manila; the photo keeps its own capture time.
+    expect(usePendingCrop.getState().pending).toEqual(
+      expect.objectContaining({
+        slot: 'ootd',
+        userId: 'u-1',
+        target: { localDate: '2026-11-08', tz: 'Asia/Manila', capturedAt: '2026-11-08T21:00:00+08:00' },
+      }),
+    );
+    expect(saveGalleryPhoto).not.toHaveBeenCalled();
+  });
+
+  it('a 3:4 photo is saved for that day and slot at the default visibility, then the editor opens', async () => {
+    jest.mocked(libraryPhotoFile).mockResolvedValue({
+      uri: 'file:///cache/gallery-2.jpg',
+      width: 3000,
+      height: 4000,
+      exif: { DateTimeOriginal: '2026:11:08 21:00:00', OffsetTimeOriginal: '+08:00' },
+    });
+    await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    await fireEvent.press(await screen.findByTestId('gallery-photo-ph://day'));
+    await waitFor(() => expect(screen).toHavePathname('/edit/41'));
+    expect(saveGalleryPhoto).toHaveBeenCalledWith({
+      uri: 'file:///cache/gallery-2.jpg',
+      slot: 'ootd',
+      userId: 'u-1',
+      target: { localDate: '2026-11-08', tz: 'Asia/Manila', capturedAt: '2026-11-08T21:00:00+08:00' },
+      crop: null,
+      visibility: 'private',
+    });
+  });
+
+  it('closing the gallery stays on the day and saves nothing', async () => {
+    await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    await fireEvent.press(await screen.findByTestId('gallery-close'));
+    await waitFor(() => expect(screen.queryByTestId('gallery-grid')).toBeNull());
+    expect(screen).toHavePathname('/day/2026-11-08');
+    expect(saveGalleryPhoto).not.toHaveBeenCalled();
+    expect(usePendingCrop.getState().pending).toBeNull();
+  });
+
+  it('a day with no photos offers Show all photos, and no camera', async () => {
+    jest
+      .mocked(loadLibraryPhotos)
+      .mockImplementation(async (_offset, _limit, range) =>
+        range ? [] : [libraryPhoto('2026-11-10T09:00:00+08:00', 'ph://later')],
+      );
+    await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    expect(await screen.findByTestId('gallery-day-empty')).toBeTruthy();
+    expect(screen.getByTestId('gallery-show-all')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /camera/i })).toBeNull();
+  });
+
+  it('asks the library for access (once while undecided); without it, Apple’s picker opens', async () => {
+    jest.mocked(askLibraryAccess).mockResolvedValue(null);
+    await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
+    await fireEvent.press(screen.getByTestId('tile-ootd'));
+    await waitFor(() => expect(pickFromGallery).toHaveBeenCalledTimes(1));
+    expect(askLibraryAccess).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('gallery-grid')).toBeNull();
     expect(screen).toHavePathname('/day/2026-11-08');
   });
 
@@ -166,11 +312,26 @@ describe('Day page route', () => {
     expect(screen.getByTestId('today-published')).toBeTruthy();
   });
 
+  it('a published jar offers View jar, which opens its jar page (D-153)', async () => {
+    await renderRouter(routes, { initialUrl: '/day/2026-11-07', wrapper });
+    const viewJar = screen.getByRole('button', { name: 'View jar' });
+    expect(viewJar.props.accessibilityHint).toBe('Opens this day’s jar page');
+    await fireEvent.press(viewJar);
+    expect(screen).toHavePathname('/jar/jar-7');
+    expect(screen.getByText('jar jar-7')).toBeTruthy();
+  });
+
+  it('an unpublished jar has no View jar', async () => {
+    await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
+    expect(screen.queryByRole('button', { name: 'View jar' })).toBeNull();
+  });
+
   it('a day without a jar has nothing to publish yet', async () => {
     await renderRouter(routes, { initialUrl: '/day/2026-11-03', wrapper });
     expect(screen.getByTestId('today-publish').props.accessibilityState).toMatchObject({ disabled: true });
     await fireEvent.press(screen.getByTestId('tile-whereami'));
-    expect(screen.getByText('camera 2026-11-03 whereami')).toBeTruthy();
+    expect(await screen.findByTestId('gallery-grid')).toBeTruthy();
+    expect(screen).toHavePathname('/day/2026-11-03');
   });
 
   it('Back with no history lands on My days', async () => {

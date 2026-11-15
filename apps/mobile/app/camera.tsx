@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, AppState, Linking } from 'react-native';
@@ -15,7 +15,7 @@ import {
 } from '@/features/capture/CameraPreview';
 import { CameraView } from '@/features/capture/CameraView';
 import { defaultCameraSlot, parseSlotParam } from '@/features/capture/cameraSlot';
-import { fillCameraSlot } from '@/features/capture/fillTarget';
+import { parseFillDateParam } from '@/features/capture/fillTarget';
 import type { LensInfo, Point } from '@/features/capture/cameraZoom';
 import { MockCameraPreview } from '@/features/capture/MockCameraPreview';
 import { isThreeByFour } from '@/features/capture/cropMath';
@@ -31,25 +31,33 @@ import { galleryTarget, saveCapture, saveGalleryPhoto } from '@/features/capture
 import { SlotPicker } from '@/features/capture/SlotPicker';
 import { useCameraAccess } from '@/features/capture/useCameraAccess';
 import { useCameraZoom } from '@/features/capture/useCameraZoom';
-import { useFillCapture } from '@/features/capture/useFillCapture';
 import { useGalleryPicker } from '@/features/capture/useGalleryPicker';
 import { useReplaceConfirm } from '@/features/capture/useReplaceConfirm';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { formatTime } from '@/lib/format';
-import { currentSlot } from '@/lib/jars';
+import { currentSlot, localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
-import { slots, type Slot } from '@/theme/tokens';
+import type { Slot } from '@/theme/tokens';
 
 const MINUTE = 60_000;
 
 // Camera (M2-07, M2-08; FR-CAP-01, FR-CAP-11; designs: Camera, CameraDenied). The shutter queues the photo,
-// then opens the editor on it (M2-12).
+// then opens the editor on it (M2-12). It captures for the open jar only (today, or yesterday's jar while it
+// is still open: the travel rule). A past day is filled from the gallery on its own page, never the camera
+// (D-153): `?date=` a past day (an old link) opens that day's page instead.
 export default function CameraScreen() {
+  const { date } = useLocalSearchParams<{ date?: string }>();
+  const pastDate = parseFillDateParam(date, localDateIn(new Date(), phoneTimeZone()));
+  if (pastDate !== null) return <Redirect href={`/day/${pastDate}`} />;
+  return <Camera />;
+}
+
+function Camera() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const params = useLocalSearchParams<{ slot?: string; date?: string; mockAccess?: string; devPhoto?: string }>();
+  const params = useLocalSearchParams<{ slot?: string; mockAccess?: string; devPhoto?: string }>();
   const cameraAccess = useCameraAccess();
   const access = parseMockAccessParam(params.mockAccess, __DEV__) ?? cameraAccess;
 
@@ -74,18 +82,14 @@ export default function CameraScreen() {
   const tz = phoneTimeZone();
   const { userId, localDate, jar, queue, me } = useToday(now);
   const nowSlot = currentSlot(now, tz);
-  // Fill this jar (`?date=` a past day, M2-26): that day's jar and its missing slots instead of the open jar.
-  const fill = useFillCapture(params.date, localDate, tz);
-  const taken =
-    fill?.taken ??
-    new Set<Slot>(
-      buildTodayGrid({ localDate: jar?.jar?.localDate ?? localDate, moments: jar?.moments ?? [], queue, nowSlot })
-        .filter(holdsSlot)
-        .map((tile) => tile.slot),
-    );
+  const taken = new Set<Slot>(
+    buildTodayGrid({ localDate: jar?.jar?.localDate ?? localDate, moments: jar?.moments ?? [], queue, nowSlot })
+      .filter(holdsSlot)
+      .map((tile) => tile.slot),
+  );
   // The tile that opened the camera picks the slot it opens on. Without a slot param (the hidden Capture
   // route) it is the Now slot, else the first empty one. The moment pill then changes it to another free slot
-  // of the same day (D-151); from then on that choice is the slot, and everything saved goes there.
+  // of the open jar (D-151); from then on that choice is the slot, and everything saved goes there.
   const [chosen, setChosen] = useState<Slot | null>(null);
   // #selfie opens on the front lens (D-99); flip still switches. `autoFront` is true while the front lens
   // is the one #selfie chose, not the user: leaving #selfie then goes back to the rear lens (D-151).
@@ -93,9 +97,9 @@ export default function CameraScreen() {
     parseSlotParam(params.slot) === 'selfie' ? 'front' : 'back',
   );
   const [autoFront, setAutoFront] = useState(() => parseSlotParam(params.slot) === 'selfie');
-  // A new link into the open camera (another slot or day) starts from its own slot again, and the lens
-  // follows it as it does for a picked moment.
-  const target = `${String(params.slot)}|${String(params.date)}`;
+  // A new link into the open camera (another slot) starts from its own slot again, and the lens follows it
+  // as it does for a picked moment.
+  const target = String(params.slot);
   const [chosenFor, setChosenFor] = useState(target);
   if (chosenFor !== target) {
     setChosenFor(target);
@@ -108,12 +112,7 @@ export default function CameraScreen() {
       setAutoFront(false);
     }
   }
-  const fillSlot = fill ? fillCameraSlot({ param: parseSlotParam(params.slot), taken }) : null;
-  const slot =
-    chosen ??
-    (fill ? (fillSlot ?? slots[0]) : defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken }));
-  // A full past jar has nothing to fill.
-  const fillFull = fill !== null && fillSlot === null;
+  const slot = chosen ?? defaultCameraSlot({ param: parseSlotParam(params.slot), nowSlot, taken });
   const [picking, setPicking] = useState(false);
   const [flash, setFlash] = useState<FlashSetting>('off');
   const [flashSupported, setFlashSupported] = useState(false);
@@ -197,7 +196,6 @@ export default function CameraScreen() {
           tz,
           shotAt,
           openJar,
-          fill: fill?.target ?? null,
           replace,
           flip,
           visibility,
@@ -212,18 +210,18 @@ export default function CameraScreen() {
   };
 
   // Gallery (M2-08, M2-10; FR-CAP-02): a 3:4 photo is queued like a shot; any other opens Crop first. With
-  // Photos access the grid shows each photo's day and opens on the day being filled.
-  const gallery = useGalleryPicker({ tz, target: fill?.target.localDate ?? null, insets });
+  // Photos access the grid shows each photo's day. A photo from an earlier day goes to that day's jar.
+  const gallery = useGalleryPicker({ tz, target: null, insets });
   const devPhoto = parseDevPhotoParam(params.devPhoto, __DEV__);
   const setPendingCrop = usePendingCrop((s) => s.setPending);
   const onGallery = async () => {
-    if (busy || userId === null || fillFull) return;
+    if (busy || userId === null) return;
     setBusy(true);
     try {
       const photo = devPhoto ? await pickDevPhoto(devPhoto) : await gallery.pick();
       if (photo === null) return;
       const openJar = jar?.jar ?? null;
-      const target = galleryTarget({ exif: photo.exif, tz, now: new Date(), openJar, fill: fill?.target ?? null });
+      const target = galleryTarget({ exif: photo.exif, tz, now: new Date(), openJar });
       if (!isThreeByFour(photo)) {
         setPendingCrop({ photo, slot, userId, target });
         router.push('/crop');
@@ -275,17 +273,15 @@ export default function CameraScreen() {
       preview={preview}
       slot={slot}
       time={formatTime(now, tz)}
-      date={fill?.dateLabel}
       flash={flash}
       flashSupported={access === 'mock' || flashSupported}
-      shutterDisabled={busy || userId === null || fillFull || (access !== 'mock' && access !== 'granted')}
+      shutterDisabled={busy || userId === null || (access !== 'mock' && access !== 'granted')}
       zoom={zoom}
       canFocus={lens?.supportsFocus ?? false}
       onFocus={onFocus}
       insets={insets}
       onClose={leave}
       onChangeSlot={() => setPicking(true)}
-      slotDisabled={fillFull}
       onToggleFlash={() => setFlash((f) => (f === 'on' ? 'off' : 'on'))}
       onFlip={() => {
         setFacing((f) => (f === 'back' ? 'front' : 'back'));
@@ -301,7 +297,6 @@ export default function CameraScreen() {
             visible={picking}
             current={slot}
             taken={taken}
-            date={fill?.dateLabel}
             onPick={onPickSlot}
             onClose={() => setPicking(false)}
           />

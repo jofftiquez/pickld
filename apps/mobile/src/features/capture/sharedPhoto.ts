@@ -114,7 +114,7 @@ export function releaseSharedPhoto(id: string, uris: readonly string[]): void {
 export type SharedPhotoDay =
   /** Taken later than now (a wrong camera clock): refused, ensure_jar takes no future dates. */
   | { kind: 'future' }
-  /** An earlier day than today in the phone zone: that day's jar, as Fill this jar (the server marks it
+  /** An earlier day than today in the phone zone: that day's jar, as a past day's page fills it (the server marks it
    * "Added later"). */
   | { kind: 'past'; localDate: string }
   /** Today, or no EXIF time: the open jar, as a camera photo (travel rule). */

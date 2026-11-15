@@ -1,6 +1,4 @@
-import type { Slot } from '@/theme/tokens';
-
-import { fillCameraSlot, fillTarget, missingSlots, parseFillDateParam } from '../fillTarget';
+import { fillTarget, parseFillDateParam } from '../fillTarget';
 
 const TODAY = '2026-11-11';
 
@@ -49,37 +47,5 @@ describe('fillTarget', () => {
       tz: 'Pacific/Honolulu',
     });
     expect(fillTarget('2026-11-08', undefined, 'Asia/Tokyo')).toEqual({ localDate: '2026-11-08', tz: 'Asia/Tokyo' });
-  });
-});
-
-describe('missing slots and the Fill this jar slot', () => {
-  const taken = new Set<Slot>(['whereami', 'morning', 'ootd', 'evening']);
-
-  it('lists only the slots not yet filled, in jar order', () => {
-    expect(missingSlots(taken)).toEqual(['mebusywith', 'whoamiwith', 'selfie', 'afternoon']);
-  });
-
-  it('opens on the requested slot when it is missing', () => {
-    expect(fillCameraSlot({ param: 'selfie', taken })).toBe('selfie');
-  });
-
-  it('never opens on a filled slot: a taken or missing param falls to the first missing one', () => {
-    expect(fillCameraSlot({ param: 'morning', taken })).toBe('mebusywith');
-    expect(fillCameraSlot({ param: null, taken })).toBe('mebusywith');
-  });
-
-  it('has nothing to fill in a full jar', () => {
-    const full = new Set<Slot>([
-      'whereami',
-      'mebusywith',
-      'whoamiwith',
-      'ootd',
-      'selfie',
-      'morning',
-      'afternoon',
-      'evening',
-    ]);
-    expect(missingSlots(full)).toEqual([]);
-    expect(fillCameraSlot({ param: 'selfie', taken: full })).toBeNull();
   });
 });

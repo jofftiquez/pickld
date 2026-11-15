@@ -25,7 +25,7 @@ import { captureError } from '@/lib/monitoring';
 import { slots, type Slot } from '@/theme/tokens';
 
 // /shared-photo?id=<id> (FR-CAP-02): Photos' Share → Pickld (targets/share) opens it with the photo it handed
-// over. The photo goes to the day it was taken: today's open jar, or an earlier day's jar as Fill this jar
+// over. The photo goes to the day it was taken: today's open jar, or an earlier day's jar as a past day's page fills
 // (the server marks it "Added later"); a photo dated after today is refused. The user picks a free slot of
 // that day, then it continues exactly like a gallery photo: Crop unless it is already 3:4, then the editor.
 export default function SharedPhotoScreen() {
@@ -73,7 +73,7 @@ export default function SharedPhotoScreen() {
 
   const picked = photo !== null && photo !== 'failed' ? photo : null;
   const day = picked ? sharedPhotoDay(picked.exif, tz, now, localDate) : null;
-  // An earlier day: that day's jar and the slots it already holds, as Fill this jar.
+  // An earlier day: that day's jar and the slots it already holds, as a past day's page fills it.
   const fill = useFillCapture(day?.kind === 'past' ? day.localDate : null, localDate, tz);
   const taken =
     fill?.taken ??

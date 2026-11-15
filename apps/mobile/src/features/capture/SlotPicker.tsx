@@ -12,21 +12,19 @@ export type SlotPickerProps = {
   visible: boolean;
   /** The slot the camera is on: marked selected. */
   current: Slot;
-  /** Slots the target day's jar already holds (server moments and queued photos): shown done, not choosable. */
+  /** Slots the open jar already holds (server moments and queued photos): shown done, not choosable. */
   taken: ReadonlySet<Slot>;
-  /** Fill this jar: the past day (already formatted). Today's jar otherwise. */
-  date?: string;
   /** A free slot was picked (never the current one). */
   onPick: (slot: Slot) => void;
   onClose: () => void;
 };
 
 /**
- * Change the moment from the camera (D-151): the target day's 8 slots in jar order. Done slots are
+ * Change the moment from the camera (D-151): the open jar's 8 slots in jar order. Done slots are
  * dimmed and can't be picked; the current one carries a check. Picking a free slot switches the camera to
  * it; the day stays the same.
  */
-export function SlotPicker({ visible, current, taken, date, onPick, onClose }: SlotPickerProps) {
+export function SlotPicker({ visible, current, taken, onPick, onClose }: SlotPickerProps) {
   const { t } = useTranslation();
   const othersDone = slots.every((slot) => slot === current || taken.has(slot));
   return (
@@ -40,11 +38,7 @@ export function SlotPicker({ visible, current, taken, date, onPick, onClose }: S
         {t('camera.slotPicker.title')}
       </Text>
       <Text style={[textStyle('label', '500'), styles.muted, styles.subtitle]}>
-        {othersDone
-          ? t('camera.slotPicker.allDone')
-          : date
-            ? t('myDays.camera.when', { date })
-            : t('camera.slotPicker.today')}
+        {othersDone ? t('camera.slotPicker.allDone') : t('camera.slotPicker.today')}
       </Text>
       {slots.map((slot, i) => (
         <SlotPickerRow

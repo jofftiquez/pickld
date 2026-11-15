@@ -15,6 +15,8 @@ export type CalendarDayProps = {
   cell: DayCell;
   /** Spoken name, already translated (e.g. "November 7, 3 of 8 moments"). */
   accessibilityLabel: string;
+  /** What a tap does, already translated; left out for future days, which can't be tapped. */
+  accessibilityHint?: string;
   selected: boolean;
   onPress: () => void;
 };
@@ -24,7 +26,7 @@ const slop = Math.floor(sizes.dayGap / 2);
 const HIT_SLOP = { top: slop, bottom: slop, left: slop, right: slop };
 
 /** One day of the My days month (Calendar): cover photo, day number and fill bar; future days disabled. */
-export function CalendarDay({ cell, accessibilityLabel, selected, onPress }: CalendarDayProps) {
+export function CalendarDay({ cell, accessibilityLabel, accessibilityHint, selected, onPress }: CalendarDayProps) {
   const [pressed, setPressed] = useState(false);
   const { jar, isFuture, isToday } = cell;
   const cover = isFuture ? null : (jar?.coverUrl ?? null);
@@ -35,6 +37,7 @@ export function CalendarDay({ cell, accessibilityLabel, selected, onPress }: Cal
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isFuture, selected }}
       disabled={isFuture}
       onPress={onPress}
