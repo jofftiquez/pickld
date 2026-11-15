@@ -9,7 +9,7 @@ import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
 import { MomentView } from '@/features/moment/MomentView';
 import { FollowButton } from '@/features/profile/FollowButton';
-import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
+import { deviceLocale, formatDate, formatShortDate, formatTime } from '@/lib/format';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
@@ -57,10 +57,13 @@ export function MomentFeedCard({
   const { t } = useTranslation();
   const at = new Date(moment.captured_at ?? moment.added_at);
   const slot = t(`slots.${moment.slot}`);
+  // A backfilled moment sits with the day it was added (the timeline is ordered by added_at), so its own date
+  // carries the year and the line says it was added later.
+  const addedLater = moment.is_backfilled;
   const when = t('moment.detail.when', {
     time: formatTime(at, moment.jar_tz, locale),
     // No-break spaces: when the line wraps beside Be a reader, the date moves down whole.
-    date: formatShortDate(at, moment.jar_tz, locale).replace(/ /g, '\u00a0'),
+    date: (addedLater ? formatDate : formatShortDate)(at, moment.jar_tz, locale).replace(/ /g, '\u00a0'),
   });
   const caption = moment.caption?.trim() ? moment.caption.trim() : null;
   // At large text the name and the button no longer fit side by side (the name shrank to "J."): stack them.
@@ -69,6 +72,7 @@ export function MomentFeedCard({
   const isPrivate = moment.visibility === 'only_me' && moment.author_id === viewerId;
   const label = [
     t('moments.cardLabel', { name: moment.author_display_name, slot, when }),
+    addedLater ? t('tile.addedLater') : null,
     isPrivate ? t('moments.private') : null,
     caption,
   ]
@@ -92,7 +96,7 @@ export function MomentFeedCard({
               {moment.author_display_name}
             </Text>
             <Text style={[textStyle('label', '500'), { color: colors.muted }]} numberOfLines={large ? 3 : 2}>
-              {t('moments.meta', { slot, when })}
+              {t(addedLater ? 'moments.metaAddedLater' : 'moments.meta', { slot, when })}
             </Text>
           </View>
         </Pressable>

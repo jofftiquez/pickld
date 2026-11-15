@@ -24,6 +24,8 @@ export const feedRow = z.object({
   is_new: z.boolean(),
   /** The jar's cover for this viewer (0069, D-56); `preview_moment_ids` already starts with it. */
   cover_moment_id: z.string().nullish(),
+  /** A moment this viewer sees went in after the jar's day ended (0144); absent in caches from before it. */
+  added_later: z.boolean().optional(),
 });
 export type FeedRow = z.infer<typeof feedRow>;
 

@@ -5,6 +5,7 @@ import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { FollowButton } from '@/features/profile/FollowButton';
+import { deviceLocale, formatDate } from '@/lib/format';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
@@ -23,14 +24,31 @@ export type FeedJarCardProps = {
    * read yet. */
   onRead?: () => void;
   readDisabled?: boolean;
+  locale?: string;
 };
 
 /** A followed author's jar in the Jars feed (design: Feed): header, photo mosaic, likes, comments and caption. */
-export function FeedJarCard({ jar, now, avatarUrl = null, onPress, onRead, readDisabled = false }: FeedJarCardProps) {
+export function FeedJarCard({
+  jar,
+  now,
+  avatarUrl = null,
+  onPress,
+  onRead,
+  readDisabled = false,
+  locale = deviceLocale(),
+}: FeedJarCardProps) {
   const { t } = useTranslation();
   const large = useLargeText();
   const age = ageOf(jar.feed_at, now);
-  const updated = t(`feed.updated.${age.unit}`, { count: age.count });
+  const updatedAgo = t(`feed.updated.${age.unit}`, { count: age.count });
+  // The timeline is ordered by when things were added, so a backfilled jar sits with today's posts: say which
+  // day it is and that it was added later. The jar's day is a calendar date, the same in every zone.
+  const updated = jar.added_later
+    ? t('feed.updatedAddedLater', {
+        updated: updatedAgo,
+        date: formatDate(new Date(`${jar.local_date}T12:00:00Z`), 'UTC', locale),
+      })
+    : updatedAgo;
   const label = t('feed.cardLabel', {
     name: jar.author_display_name,
     count: jar.visible_count,
@@ -49,7 +67,10 @@ export function FeedJarCard({ jar, now, avatarUrl = null, onPress, onRead, readD
             <Text style={[textStyle('body', '700'), { color: colors.ink }]} numberOfLines={large ? 2 : 1}>
               {jar.author_display_name}
             </Text>
-            <Text style={[textStyle('label', '500'), { color: colors.muted }]} numberOfLines={large ? 2 : 1}>
+            <Text
+              style={[textStyle('label', '500'), { color: colors.muted }]}
+              numberOfLines={(large ? 2 : 1) + (jar.added_later ? 1 : 0)}
+            >
               {updated}
             </Text>
           </View>
