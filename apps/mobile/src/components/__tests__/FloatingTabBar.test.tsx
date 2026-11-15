@@ -107,9 +107,11 @@ describe('FloatingTabBar', () => {
     expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue).toEqual({ text: 'new posts' });
     expect(screen.getByRole('tab', { name: 'Today' }).props.accessibilityValue?.text).toBeUndefined();
     for (const name of ['moments', 'jars', 'discover']) {
+      // Small, the same 8 pt as the system bar's dot (D-159).
       expect(flatStyle(screen.getByTestId(`tab-${name}-dot`))).toMatchObject({
         backgroundColor: colors.unreadDot,
-        borderColor: colors.surface,
+        width: sizes.notifyDot,
+        height: sizes.notifyDot,
       });
     }
 

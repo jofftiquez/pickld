@@ -1,0 +1,38 @@
+diff --git a/ios/tabs/RNSTabBarAppearanceCoordinator.mm b/ios/tabs/RNSTabBarAppearanceCoordinator.mm
+index b3bc98dd720850ed88344368162360493957f0b9..8d61e7391c89ebcd187cff4c15970ec259d54758 100644
+--- a/ios/tabs/RNSTabBarAppearanceCoordinator.mm
++++ b/ios/tabs/RNSTabBarAppearanceCoordinator.mm
+@@ -24,6 +24,23 @@ static UIImage *_Nullable RNSImageWithSymbolRenderingMode(UIImage *_Nullable ima
+   }
+ }
+ 
++// Pickld (D-159): the app's only badges are unread dots, sent as a zero-width space. With a 3.3 pt badge font
++// the badge is the 4 pt side and 2 pt top/bottom padding iOS adds around its text: an 8 pt round dot instead of
++// the system's ~20 pt empty badge. Set on every layout and state, since iOS picks one per bar width and state.
++static void RNSApplyDotBadgeFont(UITabBarAppearance *_Nullable appearance)
++{
++  if (appearance == nil) {
++    return;
++  }
++  NSDictionary *attributes = @{NSFontAttributeName : [UIFont systemFontOfSize:3.3]};
++  for (UITabBarItemAppearance *item in
++       @[ appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance ]) {
++    for (UITabBarItemStateAppearance *state in @[ item.normal, item.selected, item.focused, item.disabled ]) {
++      state.badgeTextAttributes = attributes;
++    }
++  }
++}
++
+ @implementation RNSTabBarAppearanceCoordinator
+ 
+ - (void)updateAppearanceOfTabBar:(nullable UITabBar *)tabBar
+@@ -63,6 +80,9 @@ static UIImage *_Nullable RNSImageWithSymbolRenderingMode(UIImage *_Nullable ima
+ {
+   UITabBarItem *tabBarItem = tabScreenCtrl.tabBarItem;
+ 
++  // Before the assignments below, which copy the appearances.
++  RNSApplyDotBadgeFont(tabScreenCtrl.tabScreenComponentView.standardAppearance);
++  RNSApplyDotBadgeFont(tabScreenCtrl.tabScreenComponentView.scrollEdgeAppearance);
+   tabBarItem.standardAppearance = tabScreenCtrl.tabScreenComponentView.standardAppearance;
+   tabBarItem.scrollEdgeAppearance = tabScreenCtrl.tabScreenComponentView.scrollEdgeAppearance;
+ 

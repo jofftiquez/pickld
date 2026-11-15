@@ -58,7 +58,7 @@ describe('tab dots in the system tab bar (iOS 26)', () => {
     jest.restoreAllMocks();
   });
 
-  /** Each native tab: name, VoiceOver label, whether the system draws its badge, and the badge's color. */
+  /** Each native tab: name, VoiceOver label, the system badge's text (none: no badge), and the badge's color. */
   async function tabs() {
     jest.spyOn(AccessibilityInfo, 'isReduceTransparencyEnabled').mockResolvedValue(false);
     await renderRouter(routes, { initialUrl: '/today', wrapper });
@@ -66,28 +66,31 @@ describe('tab dots in the system tab bar (iOS 26)', () => {
     return nativeTabs(screen.toJSON()).map((p) => ({
       title: p.title,
       label: p.tabBarItemAccessibilityLabel,
-      dot: p.badgeValue !== undefined,
+      badge: p.badgeValue,
       color: p.badgeBackgroundColor,
     }));
   }
 
-  it('draws the system badge (an empty one, a dot) on Moments and Jars in the unread red, and says so in each label', async () => {
+  // A zero-width space: the patched system badge is then just an 8 pt dot (D-159).
+  const dot = '\u200B';
+
+  it('draws the system badge as a small dot on Moments and Jars in the unread red, and says so in each label', async () => {
     Object.assign(mockUnread, { moments: true, jars: true });
     expect(await tabs()).toEqual([
-      { title: 'Today', label: 'Today', dot: false, color: colors.unreadDot },
-      { title: 'Moments', label: 'Moments, new moments', dot: true, color: colors.unreadDot },
-      { title: 'Jars', label: 'Jars, new jars', dot: true, color: colors.unreadDot },
-      { title: 'Discover', label: 'Discover', dot: false, color: colors.unreadDot },
+      { title: 'Today', label: 'Today', badge: undefined, color: colors.unreadDot },
+      { title: 'Moments', label: 'Moments, new moments', badge: dot, color: colors.unreadDot },
+      { title: 'Jars', label: 'Jars, new jars', badge: dot, color: colors.unreadDot },
+      { title: 'Discover', label: 'Discover', badge: undefined, color: colors.unreadDot },
     ]);
   });
 
   it('Discover gets the same red dot and its own label; no dots, plain names', async () => {
     Object.assign(mockUnread, { discover: true });
-    expect((await tabs()).map(({ label, dot }) => [label, dot])).toEqual([
-      ['Today', false],
-      ['Moments', false],
-      ['Jars', false],
-      ['Discover, new posts', true],
+    expect((await tabs()).map(({ label, badge }) => [label, badge])).toEqual([
+      ['Today', undefined],
+      ['Moments', undefined],
+      ['Jars', undefined],
+      ['Discover, new posts', dot],
     ]);
   });
 });
