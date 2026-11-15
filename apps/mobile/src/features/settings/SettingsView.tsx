@@ -47,6 +47,9 @@ export type SettingsViewProps = {
   /** Saved on this phone only (D-66). */
   mirrorSelfies: boolean;
   onMirrorSelfies: (on: boolean) => void;
+  /** Pending uploads (FR-CAP-04): moments still on this phone; the count shows on the row when there are any. */
+  pendingCount?: number;
+  onPending?: () => void;
   onVisibility: (visibility: Visibility) => void;
   onBlocked: () => void;
   onMyStickers: () => void;
@@ -224,6 +227,14 @@ export function SettingsView(props: SettingsViewProps) {
             {t('settings.camera')}
           </Text>
           <Card style={styles.listCard}>
+            {props.onPending ? (
+              <ListRow
+                label={t('settings.pending')}
+                value={props.pendingCount ? String(props.pendingCount) : undefined}
+                onPress={props.onPending}
+                testID="settings-pending"
+              />
+            ) : null}
             <View style={styles.switchRow}>
               <View style={styles.rowLabel} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
                 <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.mirrorSelfies')}</Text>

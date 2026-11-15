@@ -94,6 +94,8 @@ jest.mock('@/lib/supabase', () => {
   return { getSupabase: () => client };
 });
 jest.mock('@/lib/queue/store', () => ({
+  // Pending uploads' count reads it (FR-CAP-04).
+  isHeldForEditing: jest.requireActual<typeof import('@/lib/queue/store')>('@/lib/queue/store').isHeldForEditing,
   listQueue: async () => mockBackend.queue,
   subscribeQueue: () => () => {},
   retryItem: jest.fn(async () => ({})),

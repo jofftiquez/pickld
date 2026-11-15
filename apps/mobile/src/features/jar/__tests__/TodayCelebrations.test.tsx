@@ -71,6 +71,8 @@ jest.mock('expo-sqlite/kv-store', () => ({
   },
 }));
 jest.mock('@/lib/queue/store', () => ({
+  // Pending uploads' count reads it (FR-CAP-04).
+  isHeldForEditing: jest.requireActual<typeof import('@/lib/queue/store')>('@/lib/queue/store').isHeldForEditing,
   listQueue: async () => [],
   subscribeQueue: () => () => {},
   retryItem: jest.fn(async () => ({})),

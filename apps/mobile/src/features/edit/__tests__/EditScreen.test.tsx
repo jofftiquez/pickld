@@ -183,6 +183,11 @@ const routes = {
       <Text>Slot choice stub</Text>
     </View>
   ),
+  pending: () => (
+    <View>
+      <Text>Pending stub</Text>
+    </View>
+  ),
   'edit/[momentId]': EditScreen,
 };
 
@@ -525,6 +530,19 @@ describe('Editor', () => {
     await fireEvent.press(saveButton());
     await act(async () => {});
     expect(screen).toHavePathname('/day/2026-11-08');
+  });
+
+  it('a draft finished from Pending uploads goes back to that list after Add, even for a past day', async () => {
+    rows.set(7, { ...item, localDate: '2026-11-08' });
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    await push('/pending');
+    await push('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await goToDetails();
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveEdits).toHaveBeenCalledTimes(1);
+    expect(screen).toHavePathname('/pending');
   });
 
   it('Discard on a past day’s photo still goes back where it came from, not to its day', async () => {

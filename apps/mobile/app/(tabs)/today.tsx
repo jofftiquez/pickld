@@ -20,6 +20,7 @@ import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { FirstMomentTip } from '@/features/onboarding/FirstMomentTip';
 import { useFirstMomentTip } from '@/features/onboarding/useFirstMomentTip';
+import { usePendingUploads } from '@/features/pending/usePendingUploads';
 import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
 import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
@@ -43,6 +44,7 @@ export default function TodayScreen() {
   }, []);
 
   const { userId, localDate, jar: jarData, me, queue, queueLoaded } = useToday(now);
+  const pending = usePendingUploads();
   // Missing only in caches persisted before usernames (M3-06).
   const username = me?.username;
   const tz = phoneTimeZone();
@@ -143,6 +145,8 @@ export default function TodayScreen() {
         onCapture={(slot) => router.push({ pathname: '/camera', params: { slot } })}
         onOpenMyDays={() => router.push('/my-days')}
         onOpenStickers={() => router.push('/stickers')}
+        pendingCount={pending.count}
+        onOpenPending={() => router.push('/pending')}
         onOpenProfile={username ? () => router.push({ pathname: '/u/[username]', params: { username } }) : undefined}
         onRetry={(queueId) => void retryUpload(queueId)}
         zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}

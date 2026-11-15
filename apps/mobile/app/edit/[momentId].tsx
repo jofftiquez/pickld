@@ -84,11 +84,13 @@ export default function EditScreen() {
   // After Add on a new photo: the page of the day it went into (FR-CAP-04). Today's jar is the Today tab,
   // reached by leaving as Close does. A past day's photo (share sheet, a past day's gallery, an older
   // gallery photo from the camera) lands on that day's page: straight back to it when it is below the
-  // editor, otherwise leaving as Close does and opening it there, so Back from it goes to Today.
+  // editor, otherwise leaving as Close does and opening it there, so Back from it goes to Today. Opened from
+  // Pending uploads, it goes back to that list, so the next draft can be finished.
   const addedTo = (localDate: string, tz: string) => {
-    if (pastDayLabel(localDate, new Date(), tz) === null) return close();
     const state = navigation.getState();
     const below = state?.routes[state.index - 1];
+    if (below?.name === 'pending') return router.back();
+    if (pastDayLabel(localDate, new Date(), tz) === null) return close();
     if (below?.name === 'day/[date]' && (below.params as { date?: string } | undefined)?.date === localDate) {
       return router.back();
     }
