@@ -170,6 +170,7 @@ export function TextPanel({ selected, textCount, onAdd, onChange, onDeselect }: 
               style={[styles.font, on ? styles.on : styles.off]}
               testID={`editor-text-font-${font}`}
             >
+              {/* a11y-fixed-size: a sample of the face in a fixed chip; the radio's label names it */}
               <Text
                 allowFontScaling={false}
                 style={[textFontStyle(font, 16), { color: on ? colors.surface : colors.ink }]}
@@ -208,6 +209,7 @@ export function TextPanel({ selected, textCount, onAdd, onChange, onDeselect }: 
                   : null,
             ]}
           >
+            {/* a11y-fixed-size: a glyph drawn in a fixed square, like an icon */}
             <Text
               allowFontScaling={false}
               style={[
