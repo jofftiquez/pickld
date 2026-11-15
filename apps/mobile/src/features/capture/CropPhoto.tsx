@@ -20,7 +20,7 @@ import {
   type FitPlace,
   type Size,
 } from '@/lib/image/crop';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, crop, fitBorderColors, fitFrameColors, radius } from '@/theme/tokens';
 
 import { coverScale, panCrop, zoomCrop, type CropState } from './cropMath';
@@ -340,7 +340,9 @@ export function CropPhoto({
             <Text style={[textStyle('label', '700'), styles.chipText]}>{aspect}</Text>
           </View>
         )}
-        <Text style={[textStyle('bodySmall'), styles.hint]}>{t(fit ? 'crop.layout.fitHint' : 'crop.hint')}</Text>
+        <Text style={[textStyle('bodySmall'), styles.hint]} maxFontSizeMultiplier={maxTextScale.control}>
+          {t(fit ? 'crop.layout.fitHint' : 'crop.hint')}
+        </Text>
       </View>
     </GestureDetector>
   );
