@@ -5,8 +5,9 @@
 // clock, in closed form (no per-frame stepping).
 //
 // Scale: commercial paper confetti (about 5 × 2 cm) settles at roughly 0.25 m/s while tumbling (Münchenbach & Neff,
-// arXiv 2208.03695). Drawn about 9 pt long, a 5 cm strip maps 1 cm ≈ 2 pt, so 25 cm/s ≈ 50 pt/s on screen; the
-// slowest pieces here settle near that and the densest about three times faster.
+// arXiv 2208.03695). At the first drawn size, about 9 pt long, a 5 cm strip maps 1 cm ≈ 2 pt, so 25 cm/s ≈ 50 pt/s on
+// screen; the slowest pieces here settle near that and the densest about three times faster. Pieces are now drawn
+// BURST_PIECE_SCALE times bigger so they read on a phone (D-160); the speeds keep that mapping, so the fall stays light.
 
 import { lidColors, motion } from '@/theme/tokens';
 
@@ -17,6 +18,8 @@ export const BURST_FLIGHT_S = motion.confettiBurst / 1000;
 /** The last pieces leave this long after the first (a second, smaller puff). */
 export const BURST_MAX_DELAY_S = 0.15;
 export const BURST_PIECES = 36;
+/** How much bigger each piece is drawn than the first sizes (D-160). Size only: no speed, drag or path uses it. */
+export const BURST_PIECE_SCALE = 1.5;
 /** From the first launch until the last piece has faded. */
 export const BURST_DURATION_MS = Math.round((BURST_FLIGHT_S + BURST_MAX_DELAY_S) * 1000);
 /** Pieces fade over the last 22% of their own life… */
@@ -172,8 +175,12 @@ export function makeBurstPieces(count: number, seed: number): BurstPiece[] {
     const roll = rand();
     const shape: BurstShape =
       settle < 75 || (settle < 125 && roll < 0.55) ? 'strip' : settle >= 125 && roll < 0.25 ? 'dot' : 'square';
-    const side = shape === 'square' ? between(4, 6) : between(3, 4);
-    const size = shape === 'strip' ? { width: between(2, 3), height: between(7, 11) } : { width: side, height: side };
+    // Drawn from the same random numbers as before and only then scaled, so every piece keeps its path (D-160).
+    const side = BURST_PIECE_SCALE * (shape === 'square' ? between(4, 6) : between(3, 4));
+    const size =
+      shape === 'strip'
+        ? { width: BURST_PIECE_SCALE * between(2, 3), height: BURST_PIECE_SCALE * between(7, 11) }
+        : { width: side, height: side };
     const q = between(5, 7);
     // Across the card; pieces from the left lean left and from the right lean right, with some scatter. The throw
     // is scaled so every piece clears the card: it would travel `rise` up and `spread` across if it did not fall.
