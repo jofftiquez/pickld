@@ -56,7 +56,8 @@ async function take(id: string): Promise<PickedPhoto> {
     if (manifest.width && manifest.height && ext !== 'heic' && ext !== 'heif') {
       const copy = new File(Paths.cache, `shared-${manifest.photo}`);
       deleteQuietly(copy);
-      original.copy(copy);
+      // copy() is async here (as in libraryPhotos.ts): the `finally` below must not delete the original first.
+      await original.copy(copy);
       return { uri: copy.uri, width: manifest.width, height: manifest.height, exif };
     }
     // HEIC (or a size the extension couldn't read): render it upright as a JPEG at full size and quality.
