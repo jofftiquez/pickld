@@ -1,7 +1,7 @@
 // The in-app gallery's days (FR-CAP-02): library photos grouped by the local day they were taken, so someone
 // filling a past day can see which day they are scrolling through. Pure: the caller passes the phone zone.
 import { zoneOffsetMinutes } from '@/lib/image/captureTime';
-import { localDateIn } from '@/lib/jars';
+import { addDays, localDateIn, localTimeToInstant } from '@/lib/jars';
 
 /** A photo in the phone's library: its Photos id (`ph://…`), pixel size and when it was taken (ms). */
 export type LibraryPhoto = { id: string; width: number; height: number; creationTime: number | null };
@@ -44,6 +44,27 @@ export function galleryItems(photos: readonly LibraryPhoto[], tz: string): Galle
 export function targetIndex(items: readonly GalleryItem[], target: string): number | null {
   const index = items.findIndex((item) => item.kind === 'day' && item.localDate !== null && item.localDate <= target);
   return index === -1 ? null : index;
+}
+
+/** A span of creation times in ms: from `from` (included) up to `to` (excluded). */
+export type DayRange = { from: number; to: number };
+
+/**
+ * The creation times that fall on `localDate` in `tz`: from that day's local midnight up to the next one,
+ * so a library query for it returns exactly the photos `galleryItems` puts under that day's header.
+ */
+export function dayRange(localDate: string, tz: string): DayRange {
+  return {
+    from: localTimeToInstant(localDate, 0, tz).getTime(),
+    to: localTimeToInstant(addDays(localDate, 1), 0, tz).getTime(),
+  };
+}
+
+/** The photos taken on `localDate` in `tz`, by the same rule as the day headers. */
+export function photosOnDay(photos: readonly LibraryPhoto[], localDate: string, tz: string): LibraryPhoto[] {
+  return photos.filter(
+    (photo) => photo.creationTime !== null && localDateIn(new Date(photo.creationTime), tz) === localDate,
+  );
 }
 
 /** True while every loaded photo is from `target` or later, so the grid loads more before opening there. */

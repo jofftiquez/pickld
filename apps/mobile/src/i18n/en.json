@@ -749,7 +749,13 @@
     "previewHint": "Slide to Use this photo, or let go to close",
     "previewFailed": "Couldn’t load a bigger preview. You can still use this photo.",
     "previewCloseHint": "Closes the preview",
-    "usePhoto": "Use this photo"
+    "usePhoto": "Use this photo",
+    "shownLabel": "Which photos to show",
+    "onlyDay": "Only {{date}}",
+    "allPhotos": "All photos",
+    "dayEmpty": "No photos from {{date}}.",
+    "showAll": "Show all photos",
+    "showAllHint": "Shows photos from every day"
   },
   "crop": {
     "title": "Crop photo",
