@@ -48,6 +48,17 @@ async function renderToday(props: Partial<TodayViewProps> = {}) {
 }
 
 describe('TodayView', () => {
+  it('shows the Pending uploads button with its count only when something is pending', async () => {
+    const onOpenPending = jest.fn();
+    await renderToday({ onOpenPending, pendingCount: 0 });
+    expect(screen.queryByTestId('today-pending')).toBeNull();
+    await renderToday({ onOpenPending, pendingCount: 3 });
+    // The count is drawn over the button and spoken in its label, so it is hidden from VoiceOver.
+    expect(screen.getByTestId('today-pending-count', { includeHiddenElements: true })).toHaveTextContent('3');
+    await fireEvent.press(screen.getByLabelText('Pending uploads, 3 moments'));
+    expect(onOpenPending).toHaveBeenCalled();
+  });
+
   it('first day: shows "Your first jar" and no count or Publish', async () => {
     await renderToday();
     expect(screen.getByText('Your first jar')).toBeTruthy();

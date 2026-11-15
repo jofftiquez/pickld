@@ -36,6 +36,8 @@
     },
     "myDays": "My days",
     "stickers": "Stickers",
+    "pendingLabel_one": "Pending uploads, {{count}} moment",
+    "pendingLabel_other": "Pending uploads, {{count}} moments",
     "inTodaysJar": "in today’s jar",
     "inTodaysJarReaders_one": "in today’s jar · {{count}} reader",
     "inTodaysJarReaders_other": "in today’s jar · {{count}} readers",
@@ -1663,6 +1665,7 @@
     "quietHours": "Quiet hours",
     "quietHoursBody": "No pushes from {{start}} to {{end}}",
     "camera": "Camera",
+    "pending": "Pending uploads",
     "mirrorSelfies": "Mirror selfies",
     "mirrorSelfiesBody": "Save front-camera photos the way the preview shows them",
     "privacy": "Privacy",
@@ -1942,5 +1945,32 @@
     "cameraOffTitle": "Camera access is off",
     "cameraOffBody": "Turn on camera access in Settings to scan a friend’s code.",
     "openSettings": "Open Settings"
+  },
+  "pending": {
+    "title": "Pending uploads",
+    "back": "Back",
+    "today": "Today",
+    "intro": "Moments still on this phone. Finish a draft, retry an upload or discard what you don’t want.",
+    "emptyTitle": "All uploaded",
+    "empty": "Drafts and moments waiting to upload show up here.",
+    "openHint": "Opens it in the editor",
+    "rowLabel": "{{slot}}, {{day}}, {{status}}",
+    "status": {
+      "draft": "Draft, not uploaded",
+      "waiting": "Waiting to upload",
+      "uploading": "Uploading…",
+      "failed": "Didn’t upload",
+      "conflict": "Slot already has a photo"
+    },
+    "finish": "Finish",
+    "finishLabel": "Finish {{slot}}",
+    "retry": "Retry",
+    "retryLabel": "Retry {{slot}}",
+    "replace": "Replace",
+    "replaceLabel": "Replace the photo in {{slot}}",
+    "discardLabel": "Discard {{slot}}",
+    "discardTitle": "Discard this photo?",
+    "discardMessage": "It’s removed from this phone and won’t upload.",
+    "discardConfirm": "Discard"
   }
 }

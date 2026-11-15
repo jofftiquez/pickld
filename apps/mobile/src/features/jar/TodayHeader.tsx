@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Avatar } from '@/components/Avatar';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { maxTextScale, textStyle } from '@/theme/text';
-import { colors, space } from '@/theme/tokens';
+import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import type { Greeting } from './todayGrid';
 
@@ -19,6 +19,9 @@ export type TodayHeaderProps = {
   onOpenMyDays?: () => void;
   /** Opens the Stickers page (D-61); missing hides the button. */
   onOpenStickers?: () => void;
+  /** Pending uploads (FR-CAP-04): moments still on this phone. The button shows only when the count is above 0. */
+  pendingCount?: number;
+  onOpenPending?: () => void;
   /** Opens My profile from the avatar. */
   onOpenProfile?: () => void;
   /** "Tokyo time" on a jar that started in a new zone; replaces the greeting (TimeZone). */
@@ -33,6 +36,8 @@ export function TodayHeader({
   avatarUrl,
   onOpenMyDays,
   onOpenStickers,
+  onOpenPending,
+  pendingCount = 0,
   onOpenProfile,
   zoneTag = null,
 }: TodayHeaderProps) {
@@ -61,6 +66,26 @@ export function TodayHeader({
           {t('today.title')}
         </Text>
         <View style={styles.actions}>
+          {onOpenPending && pendingCount > 0 ? (
+            <View>
+              <RoundIconButton
+                icon="clock"
+                accessibilityLabel={t('today.pendingLabel', { count: pendingCount })}
+                onPress={onOpenPending}
+                testID="today-pending"
+              />
+              <View style={styles.badge} pointerEvents="none" importantForAccessibility="no-hide-descendants">
+                {/* a11y-fixed-size: a count on a fixed-size button; the button's label speaks it */}
+                <Text
+                  maxFontSizeMultiplier={1}
+                  style={[textStyle('caption', '700'), styles.badgeText]}
+                  testID="today-pending-count"
+                >
+                  {pendingCount > 99 ? '99+' : pendingCount}
+                </Text>
+              </View>
+            </View>
+          ) : null}
           {onOpenStickers ? (
             <RoundIconButton
               icon="stickers"
@@ -101,4 +126,18 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
   title: { color: colors.ink, flexShrink: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  // The count sits over the button's top-right edge, white on red (6.5:1).
+  badge: {
+    position: 'absolute',
+    top: -space.xs,
+    right: -space.xs,
+    minWidth: sizes.pendingBadge,
+    height: sizes.pendingBadge,
+    paddingHorizontal: space.xs,
+    borderRadius: radius.pill,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { color: colors.surface, lineHeight: sizes.pendingBadge },
 });
