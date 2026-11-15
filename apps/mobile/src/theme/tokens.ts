@@ -514,6 +514,11 @@ export const filters = [
   'gabi',
   'luma',
   'ulan',
+  'mangga',
+  'dagat',
+  'halo',
+  'bukid',
+  'abo',
 ] as const;
 
 export const motion = {
@@ -555,7 +560,7 @@ export const stickerTool = {
     cyclists: '#e6f1d3',
   } as Record<string, string>,
   packTintDefault: '#f0f2ec',
-  // "New: Christmas pack · ₱49 · Shop" under the grid (FR-STK-06): ink text, "Shop" in brown (8:1 on it).
+  // "New: Christmas pack · ₱49 · Shop" above the grid (FR-STK-06): ink text, "Shop" in brown (8:1 on it).
   shopBanner: '#fbeccd',
   shopBannerLink: '#6b4b10',
   shopBannerRadius: 16,

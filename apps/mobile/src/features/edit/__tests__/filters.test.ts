@@ -22,7 +22,7 @@ const samples: Rgba[] = [black, white, grey, [0.8, 0.4, 0.2, 1], [0.1, 0.6, 0.9,
 const ids = filterIdSchema.options;
 
 describe('filter list', () => {
-  it('is Original first, the first five in their old order, then the six added in QA item 23', () => {
+  it('is Original first, the first five in their old order, the six added in QA item 23, then five more', () => {
     expect(ids).toEqual([
       'original',
       'kalamansi',
@@ -35,6 +35,11 @@ describe('filter list', () => {
       'gabi',
       'luma',
       'ulan',
+      'mangga',
+      'dagat',
+      'halo',
+      'bukid',
+      'abo',
     ]);
     expect(Object.keys(filterMatrices).sort()).toEqual([...ids].sort());
   });
@@ -168,6 +173,45 @@ describe('looks match their names', () => {
     expect(b).toBeGreaterThan(r);
     const orange = apply(filterMatrices.ulan, [0.8, 0.4, 0.2, 1]);
     expect(orange[0] - orange[2]).toBeLessThan(0.3);
+  });
+});
+
+describe('the looks added for the grid match their names', () => {
+  it('Mangga: golden-orange and punchy (red > green > blue, more saturated than Merienda)', () => {
+    const [r, g, b] = apply(filterMatrices.mangga, grey);
+    expect(r).toBeGreaterThan(g);
+    expect(g - b).toBeGreaterThan(0.05);
+    const spread = (m: ColorMatrix) => {
+      const [or, , ob] = apply(m, [0.8, 0.4, 0.2, 1]);
+      return or - ob;
+    };
+    expect(spread(filterMatrices.mangga)).toBeGreaterThan(spread(filterMatrices.merienda));
+  });
+
+  it('Dagat: cool teal-blue (blue > green > red)', () => {
+    const [r, g, b] = apply(filterMatrices.dagat, grey);
+    expect(b).toBeGreaterThan(g);
+    expect(g).toBeGreaterThan(r);
+  });
+
+  it('Halo-halo: peachy-pink pastel (red highest, blue above green, lifted shadows)', () => {
+    const [r, g, b] = apply(filterMatrices.halo, grey);
+    expect(r).toBeGreaterThan(b);
+    expect(b).toBeGreaterThan(g);
+    for (const channel of apply(filterMatrices.halo, black).slice(0, 3)) expect(channel).toBeGreaterThan(0.08);
+  });
+
+  it('Bukid: fresh green (green highest)', () => {
+    const [r, g, b] = apply(filterMatrices.bukid, grey);
+    expect(g).toBeGreaterThan(r);
+    expect(g).toBeGreaterThan(b);
+  });
+
+  it('Abo: soft faded black and white (no color left, lifted blacks, dimmed whites)', () => {
+    const [r, g, b] = apply(filterMatrices.abo, [0.8, 0.4, 0.2, 1]);
+    expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThan(0.02);
+    expect(apply(filterMatrices.abo, black)[0]).toBeGreaterThan(0.05);
+    expect(apply(filterMatrices.abo, white)[0]).toBeLessThan(0.98);
   });
 });
 

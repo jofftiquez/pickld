@@ -86,6 +86,11 @@ const filterId = z.enum([
   'gabi',
   'luma',
   'ulan',
+  'mangga',
+  'dagat',
+  'halo',
+  'bukid',
+  'abo',
 ]);
 
 export interface FinishedEdits {

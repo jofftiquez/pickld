@@ -207,7 +207,7 @@ describe('Editor', () => {
     expect(screen.getByTestId('camera-slot-tag').props.accessibilityLabel).toBe('#afternoon, Wed, Nov 11 at 2:14 PM');
   });
 
-  it('shows eleven thumbnails, each previewing the real photo through its own filter', async () => {
+  it('shows all sixteen thumbnails, each previewing the real photo through its own filter', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     for (const id of filterIdSchema.options) {
@@ -215,7 +215,7 @@ describe('Editor', () => {
       expect(within(thumb).getByTestId('skia-image').props.accessibilityHint).toBe(item.photoUri);
       expect(matrixIn(`editor-filter-${id}`)).toEqual(filterMatrices[id]);
     }
-    expect(within(screen.getByTestId('editor-filters')).getAllByRole('button')).toHaveLength(11);
+    expect(within(screen.getByTestId('editor-filters')).getAllByRole('button')).toHaveLength(16);
   });
 
   it('selecting a filter marks it selected and draws the photo with its matrix right away', async () => {

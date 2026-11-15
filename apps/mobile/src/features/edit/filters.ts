@@ -13,7 +13,7 @@ export type FilterId = z.infer<typeof filterIdSchema>;
 /** Row-major 4×5 color matrix (20 numbers), the shape Skia's <ColorMatrix> takes. */
 export type ColorMatrix = readonly number[];
 
-// The other looks (all but Original and Mono) are built as: saturation around Rec. 709 luminance, then a
+// The other looks (all but Original, Mono and Abo) are built as: saturation around Rec. 709 luminance, then a
 // per-channel tint scaled by (1 - lift), plus a lift. That keeps black at the lift and white at
 // tint × (1 - lift) + lift, so neither clips. A matrix can't add contrast without clipping black, so the
 // looks differ in saturation, tint and lift. Values rounded to 4 places.
@@ -96,6 +96,42 @@ export const filterMatrices: Record<FilterId, ColorMatrix> = {
     0.5524, 0.2307, 0.0233, 0, 0.04,
     0.0759, 0.7913, 0.0258, 0, 0.06,
     0.0743, 0.2501, 0.5498, 0, 0.07,
+    0, 0, 0, 1, 0,
+  ],
+  // Ripe mango, golden-orange and punchy: saturation 1.3, tint (1, 0.9, 0.7), lift (0.03, 0.02, 0).
+  mangga: [
+    1.1991, -0.2081, -0.021, 0, 0.03,
+    -0.0563, 0.9574, -0.0191, 0, 0.02,
+    -0.0446, -0.1502, 0.8948, 0, 0,
+    0, 0, 0, 1, 0,
+  ],
+  // Sea, cool and clear teal-blue: saturation 1.15, tint (0.82, 0.97, 1), lift (0, 0.03, 0.05).
+  dagat: [
+    0.9169, -0.088, -0.0089, 0, 0,
+    -0.03, 0.9811, -0.0102, 0, 0.03,
+    -0.0303, -0.1019, 1.0822, 0, 0.05,
+    0, 0, 0, 1, 0,
+  ],
+  // Halo-halo, soft peachy-pink pastel: saturation 0.85, tint (1, 0.9, 0.92), lift (0.12, 0.09, 0.1).
+  halo: [
+    0.7761, 0.0944, 0.0095, 0, 0.12,
+    0.0261, 0.784, 0.0089, 0, 0.09,
+    0.0264, 0.0888, 0.7128, 0, 0.1,
+    0, 0, 0, 1, 0,
+  ],
+  // Rice field, fresh and green: saturation 1.15, tint (0.86, 1, 0.84), lift (0.02, 0.05, 0.02).
+  bukid: [
+    0.9423, -0.0904, -0.0091, 0, 0.02,
+    -0.0303, 0.9906, -0.0103, 0, 0.05,
+    -0.0263, -0.0883, 0.9378, 0, 0.02,
+    0, 0, 0, 1, 0,
+  ],
+  // Ash, a soft faded black and white, a little cool: saturation 0, tint (0.94, 0.95, 0.97), lift
+  // (0.08, 0.08, 0.09).
+  abo: [
+    0.1839, 0.6185, 0.0624, 0, 0.08,
+    0.1858, 0.6251, 0.0631, 0, 0.08,
+    0.1877, 0.6313, 0.0637, 0, 0.09,
     0, 0, 0, 1, 0,
   ],
 };

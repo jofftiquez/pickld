@@ -1,17 +1,7 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  type ScrollViewInstance,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/Icon';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -31,11 +21,6 @@ export type StickersPanelProps = {
 };
 
 const SUGGESTED = 'suggested';
-// The grid shows two and a half rows and scrolls inside the editor for longer packs: the half row that
-// peeks out, the bottom fade and a flash of the scroll indicator show there is more (QA item 15).
-const VISIBLE_ROWS = 2.5;
-// How far from the end the fade still shows; below this the last row is in full view.
-const END_SLACK = 2;
 
 function rowsOf<T>(items: readonly T[], size: number): T[][] {
   const rows: T[][] = [];
@@ -45,32 +30,20 @@ function rowsOf<T>(items: readonly T[], size: number): T[][] {
 
 /**
  * The Stickers tool's panel (design: Stickers; FR-CAP-05, FR-STK-01..03): pack tabs led by "For #slot",
- * and a grid of the selected tab's stickers; tapping one adds it to the photo. Packs on sale that the user
- * doesn't own follow as locked tabs that open Pack preview, and a banner under the grid leads to the shop
- * (FR-STK-06, reversing D-6).
+ * and a grid of every sticker in the selected tab; tapping one adds it to the photo. The grid never
+ * scrolls on its own: the sheet scrolls up over the photo to show a long pack whole (editor feedback, QA
+ * round 6). Packs on sale that the user doesn't own follow as locked tabs that open Pack preview, and a
+ * banner between the tabs and the grid leads to the shop (FR-STK-06).
  */
 export function StickersPanel({ slot, onAdd }: StickersPanelProps) {
   const { t } = useTranslation();
   const catalog = useStickerCatalog();
   const router = useRouter();
   const [selected, setSelected] = useState<string>(SUGGESTED);
-  const grid = useRef<ScrollViewInstance>(null);
-  // The grid's visible height, content height and scroll offset: the fade shows while rows remain below.
-  const [gridHeight, setGridHeight] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const loaded = catalog.data !== undefined;
   // A catalog persisted by an app version before the shop has no `locked` list.
   const locked = catalog.data?.locked ?? [];
   const seasonal = locked.find((pack) => pack.seasonal) ?? null;
   const prices = usePrices(seasonal ? [seasonal.productId] : []);
-
-  // Opening a pack starts at its top and flashes the scroll indicator.
-  useEffect(() => {
-    if (!loaded) return;
-    grid.current?.scrollTo({ y: 0, animated: false });
-    grid.current?.flashScrollIndicators();
-  }, [loaded, selected]);
 
   if (!catalog.data) {
     return catalog.isError ? (
@@ -101,9 +74,6 @@ export function StickersPanel({ slot, onAdd }: StickersPanelProps) {
       : current.key === SUGGESTED
         ? suggested
         : (catalog.data.packs.find((pack) => pack.id === current.key)?.stickers ?? []);
-  const rowHeight = stickerTool.cellHeight + space.sm;
-  const moreBelow = gridHeight > 0 && contentHeight - (offset + gridHeight) > END_SLACK;
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => setOffset(e.nativeEvent.contentOffset.y);
 
   return (
     <View style={styles.root} testID="stickers-panel">
@@ -128,10 +98,7 @@ export function StickersPanel({ slot, onAdd }: StickersPanelProps) {
               accessibilityRole="tab"
               accessibilityLabel={tab.label}
               accessibilityState={{ selected: isSelected }}
-              onPress={() => {
-                setSelected(tab.key);
-                setOffset(0);
-              }}
+              onPress={() => setSelected(tab.key)}
               // 36 px tab: 4 px above and below reach the 44 px minimum.
               hitSlop={{ top: space.xs, bottom: space.xs }}
               style={[styles.tab, { backgroundColor: isSelected ? colors.ink : tint }]}
@@ -163,60 +130,6 @@ export function StickersPanel({ slot, onAdd }: StickersPanelProps) {
           </Pressable>
         ))}
       </ScrollView>
-      <View>
-        <ScrollView
-          ref={grid}
-          style={{ maxHeight: Math.round(rowHeight * VISIBLE_ROWS) }}
-          nestedScrollEnabled
-          accessibilityLabel={t('editStickers.grid')}
-          contentContainerStyle={styles.grid}
-          onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}
-          onContentSizeChange={(_, height) => setContentHeight(height)}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          testID="stickers-grid"
-        >
-          {rowsOf(stickers, stickerTool.cellColumns).map((row) => (
-            <View key={row.map((s) => s.id).join()} style={styles.row}>
-              {row.map((sticker) => {
-                const art = stickerArtSize(sticker.asset);
-                // Wide word art keeps the short box; near-square pictures (0032) get the taller one.
-                const height =
-                  art && art.width < art.height * 1.6 ? stickerTool.cellPictureHeight : stickerTool.cellArtHeight;
-                return (
-                  <Pressable
-                    key={sticker.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('editStickers.add', { label: sticker.label })}
-                    accessibilityHint={t('editStickers.addHint')}
-                    onPress={() => onAdd(sticker)}
-                    style={styles.cell}
-                    testID={`sticker-option-${sticker.id}`}
-                  >
-                    <StickerImage
-                      asset={sticker.asset}
-                      stamp={sticker.stamp}
-                      width={art ? (height * art.width) / art.height : height}
-                      height={height}
-                    />
-                  </Pressable>
-                );
-              })}
-              {Array.from({ length: stickerTool.cellColumns - row.length }, (_, i) => (
-                <View key={`gap-${i}`} style={styles.cellGap} />
-              ))}
-            </View>
-          ))}
-        </ScrollView>
-        {moreBelow ? (
-          <LinearGradient
-            colors={[colors.surfaceClear, colors.surface]}
-            pointerEvents="none"
-            style={[styles.fade, { height: rowHeight / 2 }]}
-            testID="stickers-grid-fade"
-          />
-        ) : null}
-      </View>
       {locked.length > 0 ? (
         <Pressable
           accessibilityRole="link"
@@ -242,6 +155,39 @@ export function StickersPanel({ slot, onAdd }: StickersPanelProps) {
           </Text>
         </Pressable>
       ) : null}
+      <View accessibilityLabel={t('editStickers.grid')} style={styles.grid} testID="stickers-grid">
+        {rowsOf(stickers, stickerTool.cellColumns).map((row) => (
+          <View key={row.map((s) => s.id).join()} style={styles.row}>
+            {row.map((sticker) => {
+              const art = stickerArtSize(sticker.asset);
+              // Wide word art keeps the short box; near-square pictures (0032) get the taller one.
+              const height =
+                art && art.width < art.height * 1.6 ? stickerTool.cellPictureHeight : stickerTool.cellArtHeight;
+              return (
+                <Pressable
+                  key={sticker.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('editStickers.add', { label: sticker.label })}
+                  accessibilityHint={t('editStickers.addHint')}
+                  onPress={() => onAdd(sticker)}
+                  style={styles.cell}
+                  testID={`sticker-option-${sticker.id}`}
+                >
+                  <StickerImage
+                    asset={sticker.asset}
+                    stamp={sticker.stamp}
+                    width={art ? (height * art.width) / art.height : height}
+                    height={height}
+                  />
+                </Pressable>
+              );
+            })}
+            {Array.from({ length: stickerTool.cellColumns - row.length }, (_, i) => (
+              <View key={`gap-${i}`} style={styles.cellGap} />
+            ))}
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -260,7 +206,6 @@ const styles = StyleSheet.create({
   },
   lockedTab: { flexDirection: 'row', gap: space.xs + 2 },
   grid: { gap: space.sm },
-  fade: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   row: { flexDirection: 'row', gap: space.sm },
   cell: {
     flex: 1,
