@@ -2,16 +2,16 @@ import type { SkImage } from '@shopify/react-native-skia';
 import { useTranslation } from 'react-i18next';
 import { useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { useReduceMotion } from '@/lib/useReduceMotion';
 import { textStyle } from '@/theme/text';
-import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
+import { colors, space, type Slot } from '@/theme/tokens';
 
 import { BubblePanel } from './bubble/BubblePanel';
 import type { Overlay } from './edits';
+import { editorPhotoStyles, useEditorPhotoFrame } from './editorPhotoFrame';
 import { FilteredPhoto } from './FilteredPhoto';
 import { FILTER_GAP, filterThumbSize } from './filterGrid';
 import { filterIdSchema, filterMatrices, type FilterId } from './filters';
@@ -57,17 +57,6 @@ export type EditPhotoStepProps = {
   adjustFailed?: boolean;
 };
 
-// Room below the photo for the tool tabs and the filter row; the photo shrinks on short phones so they
-// fit. Taller tools (Stickers, Text with the keyboard up) and large text scroll the screen.
-const PANEL_MIN_HEIGHT = 260;
-
-// Parallax (item 14, kept on the photo step by D-105): while the panel scrolls up over it, the photo moves
-// up at 40% of the scroll speed and shrinks to 92%, so its top stays in view under the toolbar.
-const PHOTO_SCROLL_SPEED = 0.4;
-const PHOTO_MIN_SCALE = 0.92;
-// The panel can scroll up until this much of the photo's height is left showing between the toolbar and
-// the panel; the panel is at least tall enough to allow it.
-const PHOTO_PEEK = 0.25;
 // The Stickers tool is a tray, as on Instagram: picking it slides the panel all the way up so the whole
 // pack fills the screen, and adding a sticker slides it back down to show the sticker on the photo.
 
@@ -101,12 +90,9 @@ export function EditPhotoStep({
 }: EditPhotoStepProps) {
   const { t } = useTranslation();
   const window = useWindowDimensions();
-  const reduceMotion = useReduceMotion();
-  const available = window.height - toolbarHeight - PANEL_MIN_HEIGHT;
-  const width = Math.min(window.width, Math.max(0, available) * photo.aspect);
-  const height = width / photo.aspect;
+  const { width, height, panelMinHeight, panelTop, onScroll, photoMotion, reduceMotion } =
+    useEditorPhotoFrame(toolbarHeight);
   const filterThumb = filterThumbSize(window.width - 2 * space.xl);
-  const panelMinHeight = Math.max(PANEL_MIN_HEIGHT, window.height - toolbarHeight - Math.round(height * PHOTO_PEEK));
   // The screen stops scrolling while a finger moves an overlay.
   const [overlayGesture, setOverlayGesture] = useState(false);
   const selectedText = overlays.find((o): o is TextOverlay => o.type === 'text' && o.id === selectedOverlayId) ?? null;
@@ -114,7 +100,7 @@ export function EditPhotoStep({
   const scroller = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const scrollPanel = (to: 'top' | 'photo') =>
     scroller.current?.scrollTo({
-      y: to === 'top' ? Math.round(height * (1 - PHOTO_PEEK)) : 0,
+      y: to === 'top' ? panelTop : 0,
       animated: !reduceMotion,
     });
   const selectTool = (next: EditorTool) => {
@@ -126,26 +112,11 @@ export function EditPhotoStep({
     scrollPanel('photo');
   };
 
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((event) => {
-    scrollY.set(event.contentOffset.y);
-  });
-  // The photo scrolls with the content, so it is pushed back down by the part of the scroll it skips.
-  // Pulling down past the top (bounce) moves it with the content. Reduce Motion: a plain scroll.
-  const photoMotion = useAnimatedStyle(() => {
-    if (reduceMotion || height <= 0) return { transform: [{ translateY: 0 }, { scale: 1 }] };
-    const scrolled = Math.max(0, scrollY.get());
-    const progress = Math.min(1, scrolled / height);
-    return {
-      transform: [{ translateY: scrolled * (1 - PHOTO_SCROLL_SPEED) }, { scale: 1 - (1 - PHOTO_MIN_SCALE) * progress }],
-    };
-  });
-
   return (
     <Animated.ScrollView
       ref={scroller}
-      style={styles.root}
-      contentContainerStyle={[styles.content, { paddingTop: toolbarHeight }]}
+      style={editorPhotoStyles.root}
+      contentContainerStyle={[editorPhotoStyles.content, { paddingTop: toolbarHeight }]}
       scrollIndicatorInsets={{ top: toolbarHeight }}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets
@@ -154,7 +125,7 @@ export function EditPhotoStep({
       scrollEventThrottle={16}
       testID="editor-screen"
     >
-      <Animated.View style={[styles.photo, { width, height }, photoMotion]}>
+      <Animated.View style={[editorPhotoStyles.photo, { width, height }, photoMotion]} testID="editor-photo-frame">
         <View
           accessible
           accessibilityRole="image"
@@ -184,7 +155,13 @@ export function EditPhotoStep({
       </Animated.View>
 
       {/* After the photo, so it draws over it (and takes the taps) as it slides up. */}
-      <View style={[styles.panel, { minHeight: panelMinHeight, paddingBottom: bottomInset + space.xxl }]}>
+      <View
+        style={[
+          editorPhotoStyles.panel,
+          styles.panel,
+          { minHeight: panelMinHeight, paddingBottom: bottomInset + space.xxl },
+        ]}
+      >
         <SegmentedControl
           segments={editorTools.map((key) => ({ key, label: t(`edit.tool.${key}`) }))}
           selected={tool}
@@ -254,27 +231,7 @@ export function EditPhotoStep({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.editor },
-  content: { flexGrow: 1 },
-  photo: {
-    alignSelf: 'center',
-    // The parallax shrinks it toward its top edge, which stays under the toolbar.
-    transformOrigin: 'top',
-    overflow: 'hidden',
-    backgroundColor: colors.editorPhoto,
-    borderBottomLeftRadius: radius.editorPhoto,
-    borderBottomRightRadius: radius.editorPhoto,
-  },
-  panel: {
-    flex: 1,
-    marginTop: -sizes.editorPanelOverlap,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
-    paddingTop: space.lg + 2,
-    paddingHorizontal: space.xl,
-    gap: space.md + 2,
-  },
+  panel: { gap: space.md + 2 },
   // Every filter at once, four to a row (filterGrid.ts): 12 px between the photos, as designed; each
   // thumbnail already reserves its ring and white gap.
   filters: { flexDirection: 'row', flexWrap: 'wrap', columnGap: FILTER_GAP, rowGap: space.sm },

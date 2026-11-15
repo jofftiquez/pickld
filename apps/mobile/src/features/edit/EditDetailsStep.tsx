@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useRef, type ComponentRef } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextField } from '@/components/TextField';
@@ -9,10 +11,11 @@ import { textStyle } from '@/theme/text';
 import { colors, radius, space, type Slot } from '@/theme/tokens';
 
 import type { Edits } from './edits';
+import { editorPhotoStyles, useEditorPhotoFrame } from './editorPhotoFrame';
 import { useStampMoment } from './stickers/stamps';
 
 export type EditDetailsStepProps = {
-  /** The photo being edited; drawn small with the edits made on the photo step. */
+  /** The photo being edited, drawn with the edits made on the photo step. */
   photoUri: string;
   edits: Edits;
   slot: Slot;
@@ -33,14 +36,9 @@ export type EditDetailsStepProps = {
 
 export const CAPTION_MAX = 150;
 
-// The preview is a small 3:4 copy of the edited photo, as on Instagram's details step: under half the
-// screen's width, and never wider than this.
-const PREVIEW_SHARE = 0.44;
-const PREVIEW_MAX = 200;
-
 /**
- * The editor's second step (D-103; design: EditDetails): the edited photo small (drawn by MomentView,
- * so it looks as it will in the jar), the caption, the slot's hashtag (fixed by the slot, read-only) and
+ * The editor's second step (D-103; design: EditDetails): the edited photo at the size and place it has on
+ * the photo step, with the same parallax under the sheet (drawn by MomentView, so it looks as it will in the jar), the caption, the slot's hashtag (fixed by the slot, read-only) and
  * who can see the moment. Save is in the toolbar.
  */
 export function EditDetailsStep({
@@ -58,32 +56,46 @@ export function EditDetailsStep({
   onEditPhoto,
 }: EditDetailsStepProps) {
   const { t } = useTranslation();
-  const window = useWindowDimensions();
   const stamp = useStampMoment();
-  const previewWidth = Math.round(Math.min(window.width * PREVIEW_SHARE, PREVIEW_MAX));
+  const { width, height, panelMinHeight, panelTop, onScroll, photoMotion, reduceMotion } =
+    useEditorPhotoFrame(toolbarHeight);
+  // Writing the caption slides the sheet up over the photo, as far as the photo step's panel goes, so the
+  // field sits above the keyboard with the photo's top still in view.
+  const scroller = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
+  const raiseSheet = () => scroller.current?.scrollTo({ y: panelTop, animated: !reduceMotion });
   const hashtag = t(`slots.${slot}`);
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={[styles.content, { paddingTop: toolbarHeight + space.lg }]}
+    <Animated.ScrollView
+      ref={scroller}
+      style={editorPhotoStyles.root}
+      contentContainerStyle={[editorPhotoStyles.content, { paddingTop: toolbarHeight }]}
       scrollIndicatorInsets={{ top: toolbarHeight }}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets
+      onScroll={onScroll}
+      scrollEventThrottle={16}
       testID="editor-details"
     >
       {/* As on Instagram, tapping the photo goes back to editing it. */}
-      <Pressable
-        style={styles.preview}
-        onPress={onEditPhoto}
-        accessibilityRole="button"
-        accessibilityLabel={t('edit.editPhoto')}
-        accessibilityHint={t('edit.editPhotoHint')}
-        testID="editor-preview-edit"
+      <Animated.View style={[editorPhotoStyles.photo, { width, height }, photoMotion]} testID="editor-preview-frame">
+        <Pressable
+          onPress={onEditPhoto}
+          accessibilityRole="button"
+          accessibilityLabel={t('edit.editPhoto')}
+          accessibilityHint={t('edit.editPhotoHint')}
+          testID="editor-preview-edit"
+        >
+          <MomentView uri={photoUri} edits={edits} width={width} stamp={stamp} testID="editor-preview" />
+        </Pressable>
+      </Animated.View>
+      <View
+        style={[
+          editorPhotoStyles.panel,
+          styles.sheet,
+          { minHeight: panelMinHeight, paddingBottom: bottomInset + space.xxl },
+        ]}
       >
-        <MomentView uri={photoUri} edits={edits} width={previewWidth} stamp={stamp} testID="editor-preview" />
-      </Pressable>
-      <View style={[styles.sheet, { paddingBottom: bottomInset + space.xxl }]}>
         <TextField
           label={t('edit.caption')}
           value={caption}
@@ -96,6 +108,7 @@ export function EditDetailsStep({
           // The slot's own question, so there is something to answer.
           placeholder={t(`edit.captionPrompt.${slot}`)}
           autoFocus={focusCaption}
+          onFocus={raiseSheet}
           testID="editor-caption"
         />
         <View
@@ -135,28 +148,12 @@ export function EditDetailsStep({
           </Text>
         ) : null}
       </View>
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.editor },
-  content: { flexGrow: 1 },
-  preview: {
-    alignSelf: 'center',
-    marginBottom: space.xxl,
-    overflow: 'hidden',
-    borderRadius: radius.tile,
-  },
-  sheet: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
-    paddingTop: space.xl,
-    paddingHorizontal: space.xl,
-    gap: space.lg,
-  },
+  sheet: { paddingTop: space.xl, gap: space.lg },
   // Wraps at large text, so the hashtag drops under its label instead of squeezing it.
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
   label: { color: colors.ink },
