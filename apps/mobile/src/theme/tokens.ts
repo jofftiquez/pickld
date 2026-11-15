@@ -419,6 +419,8 @@ export const sizes = {
   zoomButton: 36, // 0.5× / 1× / 2× / 3× lens buttons over the viewfinder (D-144); hitSlop brings them to 44
   focusMark: 72, // square drawn where the viewfinder was tapped to focus (D-144)
   focusMarkBorder: 1.5,
+  slotPillChevron: 16, // chevron beside the slot on the camera's moment pill (D-151)
+  slotPickerCheck: 24, // green check circle on the current row of the camera's moment picker (D-151)
   accessOffIconWell: 72, // camera-off icon square (CameraDenied)
   accessOffPanel: 520 / 844, // top panel's share of the screen height (CameraDenied)
   filterThumb: 58, // filter thumbnail square (Capture)

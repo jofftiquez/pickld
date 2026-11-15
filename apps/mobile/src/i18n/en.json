@@ -100,6 +100,16 @@
     "slotTag": "{{slot}}, today at {{time}}",
     "whenOn": "{{time}} · {{date}}",
     "slotTagOn": "{{slot}}, {{date}} at {{time}}",
+    "slotHint": "Changes the moment",
+    "slotChanged": "Now taking {{slot}}",
+    "slotPicker": {
+      "title": "Change the moment",
+      "today": "For today’s jar",
+      "allDone": "Every other moment is already done for this day",
+      "done": "Done",
+      "doneLabel": "{{slot}}, done",
+      "hint": "Takes the photo for {{slot}}"
+    },
     "aspect": "3:4",
     "flashOff": "Flash off",
     "flashOn": "Flash on",

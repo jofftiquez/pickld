@@ -13,7 +13,7 @@ import type { FlashSetting } from './CameraPreview';
 import { CameraTouchArea } from './CameraTouchArea';
 import type { Point } from './cameraZoom';
 import { ShutterButton } from './ShutterButton';
-import { SlotTag } from './SlotTag';
+import { SlotPill } from './SlotPill';
 import type { CameraZoom } from './useCameraZoom';
 import { ViewfinderGrid } from './ViewfinderGrid';
 import { ZoomControls } from './ZoomControls';
@@ -21,7 +21,7 @@ import { ZoomControls } from './ZoomControls';
 export type CameraViewProps = {
   /** The live preview (vision-camera) or the dev mock; fills the 3:4 viewfinder. */
   preview: ReactNode;
-  /** The slot the photo is added to; shown read only in the slot tag (the tile that opened the camera). */
+  /** The slot the photo is added to; shown in the moment pill, which opens the moment picker (D-151). */
   slot: Slot;
   /** Current time, formatted for the slot tag. */
   time: string;
@@ -37,6 +37,10 @@ export type CameraViewProps = {
   onFocus: (point: Point) => void;
   insets: EdgeInsets;
   onClose: () => void;
+  /** Opens the moment picker. */
+  onChangeSlot: () => void;
+  /** Nothing to change to (a full past jar): the pill is disabled. */
+  slotDisabled?: boolean;
   onToggleFlash: () => void;
   onFlip: () => void;
   onGallery: () => void;
@@ -48,7 +52,7 @@ export type CameraViewProps = {
 // Room below the viewfinder for the shutter row on short phones.
 const CONTROLS_MIN_HEIGHT = 140;
 
-/** The Camera screen layout (design: Camera): 3:4 viewfinder with grid, controls and slot tag, then the shutter row. */
+/** The Camera screen layout (design: Camera): 3:4 viewfinder with grid, controls and moment pill, then the shutter row. */
 export function CameraView({
   preview,
   slot,
@@ -62,6 +66,8 @@ export function CameraView({
   onFocus,
   insets,
   onClose,
+  onChangeSlot,
+  slotDisabled = false,
   onToggleFlash,
   onFlip,
   onGallery,
@@ -90,7 +96,7 @@ export function CameraView({
             onPress={onClose}
             testID="camera-close"
           />
-          <SlotTag slot={tag} time={time} date={date} />
+          <SlotPill slot={tag} time={time} date={date} onPress={onChangeSlot} disabled={slotDisabled} />
           <RoundIconButton
             icon={flash === 'on' ? 'flash' : 'flashOff'}
             variant="glass"

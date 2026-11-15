@@ -25,6 +25,8 @@ export type CameraZoom = {
   /** Index of the highlighted zoom button (-1 without buttons). */
   selected: number;
   select: (stop: ZoomStop) => void;
+  /** Back to 1×, as on a flip: a change of moment starts afresh (D-151). */
+  reset: () => void;
   /** Pinch to zoom, for the preview's gesture detector. Runs on the UI thread. */
   pinch: PinchGesture;
 };
@@ -99,6 +101,7 @@ export function useCameraZoom(lens: LensInfo | null, onLiveZoom: (zoom: number) 
     },
     [lens],
   );
+  const reset = useCallback(() => setKept(null), []);
 
   return {
     plan,
@@ -107,6 +110,7 @@ export function useCameraZoom(lens: LensInfo | null, onLiveZoom: (zoom: number) 
     pinchFactor,
     selected: plan ? selectedStop(plan.stops, factor) : -1,
     select,
+    reset,
     pinch,
   };
 }
