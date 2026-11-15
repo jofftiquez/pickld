@@ -23,6 +23,8 @@ export type TabBarButtonProps = {
   testID: string;
 };
 
+const iconSize = 22;
+
 /** One tab of FloatingTabBar: icon in a pill (tinted when selected) over a caption. */
 export function TabBarButton({
   icon,
@@ -55,7 +57,7 @@ export function TabBarButton({
         style={[styles.pill, focused ? styles.pillActive : glyph?.icon]}
         testID={focused ? 'tab-active-pill' : undefined}
       >
-        <Icon name={icon} color={tint} size={22} strokeWidth={focused ? 2 : 1.8} />
+        <Icon name={icon} color={tint} size={iconSize} strokeWidth={focused ? 2 : 1.8} />
         {badge ? <View style={styles.dot} pointerEvents="none" testID={`${testID}-dot`} /> : null}
       </View>
       {/* Four tabs share the bar (D-130): a label stays on one line and shrinks a little rather than wrap. */}
@@ -91,17 +93,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pillActive: { backgroundColor: colors.brandTint },
-  // A red dot at the icon's top right corner, ringed in white so it reads on the glass and the milky bar (D-157).
+  // An 8 pt red dot just past the icon's top right corner, the same size and place as the system bar's (D-157, D-159).
   dot: {
     position: 'absolute',
     top: 0,
-    right: space.md,
-    width: sizes.notifyDot + 4,
-    height: sizes.notifyDot + 4,
+    start: (sizes.tabPillWidth + iconSize) / 2 - 2,
+    width: sizes.notifyDot,
+    height: sizes.notifyDot,
     borderRadius: radius.pill,
     backgroundColor: colors.unreadDot,
-    borderWidth: 2,
-    borderColor: colors.surface,
   },
   label: { textAlign: 'center' },
 });

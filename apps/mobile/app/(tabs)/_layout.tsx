@@ -28,6 +28,11 @@ const unreadText = {
 
 type UnreadTab = keyof typeof unreadText;
 
+// The system bar's badge text for a dot: a zero-width space, so the badge is only the padding around it. With the
+// tiny badge font set in patches/react-native-screens@4.30.1.patch that is an 8 pt dot, the same size as the
+// custom bar's (D-159); a plain empty badge is about 20 pt.
+const dotBadge = '\u200B';
+
 // Main tab shell (design: Main; D-52, D-130): Today | Moments | Jars | Discover; screen order sets tab order. My days is a stack
 // screen (app/my-days.tsx) opened from Today's calendar button.
 // iOS 26+ with glass allowed gets the system's floating Liquid Glass tab bar, the selected tab on a lighter glass
@@ -62,8 +67,8 @@ export default function TabsLayout() {
             >
               <NativeTabs.Trigger.Icon src={nativeIcons[name]} renderingMode="template" />
               <NativeTabs.Trigger.Label>{t(mainTabs[name].label)}</NativeTabs.Trigger.Label>
-              {/* No text: the system draws an empty badge, a dot. */}
-              <NativeTabs.Trigger.Badge hidden={!isUnread(name)} />
+              {/* Left out when read: a badge with text ignores `hidden`. */}
+              {isUnread(name) ? <NativeTabs.Trigger.Badge>{dotBadge}</NativeTabs.Trigger.Badge> : null}
             </NativeTabs.Trigger>
           ))}
           {/* Hidden, not deleted (D-52): Today's tiles open /camera?slot=… directly. */}
