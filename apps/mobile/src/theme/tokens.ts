@@ -79,6 +79,7 @@ export const colors = {
   notifyDot: '#d4451f', // unread dot on the bell (Feed)
   cropGrid: 'rgba(255,255,255,0.4)', // rule-of-thirds lines inside the crop frame
   galleryHeader: 'rgba(255,255,255,0.94)', // sticky day headers over the gallery grid (Choose a photo)
+  peekScrim: 'rgba(10,12,8,0.72)', // behind a held photo's preview in that grid; white text on it is 8:1
   onPhotoMuted: '#e2e5dc', // date and count over a photo (Memories); 12:1 on the photo fade
   cropAction: '#e2e5dc', // Cancel and Reset on the dark header (Crop); 15:1 on editor
   cropSubtitle: '#b9beb2', // "#afternoon · from gallery" under the title (Crop); 10:1 on editor
@@ -154,6 +155,7 @@ export const radius = {
   thumb: 10,
   reviewSlot: 12, // the 8 slots on Publish review (Publish)
   thumbLg: 14,
+  peek: 14, // a held photo's preview over the gallery grid (Choose a photo)
   lidChoice: 12, // jar lid colour squares (EditProfile)
   mosaicLarge: 16, // large photo in a feed jar card's mosaic (Feed); the small ones use thumbLg
   dayCell: 13, // My days calendar cells (Calendar)

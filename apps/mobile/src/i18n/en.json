@@ -731,7 +731,14 @@
     "chooseMoreHint": "Opens Photos to share more photos with Pickld",
     "empty": "No photos to show yet.",
     "loadFailed": "Couldn’t open your photos. Try again.",
-    "photoFailed": "Couldn’t open that photo. Check your connection and try again."
+    "photoFailed": "Couldn’t open that photo. Check your connection and try again.",
+    "preview": "Preview",
+    "previewPhoto": "Preview of the photo from {{when}}",
+    "previewWhen": "{{date}} · {{time}}",
+    "previewHint": "Slide to Use this photo, or let go to close",
+    "previewFailed": "Couldn’t load a bigger preview. You can still use this photo.",
+    "previewCloseHint": "Closes the preview",
+    "usePhoto": "Use this photo"
   },
   "crop": {
     "title": "Crop photo",

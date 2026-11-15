@@ -61,6 +61,32 @@ export function itemOffsets(items: readonly GalleryItem[], dayHeight: number, ro
   return offsets;
 }
 
+/**
+ * The photo under a point in the list's content (`y` already includes the scroll), or null over a day
+ * header, a gap or past the last photo of a row. `offsets` is from `itemOffsets`; `cell` is a photo's side.
+ */
+export function photoAt(
+  items: readonly GalleryItem[],
+  offsets: readonly number[],
+  x: number,
+  y: number,
+  cell: number,
+  gap: number,
+): LibraryPhoto | null {
+  let lo = 0;
+  let hi = items.length - 1;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if ((offsets[mid] ?? 0) <= y) lo = mid;
+    else hi = mid - 1;
+  }
+  const item = items[lo];
+  if (item?.kind !== 'row' || y < (offsets[lo] ?? 0) || y >= (offsets[lo] ?? 0) + cell) return null;
+  const column = Math.floor(x / (cell + gap));
+  if (x < 0 || x - column * (cell + gap) >= cell) return null;
+  return item.photos[column] ?? null;
+}
+
 const pad = (n: number, width = 2) => String(Math.abs(n)).padStart(width, '0');
 
 /**
