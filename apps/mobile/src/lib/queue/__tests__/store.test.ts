@@ -454,6 +454,43 @@ describe('editing hold and saved edits (M2-12)', () => {
     await expect(loadStore().saveEdits(999, { caption: null, visibility: 'readers', edits })).rejects.toThrow(/999/);
   });
 
+  it('saveEdits with a turned photo swaps the files and the edits in one update, then deletes the old files', async () => {
+    const store = loadStore();
+    const item = await store.enqueue({ ...input, editing: true });
+    mockFs.set('file:///cache/turned.webp', 'turned-full');
+    mockFs.set('file:///cache/turned-thumb.webp', 'turned-thumb');
+    const saved = await store.saveEdits(
+      item.id,
+      { caption: null, visibility: 'readers', edits },
+      { photoUri: 'file:///cache/turned.webp', thumbUri: 'file:///cache/turned-thumb.webp' },
+    );
+    expect(mockFs.get(saved.photoUri)).toBe('turned-full');
+    expect(mockFs.get(saved.thumbUri ?? '')).toBe('turned-thumb');
+    expect(saved).toMatchObject({ edits, caption: null, editingSince: null, prepared: true, crop: null });
+    expect(queuedFiles().sort()).toEqual([saved.photoUri, saved.thumbUri].sort());
+  });
+
+  it('saveEdits with a turned photo refuses while uploading, keeping the photo and edits as they were', async () => {
+    const store = loadStore();
+    const item = await store.enqueue(input);
+    await store.saveStatus(start(item));
+    mockFs.set('file:///cache/turned.webp', 'turned-full');
+    mockFs.set('file:///cache/turned-thumb.webp', 'turned-thumb');
+    await expect(
+      store.saveEdits(
+        item.id,
+        { caption: null, visibility: 'readers', edits },
+        { photoUri: 'file:///cache/turned.webp', thumbUri: 'file:///cache/turned-thumb.webp' },
+      ),
+    ).rejects.toBeInstanceOf(store.QueueItemBusyError);
+    expect(await store.getItem(item.id)).toMatchObject({
+      photoUri: item.photoUri,
+      caption: 'new shoes',
+      edits: input.edits,
+    });
+    expect(queuedFiles().sort()).toEqual([item.photoUri, item.thumbUri].sort());
+  });
+
   it('saveEdits tells Today the item changed', async () => {
     const store = loadStore();
     const item = await store.enqueue(input);

@@ -12,6 +12,7 @@ import { colors, sizes, space, type Slot } from '@/theme/tokens';
 
 import { EditDetailsStep } from './EditDetailsStep';
 import { EditorToolbar } from './EditorToolbar';
+import type { PhotoToolsProps } from './PhotoTools';
 import { EditPhotoStep, type EditorTool } from './EditPhotoStep';
 import type { Edits, Overlay } from './edits';
 import type { FilterId } from './filters';
@@ -67,6 +68,9 @@ export type EditorViewProps = {
   onChangeVisibility: (visibility: Visibility) => void;
   canUndo: boolean;
   onUndo: () => void;
+  /** The quick photo buttons (Rotate, Flip, Crop) on the photo step, where the photo can be changed. */
+  photoTools?: PhotoToolsProps;
+  adjustFailed?: boolean;
   /** "Add to #slot" for a photo just taken, "Done" when editing it again. Already translated. */
   saveLabel: string;
   saving: boolean;
@@ -121,6 +125,8 @@ export function EditorView({
   onChangeVisibility,
   canUndo,
   onUndo,
+  photoTools,
+  adjustFailed,
   saveLabel,
   saving,
   saveFailed,
@@ -215,6 +221,8 @@ export function EditorView({
           onSelectTool={onSelectTool}
           canUndo={canUndo}
           onUndo={onUndo}
+          photoTools={photoTools}
+          adjustFailed={adjustFailed}
         />
       </Animated.View>
       {detailsOpened ? (

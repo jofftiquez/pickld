@@ -2,6 +2,7 @@ import { useReducer } from 'react';
 
 import type { Edits, Overlay } from './edits';
 import type { FilterId } from './filters';
+import { moveWithPhoto, NO_ADJUST, sameAdjust, type PhotoAdjust } from './photoAdjust';
 import { clampScale, clampTransform, sameTransform, type Transform } from './overlays/transform';
 
 /** How many steps Undo can go back. */
@@ -11,9 +12,14 @@ export const UNDO_LIMIT = 50;
 // selection, and it is ignored once its overlay is gone (deleted, or taken back by Undo).
 // `group` is the coalescing key of the last change: a run of changes with the same key (typing into a
 // bubble) is one Undo step. Any other action ends the run.
-type State = { past: Edits[]; present: Edits; selectedId: string | null; group?: string };
+// Each step also keeps the photo's quick adjust (turn, mirror) with the overlays placed for it, so Undo
+// puts the photo and its overlays back together.
+type Step = { edits: Edits; adjust: PhotoAdjust };
+type State = { past: Step[]; present: Step; selectedId: string | null; group?: string };
 type Action =
   | { type: 'change'; change: (edits: Edits) => Edits; select?: string | null; group?: string }
+  | { type: 'adjust'; adjust: PhotoAdjust }
+  | { type: 'rebase' }
   | { type: 'select'; id: string | null }
   | { type: 'undo' };
 
@@ -27,17 +33,39 @@ function reducer(state: State, action: Action): State {
       return action.id === state.selectedId ? state : { ...state, selectedId: action.id, group: undefined };
     case 'change': {
       // A change that returns the same edits (nothing to do) records no step.
-      const next = action.change(state.present);
-      if (next === state.present) return state;
+      const next = action.change(state.present.edits);
+      if (next === state.present.edits) return state;
       const selectedId = action.select === undefined ? state.selectedId : action.select;
+      const present = { ...state.present, edits: next };
       if (action.group !== undefined && action.group === state.group) {
-        return { ...state, present: next, selectedId };
+        return { ...state, present, selectedId };
       }
+      return { past: [...state.past, state.present].slice(-UNDO_LIMIT), present, selectedId, group: action.group };
+    }
+    case 'adjust': {
+      const from = state.present.adjust;
+      if (sameAdjust(from, action.adjust)) return state;
+      const { edits } = state.present;
+      const overlays = edits.overlays.map((o) => ({ ...o, ...moveWithPhoto(o, from, action.adjust) }));
       return {
+        ...state,
         past: [...state.past, state.present].slice(-UNDO_LIMIT),
-        present: next,
-        selectedId,
-        group: action.group,
+        present: { edits: { ...edits, overlays }, adjust: action.adjust },
+        group: undefined,
+      };
+    }
+    case 'rebase': {
+      // The photo itself was replaced (Re-crop saved it, with the adjust shown at the time). The steps
+      // made on that adjust stay, now on no adjust; earlier steps were placed for another photo and go.
+      const shown = state.present.adjust;
+      let first = state.past.length;
+      while (first > 0 && sameAdjust(state.past[first - 1]?.adjust ?? NO_ADJUST, shown)) first -= 1;
+      if (first === 0 && sameAdjust(shown, NO_ADJUST)) return state;
+      return {
+        ...state,
+        past: state.past.slice(first).map((step) => ({ ...step, adjust: NO_ADJUST })),
+        present: { ...state.present, adjust: NO_ADJUST },
+        group: undefined,
       };
     }
   }
@@ -74,7 +102,13 @@ export type EditorState = {
   transformOverlay: (id: string, transform: Transform) => void;
   bringToFront: (id: string) => void;
   deleteOverlay: (id: string) => void;
-  /** Steps back one change: a filter, or an overlay added, moved, raised or deleted. */
+  /** The photo's quick adjust (turn, mirror) from the photo the editor opened with. */
+  adjust: PhotoAdjust;
+  /** Sets the photo's adjust as one step, moving every overlay with the photo (`moveWithPhoto`). */
+  adjustPhoto: (adjust: PhotoAdjust) => void;
+  /** The photo was replaced by one with the current adjust already applied: the adjust starts over. */
+  rebasePhoto: () => void;
+  /** Steps back one change: a filter, a photo adjust, or an overlay added, moved, raised or deleted. */
   undo: () => void;
   canUndo: boolean;
 };
@@ -85,8 +119,12 @@ export type EditorState = {
  * already on top) records no step.
  */
 export function useEditorState(initial: Edits): EditorState {
-  const [state, dispatch] = useReducer(reducer, { past: [], present: initial, selectedId: null });
-  const edits = state.present;
+  const [state, dispatch] = useReducer(reducer, {
+    past: [],
+    present: { edits: initial, adjust: NO_ADJUST },
+    selectedId: null,
+  });
+  const { edits } = state.present;
   const change = (fn: (edits: Edits) => Edits, select?: string | null, group?: string) =>
     dispatch({ type: 'change', change: fn, select, group });
   return {
@@ -146,6 +184,9 @@ export function useEditorState(initial: Edits): EditorState {
             )
           : e,
       ),
+    adjust: state.present.adjust,
+    adjustPhoto: (adjust) => dispatch({ type: 'adjust', adjust }),
+    rebasePhoto: () => dispatch({ type: 'rebase' }),
     undo: () => dispatch({ type: 'undo' }),
     canUndo: state.past.length > 0,
   };

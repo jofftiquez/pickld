@@ -1,12 +1,13 @@
 import type { SkImage } from '@shopify/react-native-skia';
 import { useTranslation } from 'react-i18next';
 import { useRef, useState, type ComponentRef } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { useReduceMotion } from '@/lib/useReduceMotion';
+import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import { BubblePanel } from './bubble/BubblePanel';
@@ -16,6 +17,7 @@ import { FILTER_GAP, filterThumbSize } from './filterGrid';
 import { filterIdSchema, filterMatrices, type FilterId } from './filters';
 import { FilterThumbnail } from './FilterThumbnail';
 import { OverlayLayer } from './overlays/OverlayLayer';
+import { PhotoTools, type PhotoToolsProps } from './PhotoTools';
 import type { Transform } from './overlays/transform';
 import type { CatalogSticker } from './stickers/catalog';
 import { StickersPanel } from './stickers/StickersPanel';
@@ -49,6 +51,10 @@ export type EditPhotoStepProps = {
   onSelectTool: (tool: EditorTool) => void;
   canUndo: boolean;
   onUndo: () => void;
+  /** The quick photo buttons on the photo (Rotate, Flip, Crop), where the photo can be changed. */
+  photoTools?: PhotoToolsProps;
+  /** Rotate or Flip couldn't make the changed photo. */
+  adjustFailed?: boolean;
 };
 
 // Room below the photo for the tool tabs and the filter row; the photo shrinks on short phones so they
@@ -90,6 +96,8 @@ export function EditPhotoStep({
   onSelectTool,
   canUndo,
   onUndo,
+  photoTools,
+  adjustFailed = false,
 }: EditPhotoStepProps) {
   const { t } = useTranslation();
   const window = useWindowDimensions();
@@ -172,6 +180,7 @@ export function EditPhotoStep({
           onDelete={onDeleteOverlay}
           onGestureActiveChange={setOverlayGesture}
         />
+        {photoTools ? <PhotoTools {...photoTools} /> : null}
       </Animated.View>
 
       {/* After the photo, so it draws over it (and takes the taps) as it slides up. */}
@@ -219,6 +228,15 @@ export function EditPhotoStep({
             onDeselect={() => onSelectOverlay(null)}
           />
         )}
+        {adjustFailed ? (
+          <Text
+            style={[textStyle('bodySmall'), styles.error]}
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+          >
+            {t('edit.adjust.failed')}
+          </Text>
+        ) : null}
         {canUndo ? (
           <View style={styles.actions}>
             <SecondaryButton
@@ -261,4 +279,5 @@ const styles = StyleSheet.create({
   // thumbnail already reserves its ring and white gap.
   filters: { flexDirection: 'row', flexWrap: 'wrap', columnGap: FILTER_GAP, rowGap: space.sm },
   actions: { flexDirection: 'row' },
+  error: { color: colors.danger },
 });
