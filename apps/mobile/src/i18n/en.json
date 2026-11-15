@@ -797,6 +797,21 @@
       "note": "Your cover runs across the top of your profile."
     }
   },
+  "sharedPhoto": {
+    "title": "Add to Pickld",
+    "today": "For today’s jar",
+    "past": "For {{date}} · added later",
+    "photo": "The photo you shared",
+    "choose": "Choose a moment",
+    "slotHint": "Adds the photo to {{slot}}",
+    "slotTaken": "{{slot}}, already filled",
+    "failedTitle": "Couldn’t open that photo",
+    "failedBody": "Try sharing it again from Photos.",
+    "futureTitle": "This photo is dated after today",
+    "futureBody": "Its camera clock may be wrong. Pickld adds photos up to today.",
+    "fullTitle": "That jar is full",
+    "fullBody": "All 8 moments are filled for that day."
+  },
   "preview": {
     "title": "Moment preview",
     "openHint": "Opens the moment preview",

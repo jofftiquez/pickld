@@ -10,8 +10,11 @@ export type CaptureSource =
   | 'exif-offset'
   /** EXIF DateTimeOriginal without an offset: read as wall time in the phone's zone. */
   | 'exif-phone-zone'
-  /** No usable EXIF time (or one in the future): taken now. */
-  | 'now';
+  /** No usable EXIF time: taken now. */
+  | 'now'
+  /** An EXIF time later than now (a wrong camera clock): dated now too, so the gallery treats it as a new
+   * photo; the Photos share screen refuses it. */
+  | 'future';
 
 export type CaptureInfo = {
   /** ISO 8601 with offset, second precision, e.g. `2026-11-09T23:45:10+08:00`. */
@@ -119,7 +122,8 @@ const wallMs = (w: Wall) => Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minut
  * When a photo was taken and which jar date it targets.
  * - EXIF time with offset: that instant; the date is the photo's own local date.
  * - EXIF time without offset: wall time in `phoneTz` (a time skipped by a DST gap shifts forward).
- * - Missing, invalid or future EXIF time: `now` in `phoneTz` (a camera, or a wrong camera clock).
+ * - Missing or invalid EXIF time: `now` in `phoneTz` (source `now`); an EXIF time later than `now` (a wrong
+ *   camera clock) is dated the same way, with source `future`.
  * Throws RangeError when `phoneTz` is not an IANA zone name (rule 7).
  */
 export function captureInfo(exif: unknown, phoneTz: string, now: Date): CaptureInfo {
@@ -160,5 +164,9 @@ export function captureInfo(exif: unknown, phoneTz: string, now: Date): CaptureI
     }
   }
 
-  return { capturedAt: isoWithOffset(nowMs, zoneOffsetMinutes(phoneTz, nowMs)), localDate: today, source: 'now' };
+  return {
+    capturedAt: isoWithOffset(nowMs, zoneOffsetMinutes(phoneTz, nowMs)),
+    localDate: today,
+    source: wall ? 'future' : 'now',
+  };
 }

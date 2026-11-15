@@ -69,6 +69,11 @@ export default function RootLayout() {
           name="camera"
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
         />
+        {/* Photos' Share → Pickld (FR-CAP-02) opens over whatever was on screen, like the camera. */}
+        <Stack.Screen
+          name="shared-photo"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
+        />
         <Stack.Screen
           name="crop"
           options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'fade' }}
