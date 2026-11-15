@@ -164,13 +164,16 @@ function Row({ row, day, divider, onOpen, onRetry, onReplace, onDiscard }: RowPr
         </View>
       </Pressable>
       {action ? (
-        <PillButton
-          variant={action === 'finish' ? 'primary' : 'subtle'}
-          label={t(`pending.${action}`)}
-          accessibilityLabel={t(`pending.${action}Label`, { slot })}
-          onPress={() => onAction(row)}
-          testID={`pending-${action}-${row.id}`}
-        />
+        // The pill aligns itself to the top of its parent; this full-height wrapper centres it in the row.
+        <View style={styles.action}>
+          <PillButton
+            variant={action === 'finish' ? 'primary' : 'subtle'}
+            label={t(`pending.${action}`)}
+            accessibilityLabel={t(`pending.${action}Label`, { slot })}
+            onPress={() => onAction(row)}
+            testID={`pending-${action}-${row.id}`}
+          />
+        </View>
       ) : null}
       {busy ? null : (
         <RoundIconButton
@@ -211,6 +214,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.sm + 2 },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
   body: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: sizes.roundButton },
+  action: { alignSelf: 'stretch', justifyContent: 'center' },
   thumb: { width: sizes.pendingThumbWidth, aspectRatio: 3 / 4, borderRadius: radius.pendingThumb },
   names: { flex: 1, gap: 1 },
   message: { marginTop: space.xxl },
