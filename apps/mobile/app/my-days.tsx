@@ -16,6 +16,7 @@ import {
   monthOf,
   monthsBetween,
   weekStartFrom,
+  withQueued,
 } from '@/features/days/monthGrid';
 import { useDayJar } from '@/features/days/useDayJar';
 import { useMonthJars } from '@/features/days/useMonthJars';
@@ -35,6 +36,11 @@ export default function MyDaysScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const { userId, jars, firstJarMonth, birthday } = useMonthJars(month);
   const { day, queue } = useDayJar(selectedDate);
+  // The month's jars plus photos still waiting to upload, so a day just filled shows at once (rule 3, D-148).
+  const monthJars = withQueued(
+    jars ?? [],
+    queue.filter((item) => monthOf(item.localDate) === month),
+  );
 
   // Coming back to the screen (e.g. after a capture) re-reads the months; the first focus is the initial load.
   const focusedOnce = useRef(false);
@@ -61,7 +67,7 @@ export default function MyDaysScreen() {
     month,
     today,
     weekStart: weekStartFrom(getCalendars()[0]?.firstWeekday),
-    jars: jars ?? [],
+    jars: monthJars,
   });
   // A date from the date picker opens that day's page (D-55), as Fill this jar does; today is the Today tab.
   // The calendar moves to that day too, so Back lands on it.
@@ -87,7 +93,7 @@ export default function MyDaysScreen() {
   return (
     <MyDaysView
       grid={grid}
-      momentCount={monthMomentCount(jars ?? [])}
+      momentCount={monthMomentCount(monthJars)}
       nav={nav}
       selectedDate={selectedDate}
       insets={insets}

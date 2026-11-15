@@ -1,10 +1,12 @@
 // Data for My days (FR-DAY-01): one month of the user's jars from `month_jars` (0009, owner-only) with
 // cover thumbnail URLs, plus the month of the first jar and the birthday, which bound how far back it goes
 // (D-141). All are React Query queries, so the persisted cache (src/lib/queryClient.ts) keeps them readable offline (NFR-OFF-03).
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { z } from 'zod';
 
 import { useAuthStore } from '@/lib/authStore';
+import { subscribeQueue } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
 
 import { monthJarRow, monthOf, type MonthJar } from './monthGrid';
@@ -77,6 +79,19 @@ export function useMonthJars(month: string) {
     enabled,
     staleTime: Infinity,
   });
+
+  // A queued photo that reaches the server leaves the queue: re-read the months, or a day filled while this
+  // screen was open (or just behind the day page) stays as it was before the upload (D-148).
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (userId === null) return;
+    return subscribeQueue((change) => {
+      if (change !== 'removed') return;
+      void queryClient.invalidateQueries({ queryKey: ['month', userId] });
+      void queryClient.invalidateQueries({ queryKey: daysQueryKeys.firstJarMonth(userId) });
+    });
+  }, [queryClient, userId]);
+
   return {
     userId,
     jars: jars.data,

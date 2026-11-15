@@ -163,6 +163,62 @@ export function monthNav(month: string, currentMonth: string, earliest: string):
   };
 }
 
+/** What the calendar reads of a queued moment (src/lib/queue/store.ts `QueueItem`). */
+export type QueuedForMonth = {
+  slot: string;
+  localDate: string;
+  state: string;
+  replace?: boolean;
+  thumbUri: string | null;
+  photoUri: string;
+};
+
+/**
+ * The month's jars with the photos still in the offline queue added (rule 3), so a day filled a moment ago
+ * shows on the calendar before its upload reaches the server. Each queued slot that isn't on the server yet
+ * counts once (a replacement or a slot conflict adds nothing; an uploaded row is about to leave the queue);
+ * a day without a server jar gets one from the queue, and a jar without a cover shows the queued photo.
+ */
+export function withQueued(jars: readonly MonthJar[], queue: readonly QueuedForMonth[]): MonthJar[] {
+  const slotsByDate = new Map<string, Set<string>>();
+  const coverByDate = new Map<string, string>();
+  for (const item of queue) {
+    if (item.replace === true || item.state === 'uploaded' || item.state === 'conflict') continue;
+    const daySlots = slotsByDate.get(item.localDate) ?? new Set<string>();
+    daySlots.add(item.slot);
+    slotsByDate.set(item.localDate, daySlots);
+    if (!coverByDate.has(item.localDate)) coverByDate.set(item.localDate, item.thumbUri ?? item.photoUri);
+  }
+  if (slotsByDate.size === 0) return [...jars];
+  const merged = jars.map((jar) => {
+    const queued = slotsByDate.get(jar.local_date)?.size ?? 0;
+    if (queued === 0) return jar;
+    const momentCount = Math.min(MOMENTS_PER_JAR, jar.moment_count + queued);
+    return {
+      ...jar,
+      moment_count: momentCount,
+      is_full: momentCount >= MOMENTS_PER_JAR,
+      coverUrl: jar.coverUrl ?? coverByDate.get(jar.local_date) ?? null,
+    };
+  });
+  const known = new Set(jars.map((jar) => jar.local_date));
+  for (const [date, daySlots] of slotsByDate) {
+    if (known.has(date)) continue;
+    const momentCount = Math.min(MOMENTS_PER_JAR, daySlots.size);
+    merged.push({
+      jar_id: `queued-${date}`,
+      local_date: date,
+      tz: '',
+      moment_count: momentCount,
+      is_full: momentCount >= MOMENTS_PER_JAR,
+      cover_moment_id: null,
+      cover_thumb_path: null,
+      coverUrl: coverByDate.get(date) ?? null,
+    });
+  }
+  return merged;
+}
+
 /** Moments across the month's jars, for the "November 2026 · 50 moments" line. */
 export function monthMomentCount(jars: readonly MonthJarRow[]): number {
   return jars.reduce((sum, j) => sum + j.moment_count, 0);
