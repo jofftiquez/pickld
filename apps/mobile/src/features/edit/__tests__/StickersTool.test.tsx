@@ -12,7 +12,7 @@ import { editsSchema } from '../edits';
 import { stickerArt } from '../stickers/stickerArt';
 import { stickerRows, type Viewer } from './stickerRows';
 import { useAuthStore } from '@/lib/authStore';
-import { getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import { getItem, keepAsDraft, saveEdits, type QueueItem } from '@/lib/queue/store';
 
 // The Stickers tool in the editor (FR-CAP-05, FR-STK-01..03; design: Stickers): the catalog read from
 // Supabase (a fake answering with 0012's rows and usable flags), the "For #slot" row first, tapping a
@@ -35,7 +35,7 @@ jest.mock('@shopify/react-native-skia', () => {
   };
 });
 
-jest.mock('@/lib/queue/store', () => ({ getItem: jest.fn(), saveEdits: jest.fn(), releaseEditing: jest.fn() }));
+jest.mock('@/lib/queue/store', () => ({ getItem: jest.fn(), saveEdits: jest.fn(), keepAsDraft: jest.fn() }));
 jest.mock('@/lib/queue/runner', () => ({ requestUploads: jest.fn(async () => undefined) }));
 jest.mock('@/lib/monitoring', () => ({ captureError: jest.fn() }));
 
@@ -86,6 +86,7 @@ const item: QueueItem = {
   momentId: null,
   prepared: true,
   editingSince: Date.parse('2026-11-11T06:14:05.000Z'),
+  draft: false,
   crop: null,
   replace: false,
   state: 'queued',
@@ -149,8 +150,8 @@ beforeEach(() => {
   jest.mocked(getItem).mockImplementation(async (id) => (id === item.id ? item : null));
   jest.mocked(saveEdits).mockReset();
   jest.mocked(saveEdits).mockImplementation(async (_id, input) => ({ ...item, ...input, editingSince: null }));
-  jest.mocked(releaseEditing).mockReset();
-  jest.mocked(releaseEditing).mockResolvedValue(undefined);
+  jest.mocked(keepAsDraft).mockReset();
+  jest.mocked(keepAsDraft).mockResolvedValue(undefined);
 });
 
 describe('Stickers tool', () => {

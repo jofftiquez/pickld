@@ -23,7 +23,7 @@ export type QueuedMoment = Pick<
 > &
   // What the tile needs to draw the edits (M2-18), and the caption and photo the preview shows (QA item 3);
   // optional so callers that don't need them can leave them out.
-  Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits' | 'replace' | 'caption' | 'prepared'>>;
+  Partial<Pick<QueueItem, 'tz' | 'createdAt' | 'edits' | 'replace' | 'caption' | 'prepared' | 'draft'>>;
 
 export type GridTile = {
   slot: Slot;
@@ -81,6 +81,7 @@ function emptyTile(slot: Slot, isNow: boolean): GridTile {
 
 /**
  * The 8 tiles in slot order.
+ * - A draft (Save draft, MIGRATIONS[7] of the queue) shows as a draft tile that opens the editor.
  * - A queued, uploading or failed item wins: it is the newest photo for the slot and must stay visible
  *   until it reaches the server (rule 3), even over an older server moment it replaces (FR-JAR-03).
  * - Otherwise the server moment wins (live → filled, checking/uploading → checking).
@@ -111,14 +112,16 @@ export function buildTodayGrid(input: {
     const moment = moments.find((m) => m.slot === slot && m.status !== 'removed' && !m.replaces) ?? null;
     const removed = moments.find((m) => m.slot === slot && m.status === 'removed') ?? null;
 
+    // A draft never settles: it is the newest photo for the slot and only shows here, to be finished.
     const settled =
-      queued?.state === 'uploaded' ||
-      queued?.state === 'conflict' ||
-      (queued?.replace === true && queued.state !== 'failed');
+      queued?.draft !== true &&
+      (queued?.state === 'uploaded' ||
+        queued?.state === 'conflict' ||
+        (queued?.replace === true && queued.state !== 'failed'));
     if (queued && (!settled || !moment)) {
       return {
         slot,
-        state: queueTileState[queued.state],
+        state: queued.draft === true ? 'draft' : queueTileState[queued.state],
         uri: queued.thumbUri ?? queued.photoUri,
         time: queued.capturedAt,
         visibility: queued.visibility,
@@ -153,9 +156,12 @@ export function buildTodayGrid(input: {
   });
 }
 
-/** Whether a tile holds the slot (server or queued photo); empty, Now and removed tiles leave it free. */
+/**
+ * Whether a tile holds the slot (server or queued photo); empty, Now and removed tiles leave it free, and so
+ * does a draft: it isn't added until it is finished.
+ */
 export function holdsSlot(tile: Pick<GridTile, 'state'>): boolean {
-  return tile.state !== 'empty' && tile.state !== 'now' && tile.state !== 'removed';
+  return tile.state !== 'empty' && tile.state !== 'now' && tile.state !== 'removed' && tile.state !== 'draft';
 }
 
 /** Tiles holding a photo (server or queued): the "n of 8 moments" count and the jar fill. Removed
@@ -170,9 +176,15 @@ export function momentCount(tiles: readonly GridTile[]): number {
  * upload on their own: waiting and uploading. Failed items need Retry, conflicts need Replace, and
  * uploaded ones are already on the server. Hidden while online and when nothing is waiting.
  */
-export function offlineBannerCount(queue: readonly Pick<QueuedMoment, 'state'>[], offline: boolean): number | null {
+export function offlineBannerCount(
+  queue: readonly Pick<QueuedMoment, 'state' | 'draft'>[],
+  offline: boolean,
+): number | null {
   if (!offline) return null;
-  const saved = queue.filter((item) => item.state === 'queued' || item.state === 'uploading').length;
+  // Drafts never upload on their own.
+  const saved = queue.filter(
+    (item) => item.draft !== true && (item.state === 'queued' || item.state === 'uploading'),
+  ).length;
   return saved > 0 ? saved : null;
 }
 

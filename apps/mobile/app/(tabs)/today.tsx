@@ -143,9 +143,7 @@ export default function TodayScreen() {
         onCapture={(slot) => router.push({ pathname: '/camera', params: { slot } })}
         onOpenMyDays={() => router.push('/my-days')}
         onOpenStickers={() => router.push('/stickers')}
-        onOpenProfile={
-          username ? () => router.push({ pathname: '/u/[username]', params: { username } }) : undefined
-        }
+        onOpenProfile={username ? () => router.push({ pathname: '/u/[username]', params: { username } }) : undefined}
         onRetry={(queueId) => void retryUpload(queueId)}
         zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}
         suspension={me?.suspendedUntil !== undefined ? <SuspensionBanner until={me.suspendedUntil} tz={tz} /> : null}
@@ -156,6 +154,7 @@ export default function TodayScreen() {
         }
         onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
         // The moment preview (QA item 3, D-54); Moment options is its More menu.
+        onOpenDraft={(queueId) => router.push(`/edit/${queueId}`)}
         onOpenPreview={(tile) => router.push({ pathname: '/moment/preview', params: { slot: tile.slot } })}
         onPublish={jar?.jar && !jar.jar.publishedAt ? () => router.push('/publish') : null}
         published={published}

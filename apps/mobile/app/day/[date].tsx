@@ -143,6 +143,7 @@ export default function DayScreen() {
           me?.suspendedUntil !== undefined ? <SuspensionBanner until={me.suspendedUntil} tz={phoneTz} /> : null
         }
         onOpenMoment={(id) => router.push({ pathname: '/moment/[id]', params: { id } })}
+        onOpenDraft={(queueId) => router.push(`/edit/${queueId}`)}
         onOpenPreview={(tile) => router.push({ pathname: '/moment/preview', params: { slot: tile.slot, date } })}
         // D-55: an unpublished past jar can be published from here; a day without a jar has nothing to publish.
         onPublish={jar && !jar.publishedAt ? () => router.push({ pathname: '/publish', params: { date } }) : null}

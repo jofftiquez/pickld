@@ -7,7 +7,7 @@ import { reportNetworkResult } from '../../connectivity';
 import { captureError } from '../../monitoring';
 import { BACKOFF_MS, fail, MAX_ATTEMPTS, OFFLINE_RETRY_MS, start as startAttempt } from '../machine';
 import { requestUploads, startUploadRunner, type NetworkSource } from '../runner';
-import { EDIT_HOLD_MS, enqueue, getItem, listQueue, releaseEditing, saveStatus } from '../store';
+import { enqueue, getItem, keepAsDraft, listQueue, saveEdits, saveStatus } from '../store';
 import { capturedFiles, fakeBackend, networkError, resetFakes, USER } from './fakes';
 
 jest.mock('expo-sqlite', () => jest.requireActual('./fakes').expoSqlite);
@@ -202,10 +202,10 @@ describe('upload runner', () => {
     expect(jest.mocked(reportNetworkResult).mock.calls).toEqual([['Network request failed'], [null]]);
   });
 
-  it('waits for a photo in the editor without spinning, and uploads it once the hold lapses (M2-12)', async () => {
+  it('never uploads a photo in the editor or a draft, and sets no timer for it (M2-12)', async () => {
     jest.useFakeTimers({ now: Date.UTC(2026, 10, 11, 3), doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
     const timers = jest.spyOn(global, 'setTimeout');
-    const item = await enqueue({
+    const held = await enqueue({
       userId: USER,
       ...capturedFiles(),
       slot: 'ootd',
@@ -213,23 +213,29 @@ describe('upload runner', () => {
       tz: 'Asia/Manila',
       editing: true,
     });
+    const draft = await enqueue({
+      userId: USER,
+      ...capturedFiles(),
+      slot: 'selfie',
+      localDate: '2026-11-11',
+      tz: 'Asia/Manila',
+      editing: true,
+    });
+    await keepAsDraft(draft.id);
     start();
     await requestUploads();
     await settle();
-    expect(backend.moments).toHaveLength(0);
-    // The next wake-up is when the hold lapses, not a 0 ms loop.
-    expect(timers.mock.calls.at(-1)?.[1]).toBe(EDIT_HOLD_MS);
-
-    await jest.advanceTimersByTimeAsync(EDIT_HOLD_MS - 1);
+    timers.mockClear();
+    // Hours later, still nothing: an unfinished photo has no lapse.
+    await jest.advanceTimersByTimeAsync(24 * 60 * 60_000);
     await settle();
     expect(backend.moments).toHaveLength(0);
-    await jest.advanceTimersByTimeAsync(1);
-    await settle();
-    expect(backend.moments).toHaveLength(1);
-    expect(await getItem(item.id)).toBeNull();
+    expect(timers).not.toHaveBeenCalled();
+    expect(await getItem(held.id)).not.toBeNull();
+    expect(await getItem(draft.id)).toMatchObject({ draft: true, state: 'queued' });
   });
 
-  it('uploads a photo as soon as the editor lets go of it', async () => {
+  it('uploads a photo as soon as the editor adds it', async () => {
     const item = await enqueue({
       userId: USER,
       ...capturedFiles(),
@@ -241,7 +247,7 @@ describe('upload runner', () => {
     start();
     await requestUploads();
     expect(backend.moments).toHaveLength(0);
-    await releaseEditing(item.id);
+    await saveEdits(item.id, { caption: null, visibility: 'readers', edits: {} });
     await requestUploads();
     await settle();
     expect(backend.moments).toHaveLength(1);

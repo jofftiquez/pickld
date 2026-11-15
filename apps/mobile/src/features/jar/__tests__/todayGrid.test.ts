@@ -193,6 +193,17 @@ describe('buildTodayGrid: merging server moments with the queue', () => {
     expect(stateOf(grid({ queue: [queued('ootd', { localDate: '2026-11-08' })] }), 'ootd')).toBe('empty');
   });
 
+  it('a draft shows as a draft tile for its queue item, over a server moment too, and leaves the slot free', () => {
+    const draft = queued('ootd', { draft: true, replace: true });
+    const tiles = grid({ moments: [moment('ootd')], queue: [draft] });
+    expect(tiles[3]).toMatchObject({ state: 'draft', queueId: draft.id, momentId: null, uri: draft.thumbUri });
+    expect(holdsSlot(tiles[3] ?? { state: 'empty' })).toBe(false);
+    expect(momentCount(tiles)).toBe(0);
+    // Drafts never upload, so the offline banner leaves them out.
+    expect(offlineBannerCount([draft, queued('selfie')], true)).toBe(1);
+    expect(offlineBannerCount([draft], true)).toBeNull();
+  });
+
   it('the newest queue item for a slot wins', () => {
     const older = queued('selfie', { state: 'failed' });
     const newer = queued('selfie', { state: 'uploading' });

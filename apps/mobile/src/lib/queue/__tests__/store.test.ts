@@ -401,11 +401,11 @@ describe('editing hold and saved edits (M2-12)', () => {
     expect(store.isHeldForEditing(plain)).toBe(false);
   });
 
-  it('a hold lapses after EDIT_HOLD_MS, so a forgotten edit never strands the photo', () => {
+  it('a hold and a draft never lapse: an unfinished photo is never sent on its own', () => {
     const store = loadStore();
-    const since = Date.UTC(2026, 10, 11, 3);
-    expect(store.isHeldForEditing({ editingSince: since }, since + store.EDIT_HOLD_MS - 1)).toBe(true);
-    expect(store.isHeldForEditing({ editingSince: since }, since + store.EDIT_HOLD_MS)).toBe(false);
+    expect(store.isHeldForEditing({ editingSince: Date.UTC(2020, 0, 1), draft: false })).toBe(true);
+    expect(store.isHeldForEditing({ editingSince: null, draft: true })).toBe(true);
+    expect(store.isHeldForEditing({ editingSince: null, draft: false })).toBe(false);
   });
 
   it('saveEdits stores caption, privacy and edits, ends the hold, and survives a restart', async () => {
@@ -501,19 +501,38 @@ describe('editing hold and saved edits (M2-12)', () => {
     expect(changes).toEqual(['status']);
   });
 
-  it('releaseEditing ends the hold and keeps everything else', async () => {
+  it('keepAsDraft turns the hold into a draft and keeps everything else', async () => {
     const store = loadStore();
     const item = await store.enqueue({ ...input, editing: true });
-    await store.releaseEditing(item.id);
-    const after = await store.getItem(item.id);
-    expect(after).toEqual({ ...item, editingSince: null });
-    await expect(store.releaseEditing(999)).resolves.toBeUndefined();
+    expect(item.draft).toBe(false);
+    await store.keepAsDraft(item.id);
+    expect(await store.getItem(item.id)).toEqual({ ...item, editingSince: null, draft: true });
+    await expect(store.keepAsDraft(999)).resolves.toBeUndefined();
   });
 
-  it('a hold left by a killed app is cleared on the next launch', async () => {
+  it('a photo the editor still held when the app was killed comes back as a draft, never uploaded', async () => {
     const item = await loadStore().enqueue({ ...input, editing: true });
-    expect(item.editingSince).not.toBeNull();
-    expect((await loadStore().getItem(item.id))?.editingSince).toBeNull();
+    const waiting = await loadStore().enqueue(input);
+    const relaunched = loadStore();
+    expect(await relaunched.getItem(item.id)).toMatchObject({ editingSince: null, draft: true });
+    expect(await relaunched.getItem(waiting.id)).toMatchObject({ editingSince: null, draft: false });
+  });
+
+  it('Save draft keeps the edits and the draft; Add finishes it and drops an older draft for the slot', async () => {
+    const store = loadStore();
+    const old = await store.enqueue({ ...input, editing: true });
+    await store.saveEdits(old.id, { caption: 'first try', visibility: 'readers', edits }, undefined, { draft: true });
+    expect(await store.getItem(old.id)).toMatchObject({ caption: 'first try', edits, draft: true, editingSince: null });
+
+    const otherDay = await store.enqueue({ ...input, localDate: '2026-11-10', editing: true });
+    await store.keepAsDraft(otherDay.id);
+    const next = await store.enqueue({ ...input, editing: true });
+    const added = await store.saveEdits(next.id, { caption: null, visibility: 'readers', edits });
+    expect(added).toMatchObject({ draft: false, editingSince: null });
+    expect(await store.getItem(old.id)).toBeNull();
+    expect(mockFs.has(old.photoUri)).toBe(false);
+    // Another day's draft for the same slot stays.
+    expect(await store.getItem(otherDay.id)).toMatchObject({ draft: true });
   });
 
   it('upgrades a version 3 queue: existing moments are not held', async () => {

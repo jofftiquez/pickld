@@ -70,6 +70,7 @@ describe('MomentTile', () => {
       'filled',
       'empty',
       'now',
+      'draft',
       'waiting',
       'uploading',
       'failed',
@@ -156,6 +157,13 @@ describe('MomentTile', () => {
     expect(screen.getByText('#afternoon')).toBeTruthy();
     expect(screen.getByTestId('icon-afternoon', hidden)).toBeTruthy();
     expect(screen.queryByTestId('tile-plus', hidden)).toBeNull();
+  });
+
+  it('draft: says it is a draft to finish, never by color alone', async () => {
+    await renderTile({ slot: 'ootd', state: 'draft', time: '12:30 PM' });
+    expect(screen.getByRole('button', { name: '#ootd, 12:30 PM, draft, not added yet, tap to finish' })).toBeTruthy();
+    expect(screen.getByText('Draft · tap to finish')).toBeTruthy();
+    expect(overlayColor()).toBe(colors.glass);
   });
 
   it('waiting: clock icon and "Waiting for connection"', async () => {

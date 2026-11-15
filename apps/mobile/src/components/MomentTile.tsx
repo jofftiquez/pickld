@@ -13,12 +13,14 @@ import { Icon } from './Icon';
 import { PhotoTile } from './PhotoTile';
 import { VisibilityBadge } from './VisibilityBadge';
 
-export type MomentTileState = 'filled' | 'empty' | 'now' | 'waiting' | 'uploading' | 'failed' | 'checking' | 'removed';
+export type MomentTileState =
+  'filled' | 'empty' | 'now' | 'draft' | 'waiting' | 'uploading' | 'failed' | 'checking' | 'removed';
 
 export const momentTileStates: readonly MomentTileState[] = [
   'filled',
   'empty',
   'now',
+  'draft',
   'waiting',
   'uploading',
   'failed',
@@ -97,6 +99,7 @@ export function MomentTile({
     filled: flags.length > 0 ? flags : [t('tile.a11y.added')],
     empty: [t('tile.a11y.empty')],
     now: [t('tile.a11y.now')],
+    draft: [t('tile.a11y.draft'), ...flags],
     waiting: [t('tile.a11y.waiting'), ...flags],
     uploading: [
       indeterminate ? t('tile.a11y.uploadingIndeterminate') : t('tile.a11y.uploading', { percent }),
@@ -204,6 +207,7 @@ export function MomentTile({
             ) : null
           }
         >
+          {state === 'draft' ? <OverlayText text={t('tile.draft')} /> : null}
           {state === 'waiting' ? (
             <>
               <Icon name="clock" color="surface" size={26} strokeWidth={2} />

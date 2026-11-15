@@ -13,7 +13,7 @@ import { filterIdSchema, filterMatrices } from '../filters';
 import { kape } from './stickerFixture';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
-import { discardItem, getItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import { discardItem, getItem, keepAsDraft, saveEdits, type QueueItem } from '@/lib/queue/store';
 import { saveMomentEdits } from '@/features/moment/momentActions';
 import { preparePhoto } from '@/lib/image/pipeline';
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
@@ -77,7 +77,7 @@ const mockQueueListeners = new Set<(change: 'added' | 'status' | 'removed') => v
 jest.mock('@/lib/queue/store', () => ({
   getItem: jest.fn(),
   saveEdits: jest.fn(),
-  releaseEditing: jest.fn(),
+  keepAsDraft: jest.fn(),
   discardItem: jest.fn(),
   subscribeQueue: (listener: (change: 'added' | 'status' | 'removed') => void) => {
     mockQueueListeners.add(listener);
@@ -143,6 +143,7 @@ const item: QueueItem = {
   momentId: null,
   prepared: true,
   editingSince: Date.parse('2026-11-11T06:14:05.000Z'),
+  draft: false,
   crop: null,
   replace: false,
   state: 'queued',
@@ -213,17 +214,17 @@ beforeEach(() => {
   jest.mocked(getItem).mockReset();
   jest.mocked(getItem).mockImplementation(async (id) => rows.get(id) ?? null);
   jest.mocked(saveEdits).mockReset();
-  jest.mocked(saveEdits).mockImplementation(async (id, input) => {
+  jest.mocked(saveEdits).mockImplementation(async (id, input, _photo, options) => {
     const row = rows.get(id);
     if (!row) throw new Error(`No queued moment ${id}`);
-    const saved = { ...row, ...input, editingSince: null };
+    const saved = { ...row, ...input, editingSince: null, draft: options?.draft ?? false };
     rows.set(id, saved);
     return saved;
   });
-  jest.mocked(releaseEditing).mockReset();
-  jest.mocked(releaseEditing).mockImplementation(async (id) => {
+  jest.mocked(keepAsDraft).mockReset();
+  jest.mocked(keepAsDraft).mockImplementation(async (id: number) => {
     const row = rows.get(id);
-    if (row) rows.set(id, { ...row, editingSince: null });
+    if (row) rows.set(id, { ...row, editingSince: null, draft: true });
   });
   jest.mocked(discardItem).mockReset();
   jest.mocked(discardItem).mockImplementation(async (id) => {
@@ -323,26 +324,82 @@ describe('Editor', () => {
     expect(filterButton('Kalamansi').props.accessibilityState).toMatchObject({ selected: true });
   });
 
-  it('Close returns to where the editor was opened from, keeps the photo queued unedited and lets it upload', async () => {
+  it('Close on a new photo asks first: Keep editing stays, and nothing uploads', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getByText('Save this photo as a draft?')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.queryByText('Save this photo as a draft?')).toBeNull();
+    expect(screen).toHavePathname('/edit/7');
+    expect(requestUploads).not.toHaveBeenCalled();
+    expect(saveEdits).not.toHaveBeenCalled();
+  });
+
+  it('Save draft keeps the photo and its edits on the phone as a draft, without uploading or counting it', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Mono'));
     await goToDetails();
-    await fireEvent.changeText(screen.getByLabelText('Caption'), 'not kept');
+    await fireEvent.changeText(screen.getByLabelText('Caption'), 'finish later');
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
-    expect(screen).toHavePathname('/today');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save draft' }));
     await act(async () => {});
-    expect(saveEdits).not.toHaveBeenCalled();
-    expect(releaseEditing).toHaveBeenCalledWith(7);
-    expect(requestUploads).toHaveBeenCalled();
-    // The order matters: the hold ends before the worker looks at the queue.
-    expect(jest.mocked(releaseEditing).mock.invocationCallOrder[0]).toBeLessThan(
-      jest.mocked(requestUploads).mock.invocationCallOrder[0] ?? 0,
+    expect(screen).toHavePathname('/today');
+    expect(saveEdits).toHaveBeenCalledWith(
+      7,
+      { caption: 'finish later', visibility: 'readers', edits: { v: 1, filter: 'mono', overlays: [] } },
+      undefined,
+      { draft: true },
     );
-    expect(rows.get(7)).toMatchObject({ caption: null, edits: {}, editingSince: null });
-    // Closed as it is, the photo is still added: public, as queued (NFR-ANL-01).
-    expect(jest.mocked(trackMomentAdded).mock.calls).toEqual([[expect.objectContaining({ id: 7 }), 'readers']]);
+    expect(rows.get(7)).toMatchObject({ caption: 'finish later', draft: true, editingSince: null });
+    expect(requestUploads).not.toHaveBeenCalled();
+    expect(trackMomentAdded).not.toHaveBeenCalled();
+    expect(useToastStore.getState().current?.key).toBe('draftSaved');
+  });
+
+  it('Discard deletes the photo and its row', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Discard photo' }));
+    await act(async () => {});
+    expect(screen).toHavePathname('/today');
+    expect(discardItem).toHaveBeenCalledWith(7);
+    expect(rows.has(7)).toBe(false);
+    expect(keepAsDraft).not.toHaveBeenCalled();
+    expect(requestUploads).not.toHaveBeenCalled();
+    expect(trackMomentAdded).not.toHaveBeenCalled();
+  });
+
+  it('any other way out (Android back, a parent dismissing it) asks too, then goes where it was going', async () => {
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    const { router } = jest.requireActual<typeof import('expo-router')>('expo-router');
+    await act(async () => router.back());
+    expect(screen).toHavePathname('/edit/7');
+    expect(screen.getByText('Save this photo as a draft?')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Save draft' }));
+    await act(async () => {});
+    expect(screen).toHavePathname('/today');
+    expect(rows.get(7)).toMatchObject({ draft: true });
+    expect(requestUploads).not.toHaveBeenCalled();
+  });
+
+  it('a draft reopens as a new photo: Add to #slot finishes and uploads it', async () => {
+    rows.set(7, { ...item, editingSince: null, draft: true, caption: 'finish later' });
+    await openEditor('/edit/7');
+    await screen.findByTestId('editor-screen');
+    await goToDetails();
+    expect(screen.getByLabelText('Caption').props.value).toBe('finish later');
+    expect(saveButton().props.accessibilityLabel).toBe('Add to #afternoon');
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(screen).toHavePathname('/today');
+    expect(rows.get(7)).toMatchObject({ draft: false });
+    expect(requestUploads).toHaveBeenCalled();
+    expect(trackMomentAdded).toHaveBeenCalledTimes(1);
   });
 
   it('opened by Crop (`via=crop`), saving goes back past the camera below it, to where the camera was opened', async () => {
@@ -885,7 +942,7 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
     expect(screen).toHavePathname('/today');
     expect(useToastStore.getState().current?.key).toBe('changesSaved');
     // A queued photo's hold and upload are not involved.
-    expect(releaseEditing).not.toHaveBeenCalled();
+    expect(keepAsDraft).not.toHaveBeenCalled();
   });
 
   it('from the photo step: a filter, Next, Everyone, and Done saves the edits, caption and visibility on the server', async () => {

@@ -60,6 +60,8 @@ export type TodayViewProps = {
   onOpenMoment?: (momentId: string) => void;
   /** A live moment, or a queued photo that is waiting or failed: opens the moment preview (QA item 3, D-54). */
   onOpenPreview?: (tile: GridTile) => void;
+  /** A draft tile: reopens the editor on that queued photo to finish it. */
+  onOpenDraft?: (queueId: number) => void;
   /** Opens Publish review (M3-01); null or missing disables the jar card's Publish. */
   onPublish?: (() => void) | null;
   /** A published jar (M3-02, TodayPublished): the card's Published chip, likes and "Published 10:10 PM · Readers". */
@@ -103,6 +105,7 @@ export function TodayView({
   suspension = null,
   onOpenMoment,
   onOpenPreview,
+  onOpenDraft,
   onPublish = null,
   published = null,
   onOpenVisibility,
@@ -213,11 +216,13 @@ export function TodayView({
                         onPress={
                           capturable
                             ? () => onCapture(tile.slot)
-                            : openable && momentId !== null && onOpenMoment
-                              ? () => onOpenMoment(momentId)
-                              : opensPreview(tile) && onOpenPreview
-                                ? () => onOpenPreview(tile)
-                                : undefined
+                            : tile.state === 'draft' && queueId !== null && onOpenDraft
+                              ? () => onOpenDraft(queueId)
+                              : openable && momentId !== null && onOpenMoment
+                                ? () => onOpenMoment(momentId)
+                                : opensPreview(tile) && onOpenPreview
+                                  ? () => onOpenPreview(tile)
+                                  : undefined
                         }
                         accessibilityHint={opensPreview(tile) && onOpenPreview ? t('preview.openHint') : undefined}
                         onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}

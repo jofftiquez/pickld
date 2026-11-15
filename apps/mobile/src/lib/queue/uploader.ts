@@ -280,7 +280,7 @@ export async function drainQueue(
     if (!keepGoing()) break;
     const item = await getItem(listed.id); // may have changed (Retry, Replace) since the list was read
     if (item?.state === 'uploaded') await removeItem(item.id);
-    else if (item && isDue(item, now()) && !isHeldForEditing(item, now())) outcomes.push(await uploadItem(item, deps));
+    else if (item && isDue(item, now()) && !isHeldForEditing(item)) outcomes.push(await uploadItem(item, deps));
   }
   return outcomes;
 }
