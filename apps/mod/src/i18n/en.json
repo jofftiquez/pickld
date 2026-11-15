@@ -881,6 +881,7 @@
     "direct_other": "{{count}} brought in directly",
     "total_one": "{{count}} below in total",
     "total_other": "{{count}} below in total",
+    "controls": "Graph controls",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "fit": "Fit",

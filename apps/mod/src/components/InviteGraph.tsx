@@ -446,14 +446,18 @@ export function InviteGraph({
             })}
           </g>
         </svg>
-        <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
-          <Button type="button" size="sm" variant="outline" aria-label={t('graph.zoomIn')} onClick={() => zoomBy(1.3)}>
+        <div
+          role="toolbar"
+          aria-label={t('graph.controls')}
+          className="absolute top-2.5 right-2.5 flex gap-1 rounded-full border border-border bg-card p-1 shadow-md"
+        >
+          <Button type="button" size="sm" variant="ghost" aria-label={t('graph.zoomIn')} onClick={() => zoomBy(1.3)}>
             <Plus aria-hidden />
           </Button>
           <Button
             type="button"
             size="sm"
-            variant="outline"
+            variant="ghost"
             aria-label={t('graph.zoomOut')}
             onClick={() => zoomBy(1 / 1.3)}
           >
@@ -462,7 +466,7 @@ export function InviteGraph({
           <Button
             type="button"
             size="sm"
-            variant="outline"
+            variant="ghost"
             onClick={() => {
               touched.current = true;
               fit();
