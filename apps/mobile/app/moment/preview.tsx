@@ -81,6 +81,25 @@ export default function MomentPreviewScreen() {
       ? undefined
       : buildPreviewItems({ tiles, queue, jarId, page: page.data, defaultVisibility: me?.defaultVisibility });
 
+  // A moment posted since the jar page was read (an upload that finished while the preview was open, or the
+  // editor's Back re-reading the page before the upload landed) isn't on the cached page, so the preview would
+  // show its 480 × 640 thumbnail stretched to the screen. Re-read the page, once for each set of such moments.
+  const pageData = page.data;
+  const unread =
+    pageData && items
+      ? items
+          .filter((item) => item.kind === 'live' && !pageData.moments.some((m) => m.id === item.key))
+          .map((item) => item.key)
+          .join(',')
+      : '';
+  const reread = useRef('');
+  const refreshPage = page.refresh;
+  useEffect(() => {
+    if (unread === '' || reread.current === unread) return;
+    reread.current = unread;
+    void refreshPage();
+  }, [unread, refreshPage]);
+
   const close = useCallback(() => {
     if (router.canGoBack()) router.back();
     else router.replace(pastDate ? `/day/${pastDate}` : '/today');
