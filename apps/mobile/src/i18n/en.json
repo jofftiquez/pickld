@@ -76,7 +76,15 @@
     "publishHint": "Review this day’s jar and choose who can see it",
     "addedLaterNote": "Moments added now show an “Added later” badge.",
     "viewJar": "View jar",
-    "viewJarHint": "Opens this day’s jar page"
+    "viewJarHint": "Opens this day’s jar page",
+    "past": {
+      "fillingTitle": "Filling in {{date}} · Added later",
+      "fillingBody": "This is a past day, not today. Moments you add here show as “Added later”.",
+      "lookingBackTitle": "{{date}} · Added later",
+      "lookingBackBody": "This is a past day, not today. Every moment is in this jar.",
+      "backToToday": "Back to Today",
+      "backToTodayHint": "Opens today’s jar"
+    }
   },
   "jarVisibility": {
     "title": "Who can see this jar",
@@ -102,6 +110,8 @@
     "slotTag": "{{slot}}, today at {{time}}",
     "whenOn": "{{time}} · {{date}}",
     "slotTagOn": "{{slot}}, {{date}} at {{time}}",
+    "forDay": "For {{date}}",
+    "slotTagFor": "{{slot}}, for {{date}}",
     "slotHint": "Changes the moment",
     "slotChanged": "Now taking {{slot}}",
     "slotPicker": {
@@ -761,7 +771,7 @@
   "gallery": {
     "permissionDescription": "Pickld opens your photos so you can add one from your gallery to your jar.",
     "title": "Choose a photo",
-    "forDate": "For {{date}}",
+    "forDate": "Filling in {{date}}",
     "close": "Close",
     "closeHint": "Closes the gallery without a photo",
     "today": "Today",
@@ -795,6 +805,7 @@
   "crop": {
     "title": "Crop photo",
     "subtitle": "{{slot}} · from gallery",
+    "subtitleFor": "{{slot}} · for {{date}}",
     "cancel": "Cancel",
     "cancelHint": "Goes back without adding this photo",
     "reset": "Reset",

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { trackMomentAdded } from '@/features/capture/momentAnalytics';
+import { pastDayLabel } from '@/features/days/pastDay';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { useIsOffline } from '@/lib/connectivity';
 import { captureError } from '@/lib/monitoring';
@@ -81,6 +82,8 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack 
       slot={item.slot}
       shotAt={new Date(item.capturedAt ?? item.createdAt)}
       tz={item.tz}
+      // D-156: a photo going into a past day's jar names that day, not its own shot date or Today.
+      forDay={pastDayLabel(item.localDate, new Date(), item.tz)}
       initial={{ ...item, visibility: item.visibility ?? ownerDefault ?? 'readers' }}
       saveLabel={isNew ? t('edit.addToSlot', { slot: t(`slots.${item.slot}`) }) : t('edit.done')}
       focusCaption={focusCaption}

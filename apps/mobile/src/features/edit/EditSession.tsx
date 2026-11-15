@@ -31,6 +31,8 @@ export type EditSessionProps = {
   /** When the photo was taken, shown in its jar's zone. */
   shotAt: Date;
   tz: string;
+  /** A queued photo going into a past day's jar (D-156), formatted: the slot tag says "For <day>". */
+  forDay?: string | null;
   /** Read once: the saved edits, caption and visibility are the starting point. */
   initial: { caption: string | null; visibility: Visibility; edits: unknown };
   /** "Add to #slot" for a photo just taken, "Done" when editing it again. Already translated. */
@@ -57,6 +59,7 @@ export function EditSession({
   slot,
   shotAt,
   tz,
+  forDay,
   initial,
   saveLabel,
   focusCaption = false,
@@ -100,6 +103,7 @@ export function EditSession({
       time={formatTime(shotAt, tz)}
       // A photo from another day says which day, not "Today".
       shotOn={localDateIn(shotAt, tz) === localDateIn(new Date(), tz) ? null : formatShortDate(shotAt, tz)}
+      forDay={forDay}
       edits={editor.edits}
       filter={editor.filter}
       tool={tool}

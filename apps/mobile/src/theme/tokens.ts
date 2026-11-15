@@ -65,6 +65,11 @@ export const colors = {
   editorPhoto: '#2a2d26', // behind the photo and filter thumbnails while the photo loads (Capture)
   zoneTint: '#dbe8f3', // icon well on the Time zone banner (TimeZone)
   zoneText: '#1d3a52', // icon on that well; 10:1 on zoneTint
+  // A past day's page (D-156): warm paper instead of Today's background, so a filled-in day never passes for
+  // today. Muted text is 5.7:1 on it, ink 16:1.
+  pastDayPaper: '#f3ecdc',
+  pastDayWell: '#ebdfc2', // icon well on the past-day banner
+  pastDayInk: '#5b4516', // icon on that well; 6.8:1 on pastDayWell
   overlayOutline: 'rgba(255,255,255,0.95)', // dashed outline around the selected overlay (Stickers)
   overlayPlaceholder: 'rgba(127,173,51,0.6)', // dev/test-only box drawn for overlays with no renderer yet
   textOverlayShadow: 'rgba(0,0,0,0.45)', // soft shadow under light text on photos (Text)

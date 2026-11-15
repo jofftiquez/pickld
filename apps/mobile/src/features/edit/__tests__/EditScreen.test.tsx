@@ -208,8 +208,37 @@ describe('Editor', () => {
     );
     expect(matrixIn('editor-photo')).toEqual(filterMatrices.original);
     expect(filterButton('Original').props.accessibilityState).toMatchObject({ selected: true });
-    // The photo was taken on Nov 11, not today, so the tag names the day.
-    expect(screen.getByTestId('camera-slot-tag').props.accessibilityLabel).toBe('#afternoon, Wed, Nov 11 at 2:14 PM');
+  });
+
+  describe('the slot tag (D-156)', () => {
+    // 3:00 PM on Wed, Nov 11 in Manila.
+    beforeEach(() => jest.useFakeTimers({ now: new Date('2026-11-11T07:00:00Z'), advanceTimers: true }));
+    afterEach(() => jest.useRealTimers());
+    const tag = () => screen.getByTestId('camera-slot-tag');
+
+    it('a photo taken today for today’s jar says "Today · 2:14 PM"', async () => {
+      await openEditor('/edit/7');
+      await screen.findByTestId('editor-screen');
+      expect(tag().props.accessibilityLabel).toBe('#afternoon, today at 2:14 PM');
+      expect(within(tag()).getByText('Today · 2:14 PM')).toBeTruthy();
+    });
+
+    it('a photo from an earlier day going into today’s jar names its own day, not Today', async () => {
+      rows.set(7, { ...item, capturedAt: '2026-11-09T01:30:00.000Z' });
+      await openEditor('/edit/7');
+      await screen.findByTestId('editor-screen');
+      expect(tag().props.accessibilityLabel).toBe('#afternoon, Mon, Nov 9 at 9:30 AM');
+    });
+
+    it('a photo going into a past day’s jar names that day, not the photo’s own date or Today', async () => {
+      // Shot on Nov 5, filling Sun, Nov 8.
+      rows.set(7, { ...item, localDate: '2026-11-08', capturedAt: '2026-11-05T01:30:00.000Z' });
+      await openEditor('/edit/7');
+      await screen.findByTestId('editor-screen');
+      expect(tag().props.accessibilityLabel).toBe('#afternoon, for Sun, Nov 8');
+      expect(within(tag()).getByText('For Sun, Nov 8')).toBeTruthy();
+      expect(within(tag()).queryByText(/Today|Nov 5/)).toBeNull();
+    });
   });
 
   it('shows all sixteen thumbnails, each previewing the real photo through its own filter', async () => {
