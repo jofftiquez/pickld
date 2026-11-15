@@ -80,8 +80,9 @@ function formatTileDate(localDate: string, locale: string): string {
 }
 
 /**
- * My profile and Other profile (Profile, ProfileOther; FR-SOC-08): cover, avatar, name, @username,
- * "Reads you", bio, readers / authors / jars counts and a Jars / Moments switch over a 3-column grid.
+ * My profile and Other profile (Profile, ProfileOther; FR-SOC-08): cover, avatar, name and @username with
+ * "Reads you" beside the readers / authors / jars counts (D-142), bio, and a Jars / Moments switch over a
+ * 3-column grid.
  */
 export function ProfileView({
   data,
@@ -235,66 +236,71 @@ export function ProfileView({
               ) : null}
             </View>
           </View>
-          <View style={styles.names}>
-            <View style={styles.nameRow}>
+          {/* The name and @handle share a row with the counts (D-142). The row wraps on the name column's
+              natural width: a short name keeps the counts on its right, a long name or large text pushes
+              them under it. */}
+          <View style={styles.headerRow} testID="profile-header-row">
+            <View style={styles.names}>
               <Text
                 accessibilityRole="header"
-                style={[textStyle('profileName'), styles.name, { color: colors.ink }]}
+                style={[textStyle('profileName'), { color: colors.ink }]}
                 testID="profile-name"
               >
                 {profile.display_name}
               </Text>
-              {!isOwner && relationship.readsYou ? (
-                <View style={styles.readsYou} testID="profile-reads-you">
-                  <Text style={[textStyle('caption'), { color: colors.brandText }]}>{t('profile.readsYou')}</Text>
-                </View>
-              ) : null}
+              <View style={styles.handleRow}>
+                <Text style={[textStyle('bodySmall'), styles.handle]} testID="profile-username">
+                  {t('profile.username', { username: profile.username })}
+                </Text>
+                {!isOwner && relationship.readsYou ? (
+                  <View style={styles.readsYou} testID="profile-reads-you">
+                    <Text style={[textStyle('caption'), { color: colors.brandText }]}>{t('profile.readsYou')}</Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
-            <Text style={[textStyle('bodySmall'), { color: colors.muted }]} testID="profile-username">
-              {t('profile.username', { username: profile.username })}
-            </Text>
+            <View style={styles.counts} testID="profile-counts">
+              {counts.map(({ key, n }) => {
+                const c = compactCount(n, locale);
+                const value = c.thousands ? t('profile.thousands', { value: c.value }) : c.value;
+                const content = (
+                  <>
+                    <Text style={[textStyle('cardTitle', '800'), { color: colors.ink }]}>{value}</Text>
+                    <Text style={[textStyle('label', '500'), { color: colors.muted }]}>{t(`profile.${key}`)}</Text>
+                  </>
+                );
+                const label = t(`profile.${key}A11y`, { count: n });
+                return key !== 'jars' && onOpenList ? (
+                  <Pressable
+                    key={key}
+                    accessibilityRole="button"
+                    accessibilityLabel={label}
+                    accessibilityHint={t('profile.openListHint')}
+                    onPress={() => onOpenList(key)}
+                    style={styles.count}
+                    testID={`profile-count-${key}`}
+                  >
+                    {content}
+                  </Pressable>
+                ) : (
+                  <View
+                    key={key}
+                    accessible
+                    accessibilityLabel={label}
+                    style={styles.count}
+                    testID={`profile-count-${key}`}
+                  >
+                    {content}
+                  </View>
+                );
+              })}
+            </View>
           </View>
           {profile.bio?.trim() ? (
             <Text style={[textStyle('bodyMedium'), styles.bio]} testID="profile-bio">
               {profile.bio.trim()}
             </Text>
           ) : null}
-          <View style={styles.counts}>
-            {counts.map(({ key, n }) => {
-              const c = compactCount(n, locale);
-              const value = c.thousands ? t('profile.thousands', { value: c.value }) : c.value;
-              const content = (
-                <>
-                  <Text style={[textStyle('cardTitle', '800'), { color: colors.ink }]}>{value}</Text>
-                  <Text style={[textStyle('label', '500'), { color: colors.muted }]}>{t(`profile.${key}`)}</Text>
-                </>
-              );
-              const label = t(`profile.${key}A11y`, { count: n });
-              return key !== 'jars' && onOpenList ? (
-                <Pressable
-                  key={key}
-                  accessibilityRole="button"
-                  accessibilityLabel={label}
-                  accessibilityHint={t('profile.openListHint')}
-                  onPress={() => onOpenList(key)}
-                  style={styles.count}
-                  testID={`profile-count-${key}`}
-                >
-                  {content}
-                </Pressable>
-              ) : (
-                <View
-                  key={key}
-                  accessible
-                  accessibilityLabel={label}
-                  style={styles.count}
-                  testID={`profile-count-${key}`}
-                >
-                  {content}
-                </View>
-              );
-            })}
-          </View>
           {isOwner && (onOpenStickers || onOpenInvite) ? (
             <Card style={styles.rowCard}>
               {onOpenInvite ? (
@@ -451,9 +457,18 @@ const styles = StyleSheet.create({
   // right edge, so the buttons move under the avatar and wrap.
   avatarRowLarge: { flexDirection: 'column', alignItems: 'flex-start', gap: space.sm },
   actionsLarge: { height: undefined, alignSelf: 'stretch', flexWrap: 'wrap' },
-  names: { gap: 2 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.sm },
-  name: { flexShrink: 1 },
+  headerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    columnGap: space.lg,
+    rowGap: space.xs,
+  },
+  // Natural width first (so the row knows when to wrap), then shrinks to the line so a long name wraps.
+  names: { flexGrow: 1, flexShrink: 1, gap: 2 },
+  handleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: space.sm, rowGap: 2 },
+  handle: { color: colors.muted, flexShrink: 1 },
   readsYou: {
     borderRadius: radius.pill,
     paddingVertical: 3,
@@ -462,7 +477,7 @@ const styles = StyleSheet.create({
   },
   bio: { color: colors.inkSoft, lineHeight: 20 },
   // Wraps at large text, so "Jars" moves to a second line instead of running off the right edge.
-  counts: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.xl, rowGap: space.sm },
+  counts: { flexDirection: 'row', flexWrap: 'wrap', columnGap: space.lg, rowGap: space.sm },
   count: { minHeight: sizes.minTap, justifyContent: 'center' },
   rowCard: { paddingVertical: 2 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },

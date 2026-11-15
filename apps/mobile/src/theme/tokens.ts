@@ -413,7 +413,7 @@ export const sizes = {
   unlockSticker: 150, // earned sticker's width over the jar; height follows the art
   progressBarWidth: 80, // Milestones progress bar (StickerUnlock)
   progressBarHeight: 6,
-  profileCover: 150, // cover band at the top of a profile (Profile, ProfileOther)
+  profileCover: 120, // cover band at the top of a profile (Profile, ProfileOther); lowered from 150 (D-142)
   profileAvatarOverlap: 44, // how far the profile avatar rises into the cover
   profileButton: 40, // Edit profile pill beside the avatar (Profile)
   profileTileFade: 50, // bottom fade under a profile grid tile's date and count
