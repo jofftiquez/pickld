@@ -5,7 +5,7 @@
 
 import { bubble } from '@/theme/tokens';
 
-import type { BubbleShape } from '../edits';
+import { DEFAULT_BUBBLE_TAIL, type BubbleShape, type BubbleTail } from '../edits';
 
 export function paddingXFor(shape: BubbleShape): number {
   return shape === 'thought' ? bubble.thoughtPaddingX : bubble.paddingX;
@@ -66,4 +66,58 @@ export function clampBubbleText(text: string, max: number): string {
   const cut = flat.slice(0, max);
   const last = cut.charCodeAt(cut.length - 1);
   return last >= 0xd800 && last <= 0xdbff ? cut.slice(0, -1) : cut;
+}
+
+/** The side a bubble's tail is drawn on: its saved side, else the left (bubbles saved before it could flip). */
+export function bubbleTailSide(o: { tail?: BubbleTail }): BubbleTail {
+  return o.tail ?? DEFAULT_BUBBLE_TAIL;
+}
+
+export type TailPoint = readonly [x: number, y: number];
+export type TailDot = { readonly cx: number; readonly cy: number; readonly r: number };
+
+/**
+ * A bubble's tail in reference units (the box is `bubble.referenceWidth` wide and `height` tall, origin at
+ * its top left). Speech, Shout and Whisper get a point: base start, tip, base end, the base sunk
+ * `tailOverlap` into the body. Thought gets two dots under its pill. `extent` is how far below the box
+ * the tail reaches. The right side mirrors the left across the box's middle.
+ */
+export type TailGeometry =
+  | { kind: 'point'; points: readonly [TailPoint, TailPoint, TailPoint]; extent: number }
+  | { kind: 'dots'; dots: readonly [TailDot, TailDot]; extent: number };
+
+export function bubbleTailGeometry(shape: BubbleShape, side: BubbleTail, height: number): TailGeometry {
+  const x = (at: number) => (side === 'left' ? at : bubble.referenceWidth - at);
+  if (shape !== 'thought') {
+    const base = height - bubble.tailOverlap;
+    return {
+      kind: 'point',
+      points: [
+        [x(bubble.tailStart), base],
+        [x(bubble.tailTipX), height + bubble.tailLength],
+        [x(bubble.tailEnd), base],
+      ],
+      extent: bubble.tailLength,
+    };
+  }
+  // The pill's bottom edge under the large dot: on its round end it curves up from the box's bottom.
+  const r = height / 2;
+  const dx = Math.max(0, r - bubble.thoughtDotX);
+  const edge = r + Math.sqrt(Math.max(0, r * r - dx * dx));
+  const large = {
+    cx: x(bubble.thoughtDotX),
+    cy: edge + bubble.thoughtDotGap + bubble.thoughtDotR,
+    r: bubble.thoughtDotR,
+  };
+  const small = {
+    cx: x(bubble.thoughtDotX + bubble.thoughtDotStepX),
+    cy: large.cy + bubble.thoughtDotStepY,
+    r: bubble.thoughtDotSmallR,
+  };
+  return { kind: 'dots', dots: [large, small], extent: small.cy + small.r - height };
+}
+
+/** SVG path data for a pointed tail (`M … L … L … Z`). */
+export function tailPathData(points: readonly TailPoint[]): string {
+  return `${points.map(([px, py], i) => `${i === 0 ? 'M' : 'L'}${px} ${py}`).join(' ')} Z`;
 }

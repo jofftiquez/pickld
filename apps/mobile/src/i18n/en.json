@@ -403,6 +403,13 @@
       "blush": "Pink",
       "sky": "Blue"
     },
+    "tail": "Tail",
+    "flip": "Flip",
+    "flipLabel": {
+      "left": "Tail on the left, flip to the right",
+      "right": "Tail on the right, flip to the left"
+    },
+    "flipHint": "Changes the selected bubble, or the next one",
     "text": "Bubble text",
     "textHint": "Edits the selected bubble, or adds one",
     "label": "{{shape}} bubble: {{text}}",

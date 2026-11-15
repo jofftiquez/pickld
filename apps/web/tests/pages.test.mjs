@@ -93,6 +93,9 @@ const CAPTIONED = {
       scale: 0.7,
       rotation: 0,
     },
+    // Saved before the tail could flip: no side, so its tail hangs on the left.
+    { id: 'b1', type: 'bubble', text: 'Busog na', x: 0.35, y: 0.2, scale: 0.5, rotation: 0 },
+    { id: 'b2', type: 'bubble', text: 'Tara na', tail: 'right', x: 0.6, y: 0.4, scale: 0.5, rotation: 0 },
   ],
 };
 
@@ -313,6 +316,32 @@ test('stickers and text sit on a photo only once it has loaded, never on the emp
     { timeout: 10_000 },
   );
   assert.ok(await page.getByText('Antok pa ko').isVisible());
+  await page.close();
+});
+
+test('a bubble’s tail hangs below it on its saved side; one saved without a side hangs on the left', async () => {
+  const { page } = await open(`/j/${EVERYONE}`);
+  const tail = async (text) => {
+    const bubble = page.locator('span', { hasText: text }).filter({ has: page.locator('svg[data-bubble-tail]') });
+    await bubble.waitFor();
+    const svg = bubble.locator('svg[data-bubble-tail]');
+    const side = await svg.getAttribute('data-bubble-tail');
+    const b = await bubble.boundingBox();
+    const t = await svg.locator('path').boundingBox();
+    return { side, b, t, fill: await svg.locator('path').getAttribute('fill') };
+  };
+  const old = await tail('Busog na');
+  assert.equal(old.side, 'left');
+  assert.equal(old.fill, '#ffffff'); // the bubble's own fill (white)
+  assert.ok(old.t.x + old.t.width < old.b.x + old.b.width / 2, 'the point sits in the left half');
+  const flipped = await tail('Tara na');
+  assert.equal(flipped.side, 'right');
+  assert.ok(flipped.t.x > flipped.b.x + flipped.b.width / 2, 'the point sits in the right half');
+  for (const { b, t } of [old, flipped]) {
+    // Its base tucks just inside the bubble's bottom edge; it hangs 16 of the bubble's 200 units below it.
+    assert.ok(t.y < b.y + b.height && t.y > b.y + b.height - 2, `base at ${t.y}, bubble ends at ${b.y + b.height}`);
+    assert.ok(Math.abs(t.y + t.height - (b.y + b.height + (16 / 200) * b.width)) < 1, 'the tip');
+  }
   await page.close();
 });
 

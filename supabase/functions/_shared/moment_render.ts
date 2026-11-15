@@ -19,6 +19,8 @@ import {
   bubbleAspect,
   bubbleLines,
   bubblePaddingX,
+  bubbleTailGeometry,
+  bubbleTailSide,
   FILTER_MATRICES,
   INK,
   layoutText,
@@ -59,6 +61,7 @@ const overlaySchema = z.discriminatedUnion('type', [
     shape: z.enum(['speech', 'thought', 'shout', 'whisper']).default('speech'),
     color: colorName.default('white'),
     text: z.string().max(60).default(''),
+    tail: z.enum(['left', 'right']).optional(),
   }),
   z.object({
     type: z.literal('text'),
@@ -436,14 +439,30 @@ function drawBubble(
     canvas.skew(Math.tan((BUBBLE.shoutSkewDeg * Math.PI) / 180), 0);
     canvas.translate(-w / 2, -h / 2);
   }
+  const side = bubbleTailSide(o);
   const radii: [number, number, number, number] = o.shape === 'speech'
-    ? [BUBBLE.radius * s, BUBBLE.radius * s, BUBBLE.radius * s, BUBBLE.tailRadius * s]
+    ? side === 'left'
+      ? [BUBBLE.radius * s, BUBBLE.radius * s, BUBBLE.radius * s, BUBBLE.tailRadius * s]
+      : [BUBBLE.radius * s, BUBBLE.radius * s, BUBBLE.tailRadius * s, BUBBLE.radius * s]
     : o.shape === 'thought'
     ? [h / 2, h / 2, h / 2, h / 2]
     : o.shape === 'shout'
     ? [BUBBLE.shoutRadius * s, BUBBLE.shoutRadius * s, BUBBLE.shoutRadius * s, BUBBLE.shoutRadius * s]
     : [BUBBLE.whisperRadius * s, BUBBLE.whisperRadius * s, BUBBLE.whisperRadius * s, BUBBLE.whisperRadius * s];
   const body = rrect(0, 0, w, h, radii);
+
+  // The tail below the box on its side (bubbleTailGeometry, in reference units scaled by s).
+  const geometry = bubbleTailGeometry(o.shape, side, h / s);
+  const build = keep(new ck.PathBuilder());
+  if (geometry.kind === 'point') {
+    build.addPolygon(geometry.points.flatMap(([px, py]) => [px * s, py * s]), true);
+  } else {
+    for (const d of geometry.dots) build.addCircle(d.cx * s, d.cy * s, d.r * s);
+  }
+  const tail = keep(build.detach());
+  const outline = keep(build.addRRect(body).detach());
+  // One shape for the shadow, so the tail's shadow doesn't darken the body's where they overlap.
+  const whole = keep(ck.Path.MakeFromOp(outline, tail, ck.PathOp.Union) ?? outline.copy());
 
   // The shadow is in fixed points in the app, so it scales with the photo, not the bubble.
   const sh = BUBBLE.shadow;
@@ -453,23 +472,31 @@ function drawBubble(
   shadow.setMaskFilter(keep(ck.MaskFilter.MakeBlur(ck.BlurStyle.Normal, (sh.radius * u) / 2, false)));
   canvas.save();
   canvas.translate(0, sh.offsetY * u);
-  canvas.drawRRect(body, shadow);
+  canvas.drawPath(whole, shadow);
   canvas.restore();
 
   const fill = keep(new ck.Paint());
   fill.setAntiAlias(true);
   fill.setColor(color(ck, pair.fill));
   canvas.drawRRect(body, fill);
+  const bw = BUBBLE.whisperBorder * s;
+  const line = keep(new ck.Paint());
+  line.setAntiAlias(true);
+  line.setStyle(ck.PaintStyle.Stroke);
+  line.setColor(color(ck, pair.text));
+  line.setStrokeWidth(bw);
+  line.setPathEffect(keep(ck.PathEffect.MakeDash([bw * 3, bw * 2])));
   if (o.shape === 'whisper') {
-    const bw = BUBBLE.whisperBorder * s;
-    const line = keep(new ck.Paint());
-    line.setAntiAlias(true);
-    line.setStyle(ck.PaintStyle.Stroke);
-    line.setColor(color(ck, pair.text));
-    line.setStrokeWidth(bw);
-    line.setPathEffect(keep(ck.PathEffect.MakeDash([bw * 3, bw * 2])));
     const r = BUBBLE.whisperRadius * s - bw / 2;
     canvas.drawRRect(rrect(bw / 2, bw / 2, w - bw / 2, h - bw / 2, [r, r, r, r]), line);
+  }
+  // Drawn over the body's bottom edge, so the two read as one shape; Whisper's dashes run down its edges.
+  canvas.drawPath(tail, fill);
+  if (o.shape === 'whisper' && geometry.kind === 'point') {
+    const [first, ...rest] = geometry.points;
+    build.moveTo(first[0] * s, first[1] * s);
+    for (const [px, py] of rest) build.lineTo(px * s, py * s);
+    canvas.drawPath(keep(build.detach()), line);
   }
   if (o.text === '') return;
 

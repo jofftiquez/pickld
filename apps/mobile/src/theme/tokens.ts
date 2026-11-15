@@ -695,7 +695,22 @@ export const bubble = {
   thoughtPaddingX: 24, // the pill's round ends need more room
   charWidth: 0.62, // a generous average glyph width (em) for estimating line breaks
   radius: 20, // speech: three round corners…
-  tailRadius: 6, // …and a sharp bottom-left one pointing at the speaker
+  tailRadius: 6, // …and a sharp bottom one on the tail's side
+  // The tail (FR-CAP-06), drawn below the box for the tail on the left; the right side mirrors it. Speech,
+  // Shout and Whisper hang a point from the bottom edge, between tailStart and tailEnd, its tip tailLength
+  // below the box and pulled out toward the side to tailTipX. It reaches tailOverlap into the body so no
+  // seam shows. Thought trails two dots instead: a large one under thoughtDotX, then a small one.
+  tailStart: 16,
+  tailEnd: 40,
+  tailTipX: 6,
+  tailLength: 16,
+  tailOverlap: 2,
+  thoughtDotX: 40,
+  thoughtDotR: 6,
+  thoughtDotSmallR: 3.5,
+  thoughtDotGap: 2, // between the body and the large dot
+  thoughtDotStepX: -14, // from the large dot's centre to the small one's
+  thoughtDotStepY: 11,
   shoutRadius: 4,
   shoutSkew: '-8deg',
   whisperRadius: 14,
@@ -720,4 +735,7 @@ export const bubble = {
   swatchBorder: '#d5d9cf',
   swatchRing: 2, // white gap, then an ink ring, around the selected color
   colorLabelWidth: 44,
+  flipHeight: 36, // the tail flip button; hitSlop brings it to 44
+  flipGlyphWidth: 26, // the small bubble inside it that shows the tail's side
+  flipGlyphHeight: 18,
 } as const;

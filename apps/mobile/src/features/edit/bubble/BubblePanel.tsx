@@ -13,11 +13,13 @@ import {
   type Bubble,
   type BubbleColor,
   type BubbleShape,
+  type BubbleTail,
   type Overlay,
 } from '../edits';
-import { clampBubbleText } from './bubbleLayout';
+import { bubbleTailSide, clampBubbleText } from './bubbleLayout';
 import { BubbleStyleTile } from './BubbleStyleTile';
 import { BubbleSwatch } from './BubbleSwatch';
+import { BubbleTailButton } from './BubbleTailButton';
 
 export type BubblePanelProps = {
   overlays: readonly Overlay[];
@@ -40,8 +42,9 @@ const textGroup = (id: string) => `bubble-text:${id}`;
 
 /**
  * The Bubble tool (FR-CAP-06, design: Bubble): Speech, Thought, Shout and Whisper, six colors and up to
- * 60 characters of text. With a bubble selected on the photo, the panel edits it; otherwise a style
- * tap, or typing, adds a new bubble with the chosen style and color.
+ * 60 characters of text, and a tail flipped left or right. With a bubble selected on the photo, the
+ * panel edits it; otherwise a style tap, or typing, adds a new bubble with the chosen style, color and
+ * tail side (the left until flipped).
  */
 export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = randomId }: BubblePanelProps) {
   const { t } = useTranslation();
@@ -50,29 +53,37 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
   const selected = overlays.find((o): o is Bubble => o.type === 'bubble' && o.id === selectedId) ?? null;
   const [nextShape, setNextShape] = useState<BubbleShape>('speech');
   const [nextColor, setNextColor] = useState<BubbleColor>('white');
+  const [nextTail, setNextTail] = useState<BubbleTail>('left');
   const shape = selected?.shape ?? nextShape;
   const color = selected?.color ?? nextColor;
+  const tail = selected ? bubbleTailSide(selected) : nextTail;
 
-  const add = (content: Pick<Bubble, 'shape' | 'color' | 'text'>, group?: (id: string) => string) => {
+  type Content = Pick<Bubble, 'shape' | 'color' | 'text' | 'tail'>;
+  const add = (content: Required<Content>, group?: (id: string) => string) => {
     const id = newId();
     onAdd({ id, type: 'bubble', ...NEW_BUBBLE, ...content }, group?.(id));
   };
-  const update = (id: string, patch: Partial<Pick<Bubble, 'shape' | 'color' | 'text'>>, group?: string) =>
+  const update = (id: string, patch: Partial<Content>, group?: string) =>
     onUpdate(id, (o) => (o.type === 'bubble' ? { ...o, ...patch } : o), group);
 
   const chooseShape = (next: BubbleShape) => {
     setNextShape(next);
     if (selected) update(selected.id, { shape: next });
-    else add({ shape: next, color, text: '' });
+    else add({ shape: next, color, text: '', tail });
   };
   const chooseColor = (next: BubbleColor) => {
     setNextColor(next);
     if (selected) update(selected.id, { color: next });
   };
+  const flipTail = () => {
+    const next: BubbleTail = tail === 'left' ? 'right' : 'left';
+    setNextTail(next);
+    if (selected) update(selected.id, { tail: next });
+  };
   const changeText = (raw: string) => {
     const text = clampBubbleText(raw, BUBBLE_TEXT_MAX);
     if (selected) update(selected.id, { text }, textGroup(selected.id));
-    else if (text.trim() !== '') add({ shape, color, text }, textGroup);
+    else if (text.trim() !== '') add({ shape, color, text, tail }, textGroup);
   };
 
   return (
@@ -110,6 +121,23 @@ export function BubblePanel({ overlays, selectedId, onAdd, onUpdate, newId = ran
           />
         ))}
       </View>
+      <View style={styles.tailRow}>
+        <Text
+          style={[textStyle('label'), styles.colorLabel]}
+          importantForAccessibility="no"
+          accessibilityElementsHidden
+        >
+          {t('editBubble.tail')}
+        </Text>
+        <BubbleTailButton
+          tail={tail}
+          label={t('editBubble.flip')}
+          accessibilityLabel={t(`editBubble.flipLabel.${tail}`)}
+          accessibilityHint={t('editBubble.flipHint')}
+          onPress={flipTail}
+          testID="bubble-tail"
+        />
+      </View>
       <TextField
         label={t('editBubble.text')}
         value={selected?.text ?? ''}
@@ -129,4 +157,5 @@ const styles = StyleSheet.create({
   // 10 px between the label and the circles, as designed: each circle reserves 4 px on each side for its ring.
   colorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10 - 4 * bubble.swatchRing },
   colorLabel: { minWidth: bubble.colorLabelWidth, color: colors.muted },
+  tailRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10 },
 });

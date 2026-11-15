@@ -199,3 +199,70 @@ Deno.test('text and bubbles draw (they change the pixels where they sit, not els
   assert(changed(240, 280) > 300, 'the drawn time stamp');
   assertEquals(changed(0, 40), 0, 'the top edge is untouched');
 });
+
+// A white bubble 0.6 of a 390 × 520 photo wide (234 px, 1.17 px per bubble unit) with no text: one line,
+// 42 units (49.14 px) tall, centred at (195, 156), so its box runs x 78..312, y 131.43..180.57.
+async function bubbleRender(patch: Record<string, unknown>) {
+  const r = finishedRenderer(() => Promise.resolve(null));
+  const photo = await solid(390, 520, [40, 90, 160]);
+  const out = await r.render({
+    photo,
+    edits: {
+      filter: 'original',
+      overlays: [
+        {
+          id: 'b',
+          type: 'bubble',
+          x: 0.5,
+          y: 0.3,
+          scale: 0.6,
+          rotation: 0,
+          shape: 'speech',
+          color: 'white',
+          text: '',
+          ...patch,
+        },
+      ],
+    },
+    ...at,
+  });
+  r.close();
+  return out;
+}
+const white = [255, 255, 255];
+const isWhite = async (out: Uint8Array, x: number, y: number) => {
+  const { rgb } = await pixelAt(out, x, y);
+  return rgb.every((v, i) => Math.abs(v - white[i]) <= 12);
+};
+
+// The point's corners in bubble units are (16, 40), (6, 58), (40, 40); its centroid (20.67, 46) is
+// 24.18 px in and 53.82 px down the box: (102, 185) on the photo, 4 px below the body. Mirrored: (288, 185).
+Deno.test('a speech bubble’s point hangs on its saved side; one saved without a side hangs on the left', async () => {
+  for (const [patch, left] of [[{}, true], [{ tail: 'left' }, true], [{ tail: 'right' }, false]] as const) {
+    const out = await bubbleRender(patch);
+    assertEquals(await isWhite(out, 102, 185), left, `${JSON.stringify(patch)}: tail on the left`);
+    assertEquals(await isWhite(out, 288, 185), !left, `${JSON.stringify(patch)}: tail on the right`);
+    assert(await isWhite(out, 195, 156), 'the body');
+    assertEquals(await isWhite(out, 195, 190), false, 'nothing under the middle');
+  }
+});
+
+// A thought's large dot is centred 40 units in and 50 down (2 below its flat bottom, radius 6):
+// (78 + 46.8, 131.43 + 58.5) ≈ (125, 190); mirrored (265, 190).
+Deno.test('a thought’s dots trail on its saved side', async () => {
+  const left = await bubbleRender({ shape: 'thought' });
+  assert(await isWhite(left, 125, 190));
+  assertEquals(await isWhite(left, 265, 190), false);
+  const right = await bubbleRender({ shape: 'thought', tail: 'right' });
+  assert(await isWhite(right, 265, 190));
+  assertEquals(await isWhite(right, 125, 190), false);
+});
+
+Deno.test('readEdits keeps a bubble’s tail side and drops one with an unknown side', () => {
+  const b = { type: 'bubble', x: 0.5, y: 0.5, scale: 0.5, rotation: 0 };
+  const e = readEdits({
+    filter: 'original',
+    overlays: [{ ...b, id: 'r', tail: 'right' }, { ...b, id: 'old' }, { ...b, id: 'bad', tail: 'up' }],
+  });
+  assertEquals(e.overlays.map((o) => [o.id, 'tail' in o ? o.tail : 'none']), [['r', 'right'], ['old', 'none']]);
+});

@@ -3,6 +3,8 @@ import {
   BUBBLE_COLORS,
   bubbleAspect as serverBubbleAspect,
   bubbleLines as serverBubbleLines,
+  bubbleTailGeometry as serverBubbleTailGeometry,
+  bubbleTailSide as serverBubbleTailSide,
   FILTER_MATRICES,
   INK,
   layoutText as serverLayoutText,
@@ -14,7 +16,7 @@ import {
 } from '../../../../../../supabase/functions/_shared/moment_layout';
 import { bubble, bubbleColors, colors, stickerTool, textOverlayColors } from '@/theme/tokens';
 
-import { bubbleAspect, bubbleLines } from '../bubble/bubbleLayout';
+import { bubbleAspect, bubbleLines, bubbleTailGeometry, bubbleTailSide } from '../bubble/bubbleLayout';
 import { filterMatrices } from '../filters';
 import { stampText } from '../stickers/stamps';
 import { layoutText } from '../text/textOverlay';
@@ -42,7 +44,25 @@ describe('the export renderer matches the app', () => {
     );
     expect(shared).toEqual(Object.fromEntries(Object.keys(shared).map((k) => [k, BUBBLE[k as keyof typeof BUBBLE]])));
     expect(Object.keys(shared)).toEqual(
-      expect.arrayContaining(['referenceWidth', 'fontSize', 'lineHeight', 'charWidth', 'radius']),
+      expect.arrayContaining([
+        'referenceWidth',
+        'fontSize',
+        'lineHeight',
+        'charWidth',
+        'radius',
+        'tailRadius',
+        'tailStart',
+        'tailEnd',
+        'tailTipX',
+        'tailLength',
+        'tailOverlap',
+        'thoughtDotX',
+        'thoughtDotR',
+        'thoughtDotSmallR',
+        'thoughtDotGap',
+        'thoughtDotStepX',
+        'thoughtDotStepY',
+      ]),
     );
     expect(`${BUBBLE.shoutSkewDeg}deg`).toBe(shoutSkew);
     expect(BUBBLE.shadow).toEqual({
@@ -62,6 +82,22 @@ describe('the export renderer matches the app', () => {
   ] as const)('lays out the bubble %j (%s) the same way', (text, shape) => {
     expect(serverBubbleLines(text, shape)).toBe(bubbleLines(text, shape));
     expect(serverBubbleAspect(text, shape)).toBe(bubbleAspect({ text, shape }));
+  });
+
+  it.each([
+    ['speech', 'left', 42],
+    ['shout', 'right', 64],
+    ['whisper', 'right', 42],
+    ['thought', 'left', 42],
+    ['thought', 'right', 130],
+  ] as const)('draws the %s tail on the %s of a %d-unit box the same way', (shape, side, height) => {
+    expect(serverBubbleTailGeometry(shape, side, height)).toEqual(bubbleTailGeometry(shape, side, height));
+  });
+
+  it('puts the tail of a bubble saved without a side on the same side', () => {
+    expect(serverBubbleTailSide({})).toBe(bubbleTailSide({}));
+    expect(serverBubbleTailSide({ tail: 'right' })).toBe(bubbleTailSide({ tail: 'right' }));
+    expect(serverBubbleTailSide({ tail: 'left' })).toBe(bubbleTailSide({ tail: 'left' }));
   });
 
   it.each([
