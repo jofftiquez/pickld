@@ -44,7 +44,9 @@ Repository → Settings → Environments → New environment → `staging`. Opti
 | `VERCEL_PROJECT_ID_WEB`, `VERCEL_PROJECT_ID_MOD`                                                          | variables | each project's Settings → General                                                                             | web apps                 |
 | `WEB_URL`, `MOD_URL`                                                                                      | variables | each project's production `*.vercel.app` URL                                                                  | links                    |
 | `SENTRY_DSN`, `OPENAI_API_KEY`, `EXPO_ACCESS_TOKEN`, `REVENUECAT_WEBHOOK_SECRET`, `REVENUECAT_SECRET_KEY` | secrets   | optional, when those accounts exist                                                                           | passed to Edge Functions |
-| `WAITLIST_SECRET`                                                                                         | secret    | optional: `openssl rand -hex 32`; until it is set, the pickld.me waitlist form shows "try again"             | fn:waitlist-join, web    |
+| `WAITLIST_SECRET`                                                                                         | secret    | optional: `openssl rand -hex 32`; until it is set, the pickld.me waitlist form shows "try again"              | fn:waitlist-join, web    |
+| `RESEND_API_KEY`                                                                                          | secret    | optional: Resend → API Keys, sending access (`waitlist-codes.md`)                                             | fn:waitlist-send         |
+| `EMAIL_FROM`                                                                                              | variable  | optional: `Pickld <hello@mail.pickld.me>`, on the domain verified in Resend                                   | fn:waitlist-send         |
 | `OPENAI_VISION_MODEL`, `APP_STORE_URL`, `PLAY_STORE_URL`, `APPLE_TEAM_ID`, `ANDROID_CERT_SHA256`          | variables | optional                                                                                                      | functions, web           |
 
 Never paste any of these into chat, an issue or the repo.
@@ -78,7 +80,7 @@ Each step is a click in a dashboard; the agent does the rest.
 
 ## Later (not part of staging yet)
 
-- **Sign-in email (SMTP).** Parked by the product owner. Choose a provider (Resend, Postmark or Amazon SES were suggested), verify the sending domain's DNS, and set it in Supabase → Authentication → SMTP. Then raise the email rate limit and drop the organization-member restriction above.
+- **Sign-in email (SMTP).** The provider is Resend (the same account sends waitlist codes). Follow `waitlist-codes.md`, steps 1 to 3 and 6: verify `mail.pickld.me`, then set Resend's SMTP in Supabase → Authentication → SMTP. Then raise the email rate limit and drop the organization-member restriction above.
 - **Custom hostnames** (`staging.pickld.me`, `mod-staging.pickld.me`, `photos-staging.pickld.me`): move pickld.me's DNS to Cloudflare, or add CNAMEs at GoDaddy for the Vercel projects. The Worker needs the zone on Cloudflare for a custom domain.
 - **Sentry, PostHog and alerts** (D-34, docs/runbooks/alerts.md), then the staging drills: alerts (#110), load test (#116), restore (#117), PostHog events (#119), location audit (#120: `deno task exif-check` with a read-only R2 token).
 - **OpenAI key and the child-safety matcher** before anyone outside the team uses staging.

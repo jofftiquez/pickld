@@ -104,6 +104,22 @@ test('the Waitlist page shows totals, today’s joins and sources', async () => 
   );
 });
 
+test('codes by email: counts show, and a moderator who isn’t a founder can’t send', async () => {
+  await page.goto(`${base}/waitlist`);
+  const codes = page.getByRole('region', { name: 'Codes by email' });
+  const ready = codes.locator('dt', { hasText: 'Ready for a code' }).locator('xpath=following-sibling::dd[1]');
+  assert.ok(Number(await ready.textContent()) >= 3, 'our three rows are ready for a code');
+  const send = page.getByRole('region', { name: 'Send codes' });
+  await send.getByRole('spinbutton', { name: 'How many (1 to 500)' }).fill('1');
+  await send.getByRole('button', { name: 'Send codes' }).click();
+  await send.getByRole('alert').getByText('Only founders can send codes.').waitFor();
+  const { data } = await admin.from('waitlist').select('invite_code').in('email', emails);
+  assert.ok(
+    data.every((r) => r.invite_code === null),
+    'nothing was released',
+  );
+});
+
 test('search finds emails by part of the address and filters by state', async () => {
   await page.goto(`${base}/waitlist`);
   await page.getByRole('searchbox', { name: 'Search emails' }).fill(domain.toUpperCase());

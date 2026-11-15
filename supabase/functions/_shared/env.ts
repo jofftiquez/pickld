@@ -80,6 +80,18 @@ export function waitlistSecret(): string {
   return required('WAITLIST_SECRET');
 }
 
+/** Resend's API key and the From address for fn:waitlist-send (INV-09); null until both are set. */
+export function emailConfig(): { apiKey: string; from: string } | null {
+  const apiKey = Deno.env.get('RESEND_API_KEY');
+  const from = Deno.env.get('EMAIL_FROM');
+  return apiKey && from ? { apiKey, from } : null;
+}
+
+/** The web site links in emails point at: pickld.me, or the environment's own site. */
+export function siteUrl(): string {
+  return (Deno.env.get('SITE_URL') || 'https://pickld.me').replace(/\/+$/, '');
+}
+
 /** Optional: only needed when the Expo project turns on enhanced push security. */
 export function expoAccessToken(): string | undefined {
   return Deno.env.get('EXPO_ACCESS_TOKEN') || undefined;

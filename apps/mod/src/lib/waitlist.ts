@@ -71,3 +71,17 @@ export function toCsv(rows: WaitlistRow[]): string {
 
 export const REMOVE_RESULTS = ['removed', 'not_found', 'note', 'unknown'] as const;
 export type RemoveResult = (typeof REMOVE_RESULTS)[number];
+
+// public.mod_waitlist_codes() (0143): codes for the email waitlist, sent by the waitlist-send function (INV-09).
+const Codes = z.object({ ready: z.number(), sent: z.number(), used: z.number(), expired: z.number() });
+export type WaitlistCodes = z.infer<typeof Codes>;
+
+export async function loadCodes(client: SupabaseClient): Promise<WaitlistCodes> {
+  const { data, error } = await client.rpc('mod_waitlist_codes');
+  if (error) throw new Error(error.message);
+  return Codes.parse(data);
+}
+
+export const SEND_ERRORS = ['not_founder', 'email_not_configured', 'invalid_input', 'unknown'] as const;
+export type SendResult =
+  { result: 'sent' | 'send_failed'; sent: number; total: number } | { result: (typeof SEND_ERRORS)[number] };
