@@ -86,6 +86,27 @@ describe('ProfileView', () => {
     expect(screen.queryByTestId('profile-edit')).toBeNull();
   });
 
+  it('puts the name, @handle and counts on one row that wraps for long names and large text (D-142)', async () => {
+    const long = page('dale-id', true);
+    long.profile = {
+      ...long.profile,
+      display_name: 'Maria Clara Concepcion de los Santos',
+      username: 'mariaclara_delossant',
+    };
+    await renderView({ data: long, onOpenList: jest.fn() });
+    const row = screen.getByTestId('profile-header-row');
+    // One row, wrapping: the counts sit right of a short name and drop under a long one.
+    expect(row).toHaveStyle({ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' });
+    expect(row).toHaveTextContent(
+      'Maria Clara Concepcion de los Santos@mariaclara_delossantReads you1.2kReaders203Authors1Jars',
+    );
+    expect(screen.getByTestId('profile-counts')).toHaveStyle({ flexWrap: 'wrap' });
+    // The counts keep their spoken labels and 44 pt height, and still open the lists.
+    expect(screen.getByRole('button', { name: '1234 readers' })).toHaveStyle({ minHeight: sizes.minTap });
+    expect(screen.getByRole('button', { name: '203 authors' })).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'Maria Clara Concepcion de los Santos' })).toBeTruthy();
+  });
+
   it('never tags the owner with "Reads you" and shows them their full count', async () => {
     await renderView({ data: page('mika-id', true), onEditProfile: jest.fn() });
     expect(screen.queryByTestId('profile-reads-you')).toBeNull();
