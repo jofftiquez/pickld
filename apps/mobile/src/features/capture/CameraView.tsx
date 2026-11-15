@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { RoundIconButton } from '@/components/RoundIconButton';
-import { textStyle } from '@/theme/text';
+import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import { CameraSideButton } from './CameraSideButton';
@@ -108,13 +108,26 @@ export function CameraView({
             pinchFactor={zoom.pinchFactor}
             onSelect={zoom.select}
           />
-          <View
-            style={styles.aspect}
-            pointerEvents="none"
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-          >
-            <Text style={[textStyle('caption'), { color: colors.surface }]}>{t('camera.aspect')}</Text>
+        </View>
+        {/* The 3:4 label sits in the bottom-left corner, under the Close button and level with the zoom row,
+            so the zoom row has the bottom of the viewfinder to itself (D-145). It is only a label: taps pass
+            through to tap to focus, and screen readers skip it. */}
+        <View
+          style={styles.aspectCorner}
+          pointerEvents="none"
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+          testID="camera-aspect"
+        >
+          <View style={styles.aspect}>
+            <Text
+              style={[textStyle('caption'), { color: colors.surface }]}
+              maxFontSizeMultiplier={maxTextScale.control}
+              numberOfLines={1}
+            >
+              {t('camera.aspect')}
+            </Text>
           </View>
         </View>
       </View>
@@ -170,7 +183,14 @@ const styles = StyleSheet.create({
     bottom: space.md,
     alignSelf: 'center',
     alignItems: 'center',
-    gap: space.md,
+  },
+  // As tall as the zoom buttons and as far in as Close, so the label lines up with both.
+  aspectCorner: {
+    position: 'absolute',
+    left: space.lg,
+    bottom: space.md,
+    height: sizes.zoomButton,
+    justifyContent: 'center',
   },
   aspect: {
     backgroundColor: colors.badge,

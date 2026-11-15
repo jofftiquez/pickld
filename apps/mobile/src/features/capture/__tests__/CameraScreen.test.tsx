@@ -2,7 +2,7 @@
 import 'react-native-gesture-handler/jestSetup';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
-import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
 import '../../edit/__tests__/mockReanimated';
 import type { ReactNode } from 'react';
 import { AppState, Linking, Pressable, Text, View, type AppStateStatus } from 'react-native';
@@ -16,6 +16,7 @@ import { libraryAccess, libraryPhotoFile, loadLibraryPhotos } from '../libraryPh
 import { pickFromGallery } from '../pickFromGallery';
 import { saveCapture, saveGalleryPhoto } from '../saveCapture';
 import { captureError } from '@/lib/monitoring';
+import { sizes, space } from '@/theme/tokens';
 import type { DayJar } from '@/features/days/useDayJar';
 import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
 
@@ -294,6 +295,21 @@ describe('Camera on the Simulator (dev mock camera)', () => {
     expect(tagText()).toMatch(/^#afternoon, today at /);
     expect(screen.getByText('3:4', { includeHiddenElements: true })).toBeTruthy();
     expect(mockCamera.requestPermission).not.toHaveBeenCalled();
+  });
+
+  it('the 3:4 label sits in the bottom-left corner, out of the zoom row, and never takes a tap (D-145)', async () => {
+    await openCamera();
+    const aspect = screen.getByTestId('camera-aspect', { includeHiddenElements: true });
+    expect(within(aspect).getByText('3:4', { includeHiddenElements: true })).toBeTruthy();
+    // Level with the zoom buttons and as far in as Close.
+    expect(aspect).toHaveStyle({ position: 'absolute', left: space.lg, bottom: space.md, height: sizes.zoomButton });
+    // A label, not a control: taps reach tap to focus, and screen readers skip it.
+    expect(aspect.props.pointerEvents).toBe('none');
+    expect(screen.queryByTestId('camera-aspect')).toBeNull();
+    // The zoom row's stack holds only the zoom controls now.
+    const buttons = screen.getByTestId('camera-zoom-buttons');
+    expect(within(buttons).queryByText('3:4', { includeHiddenElements: true })).toBeNull();
+    expect(within(aspect).queryAllByRole('button', { includeHiddenElements: true })).toEqual([]);
   });
 
   it('stays on the camera until the photo is in the queue, so a kill right after the shutter loses nothing', async () => {
