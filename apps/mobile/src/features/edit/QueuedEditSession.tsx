@@ -8,7 +8,7 @@ import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { useIsOffline } from '@/lib/connectivity';
 import { captureError } from '@/lib/monitoring';
 import { requestUploads } from '@/lib/queue/runner';
-import { releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
+import { discardItem, releaseEditing, saveEdits, type QueueItem } from '@/lib/queue/store';
 import { showToast } from '@/lib/toast';
 import type { Visibility } from '@/lib/visibility';
 
@@ -17,18 +17,20 @@ import { EditSession } from './EditSession';
 export const queueItemQueryKey = (id: number) => ['queueItem', id] as const;
 
 export type QueuedEditSessionProps = {
-  /** The queued moment, read once. */
+  /** The queued moment. Its photo follows preparation (raw, then the prepared file); the rest is read once. */
   item: QueueItem;
   focusCaption?: boolean;
   insets: EdgeInsets;
   onLeave: () => void;
+  /** A shared photo's way back to its slot choice: the draft is dropped first, so another slot can be chosen. */
+  onBack?: () => void;
 };
 
 /**
  * The editor on a queued moment (M2-12): saves into the queue item. However the editor is left, the item's
  * editing hold ends and the upload worker is woken, so the photo is never stuck in the queue.
  */
-export function QueuedEditSession({ item, focusCaption, insets, onLeave }: QueuedEditSessionProps) {
+export function QueuedEditSession({ item, focusCaption, insets, onLeave, onBack }: QueuedEditSessionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   // A photo queued before the profile loaded has no visibility yet: it would go up at the owner's default
@@ -61,6 +63,18 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave }: Queue
     };
   }, [item.id, ownerDefault]);
 
+  // Back from a shared photo drops the draft (it never became a moment), then returns to the slot choice.
+  const back = async (leave: () => void) => {
+    notAdded.current = null;
+    try {
+      await discardItem(item.id);
+    } catch (error) {
+      captureError(error, { area: 'edit' });
+    }
+    void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(item.userId) });
+    leave();
+  };
+
   return (
     <EditSession
       photoUri={item.photoUri}
@@ -72,6 +86,7 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave }: Queue
       focusCaption={focusCaption}
       insets={insets}
       onLeave={onLeave}
+      onBack={onBack && (() => void back(onBack))}
       onSave={async (input) => {
         const saved = await saveEdits(item.id, input);
         added(input.visibility);

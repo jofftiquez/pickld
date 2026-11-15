@@ -24,7 +24,8 @@ registerOverlayRenderers();
 if (__DEV__) registerPlaceholderRenderers();
 
 export type EditSessionProps = {
-  /** The photo being edited (a queued file or an uploaded moment's signed URL). Never changed here. */
+  /** The photo being edited (a queued file or an uploaded moment's signed URL). Never changed here; a
+   * queued photo's file is swapped once it is prepared. */
   photoUri: string;
   slot: Slot;
   /** When the photo was taken, shown in its jar's zone. */
@@ -39,6 +40,8 @@ export type EditSessionProps = {
   insets: EdgeInsets;
   /** Leaves the editor (back to Today, or wherever it was opened from). */
   onLeave: () => void;
+  /** When set, the photo step's Close becomes Back to choose another slot (a shared photo). */
+  onBack?: () => void;
   /** Stores what was edited; a rejection keeps the editor open and says the save failed. */
   onSave: (input: SaveEditsInput) => Promise<void>;
 };
@@ -59,6 +62,7 @@ export function EditSession({
   focusCaption = false,
   insets,
   onLeave,
+  onBack,
   onSave,
 }: EditSessionProps) {
   const image = useImage(useCachedPhotoFile(photoUri) ?? undefined);
@@ -101,6 +105,7 @@ export function EditSession({
       tool={tool}
       insets={insets}
       onClose={onLeave}
+      onBack={onBack}
       onSelectFilter={editor.selectFilter}
       overlays={editor.edits.overlays}
       selectedOverlayId={editor.selectedId}

@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,7 +9,13 @@ import { usePendingCrop } from '@/features/capture/pendingCrop';
 import type { PickedPhoto } from '@/features/capture/pickFromGallery';
 import { galleryTarget, saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { SharedPhotoView, type SharedPhotoState } from '@/features/capture/SharedPhotoView';
-import { parseSharedPhotoId, sharedPhotoDay, takeSharedPhoto } from '@/features/capture/sharedPhoto';
+import {
+  copySharedPhoto,
+  parseSharedPhotoId,
+  releaseSharedPhoto,
+  sharedPhotoDay,
+  takeSharedPhoto,
+} from '@/features/capture/sharedPhoto';
 import { useFillCapture } from '@/features/capture/useFillCapture';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
@@ -35,12 +41,20 @@ export default function SharedPhotoScreen() {
 
   const id = parseSharedPhotoId(params.id);
   const [loaded, setPhoto] = useState<PickedPhoto | 'failed' | null>(null);
+  // The photo stays here until this screen is left, so Back from the editor can choose another slot; Crop
+  // and the queue get copies (they delete what they are given). Leaving deletes the photo and any copy left.
+  const files = useRef<string[]>([]);
   const photo = id === null ? 'failed' : loaded;
   useEffect(() => {
     if (id === null) return;
     let active = true;
     takeSharedPhoto(id).then(
-      (taken) => active && setPhoto(taken),
+      (taken) => {
+        files.current.push(taken.uri);
+        if (active) setPhoto(taken);
+        // Loaded after the screen was left: nothing will use it.
+        else releaseSharedPhoto(id, [taken.uri]);
+      },
       (error: unknown) => {
         captureError(error, { area: 'gallery' });
         if (active) setPhoto('failed');
@@ -49,6 +63,12 @@ export default function SharedPhotoScreen() {
     return () => {
       active = false;
     };
+  }, [id]);
+
+  useEffect(() => {
+    if (id === null) return;
+    const owned = files.current;
+    return () => releaseSharedPhoto(id, owned);
   }, [id]);
 
   const picked = photo !== null && photo !== 'failed' ? photo : null;
@@ -96,7 +116,8 @@ export default function SharedPhotoScreen() {
   };
 
   // Like the camera: Crop opens over this screen (its Cancel comes back here to choose again) and replaces
-  // itself with the editor, whose close takes both away. A 3:4 photo skips Crop: the editor replaces this screen.
+  // itself with the editor. A 3:4 photo skips Crop: the editor opens over this screen. Either way the editor's
+  // Back drops the draft and comes back here to choose again; saving takes this screen away too.
   const onChoose = async (slot: Slot) => {
     if (busy || picked === null || userId === null || taken.has(slot)) return;
     setBusy(true);
@@ -108,16 +129,19 @@ export default function SharedPhotoScreen() {
         openJar: jar?.jar ?? null,
         fill: fill?.target ?? null,
       });
+      const copy = await copySharedPhoto(picked);
+      files.current.push(copy.uri);
       if (!isThreeByFour(picked)) {
-        setPendingCrop({ photo: picked, slot, userId, target });
+        setPendingCrop({ photo: copy, slot, userId, target, shared: true });
         router.push('/crop');
         setBusy(false);
         return;
       }
       const visibility = me?.defaultVisibility ?? null;
-      const item = await saveGalleryPhoto({ uri: picked.uri, slot, userId, target, crop: null, visibility });
+      const item = await saveGalleryPhoto({ uri: copy.uri, slot, userId, target, crop: null, visibility });
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
-      router.replace(`/edit/${item.id}`);
+      router.push({ pathname: '/edit/[momentId]', params: { momentId: String(item.id), via: 'share' } });
+      setBusy(false);
     } catch (error) {
       captureError(error, { area: 'gallery' });
       setBusy(false);

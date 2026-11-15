@@ -367,6 +367,7 @@
     "nextHint": "Goes on to the caption and who can see this moment",
     "back": "Back",
     "backHint": "Goes back to editing the photo",
+    "chooseSlotHint": "Goes back to choose another moment for this photo",
     "hashtag": "Hashtag",
     "hashtagLabel": "Hashtag: {{slot}}. Set by the slot."
   },

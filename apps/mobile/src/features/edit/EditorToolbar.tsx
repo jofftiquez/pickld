@@ -17,8 +17,9 @@ export type EditorToolbarProps = {
   time: string;
   /** The capture day when it isn't today, formatted for the slot tag. */
   shotOn: string | null;
-  /** Close leaves the editor; Back returns from the details step to the photo step (D-103). */
-  leading: 'close' | 'back';
+  /** Close leaves the editor; Back returns from the details step to the photo step (D-103); `slots` returns
+   * a shared photo to its slot choice. */
+  leading: 'close' | 'back' | 'slots';
   onLeading: () => void;
   /** "Next" on the photo step; "Add to #slot" or "Done" on the details step. Already translated. */
   actionLabel: string;
@@ -76,6 +77,15 @@ export function EditorToolbar({
             accessibilityLabel={t('common.close')}
             onPress={onLeading}
             testID="editor-close"
+          />
+        ) : leading === 'slots' ? (
+          <RoundIconButton
+            icon="back"
+            variant="glass"
+            accessibilityLabel={t('edit.back')}
+            accessibilityHint={t('edit.chooseSlotHint')}
+            onPress={onLeading}
+            testID="editor-choose-slot"
           />
         ) : (
           <RoundIconButton
