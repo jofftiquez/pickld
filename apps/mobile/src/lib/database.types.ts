@@ -1045,6 +1045,54 @@ export type Database = {
           },
         ];
       };
+      mutes: {
+        Row: {
+          created_at: string;
+          muted_id: string;
+          muter_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          muted_id: string;
+          muter_id: string;
+        };
+        Update: {
+          created_at?: string;
+          muted_id?: string;
+          muter_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'mutes_muted_id_fkey';
+            columns: ['muted_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mutes_muted_id_fkey';
+            columns: ['muted_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mutes_muter_id_fkey';
+            columns: ['muter_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mutes_muter_id_fkey';
+            columns: ['muter_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       notification_prefs: {
         Row: {
           appeal_decided: boolean;

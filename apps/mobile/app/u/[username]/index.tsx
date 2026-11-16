@@ -8,6 +8,7 @@ import { leftToGive } from '@/features/invite/invites';
 import { useInvites } from '@/features/invite/useInvites';
 import { ProfileView } from '@/features/profile/ProfileView';
 import { useFollow } from '@/features/profile/useFollow';
+import { useMute } from '@/features/profile/useMute';
 import { useProfile } from '@/features/profile/useProfile';
 import { ReportSheet } from '@/features/safety/ReportSheet';
 import { useBlockFlow } from '@/features/safety/useBlockFlow';
@@ -22,6 +23,7 @@ export default function ProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const { data, failed, refresh } = useProfile(username);
   const follow = useFollow(data?.viewerId ?? null);
+  const mute = useMute(data?.viewerId ?? null);
   const { invites } = useInvites();
   const [reporting, setReporting] = useState(false);
   const blockFlow = useBlockFlow(() => router.replace('/jars'));
@@ -52,6 +54,10 @@ export default function ProfileScreen() {
           }
         }}
         followBusy={follow.busy}
+        onToggleMute={() => {
+          if (data) mute.setMuted(data.profile.id, !data.relationship.muted);
+        }}
+        muteBusy={mute.busy}
         onEditProfile={() => router.push('/settings/profile')}
         onSettings={() => router.push('/settings')}
         onOpenStickers={() => router.push('/stickers')}

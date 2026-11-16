@@ -172,8 +172,8 @@ describe('profileMomentDays (D-146)', () => {
 describe('relationshipOf', () => {
   it('tells reading apart from reads-you', () => {
     const rows = [{ reader_id: 'mika', author_id: 'dale' }];
-    expect(relationshipOf(rows, 'dale', 'mika')).toEqual({ reading: false, readsYou: true });
-    expect(relationshipOf(rows, 'mika', 'dale')).toEqual({ reading: true, readsYou: false });
+    expect(relationshipOf(rows, 'dale', 'mika')).toEqual({ reading: false, readsYou: true, muted: false });
+    expect(relationshipOf(rows, 'mika', 'dale', true)).toEqual({ reading: true, readsYou: false, muted: true });
   });
 });
 
@@ -213,13 +213,13 @@ describe('withReading', () => {
       author_count: 1,
       jar_count: 1,
     },
-    relationship: { reading: false, readsYou: true },
+    relationship: { reading: false, readsYou: true, muted: false },
   };
 
   it('moves the reader count with the state, once', () => {
     const on = withReading(data, true);
     expect(on.profile.reader_count).toBe(3);
-    expect(on.relationship).toEqual({ reading: true, readsYou: true });
+    expect(on.relationship).toEqual({ reading: true, readsYou: true, muted: false });
     expect(withReading(on, true)).toBe(on);
     expect(withReading(on, false).profile.reader_count).toBe(2);
   });
@@ -228,8 +228,13 @@ describe('withReading', () => {
     const odd = {
       ...data,
       profile: { ...data.profile, reader_count: 0 },
-      relationship: { reading: true, readsYou: false },
+      relationship: { reading: true, readsYou: false, muted: false },
     };
     expect(withReading(odd, false).profile.reader_count).toBe(0);
+  });
+
+  it('stopping reading ends a mute (0151)', () => {
+    const muted = { ...data, relationship: { reading: true, readsYou: false, muted: true } };
+    expect(withReading(muted, false).relationship.muted).toBe(false);
   });
 });

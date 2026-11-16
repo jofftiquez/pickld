@@ -24,6 +24,8 @@ export type Relationship = {
   reading: boolean;
   /** This person reads the viewer: the "Reads you" tag. */
   readsYou: boolean;
+  /** The viewer muted this person (0151): still read, out of the viewer's timelines. */
+  muted: boolean;
 };
 
 export type ProfileData = { profile: ProfileRow; relationship: Relationship; viewerId: string };
@@ -31,7 +33,7 @@ export type ProfileData = { profile: ProfileRow; relationship: Relationship; vie
 /** The follow button's state (D-7): Reading unfollows; Read back when they already read you; else Read. */
 export type FollowAction = 'read' | 'readBack' | 'reading';
 
-export function followAction({ reading, readsYou }: Relationship): FollowAction {
+export function followAction({ reading, readsYou }: Pick<Relationship, 'reading' | 'readsYou'>): FollowAction {
   return reading ? 'reading' : readsYou ? 'readBack' : 'read';
 }
 
@@ -44,7 +46,8 @@ export function withReading<T extends Pick<ProfileData, 'profile' | 'relationshi
   return {
     ...data,
     profile: { ...data.profile, reader_count: Math.max(0, data.profile.reader_count + (reading ? 1 : -1)) },
-    relationship: { ...data.relationship, reading },
+    // Stopping reading ends a mute (0151).
+    relationship: { ...data.relationship, reading, muted: reading && data.relationship.muted },
   };
 }
 
@@ -63,10 +66,12 @@ export function relationshipOf(
   rows: { reader_id: string; author_id: string }[],
   viewerId: string,
   profileId: string,
+  muted = false,
 ): Relationship {
   return {
     reading: rows.some((r) => r.reader_id === viewerId && r.author_id === profileId),
     readsYou: rows.some((r) => r.reader_id === profileId && r.author_id === viewerId),
+    muted,
   };
 }
 

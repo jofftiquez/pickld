@@ -74,7 +74,7 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
   if (error) throw new Error(error.message);
   if (!data) return null;
   const profile = profileRow.parse(data);
-  const [follows, jars] = await Promise.all([
+  const [follows, jars, mutes] = await Promise.all([
     supabase
       .from('follows')
       .select('reader_id, author_id')
@@ -88,8 +88,11 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
       .gt('moment_count', 0)
       .order('local_date', { ascending: false })
       .limit(PROFILE_JAR_LIMIT),
+    // Only the viewer's own mutes are readable (0151).
+    supabase.from('mutes').select('muted_id').eq('muted_id', profile.id),
   ]);
   if (follows.error) throw new Error(follows.error.message);
+  if (mutes.error) throw new Error(mutes.error.message);
   if (jars.error) throw new Error(jars.error.message);
   const jarRows = z.array(jarRow).parse(jars.data);
   const moments =
@@ -110,7 +113,12 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
   const [urls, images] = await Promise.all([thumbUrls(rows.map((m) => m.id)), profileImages(profile.id)]);
   return {
     profile,
-    relationship: relationshipOf(z.array(followRow).parse(follows.data), viewerId, profile.id),
+    relationship: relationshipOf(
+      z.array(followRow).parse(follows.data),
+      viewerId,
+      profile.id,
+      (mutes.data ?? []).length > 0,
+    ),
     viewerId,
     images,
     jars: buildProfileJars(
