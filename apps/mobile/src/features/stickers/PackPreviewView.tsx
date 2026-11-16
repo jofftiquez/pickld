@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
+import { ListRow } from '@/components/ListRow';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
@@ -34,6 +35,8 @@ export type PackPreviewViewProps = {
   onRetry: () => void;
   onBuy: () => void;
   onShare: () => void;
+  /** Opens the sticker shop (the Stickers page's Shop tab). */
+  onOpenShop: () => void;
 };
 
 /**
@@ -54,6 +57,7 @@ export function PackPreviewView({
   onRetry,
   onBuy,
   onShare,
+  onOpenShop,
 }: PackPreviewViewProps) {
   const { t } = useTranslation();
   const ready = pack !== undefined && pack !== null;
@@ -142,6 +146,15 @@ export function PackPreviewView({
                   </Text>
                 ) : null}
               </View>
+              <View style={styles.shopLink}>
+                <ListRow
+                  label={t('packPreview.allPacks')}
+                  accessibilityHint={t('packPreview.allPacksHint')}
+                  onPress={onOpenShop}
+                  divider={false}
+                  testID="pack-preview-shop"
+                />
+              </View>
             </>
           )}
         </View>
@@ -216,6 +229,7 @@ const styles = StyleSheet.create({
     marginTop: space.xs,
   },
   more: { color: colors.muted, paddingHorizontal: space.sm },
+  shopLink: { marginTop: space.sm, borderTopWidth: 1, borderTopColor: colors.divider },
   footer: { paddingHorizontal: space.xl, paddingTop: space.md, gap: space.sm, backgroundColor: colors.background },
   message: { gap: space.md, paddingVertical: space.xxl },
   center: { textAlign: 'center', color: colors.muted },

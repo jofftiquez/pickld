@@ -30,17 +30,26 @@ describe('featuredPack (Today’s sticker pack tile)', () => {
     pack('pride'),
   ];
 
-  it('offers only paid packs on sale that the user doesn’t own, a different one each day in turn', () => {
-    const picks = ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19'].map((d) => featuredPack(packs, d)?.slug);
-    // Three candidates (olivia, corporate, pride): consecutive days walk through all three and wrap around.
-    expect(new Set(picks.slice(0, 3))).toEqual(new Set(['olivia', 'corporate', 'pride']));
-    expect(picks[3]).toBe(picks[0]);
+  const at = (date: string, hour: number) => featuredPack(packs, date, hour)?.slug;
+
+  it('offers only paid packs on sale that the user doesn’t own, the next one every 4 hours', () => {
+    // Three candidates (olivia, corporate, pride): the day's 4-hour windows walk through all three in turn.
+    const day = [0, 4, 8, 12, 16, 20].map((h) => at('2026-11-16', h));
+    expect(new Set(day.slice(0, 3))).toEqual(new Set(['olivia', 'corporate', 'pride']));
+    expect(day.slice(3)).toEqual(day.slice(0, 3));
   });
 
-  it('keeps the same pack all day, across a month and a year boundary too', () => {
-    expect(featuredPack(packs, '2026-11-16')).toBe(featuredPack(packs, '2026-11-16'));
-    const yearEnd = ['2026-12-31', '2027-01-01'].map((d) => featuredPack(packs, d)?.slug);
-    expect(yearEnd[0]).not.toBe(yearEnd[1]);
+  it('holds within a 4-hour window and changes on the hour it ends', () => {
+    expect(at('2026-11-16', 4)).toBe(at('2026-11-16', 7));
+    expect(at('2026-11-16', 7)).not.toBe(at('2026-11-16', 8));
+    expect(at('2026-11-16', 23)).toBe(at('2026-11-16', 20));
+  });
+
+  it('starts each day on a different pack, so the same hour doesn’t always show the same one', () => {
+    const noons = Array.from({ length: 14 }, (_, i) => at(`2026-11-${String(10 + i).padStart(2, '0')}`, 12));
+    expect(new Set(noons).size).toBe(3);
+    // Across a year boundary the date still parses and picks a candidate.
+    expect(['olivia', 'corporate', 'pride']).toContain(at('2027-01-01', 0));
   });
 
   it('is null once the user owns every pack on sale, which hides the tile', () => {
@@ -48,8 +57,9 @@ describe('featuredPack (Today’s sticker pack tile)', () => {
       featuredPack(
         packs.map((p) => ({ ...p, owned: true })),
         '2026-11-16',
+        12,
       ),
     ).toBeNull();
-    expect(featuredPack([], '2026-11-16')).toBeNull();
+    expect(featuredPack([], '2026-11-16', 12)).toBeNull();
   });
 });

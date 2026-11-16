@@ -758,7 +758,9 @@
     "buyFailed": "That didn’t go through. Try again in a moment.",
     "owned": "You have this pack. Find it in the Stickers tool.",
     "notForSale": "This pack isn’t for sale right now.",
-    "bought": "{{name}} is yours"
+    "bought": "{{name}} is yours",
+    "allPacks": "Browse all sticker packs",
+    "allPacksHint": "Opens the sticker shop"
   },
   "myStickers": {
     "intro": "Drag to reorder how packs appear in the editor. Turn one off to hide it without losing it.",

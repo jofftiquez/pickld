@@ -150,6 +150,11 @@ export function localDateIn(instant: Date, tz: string): string {
   return `${pad(w.year, 4)}-${pad(w.month)}-${pad(w.day)}`;
 }
 
+/** Local hour (0–23) of an instant in an IANA zone. */
+export function localHourIn(instant: Date, tz: string): number {
+  return wallClock(instant, tz).hour;
+}
+
 /** The "Now" slot at an instant, local time: morning 05:00–11:59, afternoon 12:00–17:59,
  * evening 18:00–23:59, none (null) 00:00–04:59 (FR-JAR-02). */
 export function currentSlot(instant: Date, tz: string): DaySlot | null {
