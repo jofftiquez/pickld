@@ -11,14 +11,21 @@ export const metadata: Metadata = {
   alternates: { canonical: '/why' },
 };
 
+const harms = ['design', 'beliefs', 'voices', 'time', 'kids', 'law'] as const;
 const lists = ['moments', 'jars', 'discover'] as const;
 const nots = ['likes', 'strangers', 'filters', 'private', 'analytics', 'claim'] as const;
 const controls = ['read', 'mute', 'block', 'discover', 'teens'] as const;
-// Each study was opened and checked against its abstract before it was listed (title, venue, year, authors,
-// findings and limits); see AGENTS.md "Honest copy".
+// Each source was opened and checked before it was listed (title, venue, year, findings and limits; the Surgeon
+// General's advisory from its official PDF), and every harm card says only what its source says; see AGENTS.md
+// "Honest copy".
 const studies = [
   { key: 'nature', href: 'https://doi.org/10.1038/s41586-026-10098-2' },
   { key: 'science', href: 'https://doi.org/10.1126/science.abp9364' },
+  {
+    key: 'surgeon',
+    href: 'https://www.hhs.gov/surgeongeneral/reports-and-publications/youth-mental-health/social-media/index.html',
+  },
+  { key: 'dsa', href: 'https://eur-lex.europa.eu/eli/reg/2022/2065/oj' },
 ] as const;
 
 /** Why Pickld, anchored in the first Pickld more than ten years ago: how each list decides what you see, what Pickld won't do, the controls, and the research behind it.
@@ -40,6 +47,28 @@ export default function Why() {
           <figcaption>{t('why.promiseBy')}</figcaption>
         </figure>
       </div>
+      <section className="mk-section" aria-labelledby="harm" style={{ paddingTop: 0 }}>
+        <div className="mk-wrap">
+          <div className="mk-head">
+            <h2 id="harm">{t('why.harmTitle')}</h2>
+            <p>{t('why.harmBody')}</p>
+          </div>
+          <ul className="mk-cards">
+            {harms.map((k) => (
+              <li key={k} className="mk-card">
+                <h3>{t(`why.harm.${k}.title`)}</h3>
+                <p>{t(`why.harm.${k}.body`)}</p>
+                <p className="mk-note">
+                  <a href="#research">{t(`why.harm.${k}.source`)}</a>
+                </p>
+              </li>
+            ))}
+          </ul>
+          <p className="mk-lead" style={{ marginTop: 28 }}>
+            <strong>{t('why.harmChoice')}</strong>
+          </p>
+        </div>
+      </section>
       <section className="mk-section" aria-labelledby="how" style={{ paddingTop: 0 }}>
         <div className="mk-wrap">
           <div className="mk-head">
@@ -90,7 +119,7 @@ export default function Why() {
             <h2 id="research">{t('why.researchTitle')}</h2>
             <p>{t('why.researchBody')}</p>
           </div>
-          <ul className="mk-cards">
+          <ul className="mk-cards mk-cards-2">
             {studies.map(({ key, href }) => (
               <li key={key} className="mk-card">
                 <h3>{t(`why.research.${key}.title`)}</h3>

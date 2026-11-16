@@ -668,7 +668,16 @@ test('Why Pickld and Our mission are linked from every marketing page, cite thei
     ['Moments', 'Jars', 'Discover'],
   );
   const studies = await page.getByRole('link', { name: /^Read “/ }).evaluateAll((as) => as.map((a) => a.href));
-  assert.deepEqual(studies, ['https://doi.org/10.1038/s41586-026-10098-2', 'https://doi.org/10.1126/science.abp9364']);
+  assert.deepEqual(studies, [
+    'https://doi.org/10.1038/s41586-026-10098-2',
+    'https://doi.org/10.1126/science.abp9364',
+    'https://www.hhs.gov/surgeongeneral/reports-and-publications/youth-mental-health/social-media/index.html',
+    'https://eur-lex.europa.eu/eli/reg/2022/2065/oj',
+  ]);
+  // Every harm names its source, and each source is listed under Sources.
+  const harms = page.getByRole('region', { name: 'What engagement algorithms do to us' });
+  assert.equal(await harms.locator('h3').count(), 6);
+  assert.equal(await harms.locator('a[href="#research"]').count(), 6);
   // Honest copy: never "algorithm-free" as a claim, only as the thing we say we aren't.
   const text = await page.locator('main').innerText();
   // Both pages start from the first Pickld, more than ten years ago.

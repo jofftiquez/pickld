@@ -352,6 +352,41 @@
     "lead": "We started Pickld more than ten years ago as a simple way to keep the moments of your day and be yourself while doing it. Since then, most social apps have learned to decide what you see by what keeps you scrolling. Pickld didn’t. You see the people you choose, newest first, and you meet new people through the ones you already know.",
     "promise": "“Your feed is for the people you choose. Discover is for the people you haven’t met yet.”",
     "promiseBy": "The Pickld promise",
+    "harmTitle": "What engagement algorithms do to us",
+    "harmBody": "Most feeds are ranked to keep you hooked. You pay with your time, your attention and sometimes what you believe. This is what the evidence shows.",
+    "harm": {
+      "design": {
+        "title": "Built to keep you scrolling",
+        "body": "Platforms are often designed to maximize engagement, with infinite scroll, like counts and algorithms that use your data to choose what you see.",
+        "source": "U.S. Surgeon General, 2023"
+      },
+      "beliefs": {
+        "title": "They can change what you believe",
+        "body": "Seven weeks on X’s algorithmic feed shifted users’ political opinions and the accounts they followed. Switching the algorithm off afterwards didn’t undo it.",
+        "source": "Nature, 2026"
+      },
+      "voices": {
+        "title": "They choose whose voice is heard",
+        "body": "The same study found X’s algorithm promoted conservative political content and pushed down posts from traditional news media.",
+        "source": "Nature, 2026"
+      },
+      "time": {
+        "title": "They take your time",
+        "body": "When people were moved off Facebook’s and Instagram’s ranking algorithms onto a newest-first feed, the time they spent on the apps dropped substantially.",
+        "source": "Science, 2023"
+      },
+      "kids": {
+        "title": "Kids pay the most",
+        "body": "Up to 95% of teens use social media, and more than a third say they’re on it almost constantly. Teens on it more than 3 hours a day faced double the risk of depression and anxiety symptoms.",
+        "source": "U.S. Surgeon General, 2023"
+      },
+      "law": {
+        "title": "Lawmakers are stepping in",
+        "body": "The EU now requires the largest platforms to explain their recommendation systems and to offer at least one feed that isn’t based on profiling you.",
+        "source": "EU Digital Services Act, Articles 27 and 38"
+      }
+    },
+    "harmChoice": "Pickld chose differently.",
     "howTitle": "How Pickld decides what you see",
     "howBody": "Every list follows a rule you can read. None of them uses likes, comments or reader counts.",
     "how": {
@@ -385,8 +420,8 @@
       "discover": "Turn off Show me in Discover to stay out of Discover and suggestions.",
       "teens": "Under 18, your posts stay out of Discover and suggestions."
     },
-    "researchTitle": "What research says",
-    "researchBody": "These studies shaped our thinking. They don’t prove Pickld is better for you, and we don’t claim they do.",
+    "researchTitle": "Sources",
+    "researchBody": "Every claim on this page comes from these. They don’t prove Pickld is better for you, and we don’t claim they do.",
     "research": {
       "nature": {
         "title": "The political effects of X’s feed algorithm",
@@ -399,9 +434,21 @@
         "source": "Science, 2023 · Guess, Malhotra, Pan, Barberá and colleagues",
         "summary": "During the 2020 US election, people moved to reverse-chronological Facebook and Instagram feeds spent less time on the platforms and saw different content.",
         "limit": "The chronological feed did not significantly change the polarization or political attitudes the study measured."
+      },
+      "surgeon": {
+        "title": "Social Media and Youth Mental Health",
+        "source": "U.S. Surgeon General’s Advisory, 2023",
+        "summary": "Finds that platforms are often designed to maximize engagement, including with recommendation algorithms, and that heavy use is linked to a higher risk of poor mental health in teens.",
+        "limit": "The advisory says more research is needed, and that social media can also benefit some young people."
+      },
+      "dsa": {
+        "title": "Digital Services Act, Articles 27 and 38",
+        "source": "Regulation (EU) 2022/2065, 2022",
+        "summary": "Platforms must explain the main parameters of their recommender systems. The largest must offer at least one option not based on profiling.",
+        "limit": "It’s a law, not a study, and Pickld is not one of the very large platforms it targets."
       }
     },
-    "readStudy": "Read the study",
+    "readStudy": "Read the source",
     "readStudyLabel": "Read “{{title}}”",
     "missionLink": "Read our mission",
     "finalTitle": "Keep up with your people.",
@@ -423,7 +470,7 @@
     "principles": {
       "people": {
         "title": "People over engagement",
-        "body": "More time in the app isn’t our goal. A good day on Pickld is a jar of your day and a look at your friends’ days."
+        "body": "Feeds built to maximize engagement hold people’s time and can even shift what they believe. More time in the app isn’t our goal. A good day on Pickld is a jar of your day and a look at your friends’ days."
       },
       "choice": {
         "title": "Your choice, not our guess",
