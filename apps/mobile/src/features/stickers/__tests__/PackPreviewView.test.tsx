@@ -27,6 +27,7 @@ async function setup(over: Partial<PackPreviewViewProps>) {
     onRetry: jest.fn(),
     onBuy: jest.fn(),
     onShare: jest.fn(),
+    onOpenShop: jest.fn(),
     ...over,
   };
   await render(<PackPreviewView {...props} />);
@@ -49,6 +50,18 @@ describe('PackPreviewView', () => {
     await setup({ pack: pack('everyday'), price: '₱49' });
     expect(screen.queryByTestId('pack-preview-buy')).toBeNull();
     expect(screen.getByText('You have this pack. Find it in the Stickers tool.')).toBeTruthy();
+  });
+
+  it('links to the sticker shop from any pack, bought or not, once the pack has loaded', async () => {
+    for (const slug of ['pinoy-life', 'everyday']) {
+      const props = await setup({ pack: pack(slug), price: '₱49' });
+      const link = screen.getByRole('button', { name: 'Browse all sticker packs' });
+      expect(link).toHaveProp('accessibilityHint', 'Opens the sticker shop');
+      await fireEvent.press(link);
+      expect(props.onOpenShop).toHaveBeenCalledTimes(1);
+    }
+    await setup({ pack: undefined });
+    expect(screen.queryByTestId('pack-preview-shop')).toBeNull();
   });
 
   it('shows a failed purchase under the button and disables it while buying', async () => {

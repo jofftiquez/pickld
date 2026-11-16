@@ -26,7 +26,7 @@ import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
 import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
-import { currentSlot } from '@/lib/jars';
+import { currentSlot, localHourIn } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
 
 const MINUTE = 60_000;
@@ -51,7 +51,8 @@ export default function TodayScreen() {
   const tz = phoneTimeZone();
   // Offline the persisted cache answers; a cached jar whose day has ended shows as the new, empty day.
   const jar = openTodayJar(jarData, now);
-  const featuredPack = useFeaturedPack(jar?.jar?.localDate ?? localDate);
+  // The pack tile follows the jar's own clock (it changes every few hours); `now` ticks each minute.
+  const featuredPack = useFeaturedPack(jar?.jar?.localDate ?? localDate, localHourIn(now, jar?.jar?.tz ?? tz));
   const offline = useIsOffline();
   const zone = useTimeZoneBanner({ userId, jar: jar?.jar ?? null, previousTz: jar?.previousTz });
   const { t } = useTranslation();

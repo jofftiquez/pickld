@@ -45,6 +45,8 @@ export default function PackPreviewScreen() {
       onBuy={() => {
         if (pack?.productId) buy.mutate(pack.productId);
       }}
+      // Back to the Stickers page's Shop tab when it's below in the stack, otherwise the shop replaces this page.
+      onOpenShop={() => router.dismissTo({ pathname: '/stickers', params: { tab: 'shop' } })}
       onShare={() => {
         if (pack) void Share.share({ message: t('packPreview.shareMessage', { name: pack.name, url: WEB_BASE_URL }) });
       }}
