@@ -1,4 +1,4 @@
-# M3-19: the bell on Jars shows the unread dot, opens Notifications, and a row opens what it is about.
+# M3-19: the bell on Today shows the unread dot, opens Notifications, and a row opens what it is about.
 # Needs dale signed in with unread notifications (the seed's new readers and full jar):
 # maestro test apps/mobile/.maestro/notifications.yaml
 appId: me.pickld.app
@@ -6,20 +6,18 @@ appId: me.pickld.app
 - launchApp
 - extendedWaitUntil:
     visible:
-      id: tab-jars
+      id: tab-today
     timeout: 60000
 - extendedWaitUntil:
     notVisible:
       id: splash-overlay
     timeout: 10000
-- tapOn:
-    id: tab-jars
 - extendedWaitUntil:
     visible:
-      id: feed-notifications-dot
+      id: today-notifications-dot
     timeout: 30000
 - tapOn:
-    id: feed-notifications
+    id: today-notifications
 - extendedWaitUntil:
     visible:
       id: notifications-screen
@@ -49,5 +47,5 @@ appId: me.pickld.app
 # Opening the screen marked everything read.
 - extendedWaitUntil:
     notVisible:
-      id: feed-notifications-dot
+      id: today-notifications-dot
     timeout: 10000

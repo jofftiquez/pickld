@@ -59,6 +59,18 @@ describe('TodayView', () => {
     expect(onOpenPending).toHaveBeenCalled();
   });
 
+  it('has the notifications bell, with the unread dot only when something is unread', async () => {
+    const onOpenNotifications = jest.fn();
+    await renderToday({ onOpenNotifications, hasUnread: false });
+    expect(screen.queryByTestId('today-notifications-dot')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Notifications' }));
+    expect(onOpenNotifications).toHaveBeenCalledTimes(1);
+    await renderToday({ onOpenNotifications, hasUnread: true });
+    expect(screen.getByTestId('today-notifications-dot')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Notifications, unread' }));
+    expect(onOpenNotifications).toHaveBeenCalledTimes(2);
+  });
+
   it('first day: shows "Your first jar" and no count or Publish', async () => {
     await renderToday();
     expect(screen.getByText('Your first jar')).toBeTruthy();

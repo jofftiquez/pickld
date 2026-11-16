@@ -4,7 +4,6 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View, us
 
 import { BackToTopButton } from '@/components/BackToTopButton';
 import { EmptyState } from '@/components/EmptyState';
-import { RoundIconButton } from '@/components/RoundIconButton';
 import { FeedScrubber } from '@/features/scrubber/FeedScrubber';
 import { dayOf, type TimelineScrubber } from '@/features/scrubber/scrubberModel';
 import { useScrubberVisibility } from '@/features/scrubber/useScrubberVisibility';
@@ -16,7 +15,7 @@ import { usePhotoPrefetch } from '@/lib/image/usePhotoPrefetch';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { useBackToTop, type BackToTopMode } from '@/lib/useBackToTop';
-import { colors, radius, sizes, space } from '@/theme/tokens';
+import { colors, sizes, space } from '@/theme/tokens';
 
 import { MomentFeedCard } from './MomentFeedCard';
 import { cardPhotoUrl, type FeedMoment } from './momentsModel';
@@ -32,8 +31,6 @@ export type MomentsFeedViewProps = {
   isLoading: boolean;
   isRefreshing: boolean;
   isFetchingNextPage: boolean;
-  /** Unread notifications: shows the dot on the bell. */
-  hasUnread: boolean;
   onRefresh: () => void;
   onEndReached: () => void;
   /** The date scrubber on the right edge (FR-SOC-01); none without it. */
@@ -43,7 +40,6 @@ export type MomentsFeedViewProps = {
   isFetchingPreviousPage?: boolean;
   /** After the back-to-top button brings the list up: on `reload` the screen fetches the newest page again. */
   onBackToTop: (mode: BackToTopMode) => void;
-  onOpenNotifications: () => void;
   /** Go to jar on a card (D-94). */
   onOpenJar: (moment: FeedMoment) => void;
   onToggleLike: (moment: FeedMoment) => void;
@@ -53,7 +49,7 @@ export type MomentsFeedViewProps = {
 };
 
 /**
- * The Moments tab (design: MomentsFeed; FR-SOC-01): title and bell, then live moments the user may see from
+ * The Moments tab (design: MomentsFeed; FR-SOC-01): title, then live moments the user may see from
  * the people they read and their own, newest first (D-53). Reading nobody, the user's own moments sit under a
  * Find people card, and the empty view shows only when there is nothing at all (FR-SOC-02), as on Jars.
  */
@@ -66,14 +62,12 @@ export function MomentsFeedView({
   isLoading,
   isRefreshing,
   isFetchingNextPage,
-  hasUnread,
   onRefresh,
   onEndReached,
   scrubber,
   onStartReached,
   isFetchingPreviousPage = false,
   onBackToTop,
-  onOpenNotifications,
   onOpenJar,
   onToggleLike,
   onOpenComments,
@@ -125,17 +119,6 @@ export function MomentsFeedView({
         >
           {t('moments.title')}
         </Text>
-        <View style={styles.headerButtons}>
-          <View>
-            <RoundIconButton
-              icon="bell"
-              accessibilityLabel={hasUnread ? t('feed.notificationsUnread') : t('feed.notifications')}
-              onPress={onOpenNotifications}
-              testID="moments-notifications"
-            />
-            {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="moments-notifications-dot" /> : null}
-          </View>
-        </View>
       </View>
       {readsNobody && hasMoments ? (
         <View style={[styles.cardWrap, styles.findPeople]}>
@@ -246,18 +229,6 @@ const styles = StyleSheet.create({
     paddingTop: sizes.headerTop,
     paddingHorizontal: space.xl,
     paddingBottom: space.md,
-  },
-  headerButtons: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  dot: {
-    position: 'absolute',
-    top: 10,
-    right: 11,
-    width: sizes.notifyDot + 4,
-    height: sizes.notifyDot + 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.notifyDot,
-    borderWidth: 2,
-    borderColor: colors.surface,
   },
   cardWrap: { paddingHorizontal: space.xl },
   separator: { height: space.md },

@@ -7,7 +7,6 @@ import { FeedView } from '@/features/feed/FeedView';
 import { useFeed } from '@/features/feed/useFeed';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { useTimelineJump } from '@/features/scrubber/useTimelineJump';
-import { useUnreadNotifications } from '@/features/notifications/useNotifications';
 import { useAvatarUrls } from '@/lib/avatars';
 
 const MINUTE = 60_000;
@@ -19,7 +18,6 @@ export default function JarsScreen() {
   // The date scrubber's jump (FR-SOC-01): the feed starts at that day and pages both ways from it.
   const jump = useTimelineJump('jars');
   const feed = useFeed(jump.from);
-  const unread = useUnreadNotifications();
   const { userId, markSeen } = feed;
   const me = useQuery({
     queryKey: todayQueryKeys.me(userId ?? ''),
@@ -43,11 +41,10 @@ export default function JarsScreen() {
   useFocusEffect(
     useCallback(() => {
       setNow(new Date());
-      unread.refresh();
       return () => {
         if (userId !== null) markSeen();
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- markSeen and unread.refresh are new functions each render
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- markSeen is a new function each render
     }, [userId]),
   );
 
@@ -64,9 +61,7 @@ export default function JarsScreen() {
       isLoading={feed.isLoading}
       isRefreshing={pulling}
       isFetchingNextPage={feed.isFetchingNextPage}
-      hasUnread={unread.hasUnread}
       onRefresh={() => {
-        unread.refresh();
         jump.refetchDays();
         // Pulling at the top of a jumped-to day goes back to the newest jars.
         if (jump.jumped) return jump.clearJump();
@@ -85,7 +80,6 @@ export default function JarsScreen() {
       onStartReached={() => {
         if (feed.hasPreviousPage && !feed.isFetchingPreviousPage) feed.fetchPreviousPage();
       }}
-      onOpenNotifications={() => router.push('/notifications')}
       onOpenJar={(jarId) => router.push({ pathname: '/jar/[id]', params: { id: jarId } })}
       onOpenProfile={(username) => {
         const name = username ?? me.data?.username;

@@ -22,6 +22,10 @@ export type TodayHeaderProps = {
   /** Pending uploads (FR-CAP-04): moments still on this phone. The button shows only when the count is above 0. */
   pendingCount?: number;
   onOpenPending?: () => void;
+  /** Opens Notifications (FR-NOT-03); missing hides the bell. */
+  onOpenNotifications?: () => void;
+  /** Unread notifications: shows the dot on the bell. */
+  hasUnread?: boolean;
   /** Opens My profile from the avatar. */
   onOpenProfile?: () => void;
   /** "Tokyo time" on a jar that started in a new zone; replaces the greeting (TimeZone). */
@@ -38,6 +42,8 @@ export function TodayHeader({
   onOpenStickers,
   onOpenPending,
   pendingCount = 0,
+  onOpenNotifications,
+  hasUnread = false,
   onOpenProfile,
   zoneTag = null,
 }: TodayHeaderProps) {
@@ -47,6 +53,7 @@ export function TodayHeader({
   const greetingText = firstName
     ? t(`today.greeting.${greeting}`, { name: firstName })
     : t(`today.greetingNoName.${greeting}`);
+  const showsPending = onOpenPending !== undefined && pendingCount > 0;
   return (
     // The date and greeting run the full width above the title row, so the round buttons sit beside "Today"
     // alone and the line wraps only at large text sizes.
@@ -63,14 +70,18 @@ export function TodayHeader({
       <View style={styles.row}>
         <Text
           maxFontSizeMultiplier={maxTextScale.title}
+          // On a narrow phone with every button showing, "Today" shrinks a little instead of being cut off.
+          numberOfLines={1}
+          adjustsFontSizeToFit
           testID="screen-title"
           accessibilityRole="header"
           style={[textStyle('screenTitle'), styles.title]}
         >
           {t('today.title')}
         </Text>
-        <View style={styles.actions}>
-          {onOpenPending && pendingCount > 0 ? (
+        {/* With Pending showing there are five; they close up so "Today" keeps its size on a 393 pt phone. */}
+        <View style={[styles.actions, showsPending && styles.actionsTight]}>
+          {showsPending ? (
             <View>
               <RoundIconButton
                 icon="clock"
@@ -88,6 +99,17 @@ export function TodayHeader({
                   {pendingCount > 99 ? '99+' : pendingCount}
                 </Text>
               </View>
+            </View>
+          ) : null}
+          {onOpenNotifications ? (
+            <View>
+              <RoundIconButton
+                icon="bell"
+                accessibilityLabel={hasUnread ? t('feed.notificationsUnread') : t('feed.notifications')}
+                onPress={onOpenNotifications}
+                testID="today-notifications"
+              />
+              {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="today-notifications-dot" /> : null}
             </View>
           ) : null}
           {onOpenStickers ? (
@@ -130,6 +152,19 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
   title: { color: colors.ink, flexShrink: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  actionsTight: { gap: space.xs },
+  // The unread dot on the bell, as it was on the Jars and Moments headers (Feed).
+  dot: {
+    position: 'absolute',
+    top: 10,
+    right: 11,
+    width: sizes.notifyDot + 4,
+    height: sizes.notifyDot + 4,
+    borderRadius: radius.pill,
+    backgroundColor: colors.notifyDot,
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
   // The count sits over the button's top-right edge, white on red (6.5:1).
   badge: {
     position: 'absolute',
