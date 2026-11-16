@@ -345,11 +345,11 @@
   },
   "why": {
     "metaTitle": "Why Pickld · Pickld",
-    "metaDescription": "Your people, in order. Pickld shows the people you choose, newest first, and helps you find new people through the ones you know. Likes never decide what you see.",
+    "metaDescription": "More than ten years ago, Pickld started as a simple way to keep your days and be yourself. It still shows the people you choose, newest first, and likes never decide what you see.",
     "eyebrow": "Why Pickld",
     "title1": "Your people.",
     "title2": "In order.",
-    "lead": "Most social apps decide what you see by what keeps you scrolling. Pickld doesn’t. You see the people you choose, newest first, and you meet new people through the ones you already know.",
+    "lead": "We started Pickld more than ten years ago as a simple way to keep the moments of your day and be yourself while doing it. Since then, most social apps have learned to decide what you see by what keeps you scrolling. Pickld didn’t. You see the people you choose, newest first, and you meet new people through the ones you already know.",
     "promise": "“Your feed is for the people you choose. Discover is for the people you haven’t met yet.”",
     "promiseBy": "The Pickld promise",
     "howTitle": "How Pickld decides what you see",
@@ -405,15 +405,20 @@
     "readStudyLabel": "Read “{{title}}”",
     "missionLink": "Read our mission",
     "finalTitle": "Keep up with your people.",
-    "finalBody": "Pickld is coming to iPhone. Join the waitlist to be among the first to fill a jar."
+    "finalBody": "More than ten years on, it’s still a simple way to keep your days and be yourself. Pickld is coming to iPhone; join the waitlist to be among the first to fill a jar."
   },
   "mission": {
     "metaTitle": "Our mission · Pickld",
-    "metaDescription": "Social media should help people connect, not compete for their attention. These are the rules Pickld holds itself to.",
+    "metaDescription": "More than ten years ago, we wanted a simple way to keep our moments and be ourselves. That’s still Pickld’s mission, and these are the rules it holds itself to.",
     "eyebrow": "Our mission",
     "title1": "Help people keep up",
     "title2": "with each other.",
-    "lead": "Social media should help people connect, not compete for their attention. Pickld is a photo diary for the people you choose, built on a few rules we hold ourselves to.",
+    "lead": "More than ten years ago, we wanted one simple thing: a way to keep the moments of a day and be ourselves at the same time. That was the first Pickld, and it’s still the mission. Social media should help people connect, not compete for their attention.",
+    "quote": "“The easiest way to tell your story.”",
+    "quoteBy": "The first Pickld’s line, more than ten years ago",
+    "originTitle": "Where it started",
+    "originBody": "The first Pickld was eight moments that make one real day: where you were, who you were with, how the day began and how it ended. Your days as they really were, not as they were supposed to look, and you in them. Pickld is back with the same idea at its heart.",
+    "storyLink": "Read our story",
     "principlesTitle": "What we hold ourselves to",
     "principles": {
       "people": {

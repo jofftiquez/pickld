@@ -671,6 +671,8 @@ test('Why Pickld and Our mission are linked from every marketing page, cite thei
   assert.deepEqual(studies, ['https://doi.org/10.1038/s41586-026-10098-2', 'https://doi.org/10.1126/science.abp9364']);
   // Honest copy: never "algorithm-free" as a claim, only as the thing we say we aren't.
   const text = await page.locator('main').innerText();
+  // Both pages start from the first Pickld, more than ten years ago.
+  assert.match(text, /more than ten years ago/);
   assert.match(text, /We don’t claim to be “algorithm-free”/);
   assert.equal(await page.getByRole('button', { name: 'Join the waitlist' }).count(), 1);
   assert.ok(await noSideScroll(page));
@@ -679,6 +681,8 @@ test('Why Pickld and Our mission are linked from every marketing page, cite thei
   await page.waitForURL(`${base}/mission`);
   assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' '), 'Help people keep up with each other.');
   assert.equal(await page.getByRole('region', { name: 'What we hold ourselves to' }).locator('h3').count(), 6);
+  assert.match(await page.locator('main').innerText(), /More than ten years ago, we wanted one simple thing/);
+  assert.equal(await page.getByRole('link', { name: 'Read our story →' }).getAttribute('href'), '/story');
   assert.ok(await noSideScroll(page));
   await page.getByRole('link', { name: 'How Pickld works →' }).click();
   await page.waitForURL(`${base}/why`);

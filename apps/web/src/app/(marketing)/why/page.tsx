@@ -21,7 +21,7 @@ const studies = [
   { key: 'science', href: 'https://doi.org/10.1126/science.abp9364' },
 ] as const;
 
-/** Why Pickld: how each list decides what you see, what Pickld won't do, the controls, and the research behind it.
+/** Why Pickld, anchored in the first Pickld more than ten years ago: how each list decides what you see, what Pickld won't do, the controls, and the research behind it.
  * The page to share when pitching. Every claim matches what the app does today. */
 export default function Why() {
   return (

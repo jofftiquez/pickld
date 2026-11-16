@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 
 const principles = ['people', 'choice', 'open', 'calm', 'safe', 'private'] as const;
 
-/** Our mission: why Pickld exists and the rules it holds itself to (AGENTS.md "Product principles"). */
+/** Our mission: why Pickld exists and the rules it holds itself to (AGENTS.md "Product principles"). Always anchored in
+ * the first Pickld, more than ten years ago: a simple way to keep your moments and be yourself (see /story). */
 export default function Mission() {
   return (
     <>
@@ -27,10 +28,21 @@ export default function Mission() {
         </div>
         <figure className="mk-quote">
           <Logo height={34} />
-          <blockquote>{t('mission.promise')}</blockquote>
-          <figcaption>{t('mission.promiseTitle')}</figcaption>
+          <blockquote>{t('mission.quote')}</blockquote>
+          <figcaption>{t('mission.quoteBy')}</figcaption>
         </figure>
       </div>
+      <section className="mk-section" aria-labelledby="origin" style={{ paddingTop: 0 }}>
+        <div className="mk-wrap">
+          <div className="mk-head">
+            <h2 id="origin">{t('mission.originTitle')}</h2>
+            <p>{t('mission.originBody')}</p>
+          </div>
+          <Link className="mk-link" href="/story">
+            {t('mission.storyLink')} →
+          </Link>
+        </div>
+      </section>
       <section className="mk-section" aria-labelledby="principles" style={{ paddingTop: 0 }}>
         <div className="mk-wrap">
           <div className="mk-head">
@@ -44,6 +56,14 @@ export default function Mission() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+      <section className="mk-section" aria-labelledby="promise" style={{ paddingTop: 0 }}>
+        <div className="mk-wrap">
+          <div className="mk-head">
+            <h2 id="promise">{t('mission.promiseTitle')}</h2>
+            <p className="mk-lead">{t('mission.promise')}</p>
+          </div>
           <Link className="mk-link" href="/why">
             {t('mission.whyLink')} →
           </Link>
