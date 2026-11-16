@@ -1,11 +1,10 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MomentsFeedView } from '@/features/moments/MomentsFeedView';
 import { useMomentsFeed } from '@/features/moments/useMomentsFeed';
 import { useTimelineJump } from '@/features/scrubber/useTimelineJump';
-import { useUnreadNotifications } from '@/features/notifications/useNotifications';
 import { useAvatarUrls } from '@/lib/avatars';
 
 // Moments tab (QA round 1, piece 5; FR-SOC-01, FR-SOC-02, D-52, D-53): live moments from people the user
@@ -16,18 +15,11 @@ export default function MomentsScreen() {
   // The date scrubber's jump (FR-SOC-01): the timeline starts at that day and pages both ways from it.
   const jump = useTimelineJump('moments');
   const feed = useMomentsFeed(jump.from);
-  const unread = useUnreadNotifications();
   const { userId } = feed;
   // Re-signed when someone changes their photo (D-93).
   const avatars = useAvatarUrls((feed.moments ?? []).map((m) => ({ id: m.author_id, path: m.author_avatar_path })));
   // The spinner shows only for a pull, not for background refetches.
   const [pulling, setPulling] = useState(false);
-  useFocusEffect(
-    useCallback(() => {
-      unread.refresh();
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- unread.refresh is a new function each render
-    }, [userId]),
-  );
 
   return (
     <MomentsFeedView
@@ -40,9 +32,7 @@ export default function MomentsScreen() {
       isLoading={feed.isLoading}
       isRefreshing={pulling}
       isFetchingNextPage={feed.isFetchingNextPage}
-      hasUnread={unread.hasUnread}
       onRefresh={() => {
-        unread.refresh();
         jump.refetchDays();
         // Pulling at the top of a jumped-to day goes back to the newest moments.
         if (jump.jumped) return jump.clearJump();
@@ -61,7 +51,6 @@ export default function MomentsScreen() {
       onStartReached={() => {
         if (feed.hasPreviousPage && !feed.isFetchingPreviousPage) feed.fetchPreviousPage();
       }}
-      onOpenNotifications={() => router.push('/notifications')}
       onOpenJar={(m) => router.push({ pathname: '/jar/[id]', params: { id: m.jar_id } })}
       onToggleLike={feed.toggleLike}
       onOpenComments={(m) =>

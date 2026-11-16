@@ -4,7 +4,6 @@ import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Te
 
 import { BackToTopButton } from '@/components/BackToTopButton';
 import { EmptyState } from '@/components/EmptyState';
-import { RoundIconButton } from '@/components/RoundIconButton';
 import { FeedScrubber } from '@/features/scrubber/FeedScrubber';
 import { dayOf, type TimelineScrubber } from '@/features/scrubber/scrubberModel';
 import { useScrubberVisibility } from '@/features/scrubber/useScrubberVisibility';
@@ -13,7 +12,7 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import type { AvatarUrls } from '@/lib/avatars';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { useBackToTop, type BackToTopMode } from '@/lib/useBackToTop';
-import { colors, radius, sizes, space } from '@/theme/tokens';
+import { colors, sizes, space } from '@/theme/tokens';
 
 import { FeedEmpty } from './FeedEmpty';
 import { FeedJarCard } from './FeedJarCard';
@@ -34,8 +33,6 @@ export type FeedViewProps = {
   isLoading: boolean;
   isRefreshing: boolean;
   isFetchingNextPage: boolean;
-  /** Unread notifications: shows the dot on the bell. */
-  hasUnread: boolean;
   onRefresh: () => void;
   onEndReached: () => void;
   /** The date scrubber on the right edge (FR-SOC-01); none without it. */
@@ -45,7 +42,6 @@ export type FeedViewProps = {
   isFetchingPreviousPage?: boolean;
   /** After the back-to-top button brings the list up: on `reload` the screen fetches the newest page again. */
   onBackToTop: (mode: BackToTopMode) => void;
-  onOpenNotifications: () => void;
   onOpenJar?: (jarId: string) => void;
   /** Opens a profile from the avatar row; `null` is the viewer's own ("You"). */
   onOpenProfile?: (username: string | null) => void;
@@ -59,7 +55,7 @@ function firstName(name: string): string {
 }
 
 /**
- * The Jars tab (design: Feed): title and bell, followed authors' avatars, then published jars: theirs and
+ * The Jars tab (design: Feed): title, followed authors' avatars, then published jars: theirs and
  * the user's own (D-53). Reading nobody, the user's own jars sit under a Find people card, and Jars, empty
  * shows only when there is nothing at all.
  */
@@ -74,14 +70,12 @@ export function FeedView({
   isLoading,
   isRefreshing,
   isFetchingNextPage,
-  hasUnread,
   onRefresh,
   onEndReached,
   scrubber,
   onStartReached,
   isFetchingPreviousPage = false,
   onBackToTop,
-  onOpenNotifications,
   onOpenJar,
   onOpenProfile,
   onFindPeople,
@@ -120,17 +114,6 @@ export function FeedView({
         >
           {t('jars.title')}
         </Text>
-        <View style={styles.headerButtons}>
-          <View>
-            <RoundIconButton
-              icon="bell"
-              accessibilityLabel={hasUnread ? t('feed.notificationsUnread') : t('feed.notifications')}
-              onPress={onOpenNotifications}
-              testID="feed-notifications"
-            />
-            {hasUnread ? <View style={styles.dot} pointerEvents="none" testID="feed-notifications-dot" /> : null}
-          </View>
-        </View>
       </View>
       {readsNobody && hasJars ? (
         <View style={[styles.cardWrap, styles.findPeople]}>
@@ -270,18 +253,6 @@ const styles = StyleSheet.create({
     paddingTop: sizes.headerTop,
     paddingHorizontal: space.xl,
     paddingBottom: space.md,
-  },
-  headerButtons: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  dot: {
-    position: 'absolute',
-    top: 10,
-    right: 11,
-    width: sizes.notifyDot + 4,
-    height: sizes.notifyDot + 4,
-    borderRadius: radius.pill,
-    backgroundColor: colors.notifyDot,
-    borderWidth: 2,
-    borderColor: colors.surface,
   },
   stories: { gap: space.md + 2, paddingHorizontal: space.xl, paddingTop: space.xs, paddingBottom: space.md + 2 },
   cardWrap: { paddingHorizontal: space.xl },

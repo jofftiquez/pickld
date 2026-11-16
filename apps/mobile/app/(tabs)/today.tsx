@@ -20,6 +20,7 @@ import { useWidgetSync } from '@/features/widgets/useWidgetSync';
 import { useTimeZoneBanner } from '@/features/jar/useTimeZoneBanner';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { FirstMomentTip } from '@/features/onboarding/FirstMomentTip';
+import { useUnreadNotifications } from '@/features/notifications/useNotifications';
 import { useFirstMomentTip } from '@/features/onboarding/useFirstMomentTip';
 import { usePendingUploads } from '@/features/pending/usePendingUploads';
 import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
@@ -46,6 +47,8 @@ export default function TodayScreen() {
 
   const { userId, localDate, jar: jarData, me, queue, queueLoaded } = useToday(now);
   const pending = usePendingUploads();
+  // The bell lives on Today only (Joff, QA): its dot follows unread notifications.
+  const unread = useUnreadNotifications();
   // Missing only in caches persisted before usernames (M3-06).
   const username = me?.username;
   const tz = phoneTimeZone();
@@ -76,8 +79,10 @@ export default function TodayScreen() {
         return;
       }
       if (userId === null) return;
+      unread.refresh();
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
       void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- unread.refresh is a new function each render
     }, [queryClient, userId]),
   );
 
@@ -150,6 +155,8 @@ export default function TodayScreen() {
         onOpenStickers={() => router.push('/stickers')}
         pendingCount={pending.count}
         onOpenPending={() => router.push('/pending')}
+        onOpenNotifications={() => router.push('/notifications')}
+        hasUnread={unread.hasUnread}
         onOpenProfile={username ? () => router.push({ pathname: '/u/[username]', params: { username } }) : undefined}
         onRetry={(queueId) => void retryUpload(queueId)}
         zoneTag={zone.zones ? t('timeZone.tag', { zone: zone.zones.to }) : null}

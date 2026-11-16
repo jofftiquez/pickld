@@ -10,7 +10,7 @@ import { useFollow } from '@/features/profile/useFollow';
 import { DAY_SLOTS } from '@/features/reminders/reminderPlan';
 import { currentSlot } from '@/lib/jars';
 
-// /notifications (M3-19; FR-NOT-03): from the bell on the Jars tab. Opening it marks everything read.
+// /notifications (M3-19; FR-NOT-03): from the bell on Today. Opening it marks everything read.
 export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

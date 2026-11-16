@@ -148,7 +148,7 @@ export function useNotifications() {
   };
 }
 
-/** Unread rows, for the dot on the Jars tab's bell. The tab stays mounted, so it calls `refresh` on focus. */
+/** Unread rows, for the dot on the bell on Today. The tab stays mounted, so it calls `refresh` on focus. */
 export function useUnreadNotifications() {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const query = useQuery({

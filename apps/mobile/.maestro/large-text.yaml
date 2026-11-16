@@ -19,7 +19,7 @@ appId: me.pickld.app
     id: tab-jars
 - extendedWaitUntil:
     visible:
-      id: feed-notifications
+      id: screen-title
     timeout: 30000
 - takeScreenshot: large-jars
 - tapOn:

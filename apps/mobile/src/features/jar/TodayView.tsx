@@ -50,6 +50,10 @@ export type TodayViewProps = {
   /** Pending uploads (FR-CAP-04): the header button and its count; left out on the day page. */
   pendingCount?: number;
   onOpenPending?: () => void;
+  /** Opens Notifications from the bell (FR-NOT-03); missing hides it. */
+  onOpenNotifications?: () => void;
+  /** Unread notifications: shows the dot on the bell. */
+  hasUnread?: boolean;
   /** Opens My profile from the header avatar. */
   onOpenProfile?: () => void;
   /** Retry on a failed tile, with the tile's queue item id. */
@@ -109,6 +113,8 @@ export function TodayView({
   onOpenStickers,
   pendingCount,
   onOpenPending,
+  onOpenNotifications,
+  hasUnread,
   onOpenProfile,
   onRetry,
   zoneTag = null,
@@ -165,6 +171,8 @@ export function TodayView({
             onOpenStickers={onOpenStickers}
             pendingCount={pendingCount}
             onOpenPending={onOpenPending}
+            onOpenNotifications={onOpenNotifications}
+            hasUnread={hasUnread}
             onOpenProfile={onOpenProfile}
             zoneTag={zoneTag}
           />

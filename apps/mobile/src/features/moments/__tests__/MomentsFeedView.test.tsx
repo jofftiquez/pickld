@@ -54,7 +54,6 @@ async function setup(props: Partial<MomentsFeedViewProps> = {}) {
     onRefresh: jest.fn(),
     onEndReached: jest.fn(),
     onBackToTop: jest.fn(),
-    onOpenNotifications: jest.fn(),
     onOpenJar: jest.fn(),
     onToggleLike: jest.fn(),
     onOpenComments: jest.fn(),
@@ -70,7 +69,6 @@ async function setup(props: Partial<MomentsFeedViewProps> = {}) {
       isLoading={false}
       isRefreshing={false}
       isFetchingNextPage={false}
-      hasUnread={false}
       {...handlers}
       {...props}
     />,
@@ -187,14 +185,12 @@ describe('MomentsFeedView', () => {
     expect(screen.queryByTestId('feed-empty')).toBeNull();
   });
 
-  it('the bell opens notifications and shows the unread dot', async () => {
-    const h = await setup({ hasUnread: true });
-    expect(screen.getByTestId('moments-notifications-dot')).toBeTruthy();
-    await fireEvent.press(screen.getByRole('button', { name: 'Notifications, unread' }));
-    expect(h.onOpenNotifications).toHaveBeenCalled();
+  it('has no bell: it lives on Today', async () => {
+    await setup();
+    expect(screen.queryByRole('button', { name: 'Notifications' })).toBeNull();
   });
 
-  it('has no compass next to the bell: Discover is a tab (D-130)', async () => {
+  it('has no compass: Discover is a tab (D-130)', async () => {
     await setup();
     expect(screen.queryByRole('button', { name: 'Discover' })).toBeNull();
   });
