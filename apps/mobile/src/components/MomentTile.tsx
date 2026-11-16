@@ -6,7 +6,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { hitSlopFor } from '@/lib/hitSlop';
 import { VISIBILITY_KEY, type Visibility } from '@/lib/visibility';
 import { maxTextScale, textStyle } from '@/theme/text';
-import { colors, radius, shadow, sizes, space, type Slot } from '@/theme/tokens';
+import { colors, photo, radius, shadow, sizes, space, type Slot } from '@/theme/tokens';
 
 import { PRESSED_OPACITY } from './BaseButton';
 import { Icon } from './Icon';
@@ -143,7 +143,7 @@ export function MomentTile({
         <>
           <View style={styles.topRow}>
             <View style={[styles.iconWell, state === 'now' ? styles.iconWellNow : null]}>
-              <Icon name={slot} color="ink" size={22} strokeWidth={state === 'now' ? 1.8 : 1.7} />
+              <Icon name={slot} color="ink" size={sizes.momentTileIcon} strokeWidth={state === 'now' ? 1.8 : 1.7} />
             </View>
             {state === 'now' ? (
               <View style={styles.nowChip}>
@@ -158,15 +158,22 @@ export function MomentTile({
             )}
           </View>
           <View>
+            {/* Three tiles to a row: long tags like #mebusywith shrink to fit rather than break mid-word. */}
             <Text
               maxFontSizeMultiplier={maxTextScale.tile}
-              style={[textStyle('body', '700'), { color: state === 'now' ? colors.surface : colors.ink }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              style={[textStyle('bodySmall', '700'), { color: state === 'now' ? colors.surface : colors.ink }]}
             >
               {tag}
             </Text>
             {state === 'now' ? (
               <Text
                 maxFontSizeMultiplier={maxTextScale.tile}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
                 style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}
               >
                 {t('tile.tapToCapture')}
@@ -179,21 +186,17 @@ export function MomentTile({
           uri={uri}
           // A blurred photo stays plain: its stickers and words would show through the blur.
           photoView={blurred ? undefined : photoView}
-          height={sizes.momentTile}
           label={tag}
+          labelVariant="bodySmall"
           blurred={blurred}
           overlayColor={state === 'failed' ? 'failedOverlay' : state === 'filled' ? undefined : 'glass'}
-          // "Added later" sits under the time it qualifies, so the time, Cover, Added later and the
-          // visibility badge never crowd one row and cut each other off.
+          // The time, Cover and "Added later" stack down the left, so on a tile three to a row they never
+          // crowd the visibility badge or cut each other off.
           topLeft={
             time || cover || addedLater ? (
               <View style={styles.topLeft}>
-                {time || cover ? (
-                  <View style={styles.pillRow}>
-                    {time ? <Pill text={time} /> : null}
-                    {cover ? <Pill text={t('tile.cover')} testID="tile-cover" /> : null}
-                  </View>
-                ) : null}
+                {time ? <Pill text={time} /> : null}
+                {cover ? <Pill text={t('tile.cover')} testID="tile-cover" /> : null}
                 {addedLater ? <Pill text={t('tile.addedLater')} tone="badge" testID="tile-added-later" /> : null}
               </View>
             ) : null
@@ -327,11 +330,11 @@ function RetryButton({ label, a11yLabel, onPress }: { label: string; a11yLabel: 
 
 const styles = StyleSheet.create({
   tile: {
-    minHeight: sizes.momentTile,
+    aspectRatio: photo.aspect,
     borderRadius: radius.tile,
   },
   empty: {
-    padding: space.md,
+    padding: space.sm,
     justifyContent: 'space-between',
     backgroundColor: colors.surface,
     borderWidth: sizes.tileBorder,
@@ -339,15 +342,15 @@ const styles = StyleSheet.create({
     borderColor: colors.dashed,
   },
   now: {
-    padding: space.md,
+    padding: space.sm,
     justifyContent: 'space-between',
     backgroundColor: colors.ink,
     ...shadow.nowGlow,
   },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space.xs },
   iconWell: {
-    width: sizes.tileIconWell,
-    height: sizes.tileIconWell,
+    width: sizes.momentTileIconWell,
+    height: sizes.momentTileIconWell,
     borderRadius: radius.thumbLg,
     backgroundColor: colors.tileIconWell,
     alignItems: 'center',
@@ -377,7 +380,6 @@ const styles = StyleSheet.create({
   overlayText: { color: colors.surface, textAlign: 'center', flexShrink: 1 },
   failedRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   topLeft: { alignItems: 'flex-start', gap: space.xs },
-  pillRow: { flexDirection: 'row', gap: space.xs },
   retry: {
     minHeight: sizes.retryPill,
     minWidth: sizes.minTap,

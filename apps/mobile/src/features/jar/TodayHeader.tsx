@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/Avatar';
@@ -51,10 +51,14 @@ export function TodayHeader({
     // The date and greeting run the full width above the title row, so the round buttons sit beside "Today"
     // alone and the line wraps only at large text sizes.
     <View style={styles.header}>
-      <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]}>
-        {zoneTag
-          ? t('timeZone.subtitle', { date, tag: zoneTag })
-          : t('today.subtitle', { date, greeting: greetingText })}
+      {/* The date stays muted; the greeting (or the zone tag) is in ink so the line reads first. */}
+      <Text style={[textStyle('cardTitle', '600'), { color: colors.muted }]} testID="today-subtitle">
+        <Trans
+          t={t}
+          i18nKey={zoneTag ? 'timeZone.subtitle' : 'today.subtitle'}
+          values={zoneTag ? { date, tag: zoneTag } : { date, greeting: greetingText }}
+          components={{ bold: <Text style={[textStyle('cardTitle', '700'), { color: colors.ink }]} /> }}
+        />
       </Text>
       <View style={styles.row}>
         <Text
@@ -122,7 +126,7 @@ export function TodayHeader({
 }
 
 const styles = StyleSheet.create({
-  header: { gap: space.xs / 2 },
+  header: { gap: sizes.todayMetaGap },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
   title: { color: colors.ink, flexShrink: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },

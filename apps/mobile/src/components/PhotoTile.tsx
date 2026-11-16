@@ -16,7 +16,7 @@ export type PhotoTileProps = {
   photoView?: ReactNode;
   /** Describes the photo for screen readers. Without it the image is decorative and hidden. */
   alt?: string;
-  /** Fixed height (e.g. `sizes.momentTile`); the tile still grows if its content needs more. Defaults to 3:4. */
+  /** Fixed height; the tile still grows if its content needs more. Defaults to 3:4. */
   height?: number;
   /** Corner radius token value; defaults to `radius.tile`. */
   radius?: number;
@@ -113,6 +113,9 @@ export function PhotoTile({
           maxFontSizeMultiplier={maxTextScale.tile}
           style={[textStyle(labelVariant, labelWeight), styles.label]}
           numberOfLines={1}
+          // A long tag on a narrow tile (e.g. #mebusywith at large text) shrinks rather than cutting off.
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
         >
           {label}
         </Text>
