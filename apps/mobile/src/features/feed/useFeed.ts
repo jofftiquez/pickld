@@ -11,7 +11,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { refetchFirstPage } from '@/lib/firstPage';
 import { getSupabase } from '@/lib/supabase';
 
-import { newerCursor, type PageCursor } from '@/features/scrubber/scrubberModel';
+import { discoverCursorArgs, newerCursor, type PageCursor } from '@/features/scrubber/scrubberModel';
 
 import { anchorCursor, FEED_PAGE_SIZE, feedAuthorRow, feedRow, nextCursor, type FeedPage } from './feedModel';
 import { rememberPlaceholders } from '@/lib/image/photoPlaceholders';
@@ -40,7 +40,9 @@ export async function fetchFeedPage(
 ): Promise<FeedPage> {
   const { data, error } = cursor?.newer
     ? await getSupabase().rpc('feed_page_newer', { cursor_at: cursor.at, cursor_id: cursor.id })
-    : await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
+    : rpc === 'discover_jars_page'
+      ? await getSupabase().rpc(rpc, cursor ? discoverCursorArgs(cursor) : {})
+      : await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
   if (error) throw new Error(error.message);
   const rows = z.array(feedRow).parse(data);
   if (cursor?.newer) rows.reverse();

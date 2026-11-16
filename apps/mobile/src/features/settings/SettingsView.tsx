@@ -51,6 +51,7 @@ export type SettingsViewProps = {
   pendingCount?: number;
   onPending?: () => void;
   onVisibility: (visibility: Visibility) => void;
+  onDiscoverable: (on: boolean) => void;
   onBlocked: () => void;
   onMyStickers: () => void;
   /** Invite friends (INV-07): opens the Invite page. */
@@ -260,6 +261,23 @@ export function SettingsView(props: SettingsViewProps) {
               onPress={() => setVisibilityOpen(true)}
               testID="settings-visibility"
             />
+            <View style={styles.switchRow}>
+              <View style={styles.rowLabel} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+                <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.discoverable')}</Text>
+                <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>
+                  {t(account.minor ? 'settings.discoverableMinor' : 'settings.discoverableBody')}
+                </Text>
+              </View>
+              <Toggle
+                value={account.discoverable && !account.minor}
+                onValueChange={props.onDiscoverable}
+                disabled={account.minor}
+                accessibilityLabel={`${t('settings.discoverable')}. ${t(
+                  account.minor ? 'settings.discoverableMinor' : 'settings.discoverableBody',
+                )}`}
+                testID="settings-discoverable"
+              />
+            </View>
             <ListRow
               label={t('settings.blocked')}
               value={props.blockedCount ? String(props.blockedCount) : undefined}

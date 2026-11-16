@@ -1,6 +1,6 @@
 // Settings data (M4-16; FR-SET-01, FR-NOT-04). Everything is read and written as the user, through RLS:
 // reminder_settings (owner, all), notification_prefs (owner select and update; a row per user, 0014) and
-// profiles.default_visibility (owner update). Saves update the cache first so switches move at once, and
+// profiles.default_visibility and profiles.discoverable (owner update; read back through my_profile, 0150). Saves update the cache first so switches move at once, and
 // roll back if the write fails. A reminder change invalidates ['reminders', userId], which Today's
 // useReminderSync watches, so the phone's scheduled reminders follow (FR-NOT-01).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -37,14 +37,26 @@ const accountRow = z.object({
   username: z.string(),
   display_name: z.string(),
   default_visibility: z.enum(['everyone', 'readers', 'only_me']),
+  discoverable: z.boolean(),
+  birthday: z.string(),
 });
 
 export type SettingsAccount = {
   username: string;
   displayName: string;
   defaultVisibility: Visibility;
+  /** Show me in Discover and suggestions (0150). */
+  discoverable: boolean;
+  /** Under 18: kept out of Discover whatever `discoverable` says (in_discover, 0150). */
+  minor: boolean;
   avatar: string | null;
 };
+
+/** Whether someone born on `birthday` (YYYY-MM-DD) is under 18 on `today` (YYYY-MM-DD). */
+export function isMinor(birthday: string, today: string): boolean {
+  const adultOn = `${Number(birthday.slice(0, 4)) + 18}${birthday.slice(4)}`;
+  return adultOn > today;
+}
 
 export const settingsQueryKeys = {
   account: (userId: string) => ['settings', 'account', userId] as const,
@@ -52,10 +64,10 @@ export const settingsQueryKeys = {
 };
 
 async function fetchAccount(userId: string): Promise<SettingsAccount> {
+  // my_profile: the owner's full row; discoverable and birthday aren't readable from profiles by others.
   const { data, error } = await getSupabase()
-    .from('profiles')
-    .select('username, display_name, default_visibility')
-    .eq('id', userId)
+    .rpc('my_profile')
+    .select('username, display_name, default_visibility, discoverable, birthday')
     .single();
   if (error) throw new Error(error.message);
   const row = accountRow.parse(data);
@@ -64,6 +76,8 @@ async function fetchAccount(userId: string): Promise<SettingsAccount> {
     username: row.username,
     displayName: row.display_name,
     defaultVisibility: row.default_visibility,
+    discoverable: row.discoverable,
+    minor: isMinor(row.birthday, new Date().toISOString().slice(0, 10)),
     avatar: images.avatar,
   };
 }
@@ -157,5 +171,14 @@ export function useSettings(userId: string) {
     () => void queryClient.invalidateQueries({ queryKey: todayQueryKeys.me(userId) }),
   );
 
-  return { account, reminders, prefs, saveReminder, savePref, saveVisibility };
+  const saveDiscoverable = useOptimistic<SettingsAccount, boolean>(
+    settingsQueryKeys.account(userId),
+    (a, on) => ({ ...a, discoverable: on }),
+    async (on) => {
+      const { error } = await getSupabase().from('profiles').update({ discoverable: on }).eq('id', userId);
+      if (error) throw new Error(error.message);
+    },
+  );
+
+  return { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable };
 }

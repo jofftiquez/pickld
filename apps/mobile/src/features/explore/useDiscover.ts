@@ -1,5 +1,6 @@
 // Discover's lists (QA round 3, piece K; D-100, D-102; FR-EXP-03): `discover_moments_page` and
-// `discover_jars_page` (0070), 20 rows a page, newest first. Their rows have the timelines' columns, so pages
+// `discover_jars_page` (0070), 20 rows a page: the viewer's network first, then everyone else, each newest first
+// (0150). Their rows have the timelines' columns, so pages
 // are fetched by the timelines' own functions (with signed photos) and drawn by their cards. Each list loads
 // the first time its tab is shown. Reading an author takes them out of both lists at once.
 import {
@@ -54,7 +55,7 @@ export async function removeDiscoverAuthor(queryClient: QueryClient, authorId: s
   );
 }
 
-/** The Moments list's query, shared with the Discover tab's unread dot so both read one cache entry. */
+/** The Moments list's query. */
 export function discoverMomentsQuery(userId: string | null) {
   return infiniteQueryOptions({
     queryKey: discoverQueryKeys.moments(userId ?? ''),

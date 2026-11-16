@@ -29,6 +29,9 @@ export const momentsFeedRow = z.object({
   jar_local_date: z.string(),
   /** Whether the viewer may open the moment's jar (published and visible to them). */
   jar_visible: z.boolean(),
+  /** Discover only (0150): the poster is read by one of the viewer's authors, `via_username` (first by username). */
+  in_network: z.boolean().optional(),
+  via_username: z.string().nullish(),
 });
 export type MomentsFeedRow = z.infer<typeof momentsFeedRow>;
 
@@ -40,13 +43,21 @@ export type FeedMoment = MomentsFeedRow & {
   thumbUrl: string | null;
 };
 
-export type MomentsCursor = { at: string; id: string };
+/** `network`: Discover's last row was in the viewer's network (0150); the server pages the network first. */
+export type MomentsCursor = { at: string; id: string; network?: boolean };
 export type MomentsPage = { moments: FeedMoment[]; nextCursor: MomentsCursor | null };
 
 /** The next page starts after the last row; a short page is the end of the timeline. */
-export function nextMomentsCursor(rows: Pick<MomentsFeedRow, 'added_at' | 'moment_id'>[]): MomentsCursor | null {
+export function nextMomentsCursor(
+  rows: Pick<MomentsFeedRow, 'added_at' | 'moment_id' | 'in_network'>[],
+): MomentsCursor | null {
   const last = rows[rows.length - 1];
-  return rows.length < MOMENTS_PAGE_SIZE || last === undefined ? null : { at: last.added_at, id: last.moment_id };
+  if (rows.length < MOMENTS_PAGE_SIZE || last === undefined) return null;
+  return {
+    at: last.added_at,
+    id: last.moment_id,
+    ...(last.in_network === undefined ? {} : { network: last.in_network }),
+  };
 }
 
 /**

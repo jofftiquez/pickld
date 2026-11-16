@@ -2,12 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
-import { discoverQueryKeys } from '@/features/explore/useDiscover';
 import { momentsQueryKeys } from '@/features/moments/useMomentsFeed';
 import { useAuthStore } from '@/lib/authStore';
 
 import { feedQueryKeys } from '../useFeed';
-import { useDiscoverUnread, useJarsUnread, useMomentsUnread } from '../useTabUnread';
+import { useJarsUnread, useMomentsUnread } from '../useTabUnread';
 
 // The dots read the timelines' own cache entries: with those filled, nothing is fetched.
 const mockRpc = jest.fn();
@@ -118,22 +117,5 @@ describe('Jars dot', () => {
     // The Moments dot keeps its own seen time.
     expect(mockDisk.has('unreadSeen:moments:u1')).toBe(false);
     expect(mockRpc).not.toHaveBeenCalled();
-  });
-});
-
-describe('Discover dot', () => {
-  it('keeps the seen time stored before this change, so an upgrade neither resets nor re-fires it', async () => {
-    mockDisk.set('discoverSeen:u1', '2026-11-14T10:00:00Z');
-    client.setQueryData(
-      discoverQueryKeys.moments(me),
-      pages('moments', [moment(friend, '2026-11-14T10:00:00.000000+00:00')]),
-    );
-    const hook = await renderHook(() => useDiscoverUnread(false), { wrapper });
-    await settle();
-    expect(hook.result.current).toBe(false);
-    expect(mockDisk.get('discoverSeen:u1')).toBe('2026-11-14T10:00:00Z');
-
-    await update(discoverQueryKeys.moments(me), pages('moments', [moment(friend, '2026-11-14T10:05:00Z')]));
-    expect(hook.result.current).toBe(true);
   });
 });

@@ -187,6 +187,22 @@ describe('DiscoverView', () => {
     expect(h.onReadAuthor).toHaveBeenCalledWith('bea-id');
   });
 
+  it('shows your network first with who connects you, then Beyond your network (0150)', async () => {
+    await renderDiscover({
+      moments: [
+        { ...MOMENT, in_network: true, via_username: 'kit' },
+        { ...MOMENT, moment_id: 'm2', in_network: false, via_username: null },
+      ],
+    });
+    // The list draws its first three rows here (initialNumToRender): the network heading, its card, the next heading.
+    const order = screen
+      .queryAllByTestId(/^(discover-network|discover-beyond|moments-card-m1|discover-read-by)$/)
+      .map((n) => n.props.testID);
+    expect(order).toEqual(['discover-network', 'discover-read-by', 'moments-card-m1', 'discover-beyond']);
+    expect(screen.getByText('Read by @kit')).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'Beyond your network' })).toBeTruthy();
+  });
+
   it('says when there is nothing to discover, with the pull hint', async () => {
     await renderDiscover({ moments: [] });
     expect(screen.getByText('Nothing to discover yet')).toBeTruthy();

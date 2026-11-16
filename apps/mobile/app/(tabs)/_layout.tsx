@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router/js-tabs';
 import { useTranslation } from 'react-i18next';
 
 import { FloatingTabBar, mainTabs, type MainTab } from '@/components/FloatingTabBar';
-import { useDiscoverUnread, useJarsUnread, useMomentsUnread } from '@/features/feed/useTabUnread';
+import { useJarsUnread, useMomentsUnread } from '@/features/feed/useTabUnread';
 import { TabBarClearanceContext } from '@/lib/tabBarClearance';
 import { useLiquidGlassState } from '@/lib/useLiquidGlass';
 import { colors, space } from '@/theme/tokens';
@@ -23,7 +23,6 @@ const nativeIcons = {
 const unreadText = {
   moments: { value: 'tabs.momentsNew', label: 'tabs.momentsUnread' },
   jars: { value: 'tabs.jarsNew', label: 'tabs.jarsUnread' },
-  discover: { value: 'tabs.discoverNew', label: 'tabs.discoverUnread' },
 } as const satisfies Partial<Record<MainTab, { value: `tabs.${string}`; label: `tabs.${string}` }>>;
 
 type UnreadTab = keyof typeof unreadText;
@@ -40,13 +39,12 @@ const dotBadge = '\u200B';
 export default function TabsLayout() {
   const { t } = useTranslation();
   const glass = useLiquidGlassState();
-  // A red dot on Moments, Jars and Discover while each has something from someone else newer than the newest
-  // one seen there (FR-EXP-04, D-157); a tab's dot clears while it is open.
+  // A red dot on Moments and Jars while each has something from someone else newer than the newest one seen there
+  // (FR-EXP-04, D-157); a tab's dot clears while it is open. Discover has none (0150): it lists strangers.
   const pathname = usePathname();
   const unread: Record<UnreadTab, boolean> = {
     moments: useMomentsUnread(pathname === '/moments'),
     jars: useJarsUnread(pathname === '/jars'),
-    discover: useDiscoverUnread(pathname === '/discover'),
   };
   const isUnread = (name: MainTab): name is UnreadTab => name in unread && unread[name as UnreadTab];
   // Wait for Reduce Transparency before choosing, so the bar (and each tab's state) mounts once.

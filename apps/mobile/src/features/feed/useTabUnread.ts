@@ -5,7 +5,6 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import Storage from 'expo-sqlite/kv-store';
 import { useEffect, useState } from 'react';
 
-import { discoverMomentsQuery } from '@/features/explore/useDiscover';
 import { fetchMomentsPage, momentsQueryKeys } from '@/features/moments/useMomentsFeed';
 import type { PageCursor } from '@/features/scrubber/scrubberModel';
 import { useAuthStore } from '@/lib/authStore';
@@ -83,15 +82,4 @@ export function useJarsUnread(focused: boolean): boolean {
     select: (data) => newestJarAt(data.pages[0]?.jars ?? [], userId),
   });
   return useUnreadDot('jars', focused, first.data ?? null, first.isSuccess);
-}
-
-/** The Discover tab's dot: its Moments list has something newer than the newest one seen there. */
-export function useDiscoverUnread(focused: boolean): boolean {
-  const userId = useUserId();
-  const first = useInfiniteQuery({
-    ...discoverMomentsQuery(userId),
-    staleTime: STALE_TIME,
-    select: (data) => newestMomentAt(data.pages[0]?.moments ?? [], userId),
-  });
-  return useUnreadDot('discover', focused, first.data ?? null, first.isSuccess);
 }

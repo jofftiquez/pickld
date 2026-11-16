@@ -16,9 +16,9 @@ select ok(has_function_privilege('authenticated', 'public.feed_page(timestamptz,
 select ok(not has_function_privilege('anon', 'public.feed_page_newer(timestamptz, uuid)', 'execute'), 'anon cannot call feed_page_newer');
 select ok(has_function_privilege('authenticated', 'public.feed_page_newer(timestamptz, uuid)', 'execute'),
           'signed-in users can call feed_page_newer');
-select ok(not has_function_privilege('anon', 'public.discover_jars_page(timestamptz, uuid)', 'execute'),
+select ok(not has_function_privilege('anon', 'public.discover_jars_page(timestamptz, uuid, boolean)', 'execute'),
           'anon cannot call discover_jars_page');
-select ok(has_function_privilege('authenticated', 'public.discover_jars_page(timestamptz, uuid)', 'execute'),
+select ok(has_function_privilege('authenticated', 'public.discover_jars_page(timestamptz, uuid, boolean)', 'execute'),
           'signed-in users can call discover_jars_page');
 
 -- ---------------------------------------------------------------- data

@@ -85,7 +85,16 @@ export function dayOf(at: string, tz: string): string {
 }
 
 /** A page cursor; `newer` pages hold the rows just above it (`*_page_newer`), nearest first, shown reversed. */
-export type PageCursor = { at: string; id: string; newer?: true };
+export type PageCursor = { at: string; id: string; newer?: true; network?: boolean };
+
+/** A Discover list's page arguments (0150): the network flag goes along once the rows carried one. */
+export function discoverCursorArgs(cursor: PageCursor) {
+  return {
+    cursor_at: cursor.at,
+    cursor_id: cursor.id,
+    ...(cursor.network === undefined ? {} : { cursor_network: cursor.network }),
+  };
+}
 
 /**
  * The cursor for the rows above a timeline's first page, for scrolling up from a date the scrubber jumped to.

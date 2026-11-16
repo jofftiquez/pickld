@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { anchorCursor } from '@/features/feed/feedModel';
 import { fetchFeedAuthors, feedQueryKeys } from '@/features/feed/useFeed';
 import { keyOf, sendLike, serialize } from '@/features/jar/useLike';
-import { newerCursor, type PageCursor } from '@/features/scrubber/scrubberModel';
+import { discoverCursorArgs, newerCursor, type PageCursor } from '@/features/scrubber/scrubberModel';
 import { useAuthStore } from '@/lib/authStore';
 import { refetchFirstPage } from '@/lib/firstPage';
 import { getSupabase } from '@/lib/supabase';
@@ -61,7 +61,9 @@ export async function fetchMomentsPage(
 ): Promise<MomentsPage> {
   const { data, error } = cursor?.newer
     ? await getSupabase().rpc('moments_feed_page_newer', { cursor_at: cursor.at, cursor_id: cursor.id })
-    : await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
+    : rpc === 'discover_moments_page'
+      ? await getSupabase().rpc(rpc, cursor ? discoverCursorArgs(cursor) : {})
+      : await getSupabase().rpc(rpc, cursor ? { cursor_at: cursor.at, cursor_id: cursor.id } : {});
   if (error) throw new Error(error.message);
   const rows = z.array(momentsFeedRow).parse(data);
   if (cursor?.newer) rows.reverse();

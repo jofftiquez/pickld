@@ -6,6 +6,7 @@ import { reminderQueryKeys } from '@/features/reminders/useReminderSync';
 import { useAuthStore } from '@/lib/authStore';
 
 import { SettingsScreen } from '../SettingsScreen';
+import { isMinor } from '../useSettings';
 import type { SettingsViewProps } from '../SettingsView';
 
 // The view is checked on the simulator; here its props drive what the screen saves.
@@ -63,6 +64,20 @@ const mockSignOut = jest.fn(async (..._a: unknown[]) => ({ error: null }));
 jest.mock('@/lib/supabase', () => ({
   getSupabase: () => ({
     auth: { signOut: (...a: unknown[]) => mockSignOut(...a) },
+    rpc: () => ({
+      select: () => ({
+        single: async () => ({
+          data: {
+            username: 'dale',
+            display_name: 'Dale',
+            default_visibility: 'readers',
+            discoverable: true,
+            birthday: '1995-05-05',
+          },
+          error: null,
+        }),
+      }),
+    }),
     from: (table: string) => {
       const write = (op: string) => async (row: unknown) => {
         mockDb.writes.push([table, op, row]);
@@ -71,19 +86,17 @@ jest.mock('@/lib/supabase', () => ({
       const rows =
         table === 'reminder_settings'
           ? mockDb.reminders
-          : table === 'profiles'
-            ? { username: 'dale', display_name: 'Dale', default_visibility: 'readers' }
-            : {
-                new_reader: true,
-                like: true,
-                comment: true,
-                reply: true,
-                full_jar: true,
-                friend_joined: true,
-                quiet_hours: true,
-                quiet_start: '22:00:00',
-                quiet_end: '07:00:00',
-              };
+          : {
+              new_reader: true,
+              like: true,
+              comment: true,
+              reply: true,
+              full_jar: true,
+              friend_joined: true,
+              quiet_hours: true,
+              quiet_start: '22:00:00',
+              quiet_end: '07:00:00',
+            };
       const select = () => {
         const q = {
           eq: () => q,
@@ -167,6 +180,14 @@ describe('Settings', () => {
     );
   });
 
+  it('Show me in Discover starts on and is saved to the profile (0150)', async () => {
+    await renderScreen();
+    await waitFor(() => expect(props().account?.discoverable).toBe(true));
+    expect(props().account?.minor).toBe(false);
+    await act(async () => props().onDiscoverable(false));
+    await waitFor(() => expect(mockDb.writes).toContainEqual(['profiles', 'update', { discoverable: false }]));
+  });
+
   it('a failed save puts the switch back and says so', async () => {
     mockDb.failWrites = true;
     await renderScreen();
@@ -184,5 +205,13 @@ describe('Settings', () => {
     expect(mockCancelAll).toHaveBeenCalled();
     expect(mockRemoveToken).toHaveBeenCalled();
     expect(mockSignOut).toHaveBeenCalledWith({ scope: 'local' });
+  });
+});
+
+describe('isMinor', () => {
+  it('is true until the 18th birthday and false from that day', () => {
+    expect(isMinor('2008-11-17', '2026-11-16')).toBe(true);
+    expect(isMinor('2008-11-16', '2026-11-16')).toBe(false);
+    expect(isMinor('1995-05-05', '2026-11-16')).toBe(false);
   });
 });

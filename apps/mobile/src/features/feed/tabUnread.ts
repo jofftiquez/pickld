@@ -1,13 +1,14 @@
-// The tab bar's unread dots (FR-EXP-04): Moments, Jars or Discover has something from someone else that is newer
+// The tab bar's unread dots (FR-EXP-04): Moments or Jars has something from someone else that is newer
 // than the newest item the viewer saw the last time they had that tab open. Kept on the phone as one timestamp per
-// tab per user; nothing about the items is stored.
+// tab per user; nothing about the items is stored. Discover has no dot (0150): it lists people you haven't chosen,
+// and a dot there would only pull you back to browse strangers (AGENTS.md "Product principles").
 //
 // Each list is compared by the server time it is ordered and paged by, never by a capture date: a moment by
-// `added_at` (Moments, and Discover's Moments list), a jar by `feed_at` (when it was published, or later when a
+// `added_at` (Moments), a jar by `feed_at` (when it was published, or later when a
 // moment went into it, which is what moves it to the top of Jars). So a moment added later to a past day counts as
 // new once, when it lands at the top, and an old capture date never makes anything fire again.
 
-export type UnreadTab = 'moments' | 'jars' | 'discover';
+export type UnreadTab = 'moments' | 'jars';
 
 /** Stored when a list was empty on the first run, so its first item ever counts as new. */
 export const SEEN_EMPTY = '1970-01-01T00:00:00Z';
@@ -65,7 +66,7 @@ export function seenUpdate(input: {
   return focused && hasUnread(newest, stored) ? newest : null;
 }
 
-/** Where a tab's last seen time is kept for a user. Discover keeps the key it shipped with, so no dot reappears. */
+/** Where a tab's last seen time is kept for a user. */
 export function seenKey(tab: UnreadTab, userId: string): string {
-  return tab === 'discover' ? `discoverSeen:${userId}` : `unreadSeen:${tab}:${userId}`;
+  return `unreadSeen:${tab}:${userId}`;
 }

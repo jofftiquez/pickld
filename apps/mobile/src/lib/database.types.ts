@@ -1379,6 +1379,7 @@ export type Database = {
           cover_path: string | null;
           created_at: string;
           default_visibility: Database['public']['Enums']['jar_visibility'];
+          discoverable: boolean;
           display_name: string;
           feed_seen_at: string | null;
           home_tz: string;
@@ -1399,6 +1400,7 @@ export type Database = {
           cover_path?: string | null;
           created_at?: string;
           default_visibility?: Database['public']['Enums']['jar_visibility'];
+          discoverable?: boolean;
           display_name: string;
           feed_seen_at?: string | null;
           home_tz?: string;
@@ -1418,6 +1420,7 @@ export type Database = {
           cover_path?: string | null;
           created_at?: string;
           default_visibility?: Database['public']['Enums']['jar_visibility'];
+          discoverable?: boolean;
           display_name?: string;
           feed_seen_at?: string | null;
           home_tz?: string;
@@ -2082,7 +2085,7 @@ export type Database = {
       };
       delete_comment: { Args: { comment_id: string }; Returns: undefined };
       discover_jars_page: {
-        Args: { cursor_at?: string; cursor_id?: string };
+        Args: { cursor_at?: string; cursor_id?: string; cursor_network?: boolean };
         Returns: {
           added_later: boolean;
           author_avatar_path: string;
@@ -2092,6 +2095,7 @@ export type Database = {
           comment_count: number;
           cover_moment_id: string;
           feed_at: string;
+          in_network: boolean;
           is_new: boolean;
           jar_id: string;
           last_caption: string;
@@ -2100,12 +2104,13 @@ export type Database = {
           preview_moment_ids: string[];
           preview_thumb_paths: string[];
           published_at: string;
+          via_username: string;
           visibility: Database['public']['Enums']['jar_visibility'];
           visible_count: number;
         }[];
       };
       discover_moments_page: {
-        Args: { cursor_at?: string; cursor_id?: string };
+        Args: { cursor_at?: string; cursor_id?: string; cursor_network?: boolean };
         Returns: {
           added_at: string;
           author_avatar_path: string;
@@ -2116,6 +2121,7 @@ export type Database = {
           captured_at: string;
           comment_count: number;
           edits: Json;
+          in_network: boolean;
           is_backfilled: boolean;
           jar_id: string;
           jar_local_date: string;
@@ -2125,9 +2131,11 @@ export type Database = {
           liked: boolean;
           moment_id: string;
           slot: Database['public']['Enums']['slot'];
+          via_username: string;
           visibility: Database['public']['Enums']['jar_visibility'];
         }[];
       };
+      discover_via: { Args: { p_author: string; viewer: string }; Returns: string };
       ensure_jar: {
         Args: { local_date: string; tz: string };
         Returns: {
@@ -2234,6 +2242,7 @@ export type Database = {
       };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
+      in_discover: { Args: { p_id: string }; Returns: boolean };
       in_quiet_hours: { Args: { at: string; p_user: string }; Returns: boolean };
       invite_add_set: { Args: { p_owner: string; p_set_no: number }; Returns: undefined };
       invite_check: { Args: { p_ip_hash: string; p_token: string }; Returns: Json };
@@ -2645,6 +2654,7 @@ export type Database = {
           cover_path: string | null;
           created_at: string;
           default_visibility: Database['public']['Enums']['jar_visibility'];
+          discoverable: boolean;
           display_name: string;
           feed_seen_at: string | null;
           home_tz: string;
