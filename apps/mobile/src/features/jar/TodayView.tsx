@@ -7,6 +7,7 @@ import { PastDayBanner } from '@/features/days/PastDayBanner';
 import { pastDayLabel } from '@/features/days/pastDay';
 import { MomentCover } from '@/features/moment/MomentCover';
 import { opensPreview } from '@/features/moment/momentPreview';
+import { StickerPackTile } from '@/features/stickers/StickerPackTile';
 import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
@@ -82,7 +83,12 @@ export type TodayViewProps = {
   poppingSlots?: ReadonlySet<Slot>;
   /** The jar was just published (D-58; `usePublishCelebration`): confetti and the lid closing on the card. */
   celebratePublish?: boolean;
+  /** Today's sticker pack (`useFeaturedPack`): the 9th tile, ending the 3×3 grid. Never shown on a past day. */
+  featuredPack?: { slug: string; name: string; stickers: readonly { asset: string; label: string }[] } | null;
+  onOpenPack?: (slug: string) => void;
 };
+
+const COLUMNS = 3;
 
 /** Today (design: Main; first day: EmptyToday), or a past day's page (Day). Presentational; app/(tabs)/today.tsx
  * and app/day/[date].tsx load the data. */
@@ -117,11 +123,17 @@ export function TodayView({
   day = null,
   poppingSlots,
   celebratePublish = false,
+  featuredPack = null,
+  onOpenPack,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
-  const rows: GridTile[][] = [];
-  for (let i = 0; i < tiles.length; i += 2) rows.push(tiles.slice(i, i + 2));
+  // Three 3:4 tiles to a row, so a Fit-framed photo shows whole. On Today the sticker pack tile fills the
+  // ninth cell; otherwise the last row keeps empty cells so its tiles stay the same width.
+  const pack = !day && featuredPack && onOpenPack ? featuredPack : null;
+  const cells: (GridTile | 'pack')[] = pack ? [...tiles, 'pack'] : [...tiles];
+  const rows: (GridTile | 'pack')[][] = [];
+  for (let i = 0; i < cells.length; i += COLUMNS) rows.push(cells.slice(i, i + COLUMNS));
   // Content scrolls under the floating tab bar; this keeps the last row clear of it. The day page is a stack
   // screen without the tab bar.
   const tabBarClearance = useTabBarClearance();
@@ -192,9 +204,21 @@ export function TodayView({
           />
         </View>
         <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
-          {rows.map((row) => (
-            <View key={row[0]?.slot} style={styles.gridRow}>
+          {rows.map((row, r) => (
+            <View key={r} style={styles.gridRow}>
               {row.map((tile) => {
+                if (tile === 'pack') {
+                  return pack && onOpenPack ? (
+                    <View key="pack" style={styles.cell}>
+                      <StickerPackTile
+                        slug={pack.slug}
+                        name={pack.name}
+                        stickers={pack.stickers}
+                        onPress={() => onOpenPack(pack.slug)}
+                      />
+                    </View>
+                  ) : null;
+                }
                 const capturable = tile.state === 'empty' || tile.state === 'now';
                 const { queueId, momentId } = tile;
                 const openable = tile.state === 'checking' || tile.state === 'removed';
@@ -239,6 +263,9 @@ export function TodayView({
                   </View>
                 );
               })}
+              {Array.from({ length: COLUMNS - row.length }, (_, i) => (
+                <View key={`spacer-${i}`} style={styles.cell} />
+              ))}
             </View>
           ))}
         </View>

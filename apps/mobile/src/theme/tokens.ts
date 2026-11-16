@@ -376,9 +376,10 @@ export const sizes = {
   tabPillWidth: 52, // active tab highlight behind the icon (Main)
   tabPillHeight: 30,
   tabIconLabelGap: 3,
-  momentTile: 116, // Today grid tile height (2 columns)
   momentTileFade: 64, // bottom fade on a moment tile
-  tileIconWell: 40, // slot icon square on empty and Now tiles
+  tileIconWell: 40, // slot icon square on the first-moment tip
+  momentTileIconWell: 48, // slot icon square on empty and Now tiles (3:4 grid)
+  momentTileIcon: 30, // the slot icon inside it
   tilePlus: 28, // + circle on empty tiles
   uploadRing: 34, // progress ring on an uploading tile
   tileBorder: 1.5, // dashed border on empty tiles
@@ -393,6 +394,7 @@ export const sizes = {
   retryPill: 26, // Retry pill on a failed tile (hitSlop brings it to 44)
   jarCardGraphic: 52,
   headerTop: 26, // space above the screen title block (Main)
+  todayMetaGap: 10, // Today: the date and greeting line to the title row
   dayCell: 46, // My days calendar cell height (Calendar); grows with large text
   dayGap: 5, // gap between calendar cells and weekday columns (Calendar)
   fillBar: 3, // fill bar height in a calendar cell
@@ -593,8 +595,23 @@ export const stickerTool = {
     trentahin: '#fbeccd',
     pride: '#f6dcd9',
     cyclists: '#e6f1d3',
+    hashtags: '#fbeccd',
   } as Record<string, string>,
   packTintDefault: '#f0f2ec',
+  // The sticker pack tile ending Today's grid: the pack's tint inside a white die-cut edge, tilted a little,
+  // with its top-right corner folded over to show the white backing.
+  packTile: {
+    edge: 4,
+    fold: 24,
+    foldRadius: 6,
+    tilt: -1.5,
+    // A pack with no tint of its own: the shop's grey default is too close to the page for a card.
+    tint: '#e6f1d3',
+    foldLight: '#ffffff',
+    foldMid: '#f2f3ef',
+    foldDark: '#d6d9cf',
+    foldShadow: 'rgba(17,20,13,0.14)',
+  },
   // "New: Christmas pack · ₱49 · Shop" above the grid (FR-STK-06): ink text, "Shop" in brown (8:1 on it).
   shopBanner: '#fbeccd',
   shopBannerLink: '#6b4b10',

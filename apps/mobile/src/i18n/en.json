@@ -23,7 +23,7 @@
   },
   "today": {
     "title": "Today",
-    "subtitle": "{{date}} · {{greeting}}",
+    "subtitle": "{{date}} · <bold>{{greeting}}</bold>",
     "greeting": {
       "morning": "Good morning, {{name}}",
       "afternoon": "Good afternoon, {{name}}",
@@ -46,6 +46,11 @@
     "firstJarTitle": "Your first jar",
     "firstJarBody": "Eight moments fill it up. Start with whatever’s in front of you right now.",
     "grid": "Today’s moments",
+    "packTile": {
+      "seePack": "See pack",
+      "label": "{{name}} sticker pack",
+      "hint": "Opens the pack in the sticker shop"
+    },
     "offline": {
       "title": "You’re offline.",
       "body_one": "{{count}} moment is saved on your phone and will upload when you’re back.",
@@ -106,7 +111,7 @@
     "gotIt": "Got it",
     "gotItHint": "Hides this message",
     "tag": "{{zone}} time",
-    "subtitle": "{{date}} · {{tag}}"
+    "subtitle": "{{date}} · <bold>{{tag}}</bold>"
   },
   "capture": {
     "title": "Capture"

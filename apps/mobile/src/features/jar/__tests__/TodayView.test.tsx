@@ -279,6 +279,53 @@ describe('TodayView', () => {
   });
 });
 
+describe('TodayView: three 3:4 tiles to a row, with the sticker pack tile ninth', () => {
+  const featuredPack = {
+    slug: 'olivia',
+    name: 'Olivia',
+    stickers: [{ asset: 'stickers/olivia/unimpressed.png', label: 'Unimpressed' }],
+  };
+
+  function rowsOfTiles(label = 'Today’s moments') {
+    // Each grid row holds its tiles; read them back as testIDs (spacer cells have none).
+    const grid = screen.getByLabelText(label);
+    const cell = /^(tile-(whereami|mebusywith|whoamiwith|ootd|selfie|morning|afternoon|evening)|today-pack-tile)$/;
+    return grid.children.map((row) =>
+      within(row as never)
+        .queryAllByTestId(cell)
+        .map((tile) => tile.props.testID),
+    );
+  }
+
+  it('Today: the pack tile ends the third row and opens its pack', async () => {
+    const onOpenPack = jest.fn();
+    await renderToday({ hasAnyJar: true, featuredPack, onOpenPack });
+    expect(rowsOfTiles()).toEqual([
+      ['tile-whereami', 'tile-mebusywith', 'tile-whoamiwith'],
+      ['tile-ootd', 'tile-selfie', 'tile-morning'],
+      ['tile-afternoon', 'tile-evening', 'today-pack-tile'],
+    ]);
+    const packTile = screen.getByRole('button', { name: 'Olivia sticker pack' });
+    expect(packTile.props.accessibilityHint).toBe('Opens the pack in the sticker shop');
+    expect(screen.getByText('See pack')).toBeTruthy();
+    await fireEvent.press(packTile);
+    expect(onOpenPack).toHaveBeenCalledWith('olivia');
+  });
+
+  it('a past day never shows it, and without a pack the last row keeps two tiles', async () => {
+    await renderToday({
+      hasAnyJar: true,
+      featuredPack,
+      onOpenPack: jest.fn(),
+      day: { date: '2026-11-08', onBack: jest.fn() },
+    });
+    expect(screen.queryByTestId('today-pack-tile')).toBeNull();
+    expect(rowsOfTiles('This day’s moments')[2]).toEqual(['tile-afternoon', 'tile-evening']);
+    await renderToday({ hasAnyJar: true, featuredPack: null, onOpenPack: jest.fn() });
+    expect(screen.queryByTestId('today-pack-tile')).toBeNull();
+  });
+});
+
 describe('TodayView: tiles open the moment preview (QA item 3, D-54)', () => {
   const queued = (id: number, slot: ServerMoment['slot'], state: 'queued' | 'uploading' | 'failed' | 'uploaded') => ({
     id,

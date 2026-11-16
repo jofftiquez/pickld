@@ -44,12 +44,12 @@ describe('PhotoTile', () => {
   });
 
   it('draws the dark bottom fade at the token height and honors a fixed height', async () => {
-    await render(<PhotoTile uri={URI} height={sizes.momentTile} testID="tile" />);
+    await render(<PhotoTile uri={URI} height={116} testID="tile" />);
     const fade = screen.getByTestId('photo-tile-fade', hidden);
     expect(fade.props.colors).toEqual([processColor(colors.photoFadeClear), processColor(colors.photoFade)]);
     expect(flatStyle(fade)).toMatchObject({ height: sizes.momentTileFade, bottom: 0 });
     const style = flatStyle(screen.getByTestId('tile'));
-    expect(style.minHeight).toBe(sizes.momentTile);
+    expect(style.minHeight).toBe(116);
     expect(style.aspectRatio).toBeUndefined();
   });
 
@@ -88,7 +88,7 @@ describe('MomentTile', () => {
     expect(screen.queryByTestId('tile-lock', hidden)).toBeNull();
     expect(screen.queryByText('Added later')).toBeNull();
     expect(overlayColor()).toBeUndefined();
-    expect(flatStyle(tile)).toMatchObject({ minHeight: sizes.momentTile, borderRadius: radius.tile });
+    expect(flatStyle(tile)).toMatchObject({ aspectRatio: photo.aspect, borderRadius: radius.tile });
     await fireEvent.press(tile);
     expect(onPress).toHaveBeenCalledTimes(1);
   });
@@ -133,7 +133,7 @@ describe('MomentTile', () => {
       borderColor: colors.dashed,
       borderWidth: sizes.tileBorder,
       backgroundColor: colors.surface,
-      minHeight: sizes.momentTile,
+      aspectRatio: photo.aspect,
     });
     expect(screen.getByTestId('icon-whoamiwith', hidden)).toBeTruthy();
     expect(screen.getByTestId('tile-plus', hidden)).toBeTruthy();

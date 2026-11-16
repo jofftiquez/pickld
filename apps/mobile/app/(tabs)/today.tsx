@@ -8,6 +8,7 @@ import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt'
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
+import { useFeaturedPack } from '@/features/stickers/featuredPack';
 import { retryUpload } from '@/features/jar/retryUpload';
 import { openTodayJar, useRollover } from '@/features/jar/rollover';
 import { buildTodayGrid, holdsSlot, offlineBannerCount } from '@/features/jar/todayGrid';
@@ -50,6 +51,7 @@ export default function TodayScreen() {
   const tz = phoneTimeZone();
   // Offline the persisted cache answers; a cached jar whose day has ended shows as the new, empty day.
   const jar = openTodayJar(jarData, now);
+  const featuredPack = useFeaturedPack(jar?.jar?.localDate ?? localDate);
   const offline = useIsOffline();
   const zone = useTimeZoneBanner({ userId, jar: jar?.jar ?? null, previousTz: jar?.previousTz });
   const { t } = useTranslation();
@@ -168,6 +170,8 @@ export default function TodayScreen() {
         }}
         poppingSlots={poppingSlots}
         celebratePublish={celebratePublish}
+        featuredPack={featuredPack}
+        onOpenPack={(slug) => router.push({ pathname: '/stickers/pack/[slug]', params: { slug } })}
       />
       {published && openJar ? (
         <JarVisibilitySheet
