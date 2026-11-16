@@ -89,10 +89,12 @@
     "nav": {
       "label": "Main",
       "home": "Pickld home",
+      "why": "Why Pickld",
       "stickers": "Stickers",
       "story": "Our story",
       "faq": "FAQ",
-      "join": "Join the waitlist"
+      "join": "Join the waitlist",
+      "mission": "Our mission"
     },
     "hero": {
       "eyebrow": "Coming soon to iPhone",
@@ -340,5 +342,161 @@
     "videoFrame": "You Deserve to Be You!, the first Pickld video, on YouTube",
     "finalTitle": "You deserve to be you.",
     "finalBody": "That was true ten years ago, and it’s still why we make Pickld. Join the waitlist to be among the first to fill a jar."
+  },
+  "why": {
+    "metaTitle": "Why Pickld · Pickld",
+    "metaDescription": "More than ten years ago, Pickld started as a simple way to keep your days and be yourself. It still shows the people you choose, newest first, and likes never decide what you see.",
+    "eyebrow": "Why Pickld",
+    "title1": "Your people.",
+    "title2": "In order.",
+    "lead": "We started Pickld more than ten years ago as a simple way to keep the moments of your day and be yourself while doing it. Since then, most social apps have learned to decide what you see by what keeps you scrolling. Pickld didn’t. You see the people you choose, newest first, and you meet new people through the ones you already know.",
+    "promise": "“Your feed is for the people you choose. Discover is for the people you haven’t met yet.”",
+    "promiseBy": "The Pickld promise",
+    "harmTitle": "What engagement algorithms do to us",
+    "harmBody": "Most feeds are ranked to keep you hooked. You pay with your time, your attention and sometimes what you believe. This is what the evidence shows.",
+    "harm": {
+      "design": {
+        "title": "Built to keep you scrolling",
+        "body": "Platforms are often designed to maximize engagement, with infinite scroll, like counts and algorithms that use your data to choose what you see.",
+        "source": "U.S. Surgeon General, 2023"
+      },
+      "beliefs": {
+        "title": "They can change what you believe",
+        "body": "Seven weeks on X’s algorithmic feed shifted users’ political opinions and the accounts they followed. Switching the algorithm off afterwards didn’t undo it.",
+        "source": "Nature, 2026"
+      },
+      "voices": {
+        "title": "They choose whose voice is heard",
+        "body": "The same study found X’s algorithm promoted conservative political content and pushed down posts from traditional news media.",
+        "source": "Nature, 2026"
+      },
+      "time": {
+        "title": "They take your time",
+        "body": "When people were moved off Facebook’s and Instagram’s ranking algorithms onto a newest-first feed, the time they spent on the apps dropped substantially.",
+        "source": "Science, 2023"
+      },
+      "kids": {
+        "title": "Kids pay the most",
+        "body": "Up to 95% of teens use social media, and more than a third say they’re on it almost constantly. Teens on it more than 3 hours a day faced double the risk of depression and anxiety symptoms.",
+        "source": "U.S. Surgeon General, 2023"
+      },
+      "law": {
+        "title": "Lawmakers are stepping in",
+        "body": "The EU now requires the largest platforms to explain their recommendation systems and to offer at least one feed that isn’t based on profiling you.",
+        "source": "EU Digital Services Act, Articles 27 and 38"
+      }
+    },
+    "harmChoice": "Pickld chose differently.",
+    "howTitle": "How Pickld decides what you see",
+    "howBody": "Every list follows a rule you can read. None of them uses likes, comments or reader counts.",
+    "how": {
+      "moments": {
+        "title": "Moments",
+        "body": "Every moment from the people you read, newest first, by when it went up."
+      },
+      "jars": {
+        "title": "Jars",
+        "body": "Your people’s days, one jar each. A jar moves to the top when someone adds a moment to it. Nothing else moves it."
+      },
+      "discover": {
+        "title": "Discover",
+        "body": "Public posts from people you don’t read yet. People your authors read come first, each marked “Read by @name”. Then everyone else who posts publicly, newest first."
+      }
+    },
+    "notTitle": "What Pickld doesn’t do",
+    "not": {
+      "likes": "Likes never move a post up, and nobody is ranked by how popular they are.",
+      "strangers": "Nobody you didn’t choose is slipped into your Moments or Jars.",
+      "filters": "No beauty or face-retouch filters. Color filters only.",
+      "private": "Private moments stay with you: never in feeds, shared links or notifications.",
+      "analytics": "No photos or captions go into our analytics.",
+      "claim": "We don’t claim to be “algorithm-free”. Search, spam checks and safety reviews use algorithms. What we refuse is ranking your social life by engagement."
+    },
+    "controlTitle": "You decide",
+    "control": {
+      "read": "Read or stop reading anyone, any time.",
+      "mute": "Mute someone you read. You stay their reader, their posts leave your timelines, and they aren’t told.",
+      "block": "Block anyone. Neither of you sees the other.",
+      "discover": "Turn off Show me in Discover to stay out of Discover and suggestions.",
+      "teens": "Under 18, your posts stay out of Discover and suggestions."
+    },
+    "researchTitle": "Sources",
+    "researchBody": "Every claim on this page comes from these. They don’t prove Pickld is better for you, and we don’t claim they do.",
+    "research": {
+      "nature": {
+        "title": "The political effects of X’s feed algorithm",
+        "source": "Nature, 2026 · Gauthier, Hodler, Widmer and Zhuravskaya",
+        "summary": "In a seven-week field experiment with US users of X in 2023, switching from a chronological to an algorithmic feed increased engagement and shifted some political opinions.",
+        "limit": "Switching from algorithmic back to chronological had no comparable effect. One platform, one period."
+      },
+      "science": {
+        "title": "How do social media feed algorithms affect attitudes and behavior in an election campaign?",
+        "source": "Science, 2023 · Guess, Malhotra, Pan, Barberá and colleagues",
+        "summary": "During the 2020 US election, people moved to reverse-chronological Facebook and Instagram feeds spent less time on the platforms and saw different content.",
+        "limit": "The chronological feed did not significantly change the polarization or political attitudes the study measured."
+      },
+      "surgeon": {
+        "title": "Social Media and Youth Mental Health",
+        "source": "U.S. Surgeon General’s Advisory, 2023",
+        "summary": "Finds that platforms are often designed to maximize engagement, including with recommendation algorithms, and that heavy use is linked to a higher risk of poor mental health in teens.",
+        "limit": "The advisory says more research is needed, and that social media can also benefit some young people."
+      },
+      "dsa": {
+        "title": "Digital Services Act, Articles 27 and 38",
+        "source": "Regulation (EU) 2022/2065, 2022",
+        "summary": "Platforms must explain the main parameters of their recommender systems. The largest must offer at least one option not based on profiling.",
+        "limit": "It’s a law, not a study, and Pickld is not one of the very large platforms it targets."
+      }
+    },
+    "readStudy": "Read the source",
+    "readStudyLabel": "Read “{{title}}”",
+    "missionLink": "Read our mission",
+    "finalTitle": "Keep up with your people.",
+    "finalBody": "More than ten years on, it’s still a simple way to keep your days and be yourself. Pickld is coming to iPhone; join the waitlist to be among the first to fill a jar."
+  },
+  "mission": {
+    "metaTitle": "Our mission · Pickld",
+    "metaDescription": "More than ten years ago, we wanted a simple way to keep our moments and be ourselves. That’s still Pickld’s mission, and these are the rules it holds itself to.",
+    "eyebrow": "Our mission",
+    "title1": "Help people keep up",
+    "title2": "with each other.",
+    "lead": "More than ten years ago, we wanted one simple thing: a way to keep the moments of a day and be ourselves at the same time. That was the first Pickld, and it’s still the mission. Social media should help people connect, not compete for their attention.",
+    "quote": "“The easiest way to tell your story.”",
+    "quoteBy": "The first Pickld’s line, more than ten years ago",
+    "originTitle": "Where it started",
+    "originBody": "The first Pickld was eight moments that make one real day: where you were, who you were with, how the day began and how it ended. Your days as they really were, not as they were supposed to look, and you in them. Pickld is back with the same idea at its heart.",
+    "storyLink": "Read our story",
+    "principlesTitle": "What we hold ourselves to",
+    "principles": {
+      "people": {
+        "title": "People over engagement",
+        "body": "Feeds built to maximize engagement hold people’s time and can even shift what they believe. More time in the app isn’t our goal. A good day on Pickld is a jar of your day and a look at your friends’ days."
+      },
+      "choice": {
+        "title": "Your choice, not our guess",
+        "body": "Who you read decides what you see. We don’t predict what will keep you hooked."
+      },
+      "open": {
+        "title": "Rules you can read",
+        "body": "Every list follows a plain rule, explained in the app and on this site. When we change one, we’ll say so."
+      },
+      "calm": {
+        "title": "Calm by default",
+        "body": "No streaks, no countdowns, no guilt. The only reminders are the ones you set."
+      },
+      "safe": {
+        "title": "Safety, not attention",
+        "body": "Moderation removes what breaks our community guidelines. It never boosts or buries posts to win attention."
+      },
+      "private": {
+        "title": "Private by design",
+        "body": "Private moments never leave you. Location stays out of your photos, and photos and captions stay out of our analytics."
+      }
+    },
+    "promiseTitle": "Our promise",
+    "promise": "Follow who matters. See what they share. Discover who connects you.",
+    "whyLink": "How Pickld works",
+    "finalTitle": "Fill a jar with your day.",
+    "finalBody": "Pickld is coming to iPhone. Join the waitlist to be among the first to try it."
   }
 }

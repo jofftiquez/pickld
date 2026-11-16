@@ -115,6 +115,7 @@ export const css = `
 @media (min-width:720px){
   .mk-chips{grid-template-columns:repeat(4,minmax(0,1fr))}
   .mk-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mk-cards.mk-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mk-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
   .mk-olivia{grid-template-columns:repeat(8,minmax(0,1fr))}
   .mk-foot .mk-wrap{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center}

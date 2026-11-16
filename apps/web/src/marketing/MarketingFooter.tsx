@@ -11,6 +11,12 @@ export function MarketingFooter() {
         <Logo height={20} />
         <ul aria-label={t('marketing.nav.label')}>
           <li>
+            <Link href="/why">{t('marketing.nav.why')}</Link>
+          </li>
+          <li>
+            <Link href="/mission">{t('marketing.nav.mission')}</Link>
+          </li>
+          <li>
             <Link href="/stickers">{t('marketing.nav.stickers')}</Link>
           </li>
           <li>

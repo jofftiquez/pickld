@@ -658,6 +658,46 @@ test('Our story is linked from the home page and tells the four steps, with the 
   await page.close();
 });
 
+test('Why Pickld and Our mission are linked from every marketing page, cite their studies and link to each other', async () => {
+  const { page } = await open('/');
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Why Pickld' }).click();
+  await page.waitForURL(`${base}/why`);
+  assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' '), 'Your people. In order.');
+  assert.deepEqual(
+    await page.getByRole('region', { name: 'How Pickld decides what you see' }).locator('.mk-pill').allTextContents(),
+    ['Moments', 'Jars', 'Discover'],
+  );
+  const studies = await page.getByRole('link', { name: /^Read “/ }).evaluateAll((as) => as.map((a) => a.href));
+  assert.deepEqual(studies, [
+    'https://doi.org/10.1038/s41586-026-10098-2',
+    'https://doi.org/10.1126/science.abp9364',
+    'https://www.hhs.gov/surgeongeneral/reports-and-publications/youth-mental-health/social-media/index.html',
+    'https://eur-lex.europa.eu/eli/reg/2022/2065/oj',
+  ]);
+  // Every harm names its source, and each source is listed under Sources.
+  const harms = page.getByRole('region', { name: 'What engagement algorithms do to us' });
+  assert.equal(await harms.locator('h3').count(), 6);
+  assert.equal(await harms.locator('a[href="#research"]').count(), 6);
+  // Honest copy: never "algorithm-free" as a claim, only as the thing we say we aren't.
+  const text = await page.locator('main').innerText();
+  // Both pages start from the first Pickld, more than ten years ago.
+  assert.match(text, /more than ten years ago/);
+  assert.match(text, /We don’t claim to be “algorithm-free”/);
+  assert.equal(await page.getByRole('button', { name: 'Join the waitlist' }).count(), 1);
+  assert.ok(await noSideScroll(page));
+
+  await page.getByRole('link', { name: 'Read our mission →' }).click();
+  await page.waitForURL(`${base}/mission`);
+  assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' '), 'Help people keep up with each other.');
+  assert.equal(await page.getByRole('region', { name: 'What we hold ourselves to' }).locator('h3').count(), 6);
+  assert.match(await page.locator('main').innerText(), /More than ten years ago, we wanted one simple thing/);
+  assert.equal(await page.getByRole('link', { name: 'Read our story →' }).getAttribute('href'), '/story');
+  assert.ok(await noSideScroll(page));
+  await page.getByRole('link', { name: 'How Pickld works →' }).click();
+  await page.waitForURL(`${base}/why`);
+  await page.close();
+});
+
 // ---------------------------------------------------------------- link previews (M4-14, FR-WEB-02)
 
 async function meta(route) {
@@ -847,6 +887,8 @@ test('the AASA file lets the app open profile, jar and sign-in links but not leg
     '/',
     '/stickers',
     '/story',
+    '/why',
+    '/mission',
     '/waitlist',
     '/waitlist/*',
     '/.well-known/*',
