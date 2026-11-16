@@ -86,6 +86,7 @@ design/
 13. **Copy** lives in translation files (`src/i18n/en.json`), never inline.
 14. **The repo is public.** Never commit docs (plans, decisions, milestone reports, backlogs, cost reviews; only `docs/runbooks/` is tracked) or anything with pricing, costs, revenue, business model, company, partner or personal details, or internal URLs and IPs. Keep such notes in git-ignored local files.
 15. **No engagement ranking.** Feeds, Discover and suggestions never sort by likes, comments, reader counts or predicted engagement (see Product principles). Search may rank by match quality.
+16. **Never wipe the shared local database.** It holds real moments that will be exported to production. No `supabase db reset` (`pnpm db:reset`), no wipe, no destructive migration (drop, truncate or rewrite of existing data), and no deleting real users' rows. Remove only test data you created yourself and can identify exactly. Apply new migrations additively, after checking they don't drop or rewrite existing data. Run pgTAP files inside a transaction that rolls back.
 
 ## Conventions
 
