@@ -10,11 +10,10 @@ import { colors } from '@/theme/tokens';
 
 // The tab bars' red dots (FR-EXP-04, D-157) as the tab layout draws them; when each dot shows is in
 // features/feed/__tests__/useTabUnread.test.tsx.
-const mockUnread = { moments: false, jars: false, discover: false };
+const mockUnread = { moments: false, jars: false };
 jest.mock('@/features/feed/useTabUnread', () => ({
   useMomentsUnread: () => mockUnread.moments,
   useJarsUnread: () => mockUnread.jars,
-  useDiscoverUnread: () => mockUnread.discover,
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -45,7 +44,7 @@ function nativeTabs(node: unknown): Record<string, unknown>[] {
   );
 }
 
-beforeEach(() => Object.assign(mockUnread, { moments: false, jars: false, discover: false }));
+beforeEach(() => Object.assign(mockUnread, { moments: false, jars: false }));
 
 describe('tab dots in the system tab bar (iOS 26)', () => {
   beforeEach(() => {
@@ -83,29 +82,20 @@ describe('tab dots in the system tab bar (iOS 26)', () => {
       { title: 'Discover', label: 'Discover', badge: undefined, color: colors.unreadDot },
     ]);
   });
-
-  it('Discover gets the same red dot and its own label; no dots, plain names', async () => {
-    Object.assign(mockUnread, { discover: true });
-    expect((await tabs()).map(({ label, badge }) => [label, badge])).toEqual([
-      ['Today', undefined],
-      ['Moments', undefined],
-      ['Jars', undefined],
-      ['Discover, new posts', dot],
-    ]);
-  });
 });
 
 describe('tab dots in the floating tab bar', () => {
   it('shows a dot on each unread tab, read after its name', async () => {
-    Object.assign(mockUnread, { moments: true, discover: true });
+    Object.assign(mockUnread, { moments: true, jars: true });
     await renderRouter(routes, { initialUrl: '/today', wrapper });
     expect(await screen.findByTestId('floating-tab-bar')).toBeTruthy();
     expect(screen.queryAllByTestId(/^tab-.*-dot$/).map((dot) => dot.props.testID)).toEqual([
       'tab-moments-dot',
-      'tab-discover-dot',
+      'tab-jars-dot',
     ]);
     expect(screen.getByRole('tab', { name: 'Moments' }).props.accessibilityValue).toEqual({ text: 'new moments' });
-    expect(screen.getByRole('tab', { name: 'Jars' }).props.accessibilityValue?.text).toBeUndefined();
-    expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue).toEqual({ text: 'new posts' });
+    expect(screen.getByRole('tab', { name: 'Jars' }).props.accessibilityValue).toEqual({ text: 'new jars' });
+    // Discover never has a dot (0150).
+    expect(screen.getByRole('tab', { name: 'Discover' }).props.accessibilityValue?.text).toBeUndefined();
   });
 });

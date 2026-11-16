@@ -79,15 +79,38 @@ export type DiscoverViewProps = {
   onOpenJar: (jarId: string) => void;
 };
 
-type Item = { kind: 'moment'; moment: FeedMoment } | { kind: 'jar'; jar: FeedJar };
+type Section = 'network' | 'beyond';
+type Item =
+  { kind: 'moment'; moment: FeedMoment } | { kind: 'jar'; jar: FeedJar } | { kind: 'heading'; section: Section };
 
 /** Moment cards draw a large photo worth loading ahead (NFR-PERF-02); jar cards draw small thumbnails. */
 const itemPhoto = (item: Item) => (item.kind === 'moment' ? cardPhotoUrl(item.moment) : null);
 
+/** The rows with a heading where each part starts: the viewer's network first, then everyone else (0150). */
+export function withSections<T extends { in_network?: boolean }>(rows: T[], wrap: (row: T) => Item): Item[] {
+  const items: Item[] = [];
+  let section: Section | null = null;
+  for (const row of rows) {
+    const next: Section = row.in_network ? 'network' : 'beyond';
+    if (next !== section) items.push({ kind: 'heading', section: next });
+    section = next;
+    items.push(wrap(row));
+  }
+  return items;
+}
+
+const itemKey = (item: Item) =>
+  item.kind === 'moment'
+    ? `m:${item.moment.moment_id}`
+    : item.kind === 'jar'
+      ? `j:${item.jar.jar_id}`
+      : `h:${item.section}`;
+
 /**
  * Discover (D-100, FR-EXP-01 to FR-EXP-03): search people by name or @username and Suggested authors, then a
- * Moments | Jars switch listing Everyone moments and jars of people the viewer doesn't read yet, newest first,
- * with infinite scroll and pull to refresh (D-102). While there's text to search, the results replace the rest.
+ * Moments | Jars switch listing Everyone moments and jars of people the viewer doesn't read yet: people their
+ * authors read first ("Read by @name"), then Beyond your network, each newest first (0150), with infinite scroll
+ * and pull to refresh (D-102). While there's text to search, the results replace the rest.
  */
 export function DiscoverView({
   data,
@@ -132,8 +155,8 @@ export function DiscoverView({
   const items: Item[] = showingSearch
     ? []
     : tab === 'moments'
-      ? (moments ?? []).map((moment) => ({ kind: 'moment', moment }))
-      : (jars ?? []).map((jar) => ({ kind: 'jar', jar }));
+      ? withSections(moments ?? [], (moment) => ({ kind: 'moment', moment }))
+      : withSections(jars ?? [], (jar) => ({ kind: 'jar', jar }));
   const onViewableItemsChanged = usePhotoPrefetch(items, itemPhoto);
   const { listRef, onScroll, scrollEventThrottle, showBackToTop, backToTop } = useBackToTop<Item>(onBackToTop);
   const bottomPadding = Math.max(insets.bottom, space.lg) + tabBarClearance;
@@ -245,10 +268,23 @@ export function DiscoverView({
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
         data={items}
         onViewableItemsChanged={onViewableItemsChanged}
-        keyExtractor={(item) => (item.kind === 'moment' ? `m:${item.moment.moment_id}` : `j:${item.jar.jar_id}`)}
+        keyExtractor={itemKey}
         renderItem={({ item }) => (
           <View style={styles.cardWrap}>
-            {item.kind === 'moment' ? (
+            {item.kind === 'heading' ? (
+              <View style={styles.sectionHead} testID={`discover-${item.section}`}>
+                <Text accessibilityRole="header" style={[textStyle('sectionTitle'), styles.sectionTitle]}>
+                  {t(`explore.${item.section}`)}
+                </Text>
+                <Text style={[textStyle('bodySmall'), styles.muted]}>{t(`explore.${item.section}Body`)}</Text>
+              </View>
+            ) : null}
+            {item.kind !== 'heading' && (item.kind === 'moment' ? item.moment : item.jar).via_username ? (
+              <Text style={[textStyle('bodySmall', '600'), styles.readBy]} testID="discover-read-by">
+                {t('explore.readBy', { username: (item.kind === 'moment' ? item.moment : item.jar).via_username })}
+              </Text>
+            ) : null}
+            {item.kind === 'heading' ? null : item.kind === 'moment' ? (
               <MomentFeedCard
                 moment={item.moment}
                 photoWidth={photoWidth}
@@ -482,6 +518,10 @@ const styles = StyleSheet.create({
   cardButton: { alignItems: 'center' },
   tabs: { paddingHorizontal: space.xl, marginTop: space.xl, marginBottom: space.md },
   cardWrap: { paddingHorizontal: space.xl },
+  sectionHead: { gap: space.xs, paddingTop: space.sm },
+  sectionTitle: { color: colors.ink },
+  muted: { color: colors.muted },
+  readBy: { color: colors.muted, marginBottom: space.sm },
   separator: { height: space.md },
   loading: { marginTop: space.xxl },
   message: { alignItems: 'center', gap: space.md, paddingTop: space.xl, paddingHorizontal: space.xl },

@@ -19,15 +19,15 @@ grant select on t to authenticated, anon, service_role;
 create function pg_temp.id(p_k text) returns uuid language sql stable as $$ select id from t where k = p_k $$;
 
 -- ---------------------------------------------------------------- schema
-select has_function('public', 'discover_moments_page', array['timestamp with time zone', 'uuid'], 'discover_moments_page exists');
-select has_function('public', 'discover_jars_page', array['timestamp with time zone', 'uuid'], 'discover_jars_page exists');
-select ok(not has_function_privilege('anon', 'public.discover_moments_page(timestamptz, uuid)', 'execute'),
+select has_function('public', 'discover_moments_page', array['timestamp with time zone', 'uuid', 'boolean'], 'discover_moments_page exists');
+select has_function('public', 'discover_jars_page', array['timestamp with time zone', 'uuid', 'boolean'], 'discover_jars_page exists');
+select ok(not has_function_privilege('anon', 'public.discover_moments_page(timestamptz, uuid, boolean)', 'execute'),
           'anon cannot call discover_moments_page');
-select ok(not has_function_privilege('anon', 'public.discover_jars_page(timestamptz, uuid)', 'execute'),
+select ok(not has_function_privilege('anon', 'public.discover_jars_page(timestamptz, uuid, boolean)', 'execute'),
           'anon cannot call discover_jars_page');
-select ok(has_function_privilege('authenticated', 'public.discover_moments_page(timestamptz, uuid)', 'execute'),
+select ok(has_function_privilege('authenticated', 'public.discover_moments_page(timestamptz, uuid, boolean)', 'execute'),
           'signed-in users can call discover_moments_page');
-select ok(has_function_privilege('authenticated', 'public.discover_jars_page(timestamptz, uuid)', 'execute'),
+select ok(has_function_privilege('authenticated', 'public.discover_jars_page(timestamptz, uuid, boolean)', 'execute'),
           'signed-in users can call discover_jars_page');
 select has_index('public', 'moments', 'moments_everyone_live_added_idx', 'Discover moments have their index');
 select has_index('public', 'jars', 'jars_everyone_published_idx', 'Discover jars have their index');

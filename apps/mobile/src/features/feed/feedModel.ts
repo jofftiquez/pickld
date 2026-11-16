@@ -28,6 +28,9 @@ export const feedRow = z.object({
   cover_moment_id: z.string().nullish(),
   /** A moment this viewer sees went in after the jar's day ended (0144); absent in caches from before it. */
   added_later: z.boolean().optional(),
+  /** Discover only (0150): the author is read by one of the viewer's authors, `via_username` (first by username). */
+  in_network: z.boolean().optional(),
+  via_username: z.string().nullish(),
 });
 export type FeedRow = z.infer<typeof feedRow>;
 
@@ -47,7 +50,8 @@ export type FeedAuthor = z.infer<typeof feedAuthorRow>;
 export type FeedJar = FeedRow & { previewUrls: (string | null)[]; previewRenders?: Record<string, MomentRenderRow> };
 
 export type FeedPage = { jars: FeedJar[]; nextCursor: FeedCursor | null };
-export type FeedCursor = { at: string; id: string };
+/** `network`: Discover's last row was in the viewer's network (0150); the server pages the network first. */
+export type FeedCursor = { at: string; id: string; network?: boolean };
 
 /** Above every id, so an anchored first page keeps the rows at exactly `from`. */
 const LAST_ID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
@@ -63,7 +67,8 @@ export function anchorCursor(from: string): FeedCursor {
 /** The next page starts after the last row; a short page is the end of the feed. */
 export function nextCursor(rows: FeedRow[]): FeedCursor | null {
   const last = rows[rows.length - 1];
-  return rows.length < FEED_PAGE_SIZE || last === undefined ? null : { at: last.feed_at, id: last.jar_id };
+  if (rows.length < FEED_PAGE_SIZE || last === undefined) return null;
+  return { at: last.feed_at, id: last.jar_id, ...(last.in_network === undefined ? {} : { network: last.in_network }) };
 }
 
 /** `render`: the moment's edits row (D-96); null draws the plain thumbnail. */

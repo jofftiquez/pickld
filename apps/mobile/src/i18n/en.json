@@ -17,9 +17,7 @@
     "momentsNew": "new moments",
     "momentsUnread": "Moments, new moments",
     "jarsNew": "new jars",
-    "jarsUnread": "Jars, new jars",
-    "discoverNew": "new posts",
-    "discoverUnread": "Discover, new posts"
+    "jarsUnread": "Jars, new jars"
   },
   "today": {
     "title": "Today",
@@ -1678,6 +1676,9 @@
     "privacy": "Privacy",
     "defaultVisibility": "Default visibility",
     "defaultVisibilityHint": "Who sees a new jar unless you choose otherwise",
+    "discoverable": "Show me in Discover",
+    "discoverableBody": "People outside your readers can find your public posts in Discover and see you in suggestions",
+    "discoverableMinor": "Under 18, your posts stay out of Discover and suggestions",
     "visibilityTitle": "Default visibility",
     "visibilityBody": "New jars start with this. You can change it on each jar.",
     "visibility": {
@@ -1831,7 +1832,12 @@
     "listLoading": "Loading Discover",
     "listFailed": "Discover didn’t load. Check your connection and try again.",
     "emptyTitle": "Nothing to discover yet",
-    "emptyBody": "Public moments and jars from people you don’t read yet show up here."
+    "emptyBody": "Public moments and jars from people you don’t read yet show up here.",
+    "readBy": "Read by @{{username}}",
+    "network": "From your network",
+    "networkBody": "People your authors read, newest first.",
+    "beyond": "Beyond your network",
+    "beyondBody": "Everyone else who posts publicly, newest first."
   },
   "widgets": {
     "todayName": "Today’s jar",

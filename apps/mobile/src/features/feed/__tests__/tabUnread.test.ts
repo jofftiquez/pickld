@@ -121,7 +121,6 @@ describe('tab unread dots (FR-EXP-04, D-157)', () => {
   });
 
   it('keeps one seen time per tab per user, and Discover’s key from before, so no dot comes back on upgrade', () => {
-    expect(seenKey('discover', me)).toBe('discoverSeen:user-me');
     expect(seenKey('moments', me)).toBe('unreadSeen:moments:user-me');
     expect(seenKey('jars', me)).toBe('unreadSeen:jars:user-me');
     expect(new Set([seenKey('moments', me), seenKey('jars', me), seenKey('moments', friend)]).size).toBe(3);
