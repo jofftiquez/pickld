@@ -55,6 +55,9 @@ export type ProfileViewProps = {
   onAddMoment?: () => void;
   /** Other profile only: Read / Read back starts reading, Reading stops (FR-SOC-07). */
   onToggleReading?: () => void;
+  /** Mute or unmute someone the viewer reads (0151). */
+  onToggleMute?: () => void;
+  muteBusy?: boolean;
   /** A follow request is in flight. */
   followBusy?: boolean;
   /** Opens Readers & authors on that list. */
@@ -116,6 +119,8 @@ export function ProfileView({
   invitesLeft,
   onAddMoment,
   onToggleReading,
+  onToggleMute,
+  muteBusy = false,
   followBusy = false,
   onOpenList,
   onShare,
@@ -241,6 +246,18 @@ export function ProfileView({
                   />
                 </View>
               ) : null}
+              {!isOwner && relationship.reading && onToggleMute ? (
+                <RoundIconButton
+                  icon={relationship.muted ? 'eye' : 'eyeOff'}
+                  accessibilityLabel={t(relationship.muted ? 'profile.unmute' : 'profile.mute', {
+                    name: profile.display_name,
+                  })}
+                  accessibilityHint={t(relationship.muted ? 'profile.unmuteHint' : 'profile.muteHint')}
+                  onPress={onToggleMute}
+                  disabled={muteBusy}
+                  testID="profile-mute"
+                />
+              ) : null}
               <RoundIconButton
                 icon="share"
                 accessibilityLabel={t('profile.share')}
@@ -274,6 +291,11 @@ export function ProfileView({
                 <Text style={[textStyle('bodySmall'), styles.handle]} testID="profile-username">
                   {t('profile.username', { username: profile.username })}
                 </Text>
+                {!isOwner && relationship.muted ? (
+                  <View style={styles.muted} testID="profile-muted">
+                    <Text style={[textStyle('caption'), { color: colors.muted }]}>{t('profile.muted')}</Text>
+                  </View>
+                ) : null}
                 {!isOwner && relationship.readsYou ? (
                   <View style={styles.readsYou} testID="profile-reads-you">
                     <Text style={[textStyle('caption'), { color: colors.brandText }]}>{t('profile.readsYou')}</Text>
@@ -510,6 +532,12 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: space.sm,
     backgroundColor: colors.brandTint,
+  },
+  muted: {
+    borderRadius: radius.pill,
+    paddingVertical: 3,
+    paddingHorizontal: space.sm,
+    backgroundColor: colors.subtle,
   },
   bio: { color: colors.inkSoft, lineHeight: 20 },
   // Wraps at large text, so "Jars" moves to a second line instead of running off the right edge.
