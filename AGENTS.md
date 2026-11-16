@@ -12,6 +12,18 @@ Source documents: the requirements (IDs like `FR-JAR-03`), architecture, product
 
 - **Offline design reference:** `design/index.html` (all Hi-fi A screens) and `design/screens/<Screen>.html` — static HTML exports. Open them in a browser and inspect layout, spacing and copy; translate to React Native with the component kit and `tokens.ts`, never by copying CSS directly. Photos in `design/images/` are placeholders.
 
+## Product principles: people first
+
+Pickld helps people keep up with each other instead of competing for their attention. That is a product rule, not a slogan; check every feed, notification and growth change against it.
+
+- **Your people, in order.** The Moments and Jars tabs show only authors you read, newest first by server time (`added_at`; a jar moves up when a moment is added). Likes, comments, reader counts and predicted interest never change that order, and nothing you didn't choose is mixed in.
+- **Discover goes through your network.** It lists public posts from people your authors read first ("Read by @name"), then a labeled "Beyond your network" section, newest first. No engagement or popularity scoring, no randomness, no behavioral profiling.
+- **We are not "algorithm-free".** Search relevance, spam and abuse detection, moderation and safety checks are fine. What we refuse is ranking people's social lives by engagement.
+- **People control what they see and where they appear.** Read, unread, mute and block are always one tap away; anyone can leave Discover and suggestions; accounts under 18 start on Readers and stay out of Discover.
+- **Calm by default.** No streaks, artificial urgency, guilt copy or notifications meant only to pull people back. Reminders are ones the user set.
+- **Honest copy.** The app and pickld.me describe only behavior that ships today. Never claim "no algorithm", "addiction-free" or endorsement by researchers or institutions.
+- **Changes to feed order, Discover, visibility defaults or notifications need the owner's approval.** Note the conflict instead of quietly shipping it.
+
 ## Stack
 
 | Layer | Choice |
@@ -73,6 +85,8 @@ design/
 12. **Brand:** primary buttons are `#7fad33` with white text (deliberate). All other text meets WCAG AA.
 13. **Copy** lives in translation files (`src/i18n/en.json`), never inline.
 14. **The repo is public.** Never commit docs (plans, decisions, milestone reports, backlogs, cost reviews; only `docs/runbooks/` is tracked) or anything with pricing, costs, revenue, business model, company, partner or personal details, or internal URLs and IPs. Keep such notes in git-ignored local files.
+15. **No engagement ranking.** Feeds, Discover and suggestions never sort by likes, comments, reader counts or predicted engagement (see Product principles). Search may rank by match quality.
+16. **Never wipe the shared local database.** It holds real moments that will be exported to production. No `supabase db reset` (`pnpm db:reset`), no wipe, no destructive migration (drop, truncate or rewrite of existing data), and no deleting real users' rows. Remove only test data you created yourself and can identify exactly. Apply new migrations additively, after checking they don't drop or rewrite existing data. Run pgTAP files inside a transaction that rolls back.
 
 ## Conventions
 
