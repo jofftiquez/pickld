@@ -76,7 +76,8 @@ export const css = `
 .mk-fan{position:relative;width:100%;height:clamp(250px,66vw,360px)}
 .mk-fan-card{position:absolute;left:50%;top:46%;width:clamp(140px,38vw,210px);aspect-ratio:3/4;border-radius:${radius.card}px;overflow:hidden;border:4px solid ${colors.surface};background:${colors.photoPlaceholder};box-shadow:0 18px 40px -18px ${colors.scrim};transform-origin:50% 135%}
 .mk .mk-fan-card img{width:100%;height:100%;object-fit:cover}
-.mk-fan-card span{position:absolute;left:12px;bottom:10px;color:${colors.surface};font-weight:800;font-size:15px;text-shadow:0 1px 6px ${colors.textShadow}}
+.mk-fan-card::after{content:'';position:absolute;inset:55% 0 0;background:linear-gradient(transparent,${colors.scrim})}
+.mk-fan-card span{z-index:1;position:absolute;left:12px;bottom:10px;color:${colors.surface};font-weight:800;font-size:15px;text-shadow:0 1px 6px ${colors.textShadow}}
 .mk-fan-0{z-index:3;transform:translate(-50%,-50%)}
 .mk-fan-1{z-index:2;transform:translate(-50%,-50%) rotate(-13deg)}
 .mk-fan-2{z-index:1;transform:translate(-50%,-50%) rotate(13deg)}
