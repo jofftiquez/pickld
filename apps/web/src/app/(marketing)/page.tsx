@@ -7,7 +7,8 @@ import { invite, slots } from '@/theme/tokens';
 import { t } from '~/i18n/t';
 import { Phone } from '~/marketing/Phone';
 import * as shot from '~/marketing/shots';
-import { momentStickers, pack, stickerLabel } from '~/marketing/stickers';
+import { momentPhotos } from '~/marketing/momentPhotos';
+import { pack, stickerLabel } from '~/marketing/stickers';
 import { WaitlistForm } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
@@ -24,7 +25,6 @@ export const metadata: Metadata = {
 };
 
 const olivia = pack('olivia').stickers;
-const examples = ['e1', 'e2', 'e3', 'e4', 'e5'] as const;
 const faqs = ['free', 'android', 'who', 'full', 'missed', 'age'] as const;
 
 /** pickld.me: what Pickld is, in real screenshots, with the waitlist (FR-WEB-01). */
@@ -58,40 +58,28 @@ export default function Home() {
             <h2 id="moments">{t('marketing.moments.title')}</h2>
             <p className="mk-lead">{t('marketing.moments.body')}</p>
           </div>
-          <ul className="mk-chips" aria-label={t('marketing.moments.label')}>
-            {slots.map((slot) => (
-              <li key={slot}>
-                <a className="mk-chip" href={`#${slot}`}>
-                  <b>#{slot}</b>
-                  <span>{t(`marketing.moments.${slot}.title`)}</span>
-                </a>
+          <ul className="mk-rows" aria-label={t('marketing.moments.label')}>
+            {slots.map((slot, i) => (
+              <li key={slot} className={`mk-row${i % 2 ? ' mk-row-flip' : ''}`}>
+                <div className="mk-fan" aria-hidden>
+                  {momentPhotos[slot].map((src, n) => (
+                    <div key={n} className={`mk-fan-card mk-fan-${n}`}>
+                      <Image src={src} alt="" sizes="(min-width: 900px) 220px, 40vw" placeholder="blur" />
+                      {n === 0 ? <span>#{slot}</span> : null}
+                    </div>
+                  ))}
+                </div>
+                <div className="mk-row-text">
+                  <b style={{ color: invite.slotColors[slot] }}>#{slot}</b>
+                  <h3>{t(`marketing.moments.${slot}.title`)}</h3>
+                  <p>{t(`marketing.moments.${slot}.body`)}</p>
+                </div>
               </li>
             ))}
           </ul>
-          <div className="mk-moments">
-            {slots.map((slot) => (
-              <section key={slot} id={slot} className="mk-moment" aria-labelledby={`${slot}-title`}>
-                <div className="mk-moment-tag" style={{ background: invite.slotColors[slot] }}>
-                  <h3 id={`${slot}-title`}>#{slot}</h3>
-                  <p className="mk-moment-title">{t(`marketing.moments.${slot}.title`)}</p>
-                  <p className="mk-moment-ask">
-                    {t('marketing.moments.asks', { question: t(`marketing.moments.${slot}.question`) })}
-                  </p>
-                  <Image className="mk-moment-sticker" src={momentStickers[slot]} alt="" sizes="110px" />
-                </div>
-                <div className="mk-moment-body">
-                  <p>{t(`marketing.moments.${slot}.body`)}</p>
-                  <h4>{t('marketing.moments.ideas', { slot })}</h4>
-                  <ul>
-                    {examples.map((e) => (
-                      <li key={e}>{t(`marketing.moments.${slot}.${e}`)}</li>
-                    ))}
-                  </ul>
-                </div>
-              </section>
-            ))}
-          </div>
-          <p className="mk-note mk-moments-outro">{t('marketing.moments.outro')}</p>
+          <Link className="mk-btn mk-rows-more" href="/moments">
+            {t('marketing.moments.seeAll')} →
+          </Link>
         </div>
       </section>
 

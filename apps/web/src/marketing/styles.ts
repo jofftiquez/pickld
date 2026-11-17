@@ -60,17 +60,31 @@ export const css = `
 .mk-moment{display:grid;scroll-margin-top:16px;background:${colors.surface};border-radius:${radius.card}px;overflow:hidden}
 .mk-moment-tag{position:relative;overflow:hidden;padding:26px 22px 28px;display:flex;flex-direction:column;gap:8px;min-height:190px}
 .mk-moment-tag::after{content:'#';position:absolute;right:-6px;top:-34px;font-size:${invite.watermark * 1.6}px;font-weight:800;line-height:1;color:${invite.watermarkOnColor}}
-.mk .mk-moment-tag h3{color:${colors.surface};font-size:clamp(30px,6vw,40px);letter-spacing:-.03em;overflow-wrap:break-word}
+.mk .mk-moment-tag h2{color:${colors.surface};font-size:clamp(30px,6vw,40px);letter-spacing:-.03em;overflow-wrap:break-word}
 .mk .mk-moment-tag p{color:${colors.surface};position:relative;z-index:1;max-width:15em}
 .mk .mk-moment-title{font-size:19px;font-weight:800;line-height:1.3}
 .mk .mk-moment-ask{font-size:15px;font-weight:600;padding-right:84px}
 .mk-moment-sticker{position:absolute;right:14px;bottom:12px;width:86px;transform:rotate(6deg);filter:drop-shadow(0 6px 10px ${colors.textShadow})}
 .mk-moment-body{padding:22px;display:flex;flex-direction:column;gap:12px}
 .mk-moment-body p{color:${colors.ink};font-size:17px}
-.mk-moment-body h4{margin:6px 0 0;color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.mk .mk-moment-body h3{margin:6px 0 0;color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .mk-moment-body ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
 .mk-moment-body li{background:${colors.subtle};color:${colors.ink};border-radius:${radius.pill}px;padding:8px 14px;font-size:15px;line-height:1.35}
 .mk-moments-outro{text-align:center}
+.mk-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:56px}
+.mk-row{display:grid;gap:24px;align-items:center}
+.mk-fan{position:relative;width:100%;height:clamp(250px,66vw,360px)}
+.mk-fan-card{position:absolute;left:50%;top:46%;width:clamp(140px,38vw,210px);aspect-ratio:3/4;border-radius:${radius.card}px;overflow:hidden;border:4px solid ${colors.surface};background:${colors.photoPlaceholder};box-shadow:0 18px 40px -18px ${colors.scrim};transform-origin:50% 135%}
+.mk .mk-fan-card img{width:100%;height:100%;object-fit:cover}
+.mk-fan-card span{position:absolute;left:12px;bottom:10px;color:${colors.surface};font-weight:800;font-size:15px;text-shadow:0 1px 6px ${colors.textShadow}}
+.mk-fan-0{z-index:3;transform:translate(-50%,-50%)}
+.mk-fan-1{z-index:2;transform:translate(-50%,-50%) rotate(-13deg)}
+.mk-fan-2{z-index:1;transform:translate(-50%,-50%) rotate(13deg)}
+.mk-row-text{display:flex;flex-direction:column;gap:8px}
+.mk-row-text b{font-size:clamp(30px,6vw,44px);font-weight:800;line-height:1.05;letter-spacing:-.035em;overflow-wrap:break-word}
+.mk .mk-row-text h3{font-size:22px}
+.mk-row-text p{max-width:28em}
+.mk-rows-more{display:flex;width:fit-content;margin:56px auto 0}
 .mk-chip b{color:${colors.brandText};font-size:16px;font-weight:800}
 .mk-chip span{color:${colors.muted};font-size:14px;line-height:1.35}
 .mk-steps{display:grid;gap:20px;list-style:none;margin:0;padding:0}
@@ -147,6 +161,11 @@ export const css = `
   .mk-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mk-split{grid-template-columns:1fr 1fr;gap:64px}
   .mk-split-flip>:first-child{order:2}
+  .mk-rows{gap:24px}
+  .mk-row{grid-template-columns:1fr 1fr;gap:64px}
+  .mk-fan{height:420px}
+  .mk-fan-card{width:250px}
+  .mk-row-flip>:first-child{order:2}
   .mk-timeline{flex-direction:row;max-width:none;padding:28px 0 0;border-left:0;border-top:3px solid ${colors.brandTint};gap:32px}
   .mk-timeline li{flex:1}
   .mk-timeline li::before{left:0;top:-41px}
@@ -162,6 +181,9 @@ export const css = `
   .mk-btn:hover{transform:translateY(-1px)}
   .mk-chip{transition:transform .15s ease}
   .mk-chip:hover{transform:translateY(-2px)}
+  .mk-fan-card{transition:transform .3s ease}
+  .mk-row:hover .mk-fan-1{transform:translate(-50%,-50%) rotate(-18deg)}
+  .mk-row:hover .mk-fan-2{transform:translate(-50%,-50%) rotate(18deg)}
   .mk-float{animation:mk-bob 5s ease-in-out infinite}
   .mk-float-b{animation-delay:-2.5s}
   @keyframes mk-bob{50%{translate:0 -8px}}

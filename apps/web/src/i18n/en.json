@@ -94,7 +94,8 @@
       "story": "Our story",
       "faq": "FAQ",
       "join": "Join the waitlist",
-      "mission": "Our mission"
+      "mission": "Our mission",
+      "moments": "The eight moments"
     },
     "hero": {
       "eyebrow": "Coming soon to iPhone",
@@ -196,7 +197,10 @@
         "e3": "Your skincare lineup",
         "e4": "A late game night with friends",
         "e5": "Your bed, finally"
-      }
+      },
+      "seeAll": "Ideas for all eight moments",
+      "metaTitle": "The eight moments · Pickld",
+      "metaDescription": "What goes in each of Pickld’s eight daily moments, from #whereami to #evening, with ideas for each. #whoamiwith doesn’t have to be a person."
     },
     "how": {
       "title": "Snap. Decorate. Share.",

@@ -1,7 +1,7 @@
 import { APP_ID, appIdentity } from '~/lib/env';
 
 // Universal links (FR-WEB-03, M4-15). Profile, jar and sign-in links open the app; legal and marketing
-// pages (home, Stickers, Our story, Why Pickld, Our mission, Join the waitlist) stay on the web. Served as JSON with no redirect, as iOS requires. 404 until APPLE_TEAM_ID is set.
+// pages (home, Stickers, Our story, Why Pickld, Our mission, The eight moments, Join the waitlist) stay on the web. Served as JSON with no redirect, as iOS requires. 404 until APPLE_TEAM_ID is set.
 export const dynamic = 'force-dynamic';
 
 export function GET() {
@@ -21,6 +21,7 @@ export function GET() {
             { '/': '/story', exclude: true },
             { '/': '/why', exclude: true },
             { '/': '/mission', exclude: true },
+            { '/': '/moments', exclude: true },
             { '/': '/waitlist', exclude: true },
             { '/': '/waitlist/*', exclude: true },
             { '/': '/.well-known/*', exclude: true },
