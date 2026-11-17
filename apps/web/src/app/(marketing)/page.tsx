@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 const olivia = pack('olivia').stickers;
 const steps = [
-  ['snap', shot.day],
+  ['snap', shot.today],
   ['decorate', shot.filters],
   ['share', shot.share],
 ] as const;
