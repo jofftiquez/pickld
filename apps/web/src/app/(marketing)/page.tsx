@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { slots } from '@/theme/tokens';
+import { invite, slots } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
 import { Phone } from '~/marketing/Phone';
 import * as shot from '~/marketing/shots';
-import { pack, stickerLabel } from '~/marketing/stickers';
+import { momentStickers, pack, stickerLabel } from '~/marketing/stickers';
 import { WaitlistForm } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 };
 
 const olivia = pack('olivia').stickers;
+const examples = ['e1', 'e2', 'e3', 'e4', 'e5'] as const;
 const faqs = ['free', 'android', 'who', 'full', 'missed', 'age'] as const;
 
 /** pickld.me: what Pickld is, in real screenshots, with the waitlist (FR-WEB-01). */
@@ -52,18 +53,45 @@ export default function Home() {
 
       <section className="mk-section" aria-labelledby="moments">
         <div className="mk-wrap">
-          <div className="mk-head">
+          <div className="mk-head mk-head-big">
+            <p className="mk-eyebrow">{t('marketing.moments.eyebrow')}</p>
             <h2 id="moments">{t('marketing.moments.title')}</h2>
-            <p>{t('marketing.moments.body')}</p>
+            <p className="mk-lead">{t('marketing.moments.body')}</p>
           </div>
           <ul className="mk-chips" aria-label={t('marketing.moments.label')}>
             {slots.map((slot) => (
-              <li key={slot} className="mk-chip">
-                <b>#{slot}</b>
-                <span>{t(`marketing.moments.${slot}`)}</span>
+              <li key={slot}>
+                <a className="mk-chip" href={`#${slot}`}>
+                  <b>#{slot}</b>
+                  <span>{t(`marketing.moments.${slot}.title`)}</span>
+                </a>
               </li>
             ))}
           </ul>
+          <div className="mk-moments">
+            {slots.map((slot) => (
+              <section key={slot} id={slot} className="mk-moment" aria-labelledby={`${slot}-title`}>
+                <div className="mk-moment-tag" style={{ background: invite.slotColors[slot] }}>
+                  <h3 id={`${slot}-title`}>#{slot}</h3>
+                  <p className="mk-moment-title">{t(`marketing.moments.${slot}.title`)}</p>
+                  <p className="mk-moment-ask">
+                    {t('marketing.moments.asks', { question: t(`marketing.moments.${slot}.question`) })}
+                  </p>
+                  <Image className="mk-moment-sticker" src={momentStickers[slot]} alt="" sizes="110px" />
+                </div>
+                <div className="mk-moment-body">
+                  <p>{t(`marketing.moments.${slot}.body`)}</p>
+                  <h4>{t('marketing.moments.ideas', { slot })}</h4>
+                  <ul>
+                    {examples.map((e) => (
+                      <li key={e}>{t(`marketing.moments.${slot}.${e}`)}</li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            ))}
+          </div>
+          <p className="mk-note mk-moments-outro">{t('marketing.moments.outro')}</p>
         </div>
       </section>
 

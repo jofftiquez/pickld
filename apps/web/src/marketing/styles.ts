@@ -1,4 +1,4 @@
-import { colors, radius } from '@/theme/tokens';
+import { colors, invite, radius } from '@/theme/tokens';
 
 // The marketing pages' stylesheet, built from the app's tokens so no color or radius is hard-coded. One
 // small inline <style> (no extra request); media queries do the phone-to-desktop layout, and motion only
@@ -52,7 +52,25 @@ export const css = `
 .mk-head{max-width:640px;margin-bottom:32px}
 .mk-head p{margin-top:14px}
 .mk-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;list-style:none;margin:0;padding:0}
-.mk-chip{background:${colors.surface};border-radius:${radius.banner}px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.mk-head-big{max-width:820px}
+.mk-head-big h2{font-size:clamp(36px,8vw,64px);line-height:1.04;letter-spacing:-.04em}
+.mk-head-big .mk-lead{margin-top:18px}
+.mk-chip{background:${colors.surface};border-radius:${radius.banner}px;padding:16px;display:flex;flex-direction:column;gap:6px;height:100%;text-decoration:none}
+.mk-moments{display:flex;flex-direction:column;gap:16px;margin-top:40px}
+.mk-moment{display:grid;scroll-margin-top:16px;background:${colors.surface};border-radius:${radius.card}px;overflow:hidden}
+.mk-moment-tag{position:relative;overflow:hidden;padding:26px 22px 28px;display:flex;flex-direction:column;gap:8px;min-height:190px}
+.mk-moment-tag::after{content:'#';position:absolute;right:-6px;top:-34px;font-size:${invite.watermark * 1.6}px;font-weight:800;line-height:1;color:${invite.watermarkOnColor}}
+.mk .mk-moment-tag h3{color:${colors.surface};font-size:clamp(30px,6vw,40px);letter-spacing:-.03em;overflow-wrap:break-word}
+.mk .mk-moment-tag p{color:${colors.surface};position:relative;z-index:1;max-width:15em}
+.mk .mk-moment-title{font-size:19px;font-weight:800;line-height:1.3}
+.mk .mk-moment-ask{font-size:15px;font-weight:600;padding-right:84px}
+.mk-moment-sticker{position:absolute;right:14px;bottom:12px;width:86px;transform:rotate(6deg);filter:drop-shadow(0 6px 10px ${colors.textShadow})}
+.mk-moment-body{padding:22px;display:flex;flex-direction:column;gap:12px}
+.mk-moment-body p{color:${colors.ink};font-size:17px}
+.mk-moment-body h4{margin:6px 0 0;color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.mk-moment-body ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.mk-moment-body li{background:${colors.subtle};color:${colors.ink};border-radius:${radius.pill}px;padding:8px 14px;font-size:15px;line-height:1.35}
+.mk-moments-outro{text-align:center}
 .mk-chip b{color:${colors.brandText};font-size:16px;font-weight:800}
 .mk-chip span{color:${colors.muted};font-size:14px;line-height:1.35}
 .mk-steps{display:grid;gap:20px;list-style:none;margin:0;padding:0}
@@ -114,6 +132,9 @@ export const css = `
 .mk-status p{margin-top:12px}
 @media (min-width:720px){
   .mk-chips{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .mk-moment{grid-template-columns:340px 1fr}
+  .mk-moment-tag{min-height:230px;padding:30px 26px}
+  .mk-moment-body{padding:30px 30px 30px 32px;justify-content:center}
   .mk-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mk-cards.mk-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mk-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
@@ -139,6 +160,8 @@ export const css = `
   html{scroll-behavior:smooth}
   .mk-btn{transition:transform .15s ease}
   .mk-btn:hover{transform:translateY(-1px)}
+  .mk-chip{transition:transform .15s ease}
+  .mk-chip:hover{transform:translateY(-2px)}
   .mk-float{animation:mk-bob 5s ease-in-out infinite}
   .mk-float-b{animation-delay:-2.5s}
   @keyframes mk-bob{50%{translate:0 -8px}}

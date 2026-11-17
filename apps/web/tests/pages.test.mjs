@@ -518,6 +518,14 @@ test('the home page shows the pitch, the eight moments and loaded screenshots wi
     '#afternoon',
     '#evening',
   ]);
+  // Each moment has its own section with the app's caption question and five ideas.
+  for (const slot of moments) {
+    const section = page.getByRole('region', { name: slot, exact: true });
+    assert.equal(await section.getByRole('listitem').count(), 5, slot);
+  }
+  const who = page.getByRole('region', { name: '#whoamiwith', exact: true });
+  assert.ok(await who.getByText('Pickld asks: “Who are you with?”').isVisible());
+  assert.ok(await who.getByText('Your dog, waiting by the door').isVisible());
   const imgs = page.locator('main img');
   assert.ok((await imgs.count()) >= 15);
   // Lazy images load as they scroll in; the floating stickers animate, so scroll with the DOM, not Playwright.

@@ -4,6 +4,8 @@
 // 0065); copy lives in en.json under stickers.packs.<slug>.
 import type { StaticImageData } from 'next/image';
 
+import type { Slot } from '@/theme/tokens';
+
 import olivia_queen from '../../../../assets/stickers/olivia/queen.png';
 import olivia_heart_eyes from '../../../../assets/stickers/olivia/heart-eyes.png';
 import olivia_zoomies from '../../../../assets/stickers/olivia/zoomies.png';
@@ -32,6 +34,9 @@ import the_eight_milk_tea from '../../../../assets/stickers/the-eight/milk-tea.p
 import the_eight_book_stack from '../../../../assets/stickers/the-eight/book-stack.png';
 import the_eight_sneaker from '../../../../assets/stickers/the-eight/sneaker.png';
 import the_eight_sleepy_moon from '../../../../assets/stickers/the-eight/sleepy-moon.png';
+import the_eight_happy_laptop from '../../../../assets/stickers/the-eight/happy-laptop.png';
+import the_eight_cat_cuddle from '../../../../assets/stickers/the-eight/cat-cuddle.png';
+import the_eight_bear_peace from '../../../../assets/stickers/the-eight/bear-peace.png';
 import stamps_date from '../../../../assets/stickers/stamps/date.png';
 import stamps_time from '../../../../assets/stickers/stamps/time.png';
 import stamps_real_day from '../../../../assets/stickers/stamps/real-day.png';
@@ -347,6 +352,18 @@ export const packs: Pack[] = [
     ],
   },
 ];
+
+/** One sticker per moment from The Eight, each with that slot as its hint in the catalog (0032). */
+export const momentStickers: Record<Slot, StaticImageData> = {
+  whereami: the_eight_map_pin,
+  mebusywith: the_eight_happy_laptop,
+  whoamiwith: the_eight_cat_cuddle,
+  ootd: the_eight_sneaker,
+  selfie: the_eight_bear_peace,
+  morning: the_eight_sunrise,
+  afternoon: the_eight_milk_tea,
+  evening: the_eight_sleepy_moon,
+};
 
 export function pack(slug: string): Pack {
   const found = packs.find((p) => p.slug === slug);
