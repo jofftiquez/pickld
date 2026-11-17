@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 
 import { invite, slots } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
-import { momentStickers } from '~/marketing/stickers';
+import { MomentFan } from '~/marketing/MomentFan';
 import { WaitlistForm } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
@@ -13,9 +12,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/moments' },
 };
 
-const examples = ['e1', 'e2', 'e3', 'e4', 'e5'] as const;
+const examples = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'] as const;
 
-/** The eight moments, one section each: its #tag, the app's caption question, what it's for and five ideas (FR-WEB-01). */
+/** The eight moments in the home page's fanned rows, each with the app's question, a longer description and ideas (FR-WEB-01). */
 export default function Moments() {
   return (
     <>
@@ -38,21 +37,26 @@ export default function Moments() {
               </li>
             ))}
           </ul>
-          <div className="mk-moments">
-            {slots.map((slot) => (
-              <section key={slot} id={slot} className="mk-moment" aria-labelledby={`${slot}-title`}>
-                <div className="mk-moment-tag" style={{ background: invite.slotColors[slot] }}>
-                  <h2 id={`${slot}-title`}>#{slot}</h2>
-                  <p className="mk-moment-title">{t(`marketing.moments.${slot}.title`)}</p>
-                  <p className="mk-moment-ask">
+          <div className="mk-rows mk-rows-page">
+            {slots.map((slot, i) => (
+              <section
+                key={slot}
+                id={slot}
+                className={`mk-row${i % 2 ? ' mk-row-flip' : ''}`}
+                aria-labelledby={`${slot}-title`}
+              >
+                <MomentFan slot={slot} />
+                <div className="mk-row-text">
+                  <h2 id={`${slot}-title`} style={{ color: invite.slotColors[slot] }}>
+                    #{slot}
+                  </h2>
+                  <h3>{t(`marketing.moments.${slot}.title`)}</h3>
+                  <p className="mk-row-ask">
                     {t('marketing.moments.asks', { question: t(`marketing.moments.${slot}.question`) })}
                   </p>
-                  <Image className="mk-moment-sticker" src={momentStickers[slot]} alt="" sizes="110px" />
-                </div>
-                <div className="mk-moment-body">
-                  <p>{t(`marketing.moments.${slot}.body`)}</p>
-                  <h3>{t('marketing.moments.ideas', { slot })}</h3>
-                  <ul>
+                  <p>{t(`marketing.moments.${slot}.long`)}</p>
+                  <h4>{t('marketing.moments.ideasTitle')}</h4>
+                  <ul className="mk-ideas">
                     {examples.map((e) => (
                       <li key={e}>{t(`marketing.moments.${slot}.${e}`)}</li>
                     ))}

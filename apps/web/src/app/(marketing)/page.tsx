@@ -7,7 +7,7 @@ import { invite, slots } from '@/theme/tokens';
 import { t } from '~/i18n/t';
 import { Phone } from '~/marketing/Phone';
 import * as shot from '~/marketing/shots';
-import { momentPhotos } from '~/marketing/momentPhotos';
+import { MomentFan } from '~/marketing/MomentFan';
 import { pack, stickerLabel } from '~/marketing/stickers';
 import { WaitlistForm } from '~/marketing/WaitlistForm';
 
@@ -25,6 +25,13 @@ export const metadata: Metadata = {
 };
 
 const olivia = pack('olivia').stickers;
+const steps = [
+  ['snap', shot.day],
+  ['decorate', shot.filters],
+  ['share', shot.story],
+] as const;
+const points = ['p1', 'p2', 'p3', 'p4'] as const;
+const controls = ['private', 'location', 'mute', 'block', 'discover', 'teens'] as const;
 const faqs = ['free', 'android', 'who', 'full', 'missed', 'age'] as const;
 
 /** pickld.me: what Pickld is, in real screenshots, with the waitlist (FR-WEB-01). */
@@ -61,14 +68,7 @@ export default function Home() {
           <ul className="mk-rows" aria-label={t('marketing.moments.label')}>
             {slots.map((slot, i) => (
               <li key={slot} className={`mk-row${i % 2 ? ' mk-row-flip' : ''}`}>
-                <div className="mk-fan" aria-hidden>
-                  {momentPhotos[slot].map((src, n) => (
-                    <div key={n} className={`mk-fan-card mk-fan-${n}`}>
-                      <Image src={src} alt="" sizes="(min-width: 900px) 220px, 40vw" placeholder="blur" />
-                      {n === 0 ? <span>#{slot}</span> : null}
-                    </div>
-                  ))}
-                </div>
+                <MomentFan slot={slot} />
                 <div className="mk-row-text">
                   <b style={{ color: invite.slotColors[slot] }}>#{slot}</b>
                   <h3>{t(`marketing.moments.${slot}.title`)}</h3>
@@ -87,19 +87,24 @@ export default function Home() {
         <div className="mk-wrap">
           <div className="mk-head">
             <h2 id="how">{t('marketing.how.title')}</h2>
+            <p>{t('marketing.how.body')}</p>
           </div>
-          <ol className="mk-steps">
-            {(
-              [
-                ['snap', shot.day],
-                ['decorate', shot.filters],
-                ['share', shot.story],
-              ] as const
-            ).map(([step, src]) => (
-              <li key={step} className="mk-step">
-                <h3>{t(`marketing.how.${step}Title`)}</h3>
-                <p>{t(`marketing.how.${step}Body`)}</p>
-                <Phone src={src} alt={t(`marketing.how.${step}Alt`)} sizes="(min-width: 900px) 240px, 64vw" />
+          <ol className="mk-panels">
+            {steps.map(([step, src], i) => (
+              <li key={step} className={`mk-panel mk-split${i % 2 ? ' mk-split-flip' : ''}`}>
+                <div>
+                  <span className="mk-step-n">{i + 1}</span>
+                  <h3>{t(`marketing.how.${step}Title`)}</h3>
+                  <p className="mk-lead">{t(`marketing.how.${step}Body`)}</p>
+                  <ul className="mk-points">
+                    {points.map((pt) => (
+                      <li key={pt}>{t(`marketing.how.${step}Points.${pt}`)}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mk-art">
+                  <Phone src={src} alt={t(`marketing.how.${step}Alt`)} sizes="(min-width: 900px) 260px, 64vw" />
+                </div>
               </li>
             ))}
           </ol>
@@ -145,7 +150,18 @@ export default function Home() {
               </li>
             ))}
           </ul>
-          <p className="mk-note">{t('marketing.privacy.private')}</p>
+          <h3 className="mk-subhead">{t('marketing.privacy.controlsTitle')}</h3>
+          <ul className="mk-cards mk-cards-controls">
+            {controls.map((k) => (
+              <li key={k} className="mk-card">
+                <h4>{t(`marketing.privacy.controls.${k}.title`)}</h4>
+                <p>{t(`marketing.privacy.controls.${k}.body`)}</p>
+              </li>
+            ))}
+          </ul>
+          <Link className="mk-link" href="/why">
+            {t('marketing.nav.why')} →
+          </Link>
         </div>
       </section>
 

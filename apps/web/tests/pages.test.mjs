@@ -544,14 +544,15 @@ test('the home page shows the pitch, the eight moments and loaded screenshots wi
   await page.close();
 });
 
-test('the moments page gives each moment its own section with the app’s question and five ideas', async () => {
+test('the moments page gives each moment its own fanned row with the app’s question and eight ideas', async () => {
   const { page, status } = await open('/moments');
   assert.equal(status, 200);
   const slots = await page.getByRole('list', { name: 'The eight moments' }).locator('b').allTextContents();
   assert.equal(slots.length, 8);
   for (const slot of slots) {
     const section = page.getByRole('region', { name: slot, exact: true });
-    assert.equal(await section.getByRole('listitem').count(), 5, slot);
+    assert.equal(await section.getByRole('listitem').count(), 8, slot);
+    assert.equal(await section.locator('.mk-fan img').count(), 3, slot);
   }
   const who = page.getByRole('region', { name: '#whoamiwith', exact: true });
   assert.ok(await who.getByText('Pickld asks: “Who are you with?”').isVisible());

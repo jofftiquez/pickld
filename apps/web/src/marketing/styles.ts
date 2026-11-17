@@ -1,4 +1,4 @@
-import { colors, invite, radius } from '@/theme/tokens';
+import { colors, radius } from '@/theme/tokens';
 
 // The marketing pages' stylesheet, built from the app's tokens so no color or radius is hard-coded. One
 // small inline <style> (no extra request); media queries do the phone-to-desktop layout, and motion only
@@ -56,23 +56,9 @@ export const css = `
 .mk-head-big h2{font-size:clamp(36px,8vw,64px);line-height:1.04;letter-spacing:-.04em}
 .mk-head-big .mk-lead{margin-top:18px}
 .mk-chip{background:${colors.surface};border-radius:${radius.banner}px;padding:16px;display:flex;flex-direction:column;gap:6px;height:100%;text-decoration:none}
-.mk-moments{display:flex;flex-direction:column;gap:16px;margin-top:40px}
-.mk-moment{display:grid;scroll-margin-top:16px;background:${colors.surface};border-radius:${radius.card}px;overflow:hidden}
-.mk-moment-tag{position:relative;overflow:hidden;padding:26px 22px 28px;display:flex;flex-direction:column;gap:8px;min-height:190px}
-.mk-moment-tag::after{content:'#';position:absolute;right:-6px;top:-34px;font-size:${invite.watermark * 1.6}px;font-weight:800;line-height:1;color:${invite.watermarkOnColor}}
-.mk .mk-moment-tag h2{color:${colors.surface};font-size:clamp(30px,6vw,40px);letter-spacing:-.03em;overflow-wrap:break-word}
-.mk .mk-moment-tag p{color:${colors.surface};position:relative;z-index:1;max-width:15em}
-.mk .mk-moment-title{font-size:19px;font-weight:800;line-height:1.3}
-.mk .mk-moment-ask{font-size:15px;font-weight:600;padding-right:84px}
-.mk-moment-sticker{position:absolute;right:14px;bottom:12px;width:86px;transform:rotate(6deg);filter:drop-shadow(0 6px 10px ${colors.textShadow})}
-.mk-moment-body{padding:22px;display:flex;flex-direction:column;gap:12px}
-.mk-moment-body p{color:${colors.ink};font-size:17px}
-.mk .mk-moment-body h3{margin:6px 0 0;color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.mk-moment-body ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
-.mk-moment-body li{background:${colors.subtle};color:${colors.ink};border-radius:${radius.pill}px;padding:8px 14px;font-size:15px;line-height:1.35}
 .mk-moments-outro{text-align:center}
 .mk-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:56px}
-.mk-row{display:grid;gap:24px;align-items:center}
+.mk-row{display:grid;gap:24px;align-items:center;scroll-margin-top:16px}
 .mk-fan{position:relative;width:100%;height:clamp(250px,66vw,360px)}
 .mk-fan-card{position:absolute;left:50%;top:46%;width:clamp(140px,38vw,210px);aspect-ratio:3/4;border-radius:${radius.card}px;overflow:hidden;border:4px solid ${colors.surface};background:${colors.photoPlaceholder};box-shadow:0 18px 40px -18px ${colors.scrim};transform-origin:50% 135%}
 .mk .mk-fan-card img{width:100%;height:100%;object-fit:cover}
@@ -85,12 +71,25 @@ export const css = `
 .mk-row-text b{font-size:clamp(30px,6vw,44px);font-weight:800;line-height:1.05;letter-spacing:-.035em;overflow-wrap:break-word}
 .mk .mk-row-text h3{font-size:22px}
 .mk-row-text p{max-width:28em}
+.mk-row-text h2{font-size:clamp(30px,6vw,44px);line-height:1.05;letter-spacing:-.035em;overflow-wrap:break-word}
+.mk .mk-row-ask{color:${colors.ink};font-weight:700}
+.mk-row-text h4{margin:10px 0 0;color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.mk-ideas{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.mk-ideas li{background:${colors.surface};color:${colors.ink};border-radius:${radius.pill}px;padding:8px 14px;font-size:15px;line-height:1.35}
+.mk-rows-page{margin-top:48px}
+.mk-panels{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:20px}
+.mk-panel{background:${colors.surface};border-radius:${radius.card}px;padding:32px 22px;overflow:hidden}
+.mk-panel h3{font-size:clamp(26px,5vw,34px);letter-spacing:-.03em;margin-top:14px}
+.mk-panel .mk-lead{margin-top:12px}
+.mk-step-n{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${colors.brandTint};color:${colors.brandText};font-weight:800;font-size:18px}
+.mk-points{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.mk-points li{position:relative;padding-left:28px;color:${colors.ink};font-size:16px;line-height:1.45}
+.mk-points li::before{content:'';position:absolute;left:4px;top:7px;width:10px;height:10px;border-radius:50%;background:${colors.brand}}
+.mk .mk-subhead{margin:48px 0 16px;font-size:clamp(24px,4.5vw,30px);letter-spacing:-.025em}
+.mk-card h4{margin:0;color:${colors.ink};font-size:17px;font-weight:800}
 .mk-rows-more{display:flex;width:fit-content;margin:56px auto 0}
 .mk-chip b{color:${colors.brandText};font-size:16px;font-weight:800}
 .mk-chip span{color:${colors.muted};font-size:14px;line-height:1.35}
-.mk-steps{display:grid;gap:20px;list-style:none;margin:0;padding:0}
-.mk-step{background:${colors.surface};border-radius:${radius.card}px;padding:28px 20px 0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
-.mk-step .mk-phone{margin:14px auto -60px;width:min(240px,64vw)}
 .mk-dark{background:${colors.ink}}
 .mk-dark h2,.mk-dark h3{color:${colors.surface}}
 .mk-dark p{color:${colors.onDarkMuted}}
@@ -147,10 +146,8 @@ export const css = `
 .mk-status p{margin-top:12px}
 @media (min-width:720px){
   .mk-chips{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .mk-moment{grid-template-columns:340px 1fr}
-  .mk-moment-tag{min-height:230px;padding:30px 26px}
-  .mk-moment-body{padding:30px 30px 30px 32px;justify-content:center}
   .mk-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mk-panel{padding:48px 56px}
   .mk-cards.mk-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mk-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
   .mk-olivia{grid-template-columns:repeat(8,minmax(0,1fr))}
@@ -159,7 +156,6 @@ export const css = `
 @media (min-width:900px){
   .mk-hero{grid-template-columns:1.1fr .9fr;padding-top:72px;padding-bottom:88px}
   .mk-section{padding:96px 0}
-  .mk-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mk-split{grid-template-columns:1fr 1fr;gap:64px}
   .mk-split-flip>:first-child{order:2}
   .mk-rows{gap:24px}
