@@ -28,7 +28,7 @@ const olivia = pack('olivia').stickers;
 const steps = [
   ['snap', shot.day],
   ['decorate', shot.filters],
-  ['share', shot.story],
+  ['share', shot.share],
 ] as const;
 const points = ['p1', 'p2', 'p3', 'p4'] as const;
 const controls = ['private', 'location', 'mute', 'block', 'discover', 'teens'] as const;

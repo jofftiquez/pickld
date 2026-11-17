@@ -77,8 +77,8 @@ export const css = `
 .mk-ideas{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
 .mk-ideas li{background:${colors.surface};color:${colors.ink};border-radius:${radius.pill}px;padding:8px 14px;font-size:15px;line-height:1.35}
 .mk-rows-page{margin-top:48px}
-.mk-panels{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:20px}
-.mk-panel{background:${colors.surface};border-radius:${radius.card}px;padding:32px 22px;overflow:hidden}
+.mk-panels{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:56px}
+.mk-panel{padding:8px 0}
 .mk-panel h3{font-size:clamp(26px,5vw,34px);letter-spacing:-.03em;margin-top:14px}
 .mk-panel .mk-lead{margin-top:12px}
 .mk-step-n{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${colors.brandTint};color:${colors.brandText};font-weight:800;font-size:18px}
@@ -147,7 +147,7 @@ export const css = `
 @media (min-width:720px){
   .mk-chips{grid-template-columns:repeat(4,minmax(0,1fr))}
   .mk-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .mk-panel{padding:48px 56px}
+  .mk-panels{gap:72px}
   .mk-cards.mk-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mk-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
   .mk-olivia{grid-template-columns:repeat(8,minmax(0,1fr))}

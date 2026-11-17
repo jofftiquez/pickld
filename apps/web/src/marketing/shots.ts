@@ -5,7 +5,7 @@ export { default as filters } from './shots/filters.jpg';
 export { default as jar } from './shots/jar.jpg';
 export { default as memories } from './shots/memories.jpg';
 export { default as pack } from './shots/pack.jpg';
+export { default as share } from './shots/share.jpg';
 export { default as shop } from './shots/shop.jpg';
 export { default as stickers } from './shots/stickers.jpg';
-export { default as story } from './shots/story.jpg';
 export { default as widget } from './shots/widget.jpg';
