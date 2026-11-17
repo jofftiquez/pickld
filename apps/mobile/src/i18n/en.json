@@ -1716,6 +1716,10 @@
     "noResults": "No questions match “{{query}}”. Try another word, or message us below.",
     "faq": [
       {
+        "q": "How do my feeds work?",
+        "a": "Moments and Jars show only people you read, newest first. A jar moves up when someone adds a moment to it. Discover shows people your authors read first, then everyone else who posts publicly, also newest first. Likes and reader counts never change the order. Turn off Show me in Discover in Settings to stay out of it, or mute an author to hide their posts without unreading them."
+      },
+      {
         "q": "How do jars and moments work?",
         "a": "Each day gets one jar with eight slots: where you are, what you’re busy with, who you’re with, your outfit, a selfie, and your morning, afternoon and evening. Fill a slot with one photo, a moment. A new jar starts at your local midnight."
       },
