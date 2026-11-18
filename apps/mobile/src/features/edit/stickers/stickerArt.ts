@@ -3557,6 +3557,76 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 1024,
     height: 956,
   },
+  'stickers/the-eight/beach-day.png': {
+    source: require('../../../../../../assets/stickers/the-eight/beach-day.png'),
+    width: 917,
+    height: 1024,
+  },
+  'stickers/the-eight/mountain-view.png': {
+    source: require('../../../../../../assets/stickers/the-eight/mountain-view.png'),
+    width: 1024,
+    height: 730,
+  },
+  'stickers/the-eight/art-time.png': {
+    source: require('../../../../../../assets/stickers/the-eight/art-time.png'),
+    width: 1024,
+    height: 808,
+  },
+  'stickers/the-eight/cooking.png': {
+    source: require('../../../../../../assets/stickers/the-eight/cooking.png'),
+    width: 1024,
+    height: 861,
+  },
+  'stickers/the-eight/best-buds.png': {
+    source: require('../../../../../../assets/stickers/the-eight/best-buds.png'),
+    width: 1024,
+    height: 891,
+  },
+  'stickers/the-eight/duck-family.png': {
+    source: require('../../../../../../assets/stickers/the-eight/duck-family.png'),
+    width: 1024,
+    height: 498,
+  },
+  'stickers/the-eight/fresh-tee.png': {
+    source: require('../../../../../../assets/stickers/the-eight/fresh-tee.png'),
+    width: 912,
+    height: 1024,
+  },
+  'stickers/the-eight/bucket-hat.png': {
+    source: require('../../../../../../assets/stickers/the-eight/bucket-hat.png'),
+    width: 1024,
+    height: 722,
+  },
+  'stickers/the-eight/selfie-phone.png': {
+    source: require('../../../../../../assets/stickers/the-eight/selfie-phone.png'),
+    width: 1024,
+    height: 982,
+  },
+  'stickers/the-eight/mirror-check.png': {
+    source: require('../../../../../../assets/stickers/the-eight/mirror-check.png'),
+    width: 685,
+    height: 1024,
+  },
+  'stickers/the-eight/latte.png': {
+    source: require('../../../../../../assets/stickers/the-eight/latte.png'),
+    width: 990,
+    height: 1024,
+  },
+  'stickers/the-eight/ice-cream.png': {
+    source: require('../../../../../../assets/stickers/the-eight/ice-cream.png'),
+    width: 546,
+    height: 1024,
+  },
+  'stickers/the-eight/ramen.png': {
+    source: require('../../../../../../assets/stickers/the-eight/ramen.png'),
+    width: 1024,
+    height: 962,
+  },
+  'stickers/the-eight/sleepy-stars.png': {
+    source: require('../../../../../../assets/stickers/the-eight/sleepy-stars.png'),
+    width: 1024,
+    height: 1020,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
