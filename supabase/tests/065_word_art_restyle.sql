@@ -17,7 +17,7 @@ select is((select count(*)::int from public.stickers old join public.stickers ne
              and new.pack_id = old.pack_id and new.tags = old.tags), 60, 'each restyle keeps its label, pack, order and tags');
 select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id
            where p.slug = 'hashtags' and p.tier = 'premium' and p.store_product_id = 'me.pickld.pack.hashtags'
-             and s.retired_at is null and s.label like '#%'), 16, 'Hashtags: 16 premium hashtag stickers');
+             and s.retired_at is null and s.label like '#%'), 30, 'Hashtags: 30 premium hashtag stickers (16 here, 14 more in 0154)');
 select is((select count(*)::int from (
              select p.id from public.sticker_packs p left join public.stickers s on s.pack_id = p.id and s.retired_at is null
              group by p.id having count(s.id) < 10) short), 0,
