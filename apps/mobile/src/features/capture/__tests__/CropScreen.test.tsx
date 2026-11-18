@@ -138,13 +138,17 @@ describe('Crop screen', () => {
     expect(screen.queryByText(/ for /)).toBeNull();
   });
 
-  it('shows the design: title, slot, 3:4 lock chip, grid frame, hint, zoom and tools', async () => {
+  it('shows the design: title, slot, 3:4 lock chip, grid frame, Straighten dial, zoom and tools', async () => {
     await openCrop();
     expect(screen.getByRole('header', { name: 'Crop photo' })).toBeTruthy();
     expect(screen.getByText('#afternoon · from gallery')).toBeTruthy();
     expect(screen.getByLabelText('Crop locked to 3:4')).toBeTruthy();
     expect(screen.getByTestId('crop-frame', { includeHiddenElements: true })).toBeTruthy();
-    expect(screen.getByText('Drag to reposition · pinch to zoom')).toBeTruthy();
+    // Straighten's dial takes the band under the frame; Fill's gesture hint gives way to it.
+    expect(screen.getByRole('adjustable', { name: 'Straighten' }).props.accessibilityValue).toEqual({
+      text: '0 degrees',
+    });
+    expect(screen.queryByText('Drag to reposition · pinch to zoom')).toBeNull();
     expect(screen.getByRole('adjustable', { name: 'Zoom' }).props.accessibilityValue).toMatchObject({
       min: 100,
       max: 300,
@@ -261,7 +265,7 @@ describe('Crop screen', () => {
     await press('Rotate 90 degrees');
     await press('Flip');
     const photo = screen.getByTestId('crop-photo');
-    expect(photo.props.style).toMatchObject({ transform: [{ scaleX: -1 }, { rotate: '270deg' }] });
+    expect(photo.props.style).toMatchObject({ transform: [{ rotate: '0deg' }, { scaleX: -1 }, { rotate: '270deg' }] });
     await done();
     expect(queuedCrop()).toMatchObject({ rotate: 270, flip: true });
     // Turned, the 2:1 photo is tall: the full width is kept.
@@ -331,6 +335,59 @@ describe('Crop screen', () => {
       rotate: 0,
       flip: false,
     });
+  });
+
+  it('Straighten: dragging the dial tilts the photo, shows a fine grid, snaps to level, and reaches the queued crop', async () => {
+    await openCrop();
+    const dial = screen.getByTestId('crop-straighten');
+    const haptic = jest.spyOn(Haptics, 'selectionAsync').mockClear();
+    await act(() => dial.props.onResponderGrant({ nativeEvent: { pageX: 200 } }));
+    expect(screen.getByTestId('crop-straighten-grid', { includeHiddenElements: true })).toBeTruthy();
+    // Dragging the ruler left tilts clockwise, a degree per tick gap; passing 5° ticks once.
+    await act(() => dial.props.onResponderMove({ nativeEvent: { pageX: 200 - 6.5 * crop.dialTickGap } }));
+    expect(haptic).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('crop-straighten-value').props.children).toBe('6.5°');
+    // Past the end it stops at 15°.
+    await act(() => dial.props.onResponderMove({ nativeEvent: { pageX: 200 - 40 * crop.dialTickGap } }));
+    expect(screen.getByTestId('crop-straighten-value').props.children).toBe('15°');
+    // Back within 0.3° of level it is exactly level (with a tick), then a little the other way.
+    await act(() => dial.props.onResponderMove({ nativeEvent: { pageX: 200 - 0.2 * crop.dialTickGap } }));
+    expect(screen.getByTestId('crop-straighten-value').props.children).toBe('0°');
+    await act(() => dial.props.onResponderMove({ nativeEvent: { pageX: 200 + 3 * crop.dialTickGap } }));
+    await act(() => dial.props.onResponderRelease({ nativeEvent: { pageX: 200 + 3 * crop.dialTickGap } }));
+    expect(screen.queryByTestId('crop-straighten-grid', { includeHiddenElements: true })).toBeNull();
+    expect(screen.getByRole('adjustable', { name: 'Straighten' }).props.accessibilityValue).toEqual({
+      text: '-3 degrees',
+    });
+    expect(screen.getByTestId('crop-photo').props.style).toMatchObject({
+      transform: [{ rotate: '-3deg' }, { scaleX: 1 }, { rotate: '0deg' }],
+    });
+    // Tilted, the levelled 2:1 photo is smaller, so the 3:4 frame takes a smaller rectangle of it.
+    await done();
+    expect(queuedCrop()).toMatchObject({ straighten: -3, rotate: 0, flip: false });
+    expect(queuedCrop()?.crop.height).toBeLessThan(2000);
+  });
+
+  it('Straighten steps a degree with a screen reader; Flip mirrors the tilt; Rotate keeps it; Reset levels', async () => {
+    await openCrop();
+    const step = (actionName: string) =>
+      act(() =>
+        screen
+          .getByRole('adjustable', { name: 'Straighten' })
+          .props.onAccessibilityAction({ nativeEvent: { actionName } }),
+      );
+    await step('increment');
+    await step('increment');
+    await press('Flip');
+    expect(screen.getByRole('adjustable', { name: 'Straighten' }).props.accessibilityValue.text).toBe('-2 degrees');
+    await press('Rotate 90 degrees');
+    await step('decrement');
+    expect(screen.getByRole('adjustable', { name: 'Straighten' }).props.accessibilityValue.text).toBe('-3 degrees');
+    await press('Reset');
+    expect(screen.getByRole('adjustable', { name: 'Straighten' }).props.accessibilityValue.text).toBe('0 degrees');
+    await done();
+    // Level again: the queued crop names no tilt, as before Straighten.
+    expect(queuedCrop()).not.toHaveProperty('straighten');
   });
 
   it('Cancel returns to the camera and queues nothing', async () => {
@@ -689,10 +746,34 @@ describe('Fill / Fit (D-152)', () => {
     expect(screen.getByTestId('crop-photo').props.style).toMatchObject({
       width: f.height,
       height: f.height / 2,
-      transform: [{ scaleX: -1 }, { rotate: '90deg' }],
+      transform: [{ rotate: '0deg' }, { scaleX: -1 }, { rotate: '90deg' }],
     });
     await done();
     expect(queuedCrop()).toMatchObject({ rotate: 90, flip: true, fit: { frame: 'white' } });
+  });
+
+  it('Straighten in Fit: the levelled photo is placed whole, as large as before, the tilted photo larger behind it', async () => {
+    await openCrop();
+    await fireEvent.press(tab('Fit'));
+    // The hint moves above the frame, where Fill's lock chip would be.
+    expect(screen.getByText('Drag to move · pinch to resize · double tap to center')).toBeTruthy();
+    const box = () => StyleSheet.flatten(screen.getByTestId('crop-fit-photo').props.style);
+    const level = box();
+    const dial = screen.getByTestId('crop-straighten');
+    await act(() => dial.props.onResponderGrant({ nativeEvent: { pageX: 200 } }));
+    await act(() => dial.props.onResponderMove({ nativeEvent: { pageX: 200 - 10 * crop.dialTickGap } }));
+    await act(() => dial.props.onResponderRelease({ nativeEvent: { pageX: 200 - 10 * crop.dialTickGap } }));
+    // At 10° a 2:1 photo's levelled middle is 1 / (cos 10° + 2 sin 10°) of it (its height binds: the tilted
+    // photo's top and bottom edges cut the corners first). It keeps the photo's shape, so the box in the frame is
+    // as large as before, and the whole photo behind it is drawn larger by that much.
+    const k = 1 / (Math.cos(Math.PI / 18) + 2 * Math.sin(Math.PI / 18));
+    expect(box().width).toBeCloseTo(level.width, 5);
+    expect(box().height).toBeCloseTo(level.height, 5);
+    const photo = StyleSheet.flatten(screen.getByTestId('crop-photo').props.style);
+    expect(photo.width).toBeCloseTo(level.width / k, 3);
+    expect(photo.transform?.[0]).toEqual({ rotate: '10deg' });
+    await done();
+    expect(queuedCrop()).toMatchObject({ straighten: 10, fit: { frame: 'white', scale: 1, x: 0, y: 0 } });
   });
 });
 

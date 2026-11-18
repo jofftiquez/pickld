@@ -17,7 +17,6 @@ import {
   clampFitLayout,
   DEFAULT_FIT_PLACE,
   fitPlacement,
-  rotatedSize,
   type FitLayout,
   type FitPlace,
   type Size,
@@ -26,7 +25,7 @@ import { snapCenter } from '@/lib/image/snap';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, crop, fitBorderColors, fitFrameColors, radius, sizes } from '@/theme/tokens';
 
-import { coverScale, panCrop, zoomCrop, type CropState } from './cropMath';
+import { coverScale, croppedSize, panCrop, zoomCrop, type CropState } from './cropMath';
 
 export type CropPhotoProps = {
   uri: string;
@@ -53,6 +52,11 @@ export type CropPhotoProps = {
    */
   fit?: FitLayout | null;
   onFitChange?: (place: FitPlace) => void;
+  /** Straighten's dial is being dragged: a fine grid over the frame, in Fill and Fit, to level the photo against. */
+  straightening?: boolean;
+  /** The band under the frame holds Straighten's dial (moments): the gesture hint moves to the band above it when
+   * that is free (Fit, no aspect chip), and is left out otherwise. */
+  dialBelow?: boolean;
 };
 
 /**
@@ -64,6 +68,9 @@ export function previewBlurRadius(frameWidth: number): number {
 }
 
 const THIRDS = ['33.333%', '66.666%'] as const;
+// Straighten's grid: square cells on the 3:4 frame, 6 across and 8 down.
+const FINE_COLUMNS = ['16.667%', '33.333%', '50%', '66.667%', '83.333%'] as const;
+const FINE_ROWS = ['12.5%', '25%', '37.5%', '50%', '62.5%', '75%', '87.5%'] as const;
 const CORNERS = [
   {
     top: -crop.cornerOffset,
@@ -113,10 +120,13 @@ export function CropPhoto({
   circle = false,
   fit = null,
   onFitChange,
+  straightening = false,
+  dialBelow = false,
 }: CropPhotoProps) {
   const { t } = useTranslation();
-  // The turned photo's size, and Fit's layout pulled back inside the frame: what is drawn, and where gestures start.
-  const turned = rotatedSize(image, state.rotation);
+  // The turned, levelled photo's size (the part that is cropped or fitted), and Fit's layout pulled back inside the
+  // frame: what is drawn, and where gestures start.
+  const turned = croppedSize(image, state.rotation, state.straighten);
   const placed = fit ? clampFitLayout(turned, fit, frame) : null;
   // Gesture callbacks read the latest state, not the one from when they were made.
   const latest = useRef({ state, placed, turned, onFitChange });
@@ -206,9 +216,14 @@ export function CropPhoto({
   const inset = (areaWidth - frame.width) / 2;
   const height = frame.height + crop.frameInsetY * 2;
   const bottom = crop.frameInsetY + frame.height;
-  // Turned first, then mirrored on screen: the order the image pipeline applies them.
-  const turn = [{ scaleX: state.flip ? -1 : 1 }, { rotate: `${state.rotation}deg` }];
-  const cover = coverScale(image, frame, state.rotation);
+  // Turned first, then mirrored, then tilted on screen: the order the image pipeline applies them. The photo is drawn
+  // whole; only its levelled middle (`turned`) is sized to the frame, so the tilted edges stay outside the frame.
+  const turn = [
+    { rotate: `${state.straighten}deg` },
+    { scaleX: state.flip ? -1 : 1 },
+    { rotate: `${state.rotation}deg` },
+  ];
+  const cover = coverScale(image, frame, state.rotation, state.straighten);
   // Fit: where the layout puts the photo in the frame, in points (zoom and pan come back on Fill).
   const place = placed ? fitPlacement(turned, frame, placed) : null;
   const scale = place ? place.photo.width / turned.width : cover * state.zoom;
@@ -319,6 +334,20 @@ export function CropPhoto({
           <View style={[styles.scrim, { left: 0, right: 0, top: bottom, bottom: 0 }]} />
           <View style={[styles.scrim, { left: 0, width: inset, top: crop.frameInsetY, height: frame.height }]} />
           <View style={[styles.scrim, { right: 0, width: inset, top: crop.frameInsetY, height: frame.height }]} />
+          {/* While straightening, a fine grid over the frame in Fill and Fit alike. */}
+          {straightening ? (
+            <View
+              style={[styles.placed, { left: inset, top: crop.frameInsetY, width: frame.width, height: frame.height }]}
+              testID="crop-straighten-grid"
+            >
+              {FINE_COLUMNS.map((at) => (
+                <View key={`v${at}`} style={[styles.vertical, { left: at }]} />
+              ))}
+              {FINE_ROWS.map((at) => (
+                <View key={`h${at}`} style={[styles.horizontal, { top: at }]} />
+              ))}
+            </View>
+          ) : null}
           {/* Fit is a layout, not a crop: no frame outline, grid or corner marks over it (D-154). */}
           {place ? null : (
             <View
@@ -343,7 +372,7 @@ export function CropPhoto({
                   />
                   <View style={[styles.circleGuide, { borderRadius: frame.width / 2 }]} />
                 </View>
-              ) : (
+              ) : straightening ? null : (
                 <>
                   {THIRDS.map((at) => (
                     <View key={`v${at}`} style={[styles.vertical, { left: at }]} />
@@ -373,9 +402,14 @@ export function CropPhoto({
             <Text style={[textStyle('label', '700'), styles.chipText]}>{aspect}</Text>
           </View>
         )}
-        <Text style={[textStyle('bodySmall'), styles.hint]} maxFontSizeMultiplier={maxTextScale.control}>
-          {t(fit ? 'crop.layout.fitHint' : 'crop.hint')}
-        </Text>
+        {dialBelow && !place ? null : (
+          <Text
+            style={[textStyle('bodySmall'), styles.hint, dialBelow ? styles.hintTop : styles.hintBottom]}
+            maxFontSizeMultiplier={maxTextScale.control}
+          >
+            {t(fit ? 'crop.layout.fitHint' : 'crop.hint')}
+          </Text>
+        )}
       </View>
     </GestureDetector>
   );
@@ -408,10 +442,11 @@ const styles = StyleSheet.create({
   chipText: { color: colors.ink },
   hint: {
     position: 'absolute',
-    bottom: crop.hintBottom,
     left: 0,
     right: 0,
     textAlign: 'center',
     color: colors.onDarkMuted,
   },
+  hintBottom: { bottom: crop.hintBottom },
+  hintTop: { top: crop.chipTop },
 });

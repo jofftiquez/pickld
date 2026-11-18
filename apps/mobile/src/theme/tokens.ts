@@ -703,6 +703,11 @@ export const crop = {
   fitTileRadius: { none: 0, small: 3, medium: 6, large: 10 }, // the glyph's corners for each corner choice
   toolRadius: 18,
   zoomIcon: 18,
+  // Straighten's dial under the frame: a ruler of one tick per degree that slides under a fixed green marker.
+  dialTickGap: 8, // points per degree
+  dialTick: 8, // a degree's tick; every fifth is `dialTickMajor`
+  dialTickMajor: 14,
+  dialMarker: 20,
 } as const;
 
 // Invite page (Invite, InviteQR; INV-07): one collectible card per code in its moment's color, white text on

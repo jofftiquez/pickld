@@ -850,6 +850,10 @@
     "rotateLabel": "Rotate 90 degrees",
     "flip": "Flip",
     "flipHint": "Mirrors the photo left to right",
+    "straighten": "Straighten",
+    "straightenHint": "Drag left or right to level the photo",
+    "straightenValue": "{{degrees}} degrees",
+    "straightenShort": "{{degrees}}°",
     "layout": {
       "label": "Fill or fit the 3:4 frame",
       "fill": "Fill",

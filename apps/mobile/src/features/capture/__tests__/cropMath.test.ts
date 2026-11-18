@@ -20,6 +20,7 @@ import {
   MOMENT_CROP_SHEET_HEIGHT,
   panCrop,
   rotateCrop,
+  straightenCrop,
   zoomCrop,
   type CropState,
 } from '../cropMath';
@@ -294,5 +295,44 @@ describe('profile photo frames (D-79)', () => {
 
   it('without a ratio it is the 3:4 moment frame, as before', () => {
     expect(cropFrame(window, insets, CROP_RATIO.moment)).toEqual(cropFrame(window, insets));
+  });
+});
+
+describe('Straighten', () => {
+  it('tilting makes the frame take a smaller rectangle, inside the levelled photo, still centred', () => {
+    const level = cropRectFor(initialCrop, wide, frame);
+    const tilted = cropRectFor(straightenCrop(initialCrop, 10, wide, frame), wide, frame);
+    // 2:1 at 10°: the levelled photo is 1 / (cos 10° + 2 sin 10°) of the turned one, so the frame's full height is
+    // that much of 2000.
+    const k = 1 / (Math.cos(Math.PI / 18) + 2 * Math.sin(Math.PI / 18));
+    expect(tilted.height).toBe(Math.floor(2000 * k));
+    expectInside(tilted, { width: 4000 * k, height: 2000 * k });
+    expect(tilted.originX + tilted.width / 2).toBeCloseTo((4000 * k) / 2, 0);
+    expect(level.height).toBe(2000);
+  });
+
+  it('zoom and pan stay, and a moved frame stays inside the levelled photo; the angle stops at ±15°', () => {
+    const moved = panCrop(at({ zoom: 2 }), { x: 9999, y: 9999 }, wide, frame);
+    const tilted = straightenCrop(moved, -40, wide, frame);
+    expect(tilted.straighten).toBe(-15);
+    expect(tilted.zoom).toBe(2);
+    // The cover scale grows as the levelled photo shrinks, so the photo is drawn larger; the levelled photo keeps
+    // its shape, so the room to pan (in points) is the same and a frame moved to the corner stays there.
+    expect(coverScale(wide, frame, 0, -15)).toBeGreaterThan(coverScale(wide, frame, 0));
+    expect(tilted.pan).toEqual(maxPan(wide, frame, 0, 2, -15));
+    expect(tilted.pan).toEqual(moved.pan);
+    const k = 1 / (Math.cos(Math.PI / 12) + 2 * Math.sin(Math.PI / 12));
+    const rect = cropRectFor(tilted, wide, frame);
+    expectInside(rect, { width: 4000 * k, height: 2000 * k });
+    // At the top-left corner, within a pixel of rounding the levelled photo's fractional size.
+    expect(rect.originX).toBeLessThanOrEqual(1);
+    expect(rect.originY).toBeLessThanOrEqual(1);
+  });
+
+  it('Flip mirrors the tilt; Rotate keeps it; Reset (initialCrop) is level', () => {
+    expect(flipCrop(at({ straighten: 4.5 })).straighten).toBe(-4.5);
+    expect(flipCrop(at({ straighten: 0 })).straighten).toBe(0);
+    expect(rotateCrop(at({ straighten: 4.5, zoom: 2 }))).toMatchObject({ straighten: 4.5, rotation: 90, zoom: 1 });
+    expect(initialCrop.straighten).toBe(0);
   });
 });

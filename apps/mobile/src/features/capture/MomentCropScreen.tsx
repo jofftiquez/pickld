@@ -8,14 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { pastDayLabel } from '@/features/days/pastDay';
 import { todayQueryKeys, type Me } from '@/features/jar/useToday';
 import { discardRecropPhoto, finishRecrop } from '@/features/moment/recrop';
-import {
-  clampFitLayout,
-  DEFAULT_FIT_PLACE,
-  rotatedSize,
-  type CropSpec,
-  type FitPlace,
-  type FitStyle,
-} from '@/lib/image/crop';
+import { clampFitLayout, DEFAULT_FIT_PLACE, type CropSpec, type FitPlace, type FitStyle } from '@/lib/image/crop';
 import { captureError } from '@/lib/monitoring';
 import { prepareItem } from '@/lib/queue/prepare';
 import { getSupabase } from '@/lib/supabase';
@@ -27,11 +20,13 @@ import {
   clampCrop,
   CROP_RATIO,
   cropFrame,
+  croppedSize,
   cropRectFor,
   flipCrop,
   initialCrop,
   MOMENT_CROP_SHEET_HEIGHT,
   rotateCrop,
+  straightenCrop,
   zoomCrop,
   type CropState,
 } from './cropMath';
@@ -49,6 +44,8 @@ import { saveGalleryPhoto } from './saveCapture';
 // photo and the editor, which opens on that file, shows exactly it. Fit is a layout step (D-154): the photo
 // starts whole and centred and can be moved and made smaller, with an optional border and rounded corners.
 // The look (frame style, border, corners) is remembered; the position starts centred for every photo.
+// Straighten (FR-CAP-03) tilts the photo up to 15° either way to level it, in Fill and Fit; the crop spec carries the
+// angle and preparation bakes the levelled photo in, so the editor, thumbnails and overlays all start from it.
 export function MomentCropScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -90,13 +87,15 @@ export function MomentCropScreen() {
   const image = { width: photo.width, height: photo.height };
   // The same frame CropView draws, so the rectangle matches what the user sees.
   const frame = cropFrame(window, insets, CROP_RATIO.moment, MOMENT_CROP_SHEET_HEIGHT);
-  // Fit's layout, kept whole inside the frame for the photo as it is turned now (a quarter turn changes its shape).
-  const fit = clampFitLayout(rotatedSize(image, state.rotation), { ...fitStyle, ...fitPlace });
+  // Fit's layout, kept whole inside the frame for the photo as it is turned and levelled now (a quarter turn changes
+  // its shape; Straighten keeps the shape and only makes the levelled photo smaller).
+  const fit = clampFitLayout(croppedSize(image, state.rotation, state.straighten), { ...fitStyle, ...fitPlace });
   const spec = (): CropSpec => ({
     crop: cropRectFor(state, image, frame),
     cropBasis: image,
     rotate: state.rotation,
     flip: state.flip,
+    ...(state.straighten ? { straighten: state.straighten } : null),
     ...(layout === 'fit' ? { fit } : null),
   });
 
@@ -184,6 +183,7 @@ export function MomentCropScreen() {
         setPlace(DEFAULT_FIT_PLACE);
       }}
       onFlip={() => setState((s) => clampCrop(flipCrop(s), image, frame))}
+      onStraighten={(degrees) => setState((s) => straightenCrop(s, degrees, image, frame))}
       layout={layout}
       fit={fit}
       onLayout={setLayout}

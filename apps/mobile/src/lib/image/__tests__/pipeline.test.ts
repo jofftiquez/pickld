@@ -77,6 +77,9 @@ jest.mock('expo-image-manipulator', () => {
 // Fit's frame is drawn with Skia (fitFrame.test covers the drawing); here it only hands back its PNG.
 const mockCompose = jest.fn(async (..._args: unknown[]) => 'file:///cache/fit-frame.png');
 jest.mock('../fitFrame', () => ({ composeFit: (...args: unknown[]) => mockCompose(...args) }));
+// Straighten's tilt is drawn with Skia too; here it only hands back its PNG.
+const mockStraighten = jest.fn(async (..._args: unknown[]) => 'file:///cache/level.png');
+jest.mock('../straighten', () => ({ drawStraightened: (...args: unknown[]) => mockStraighten(...args) }));
 
 jest.mock('expo-file-system', () => {
   const nodeFs = jest.requireActual<typeof import('node:fs')>('node:fs');
@@ -172,6 +175,36 @@ describe('preparePhoto', () => {
       cropBasis: { width: 2016, height: 1512 },
     });
     expect(mockState.ops[1]?.[0]).toEqual(['crop', { originX: 200, originY: 100, width: 1200, height: 1600 }]);
+  });
+
+  it('after a quarter turn the frame is scaled from the picked size turned the same way', async () => {
+    // Measured on a 2016 × 1512 report, turned to 1512 × 2016: the whole turned photo is the whole 3024 × 4032 one.
+    await preparePhoto('file:///picked.jpg', {
+      rotate: 90,
+      crop: { originX: 0, originY: 0, width: 1512, height: 2016 },
+      cropBasis: { width: 2016, height: 1512 },
+    });
+    expect(mockState.ops[1]?.[0]).toEqual(['crop', { originX: 0, originY: 0, width: 3024, height: 4032 }]);
+  });
+
+  it('Straighten: draws the frame of the levelled photo at 1440 × 1920 instead of cropping the source', async () => {
+    mockStraighten.mockClear();
+    await preparePhoto('file:///picked.jpg', {
+      crop: { originX: 100, originY: 50, width: 600, height: 800 },
+      cropBasis: { width: 2016, height: 1512 },
+      straighten: 5,
+    });
+    // The turned photo is written once (nearly lossless) for Skia, which gets the frame scaled to the decoded size.
+    expect(mockState.saves[0]?.options).toEqual({ format: 'jpeg', compress: 1 });
+    expect(mockStraighten).toHaveBeenCalledWith(
+      'file:///cache/out-0.webp',
+      5,
+      { originX: 200, originY: 100, width: 1200, height: 1600 },
+      { width: 1440, height: 1920 },
+    );
+    // Nothing crops or resizes the source; full is read from the drawn PNG.
+    expect(mockState.ops.flat().some(([op]) => op === 'crop')).toBe(false);
+    expect(mockState.deleted).toEqual(['file:///cache/out-0.webp', 'file:///cache/level.png']);
   });
 
   it('refuses and deletes outputs that still carry GPS', async () => {
@@ -274,6 +307,28 @@ describe('preparePhoto with Fit (D-152)', () => {
       [['resize', { width: 1440, height: 1920 }]],
       [['resize', { width: 480, height: 640 }]],
     ]);
+  });
+
+  it('Straighten in Fit: the whole levelled photo is drawn at the laid-out size, then framed', async () => {
+    mockStraighten.mockClear();
+    await preparePhoto('file:///picked.jpg', { fit: { frame: 'white' }, straighten: -8 });
+    // A 16:9 photo tilted 8°: its height binds, so the levelled middle is 1 / (cos 8° + 16/9 sin 8°) of it.
+    const k = 1 / (Math.cos((8 * Math.PI) / 180) + (16 / 9) * Math.sin((8 * Math.PI) / 180));
+    const [uri, degrees, rect, size] = mockStraighten.mock.calls[0] as [
+      string,
+      number,
+      Record<string, number>,
+      unknown,
+    ];
+    expect([uri, degrees, size]).toEqual(['file:///cache/out-0.webp', -8, { width: 1440, height: 810 }]);
+    expect(rect.originX).toBe(0);
+    expect(rect.originY).toBe(0);
+    expect(rect.width).toBeCloseTo(3840 * k, 6);
+    expect(rect.height).toBeCloseTo(2160 * k, 6);
+    expect(mockCompose.mock.calls[0]?.[0]).toBe('file:///cache/level.png');
+    expect(mockCompose.mock.calls[0]?.[1]).toMatchObject({
+      photo: { originX: 0, originY: 555, width: 1440, height: 810 },
+    });
   });
 
   it('a framed photo still goes through the location check, and nothing is left behind', async () => {

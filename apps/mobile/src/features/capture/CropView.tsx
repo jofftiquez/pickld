@@ -30,6 +30,7 @@ import { colors, crop, fitBorderColors, fitFrameColors, radius, sizes, space } f
 import { CropHeaderAction } from './CropHeaderAction';
 import { CropPhoto } from './CropPhoto';
 import { CROP_RATIO, cropFrame, MAX_ZOOM, MIN_ZOOM, MOMENT_CROP_SHEET_HEIGHT, type CropState } from './cropMath';
+import { StraightenDial } from './StraightenDial';
 
 /** Fill crops the photo to the frame (today's crop); Fit places it whole inside the frame (D-152). */
 export type CropLayout = 'fill' | 'fit';
@@ -66,6 +67,8 @@ export type CropViewProps = {
   /** Moments only. */
   onRotate?: () => void;
   onFlip?: () => void;
+  /** Moments only: Straighten's dial, degrees clockwise (Fill and Fit alike). */
+  onStraighten?: (degrees: number) => void;
   onReset: () => void;
   onCancel: () => void;
   onDone: () => void;
@@ -84,7 +87,8 @@ const PERCENT = 100;
  * Crop (FR-CAP-03; design: Crop): a header with Cancel, the title and the main button (Next: edit, or Save
  * crop for Re-crop) as a green pill like the editor's Save (D-59, D-65); the photo under the fixed 3:4
  * frame (square or 5:2 for Edit profile's photos, D-79), with Rotate, Flip and Reset as round glass buttons
- * down the frame's top right corner like the editor's photo buttons (D-158; only Reset for profile photos); a
+ * down the frame's top right corner like the editor's photo buttons (D-158; only Reset for profile photos), and for
+ * moments Straighten's dial in the dark band under the frame (a fine grid over the frame while it is dragged); a
  * low white sheet with Fill / Fit (D-152) and the zoom slider (Fit's frame styles in its place when Fit is on).
  * The frame is sized so the sheet fits without scrolling; it scrolls only when large text makes it taller
  * (D-37). From 1.5× text the title moves to its own row under the buttons, as in the editor's toolbar.
@@ -94,6 +98,7 @@ export function CropView(props: CropViewProps) {
   const { layout = 'fill', fit: fitLayout = null, forDay = null } = props;
   const { t } = useTranslation();
   const [fitTab, setFitTab] = useState<FitTab>('frame');
+  const [straightening, setStraightening] = useState(false);
   const profile = mode === 'avatar' || mode === 'cover';
   const copy = COPY[mode];
   // The frame's shape (lock chip, note): the moment copy unless it's a profile photo.
@@ -158,7 +163,24 @@ export function CropView(props: CropViewProps) {
           circle={mode === 'avatar'}
           fit={fit}
           onFitChange={props.onFitPlace}
+          straightening={straightening}
+          dialBelow={!profile}
         />
+        {/* Under the frame, in the dark band; a sibling of the photo's gestures, like the tools. */}
+        {profile ? null : (
+          <View
+            style={[
+              styles.dial,
+              { top: crop.frameInsetY + frame.height, left: (window.width - frame.width) / 2, width: frame.width },
+            ]}
+          >
+            <StraightenDial
+              value={state.straighten}
+              onChange={(degrees) => props.onStraighten?.(degrees)}
+              onActive={setStraightening}
+            />
+          </View>
+        )}
         {/* Over the photo, not in the sheet (D-158): down the frame's top right corner, as in the editor. A sibling
             of the photo's gestures, so pressing a button never drags the photo. */}
         <View
@@ -413,6 +435,7 @@ const styles = StyleSheet.create({
   sheetContent: { flexGrow: 1, gap: space.lg, paddingTop: crop.sheetPaddingTop, paddingHorizontal: space.xl },
   zoomRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   tools: { position: 'absolute', gap: space.sm, alignItems: 'center' },
+  dial: { position: 'absolute', height: crop.frameInsetY, justifyContent: 'center' },
   // As tall as the zoom row it replaces, so switching to Fit doesn't move the note's space.
   swatches: {
     flexDirection: 'row',

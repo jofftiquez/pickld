@@ -55,6 +55,24 @@ export type Rotation = (typeof rotations)[number];
 
 export type Size = { width: number; height: number };
 
+/** Straighten's range (FR-CAP-03): a small tilt either way to level a photo, not a turn. */
+export const MAX_STRAIGHTEN = 15;
+
+/**
+ * The largest rectangle of `turned`'s own shape, centred, that lies inside `turned` tilted `degrees` (clockwise)
+ * about its centre: the levelled photo Straighten keeps (FR-CAP-03). Fill crops inside it and Fit places it whole,
+ * so neither ever shows the tilted photo's empty corners. At 0 it is `turned` itself.
+ */
+export function levelledSize(turned: Size, degrees: number): Size {
+  if (!degrees) return turned;
+  const radians = (Math.abs(degrees) * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const { width: w, height: h } = turned;
+  const k = Math.min(w / (w * cos + h * sin), h / (w * sin + h * cos));
+  return { width: w * k, height: h * k };
+}
+
 const positive = z.number().finite().positive();
 
 /**
@@ -213,7 +231,9 @@ export function fitRect34(source: Size, out: Size = FULL_SIZE): CropRect {
  * scales `crop` to the size it actually decodes, so a picker that reports a scaled size still crops the
  * same part of the photo. With `fit` (D-152) the turned photo isn't cropped at all: it is placed whole inside
  * the 3:4 frame (`fitPixels`, with its position, size, border and corners from D-154) on `fit.frame`, and `crop`
- * is ignored. Rows queued before Fit have no `fit`.
+ * is ignored. Rows queued before Fit have no `fit`. `straighten` (degrees clockwise, after the turn and the flip)
+ * levels the photo: `crop` and Fit then measure the levelled photo (`levelledSize`) instead of the turned one.
+ * Rows queued before Straighten have none: 0.
  */
 export const cropSpecSchema = z.object({
   crop: z.object({
@@ -225,6 +245,7 @@ export const cropSpecSchema = z.object({
   cropBasis: z.object({ width: positive, height: positive }),
   rotate: z.literal(rotations),
   flip: z.boolean(),
+  straighten: z.number().finite().min(-MAX_STRAIGHTEN).max(MAX_STRAIGHTEN).optional(),
   fit: fitSpecSchema.optional(),
 });
 export type CropSpec = z.infer<typeof cropSpecSchema>;
