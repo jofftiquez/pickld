@@ -4127,6 +4127,126 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 972,
     height: 1024,
   },
+  'stickers/christmas-2026/christmas-tree.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/christmas-tree.png'),
+    width: 702,
+    height: 1024,
+  },
+  'stickers/christmas-2026/snowman.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/snowman.png'),
+    width: 849,
+    height: 1024,
+  },
+  'stickers/christmas-2026/belen.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/belen.png'),
+    width: 1024,
+    height: 958,
+  },
+  'stickers/christmas-2026/stocking.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/stocking.png'),
+    width: 817,
+    height: 1024,
+  },
+  'stickers/christmas-2026/queso-de-bola.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/queso-de-bola.png'),
+    width: 1024,
+    height: 956,
+  },
+  'stickers/christmas-2026/gingerbread.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/gingerbread.png'),
+    width: 893,
+    height: 1024,
+  },
+  'stickers/christmas-2026/carolers.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/carolers.png'),
+    width: 1024,
+    height: 1002,
+  },
+  'stickers/christmas-2026/reindeer.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/reindeer.png'),
+    width: 779,
+    height: 1024,
+  },
+  'stickers/christmas-2026/salabat.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/salabat.png'),
+    width: 1024,
+    height: 730,
+  },
+  'stickers/christmas-2026/candy-cane.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/candy-cane.png'),
+    width: 675,
+    height: 1024,
+  },
+  'stickers/christmas-2026/hot-cocoa.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/hot-cocoa.png'),
+    width: 829,
+    height: 1024,
+  },
+  'stickers/christmas-2026/ornament.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/ornament.png'),
+    width: 700,
+    height: 1024,
+  },
+  'stickers/christmas-2026/santa.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/santa.png'),
+    width: 922,
+    height: 1024,
+  },
+  'stickers/christmas-2026/milk-cookies.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/milk-cookies.png'),
+    width: 1024,
+    height: 860,
+  },
+  'stickers/christmas-2026/wreath.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/wreath.png'),
+    width: 890,
+    height: 1024,
+  },
+  'stickers/christmas-2026/noche-buena-table.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/noche-buena-table.png'),
+    width: 1024,
+    height: 818,
+  },
+  'stickers/christmas-2026/poinsettia.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/poinsettia.png'),
+    width: 972,
+    height: 1024,
+  },
+  'stickers/christmas-2026/string-lights.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/string-lights.png'),
+    width: 1024,
+    height: 334,
+  },
+  'stickers/christmas-2026/leche-flan.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/leche-flan.png'),
+    width: 1024,
+    height: 722,
+  },
+  'stickers/christmas-2026/gift-opening.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/gift-opening.png'),
+    width: 989,
+    height: 1024,
+  },
+  'stickers/christmas-2026/snow-globe.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/snow-globe.png'),
+    width: 783,
+    height: 1024,
+  },
+  'stickers/christmas-2026/jingle-bells.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/jingle-bells.png'),
+    width: 1024,
+    height: 870,
+  },
+  'stickers/christmas-2026/skating-penguin.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/skating-penguin.png'),
+    width: 875,
+    height: 1024,
+  },
+  'stickers/christmas-2026/balikbayan-box.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/balikbayan-box.png'),
+    width: 1024,
+    height: 1013,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
