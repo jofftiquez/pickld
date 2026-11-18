@@ -1,5 +1,7 @@
 // Renders the sticker art in assets/stickers/<pack>/<name>.png from the catalog in the local database.
-// Usage (after `pnpm db:reset`): node scripts/render-stickers.mjs [--force] [pack-slug ...]   (no slugs: every pack)
+// Usage: node scripts/render-stickers.mjs [--force] [pack-slug ...]   (no slugs: every pack)
+// With STICKER_CATALOG=<file.json> it renders those rows (public_sticker_catalog()'s shape) instead of reading the
+// local database, so art for a migration that isn't applied yet can be rendered without touching the database.
 // Existing files are kept (art never changes under a key; restyled art gets a new file name), unless --force.
 //
 // The catalog (labels, packs, asset paths) lives in supabase/migrations (0012); this script reads it with the
@@ -30,22 +32,30 @@ const font = `data:font/ttf;base64,${readFileSync(
   resolve(root, 'node_modules/@expo-google-fonts/plus-jakarta-sans/800ExtraBold/PlusJakartaSans_800ExtraBold.ttf'),
 ).toString('base64')}`;
 
-// Local stack only: the URL and anon key are read at runtime, never stored.
-const statusText = execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
-  cwd: root,
-  encoding: 'utf8',
-  stdio: ['ignore', 'pipe', 'ignore'],
-});
-const status = JSON.parse(statusText.slice(statusText.indexOf('{')));
-const res = await fetch(`${status.API_URL}/rest/v1/rpc/public_sticker_catalog`, {
-  method: 'POST',
-  headers: { apikey: status.ANON_KEY, authorization: `Bearer ${status.ANON_KEY}`, 'content-type': 'application/json' },
-  body: '{}',
-});
-if (!res.ok) throw new Error(`public_sticker_catalog: ${res.status} ${await res.text()}`);
+async function readCatalog() {
+  if (process.env.STICKER_CATALOG) return JSON.parse(readFileSync(resolve(process.env.STICKER_CATALOG), 'utf8'));
+  // Local stack only: the URL and anon key are read at runtime, never stored.
+  const statusText = execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  const status = JSON.parse(statusText.slice(statusText.indexOf('{')));
+  const res = await fetch(`${status.API_URL}/rest/v1/rpc/public_sticker_catalog`, {
+    method: 'POST',
+    headers: {
+      apikey: status.ANON_KEY,
+      authorization: `Bearer ${status.ANON_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: '{}',
+  });
+  if (!res.ok) throw new Error(`public_sticker_catalog: ${res.status} ${await res.text()}`);
+  return res.json();
+}
 const force = process.argv.includes('--force');
 const only = process.argv.slice(2).filter((a) => a !== '--force');
-const catalog = (await res.json()).filter(
+const catalog = (await readCatalog()).filter(
   (s) =>
     (only.length === 0 || only.includes(s.pack_slug)) && (force || !existsSync(resolve(root, 'assets', s.asset_path))),
 );
@@ -107,8 +117,9 @@ async function shoot(s, html, after) {
 }
 for (const s of catalog) {
   if (WORD_ART_PACKS.includes(s.pack_slug)) {
-    // The T-507 pills (no -v2) are retired (0065); their committed art stays as it is.
-    if (s.asset_path.endsWith('-v2.png')) await shoot(s, wordArtHtml(s.pack_slug, s.label, s.sort));
+    // The T-507 pills restyled under -v2 names are retired (0065); their committed art stays as it is.
+    const restyled = existsSync(resolve(root, 'assets', s.asset_path.replace(/\.png$/, '-v2.png')));
+    if (!restyled) await shoot(s, wordArtHtml(s.pack_slug, s.label, s.sort));
     continue;
   }
   if (s.pack_slug === HASHTAG_PACK) {
