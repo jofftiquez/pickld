@@ -21,11 +21,11 @@ select results_eq(
             ('corporate', 'premium', 'me.pickld.pack.corporate', 42), ('gen-z', 'premium', 'me.pickld.pack.gen_z', 42),
             ('trentahin', 'premium', 'me.pickld.pack.trentahin', 42), ('pride', 'premium', 'me.pickld.pack.pride', 42),
             ('cyclists', 'premium', 'me.pickld.pack.cyclists', 42), ('hashtags', 'premium', 'me.pickld.pack.hashtags', 30),
-            ('gym', 'premium', 'me.pickld.pack.gym', 30), ('foodie', 'premium', 'me.pickld.pack.foodie', 30), ('travel', 'premium', 'me.pickld.pack.travel', 30), ('student', 'premium', 'me.pickld.pack.student', 30), ('parents', 'premium', 'me.pickld.pack.parents', 30), ('fan-life', 'premium', 'me.pickld.pack.fan_life', 30) $$,
-  'nineteen paid packs (seven added in 0060, Hashtags in 0065, six in 0155; 0065 also restyles the word packs), each with its store product and stickers');
+            ('gym', 'premium', 'me.pickld.pack.gym', 30), ('foodie', 'premium', 'me.pickld.pack.foodie', 30), ('travel', 'premium', 'me.pickld.pack.travel', 30), ('student', 'premium', 'me.pickld.pack.student', 30), ('parents', 'premium', 'me.pickld.pack.parents', 30), ('fan-life', 'premium', 'me.pickld.pack.fan_life', 30), ('birthdays', 'premium', 'me.pickld.pack.birthdays', 30) $$,
+  'twenty paid packs (seven added in 0060, Hashtags in 0065, six in 0155; 0065 also restyles the word packs), each with its store product and stickers');
 select is((select count(*)::int from public.sticker_packs where tier in ('premium', 'seasonal') and (description is null or store_product_id is null)), 0,
           'every paid pack has a description and a store product');
-select is((select count(distinct store_product_id)::int from public.sticker_packs where store_product_id is not null), 19,
+select is((select count(distinct store_product_id)::int from public.sticker_packs where store_product_id is not null), 20,
           'store products are distinct');
 select is((select available_from || ' – ' || available_to from public.sticker_packs where slug = 'christmas-2026'),
           '2026-08-31 16:00:00+00 – 2026-12-31 16:00:00+00', 'the Christmas pack sells Sep 1 – Dec 31, Manila time');

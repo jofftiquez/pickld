@@ -4247,6 +4247,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 1024,
     height: 1013,
   },
+  'stickers/birthdays/birthday-cake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-cake.png'),
+    width: 817,
+    height: 1024,
+  },
+  'stickers/birthdays/balloons.png': {
+    source: require('../../../../../../assets/stickers/birthdays/balloons.png'),
+    width: 941,
+    height: 1024,
+  },
+  'stickers/birthdays/party-hat.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-hat.png'),
+    width: 869,
+    height: 1024,
+  },
+  'stickers/birthdays/party-popper.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-popper.png'),
+    width: 951,
+    height: 1024,
+  },
+  'stickers/birthdays/make-a-wish.png': {
+    source: require('../../../../../../assets/stickers/birthdays/make-a-wish.png'),
+    width: 963,
+    height: 1024,
+  },
+  'stickers/birthdays/gift-stack.png': {
+    source: require('../../../../../../assets/stickers/birthdays/gift-stack.png'),
+    width: 653,
+    height: 1024,
+  },
+  'stickers/birthdays/cake-slice.png': {
+    source: require('../../../../../../assets/stickers/birthdays/cake-slice.png'),
+    width: 875,
+    height: 1024,
+  },
+  'stickers/birthdays/bunting.png': {
+    source: require('../../../../../../assets/stickers/birthdays/bunting.png'),
+    width: 1024,
+    height: 363,
+  },
+  'stickers/birthdays/blow-candles.png': {
+    source: require('../../../../../../assets/stickers/birthdays/blow-candles.png'),
+    width: 1024,
+    height: 997,
+  },
+  'stickers/birthdays/cupcake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/cupcake.png'),
+    width: 727,
+    height: 1024,
+  },
+  'stickers/birthdays/crown.png': {
+    source: require('../../../../../../assets/stickers/birthdays/crown.png'),
+    width: 1024,
+    height: 758,
+  },
+  'stickers/birthdays/pinata.png': {
+    source: require('../../../../../../assets/stickers/birthdays/pinata.png'),
+    width: 967,
+    height: 1024,
+  },
+  'stickers/birthdays/pancit.png': {
+    source: require('../../../../../../assets/stickers/birthdays/pancit.png'),
+    width: 1024,
+    height: 703,
+  },
+  'stickers/birthdays/birthday-card.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-card.png'),
+    width: 845,
+    height: 1024,
+  },
+  'stickers/birthdays/gift-bear.png': {
+    source: require('../../../../../../assets/stickers/birthdays/gift-bear.png'),
+    width: 741,
+    height: 1024,
+  },
+  'stickers/birthdays/party-blower.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-blower.png'),
+    width: 1024,
+    height: 657,
+  },
+  'stickers/birthdays/party-animals.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-animals.png'),
+    width: 1024,
+    height: 917,
+  },
+  'stickers/birthdays/spaghetti.png': {
+    source: require('../../../../../../assets/stickers/birthdays/spaghetti.png'),
+    width: 1024,
+    height: 883,
+  },
+  'stickers/birthdays/heart-balloon.png': {
+    source: require('../../../../../../assets/stickers/birthdays/heart-balloon.png'),
+    width: 860,
+    height: 1024,
+  },
+  'stickers/birthdays/surprise-cat.png': {
+    source: require('../../../../../../assets/stickers/birthdays/surprise-cat.png'),
+    width: 907,
+    height: 1024,
+  },
+  'stickers/birthdays/ice-cream.png': {
+    source: require('../../../../../../assets/stickers/birthdays/ice-cream.png'),
+    width: 620,
+    height: 1024,
+  },
+  'stickers/birthdays/birthday-photo.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-photo.png'),
+    width: 985,
+    height: 1024,
+  },
+  'stickers/birthdays/lola-cake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/lola-cake.png'),
+    width: 931,
+    height: 1024,
+  },
+  'stickers/birthdays/cheers.png': {
+    source: require('../../../../../../assets/stickers/birthdays/cheers.png'),
+    width: 1024,
+    height: 875,
+  },
+  'stickers/birthdays/birthday-sash.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-sash.png'),
+    width: 674,
+    height: 1024,
+  },
+  'stickers/birthdays/loot-bag.png': {
+    source: require('../../../../../../assets/stickers/birthdays/loot-bag.png'),
+    width: 716,
+    height: 1024,
+  },
+  'stickers/birthdays/sparkler-cake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/sparkler-cake.png'),
+    width: 597,
+    height: 1024,
+  },
+  'stickers/birthdays/big-day.png': {
+    source: require('../../../../../../assets/stickers/birthdays/big-day.png'),
+    width: 965,
+    height: 1024,
+  },
+  'stickers/birthdays/karaoke.png': {
+    source: require('../../../../../../assets/stickers/birthdays/karaoke.png'),
+    width: 1024,
+    height: 999,
+  },
+  'stickers/birthdays/first-birthday.png': {
+    source: require('../../../../../../assets/stickers/birthdays/first-birthday.png'),
+    width: 848,
+    height: 1024,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
