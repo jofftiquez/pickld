@@ -603,6 +603,7 @@ export const stickerTool = {
     parents: '#e6f1d3',
     'fan-life': '#fbe3ea',
     birthdays: '#fbe3ea',
+    'new-year': '#fbeccd',
   } as Record<string, string>,
   packTintDefault: '#f0f2ec',
   // The sticker pack tile ending Today's grid: the pack's tint inside a white die-cut edge, tilted a little,

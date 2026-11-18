@@ -61,6 +61,7 @@ describe('bundled art', () => {
       ['0163_pet_parent_30.sql', 23],
       ['0164_christmas_30.sql', 24],
       ['0165_birthdays.sql', 30],
+      ['0166_new_year.sql', 30],
     ] as const;
     const drawnArt = drawn.flatMap(([migration, count]) => {
       const assets = assetsIn(migration);

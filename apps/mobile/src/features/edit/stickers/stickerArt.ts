@@ -4397,6 +4397,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 848,
     height: 1024,
   },
+  'stickers/new-year/fireworks.png': {
+    source: require('../../../../../../assets/stickers/new-year/fireworks.png'),
+    width: 1024,
+    height: 1019,
+  },
+  'stickers/new-year/midnight-clock.png': {
+    source: require('../../../../../../assets/stickers/new-year/midnight-clock.png'),
+    width: 1024,
+    height: 954,
+  },
+  'stickers/new-year/round-fruits.png': {
+    source: require('../../../../../../assets/stickers/new-year/round-fruits.png'),
+    width: 1024,
+    height: 850,
+  },
+  'stickers/new-year/jump-for-luck.png': {
+    source: require('../../../../../../assets/stickers/new-year/jump-for-luck.png'),
+    width: 738,
+    height: 1024,
+  },
+  'stickers/new-year/sparkler.png': {
+    source: require('../../../../../../assets/stickers/new-year/sparkler.png'),
+    width: 695,
+    height: 1024,
+  },
+  'stickers/new-year/midnight-toast.png': {
+    source: require('../../../../../../assets/stickers/new-year/midnight-toast.png'),
+    width: 931,
+    height: 1024,
+  },
+  'stickers/new-year/resolutions.png': {
+    source: require('../../../../../../assets/stickers/new-year/resolutions.png'),
+    width: 920,
+    height: 1024,
+  },
+  'stickers/new-year/red-lantern.png': {
+    source: require('../../../../../../assets/stickers/new-year/red-lantern.png'),
+    width: 756,
+    height: 1024,
+  },
+  'stickers/new-year/torotot.png': {
+    source: require('../../../../../../assets/stickers/new-year/torotot.png'),
+    width: 1024,
+    height: 530,
+  },
+  'stickers/new-year/red-envelope.png': {
+    source: require('../../../../../../assets/stickers/new-year/red-envelope.png'),
+    width: 656,
+    height: 1024,
+  },
+  'stickers/new-year/lucky-coins.png': {
+    source: require('../../../../../../assets/stickers/new-year/lucky-coins.png'),
+    width: 890,
+    height: 1024,
+  },
+  'stickers/new-year/biko.png': {
+    source: require('../../../../../../assets/stickers/new-year/biko.png'),
+    width: 1024,
+    height: 772,
+  },
+  'stickers/new-year/disco-ball.png': {
+    source: require('../../../../../../assets/stickers/new-year/disco-ball.png'),
+    width: 1021,
+    height: 1024,
+  },
+  'stickers/new-year/slow-morning.png': {
+    source: require('../../../../../../assets/stickers/new-year/slow-morning.png'),
+    width: 1024,
+    height: 925,
+  },
+  'stickers/new-year/first-sunrise.png': {
+    source: require('../../../../../../assets/stickers/new-year/first-sunrise.png'),
+    width: 1024,
+    height: 666,
+  },
+  'stickers/new-year/party-top-hat.png': {
+    source: require('../../../../../../assets/stickers/new-year/party-top-hat.png'),
+    width: 1024,
+    height: 1002,
+  },
+  'stickers/new-year/media-noche.png': {
+    source: require('../../../../../../assets/stickers/new-year/media-noche.png'),
+    width: 1024,
+    height: 867,
+  },
+  'stickers/new-year/midnight-kiss.png': {
+    source: require('../../../../../../assets/stickers/new-year/midnight-kiss.png'),
+    width: 1002,
+    height: 1024,
+  },
+  'stickers/new-year/fresh-start.png': {
+    source: require('../../../../../../assets/stickers/new-year/fresh-start.png'),
+    width: 1024,
+    height: 928,
+  },
+  'stickers/new-year/firecrackers.png': {
+    source: require('../../../../../../assets/stickers/new-year/firecrackers.png'),
+    width: 1015,
+    height: 1024,
+  },
+  'stickers/new-year/wish-jar.png': {
+    source: require('../../../../../../assets/stickers/new-year/wish-jar.png'),
+    width: 881,
+    height: 1024,
+  },
+  'stickers/new-year/party-pup.png': {
+    source: require('../../../../../../assets/stickers/new-year/party-pup.png'),
+    width: 1014,
+    height: 1024,
+  },
+  'stickers/new-year/moon-and-star.png': {
+    source: require('../../../../../../assets/stickers/new-year/moon-and-star.png'),
+    width: 1024,
+    height: 777,
+  },
+  'stickers/new-year/tikoy.png': {
+    source: require('../../../../../../assets/stickers/new-year/tikoy.png'),
+    width: 1024,
+    height: 741,
+  },
+  'stickers/new-year/countdown.png': {
+    source: require('../../../../../../assets/stickers/new-year/countdown.png'),
+    width: 768,
+    height: 1024,
+  },
+  'stickers/new-year/new-routine.png': {
+    source: require('../../../../../../assets/stickers/new-year/new-routine.png'),
+    width: 1024,
+    height: 937,
+  },
+  'stickers/new-year/polka-dots.png': {
+    source: require('../../../../../../assets/stickers/new-year/polka-dots.png'),
+    width: 749,
+    height: 1024,
+  },
+  'stickers/new-year/confetti-cannon.png': {
+    source: require('../../../../../../assets/stickers/new-year/confetti-cannon.png'),
+    width: 947,
+    height: 1024,
+  },
+  'stickers/new-year/long-noodles.png': {
+    source: require('../../../../../../assets/stickers/new-year/long-noodles.png'),
+    width: 1011,
+    height: 1024,
+  },
+  'stickers/new-year/nye-selfie.png': {
+    source: require('../../../../../../assets/stickers/new-year/nye-selfie.png'),
+    width: 1024,
+    height: 919,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
