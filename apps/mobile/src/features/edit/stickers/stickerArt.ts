@@ -4012,6 +4012,121 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 1024,
     height: 890,
   },
+  'stickers/pet-parent/bath-time.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/bath-time.png'),
+    width: 1002,
+    height: 1024,
+  },
+  'stickers/pet-parent/box-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/box-cat.png'),
+    width: 1024,
+    height: 952,
+  },
+  'stickers/pet-parent/dinner-bowl.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/dinner-bowl.png'),
+    width: 952,
+    height: 1024,
+  },
+  'stickers/pet-parent/yarn-kitten.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/yarn-kitten.png'),
+    width: 1024,
+    height: 895,
+  },
+  'stickers/pet-parent/car-ride.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/car-ride.png'),
+    width: 1024,
+    height: 788,
+  },
+  'stickers/pet-parent/keyboard-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/keyboard-cat.png'),
+    width: 984,
+    height: 1024,
+  },
+  'stickers/pet-parent/sweater-corgi.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/sweater-corgi.png'),
+    width: 946,
+    height: 1024,
+  },
+  'stickers/pet-parent/hamster.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/hamster.png'),
+    width: 1024,
+    height: 931,
+  },
+  'stickers/pet-parent/slipper-crime.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/slipper-crime.png'),
+    width: 1024,
+    height: 773,
+  },
+  'stickers/pet-parent/window-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/window-cat.png'),
+    width: 924,
+    height: 1024,
+  },
+  'stickers/pet-parent/fetch.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/fetch.png'),
+    width: 1024,
+    height: 692,
+  },
+  'stickers/pet-parent/goldfish.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/goldfish.png'),
+    width: 1024,
+    height: 955,
+  },
+  'stickers/pet-parent/bunny.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/bunny.png'),
+    width: 1024,
+    height: 1007,
+  },
+  'stickers/pet-parent/cuddle-pile.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/cuddle-pile.png'),
+    width: 1024,
+    height: 906,
+  },
+  'stickers/pet-parent/glass-push.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/glass-push.png'),
+    width: 1024,
+    height: 855,
+  },
+  'stickers/pet-parent/budgie.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/budgie.png'),
+    width: 874,
+    height: 1024,
+  },
+  'stickers/pet-parent/muddy-pup.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/muddy-pup.png'),
+    width: 1024,
+    height: 837,
+  },
+  'stickers/pet-parent/scratch-post.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/scratch-post.png'),
+    width: 930,
+    height: 1024,
+  },
+  'stickers/pet-parent/leash.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/leash.png'),
+    width: 1024,
+    height: 752,
+  },
+  'stickers/pet-parent/groomed-pup.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/groomed-pup.png'),
+    width: 869,
+    height: 1024,
+  },
+  'stickers/pet-parent/turtle.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/turtle.png'),
+    width: 1024,
+    height: 600,
+  },
+  'stickers/pet-parent/pet-birthday.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/pet-birthday.png'),
+    width: 1024,
+    height: 1000,
+  },
+  'stickers/pet-parent/laundry-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/laundry-cat.png'),
+    width: 972,
+    height: 1024,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */

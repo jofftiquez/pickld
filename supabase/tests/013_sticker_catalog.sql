@@ -73,15 +73,15 @@ select throws_ok($$ insert into public.stickers (pack_id, label, asset_path) sel
 
 -- ---------------------------------------------------------------- signed-in reads (owner, reader, outsider, blocked, blocker)
 select tests.act_as('owner');
-select is(pg_temp.seen(), '23 packs/801 stickers', 'owner reads the whole catalog');
+select is(pg_temp.seen(), '23 packs/824 stickers', 'owner reads the whole catalog');
 select tests.act_as('reader');
-select is(pg_temp.seen(), '23 packs/801 stickers', 'reader reads the whole catalog');
+select is(pg_temp.seen(), '23 packs/824 stickers', 'reader reads the whole catalog');
 select tests.act_as('outsider');
-select is(pg_temp.seen(), '23 packs/801 stickers', 'outsider reads the whole catalog');
+select is(pg_temp.seen(), '23 packs/824 stickers', 'outsider reads the whole catalog');
 select tests.act_as('blocked');
-select is(pg_temp.seen(), '23 packs/801 stickers', 'a blocked user reads the whole catalog (it is nobody''s content)');
+select is(pg_temp.seen(), '23 packs/824 stickers', 'a blocked user reads the whole catalog (it is nobody''s content)');
 select tests.act_as('blocker');
-select is(pg_temp.seen(), '23 packs/801 stickers', 'a user who blocked someone reads the whole catalog');
+select is(pg_temp.seen(), '23 packs/824 stickers', 'a user who blocked someone reads the whole catalog');
 select throws_ok($$ insert into public.stickers (pack_id, label, asset_path) select id, 'mine', 'stickers/everyday/mine.png' from public.sticker_packs limit 1 $$,
                  '42501', null, 'a signed-in user cannot add a sticker');
 select throws_ok($$ update public.sticker_packs set tier = 'free' where slug = 'milestones' $$,
@@ -94,10 +94,10 @@ select throws_ok($$ select * from public.sticker_packs $$, '42501', null, 'anon 
 select throws_ok($$ select * from public.owned_packs $$, '42501', null, 'anon cannot read owned_packs');
 select throws_ok($$ select public.pack_usable(p) from (select null::public.sticker_packs p) x $$, '42501', null,
                  'anon cannot call pack_usable');
-select is((select count(*)::int from public.public_sticker_catalog()), 801, 'anon reads all 801 stickers through the RPC (launch, paid and retired)');
+select is((select count(*)::int from public.public_sticker_catalog()), 824, 'anon reads all 824 stickers through the RPC (launch, paid and retired)');
 select results_eq($$ select pack_slug, count(*)::int from public.public_sticker_catalog() group by pack_slug, pack_sort order by pack_sort $$,
                   $$ values ('everyday', 45), ('the-eight', 54), ('stamps', 31), ('milestones', 12), ('christmas-2026', 18),
-                           ('pinoy-life', 48), ('barkada', 46), ('work-from-wherever', 46), ('pet-parent', 21),
+                           ('pinoy-life', 48), ('barkada', 46), ('work-from-wherever', 46), ('pet-parent', 44),
                            ('olivia', 30), ('fish-moods', 30), ('corporate', 42), ('gen-z', 42), ('trentahin', 42), ('pride', 42), ('cyclists', 42),
                            ('hashtags', 30),
                            ('gym', 30), ('foodie', 30), ('travel', 30), ('student', 30), ('parents', 30), ('fan-life', 30) $$,
@@ -137,7 +137,7 @@ update public.sticker_packs set available_from = now() + interval '7 days' where
 insert into public.stickers (pack_id, label, asset_path, tags)
 select id, 'Bago', 'stickers/' || slug || '/bago.png', '{new}' from public.sticker_packs where slug in ('test-free', 'test-soon');
 select tests.act_as('outsider');
-select is(pg_temp.seen(), '25 packs/803 stickers', 'a new pack and sticker are readable as soon as the rows exist');
+select is(pg_temp.seen(), '25 packs/826 stickers', 'a new pack and sticker are readable as soon as the rows exist');
 select ok('test-free' = any (pg_temp.usable_packs()), 'a new free pack is usable at once, with no backfill');
 select tests.act_as_anon();
 select ok(exists (select 1 from public.public_sticker_catalog() where pack_slug = 'test-free' and label = 'Bago'),
