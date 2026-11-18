@@ -1797,6 +1797,76 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 360,
     height: 307,
   },
+  'stickers/olivia/good-morning.png': {
+    source: require('../../../../../../assets/stickers/olivia/good-morning.png'),
+    width: 930,
+    height: 1024,
+  },
+  'stickers/olivia/window-watch.png': {
+    source: require('../../../../../../assets/stickers/olivia/window-watch.png'),
+    width: 882,
+    height: 1024,
+  },
+  'stickers/olivia/keyboard-cat.png': {
+    source: require('../../../../../../assets/stickers/olivia/keyboard-cat.png'),
+    width: 1024,
+    height: 799,
+  },
+  'stickers/olivia/sun-puddle.png': {
+    source: require('../../../../../../assets/stickers/olivia/sun-puddle.png'),
+    width: 1024,
+    height: 931,
+  },
+  'stickers/olivia/night-owl.png': {
+    source: require('../../../../../../assets/stickers/olivia/night-owl.png'),
+    width: 1024,
+    height: 1015,
+  },
+  'stickers/olivia/selfie.png': {
+    source: require('../../../../../../assets/stickers/olivia/selfie.png'),
+    width: 907,
+    height: 1024,
+  },
+  'stickers/olivia/lady-queen.png': {
+    source: require('../../../../../../assets/stickers/olivia/lady-queen.png'),
+    width: 941,
+    height: 1024,
+  },
+  'stickers/olivia/cuddle-buddy.png': {
+    source: require('../../../../../../assets/stickers/olivia/cuddle-buddy.png'),
+    width: 1024,
+    height: 873,
+  },
+  'stickers/olivia/bath-time-no.png': {
+    source: require('../../../../../../assets/stickers/olivia/bath-time-no.png'),
+    width: 916,
+    height: 1024,
+  },
+  'stickers/olivia/if-i-fits.png': {
+    source: require('../../../../../../assets/stickers/olivia/if-i-fits.png'),
+    width: 1024,
+    height: 1013,
+  },
+  'stickers/olivia/laundry-queen.png': {
+    source: require('../../../../../../assets/stickers/olivia/laundry-queen.png'),
+    width: 898,
+    height: 1024,
+  },
+  'stickers/olivia/hunting-mode.png': {
+    source: require('../../../../../../assets/stickers/olivia/hunting-mode.png'),
+    width: 1010,
+    height: 1024,
+  },
+  'stickers/olivia/judging-you.png': {
+    source: require('../../../../../../assets/stickers/olivia/judging-you.png'),
+    width: 831,
+    height: 1024,
+  },
+  'stickers/olivia/tv-time.png': {
+    source: require('../../../../../../assets/stickers/olivia/tv-time.png'),
+    width: 1024,
+    height: 929,
+  },
   'stickers/parents/babys-first.png': {
     source: require('../../../../../../assets/stickers/parents/babys-first.png'),
     width: 2047,
