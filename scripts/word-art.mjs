@@ -162,19 +162,18 @@ export function wordArtHtml(packSlug, label, sort) {
   const cut = 7; // white die-cut, beyond the outline
   const layer = (style, extra = '') => `<div class="l" style="${style}">${extra}${body}</div>`;
   const layers = [];
-  // Die-cut: white, thick stroke, at every extrusion step so the edge wraps the 3D part too.
-  const ring = [0, 45, 90, 135, 180, 225, 270, 315]
-    .map(
-      (a) =>
-        `drop-shadow(${(cut * Math.cos((a * Math.PI) / 180)).toFixed(1)}px ${(cut * Math.sin((a * Math.PI) / 180)).toFixed(1)}px 0.8px #fff)`,
-    )
-    .join(' ');
-  for (let k = steps; k >= 0; k -= 2) {
-    layers.push(
-      layer(`color:#fff;-webkit-text-stroke:${p.strokeW * 2}px #fff;transform:translate(${k}px,${k}px);filter:${ring}`),
-    );
+  // Die-cut: white, thick stroke, at every extrusion step so the edge wraps the 3D part too. The #cut filter grows
+  // the white steps by `cut` with a round edge (dilate, soften, re-sharpen): smooth when the art is drawn big.
+  const cutFilter = `<svg width="0" height="0" style="position:absolute"><filter id="cut" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="${cut - 1.5}"/><feGaussianBlur stdDeviation="1.5"/>
+    <feComponentTransfer result="a"><feFuncA type="linear" slope="6" intercept="-2"/></feComponentTransfer>
+    <feFlood flood-color="#fff"/><feComposite in2="a" operator="in"/></filter></svg>`;
+  const white = [];
+  for (let k = steps; k >= 0; k -= 1) {
+    white.push(layer(`color:#fff;-webkit-text-stroke:${p.strokeW * 2}px #fff;transform:translate(${k}px,${k}px)`));
   }
-  for (let k = steps; k >= 1; k--) {
+  layers.push(`<div class="l stack" style="padding:0;filter:url(#cut)">${white.join('')}</div>`);
+  for (let k = steps; k >= 0.5; k -= 0.5) {
     layers.push(
       layer(
         `color:${look.extrude};-webkit-text-stroke:${p.strokeW * 2}px ${look.extrude};transform:translate(${k}px,${k}px)`,
@@ -194,7 +193,7 @@ export function wordArtHtml(packSlug, label, sort) {
     );
   }
   const room = p.decor === 'speed' ? 'padding:0 0 0 38px' : 'padding:18px 24px 0 0';
-  return `<div id="s"><div id="w" style="transform:rotate(${tilt}deg) skewX(${p.skew}deg);${room}">
+  return `${cutFilter}<div id="s"><div id="w" style="transform:rotate(${tilt}deg) skewX(${p.skew}deg);${room}">
     <div class="stack" style="font-family:${p.font};font-size:${p.size}px;letter-spacing:${p.spacing};line-height:${p.lineHeight ?? 1.08}">${layers.join('')}</div>
     ${DECOR[p.decor](look.stroke)}
   </div></div>`;
@@ -289,16 +288,10 @@ export const bubbleScript = `(${(bubblePathSrc) => {
   const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
   svg.innerHTML = `
     <defs>
-      <filter id="grain" x="0" y="0" width="100%" height="100%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="${seed}"/>
-        <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -2.2 1.25"/>
-        <feComposite operator="in" in2="SourceGraphic"/>
-      </filter>
       <filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.2"/></filter>
     </defs>
     <path d="${d}" fill="#fff" stroke="#fff" stroke-width="16" stroke-linejoin="round" filter="url(#sh)"/>
     <path d="${d}" fill="${bg}"/>
-    <path d="${d}" fill="${bg}" filter="url(#grain)" opacity="0.35"/>
     <text x="${shape === 'drop' ? w * 0.56 : w / 2}" y="${h / 2}" text-anchor="middle" dominant-baseline="central" font-family="hand" font-size="46" fill="${fg}" stroke="${fg}" stroke-width="0.9" letter-spacing="0.5">${esc(label)}</text>`;
   // Crop to the bubble: its outline (8px white edge) plus room for the shadow.
   const bb = svg.querySelector('path').getBBox();
