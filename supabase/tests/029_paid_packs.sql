@@ -17,7 +17,7 @@ select results_eq(
   $$ values ('christmas-2026', 'seasonal', 'me.pickld.pack.christmas_2026', 18), ('pinoy-life', 'premium', 'me.pickld.pack.pinoy_life', 34),
             ('barkada', 'premium', 'me.pickld.pack.barkada', 25), ('work-from-wherever', 'premium', 'me.pickld.pack.work_from_wherever', 24),
             ('pet-parent', 'premium', 'me.pickld.pack.pet_parent', 21),
-            ('olivia', 'premium', 'me.pickld.pack.olivia', 30), ('fish-moods', 'premium', 'me.pickld.pack.fish_moods', 16),
+            ('olivia', 'premium', 'me.pickld.pack.olivia', 30), ('fish-moods', 'premium', 'me.pickld.pack.fish_moods', 30),
             ('corporate', 'premium', 'me.pickld.pack.corporate', 42), ('gen-z', 'premium', 'me.pickld.pack.gen_z', 42),
             ('trentahin', 'premium', 'me.pickld.pack.trentahin', 42), ('pride', 'premium', 'me.pickld.pack.pride', 42),
             ('cyclists', 'premium', 'me.pickld.pack.cyclists', 42), ('hashtags', 'premium', 'me.pickld.pack.hashtags', 30),

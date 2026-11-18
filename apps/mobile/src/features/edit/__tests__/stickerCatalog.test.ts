@@ -14,7 +14,7 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012, 0029, 0032, 0060, 0065, 0135, 0154, 0155 and 0156 seed, and nothing else', () => {
+  it('has a PNG for every sticker 0012, 0029, 0032, 0060, 0065, 0135, 0154, 0155 and 0156+ seed, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
     const assetsIn = (migration: string, from = 'insert into') =>
       [
@@ -49,9 +49,16 @@ describe('bundled art', () => {
     // 0155 adds six text packs of 30.
     const world = assetsIn('0155_world_text_packs.sql');
     expect(world).toHaveLength(180);
-    // 0156 adds 14 Olivia pictures, drawn at 1024 px.
-    const olivia = assetsIn('0156_olivia_30.sql');
-    expect(olivia).toHaveLength(14);
+    // 0156 on: drawn pictures at 1024 px that grow each picture pack to 30 (their updates retire text stickers first).
+    const drawn = [
+      ['0156_olivia_30.sql', 14],
+      ['0157_fish_moods_30.sql', 14],
+    ] as const;
+    const drawnArt = drawn.flatMap(([migration, count]) => {
+      const assets = assetsIn(migration);
+      expect(assets).toHaveLength(count);
+      return assets;
+    });
     const words = [
       ...seededStickers.map((s) => s.asset),
       ...paid,
@@ -62,7 +69,7 @@ describe('bundled art', () => {
       ...thirty,
       ...world,
     ];
-    expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures, ...addedPictures, ...olivia].sort());
+    expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures, ...addedPictures, ...drawnArt].sort());
     // Word stickers are wide labels (hashtag bubbles can be near square); picture stickers fit a near-square box.
     for (const asset of words.filter((a) => !a.startsWith('stickers/hashtags/')))
       expect(stickerArt[asset]!.width).toBeGreaterThan(stickerArt[asset]!.height);

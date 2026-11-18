@@ -3487,6 +3487,76 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 346,
     height: 360,
   },
+  'stickers/fish-moods/bored.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/bored.png'),
+    width: 1024,
+    height: 776,
+  },
+  'stickers/fish-moods/excited.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/excited.png'),
+    width: 949,
+    height: 1024,
+  },
+  'stickers/fish-moods/thinking.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/thinking.png'),
+    width: 1024,
+    height: 955,
+  },
+  'stickers/fish-moods/grateful.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/grateful.png'),
+    width: 1024,
+    height: 948,
+  },
+  'stickers/fish-moods/sorry.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/sorry.png'),
+    width: 1024,
+    height: 1003,
+  },
+  'stickers/fish-moods/hug-me.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/hug-me.png'),
+    width: 989,
+    height: 1024,
+  },
+  'stickers/fish-moods/determined.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/determined.png'),
+    width: 1024,
+    height: 1009,
+  },
+  'stickers/fish-moods/cold.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/cold.png'),
+    width: 1024,
+    height: 978,
+  },
+  'stickers/fish-moods/hot.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/hot.png'),
+    width: 1024,
+    height: 796,
+  },
+  'stickers/fish-moods/dizzy.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/dizzy.png'),
+    width: 1011,
+    height: 1024,
+  },
+  'stickers/fish-moods/eye-roll.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/eye-roll.png'),
+    width: 1024,
+    height: 937,
+  },
+  'stickers/fish-moods/wink.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/wink.png'),
+    width: 1024,
+    height: 1006,
+  },
+  'stickers/fish-moods/thumbs-up.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/thumbs-up.png'),
+    width: 1024,
+    height: 977,
+  },
+  'stickers/fish-moods/good-night.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/good-night.png'),
+    width: 1024,
+    height: 956,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
