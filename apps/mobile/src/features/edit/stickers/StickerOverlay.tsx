@@ -9,6 +9,7 @@ export function StickerOverlay({ overlay, width, height }: StickerOverlayProps) 
       stamp={overlay.stamp}
       width={width}
       height={height}
+      fullResolution
       testID={`sticker-${overlay.id}`}
     />
   );

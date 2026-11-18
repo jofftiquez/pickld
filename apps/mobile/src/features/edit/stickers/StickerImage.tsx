@@ -14,6 +14,11 @@ export type StickerImageProps = {
   stamp?: StampKind | null;
   width: number;
   height: number;
+  /**
+   * Decode the art at its own size instead of the view's. A sticker on a photo is pinched bigger than it was laid
+   * out (OverlayItem scales it until the gesture ends), so art decoded at the smaller size would blur.
+   */
+  fullResolution?: boolean;
   testID?: string;
 };
 
@@ -22,7 +27,7 @@ export type StickerImageProps = {
  * a soft placeholder until it arrives, nothing when the Worker has no such art), or for an auto stamp the
  * live value of the moment being edited. Decorative: the control or overlay around it carries the spoken name.
  */
-export function StickerImage({ asset, stamp, width, height, testID }: StickerImageProps) {
+export function StickerImage({ asset, stamp, width, height, fullResolution = false, testID }: StickerImageProps) {
   const { t } = useTranslation();
   const moment = useStampMoment();
   const art = useStickerArtSource(asset);
@@ -48,6 +53,7 @@ export function StickerImage({ asset, stamp, width, height, testID }: StickerIma
       source={art.kind === 'bundled' ? art.source : { uri: art.uri }}
       style={{ width, height }}
       contentFit="contain"
+      allowDownscaling={!fullResolution}
       accessible={false}
       testID={testID}
     />
