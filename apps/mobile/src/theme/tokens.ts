@@ -604,6 +604,7 @@ export const stickerTool = {
     'fan-life': '#fbe3ea',
     birthdays: '#fbe3ea',
     'new-year': '#fbeccd',
+    valentines: '#f6dcd9',
   } as Record<string, string>,
   packTintDefault: '#f0f2ec',
   // The sticker pack tile ending Today's grid: the pack's tint inside a white die-cut edge, tilted a little,

@@ -4547,6 +4547,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 1024,
     height: 919,
   },
+  'stickers/valentines/hearts.png': {
+    source: require('../../../../../../assets/stickers/valentines/hearts.png'),
+    width: 1024,
+    height: 791,
+  },
+  'stickers/valentines/roses.png': {
+    source: require('../../../../../../assets/stickers/valentines/roses.png'),
+    width: 834,
+    height: 1024,
+  },
+  'stickers/valentines/chocolates.png': {
+    source: require('../../../../../../assets/stickers/valentines/chocolates.png'),
+    width: 902,
+    height: 1024,
+  },
+  'stickers/valentines/love-letter.png': {
+    source: require('../../../../../../assets/stickers/valentines/love-letter.png'),
+    width: 932,
+    height: 1024,
+  },
+  'stickers/valentines/cupid.png': {
+    source: require('../../../../../../assets/stickers/valentines/cupid.png'),
+    width: 996,
+    height: 1024,
+  },
+  'stickers/valentines/heart-bear.png': {
+    source: require('../../../../../../assets/stickers/valentines/heart-bear.png'),
+    width: 772,
+    height: 1024,
+  },
+  'stickers/valentines/coffee-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/coffee-date.png'),
+    width: 1024,
+    height: 775,
+  },
+  'stickers/valentines/holding-hands.png': {
+    source: require('../../../../../../assets/stickers/valentines/holding-hands.png'),
+    width: 995,
+    height: 1024,
+  },
+  'stickers/valentines/love-lock.png': {
+    source: require('../../../../../../assets/stickers/valentines/love-lock.png'),
+    width: 1024,
+    height: 928,
+  },
+  'stickers/valentines/penguin-pair.png': {
+    source: require('../../../../../../assets/stickers/valentines/penguin-pair.png'),
+    width: 1024,
+    height: 1015,
+  },
+  'stickers/valentines/candlelit-dinner.png': {
+    source: require('../../../../../../assets/stickers/valentines/candlelit-dinner.png'),
+    width: 1024,
+    height: 718,
+  },
+  'stickers/valentines/ring-box.png': {
+    source: require('../../../../../../assets/stickers/valentines/ring-box.png'),
+    width: 816,
+    height: 1024,
+  },
+  'stickers/valentines/sweet-treats.png': {
+    source: require('../../../../../../assets/stickers/valentines/sweet-treats.png'),
+    width: 1024,
+    height: 734,
+  },
+  'stickers/valentines/cat-couple.png': {
+    source: require('../../../../../../assets/stickers/valentines/cat-couple.png'),
+    width: 1024,
+    height: 867,
+  },
+  'stickers/valentines/galentines.png': {
+    source: require('../../../../../../assets/stickers/valentines/galentines.png'),
+    width: 1024,
+    height: 931,
+  },
+  'stickers/valentines/heart-balloon.png': {
+    source: require('../../../../../../assets/stickers/valentines/heart-balloon.png'),
+    width: 783,
+    height: 1024,
+  },
+  'stickers/valentines/finger-heart.png': {
+    source: require('../../../../../../assets/stickers/valentines/finger-heart.png'),
+    width: 1024,
+    height: 674,
+  },
+  'stickers/valentines/single-rose.png': {
+    source: require('../../../../../../assets/stickers/valentines/single-rose.png'),
+    width: 655,
+    height: 1024,
+  },
+  'stickers/valentines/self-love.png': {
+    source: require('../../../../../../assets/stickers/valentines/self-love.png'),
+    width: 1024,
+    height: 864,
+  },
+  'stickers/valentines/mended-heart.png': {
+    source: require('../../../../../../assets/stickers/valentines/mended-heart.png'),
+    width: 1024,
+    height: 897,
+  },
+  'stickers/valentines/rain-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/rain-date.png'),
+    width: 1024,
+    height: 1019,
+  },
+  'stickers/valentines/boba-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/boba-date.png'),
+    width: 1024,
+    height: 926,
+  },
+  'stickers/valentines/lolo-lola.png': {
+    source: require('../../../../../../assets/stickers/valentines/lolo-lola.png'),
+    width: 922,
+    height: 1024,
+  },
+  'stickers/valentines/movie-night.png': {
+    source: require('../../../../../../assets/stickers/valentines/movie-night.png'),
+    width: 1024,
+    height: 791,
+  },
+  'stickers/valentines/picnic-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/picnic-date.png'),
+    width: 1024,
+    height: 834,
+  },
+  'stickers/valentines/video-call.png': {
+    source: require('../../../../../../assets/stickers/valentines/video-call.png'),
+    width: 929,
+    height: 1024,
+  },
+  'stickers/valentines/lovebirds.png': {
+    source: require('../../../../../../assets/stickers/valentines/lovebirds.png'),
+    width: 1024,
+    height: 697,
+  },
+  'stickers/valentines/rose-pup.png': {
+    source: require('../../../../../../assets/stickers/valentines/rose-pup.png'),
+    width: 1024,
+    height: 1015,
+  },
+  'stickers/valentines/heart-pizza.png': {
+    source: require('../../../../../../assets/stickers/valentines/heart-pizza.png'),
+    width: 1024,
+    height: 904,
+  },
+  'stickers/valentines/love-song.png': {
+    source: require('../../../../../../assets/stickers/valentines/love-song.png'),
+    width: 1024,
+    height: 1007,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
