@@ -15,7 +15,7 @@ select results_eq(
   $$ select p.slug, p.tier::text, p.store_product_id, count(s.id)::int from public.sticker_packs p join public.stickers s on s.pack_id = p.id
      where p.tier in ('premium', 'seasonal') group by p.slug, p.tier, p.store_product_id, p.sort order by p.sort $$,
   $$ values ('christmas-2026', 'seasonal', 'me.pickld.pack.christmas_2026', 18), ('pinoy-life', 'premium', 'me.pickld.pack.pinoy_life', 48),
-            ('barkada', 'premium', 'me.pickld.pack.barkada', 46), ('work-from-wherever', 'premium', 'me.pickld.pack.work_from_wherever', 24),
+            ('barkada', 'premium', 'me.pickld.pack.barkada', 46), ('work-from-wherever', 'premium', 'me.pickld.pack.work_from_wherever', 46),
             ('pet-parent', 'premium', 'me.pickld.pack.pet_parent', 21),
             ('olivia', 'premium', 'me.pickld.pack.olivia', 30), ('fish-moods', 'premium', 'me.pickld.pack.fish_moods', 30),
             ('corporate', 'premium', 'me.pickld.pack.corporate', 42), ('gen-z', 'premium', 'me.pickld.pack.gen_z', 42),

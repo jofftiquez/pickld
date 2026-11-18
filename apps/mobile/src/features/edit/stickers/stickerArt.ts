@@ -3902,6 +3902,116 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 1024,
     height: 829,
   },
+  'stickers/work-from-wherever/cafe-desk.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/cafe-desk.png'),
+    width: 1024,
+    height: 1019,
+  },
+  'stickers/work-from-wherever/beach-desk.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/beach-desk.png'),
+    width: 1024,
+    height: 964,
+  },
+  'stickers/work-from-wherever/bed-desk.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/bed-desk.png'),
+    width: 1024,
+    height: 855,
+  },
+  'stickers/work-from-wherever/five-oclock.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/five-oclock.png'),
+    width: 1024,
+    height: 959,
+  },
+  'stickers/work-from-wherever/all-done.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/all-done.png'),
+    width: 994,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/crunch-time.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/crunch-time.png'),
+    width: 1024,
+    height: 923,
+  },
+  'stickers/work-from-wherever/desk-lamp.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/desk-lamp.png'),
+    width: 1024,
+    height: 964,
+  },
+  'stickers/work-from-wherever/keyboard.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/keyboard.png'),
+    width: 1024,
+    height: 588,
+  },
+  'stickers/work-from-wherever/mouse.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/mouse.png'),
+    width: 861,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/video-meeting.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/video-meeting.png'),
+    width: 1024,
+    height: 947,
+  },
+  'stickers/work-from-wherever/comfy-chair.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/comfy-chair.png'),
+    width: 760,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/workation.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/workation.png'),
+    width: 554,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/full-wifi.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/full-wifi.png'),
+    width: 1024,
+    height: 887,
+  },
+  'stickers/work-from-wherever/low-battery.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/low-battery.png'),
+    width: 1024,
+    height: 950,
+  },
+  'stickers/work-from-wherever/balcony-office.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/balcony-office.png'),
+    width: 1024,
+    height: 680,
+  },
+  'stickers/work-from-wherever/water-bottle.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/water-bottle.png'),
+    width: 745,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/focus-timer.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/focus-timer.png'),
+    width: 1016,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/laptop-bag.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/laptop-bag.png'),
+    width: 1010,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/stretch-break.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/stretch-break.png'),
+    width: 1024,
+    height: 762,
+  },
+  'stickers/work-from-wherever/paperwork.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/paperwork.png'),
+    width: 1024,
+    height: 931,
+  },
+  'stickers/work-from-wherever/bright-idea.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/bright-idea.png'),
+    width: 855,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/train-office.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/train-office.png'),
+    width: 1024,
+    height: 890,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
