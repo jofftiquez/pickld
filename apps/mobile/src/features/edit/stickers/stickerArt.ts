@@ -3697,6 +3697,106 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 850,
     height: 1024,
   },
+  'stickers/everyday/panda.png': {
+    source: require('../../../../../../assets/stickers/everyday/panda.png'),
+    width: 850,
+    height: 1024,
+  },
+  'stickers/everyday/penguin.png': {
+    source: require('../../../../../../assets/stickers/everyday/penguin.png'),
+    width: 998,
+    height: 1024,
+  },
+  'stickers/everyday/fox.png': {
+    source: require('../../../../../../assets/stickers/everyday/fox.png'),
+    width: 807,
+    height: 1024,
+  },
+  'stickers/everyday/koala.png': {
+    source: require('../../../../../../assets/stickers/everyday/koala.png'),
+    width: 932,
+    height: 1024,
+  },
+  'stickers/everyday/hamster.png': {
+    source: require('../../../../../../assets/stickers/everyday/hamster.png'),
+    width: 954,
+    height: 1024,
+  },
+  'stickers/everyday/turtle.png': {
+    source: require('../../../../../../assets/stickers/everyday/turtle.png'),
+    width: 1024,
+    height: 810,
+  },
+  'stickers/everyday/duckling.png': {
+    source: require('../../../../../../assets/stickers/everyday/duckling.png'),
+    width: 824,
+    height: 1024,
+  },
+  'stickers/everyday/pineapple.png': {
+    source: require('../../../../../../assets/stickers/everyday/pineapple.png'),
+    width: 648,
+    height: 1024,
+  },
+  'stickers/everyday/cherries.png': {
+    source: require('../../../../../../assets/stickers/everyday/cherries.png'),
+    width: 1024,
+    height: 960,
+  },
+  'stickers/everyday/lemon.png': {
+    source: require('../../../../../../assets/stickers/everyday/lemon.png'),
+    width: 826,
+    height: 1024,
+  },
+  'stickers/everyday/peach.png': {
+    source: require('../../../../../../assets/stickers/everyday/peach.png'),
+    width: 975,
+    height: 1024,
+  },
+  'stickers/everyday/donut.png': {
+    source: require('../../../../../../assets/stickers/everyday/donut.png'),
+    width: 997,
+    height: 1024,
+  },
+  'stickers/everyday/cupcake.png': {
+    source: require('../../../../../../assets/stickers/everyday/cupcake.png'),
+    width: 735,
+    height: 1024,
+  },
+  'stickers/everyday/popsicle.png': {
+    source: require('../../../../../../assets/stickers/everyday/popsicle.png'),
+    width: 547,
+    height: 1024,
+  },
+  'stickers/everyday/sunny.png': {
+    source: require('../../../../../../assets/stickers/everyday/sunny.png'),
+    width: 986,
+    height: 1024,
+  },
+  'stickers/everyday/cloudy.png': {
+    source: require('../../../../../../assets/stickers/everyday/cloudy.png'),
+    width: 1024,
+    height: 922,
+  },
+  'stickers/everyday/rainbow.png': {
+    source: require('../../../../../../assets/stickers/everyday/rainbow.png'),
+    width: 1024,
+    height: 540,
+  },
+  'stickers/everyday/star.png': {
+    source: require('../../../../../../assets/stickers/everyday/star.png'),
+    width: 1024,
+    height: 958,
+  },
+  'stickers/everyday/flower.png': {
+    source: require('../../../../../../assets/stickers/everyday/flower.png'),
+    width: 812,
+    height: 1024,
+  },
+  'stickers/everyday/teddy.png': {
+    source: require('../../../../../../assets/stickers/everyday/teddy.png'),
+    width: 865,
+    height: 1024,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
