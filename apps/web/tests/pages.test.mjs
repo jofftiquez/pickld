@@ -518,6 +518,14 @@ test('the home page shows the pitch, the eight moments and loaded screenshots wi
     '#afternoon',
     '#evening',
   ]);
+  // Each row fans three example photos, with the moment's #tag on the front one.
+  const rows = page.getByRole('list', { name: 'The eight moments' }).getByRole('listitem');
+  assert.equal(await rows.nth(2).locator('.mk-fan img').count(), 3);
+  assert.equal(await rows.nth(2).locator('.mk-fan span').innerText(), '#whoamiwith');
+  assert.equal(
+    await page.getByRole('link', { name: 'Ideas for all eight moments →' }).getAttribute('href'),
+    '/moments',
+  );
   const imgs = page.locator('main img');
   assert.ok((await imgs.count()) >= 15);
   // Lazy images load as they scroll in; the floating stickers animate, so scroll with the DOM, not Playwright.
@@ -532,6 +540,23 @@ test('the home page shows the pitch, the eight moments and loaded screenshots wi
   // Decorative stickers are hidden from screen readers; every other image says what it shows.
   assert.ok(await imgs.evaluateAll((els) => els.every((e) => e.hasAttribute('alt'))));
   assert.equal(await page.getByRole('link', { name: 'Google Play' }).count(), 0, 'iPhone first');
+  assert.ok(await noSideScroll(page));
+  await page.close();
+});
+
+test('the moments page gives each moment its own fanned row with the app’s question and eight ideas', async () => {
+  const { page, status } = await open('/moments');
+  assert.equal(status, 200);
+  const slots = await page.getByRole('list', { name: 'The eight moments' }).locator('b').allTextContents();
+  assert.equal(slots.length, 8);
+  for (const slot of slots) {
+    const section = page.getByRole('region', { name: slot, exact: true });
+    assert.equal(await section.getByRole('listitem').count(), 8, slot);
+    assert.equal(await section.locator('.mk-fan img').count(), 3, slot);
+  }
+  const who = page.getByRole('region', { name: '#whoamiwith', exact: true });
+  assert.ok(await who.getByText('Pickld asks: “Who are you with?”').isVisible());
+  assert.ok(await who.getByText('Your dog, waiting by the door').isVisible());
   assert.ok(await noSideScroll(page));
   await page.close();
 });
@@ -889,6 +914,7 @@ test('the AASA file lets the app open profile, jar and sign-in links but not leg
     '/story',
     '/why',
     '/mission',
+    '/moments',
     '/waitlist',
     '/waitlist/*',
     '/.well-known/*',

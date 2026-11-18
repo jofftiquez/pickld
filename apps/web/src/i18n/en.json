@@ -94,7 +94,8 @@
       "story": "Our story",
       "faq": "FAQ",
       "join": "Join the waitlist",
-      "mission": "Our mission"
+      "mission": "Our mission",
+      "moments": "The eight moments"
     },
     "hero": {
       "eyebrow": "Coming soon to iPhone",
@@ -110,29 +111,160 @@
       "note": "We’ll email you a 6-digit code to check it’s you, then only about Pickld’s launch."
     },
     "moments": {
+      "eyebrow": "The heart of Pickld",
       "title": "One jar a day. Eight moments to fill.",
-      "body": "Every moment has its own slot, so your jar tells the whole day, not just the highlight. A new jar starts at midnight.",
-      "whereami": "Where you are right now",
-      "mebusywith": "What’s keeping you busy",
-      "whoamiwith": "The people you’re with",
-      "ootd": "Today’s outfit",
-      "selfie": "Your face, as it is",
-      "morning": "How the day began",
-      "afternoon": "The middle of it all",
-      "evening": "How it ended",
-      "label": "The eight moments"
+      "body": "Every moment has its own slot, so your jar tells the whole day, not just the highlight. Each slot is a small prompt, not a rule: fill it with whatever your day actually looked like. A new jar starts at midnight.",
+      "label": "The eight moments",
+      "asks": "Pickld asks: “{{question}}”",
+      "ideas": "Ideas for #{{slot}}",
+      "outro": "Fill as many as you like. A half-full jar is still a real day.",
+      "whereami": {
+        "title": "Where you are right now",
+        "question": "Where are you right now?",
+        "body": "The place you’re in, big or small. Trips count, but so do the ordinary spots your day passes through.",
+        "e1": "The jeepney window on the way to work",
+        "e2": "Your desk, coffee ring and all",
+        "e3": "The new café you finally tried",
+        "e4": "Lola’s kitchen on a Sunday",
+        "e5": "The beach you saved up for",
+        "long": "Snap the place you’re in, whatever it is. A new city counts, and so does the jeepney window, the waiting room or the corner of your room you never leave. Months later, these are the photos that tell you where your days actually went.",
+        "e6": "A waiting room, number in hand",
+        "e7": "The view from your bedroom window",
+        "e8": "A street you’ve never walked before"
+      },
+      "mebusywith": {
+        "title": "What’s keeping you busy",
+        "question": "What’s keeping you busy?",
+        "body": "Whatever has your hands or your head today: work, school, a hobby, or resting on purpose.",
+        "e1": "A spreadsheet that won’t balance",
+        "e2": "Reviewing for tomorrow’s exam",
+        "e3": "Packing orders for your side hustle",
+        "e4": "Repotting your plants",
+        "e5": "A mountain of laundry to fold",
+        "long": "Whatever has your hands or your head today. Work and school count, and so do the small jobs nobody sees: cooking, caring for someone, fixing something, or finally resting because you needed it.",
+        "e6": "Dinner prep for the whole family",
+        "e7": "Sketching something just for you",
+        "e8": "Doing nothing on purpose"
+      },
+      "whoamiwith": {
+        "title": "Who you’re with",
+        "question": "Who are you with?",
+        "body": "Your company today. It doesn’t have to be a person: a pet, a plant, a good book, or just you all count.",
+        "e1": "Your barkada at the merienda spot",
+        "e2": "Your dog, waiting by the door",
+        "e3": "The plant you’ve kept alive all year",
+        "e4": "A book you can’t put down",
+        "e5": "Just you, and that’s enough",
+        "long": "Your company today, whoever or whatever it is. It doesn’t have to be a person: a pet, a plant, a good book, a show you’re hooked on, or just you. Quiet days alone count as much as loud days with the barkada.",
+        "e6": "Lola on her favorite chair",
+        "e7": "Your cat, sitting on your keyboard",
+        "e8": "The coworker who saved your day"
+      },
+      "ootd": {
+        "title": "Today’s outfit",
+        "question": "What are you wearing today?",
+        "body": "What you actually wore, not what you’d post. Pambahay counts.",
+        "e1": "Pambahay all day",
+        "e2": "Your school uniform",
+        "e3": "The office fit you planned last night",
+        "e4": "Gym clothes that never saw the gym",
+        "e5": "Just the new shoes",
+        "long": "What you actually wore today, not what you’d dress up for a post. Pambahay, uniform, work clothes or the shirt you slept in all count. Look back in a year and you’ll see your real wardrobe, and your real life.",
+        "e6": "Rain boots and a borrowed jacket",
+        "e7": "Matching shirts at a family party",
+        "e8": "Just your favorite socks"
+      },
+      "selfie": {
+        "title": "Your face, as it is",
+        "question": "How are you feeling?",
+        "body": "How you look and feel right now. Pickld has no beauty filters or retouching, so it’s really you.",
+        "e1": "Sleepy, first thing in the morning",
+        "e2": "Mid-laugh with a friend",
+        "e3": "Sweaty after a run",
+        "e4": "Proud of a fresh haircut",
+        "e5": "Tired but happy on the ride home",
+        "long": "How you look and feel right now: sleepy, proud, sweaty or glowing. Pickld has color filters but no beauty filters or face retouching, so it’s really you. Not feeling it? Any photo of you counts, even your shadow.",
+        "e6": "Your shadow on the pavement",
+        "e7": "Mid-yawn at your desk",
+        "e8": "A blurry one, laughing"
+      },
+      "morning": {
+        "title": "How the day began",
+        "question": "How’s your morning going?",
+        "body": "The first part of your day, however it started: early, late or somewhere in between.",
+        "e1": "Pandesal and coffee",
+        "e2": "The sunrise on your walk",
+        "e3": "The queue for the MRT",
+        "e4": "Your cat asking for breakfast",
+        "e5": "The alarm you snoozed three times",
+        "long": "The first stretch of your day, however it started. Early run or late alarm, pandesal or no breakfast at all. The Now tile points to #morning from 5 in the morning until noon.",
+        "e6": "The light coming through your window",
+        "e7": "Packed baon on the counter",
+        "e8": "Your plants getting watered"
+      },
+      "afternoon": {
+        "title": "The middle of it all",
+        "question": "How’s your afternoon going?",
+        "body": "The stretch between lunch and going home: the busy part, the slump and the snack that saves it.",
+        "e1": "Lunch with your officemates",
+        "e2": "Halo-halo on a hot day",
+        "e3": "A siesta on the sofa",
+        "e4": "Rain on the window",
+        "e5": "School pick-up time",
+        "long": "The middle of it all, from lunch until you head home. It’s the busy part, the slump and the merienda that saves it. Afternoons are the part of the day we forget fastest, so they’re worth a photo.",
+        "e6": "Merienda: turon and a cold drink",
+        "e7": "Your shoes up on a desk",
+        "e8": "The long line at the bank"
+      },
+      "evening": {
+        "title": "How it ended",
+        "question": "How was your day?",
+        "body": "The way your day wound down, quiet or not.",
+        "e1": "Dinner at the family table",
+        "e2": "The sunset from the rooftop",
+        "e3": "Your skincare lineup",
+        "e4": "A late game night with friends",
+        "e5": "Your bed, finally",
+        "long": "How your day wound down, quiet or not. Dinner, the commute home, a night out or your bed at last. An evening moment closes the jar, so it’s the one you’ll see first when you look back.",
+        "e6": "The commute home through city lights",
+        "e7": "A late-night snack",
+        "e8": "The last episode before sleep"
+      },
+      "seeAll": "Ideas for all eight moments",
+      "metaTitle": "The eight moments · Pickld",
+      "metaDescription": "What goes in each of Pickld’s eight daily moments, from #whereami to #evening, with ideas for each. #whoamiwith doesn’t have to be a person.",
+      "ideasTitle": "Ideas"
     },
     "how": {
       "title": "Snap. Decorate. Share.",
       "snapTitle": "Snap it when it happens",
       "snapBody": "Take the photo and it drops into the right slot. No signal? It’s saved on your phone and uploads later.",
-      "snapAlt": "Thursday’s jar on Pickld with eight moments, each with the time it was taken",
+      "snapAlt": "Today on Pickld: 6 of 8 moments in today’s jar, each photo with its time and #tag, with #selfie and #evening still open to fill",
       "decorateTitle": "Make it yours",
       "decorateBody": "Color filters, stickers, speech bubbles and text. No beauty filters or face retouching, ever.",
-      "decorateAlt": "Pickld’s photo editor with a row of color filters under the photo",
+      "decorateAlt": "Pickld’s photo editor on an #afternoon photo, with tabs for Filters, Stickers, Bubble and Text and a row of color filters",
       "shareTitle": "Share it your way",
       "shareBody": "Publish your jar for the people who read you, or turn a moment or the whole jar into a card for your Stories, with your pickld.me link on it.",
-      "shareAlt": "A Pickld jar card for Stories: eight photos, the caption “sinigang night” and Dale’s Thursday, 8 of 8"
+      "shareAlt": "Share jar on Pickld: a card of Dale’s Thursday with all eight photos and his pickld.me link, with buttons to save the image, copy the link or share it",
+      "body": "Three steps, all in the app, from the moment it happens to your friends reading it.",
+      "snapPoints": {
+        "p1": "The Now tile picks the moment for the time of day: morning, afternoon or evening.",
+        "p2": "Choose from your gallery and the photo joins the day it was taken.",
+        "p3": "Missed one? Fill in any past day later; it shows a small “Added later” badge.",
+        "p4": "Offline, it’s saved on your phone and uploads when you’re back."
+      },
+      "decoratePoints": {
+        "p1": "16 color filters, named for Pinoy days, like Kalamansi, Kape and Halo-halo.",
+        "p2": "Stickers from free packs, Olivia’s pack and very Pinoy packs.",
+        "p3": "Speech, thought, shout and whisper bubbles, and text in 8 fonts.",
+        "p4": "No beauty filters or face retouching, ever."
+      },
+      "sharePoints": {
+        "p1": "Publish the jar for your readers, for everyone, or only you.",
+        "p2": "Turn a moment or the whole jar into a card for your Stories, in 9:16 or 4:5.",
+        "p3": "Pick from layouts, from one big photo to a grid of eight.",
+        "p4": "Every card carries your pickld.me link so friends can find you."
+      }
     },
     "stickers": {
       "eyebrow": "Stickers",
@@ -151,7 +283,33 @@
       "everyoneBody": "Anyone with the link, and your page at pickld.me.",
       "onlyMe": "Only me",
       "onlyMeBody": "Keep this jar just for you.",
-      "private": "A single moment can be private too. Private moments stay with you: never in feeds, shares or notifications."
+      "controlsTitle": "You decide who you see, and who sees you",
+      "controls": {
+        "private": {
+          "title": "Private moments",
+          "body": "Mark one moment private and it stays with you: never in feeds, share cards, notifications or our analytics."
+        },
+        "location": {
+          "title": "No location in your photos",
+          "body": "Pickld removes location data from your photos before they upload. Only the time is kept."
+        },
+        "mute": {
+          "title": "Mute without drama",
+          "body": "Mute someone you read and their posts leave your Moments and Jars. You stay their reader, and they aren’t told."
+        },
+        "block": {
+          "title": "Block anyone",
+          "body": "Blocked people can’t see your jars or find your profile, and they aren’t told."
+        },
+        "discover": {
+          "title": "Stay out of Discover",
+          "body": "Turn off Show me in Discover to stay out of Discover and suggestions."
+        },
+        "teens": {
+          "title": "Safer for teens",
+          "body": "Under 18, your posts stay out of Discover and suggestions."
+        }
+      }
     },
     "memories": {
       "title": "Look back without scrolling",

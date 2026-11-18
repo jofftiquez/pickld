@@ -15,7 +15,7 @@ import { waitlistEnv } from '~/lib/env';
 export type WaitlistStatus = 'joined' | 'already' | 'member' | 'limited' | 'invalid' | 'captcha' | 'expired' | 'error';
 
 const COOKIE = 'pickld_waitlist';
-const sources = ['hero', 'final', 'waitlist', 'story'] as const;
+const sources = ['hero', 'final', 'waitlist', 'story', 'moments'] as const;
 const email = z.string().trim().max(254).pipe(z.email());
 const pending = z.object({ email, source: z.enum(sources) });
 const start = z.object({ email, source: z.enum(sources).catch('hero'), token: z.string().min(1).max(2048) });

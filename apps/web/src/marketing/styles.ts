@@ -52,12 +52,44 @@ export const css = `
 .mk-head{max-width:640px;margin-bottom:32px}
 .mk-head p{margin-top:14px}
 .mk-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;list-style:none;margin:0;padding:0}
-.mk-chip{background:${colors.surface};border-radius:${radius.banner}px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.mk-head-big{max-width:820px}
+.mk-head-big h2{font-size:clamp(36px,8vw,64px);line-height:1.04;letter-spacing:-.04em}
+.mk-head-big .mk-lead{margin-top:18px}
+.mk-chip{background:${colors.surface};border-radius:${radius.banner}px;padding:16px;display:flex;flex-direction:column;gap:6px;height:100%;text-decoration:none}
+.mk-moments-outro{text-align:center}
+.mk-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:56px}
+.mk-row{display:grid;gap:24px;align-items:center;scroll-margin-top:16px}
+.mk-fan{position:relative;width:100%;height:clamp(250px,66vw,360px)}
+.mk-fan-card{position:absolute;left:50%;top:46%;width:clamp(140px,38vw,210px);aspect-ratio:3/4;border-radius:${radius.card}px;overflow:hidden;border:4px solid ${colors.surface};background:${colors.photoPlaceholder};box-shadow:0 18px 40px -18px ${colors.scrim};transform-origin:50% 135%}
+.mk .mk-fan-card img{width:100%;height:100%;object-fit:cover}
+.mk-fan-card::after{content:'';position:absolute;inset:55% 0 0;background:linear-gradient(transparent,${colors.scrim})}
+.mk-fan-card span{z-index:1;position:absolute;left:12px;bottom:10px;color:${colors.surface};font-weight:800;font-size:15px;text-shadow:0 1px 6px ${colors.textShadow}}
+.mk-fan-0{z-index:3;transform:translate(-50%,-50%)}
+.mk-fan-1{z-index:2;transform:translate(-50%,-50%) rotate(-13deg)}
+.mk-fan-2{z-index:1;transform:translate(-50%,-50%) rotate(13deg)}
+.mk-row-text{display:flex;flex-direction:column;gap:8px}
+.mk-row-text b{font-size:clamp(30px,6vw,44px);font-weight:800;line-height:1.05;letter-spacing:-.035em;overflow-wrap:break-word}
+.mk .mk-row-text h3{font-size:22px}
+.mk-row-text p{max-width:28em}
+.mk-row-text h2{font-size:clamp(30px,6vw,44px);line-height:1.05;letter-spacing:-.035em;overflow-wrap:break-word}
+.mk .mk-row-ask{color:${colors.ink};font-weight:700}
+.mk-row-text h4{margin:10px 0 0;color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.mk-ideas{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.mk-ideas li{background:${colors.surface};color:${colors.ink};border-radius:${radius.pill}px;padding:8px 14px;font-size:15px;line-height:1.35}
+.mk-rows-page{margin-top:48px}
+.mk-panels{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:56px}
+.mk-panel{padding:8px 0}
+.mk-panel h3{font-size:clamp(26px,5vw,34px);letter-spacing:-.03em;margin-top:14px}
+.mk-panel .mk-lead{margin-top:12px}
+.mk-step-n{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${colors.brandTint};color:${colors.brandText};font-weight:800;font-size:18px}
+.mk-points{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.mk-points li{position:relative;padding-left:28px;color:${colors.ink};font-size:16px;line-height:1.45}
+.mk-points li::before{content:'';position:absolute;left:4px;top:7px;width:10px;height:10px;border-radius:50%;background:${colors.brand}}
+.mk .mk-subhead{margin:48px 0 16px;font-size:clamp(24px,4.5vw,30px);letter-spacing:-.025em}
+.mk-card h4{margin:0;color:${colors.ink};font-size:17px;font-weight:800}
+.mk-rows-more{display:flex;width:fit-content;margin:56px auto 0}
 .mk-chip b{color:${colors.brandText};font-size:16px;font-weight:800}
 .mk-chip span{color:${colors.muted};font-size:14px;line-height:1.35}
-.mk-steps{display:grid;gap:20px;list-style:none;margin:0;padding:0}
-.mk-step{background:${colors.surface};border-radius:${radius.card}px;padding:28px 20px 0;display:flex;flex-direction:column;gap:10px;overflow:hidden}
-.mk-step .mk-phone{margin:14px auto -60px;width:min(240px,64vw)}
 .mk-dark{background:${colors.ink}}
 .mk-dark h2,.mk-dark h3{color:${colors.surface}}
 .mk-dark p{color:${colors.onDarkMuted}}
@@ -115,6 +147,7 @@ export const css = `
 @media (min-width:720px){
   .mk-chips{grid-template-columns:repeat(4,minmax(0,1fr))}
   .mk-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mk-panels{gap:72px}
   .mk-cards.mk-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mk-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
   .mk-olivia{grid-template-columns:repeat(8,minmax(0,1fr))}
@@ -123,9 +156,13 @@ export const css = `
 @media (min-width:900px){
   .mk-hero{grid-template-columns:1.1fr .9fr;padding-top:72px;padding-bottom:88px}
   .mk-section{padding:96px 0}
-  .mk-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mk-split{grid-template-columns:1fr 1fr;gap:64px}
   .mk-split-flip>:first-child{order:2}
+  .mk-rows{gap:24px}
+  .mk-row{grid-template-columns:1fr 1fr;gap:64px}
+  .mk-fan{height:420px}
+  .mk-fan-card{width:250px}
+  .mk-row-flip>:first-child{order:2}
   .mk-timeline{flex-direction:row;max-width:none;padding:28px 0 0;border-left:0;border-top:3px solid ${colors.brandTint};gap:32px}
   .mk-timeline li{flex:1}
   .mk-timeline li::before{left:0;top:-41px}
@@ -139,6 +176,11 @@ export const css = `
   html{scroll-behavior:smooth}
   .mk-btn{transition:transform .15s ease}
   .mk-btn:hover{transform:translateY(-1px)}
+  .mk-chip{transition:transform .15s ease}
+  .mk-chip:hover{transform:translateY(-2px)}
+  .mk-fan-card{transition:transform .3s ease}
+  .mk-row:hover .mk-fan-1{transform:translate(-50%,-50%) rotate(-18deg)}
+  .mk-row:hover .mk-fan-2{transform:translate(-50%,-50%) rotate(18deg)}
   .mk-float{animation:mk-bob 5s ease-in-out infinite}
   .mk-float-b{animation-delay:-2.5s}
   @keyframes mk-bob{50%{translate:0 -8px}}
