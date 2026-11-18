@@ -1,16 +1,25 @@
 // Crop screen geometry (FR-CAP-03, M2-10). Pure.
 //
 // The photo (`image`, its pixel size) is turned `rotation` degrees clockwise, mirrored left to right when
-// `flip`, then drawn at `coverScale × zoom` points per pixel with its centre `pan` points from the centre
+// `flip`, tilted `straighten` degrees clockwise to level it (only its levelled middle counts, `levelledSize`),
+// then drawn at `coverScale × zoom` points per pixel with its centre `pan` points from the centre
 // of the 3:4 `frame`. Zoom 1 is the smallest size that still covers the frame; pan is clamped so the photo
-// always fills the frame. `cropRectFor` turns that into the frame's rectangle in the turned photo's
-// pixels, which is what the image pipeline crops after turning the photo the same way.
-import { cropRectRatio, rotatedSize, type CropRect, type Rotation, type Size } from '@/lib/image/crop';
+// always fills the frame. `cropRectFor` turns that into the frame's rectangle in the levelled photo's
+// pixels, which is what the image pipeline crops after turning and levelling the photo the same way.
+import {
+  cropRectRatio,
+  levelledSize,
+  MAX_STRAIGHTEN,
+  rotatedSize,
+  type CropRect,
+  type Rotation,
+  type Size,
+} from '@/lib/image/crop';
 import { crop, sizes, space } from '@/theme/tokens';
 
 export type Point = { x: number; y: number };
 
-export type CropState = { rotation: Rotation; flip: boolean; zoom: number; pan: Point };
+export type CropState = { rotation: Rotation; flip: boolean; straighten: number; zoom: number; pan: Point };
 
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 3;
@@ -26,7 +35,12 @@ export const CROP_RATIO: Record<CropMode, Size> = {
   cover: { width: 5, height: 2 },
 };
 
-export const initialCrop: CropState = { rotation: 0, flip: false, zoom: MIN_ZOOM, pan: { x: 0, y: 0 } };
+export const initialCrop: CropState = { rotation: 0, flip: false, straighten: 0, zoom: MIN_ZOOM, pan: { x: 0, y: 0 } };
+
+/** The part of the photo the frame crops from and Fit places: turned, then levelled by Straighten. */
+export function croppedSize(image: Size, rotation: Rotation, straighten = 0): Size {
+  return levelledSize(rotatedSize(image, rotation), straighten);
+}
 
 /** Crop's header at normal text sizes: the padding under the safe area, the 44-point row of Cancel, the
  * title and the main button, its bottom padding and the gap above the photo (CropView). */
@@ -62,9 +76,9 @@ export function isThreeByFour(image: Size): boolean {
   return image.width > 0 && image.width * 4 === image.height * 3;
 }
 
-/** Points per photo pixel at zoom 1: the turned photo just covers the frame. */
-export function coverScale(image: Size, frame: Size, rotation: Rotation): number {
-  const turned = rotatedSize(image, rotation);
+/** Points per photo pixel at zoom 1: the turned, levelled photo just covers the frame. */
+export function coverScale(image: Size, frame: Size, rotation: Rotation, straighten = 0): number {
+  const turned = croppedSize(image, rotation, straighten);
   return Math.max(frame.width / turned.width, frame.height / turned.height);
 }
 
@@ -79,9 +93,9 @@ export function clampZoom(zoom: number): number {
 }
 
 /** How far the photo's centre may move from the frame's centre at this zoom, in points. */
-export function maxPan(image: Size, frame: Size, rotation: Rotation, zoom: number): Point {
-  const turned = rotatedSize(image, rotation);
-  const scale = coverScale(image, frame, rotation) * clampZoom(zoom);
+export function maxPan(image: Size, frame: Size, rotation: Rotation, zoom: number, straighten = 0): Point {
+  const turned = croppedSize(image, rotation, straighten);
+  const scale = coverScale(image, frame, rotation, straighten) * clampZoom(zoom);
   return {
     x: Math.max(0, (turned.width * scale - frame.width) / 2),
     y: Math.max(0, (turned.height * scale - frame.height) / 2),
@@ -94,8 +108,15 @@ const clamp = (value: number, limit: number) =>
 /** `state` with zoom and pan pulled back inside their limits, so the photo fills the frame. */
 export function clampCrop(state: CropState, image: Size, frame: Size): CropState {
   const zoom = clampZoom(state.zoom);
-  const limit = maxPan(image, frame, state.rotation, zoom);
-  return { ...state, zoom, pan: { x: clamp(state.pan.x, limit.x), y: clamp(state.pan.y, limit.y) } };
+  const straighten = clamp(state.straighten, MAX_STRAIGHTEN);
+  const limit = maxPan(image, frame, state.rotation, zoom, straighten);
+  return { ...state, straighten, zoom, pan: { x: clamp(state.pan.x, limit.x), y: clamp(state.pan.y, limit.y) } };
+}
+
+/** Straighten: tilts the photo `degrees` clockwise (within ±MAX_STRAIGHTEN) about the frame's centre; zoom
+ * stays, so the levelled photo grows to keep covering the frame, and pan is clamped. */
+export function straightenCrop(state: CropState, degrees: number, image: Size, frame: Size): CropState {
+  return clampCrop({ ...state, straighten: degrees }, image, frame);
 }
 
 /** Moves the photo to `pan` (points), clamped. */
@@ -111,25 +132,32 @@ export function zoomCrop(state: CropState, zoom: number, image: Size, frame: Siz
   return clampCrop({ ...state, zoom: to, pan: { x: state.pan.x * ratio, y: state.pan.y * ratio } }, image, frame);
 }
 
-/** Rotate 90°: a quarter turn clockwise, starting again from the whole photo fitted to the frame. */
+/** Rotate 90°: a quarter turn clockwise, starting again from the whole photo fitted to the frame. Straighten
+ * stays: the levelled photo turns with it. */
 export function rotateCrop(state: CropState): CropState {
   return { ...state, rotation: ((state.rotation + 90) % 360) as Rotation, zoom: MIN_ZOOM, pan: { x: 0, y: 0 } };
 }
 
-/** Flip: mirror left to right; the same part of the photo stays in the frame. */
+/** Flip: mirror left to right; the same part of the photo stays in the frame, as level as it was (the tilt is
+ * mirrored too). */
 export function flipCrop(state: CropState): CropState {
-  return { ...state, flip: !state.flip, pan: { x: state.pan.x === 0 ? 0 : -state.pan.x, y: state.pan.y } };
+  return {
+    ...state,
+    flip: !state.flip,
+    straighten: state.straighten === 0 ? 0 : -state.straighten,
+    pan: { x: state.pan.x === 0 ? 0 : -state.pan.x, y: state.pan.y },
+  };
 }
 
 /**
- * The frame's rectangle in the turned (and mirrored) photo's pixels: whole pixels, exactly 3:4 (or
- * `ratio`), inside the photo. The state is clamped first, so the rectangle never reaches past the photo's
+ * The frame's rectangle in the turned (and mirrored) and levelled photo's pixels (`croppedSize`): whole pixels,
+ * exactly 3:4 (or `ratio`), inside the levelled photo. The state is clamped first, so the rectangle never reaches past the photo's
  * edges.
  */
 export function cropRectFor(state: CropState, image: Size, frame: Size, ratio: Size = CROP_RATIO.moment): CropRect {
   const s = clampCrop(state, image, frame);
-  const turned = rotatedSize(image, s.rotation);
-  const scale = coverScale(image, frame, s.rotation) * s.zoom;
+  const turned = croppedSize(image, s.rotation, s.straighten);
+  const scale = coverScale(image, frame, s.rotation, s.straighten) * s.zoom;
   const width = frame.width / scale;
   const height = frame.height / scale;
   return cropRectRatio(turned.width, turned.height, ratio, {

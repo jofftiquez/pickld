@@ -14,13 +14,16 @@ import {
   fitLayoutOf,
   fitPixels,
   FULL_SIZE,
+  levelledSize,
   MEDIUM_SIZE,
+  rotatedSize,
   scaleRect,
   THUMB_SIZE,
   type CropSpec,
 } from './crop';
 import { assertNoLocationMetadata } from './exif';
 import { composeFit } from './fitFrame';
+import { drawStraightened } from './straighten';
 
 export type PreparedImage = { uri: string; width: number; height: number };
 export type PreparedPhoto = { full: PreparedImage; thumb: PreparedImage };
@@ -41,7 +44,9 @@ export type PrepareOptions = Partial<CropSpec>;
  * it the largest centred 3:4 area is used. With `fit` (D-152) nothing is cropped: the turned photo is scaled
  * straight from the decoded source to the size the Crop screen chose (`fitPixels`, D-154) and drawn on its frame
  * with its border and corners (`composeFit`), so every output (full, thumbnail and the medium copy, both resized
- * from full) carries the same framed picture in the same proportions. Throws
+ * from full) carries the same framed picture in the same proportions. With `straighten` the turned photo is
+ * tilted to level it and only its levelled middle (`levelledSize`) is cropped or fitted, drawn with Skia
+ * (`drawStraightened`) straight at the output size. Throws
  * `LocationMetadataError` (and deletes both outputs) if an output still carries location metadata.
  */
 export async function preparePhoto(uri: string, options: PrepareOptions = {}): Promise<PreparedPhoto> {
@@ -57,23 +62,43 @@ export async function preparePhoto(uri: string, options: PrepareOptions = {}): P
     if (options.rotate) turned.rotate(options.rotate);
     if (options.flip) turned.flip('horizontal');
     const source = track(await turned.renderAsync());
+    const degrees = options.straighten ?? 0;
+    const level = levelledSize(source, degrees);
+    // Straighten draws with Skia from a file: the turned photo, written nearly losslessly.
+    const turnedUri = degrees ? (await source.saveAsync({ format: SaveFormat.JPEG, compress: 1 })).uri : null;
+    if (turnedUri) scratch.push(turnedUri);
 
     let full: Awaited<ReturnType<typeof turned.renderAsync>>;
     if (options.fit) {
       const layout = fitLayoutOf(options.fit);
-      const place = fitPixels(source, FULL_SIZE, layout);
+      const place = fitPixels(level, FULL_SIZE, layout);
       const size = { width: place.photo.width, height: place.photo.height };
-      const photo = track(await track(ImageManipulator.manipulate(source)).resize(size).renderAsync());
-      const photoOut = await photo.saveAsync({ format: SaveFormat.PNG });
-      scratch.push(photoOut.uri);
-      const framed = await composeFit(photoOut.uri, place, layout, FULL_SIZE);
+      let photoUri: string;
+      if (turnedUri) {
+        const whole = { originX: 0, originY: 0, width: level.width, height: level.height };
+        photoUri = await drawStraightened(turnedUri, degrees, whole, size);
+      } else {
+        const photo = track(await track(ImageManipulator.manipulate(source)).resize(size).renderAsync());
+        photoUri = (await photo.saveAsync({ format: SaveFormat.PNG })).uri;
+      }
+      scratch.push(photoUri);
+      const framed = await composeFit(photoUri, place, layout, FULL_SIZE);
       scratch.push(framed);
       full = track(await track(ImageManipulator.manipulate(framed)).resize(FULL_SIZE).renderAsync());
     } else {
       const area =
-        options.crop && options.cropBasis ? scaleRect(options.crop, options.cropBasis, source) : options.crop;
-      const rect = cropRect34(source.width, source.height, area);
-      full = track(await track(ImageManipulator.manipulate(source)).crop(rect).resize(FULL_SIZE).renderAsync());
+        // The basis is the photo as picked; the rectangle was measured on it turned the same way.
+        options.crop && options.cropBasis
+          ? scaleRect(options.crop, rotatedSize(options.cropBasis, options.rotate ?? 0), source)
+          : options.crop;
+      const rect = cropRect34(level.width, level.height, area);
+      if (turnedUri) {
+        const levelled = await drawStraightened(turnedUri, degrees, rect, FULL_SIZE);
+        scratch.push(levelled);
+        full = track(await track(ImageManipulator.manipulate(levelled)).renderAsync());
+      } else {
+        full = track(await track(ImageManipulator.manipulate(source)).crop(rect).resize(FULL_SIZE).renderAsync());
+      }
     }
     const fullOut = await full.saveAsync({ format: SaveFormat.WEBP, compress: FULL_QUALITY });
     written.push(fullOut.uri);

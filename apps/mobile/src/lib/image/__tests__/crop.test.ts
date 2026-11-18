@@ -1,5 +1,6 @@
 import {
   clampFitLayout,
+  levelledSize,
   cropRect34,
   cropRectRatio,
   cropSpecSchema,
@@ -254,5 +255,43 @@ describe('cropRectRatio (profile photos, D-79)', () => {
     expect(
       cropRectRatio(3000, 4000, { width: 5, height: 2 }, { originX: 0, originY: 3500, width: 3000, height: 1200 }),
     ).toEqual({ originX: 875, originY: 3500, width: 1250, height: 500 });
+  });
+});
+
+describe('levelledSize (Straighten)', () => {
+  // Independent check: tilt the photo's corners and test that the levelled rectangle's corners are inside it.
+  function inside(turned: { width: number; height: number }, degrees: number, scale: number): boolean {
+    const level = levelledSize(turned, degrees);
+    const a = (-degrees * Math.PI) / 180; // into the photo's own axes
+    return [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ].every(([sx = 0, sy = 0]) => {
+      const x = (sx * level.width * scale) / 2;
+      const y = (sy * level.height * scale) / 2;
+      const px = x * Math.cos(a) - y * Math.sin(a);
+      const py = x * Math.sin(a) + y * Math.cos(a);
+      return Math.abs(px) <= turned.width / 2 + 1e-9 && Math.abs(py) <= turned.height / 2 + 1e-9;
+    });
+  }
+
+  it.each([
+    [{ width: 3024, height: 4032 }, 15],
+    [{ width: 3024, height: 4032 }, -4.3],
+    [{ width: 4000, height: 2000 }, 10],
+    [{ width: 1000, height: 1000 }, -0.1],
+  ])('%j at %s°: keeps the shape, lies inside the tilted photo, and is the largest that does', (turned, degrees) => {
+    const level = levelledSize(turned, degrees);
+    expect(level.width / level.height).toBeCloseTo(turned.width / turned.height, 9);
+    expect(inside(turned, degrees, 1)).toBe(true);
+    expect(inside(turned, degrees, 1.001)).toBe(false);
+  });
+
+  it('a square loses 1 / (cos θ + sin θ); level is the photo itself', () => {
+    const r = (20 * Math.PI) / 180;
+    expect(levelledSize({ width: 100, height: 100 }, 20).width).toBeCloseTo(100 / (Math.cos(r) + Math.sin(r)), 9);
+    expect(levelledSize({ width: 3, height: 4 }, 0)).toEqual({ width: 3, height: 4 });
   });
 });
