@@ -1,4 +1,4 @@
-// Bundled art for every catalog sticker (0012 launch packs, 0029 paid packs, 0032 picture stickers, 0060 new packs, 0065 restyled word art and Hashtags: one PNG per sticker at repo-root assets/stickers/<pack>/<name>.png,
+// Bundled art for every catalog sticker (0012 launch packs, 0029 paid packs, 0032 picture stickers, 0060 new packs, 0065 restyled word art and Hashtags, 0154 thirty per text pack: one PNG per sticker at repo-root assets/stickers/<pack>/<name>.png,
 // the same files the photo worker serves), keyed by the catalog's asset_path. Bundled so the Stickers tool and
 // every moment's stickers draw offline and from the first use (FR-STK-02 cached art). Width and height are the
 // PNG's pixels: the overlay's box takes the art's aspect.
@@ -232,6 +232,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 693,
     height: 234,
   },
+  'stickers/corporate/bandwidth.png': {
+    source: require('../../../../../../assets/stickers/corporate/bandwidth.png'),
+    width: 2047,
+    height: 644,
+  },
+  'stickers/corporate/big-win.png': {
+    source: require('../../../../../../assets/stickers/corporate/big-win.png'),
+    width: 2047,
+    height: 849,
+  },
   'stickers/corporate/blocked-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/blocked-v2.png'),
     width: 582,
@@ -241,6 +251,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/corporate/blocked.png'),
     width: 522,
     height: 234,
+  },
+  'stickers/corporate/can-you-see-my-screen.png': {
+    source: require('../../../../../../assets/stickers/corporate/can-you-see-my-screen.png'),
+    width: 2047,
+    height: 842,
   },
   'stickers/corporate/circle-back-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/circle-back-v2.png'),
@@ -252,6 +267,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 843,
     height: 234,
   },
+  'stickers/corporate/deep-dive.png': {
+    source: require('../../../../../../assets/stickers/corporate/deep-dive.png'),
+    width: 2043,
+    height: 718,
+  },
   'stickers/corporate/eod-na-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/eod-na-v2.png'),
     width: 562,
@@ -261,6 +281,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/corporate/eod-na.png'),
     width: 480,
     height: 234,
+  },
+  'stickers/corporate/for-your-approval.png': {
+    source: require('../../../../../../assets/stickers/corporate/for-your-approval.png'),
+    width: 2045,
+    height: 1080,
+  },
+  'stickers/corporate/hard-stop.png': {
+    source: require('../../../../../../assets/stickers/corporate/hard-stop.png'),
+    width: 2045,
+    height: 718,
+  },
+  'stickers/corporate/kape-break.png': {
+    source: require('../../../../../../assets/stickers/corporate/kape-break.png'),
+    width: 2048,
+    height: 646,
   },
   'stickers/corporate/kpi-hit-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/kpi-hit-v2.png'),
@@ -282,6 +317,26 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 831,
     height: 234,
   },
+  'stickers/corporate/lets-align.png': {
+    source: require('../../../../../../assets/stickers/corporate/lets-align.png'),
+    width: 2047,
+    height: 694,
+  },
+  'stickers/corporate/low-hanging-fruit.png': {
+    source: require('../../../../../../assets/stickers/corporate/low-hanging-fruit.png'),
+    width: 2044,
+    height: 839,
+  },
+  'stickers/corporate/moving-forward.png': {
+    source: require('../../../../../../assets/stickers/corporate/moving-forward.png'),
+    width: 2041,
+    height: 1154,
+  },
+  'stickers/corporate/new-hire.png': {
+    source: require('../../../../../../assets/stickers/corporate/new-hire.png'),
+    width: 2043,
+    height: 759,
+  },
   'stickers/corporate/noted-with-thanks-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/noted-with-thanks-v2.png'),
     width: 718,
@@ -302,6 +357,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 627,
     height: 234,
   },
+  'stickers/corporate/payday.png': {
+    source: require('../../../../../../assets/stickers/corporate/payday.png'),
+    width: 2048,
+    height: 881,
+  },
   'stickers/corporate/ping-me-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/ping-me-v2.png'),
     width: 592,
@@ -311,6 +371,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/corporate/ping-me.png'),
     width: 507,
     height: 234,
+  },
+  'stickers/corporate/promoted.png': {
+    source: require('../../../../../../assets/stickers/corporate/promoted.png'),
+    width: 2045,
+    height: 706,
   },
   'stickers/corporate/q4-grind-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/q4-grind-v2.png'),
@@ -332,6 +397,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 681,
     height: 234,
   },
+  'stickers/corporate/ready-for-review.png': {
+    source: require('../../../../../../assets/stickers/corporate/ready-for-review.png'),
+    width: 2045,
+    height: 1004,
+  },
+  'stickers/corporate/ship-it.png': {
+    source: require('../../../../../../assets/stickers/corporate/ship-it.png'),
+    width: 2040,
+    height: 922,
+  },
   'stickers/corporate/take-this-offline-v2.png': {
     source: require('../../../../../../assets/stickers/corporate/take-this-offline-v2.png'),
     width: 706,
@@ -341,6 +416,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/corporate/take-this-offline.png'),
     width: 1020,
     height: 234,
+  },
+  'stickers/corporate/team-building.png': {
+    source: require('../../../../../../assets/stickers/corporate/team-building.png'),
+    width: 2047,
+    height: 565,
+  },
+  'stickers/corporate/team-lunch.png': {
+    source: require('../../../../../../assets/stickers/corporate/team-lunch.png'),
+    width: 2046,
+    height: 645,
+  },
+  'stickers/corporate/touch-base.png': {
+    source: require('../../../../../../assets/stickers/corporate/touch-base.png'),
+    width: 2043,
+    height: 650,
   },
   'stickers/cyclists/100-km-done-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/100-km-done-v2.png'),
@@ -352,6 +442,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 696,
     height: 234,
   },
+  'stickers/cyclists/50-km-done.png': {
+    source: require('../../../../../../assets/stickers/cyclists/50-km-done.png'),
+    width: 2043,
+    height: 533,
+  },
   'stickers/cyclists/ahon-pa-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/ahon-pa-v2.png'),
     width: 636,
@@ -361,6 +456,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/cyclists/ahon-pa.png'),
     width: 519,
     height: 234,
+  },
+  'stickers/cyclists/bike-is-life.png': {
+    source: require('../../../../../../assets/stickers/cyclists/bike-is-life.png'),
+    width: 2043,
+    height: 555,
+  },
+  'stickers/cyclists/bike-shop-run.png': {
+    source: require('../../../../../../assets/stickers/cyclists/bike-shop-run.png'),
+    width: 2045,
+    height: 463,
   },
   'stickers/cyclists/bike-to-work-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/bike-to-work-v2.png'),
@@ -392,6 +497,46 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 642,
     height: 234,
   },
+  'stickers/cyclists/downhill.png': {
+    source: require('../../../../../../assets/stickers/cyclists/downhill.png'),
+    width: 2046,
+    height: 597,
+  },
+  'stickers/cyclists/drafting.png': {
+    source: require('../../../../../../assets/stickers/cyclists/drafting.png'),
+    width: 2045,
+    height: 621,
+  },
+  'stickers/cyclists/flat-tire.png': {
+    source: require('../../../../../../assets/stickers/cyclists/flat-tire.png'),
+    width: 2044,
+    height: 636,
+  },
+  'stickers/cyclists/fresh-legs.png': {
+    source: require('../../../../../../assets/stickers/cyclists/fresh-legs.png'),
+    width: 2043,
+    height: 558,
+  },
+  'stickers/cyclists/gravel-day.png': {
+    source: require('../../../../../../assets/stickers/cyclists/gravel-day.png'),
+    width: 2047,
+    height: 552,
+  },
+  'stickers/cyclists/group-ride.png': {
+    source: require('../../../../../../assets/stickers/cyclists/group-ride.png'),
+    width: 2043,
+    height: 545,
+  },
+  'stickers/cyclists/headwind.png': {
+    source: require('../../../../../../assets/stickers/cyclists/headwind.png'),
+    width: 2045,
+    height: 588,
+  },
+  'stickers/cyclists/kom.png': {
+    source: require('../../../../../../assets/stickers/cyclists/kom.png'),
+    width: 1816,
+    height: 824,
+  },
   'stickers/cyclists/long-ride-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/long-ride-v2.png'),
     width: 708,
@@ -401,6 +546,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/cyclists/long-ride.png'),
     width: 564,
     height: 234,
+  },
+  'stickers/cyclists/lusong.png': {
+    source: require('../../../../../../assets/stickers/cyclists/lusong.png'),
+    width: 2044,
+    height: 677,
+  },
+  'stickers/cyclists/n-plus-1.png': {
+    source: require('../../../../../../assets/stickers/cyclists/n-plus-1.png'),
+    width: 2038,
+    height: 1055,
+  },
+  'stickers/cyclists/night-ride.png': {
+    source: require('../../../../../../assets/stickers/cyclists/night-ride.png'),
+    width: 2045,
+    height: 568,
   },
   'stickers/cyclists/padyak-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/padyak-v2.png'),
@@ -422,6 +582,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 690,
     height: 234,
   },
+  'stickers/cyclists/rain-ride.png': {
+    source: require('../../../../../../assets/stickers/cyclists/rain-ride.png'),
+    width: 2047,
+    height: 613,
+  },
   'stickers/cyclists/rest-stop-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/rest-stop-v2.png'),
     width: 716,
@@ -431,6 +596,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/cyclists/rest-stop.png'),
     width: 567,
     height: 234,
+  },
+  'stickers/cyclists/ride-buddies.png': {
+    source: require('../../../../../../assets/stickers/cyclists/ride-buddies.png'),
+    width: 2047,
+    height: 496,
   },
   'stickers/cyclists/ride-on-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/ride-on-v2.png'),
@@ -442,6 +612,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 489,
     height: 234,
   },
+  'stickers/cyclists/saddle-sore.png': {
+    source: require('../../../../../../assets/stickers/cyclists/saddle-sore.png'),
+    width: 2047,
+    height: 508,
+  },
   'stickers/cyclists/sunday-ride-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/sunday-ride-v2.png'),
     width: 816,
@@ -451,6 +626,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/cyclists/sunday-ride.png'),
     width: 663,
     height: 234,
+  },
+  'stickers/cyclists/tailwind.png': {
+    source: require('../../../../../../assets/stickers/cyclists/tailwind.png'),
+    width: 2046,
+    height: 631,
   },
   'stickers/cyclists/uphill-grind-v2.png': {
     source: require('../../../../../../assets/stickers/cyclists/uphill-grind-v2.png'),
@@ -677,6 +857,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 513,
     height: 234,
   },
+  'stickers/gen-z/bestie.png': {
+    source: require('../../../../../../assets/stickers/gen-z/bestie.png'),
+    width: 2008,
+    height: 968,
+  },
   'stickers/gen-z/bet-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/bet-v2.png'),
     width: 384,
@@ -686,6 +871,26 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/gen-z/bet.png'),
     width: 333,
     height: 234,
+  },
+  'stickers/gen-z/big-w.png': {
+    source: require('../../../../../../assets/stickers/gen-z/big-w.png'),
+    width: 1936,
+    height: 968,
+  },
+  'stickers/gen-z/bussin.png': {
+    source: require('../../../../../../assets/stickers/gen-z/bussin.png'),
+    width: 2045,
+    height: 927,
+  },
+  'stickers/gen-z/caught-in-4k.png': {
+    source: require('../../../../../../assets/stickers/gen-z/caught-in-4k.png'),
+    width: 2048,
+    height: 609,
+  },
+  'stickers/gen-z/core-memory.png': {
+    source: require('../../../../../../assets/stickers/gen-z/core-memory.png'),
+    width: 2045,
+    height: 604,
   },
   'stickers/gen-z/delulu-era-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/delulu-era-v2.png'),
@@ -697,6 +902,31 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 585,
     height: 234,
   },
+  'stickers/gen-z/era-unlocked.png': {
+    source: require('../../../../../../assets/stickers/gen-z/era-unlocked.png'),
+    width: 2046,
+    height: 589,
+  },
+  'stickers/gen-z/girl-dinner.png': {
+    source: require('../../../../../../assets/stickers/gen-z/girl-dinner.png'),
+    width: 2047,
+    height: 657,
+  },
+  'stickers/gen-z/glow-up.png': {
+    source: require('../../../../../../assets/stickers/gen-z/glow-up.png'),
+    width: 2045,
+    height: 809,
+  },
+  'stickers/gen-z/hard-launch.png': {
+    source: require('../../../../../../assets/stickers/gen-z/hard-launch.png'),
+    width: 2048,
+    height: 613,
+  },
+  'stickers/gen-z/highkey.png': {
+    source: require('../../../../../../assets/stickers/gen-z/highkey.png'),
+    width: 2045,
+    height: 841,
+  },
   'stickers/gen-z/iconic-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/iconic-v2.png'),
     width: 508,
@@ -706,6 +936,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/gen-z/iconic.png'),
     width: 438,
     height: 234,
+  },
+  'stickers/gen-z/its-a-vibe.png': {
+    source: require('../../../../../../assets/stickers/gen-z/its-a-vibe.png'),
+    width: 2048,
+    height: 727,
   },
   'stickers/gen-z/its-giving-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/its-giving-v2.png'),
@@ -737,6 +972,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 786,
     height: 234,
   },
+  'stickers/gen-z/mother.png': {
+    source: require('../../../../../../assets/stickers/gen-z/mother.png'),
+    width: 2043,
+    height: 870,
+  },
   'stickers/gen-z/no-cap-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/no-cap-v2.png'),
     width: 546,
@@ -746,6 +986,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/gen-z/no-cap.png'),
     width: 471,
     height: 234,
+  },
+  'stickers/gen-z/periodt.png': {
+    source: require('../../../../../../assets/stickers/gen-z/periodt.png'),
+    width: 2045,
+    height: 859,
+  },
+  'stickers/gen-z/purr.png': {
+    source: require('../../../../../../assets/stickers/gen-z/purr.png'),
+    width: 1824,
+    height: 968,
   },
   'stickers/gen-z/rent-free-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/rent-free-v2.png'),
@@ -757,6 +1007,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 555,
     height: 234,
   },
+  'stickers/gen-z/say-less.png': {
+    source: require('../../../../../../assets/stickers/gen-z/say-less.png'),
+    width: 2048,
+    height: 823,
+  },
   'stickers/gen-z/slay-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/slay-v2.png'),
     width: 434,
@@ -766,6 +1021,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/gen-z/slay.png'),
     width: 363,
     height: 234,
+  },
+  'stickers/gen-z/soft-launch.png': {
+    source: require('../../../../../../assets/stickers/gen-z/soft-launch.png'),
+    width: 2046,
+    height: 630,
+  },
+  'stickers/gen-z/the-ick.png': {
+    source: require('../../../../../../assets/stickers/gen-z/the-ick.png'),
+    width: 2047,
+    height: 907,
+  },
+  'stickers/gen-z/touch-grass.png': {
+    source: require('../../../../../../assets/stickers/gen-z/touch-grass.png'),
+    width: 2046,
+    height: 622,
   },
   'stickers/gen-z/understood-the-assignment-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/understood-the-assignment-v2.png'),
@@ -792,25 +1062,75 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 538,
     height: 340,
   },
+  'stickers/hashtags/blessed.png': {
+    source: require('../../../../../../assets/stickers/hashtags/blessed.png'),
+    width: 1928,
+    height: 1376,
+  },
+  'stickers/hashtags/bonding.png': {
+    source: require('../../../../../../assets/stickers/hashtags/bonding.png'),
+    width: 1984,
+    height: 1368,
+  },
+  'stickers/hashtags/budol.png': {
+    source: require('../../../../../../assets/stickers/hashtags/budol.png'),
+    width: 1648,
+    height: 1360,
+  },
+  'stickers/hashtags/charot.png': {
+    source: require('../../../../../../assets/stickers/hashtags/charot.png'),
+    width: 1840,
+    height: 1360,
+  },
   'stickers/hashtags/exam-na.png': {
     source: require('../../../../../../assets/stickers/hashtags/exam-na.png'),
     width: 600,
     height: 450,
+  },
+  'stickers/hashtags/foodtrip.png': {
+    source: require('../../../../../../assets/stickers/hashtags/foodtrip.png'),
+    width: 2042,
+    height: 1500,
   },
   'stickers/hashtags/gala.png': {
     source: require('../../../../../../assets/stickers/hashtags/gala.png'),
     width: 374,
     height: 340,
   },
+  'stickers/hashtags/ganap.png': {
+    source: require('../../../../../../assets/stickers/hashtags/ganap.png'),
+    width: 1848,
+    height: 1328,
+  },
+  'stickers/hashtags/grateful.png': {
+    source: require('../../../../../../assets/stickers/hashtags/grateful.png'),
+    width: 2043,
+    height: 1279,
+  },
+  'stickers/hashtags/gym-time.png': {
+    source: require('../../../../../../assets/stickers/hashtags/gym-time.png'),
+    width: 2046,
+    height: 1319,
+  },
   'stickers/hashtags/happy-weekend.png': {
     source: require('../../../../../../assets/stickers/hashtags/happy-weekend.png'),
     width: 712,
     height: 362,
   },
+  'stickers/hashtags/ipon.png': {
+    source: require('../../../../../../assets/stickers/hashtags/ipon.png'),
+    width: 1776,
+    height: 1616,
+  },
   'stickers/hashtags/kain-tayo.png': {
     source: require('../../../../../../assets/stickers/hashtags/kain-tayo.png'),
     width: 564,
     height: 342,
+  },
+  'stickers/hashtags/kape-muna.png': {
+    source: require('../../../../../../assets/stickers/hashtags/kape-muna.png'),
+    width: 2047,
+    height: 1186,
   },
   'stickers/hashtags/lodi.png': {
     source: require('../../../../../../assets/stickers/hashtags/lodi.png'),
@@ -821,6 +1141,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/hashtags/lunes-na-naman.png'),
     width: 728,
     height: 358,
+  },
+  'stickers/hashtags/mood.png': {
+    source: require('../../../../../../assets/stickers/hashtags/mood.png'),
+    width: 1952,
+    height: 1776,
+  },
+  'stickers/hashtags/ootd.png': {
+    source: require('../../../../../../assets/stickers/hashtags/ootd.png'),
+    width: 1680,
+    height: 1344,
+  },
+  'stickers/hashtags/pasyal.png': {
+    source: require('../../../../../../assets/stickers/hashtags/pasyal.png'),
+    width: 2045,
+    height: 1697,
   },
   'stickers/hashtags/petsa-de-peligro.png': {
     source: require('../../../../../../assets/stickers/hashtags/petsa-de-peligro.png'),
@@ -841,6 +1176,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/hashtags/sana-all.png'),
     width: 474,
     height: 342,
+  },
+  'stickers/hashtags/self-love.png': {
+    source: require('../../../../../../assets/stickers/hashtags/self-love.png'),
+    width: 2046,
+    height: 1432,
   },
   'stickers/hashtags/tag-ulan.png': {
     source: require('../../../../../../assets/stickers/hashtags/tag-ulan.png'),
@@ -1282,6 +1622,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 268,
     height: 360,
   },
+  'stickers/pride/ace-pride.png': {
+    source: require('../../../../../../assets/stickers/pride/ace-pride.png'),
+    width: 2046,
+    height: 690,
+  },
+  'stickers/pride/ally-always.png': {
+    source: require('../../../../../../assets/stickers/pride/ally-always.png'),
+    width: 2044,
+    height: 583,
+  },
   'stickers/pride/be-yourself-v2.png': {
     source: require('../../../../../../assets/stickers/pride/be-yourself-v2.png'),
     width: 798,
@@ -1291,6 +1641,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/pride/be-yourself.png'),
     width: 639,
     height: 234,
+  },
+  'stickers/pride/bi-pride.png': {
+    source: require('../../../../../../assets/stickers/pride/bi-pride.png'),
+    width: 2048,
+    height: 748,
+  },
+  'stickers/pride/celebrate-love.png': {
+    source: require('../../../../../../assets/stickers/pride/celebrate-love.png'),
+    width: 2047,
+    height: 905,
   },
   'stickers/pride/chosen-family-v2.png': {
     source: require('../../../../../../assets/stickers/pride/chosen-family-v2.png'),
@@ -1302,6 +1662,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 759,
     height: 234,
   },
+  'stickers/pride/different-is-beautiful.png': {
+    source: require('../../../../../../assets/stickers/pride/different-is-beautiful.png'),
+    width: 2044,
+    height: 774,
+  },
+  'stickers/pride/equal-love.png': {
+    source: require('../../../../../../assets/stickers/pride/equal-love.png'),
+    width: 2044,
+    height: 625,
+  },
+  'stickers/pride/free-to-be-me.png': {
+    source: require('../../../../../../assets/stickers/pride/free-to-be-me.png'),
+    width: 2045,
+    height: 553,
+  },
   'stickers/pride/ganda-mo-mars-v2.png': {
     source: require('../../../../../../assets/stickers/pride/ganda-mo-mars-v2.png'),
     width: 644,
@@ -1311,6 +1686,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/pride/ganda-mo-mars.png'),
     width: 837,
     height: 234,
+  },
+  'stickers/pride/gay-and-proud.png': {
+    source: require('../../../../../../assets/stickers/pride/gay-and-proud.png'),
+    width: 2046,
+    height: 521,
   },
   'stickers/pride/happy-pride-v2.png': {
     source: require('../../../../../../assets/stickers/pride/happy-pride-v2.png'),
@@ -1322,6 +1702,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 681,
     height: 234,
   },
+  'stickers/pride/lesbian-love.png': {
+    source: require('../../../../../../assets/stickers/pride/lesbian-love.png'),
+    width: 2045,
+    height: 553,
+  },
   'stickers/pride/love-is-love-v2.png': {
     source: require('../../../../../../assets/stickers/pride/love-is-love-v2.png'),
     width: 822,
@@ -1331,6 +1716,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/pride/love-is-love.png'),
     width: 648,
     height: 234,
+  },
+  'stickers/pride/love-out-loud.png': {
+    source: require('../../../../../../assets/stickers/pride/love-out-loud.png'),
+    width: 2047,
+    height: 525,
   },
   'stickers/pride/love-wins-v2.png': {
     source: require('../../../../../../assets/stickers/pride/love-wins-v2.png'),
@@ -1342,6 +1732,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 585,
     height: 234,
   },
+  'stickers/pride/nonbinary-and-proud.png': {
+    source: require('../../../../../../assets/stickers/pride/nonbinary-and-proud.png'),
+    width: 2046,
+    height: 870,
+  },
   'stickers/pride/out-and-proud-v2.png': {
     source: require('../../../../../../assets/stickers/pride/out-and-proud-v2.png'),
     width: 908,
@@ -1351,6 +1746,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/pride/out-and-proud.png'),
     width: 768,
     height: 234,
+  },
+  'stickers/pride/pan-pride.png': {
+    source: require('../../../../../../assets/stickers/pride/pan-pride.png'),
+    width: 2043,
+    height: 679,
+  },
+  'stickers/pride/pride-all-year.png': {
+    source: require('../../../../../../assets/stickers/pride/pride-all-year.png'),
+    width: 2044,
+    height: 994,
   },
   'stickers/pride/pride-march-v2.png': {
     source: require('../../../../../../assets/stickers/pride/pride-march-v2.png'),
@@ -1372,6 +1777,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 588,
     height: 234,
   },
+  'stickers/pride/proud-of-you.png': {
+    source: require('../../../../../../assets/stickers/pride/proud-of-you.png'),
+    width: 2046,
+    height: 559,
+  },
   'stickers/pride/queer-joy-v2.png': {
     source: require('../../../../../../assets/stickers/pride/queer-joy-v2.png'),
     width: 700,
@@ -1381,6 +1791,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/pride/queer-joy.png'),
     width: 579,
     height: 234,
+  },
+  'stickers/pride/rainbow-family.png': {
+    source: require('../../../../../../assets/stickers/pride/rainbow-family.png'),
+    width: 2046,
+    height: 1013,
   },
   'stickers/pride/rainbow-vibes-v2.png': {
     source: require('../../../../../../assets/stickers/pride/rainbow-vibes-v2.png'),
@@ -1402,6 +1817,41 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 630,
     height: 234,
   },
+  'stickers/pride/trans-joy.png': {
+    source: require('../../../../../../assets/stickers/pride/trans-joy.png'),
+    width: 2046,
+    height: 674,
+  },
+  'stickers/pride/you-are-valid.png': {
+    source: require('../../../../../../assets/stickers/pride/you-are-valid.png'),
+    width: 2045,
+    height: 529,
+  },
+  'stickers/pride/you-belong.png': {
+    source: require('../../../../../../assets/stickers/pride/you-belong.png'),
+    width: 2046,
+    height: 619,
+  },
+  'stickers/stamps/100-real.png': {
+    source: require('../../../../../../assets/stickers/stamps/100-real.png'),
+    width: 1840,
+    height: 632,
+  },
+  'stickers/stamps/approved.png': {
+    source: require('../../../../../../assets/stickers/stamps/approved.png'),
+    width: 1824,
+    height: 632,
+  },
+  'stickers/stamps/behind-the-scenes.png': {
+    source: require('../../../../../../assets/stickers/stamps/behind-the-scenes.png'),
+    width: 2046,
+    height: 448,
+  },
+  'stickers/stamps/big-day.png': {
+    source: require('../../../../../../assets/stickers/stamps/big-day.png'),
+    width: 2041,
+    height: 876,
+  },
   'stickers/stamps/date.png': {
     source: require('../../../../../../assets/stickers/stamps/date.png'),
     width: 498,
@@ -1417,10 +1867,55 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 747,
     height: 240,
   },
+  'stickers/stamps/done.png': {
+    source: require('../../../../../../assets/stickers/stamps/done.png'),
+    width: 2035,
+    height: 1072,
+  },
+  'stickers/stamps/first-time.png': {
+    source: require('../../../../../../assets/stickers/stamps/first-time.png'),
+    width: 1784,
+    height: 632,
+  },
+  'stickers/stamps/good-day.png': {
+    source: require('../../../../../../assets/stickers/stamps/good-day.png'),
+    width: 1808,
+    height: 632,
+  },
+  'stickers/stamps/grateful.png': {
+    source: require('../../../../../../assets/stickers/stamps/grateful.png'),
+    width: 1728,
+    height: 632,
+  },
+  'stickers/stamps/hello.png': {
+    source: require('../../../../../../assets/stickers/stamps/hello.png'),
+    width: 2042,
+    height: 1002,
+  },
+  'stickers/stamps/homebody.png': {
+    source: require('../../../../../../assets/stickers/stamps/homebody.png'),
+    width: 1920,
+    height: 632,
+  },
   'stickers/stamps/jar-number.png': {
     source: require('../../../../../../assets/stickers/stamps/jar-number.png'),
     width: 567,
     height: 240,
+  },
+  'stickers/stamps/keep-this.png': {
+    source: require('../../../../../../assets/stickers/stamps/keep-this.png'),
+    width: 1696,
+    height: 632,
+  },
+  'stickers/stamps/lazy-day.png': {
+    source: require('../../../../../../assets/stickers/stamps/lazy-day.png'),
+    width: 1640,
+    height: 632,
+  },
+  'stickers/stamps/long-day.png': {
+    source: require('../../../../../../assets/stickers/stamps/long-day.png'),
+    width: 1736,
+    height: 632,
   },
   'stickers/stamps/no-filter.png': {
     source: require('../../../../../../assets/stickers/stamps/no-filter.png'),
@@ -1432,6 +1927,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 756,
     height: 240,
   },
+  'stickers/stamps/ordinary-day.png': {
+    source: require('../../../../../../assets/stickers/stamps/ordinary-day.png'),
+    width: 2045,
+    height: 561,
+  },
+  'stickers/stamps/out-and-about.png': {
+    source: require('../../../../../../assets/stickers/stamps/out-and-about.png'),
+    width: 2042,
+    height: 524,
+  },
+  'stickers/stamps/payday.png': {
+    source: require('../../../../../../assets/stickers/stamps/payday.png'),
+    width: 2041,
+    height: 891,
+  },
   'stickers/stamps/photo-dump.png': {
     source: require('../../../../../../assets/stickers/stamps/photo-dump.png'),
     width: 795,
@@ -1442,6 +1952,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 615,
     height: 240,
   },
+  'stickers/stamps/sick-day.png': {
+    source: require('../../../../../../assets/stickers/stamps/sick-day.png'),
+    width: 1616,
+    height: 632,
+  },
   'stickers/stamps/time.png': {
     source: require('../../../../../../assets/stickers/stamps/time.png'),
     width: 546,
@@ -1451,6 +1966,26 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/stamps/totoo.png'),
     width: 783,
     height: 240,
+  },
+  'stickers/stamps/travel-day.png': {
+    source: require('../../../../../../assets/stickers/stamps/travel-day.png'),
+    width: 1936,
+    height: 632,
+  },
+  'stickers/stamps/unplanned.png': {
+    source: require('../../../../../../assets/stickers/stamps/unplanned.png'),
+    width: 1968,
+    height: 632,
+  },
+  'stickers/stamps/weekend.png': {
+    source: require('../../../../../../assets/stickers/stamps/weekend.png'),
+    width: 1672,
+    height: 632,
+  },
+  'stickers/stamps/win.png': {
+    source: require('../../../../../../assets/stickers/stamps/win.png'),
+    width: 2000,
+    height: 1264,
   },
   'stickers/the-eight/afternoon-slump.png': {
     source: require('../../../../../../assets/stickers/the-eight/afternoon-slump.png'),
@@ -1692,6 +2227,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 849,
     height: 234,
   },
+  'stickers/trentahin/emergency-fund.png': {
+    source: require('../../../../../../assets/stickers/trentahin/emergency-fund.png'),
+    width: 2046,
+    height: 670,
+  },
+  'stickers/trentahin/grocery-date.png': {
+    source: require('../../../../../../assets/stickers/trentahin/grocery-date.png'),
+    width: 2045,
+    height: 760,
+  },
   'stickers/trentahin/healing-era-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/healing-era-v2.png'),
     width: 662,
@@ -1701,6 +2246,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/trentahin/healing-era.png'),
     width: 636,
     height: 234,
+  },
+  'stickers/trentahin/home-by-8.png': {
+    source: require('../../../../../../assets/stickers/trentahin/home-by-8.png'),
+    width: 2047,
+    height: 832,
+  },
+  'stickers/trentahin/hydrate.png': {
+    source: require('../../../../../../assets/stickers/trentahin/hydrate.png'),
+    width: 2043,
+    height: 991,
   },
   'stickers/trentahin/ipon-mode-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/ipon-mode-v2.png'),
@@ -1722,6 +2277,11 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 630,
     height: 234,
   },
+  'stickers/trentahin/laba-day.png': {
+    source: require('../../../../../../assets/stickers/trentahin/laba-day.png'),
+    width: 2047,
+    height: 947,
+  },
   'stickers/trentahin/likod-check-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/likod-check-v2.png'),
     width: 650,
@@ -1731,6 +2291,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/trentahin/likod-check.png'),
     width: 672,
     height: 234,
+  },
+  'stickers/trentahin/lumbar-support.png': {
+    source: require('../../../../../../assets/stickers/trentahin/lumbar-support.png'),
+    width: 2046,
+    height: 652,
+  },
+  'stickers/trentahin/maintenance-meds.png': {
+    source: require('../../../../../../assets/stickers/trentahin/maintenance-meds.png'),
+    width: 2045,
+    height: 592,
   },
   'stickers/trentahin/may-pasok-bukas-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/may-pasok-bukas-v2.png'),
@@ -1742,6 +2312,21 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 873,
     height: 234,
   },
+  'stickers/trentahin/ninang-era.png': {
+    source: require('../../../../../../assets/stickers/trentahin/ninang-era.png'),
+    width: 2043,
+    height: 841,
+  },
+  'stickers/trentahin/pa-check-up.png': {
+    source: require('../../../../../../assets/stickers/trentahin/pa-check-up.png'),
+    width: 2045,
+    height: 808,
+  },
+  'stickers/trentahin/pagod-pero-okay.png': {
+    source: require('../../../../../../assets/stickers/trentahin/pagod-pero-okay.png'),
+    width: 2045,
+    height: 642,
+  },
   'stickers/trentahin/pahinga-is-productive-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/pahinga-is-productive-v2.png'),
     width: 606,
@@ -1751,6 +2336,26 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/trentahin/pahinga-is-productive.png'),
     width: 1044,
     height: 234,
+  },
+  'stickers/trentahin/plans-cancelled-yay.png': {
+    source: require('../../../../../../assets/stickers/trentahin/plans-cancelled-yay.png'),
+    width: 2048,
+    height: 1029,
+  },
+  'stickers/trentahin/plantita-era.png': {
+    source: require('../../../../../../assets/stickers/trentahin/plantita-era.png'),
+    width: 2046,
+    height: 785,
+  },
+  'stickers/trentahin/quiet-weekend.png': {
+    source: require('../../../../../../assets/stickers/trentahin/quiet-weekend.png'),
+    width: 2047,
+    height: 712,
+  },
+  'stickers/trentahin/sahod-bayad-ubos.png': {
+    source: require('../../../../../../assets/stickers/trentahin/sahod-bayad-ubos.png'),
+    width: 2048,
+    height: 1193,
   },
   'stickers/trentahin/salonpas-gang-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/salonpas-gang-v2.png'),
@@ -1762,6 +2367,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 774,
     height: 234,
   },
+  'stickers/trentahin/thirty-and-thriving.png': {
+    source: require('../../../../../../assets/stickers/trentahin/thirty-and-thriving.png'),
+    width: 2046,
+    height: 1226,
+  },
+  'stickers/trentahin/tuhod-check.png': {
+    source: require('../../../../../../assets/stickers/trentahin/tuhod-check.png'),
+    width: 2044,
+    height: 800,
+  },
   'stickers/trentahin/tulog-by-9-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/tulog-by-9-v2.png'),
     width: 622,
@@ -1771,6 +2386,16 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/trentahin/tulog-by-9.png'),
     width: 591,
     height: 234,
+  },
+  'stickers/trentahin/vitamins-taken.png': {
+    source: require('../../../../../../assets/stickers/trentahin/vitamins-taken.png'),
+    width: 2043,
+    height: 688,
+  },
+  'stickers/trentahin/walking-is-cardio.png': {
+    source: require('../../../../../../assets/stickers/trentahin/walking-is-cardio.png'),
+    width: 2041,
+    height: 1403,
   },
   'stickers/work-from-wherever/bento-box.png': {
     source: require('../../../../../../assets/stickers/work-from-wherever/bento-box.png'),

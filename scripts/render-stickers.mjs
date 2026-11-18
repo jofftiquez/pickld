@@ -1,5 +1,7 @@
 // Renders the sticker art in assets/stickers/<pack>/<name>.png from the catalog in the local database.
-// Usage (after `pnpm db:reset`): node scripts/render-stickers.mjs [--force] [pack-slug ...]   (no slugs: every pack)
+// Usage: node scripts/render-stickers.mjs [--force] [pack-slug ...]   (no slugs: every pack)
+// With STICKER_CATALOG=<file.json> it renders those rows (public_sticker_catalog()'s shape) instead of reading the
+// local database, so art for a migration that isn't applied yet can be rendered without touching the database.
 // Existing files are kept (art never changes under a key; restyled art gets a new file name), unless --force.
 //
 // The catalog (labels, packs, asset paths) lives in supabase/migrations (0012); this script reads it with the
@@ -30,22 +32,30 @@ const font = `data:font/ttf;base64,${readFileSync(
   resolve(root, 'node_modules/@expo-google-fonts/plus-jakarta-sans/800ExtraBold/PlusJakartaSans_800ExtraBold.ttf'),
 ).toString('base64')}`;
 
-// Local stack only: the URL and anon key are read at runtime, never stored.
-const statusText = execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
-  cwd: root,
-  encoding: 'utf8',
-  stdio: ['ignore', 'pipe', 'ignore'],
-});
-const status = JSON.parse(statusText.slice(statusText.indexOf('{')));
-const res = await fetch(`${status.API_URL}/rest/v1/rpc/public_sticker_catalog`, {
-  method: 'POST',
-  headers: { apikey: status.ANON_KEY, authorization: `Bearer ${status.ANON_KEY}`, 'content-type': 'application/json' },
-  body: '{}',
-});
-if (!res.ok) throw new Error(`public_sticker_catalog: ${res.status} ${await res.text()}`);
+async function readCatalog() {
+  if (process.env.STICKER_CATALOG) return JSON.parse(readFileSync(resolve(process.env.STICKER_CATALOG), 'utf8'));
+  // Local stack only: the URL and anon key are read at runtime, never stored.
+  const statusText = execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  const status = JSON.parse(statusText.slice(statusText.indexOf('{')));
+  const res = await fetch(`${status.API_URL}/rest/v1/rpc/public_sticker_catalog`, {
+    method: 'POST',
+    headers: {
+      apikey: status.ANON_KEY,
+      authorization: `Bearer ${status.ANON_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: '{}',
+  });
+  if (!res.ok) throw new Error(`public_sticker_catalog: ${res.status} ${await res.text()}`);
+  return res.json();
+}
 const force = process.argv.includes('--force');
 const only = process.argv.slice(2).filter((a) => a !== '--force');
-const catalog = (await res.json()).filter(
+const catalog = (await readCatalog()).filter(
   (s) =>
     (only.length === 0 || only.includes(s.pack_slug)) && (force || !existsSync(resolve(root, 'assets', s.asset_path))),
 );
@@ -87,28 +97,44 @@ function escapeHtml(t) {
   return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Stickers can be pinched to twice the photo's width, so the art is drawn big: each sticker is measured at 1x, then
+// drawn at the pixel density that makes its longest side MAX_PX (the catalog's art_width/art_height limit, 0100),
+// at most MAX_DENSITY. Density scales strokes, shadows and filters alike, where CSS zoom would not. Compress the
+// result with `pngquant --quality=70-95`, as committed.
+const MAX_PX = 2048;
+const MAX_DENSITY = 16;
+const VIEWPORT = { width: 1200, height: 600 };
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1200, height: 400 }, deviceScaleFactor: 3 });
+const measure = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 });
 // Word-art packs and Hashtags (T-511) have their own lettering in word-art.mjs; everything else is a pill.
-// Rendered at 2x (the lettering is large) and then compressed with `pngquant --quality=70-95`, as committed.
 const faces = fontFaces(root);
-const page2x = await browser.newPage({ viewport: { width: 1200, height: 400 }, deviceScaleFactor: 2 });
-async function shoot(s, html, after) {
-  const page = page2x;
-  await page.setContent(
-    `<!doctype html><html><head><style>${faces}${PAGE_CSS}</style></head><body>${html}</body></html>`,
-  );
+async function load(page, doc, after) {
+  await page.setContent(doc);
   await page.evaluate(() => document.fonts.ready);
   if (after) await page.evaluate(after);
+}
+async function render(s, doc, after) {
+  await load(measure, doc, after);
+  const box = await measure.locator('#s').boundingBox();
+  if (!box) throw new Error(`${s.asset_path}: nothing to draw`);
+  const deviceScaleFactor = Math.min(MAX_DENSITY, MAX_PX / Math.max(box.width, box.height));
+  const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor });
+  await load(page, doc, after);
   const out = resolve(root, 'assets', s.asset_path);
   mkdirSync(dirname(out), { recursive: true });
-  await page.locator('#s').screenshot({ path: out, omitBackground: true });
+  // A clip of the measured box, not an element screenshot: heavy lettering redraws too slowly for Playwright's
+  // stability check at high density.
+  await page.screenshot({ path: out, omitBackground: true, clip: box, timeout: 120_000 });
+  await page.close();
   console.log(`assets/${s.asset_path}`);
 }
+const shoot = (s, html, after) =>
+  render(s, `<!doctype html><html><head><style>${faces}${PAGE_CSS}</style></head><body>${html}</body></html>`, after);
 for (const s of catalog) {
   if (WORD_ART_PACKS.includes(s.pack_slug)) {
-    // The T-507 pills (no -v2) are retired (0065); their committed art stays as it is.
-    if (s.asset_path.endsWith('-v2.png')) await shoot(s, wordArtHtml(s.pack_slug, s.label, s.sort));
+    // The T-507 pills restyled under -v2 names are retired (0065); their committed art stays as it is.
+    const restyled = existsSync(resolve(root, 'assets', s.asset_path.replace(/\.png$/, '-v2.png')));
+    if (!restyled) await shoot(s, wordArtHtml(s.pack_slug, s.label, s.sort));
     continue;
   }
   if (s.pack_slug === HASHTAG_PACK) {
@@ -123,19 +149,20 @@ for (const s of catalog) {
       `border-radius:10px;padding:8px 16px;letter-spacing:0.08em;`,
     earned: `background:${st.bg};color:${st.fg};border:3px solid #ffe08a;border-radius:999px;padding:10px 20px;`,
   }[st.kind];
-  await page.setContent(`<!doctype html><html><head><style>
+  const fontCheck = () => {
+    if (!document.fonts.check('800 26px Jakarta')) throw new Error('font did not load');
+  };
+  await render(
+    s,
+    `<!doctype html><html><head><style>
     @font-face { font-family: Jakarta; src: url('${font}'); font-weight: 800; }
     html, body { margin: 0; background: transparent; }
     #s { display: inline-block; padding: 14px; }
     #p { display: inline-block; font: 800 26px/1.15 Jakarta; white-space: nowrap; letter-spacing: 0.02em;
          transform: rotate(${st.tilt}deg); box-shadow: 0 3px 8px rgba(0,0,0,0.18); ${frame} }
-  </style></head><body><div id="s"><div id="p">${escapeHtml(st.text)}</div></div></body></html>`);
-  await page.evaluate(() => document.fonts.ready);
-  if (!(await page.evaluate(() => document.fonts.check('800 26px Jakarta')))) throw new Error('font did not load');
-  const out = resolve(root, 'assets', s.asset_path);
-  mkdirSync(dirname(out), { recursive: true });
-  await page.locator('#s').screenshot({ path: out, omitBackground: true });
-  console.log(`assets/${s.asset_path}`);
+  </style></head><body><div id="s"><div id="p">${escapeHtml(st.text)}</div></div></body></html>`,
+    fontCheck,
+  );
 }
 await browser.close();
 console.log(`${catalog.length} stickers`);
