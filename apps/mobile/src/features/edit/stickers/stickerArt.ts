@@ -1657,6 +1657,66 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 660,
     height: 354,
   },
+  'stickers/milestones/first-friend-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/first-friend-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/first-full-jar-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/first-full-jar-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jar-of-friends-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jar-of-friends-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-100-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-100-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-30-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-30-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-7-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-7-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-100-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-100-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-200-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-200-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-30-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-30-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-50-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-50-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-7-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-7-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/one-year-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/one-year-v2.png'),
+    width: 896,
+    height: 1024,
+  },
   'stickers/milestones/first-friend.png': {
     source: require('../../../../../../assets/stickers/milestones/first-friend.png'),
     width: 744,

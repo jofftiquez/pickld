@@ -14,7 +14,7 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012, 0029, 0032, 0060, 0065, 0135, 0154, 0155 and 0156+ seed, and nothing else', () => {
+  it('has a PNG for every sticker 0012, 0029, 0032, 0060, 0065, 0135, 0154, 0155 and 0156+ seed, 0168 badges, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
     const assetsIn = (migration: string, from = 'insert into') =>
       [
@@ -69,6 +69,11 @@ describe('bundled art', () => {
       expect(assets).toHaveLength(count);
       return assets;
     });
+    // 0168 restyles the 12 milestone pills as badges under -v2 names (old rows retired, art kept).
+    const badges = [...seededStickers.map((s) => s.asset), ...added, ...invite]
+      .filter((a) => a.startsWith('stickers/milestones/'))
+      .map((a) => a.replace('.png', '-v2.png'));
+    expect(badges).toHaveLength(12);
     const words = [
       ...seededStickers.map((s) => s.asset),
       ...paid,
@@ -79,7 +84,9 @@ describe('bundled art', () => {
       ...thirty,
       ...world,
     ];
-    expect(Object.keys(stickerArt).sort()).toEqual([...words, ...pictures, ...addedPictures, ...drawnArt].sort());
+    expect(Object.keys(stickerArt).sort()).toEqual(
+      [...words, ...pictures, ...addedPictures, ...drawnArt, ...badges].sort(),
+    );
     // Word stickers are wide labels (hashtag bubbles can be near square); picture stickers fit a near-square box.
     for (const asset of words.filter((a) => !a.startsWith('stickers/hashtags/')))
       expect(stickerArt[asset]!.width).toBeGreaterThan(stickerArt[asset]!.height);

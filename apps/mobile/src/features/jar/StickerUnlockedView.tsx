@@ -13,22 +13,22 @@ import { CelebrationReveal } from './CelebrationReveal';
 import { milestoneKeys, type MilestoneKey } from './celebrations';
 import { Confetti } from './Confetti';
 
-// The Milestones pack art (0012: stickers/milestones/<name>.png), bundled so it shows offline.
+// The Milestones pack badges (0168: stickers/milestones/<name>-v2.png), bundled so they show offline.
 const stickerArt: Record<MilestoneKey, number> = {
-  first_full_jar: require('../../../../../assets/stickers/milestones/first-full-jar.png'),
-  jars_7: require('../../../../../assets/stickers/milestones/jars-7.png'),
-  full_jars_7: require('../../../../../assets/stickers/milestones/full-jars-7.png'),
-  jars_30: require('../../../../../assets/stickers/milestones/jars-30.png'),
-  full_jars_30: require('../../../../../assets/stickers/milestones/full-jars-30.png'),
-  jars_50: require('../../../../../assets/stickers/milestones/jars-50.png'),
-  jars_100: require('../../../../../assets/stickers/milestones/jars-100.png'),
-  full_jars_100: require('../../../../../assets/stickers/milestones/full-jars-100.png'),
-  jars_200: require('../../../../../assets/stickers/milestones/jars-200.png'),
-  one_year: require('../../../../../assets/stickers/milestones/one-year.png'),
+  first_full_jar: require('../../../../../assets/stickers/milestones/first-full-jar-v2.png'),
+  jars_7: require('../../../../../assets/stickers/milestones/jars-7-v2.png'),
+  full_jars_7: require('../../../../../assets/stickers/milestones/full-jars-7-v2.png'),
+  jars_30: require('../../../../../assets/stickers/milestones/jars-30-v2.png'),
+  full_jars_30: require('../../../../../assets/stickers/milestones/full-jars-30-v2.png'),
+  jars_50: require('../../../../../assets/stickers/milestones/jars-50-v2.png'),
+  jars_100: require('../../../../../assets/stickers/milestones/jars-100-v2.png'),
+  full_jars_100: require('../../../../../assets/stickers/milestones/full-jars-100-v2.png'),
+  jars_200: require('../../../../../assets/stickers/milestones/jars-200-v2.png'),
+  one_year: require('../../../../../assets/stickers/milestones/one-year-v2.png'),
 };
 
-// The art is about 3:1 (753 × 252 for First full jar); contain keeps each one whole.
-const ART_ASPECT = 3;
+// Every badge is 896 × 1024; contain keeps each one whole.
+const ART_ASPECT = 896 / 1024;
 
 export type StickerUnlockedViewProps = {
   milestone: MilestoneKey;

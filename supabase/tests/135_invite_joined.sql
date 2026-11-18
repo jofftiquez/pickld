@@ -69,8 +69,8 @@ select tests.make_moment(tests.make_jar('owner2'), 'morning', 'live');
 -- ---------------------------------------------------------------- the stickers are earn-only
 select is((select array_agg(s.label order by s.sort) from public.stickers s
            join public.sticker_packs p on p.id = s.pack_id
-           where s.milestone_key in ('first_friend', 'full_jar_of_friends') and p.slug = 'milestones'),
-          array['First friend', 'Full jar of friends'], 'both invite stickers are in the Milestones pack');
+           where s.milestone_key in ('first_friend', 'full_jar_of_friends') and p.slug = 'milestones' and s.retired_at is null),
+          array['First friend', 'Full jar of friends'], 'both invite stickers are in the Milestones pack (as badges since 0168)');
 select ok((select p.tier = 'earned' and p.store_product_id is null from public.sticker_packs p where p.slug = 'milestones'),
           'the Milestones pack is earned and has no store product, so it is never sold');
 select ok(not has_function_privilege('authenticated', 'public.invite_joined(uuid, uuid)', 'execute')
