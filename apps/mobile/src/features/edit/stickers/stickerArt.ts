@@ -3797,6 +3797,111 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 865,
     height: 1024,
   },
+  'stickers/barkada/bonfire.png': {
+    source: require('../../../../../../assets/stickers/barkada/bonfire.png'),
+    width: 1024,
+    height: 847,
+  },
+  'stickers/barkada/camping.png': {
+    source: require('../../../../../../assets/stickers/barkada/camping.png'),
+    width: 1024,
+    height: 790,
+  },
+  'stickers/barkada/game-night.png': {
+    source: require('../../../../../../assets/stickers/barkada/game-night.png'),
+    width: 1024,
+    height: 822,
+  },
+  'stickers/barkada/movie-night.png': {
+    source: require('../../../../../../assets/stickers/barkada/movie-night.png'),
+    width: 1024,
+    height: 1007,
+  },
+  'stickers/barkada/milk-tea-date.png': {
+    source: require('../../../../../../assets/stickers/barkada/milk-tea-date.png'),
+    width: 1020,
+    height: 1024,
+  },
+  'stickers/barkada/friendship-bracelets.png': {
+    source: require('../../../../../../assets/stickers/barkada/friendship-bracelets.png'),
+    width: 1024,
+    height: 845,
+  },
+  'stickers/barkada/beach-ball.png': {
+    source: require('../../../../../../assets/stickers/barkada/beach-ball.png'),
+    width: 669,
+    height: 1024,
+  },
+  'stickers/barkada/picnic.png': {
+    source: require('../../../../../../assets/stickers/barkada/picnic.png'),
+    width: 922,
+    height: 1024,
+  },
+  'stickers/barkada/samgyup.png': {
+    source: require('../../../../../../assets/stickers/barkada/samgyup.png'),
+    width: 1024,
+    height: 894,
+  },
+  'stickers/barkada/share-fries.png': {
+    source: require('../../../../../../assets/stickers/barkada/share-fries.png'),
+    width: 1024,
+    height: 889,
+  },
+  'stickers/barkada/sparklers.png': {
+    source: require('../../../../../../assets/stickers/barkada/sparklers.png'),
+    width: 1024,
+    height: 1020,
+  },
+  'stickers/barkada/pinky-promise.png': {
+    source: require('../../../../../../assets/stickers/barkada/pinky-promise.png'),
+    width: 1024,
+    height: 943,
+  },
+  'stickers/barkada/group-hug.png': {
+    source: require('../../../../../../assets/stickers/barkada/group-hug.png'),
+    width: 970,
+    height: 1024,
+  },
+  'stickers/barkada/bowling.png': {
+    source: require('../../../../../../assets/stickers/barkada/bowling.png'),
+    width: 1024,
+    height: 854,
+  },
+  'stickers/barkada/player-two.png': {
+    source: require('../../../../../../assets/stickers/barkada/player-two.png'),
+    width: 1024,
+    height: 687,
+  },
+  'stickers/barkada/party-popper.png': {
+    source: require('../../../../../../assets/stickers/barkada/party-popper.png'),
+    width: 926,
+    height: 1024,
+  },
+  'stickers/barkada/video-call.png': {
+    source: require('../../../../../../assets/stickers/barkada/video-call.png'),
+    width: 728,
+    height: 1024,
+  },
+  'stickers/barkada/balloons.png': {
+    source: require('../../../../../../assets/stickers/barkada/balloons.png'),
+    width: 845,
+    height: 1024,
+  },
+  'stickers/barkada/walk-together.png': {
+    source: require('../../../../../../assets/stickers/barkada/walk-together.png'),
+    width: 1024,
+    height: 670,
+  },
+  'stickers/barkada/food-crawl.png': {
+    source: require('../../../../../../assets/stickers/barkada/food-crawl.png'),
+    width: 609,
+    height: 1024,
+  },
+  'stickers/barkada/sleepover.png': {
+    source: require('../../../../../../assets/stickers/barkada/sleepover.png'),
+    width: 1024,
+    height: 829,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
