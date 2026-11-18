@@ -11,7 +11,7 @@ select results_eq(
   $$ select p.slug, count(*) filter (where s.retired_at is null)::int, count(*) filter (where s.retired_at is not null)::int
      from public.sticker_packs p join public.stickers s on s.pack_id = p.id group by p.slug, p.sort order by p.sort $$,
   $$ values ('everyday', 17, 8), ('the-eight', 30, 24), ('stamps', 30, 1), ('milestones', 12, 0), ('christmas-2026', 12, 6),
-            ('pinoy-life', 25, 9), ('barkada', 17, 8), ('work-from-wherever', 16, 8), ('pet-parent', 14, 7),
+            ('pinoy-life', 30, 18), ('barkada', 17, 8), ('work-from-wherever', 16, 8), ('pet-parent', 14, 7),
             ('olivia', 30, 0), ('fish-moods', 30, 0), ('corporate', 30, 12), ('gen-z', 30, 12), ('trentahin', 30, 12), ('pride', 30, 12),
             ('cyclists', 30, 12), ('hashtags', 30, 0),
             ('gym', 30, 0), ('foodie', 30, 0), ('travel', 30, 0), ('student', 30, 0), ('parents', 30, 0), ('fan-life', 30, 0) $$,
@@ -25,7 +25,7 @@ select results_eq(
   'The Eight offers three or four drawings for each slot (0158 retires its words)');
 select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id
            where p.slug in ('everyday', 'the-eight', 'christmas-2026', 'pinoy-life', 'barkada', 'work-from-wherever', 'pet-parent')
-             and s.retired_at is null and s.sort < 100), 86, '86 picture stickers (64 here, 8 more Pinoy Life in 0060, 14 drawn in 0158), sorted before the words that stay');
+             and s.retired_at is null and s.sort < 100), 100, '100 picture stickers (64 here, 8 more Pinoy Life in 0060, 14 drawn in 0158, 14 drawn in 0159), sorted before the words that stay');
 select is((select count(*)::int from public.stickers where id <> md5('pickld-sticker:' || asset_path)::uuid), 0,
           'new and old ids still derive from the asset path');
 
@@ -48,7 +48,7 @@ select ok((select s.sticker_usable from public.stickers s where asset_path = 'st
           'a retired free sticker stays usable, so re-saving an old moment that has it works');
 select is((select retired_at is not null from public.stickers where asset_path = 'stickers/everyday/kain-tayo.png'), true,
           'and the app can see it is retired');
-select is((select count(*)::int from public.stickers where retired_at is null), 593, 'the app offers 593 stickers across all packs (0135 adds 2 milestones, 0154 adds 124, 0155 adds 180, 0156 adds 14, 0157 +14, 0158 +14/-8)');
+select is((select count(*)::int from public.stickers where retired_at is null), 598, 'the app offers 598 stickers across all packs (0135 adds 2 milestones, 0154 adds 124, 0155 adds 180, 0156 adds 14, 0157 +14, 0158 +14/-8, 0159 +14/-9)');
 select throws_ok($$ update public.stickers set retired_at = null where asset_path = 'stickers/everyday/kain-tayo.png' $$,
                  '42501', null, 'a signed-in user cannot bring a retired sticker back');
 select tests.act_as_anon();

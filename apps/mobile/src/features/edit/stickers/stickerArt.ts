@@ -3627,6 +3627,76 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 1024,
     height: 1020,
   },
+  'stickers/pinoy-life/sinigang.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/sinigang.png'),
+    width: 1024,
+    height: 925,
+  },
+  'stickers/pinoy-life/turon.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/turon.png'),
+    width: 1024,
+    height: 700,
+  },
+  'stickers/pinoy-life/lumpia.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/lumpia.png'),
+    width: 1024,
+    height: 703,
+  },
+  'stickers/pinoy-life/sapin-sapin.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/sapin-sapin.png'),
+    width: 1024,
+    height: 732,
+  },
+  'stickers/pinoy-life/fishball.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/fishball.png'),
+    width: 732,
+    height: 1024,
+  },
+  'stickers/pinoy-life/sorbetes.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/sorbetes.png'),
+    width: 1024,
+    height: 699,
+  },
+  'stickers/pinoy-life/calamansi.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/calamansi.png'),
+    width: 1005,
+    height: 1024,
+  },
+  'stickers/pinoy-life/kalesa.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/kalesa.png'),
+    width: 1024,
+    height: 686,
+  },
+  'stickers/pinoy-life/bahay-kubo.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/bahay-kubo.png'),
+    width: 1024,
+    height: 868,
+  },
+  'stickers/pinoy-life/tsinelas.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/tsinelas.png'),
+    width: 907,
+    height: 1024,
+  },
+  'stickers/pinoy-life/tabo.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/tabo.png'),
+    width: 1024,
+    height: 831,
+  },
+  'stickers/pinoy-life/walis-tingting.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/walis-tingting.png'),
+    width: 925,
+    height: 1024,
+  },
+  'stickers/pinoy-life/banderitas.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/banderitas.png'),
+    width: 1024,
+    height: 377,
+  },
+  'stickers/pinoy-life/street-hoop.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/street-hoop.png'),
+    width: 850,
+    height: 1024,
+  },
 };
 
 /** The art for a catalog asset_path, or undefined for a sticker this app version doesn't bundle. */
