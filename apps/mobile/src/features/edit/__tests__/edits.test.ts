@@ -132,3 +132,44 @@ describe('sticker overlays (M2-15)', () => {
     expect(overlaySchema.safeParse({ ...stamp, ...change }).success).toBe(false);
   });
 });
+
+describe('place overlays', () => {
+  const placeOverlay = {
+    id: 'pl1',
+    type: 'place',
+    x: 0.5,
+    y: 0.82,
+    scale: 0.4,
+    rotation: 0,
+    text: 'Baguio',
+    color: 'butter',
+  } as const;
+
+  it('round-trip with only the words and the color', () => {
+    const edits: Edits = { v: 1, filter: 'original', overlays: [placeOverlay] };
+    const stored: unknown = JSON.parse(JSON.stringify(edits));
+    expect(editsSchema.parse(stored)).toEqual(edits);
+    expect(parseEdits(stored)).toEqual(edits);
+  });
+
+  it('never keeps coordinates or anything else that rides along', () => {
+    const withLocation = { ...placeOverlay, latitude: 16.41, longitude: 120.59, coords: { lat: 16.41 } };
+    const [read] = parseEdits({ filter: 'original', overlays: [withLocation] }).overlays;
+    expect(read).toEqual(placeOverlay);
+    expect(JSON.stringify(read)).not.toMatch(/16\.41|120\.59|lat|lon|coord/);
+  });
+
+  it('drops a blank or too-long place and gives one without a color white', () => {
+    const { color: _color, ...noColor } = placeOverlay;
+    expect(
+      parseEdits({
+        filter: 'original',
+        overlays: [
+          { ...placeOverlay, id: 'blank', text: '   ' },
+          { ...placeOverlay, id: 'long', text: 'x'.repeat(41) },
+          noColor,
+        ],
+      }).overlays,
+    ).toEqual([{ ...placeOverlay, color: 'white' }]);
+  });
+});

@@ -18,6 +18,7 @@ const en = JSON.parse(readFileSync(join(__dirname, 'src/i18n/en.json'), 'utf8'))
   gallery: { permissionDescription: string };
   contacts: { permissionDescription: string };
   mediaLibrary: { savePermissionDescription: string };
+  location: { permissionDescription: string };
   widgets: { todayName: string; todayDescription: string; friendName: string; friendDescription: string };
 };
 
@@ -85,6 +86,8 @@ const config: ExpoConfig = {
       },
     ],
     permissions: ['android.permission.CAMERA'],
+    // The Place sticker needs a town, not a street: approximate location only.
+    blockedPermissions: ['android.permission.ACCESS_FINE_LOCATION'],
     adaptiveIcon: {
       backgroundColor: colors.brand,
       foregroundImage: './assets/brand/android-foreground.png',
@@ -139,6 +142,22 @@ const config: ExpoConfig = {
             ios: { supportedFamilies: ['systemSmall'], contentMarginsDisabled: true },
           },
         ],
+      },
+    ],
+    // The Place sticker's "Use where I am" (Place tool): while using the app only, approximate by default,
+    // never in the background, no motion. The phone turns the fix into a town name; only that name is saved.
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission: en.location.permissionDescription,
+        locationAlwaysAndWhenInUsePermission: false,
+        locationAlwaysPermission: false,
+        locationFullAccuracyPermission: false,
+        motionUsagePermission: false,
+        isIosReducedAccuracyByDefault: true,
+        isIosBackgroundLocationEnabled: false,
+        isAndroidBackgroundLocationEnabled: false,
+        isAndroidForegroundServiceEnabled: false,
       },
     ],
     // Native targets in targets/: the Photos share extension, which hands a photo to /shared-photo (FR-CAP-02).

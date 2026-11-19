@@ -366,3 +366,27 @@ async function countNear(bytes: Uint8Array, rgb: number[], tol = 40) {
   }
   return n;
 }
+
+Deno.test('a place sticker draws its pill where it sits; readEdits keeps only its words and color', async () => {
+  const o = {
+    id: 'p',
+    type: 'place',
+    x: 0.5,
+    y: 0.5,
+    scale: 0.5,
+    rotation: 0,
+    text: 'Baguio',
+    color: 'butter',
+  } as const;
+  assertEquals(readEdits({ filter: 'original', overlays: [{ ...o, latitude: 16.4 }] }).overlays, [o]);
+  assertEquals(readEdits({ filter: 'original', overlays: [{ ...o, text: ' ' }] }).overlays, []);
+
+  const r = finishedRenderer(() => Promise.resolve(null));
+  const photo = await solid(390, 520, [40, 90, 160]);
+  const out = await r.render({ photo, edits: { filter: 'original', overlays: [o] }, ...at });
+  // The pill is 195 px wide (half the photo) and 67 px tall, centred: its left end is butter, and the photo
+  // just above it and just left of it is untouched.
+  near((await pixelAt(out, 97 + 10, 260)).rgb, [0xff, 0xe0, 0x8a], 12);
+  near((await pixelAt(out, 195, 215)).rgb, [40, 90, 160], 12);
+  near((await pixelAt(out, 90, 260)).rgb, [40, 90, 160], 12);
+});

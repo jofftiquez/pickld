@@ -12,6 +12,10 @@ import {
   contrastColor as serverContrastColor,
   layoutText as serverLayoutText,
   outlineOffsets as serverOutlineOffsets,
+  PIN_PATH as SERVER_PIN_PATH,
+  PIN_VIEWBOX as SERVER_PIN_VIEWBOX,
+  PLACE,
+  placeReferenceWidth as serverPlaceReferenceWidth,
   STAMP,
   stampText as serverStampText,
   SURFACE,
@@ -20,7 +24,7 @@ import {
   TEXT_STYLE,
   TEXT_TRACKING,
 } from '../../../../../../supabase/functions/_shared/moment_layout';
-import { bubble, bubbleColors, colors, stickerTool, textOverlayColors } from '@/theme/tokens';
+import { bubble, bubbleColors, colors, place, stickerTool, textOverlayColors } from '@/theme/tokens';
 
 import {
   bubbleAspect,
@@ -31,6 +35,7 @@ import {
   isCloud,
 } from '../bubble/bubbleLayout';
 import { filterMatrices } from '../filters';
+import { PIN_PATH, PIN_VIEWBOX, placeReferenceWidth } from '../place/placeLayout';
 import { stampText } from '../stickers/stamps';
 import { textFontStyle } from '../text/textFonts';
 import {
@@ -176,4 +181,13 @@ describe('the export renderer matches the app', () => {
       stampText(kind, { capturedAt, tz: 'Asia/Manila' }, 'en-US'),
     );
   });
+
+  it.each(['Baguio', '  Quezon City ', '東京', 'Llanfairpwllgwyngyll station', 'x'])(
+    'sizes and draws the place sticker %j the same way',
+    (text) => {
+      expect(PLACE).toEqual(place);
+      expect([SERVER_PIN_PATH, SERVER_PIN_VIEWBOX]).toEqual([PIN_PATH, PIN_VIEWBOX]);
+      expect(serverPlaceReferenceWidth(text)).toBe(placeReferenceWidth(text));
+    },
+  );
 });

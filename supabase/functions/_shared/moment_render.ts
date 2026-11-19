@@ -30,6 +30,10 @@ import {
   layoutText,
   outlineOffsets,
   PHOTO_ASPECT,
+  PIN_PATH,
+  PIN_VIEWBOX,
+  PLACE,
+  placeReferenceWidth,
   REF_WIDTH,
   STAMP,
   stampText,
@@ -96,6 +100,12 @@ const overlaySchema = z.discriminatedUnion('type', [
     align: z.enum(['left', 'center']).default('center'),
     background: z.enum(['none', 'solid', 'soft']).optional(),
     outline: textColorName.optional(),
+  }),
+  z.object({
+    type: z.literal('place'),
+    ...base,
+    text: z.string().max(40).refine((s) => s.trim().length > 0),
+    color: colorName.default('white'),
   }),
 ]);
 type Overlay = z.infer<typeof overlaySchema>;
@@ -306,6 +316,8 @@ function draw(k: Kit, input: FinishedInput, edits: FinishedEdits, art: Map<strin
         ? sticker ? sticker.height() / sticker.width() : STICKER_FALLBACK_ASPECT
         : o.type === 'bubble'
         ? bubbleAspect(o.text, o.shape)
+        : o.type === 'place'
+        ? PLACE.referenceHeight / placeReferenceWidth(o.text)
         : layoutText(o).height / layoutText(o).width;
       const w = o.scale * W;
       const h = w * aspect;
@@ -317,6 +329,7 @@ function draw(k: Kit, input: FinishedInput, edits: FinishedEdits, art: Map<strin
       canvas.translate(-w / 2, -h / 2);
       if (o.type === 'sticker') drawSticker(k, canvas, keep, o, sticker, w, h, u, input);
       else if (o.type === 'bubble') drawBubble(k, canvas, keep, o, w, h, u);
+      else if (o.type === 'place') drawPlace(k, canvas, keep, o, w, h);
       else drawText(k, canvas, keep, o, w);
       canvas.restore();
     }
@@ -570,6 +583,58 @@ function drawBubble(
     if (!p.didExceedMaxLines()) break;
   }
   if (p) canvas.drawParagraph(p, (w - inner) / 2, (h - p.getHeight()) / 2);
+}
+
+/** PlaceOverlay: a pill in its bubble color, the pin and the name on one line, centred together. */
+function drawPlace(k: Kit, canvas: Canvas, keep: Keep, o: Extract<Overlay, { type: 'place' }>, w: number, h: number) {
+  const { ck } = k;
+  const s = h / PLACE.referenceHeight;
+  const pair = BUBBLE_COLORS[o.color];
+  const fill = keep(new ck.Paint());
+  fill.setAntiAlias(true);
+  fill.setColor(color(ck, pair.fill));
+  canvas.drawRRect(rrect(0, 0, w, h, [h / 2, h / 2, h / 2, h / 2]), fill);
+
+  const icon = PLACE.icon * s;
+  const gap = PLACE.gap * s;
+  const inner = w - 2 * PLACE.paddingX * s - icon - gap;
+  let size = PLACE.fontSize * s;
+  const make = () =>
+    paragraph(k, keep, o.text, {
+      family: 'jakarta-800',
+      size,
+      lineHeight: size * 1.2,
+      color: pair.text,
+      align: 'left',
+      maxLines: 1,
+      width: 1e5,
+    });
+  let p = make();
+  // adjustsFontSizeToFit (minimumFontScale 0.5) on one line.
+  if (p.getMaxIntrinsicWidth() > inner) {
+    size *= Math.max(0.5, inner / p.getMaxIntrinsicWidth());
+    p = make();
+  }
+  const textWidth = Math.min(inner, p.getMaxIntrinsicWidth());
+  const left = (w - (icon + gap + textWidth)) / 2;
+
+  const pin = ck.Path.MakeFromSVGString(PIN_PATH);
+  if (pin) {
+    keep(pin);
+    pin.setFillType(ck.FillType.EvenOdd);
+    const ink = keep(new ck.Paint());
+    ink.setAntiAlias(true);
+    ink.setColor(color(ck, pair.text));
+    canvas.save();
+    canvas.translate(left, (h - icon) / 2);
+    canvas.scale(icon / PIN_VIEWBOX, icon / PIN_VIEWBOX);
+    canvas.drawPath(pin, ink);
+    canvas.restore();
+  }
+  canvas.save();
+  canvas.clipRect(ck.XYWHRect(left + icon + gap, 0, inner, h), ck.ClipOp.Intersect, true);
+  canvas.drawParagraph(p, left + icon + gap, (h - p.getHeight()) / 2);
+  canvas.restore();
 }
 
 function drawText(k: Kit, canvas: Canvas, keep: Keep, o: Extract<Overlay, { type: 'text' }>, w: number) {

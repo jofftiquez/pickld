@@ -224,6 +224,20 @@ export function contrastColor(color: string): 'white' | 'ink' {
 /** tokens.stickerTool.stamp: fractions of the stamp's height. */
 export const STAMP = { ring: 0.025, inset: 0.07, border: 0.05, radius: 0.16, text: 0.3, padding: 0.2 } as const;
 
+/** tokens.place: the Place sticker's pill, in reference points. */
+export const PLACE = { referenceHeight: 40, fontSize: 17, paddingX: 14, icon: 18, gap: 6, charWidth: 0.62 } as const;
+
+/** placeLayout.ts: the pin on a 24-point square, filled even-odd so its dot is a hole. */
+export const PIN_PATH =
+  'M12 1.5C7.86 1.5 4.5 4.8 4.5 8.9c0 5.4 7.5 13.6 7.5 13.6s7.5-8.2 7.5-13.6C19.5 4.8 16.14 1.5 12 1.5Zm0 4.4a3 3 0 1 1 0 6a3 3 0 0 1 0-6Z';
+export const PIN_VIEWBOX = 24;
+
+/** placeLayout.ts: a place pill's width in reference points. */
+export function placeReferenceWidth(text: string): number {
+  const chars = Math.max(1, Array.from(text.trim()).length);
+  return Math.ceil(2 * PLACE.paddingX + PLACE.icon + PLACE.gap + chars * PLACE.fontSize * PLACE.charWidth);
+}
+
 /** stickerRenderer.ts: a sticker whose art is missing keeps this height ÷ width. */
 export const STICKER_FALLBACK_ASPECT = 0.4;
 

@@ -12,7 +12,7 @@ export function hasVisibleEdits(edits: Edits): boolean {
 
 /**
  * One spoken label for the whole picture, e.g. "Photo with 2 stickers and text". It counts the overlay
- * kinds and never includes what a bubble or text says, nor the caption: the label is safe to show
+ * kinds and never includes what a bubble, text or place says, nor the caption: the label is safe to show
  * anywhere the photo is (rule 10 keeps it out of analytics anyway).
  */
 export function momentLabel(edits: Edits, t: TFunction): string {
@@ -21,17 +21,20 @@ export function momentLabel(edits: Edits, t: TFunction): string {
     { key: 'momentRenderer.stickers' as const, count: count('sticker') },
     { key: 'momentRenderer.bubbles' as const, count: count('bubble') },
     { key: 'momentRenderer.texts' as const, count: count('text') },
+    { key: 'momentRenderer.places' as const, count: count('place') },
   ]
     .filter((part) => part.count > 0)
     .map((part) => t(part.key, { count: part.count }));
   if (parts.length === 0) return t('momentRenderer.photo');
-  const [a = '', b = '', c = ''] = parts;
+  const [a = '', b = '', c = '', d = ''] = parts;
   const items =
     parts.length === 1
       ? a
       : parts.length === 2
         ? t('momentRenderer.list2', { a, b })
-        : t('momentRenderer.list3', { a, b, c });
+        : parts.length === 3
+          ? t('momentRenderer.list3', { a, b, c })
+          : t('momentRenderer.list4', { a, b, c, d });
   return t('momentRenderer.photoWith', { items });
 }
 

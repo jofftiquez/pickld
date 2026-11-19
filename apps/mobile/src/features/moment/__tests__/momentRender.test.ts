@@ -34,6 +34,7 @@ const text = (id: string): Overlay => ({
   align: 'center',
   ...at,
 });
+const place = (id: string): Overlay => ({ id, type: 'place', text: 'Hidden Valley', color: 'white', ...at });
 const withOverlays = (...overlays: Overlay[]): Edits => ({ ...DEFAULT_EDITS, overlays });
 
 describe('momentLabel', () => {
@@ -45,12 +46,19 @@ describe('momentLabel', () => {
     [[bubble('a'), text('b'), text('c')], 'Photo with a speech bubble and 2 texts'],
     [[text('c'), bubble('b'), sticker('a')], 'Photo with a sticker, a speech bubble and text'],
     [[bubble('a'), bubble('b'), bubble('c')], 'Photo with 3 speech bubbles'],
+    [[place('a'), text('b')], 'Photo with text and a place'],
+    [
+      [place('a'), sticker('b'), bubble('c'), text('d'), place('e')],
+      'Photo with a sticker, a speech bubble, text and 2 places',
+    ],
   ])('%j → %s', (overlays, label) => {
     expect(momentLabel(withOverlays(...overlays), t)).toBe(label);
   });
 
-  it('never speaks what a bubble or text says, nor a sticker’s own name', () => {
-    expect(momentLabel(withOverlays(sticker('a'), bubble('b'), text('c')), t)).not.toMatch(/secret|private|Kape/);
+  it('never speaks what a bubble, text or place says, nor a sticker’s own name', () => {
+    expect(momentLabel(withOverlays(sticker('a'), bubble('b'), text('c'), place('d')), t)).not.toMatch(
+      /secret|private|Kape|Hidden/,
+    );
   });
 
   it('a filter alone is still just "Photo"', () => {
