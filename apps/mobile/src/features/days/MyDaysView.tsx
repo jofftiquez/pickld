@@ -31,6 +31,10 @@ export type MyDaysViewProps = {
   onSelectDay: (date: string) => void;
   /** Opens Memories (FR-DAY-03). */
   onMemories?: () => void;
+  /** Past days from the last week that weren't published or kept to myself; the Not published row shows above 0. */
+  unpublishedCount?: number;
+  /** Opens Not published. */
+  onUnpublished?: () => void;
   /** The months the month picker offers, oldest first: the range Previous and Next reach (`monthsBetween`). */
   pickableMonths?: readonly string[];
   /** Jumps to a month chosen in the month picker. Without it the month line is plain text. */
@@ -74,6 +78,8 @@ export function MyDaysView({
   onNext,
   onSelectDay,
   onMemories,
+  unpublishedCount = 0,
+  onUnpublished,
   pickableMonths = [],
   onPickMonth,
   onPickDate,
@@ -85,6 +91,7 @@ export function MyDaysView({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [monthPressed, setMonthPressed] = useState(false);
+  const [unpublishedPressed, setUnpublishedPressed] = useState(false);
   const subtitle = (
     <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]} testID="my-days-subtitle">
       {t('myDays.subtitle', { month, count: momentCount })}
@@ -177,6 +184,26 @@ export function MyDaysView({
           />
         </View>
       </View>
+
+      {onUnpublished && unpublishedCount > 0 ? (
+        // One row however many days wait, so My jars never grows; the list opens on its own screen.
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('myDays.unpublishedLabel', { count: unpublishedCount })}
+          accessibilityHint={t('myDays.unpublishedHint')}
+          onPress={onUnpublished}
+          onPressIn={() => setUnpublishedPressed(true)}
+          onPressOut={() => setUnpublishedPressed(false)}
+          testID="my-days-unpublished"
+          style={[styles.unpublished, unpublishedPressed ? { opacity: PRESSED_OPACITY } : null]}
+        >
+          <Text style={[textStyle('body', '600'), styles.unpublishedText]}>{t('myDays.unpublished')}</Text>
+          <View style={styles.countPill}>
+            <Text style={[textStyle('label', '700'), { color: colors.brandText }]}>{unpublishedCount}</Text>
+          </View>
+          <Icon name="chevronRight" size={sizes.monthButtonIcon} strokeWidth={2.4} color="chevron" />
+        </Pressable>
+      ) : null}
 
       <View style={styles.card} accessibilityLabel={t('myDays.calendar', { month })} testID="my-days-calendar">
         {/* The day labels already say the date, so the weekday letters are hidden from screen readers. */}
@@ -302,6 +329,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     gap: space.sm,
     ...shadow.card,
+  },
+  unpublished: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    minHeight: sizes.roundButton,
+    marginHorizontal: space.lg,
+    marginBottom: space.md,
+    paddingHorizontal: sizes.cardPadding,
+    paddingVertical: space.sm,
+    borderRadius: radius.card,
+    backgroundColor: colors.surface,
+    ...shadow.card,
+  },
+  unpublishedText: { color: colors.ink, flex: 1 },
+  countPill: {
+    minWidth: sizes.roundButton / 2,
+    alignItems: 'center',
+    paddingHorizontal: space.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brandTint,
   },
   weeks: { gap: sizes.dayGap },
   row: { flexDirection: 'row', gap: sizes.dayGap },

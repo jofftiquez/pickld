@@ -74,8 +74,17 @@ async function renderMyDays(props: Partial<MyDaysViewProps> = {}) {
 describe('MyDaysView', () => {
   it('shows the title, month and moment count', async () => {
     await renderMyDays();
-    expect(screen.getByTestId('screen-title').props.children).toBe('My days');
+    expect(screen.getByTestId('screen-title').props.children).toBe('My jars');
     expect(screen.getByText('November 2026 · 10 moments')).toBeTruthy();
+  });
+
+  it('shows one Not published row only while days wait, and opens the list', async () => {
+    const onUnpublished = jest.fn();
+    await renderMyDays({ unpublishedCount: 0, onUnpublished });
+    expect(screen.queryByTestId('my-days-unpublished')).toBeNull();
+    await renderMyDays({ unpublishedCount: 3, onUnpublished });
+    await fireEvent.press(screen.getByRole('button', { name: 'Not published, 3 days' }));
+    expect(onUnpublished).toHaveBeenCalledTimes(1);
   });
 
   it('announces Next month as disabled on the current month, and does not call it', async () => {

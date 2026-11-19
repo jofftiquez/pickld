@@ -17,7 +17,7 @@ const photoUrlsResponse = z.object({
 });
 
 /** Cover URLs from `fn:photo-urls` (as useToday does); a failure leaves cells without a photo. */
-async function coverUrls(momentIds: string[]): Promise<Map<string, string | null>> {
+export async function coverUrls(momentIds: string[]): Promise<Map<string, string | null>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
   rememberPlaceholders(data);

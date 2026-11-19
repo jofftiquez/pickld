@@ -56,6 +56,7 @@ export default function PublishScreen() {
       if (userId !== null) {
         void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
         void queryClient.invalidateQueries({ queryKey: ['day', userId] });
+        void queryClient.invalidateQueries({ queryKey: ['unpublished', userId] });
       }
       close();
       showToast('jarPublished');
