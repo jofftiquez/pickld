@@ -1657,6 +1657,96 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 660,
     height: 354,
   },
+  'stickers/milestones/jars-14-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-14-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-75-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-75-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-150-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-150-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-250-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-250-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-300-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-300-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-500-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-500-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/two-years-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/two-years-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-1000-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-1000-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/three-years-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/three-years-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-3-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-3-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-14-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-14-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-50-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-50-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-75-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-75-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-150-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-150-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-200-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-200-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-250-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-250-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-365-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-365-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-500-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-500-v2.png'),
+    width: 896,
+    height: 1024,
+  },
   'stickers/milestones/first-friend-v2.png': {
     source: require('../../../../../../assets/stickers/milestones/first-friend-v2.png'),
     width: 896,

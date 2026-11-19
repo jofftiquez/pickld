@@ -99,6 +99,8 @@ const RIBBON = { jars: '#5fae2e', full: '#ff5c93', friends: '#2f9bf0', year: '#8
 function milestoneParts(label) {
   const n = /^(\d+) (full jars|jars)$/.exec(label);
   if (n) return { big: n[1], word: n[2], ribbon: n[2] === 'jars' ? RIBBON.jars : RIBBON.full };
+  const y = /^(\d+) years of jars$/.exec(label);
+  if (y) return { big: y[1], word: 'years of jars', ribbon: RIBBON.year };
   return (
     {
       'First full jar': { big: '1', sup: 'st', word: 'full jar', ribbon: RIBBON.full },
@@ -142,8 +144,8 @@ function milestoneHtml(label) {
             background: radial-gradient(circle at 35% 28%, #fffbe0, #ffe066 40%, #ffb800 100%); }
     .shine { position: absolute; left: 76px; top: 52px; width: 46px; height: 20px; border-radius: 50%;
              background: rgba(255,255,255,0.85); transform: rotate(-28deg); }
-    .num { position: absolute; left: 47px; top: 34px; width: 156px; text-align: center; font: 800 ${m.big.length > 2 ? 62 : 74}px/1 Jakarta;
-           color: #8a4600; text-shadow: 0 3px 0 #fff6c2, 0 -2px 0 rgba(120,60,0,0.25); letter-spacing: -0.02em; padding-top: ${m.big.length > 2 ? 30 : 24}px; }
+    .num { position: absolute; left: 47px; top: 34px; width: 156px; text-align: center; font: 800 ${[74, 74, 74, 62, 48][m.big.length] ?? 48}px/1 Jakarta;
+           color: #8a4600; text-shadow: 0 3px 0 #fff6c2, 0 -2px 0 rgba(120,60,0,0.25); letter-spacing: -0.02em; padding-top: ${[24, 24, 24, 30, 38][m.big.length] ?? 38}px; }
     .num sup { font-size: 0.42em; vertical-align: 0.9em; margin-left: 2px; }
     .band { position: absolute; left: 0; top: 146px; width: 250px; height: 46px; background: ${m.ribbon};
             clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);

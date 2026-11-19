@@ -5,18 +5,37 @@ import { slots } from '@/theme/tokens';
 
 import type { ServerMoment } from './todayGrid';
 
-/** The milestones (0010, D-8; five more in 0060), in the order their Sticker unlocked screens are shown. */
+/** The milestones (0010, D-8; five more in 0060, eighteen in 0170) by count, the order their Sticker unlocked screens
+ * are shown and "Next up" follows. */
 export const milestoneKeys = [
   'first_full_jar',
+  'full_jars_3',
   'jars_7',
   'full_jars_7',
+  'jars_14',
+  'full_jars_14',
   'jars_30',
   'full_jars_30',
   'jars_50',
+  'full_jars_50',
+  'jars_75',
+  'full_jars_75',
   'jars_100',
   'full_jars_100',
+  'jars_150',
+  'full_jars_150',
   'jars_200',
+  'full_jars_200',
+  'jars_250',
+  'full_jars_250',
+  'jars_300',
   'one_year',
+  'full_jars_365',
+  'jars_500',
+  'full_jars_500',
+  'two_years',
+  'jars_1000',
+  'three_years',
 ] as const;
 export type MilestoneKey = (typeof milestoneKeys)[number];
 
