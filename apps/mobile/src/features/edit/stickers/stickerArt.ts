@@ -1,4 +1,4 @@
-// Bundled art for every catalog sticker (0012 launch packs, 0029 paid packs, 0032 picture stickers, 0060 new packs, 0065 restyled word art and Hashtags, 0154 thirty per text pack: one PNG per sticker at repo-root assets/stickers/<pack>/<name>.png,
+// Bundled art for every catalog sticker (0012 launch packs, 0029 paid packs, 0032 picture stickers, 0060 new packs, 0065 restyled word art and Hashtags, 0154 thirty per text pack, 0155 six text packs: one PNG per sticker at repo-root assets/stickers/<pack>/<name>.png,
 // the same files the photo worker serves), keyed by the catalog's asset_path. Bundled so the Stickers tool and
 // every moment's stickers draw offline and from the first use (FR-STK-02 cached art). Width and height are the
 // PNG's pixels: the overlay's box takes the art's aspect.
@@ -767,6 +767,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 360,
     height: 344,
   },
+  'stickers/fan-life/album-haul.png': {
+    source: require('../../../../../../assets/stickers/fan-life/album-haul.png'),
+    width: 2044,
+    height: 612,
+  },
+  'stickers/fan-life/bias-wrecked.png': {
+    source: require('../../../../../../assets/stickers/fan-life/bias-wrecked.png'),
+    width: 2044,
+    height: 544,
+  },
+  'stickers/fan-life/bias.png': {
+    source: require('../../../../../../assets/stickers/fan-life/bias.png'),
+    width: 2042,
+    height: 1096,
+  },
+  'stickers/fan-life/comeback.png': {
+    source: require('../../../../../../assets/stickers/fan-life/comeback.png'),
+    width: 2043,
+    height: 683,
+  },
+  'stickers/fan-life/concert-fit.png': {
+    source: require('../../../../../../assets/stickers/fan-life/concert-fit.png'),
+    width: 2045,
+    height: 606,
+  },
+  'stickers/fan-life/concert-night.png': {
+    source: require('../../../../../../assets/stickers/fan-life/concert-night.png'),
+    width: 2047,
+    height: 522,
+  },
+  'stickers/fan-life/dance-cover.png': {
+    source: require('../../../../../../assets/stickers/fan-life/dance-cover.png'),
+    width: 2044,
+    height: 575,
+  },
+  'stickers/fan-life/encore.png': {
+    source: require('../../../../../../assets/stickers/fan-life/encore.png'),
+    width: 2047,
+    height: 798,
+  },
+  'stickers/fan-life/fan-boy.png': {
+    source: require('../../../../../../assets/stickers/fan-life/fan-boy.png'),
+    width: 2047,
+    height: 783,
+  },
+  'stickers/fan-life/fan-chant.png': {
+    source: require('../../../../../../assets/stickers/fan-life/fan-chant.png'),
+    width: 2045,
+    height: 663,
+  },
+  'stickers/fan-life/fan-girl.png': {
+    source: require('../../../../../../assets/stickers/fan-life/fan-girl.png'),
+    width: 2046,
+    height: 767,
+  },
+  'stickers/fan-life/fan-meet.png': {
+    source: require('../../../../../../assets/stickers/fan-life/fan-meet.png'),
+    width: 2045,
+    height: 725,
+  },
+  'stickers/fan-life/fandom-friends.png': {
+    source: require('../../../../../../assets/stickers/fan-life/fandom-friends.png'),
+    width: 2042,
+    height: 1093,
+  },
+  'stickers/fan-life/forever-my-era.png': {
+    source: require('../../../../../../assets/stickers/fan-life/forever-my-era.png'),
+    width: 2045,
+    height: 1049,
+  },
+  'stickers/fan-life/front-row.png': {
+    source: require('../../../../../../assets/stickers/fan-life/front-row.png'),
+    width: 2048,
+    height: 639,
+  },
+  'stickers/fan-life/hearts-for-you.png': {
+    source: require('../../../../../../assets/stickers/fan-life/hearts-for-you.png'),
+    width: 2042,
+    height: 1068,
+  },
+  'stickers/fan-life/lightstick-ready.png': {
+    source: require('../../../../../../assets/stickers/fan-life/lightstick-ready.png'),
+    width: 2046,
+    height: 897,
+  },
+  'stickers/fan-life/living-my-best-fan-life.png': {
+    source: require('../../../../../../assets/stickers/fan-life/living-my-best-fan-life.png'),
+    width: 2048,
+    height: 767,
+  },
+  'stickers/fan-life/merch-line.png': {
+    source: require('../../../../../../assets/stickers/fan-life/merch-line.png'),
+    width: 2047,
+    height: 642,
+  },
+  'stickers/fan-life/music-video-drop.png': {
+    source: require('../../../../../../assets/stickers/fan-life/music-video-drop.png'),
+    width: 2045,
+    height: 854,
+  },
+  'stickers/fan-life/photocard.png': {
+    source: require('../../../../../../assets/stickers/fan-life/photocard.png'),
+    width: 2044,
+    height: 626,
+  },
+  'stickers/fan-life/post-concert-blues.png': {
+    source: require('../../../../../../assets/stickers/fan-life/post-concert-blues.png'),
+    width: 2045,
+    height: 726,
+  },
+  'stickers/fan-life/repeat-mode.png': {
+    source: require('../../../../../../assets/stickers/fan-life/repeat-mode.png'),
+    width: 2043,
+    height: 575,
+  },
+  'stickers/fan-life/screaming.png': {
+    source: require('../../../../../../assets/stickers/fan-life/screaming.png'),
+    width: 2048,
+    height: 655,
+  },
+  'stickers/fan-life/sold-out.png': {
+    source: require('../../../../../../assets/stickers/fan-life/sold-out.png'),
+    width: 2042,
+    height: 724,
+  },
+  'stickers/fan-life/stan-forever.png': {
+    source: require('../../../../../../assets/stickers/fan-life/stan-forever.png'),
+    width: 2046,
+    height: 548,
+  },
+  'stickers/fan-life/streaming-party.png': {
+    source: require('../../../../../../assets/stickers/fan-life/streaming-party.png'),
+    width: 2043,
+    height: 896,
+  },
+  'stickers/fan-life/ticket-secured.png': {
+    source: require('../../../../../../assets/stickers/fan-life/ticket-secured.png'),
+    width: 2043,
+    height: 1051,
+  },
+  'stickers/fan-life/ultimate-fan.png': {
+    source: require('../../../../../../assets/stickers/fan-life/ultimate-fan.png'),
+    width: 2048,
+    height: 562,
+  },
+  'stickers/fan-life/waiting-for-the-drop.png': {
+    source: require('../../../../../../assets/stickers/fan-life/waiting-for-the-drop.png'),
+    width: 2043,
+    height: 821,
+  },
   'stickers/fish-moods/angry.png': {
     source: require('../../../../../../assets/stickers/fish-moods/angry.png'),
     width: 347,
@@ -846,6 +996,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/fish-moods/sleepy.png'),
     width: 360,
     height: 334,
+  },
+  'stickers/foodie/bake-day.png': {
+    source: require('../../../../../../assets/stickers/foodie/bake-day.png'),
+    width: 2041,
+    height: 873,
+  },
+  'stickers/foodie/breakfast-club.png': {
+    source: require('../../../../../../assets/stickers/foodie/breakfast-club.png'),
+    width: 2043,
+    height: 1191,
+  },
+  'stickers/foodie/brunch-time.png': {
+    source: require('../../../../../../assets/stickers/foodie/brunch-time.png'),
+    width: 2045,
+    height: 736,
+  },
+  'stickers/foodie/cheat-day.png': {
+    source: require('../../../../../../assets/stickers/foodie/cheat-day.png'),
+    width: 2042,
+    height: 818,
+  },
+  'stickers/foodie/chef-mode.png': {
+    source: require('../../../../../../assets/stickers/foodie/chef-mode.png'),
+    width: 2043,
+    height: 808,
+  },
+  'stickers/foodie/chefs-kiss.png': {
+    source: require('../../../../../../assets/stickers/foodie/chefs-kiss.png'),
+    width: 2043,
+    height: 829,
+  },
+  'stickers/foodie/coffee-first.png': {
+    source: require('../../../../../../assets/stickers/foodie/coffee-first.png'),
+    width: 2043,
+    height: 756,
+  },
+  'stickers/foodie/dessert-first.png': {
+    source: require('../../../../../../assets/stickers/foodie/dessert-first.png'),
+    width: 2043,
+    height: 723,
+  },
+  'stickers/foodie/food-coma.png': {
+    source: require('../../../../../../assets/stickers/foodie/food-coma.png'),
+    width: 2042,
+    height: 816,
+  },
+  'stickers/foodie/foodie.png': {
+    source: require('../../../../../../assets/stickers/foodie/foodie.png'),
+    width: 2045,
+    height: 1081,
+  },
+  'stickers/foodie/fresh-from-the-oven.png': {
+    source: require('../../../../../../assets/stickers/foodie/fresh-from-the-oven.png'),
+    width: 2045,
+    height: 1100,
+  },
+  'stickers/foodie/grill-master.png': {
+    source: require('../../../../../../assets/stickers/foodie/grill-master.png'),
+    width: 2046,
+    height: 746,
+  },
+  'stickers/foodie/home-cooked.png': {
+    source: require('../../../../../../assets/stickers/foodie/home-cooked.png'),
+    width: 2046,
+    height: 709,
+  },
+  'stickers/foodie/late-night-snack.png': {
+    source: require('../../../../../../assets/stickers/foodie/late-night-snack.png'),
+    width: 2046,
+    height: 1119,
+  },
+  'stickers/foodie/leftovers-again.png': {
+    source: require('../../../../../../assets/stickers/foodie/leftovers-again.png'),
+    width: 2042,
+    height: 1194,
+  },
+  'stickers/foodie/lunch-date.png': {
+    source: require('../../../../../../assets/stickers/foodie/lunch-date.png'),
+    width: 2042,
+    height: 772,
+  },
+  'stickers/foodie/meal-prep.png': {
+    source: require('../../../../../../assets/stickers/foodie/meal-prep.png'),
+    width: 2047,
+    height: 812,
+  },
+  'stickers/foodie/new-cafe.png': {
+    source: require('../../../../../../assets/stickers/foodie/new-cafe.png'),
+    width: 2042,
+    height: 849,
+  },
+  'stickers/foodie/picnic.png': {
+    source: require('../../../../../../assets/stickers/foodie/picnic.png'),
+    width: 2040,
+    height: 1127,
+  },
+  'stickers/foodie/pizza-party.png': {
+    source: require('../../../../../../assets/stickers/foodie/pizza-party.png'),
+    width: 2048,
+    height: 746,
+  },
+  'stickers/foodie/ramen-night.png': {
+    source: require('../../../../../../assets/stickers/foodie/ramen-night.png'),
+    width: 2045,
+    height: 721,
+  },
+  'stickers/foodie/second-helping.png': {
+    source: require('../../../../../../assets/stickers/foodie/second-helping.png'),
+    width: 2044,
+    height: 1382,
+  },
+  'stickers/foodie/spicy.png': {
+    source: require('../../../../../../assets/stickers/foodie/spicy.png'),
+    width: 2041,
+    height: 1122,
+  },
+  'stickers/foodie/street-food.png': {
+    source: require('../../../../../../assets/stickers/foodie/street-food.png'),
+    width: 2047,
+    height: 769,
+  },
+  'stickers/foodie/sushi-date.png': {
+    source: require('../../../../../../assets/stickers/foodie/sushi-date.png'),
+    width: 2042,
+    height: 824,
+  },
+  'stickers/foodie/taco-tuesday.png': {
+    source: require('../../../../../../assets/stickers/foodie/taco-tuesday.png'),
+    width: 2047,
+    height: 708,
+  },
+  'stickers/foodie/taste-test.png': {
+    source: require('../../../../../../assets/stickers/foodie/taste-test.png'),
+    width: 2042,
+    height: 846,
+  },
+  'stickers/foodie/tea-time.png': {
+    source: require('../../../../../../assets/stickers/foodie/tea-time.png'),
+    width: 2041,
+    height: 922,
+  },
+  'stickers/foodie/treat-yourself.png': {
+    source: require('../../../../../../assets/stickers/foodie/treat-yourself.png'),
+    width: 2042,
+    height: 1302,
+  },
+  'stickers/foodie/yum.png': {
+    source: require('../../../../../../assets/stickers/foodie/yum.png'),
+    width: 2039,
+    height: 1312,
   },
   'stickers/gen-z/ate-that-v2.png': {
     source: require('../../../../../../assets/stickers/gen-z/ate-that-v2.png'),
@@ -1056,6 +1356,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/gen-z/vibe-check.png'),
     width: 636,
     height: 234,
+  },
+  'stickers/gym/10k-done.png': {
+    source: require('../../../../../../assets/stickers/gym/10k-done.png'),
+    width: 2045,
+    height: 885,
+  },
+  'stickers/gym/5-am-club.png': {
+    source: require('../../../../../../assets/stickers/gym/5-am-club.png'),
+    width: 2042,
+    height: 829,
+  },
+  'stickers/gym/arm-day.png': {
+    source: require('../../../../../../assets/stickers/gym/arm-day.png'),
+    width: 2046,
+    height: 932,
+  },
+  'stickers/gym/beast-mode.png': {
+    source: require('../../../../../../assets/stickers/gym/beast-mode.png'),
+    width: 2045,
+    height: 764,
+  },
+  'stickers/gym/cardio-done.png': {
+    source: require('../../../../../../assets/stickers/gym/cardio-done.png'),
+    width: 2046,
+    height: 734,
+  },
+  'stickers/gym/consistency.png': {
+    source: require('../../../../../../assets/stickers/gym/consistency.png'),
+    width: 2042,
+    height: 743,
+  },
+  'stickers/gym/earned-this-meal.png': {
+    source: require('../../../../../../assets/stickers/gym/earned-this-meal.png'),
+    width: 2041,
+    height: 1209,
+  },
+  'stickers/gym/gym-buddy.png': {
+    source: require('../../../../../../assets/stickers/gym/gym-buddy.png'),
+    width: 2046,
+    height: 804,
+  },
+  'stickers/gym/gym-fit.png': {
+    source: require('../../../../../../assets/stickers/gym/gym-fit.png'),
+    width: 2045,
+    height: 991,
+  },
+  'stickers/gym/gym-selfie.png': {
+    source: require('../../../../../../assets/stickers/gym/gym-selfie.png'),
+    width: 2045,
+    height: 817,
+  },
+  'stickers/gym/hydrate.png': {
+    source: require('../../../../../../assets/stickers/gym/hydrate.png'),
+    width: 2041,
+    height: 969,
+  },
+  'stickers/gym/leg-day.png': {
+    source: require('../../../../../../assets/stickers/gym/leg-day.png'),
+    width: 2042,
+    height: 993,
+  },
+  'stickers/gym/lift-heavy.png': {
+    source: require('../../../../../../assets/stickers/gym/lift-heavy.png'),
+    width: 2043,
+    height: 849,
+  },
+  'stickers/gym/new-pr.png': {
+    source: require('../../../../../../assets/stickers/gym/new-pr.png'),
+    width: 2043,
+    height: 1026,
+  },
+  'stickers/gym/no-pain-no-gain.png': {
+    source: require('../../../../../../assets/stickers/gym/no-pain-no-gain.png'),
+    width: 2042,
+    height: 1353,
+  },
+  'stickers/gym/one-more-rep.png': {
+    source: require('../../../../../../assets/stickers/gym/one-more-rep.png'),
+    width: 2048,
+    height: 683,
+  },
+  'stickers/gym/pilates.png': {
+    source: require('../../../../../../assets/stickers/gym/pilates.png'),
+    width: 2042,
+    height: 1042,
+  },
+  'stickers/gym/post-workout-glow.png': {
+    source: require('../../../../../../assets/stickers/gym/post-workout-glow.png'),
+    width: 2045,
+    height: 931,
+  },
+  'stickers/gym/pre-workout.png': {
+    source: require('../../../../../../assets/stickers/gym/pre-workout.png'),
+    width: 2046,
+    height: 705,
+  },
+  'stickers/gym/progress-not-perfection.png': {
+    source: require('../../../../../../assets/stickers/gym/progress-not-perfection.png'),
+    width: 2043,
+    height: 953,
+  },
+  'stickers/gym/protein-first.png': {
+    source: require('../../../../../../assets/stickers/gym/protein-first.png'),
+    width: 2044,
+    height: 702,
+  },
+  'stickers/gym/rest-day.png': {
+    source: require('../../../../../../assets/stickers/gym/rest-day.png'),
+    width: 2042,
+    height: 913,
+  },
+  'stickers/gym/run-club.png': {
+    source: require('../../../../../../assets/stickers/gym/run-club.png'),
+    width: 2048,
+    height: 903,
+  },
+  'stickers/gym/skipped-leg-day.png': {
+    source: require('../../../../../../assets/stickers/gym/skipped-leg-day.png'),
+    width: 2042,
+    height: 1396,
+  },
+  'stickers/gym/sore-today.png': {
+    source: require('../../../../../../assets/stickers/gym/sore-today.png'),
+    width: 2043,
+    height: 778,
+  },
+  'stickers/gym/spotter-needed.png': {
+    source: require('../../../../../../assets/stickers/gym/spotter-needed.png'),
+    width: 2046,
+    height: 1366,
+  },
+  'stickers/gym/stretch-it-out.png': {
+    source: require('../../../../../../assets/stickers/gym/stretch-it-out.png'),
+    width: 2045,
+    height: 1371,
+  },
+  'stickers/gym/strong-not-skinny.png': {
+    source: require('../../../../../../assets/stickers/gym/strong-not-skinny.png'),
+    width: 2045,
+    height: 1066,
+  },
+  'stickers/gym/sweaty-but-happy.png': {
+    source: require('../../../../../../assets/stickers/gym/sweaty-but-happy.png'),
+    width: 2045,
+    height: 1191,
+  },
+  'stickers/gym/yoga-flow.png': {
+    source: require('../../../../../../assets/stickers/gym/yoga-flow.png'),
+    width: 2047,
+    height: 812,
   },
   'stickers/hashtags/beach-pa.png': {
     source: require('../../../../../../assets/stickers/hashtags/beach-pa.png'),
@@ -1346,6 +1796,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/olivia/zoomies.png'),
     width: 360,
     height: 307,
+  },
+  'stickers/parents/babys-first.png': {
+    source: require('../../../../../../assets/stickers/parents/babys-first.png'),
+    width: 2047,
+    height: 723,
+  },
+  'stickers/parents/bath-time.png': {
+    source: require('../../../../../../assets/stickers/parents/bath-time.png'),
+    width: 2043,
+    height: 792,
+  },
+  'stickers/parents/bedtime-story.png': {
+    source: require('../../../../../../assets/stickers/parents/bedtime-story.png'),
+    width: 2044,
+    height: 624,
+  },
+  'stickers/parents/coffee-is-life.png': {
+    source: require('../../../../../../assets/stickers/parents/coffee-is-life.png'),
+    width: 2046,
+    height: 1375,
+  },
+  'stickers/parents/dad-life.png': {
+    source: require('../../../../../../assets/stickers/parents/dad-life.png'),
+    width: 2045,
+    height: 901,
+  },
+  'stickers/parents/family-day.png': {
+    source: require('../../../../../../assets/stickers/parents/family-day.png'),
+    width: 2047,
+    height: 745,
+  },
+  'stickers/parents/family-dinner.png': {
+    source: require('../../../../../../assets/stickers/parents/family-dinner.png'),
+    width: 2047,
+    height: 643,
+  },
+  'stickers/parents/family-photo.png': {
+    source: require('../../../../../../assets/stickers/parents/family-photo.png'),
+    width: 2043,
+    height: 663,
+  },
+  'stickers/parents/first-steps.png': {
+    source: require('../../../../../../assets/stickers/parents/first-steps.png'),
+    width: 2047,
+    height: 754,
+  },
+  'stickers/parents/growing-up-fast.png': {
+    source: require('../../../../../../assets/stickers/parents/growing-up-fast.png'),
+    width: 2041,
+    height: 1217,
+  },
+  'stickers/parents/homework-helper.png': {
+    source: require('../../../../../../assets/stickers/parents/homework-helper.png'),
+    width: 2046,
+    height: 1062,
+  },
+  'stickers/parents/laundry-mountain.png': {
+    source: require('../../../../../../assets/stickers/parents/laundry-mountain.png'),
+    width: 2044,
+    height: 1129,
+  },
+  'stickers/parents/little-helper.png': {
+    source: require('../../../../../../assets/stickers/parents/little-helper.png'),
+    width: 2046,
+    height: 684,
+  },
+  'stickers/parents/lola-and-lolo.png': {
+    source: require('../../../../../../assets/stickers/parents/lola-and-lolo.png'),
+    width: 2043,
+    height: 632,
+  },
+  'stickers/parents/love-you-more.png': {
+    source: require('../../../../../../assets/stickers/parents/love-you-more.png'),
+    width: 2044,
+    height: 599,
+  },
+  'stickers/parents/messy-house-happy-kids.png': {
+    source: require('../../../../../../assets/stickers/parents/messy-house-happy-kids.png'),
+    width: 2047,
+    height: 902,
+  },
+  'stickers/parents/mini-me.png': {
+    source: require('../../../../../../assets/stickers/parents/mini-me.png'),
+    width: 2045,
+    height: 911,
+  },
+  'stickers/parents/mom-life.png': {
+    source: require('../../../../../../assets/stickers/parents/mom-life.png'),
+    width: 2042,
+    height: 850,
+  },
+  'stickers/parents/nap-time.png': {
+    source: require('../../../../../../assets/stickers/parents/nap-time.png'),
+    width: 2045,
+    height: 836,
+  },
+  'stickers/parents/parenting-win.png': {
+    source: require('../../../../../../assets/stickers/parents/parenting-win.png'),
+    width: 2045,
+    height: 634,
+  },
+  'stickers/parents/park-day.png': {
+    source: require('../../../../../../assets/stickers/parents/park-day.png'),
+    width: 2041,
+    height: 838,
+  },
+  'stickers/parents/playdate.png': {
+    source: require('../../../../../../assets/stickers/parents/playdate.png'),
+    width: 2042,
+    height: 844,
+  },
+  'stickers/parents/proud-parent.png': {
+    source: require('../../../../../../assets/stickers/parents/proud-parent.png'),
+    width: 2047,
+    height: 655,
+  },
+  'stickers/parents/quiet-time.png': {
+    source: require('../../../../../../assets/stickers/parents/quiet-time.png'),
+    width: 2047,
+    height: 754,
+  },
+  'stickers/parents/school-run.png': {
+    source: require('../../../../../../assets/stickers/parents/school-run.png'),
+    width: 2042,
+    height: 748,
+  },
+  'stickers/parents/snack-duty.png': {
+    source: require('../../../../../../assets/stickers/parents/snack-duty.png'),
+    width: 2046,
+    height: 729,
+  },
+  'stickers/parents/super-dad.png': {
+    source: require('../../../../../../assets/stickers/parents/super-dad.png'),
+    width: 2043,
+    height: 779,
+  },
+  'stickers/parents/super-mom.png': {
+    source: require('../../../../../../assets/stickers/parents/super-mom.png'),
+    width: 2043,
+    height: 732,
+  },
+  'stickers/parents/tantrum-survived.png': {
+    source: require('../../../../../../assets/stickers/parents/tantrum-survived.png'),
+    width: 2043,
+    height: 1188,
+  },
+  'stickers/parents/weekend-with-the-kids.png': {
+    source: require('../../../../../../assets/stickers/parents/weekend-with-the-kids.png'),
+    width: 2045,
+    height: 867,
   },
   'stickers/pet-parent/bantay-dog.png': {
     source: require('../../../../../../assets/stickers/pet-parent/bantay-dog.png'),
@@ -1987,6 +2587,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 2000,
     height: 1264,
   },
+  'stickers/student/all-nighter.png': {
+    source: require('../../../../../../assets/stickers/student/all-nighter.png'),
+    width: 2045,
+    height: 772,
+  },
+  'stickers/student/back-to-school.png': {
+    source: require('../../../../../../assets/stickers/student/back-to-school.png'),
+    width: 2044,
+    height: 1335,
+  },
+  'stickers/student/brain-fried.png': {
+    source: require('../../../../../../assets/stickers/student/brain-fried.png'),
+    width: 2044,
+    height: 769,
+  },
+  'stickers/student/campus-life.png': {
+    source: require('../../../../../../assets/stickers/student/campus-life.png'),
+    width: 2044,
+    height: 737,
+  },
+  'stickers/student/class-is-cancelled.png': {
+    source: require('../../../../../../assets/stickers/student/class-is-cancelled.png'),
+    width: 2045,
+    height: 1199,
+  },
+  'stickers/student/classmates.png': {
+    source: require('../../../../../../assets/stickers/student/classmates.png'),
+    width: 2044,
+    height: 753,
+  },
+  'stickers/student/coffee-and-homework.png': {
+    source: require('../../../../../../assets/stickers/student/coffee-and-homework.png'),
+    width: 2043,
+    height: 1049,
+  },
+  'stickers/student/deans-list.png': {
+    source: require('../../../../../../assets/stickers/student/deans-list.png'),
+    width: 2048,
+    height: 775,
+  },
+  'stickers/student/due-tomorrow.png': {
+    source: require('../../../../../../assets/stickers/student/due-tomorrow.png'),
+    width: 2045,
+    height: 620,
+  },
+  'stickers/student/exam-week.png': {
+    source: require('../../../../../../assets/stickers/student/exam-week.png'),
+    width: 2047,
+    height: 713,
+  },
+  'stickers/student/field-trip.png': {
+    source: require('../../../../../../assets/stickers/student/field-trip.png'),
+    width: 2048,
+    height: 837,
+  },
+  'stickers/student/finals.png': {
+    source: require('../../../../../../assets/stickers/student/finals.png'),
+    width: 2041,
+    height: 1101,
+  },
+  'stickers/student/first-day.png': {
+    source: require('../../../../../../assets/stickers/student/first-day.png'),
+    width: 2047,
+    height: 842,
+  },
+  'stickers/student/graduation.png': {
+    source: require('../../../../../../assets/stickers/student/graduation.png'),
+    width: 2048,
+    height: 737,
+  },
+  'stickers/student/group-project.png': {
+    source: require('../../../../../../assets/stickers/student/group-project.png'),
+    width: 2047,
+    height: 649,
+  },
+  'stickers/student/highlighter-gang.png': {
+    source: require('../../../../../../assets/stickers/student/highlighter-gang.png'),
+    width: 2042,
+    height: 1042,
+  },
+  'stickers/student/lab-day.png': {
+    source: require('../../../../../../assets/stickers/student/lab-day.png'),
+    width: 2045,
+    height: 901,
+  },
+  'stickers/student/library-day.png': {
+    source: require('../../../../../../assets/stickers/student/library-day.png'),
+    width: 2045,
+    height: 727,
+  },
+  'stickers/student/nap-between-classes.png': {
+    source: require('../../../../../../assets/stickers/student/nap-between-classes.png'),
+    width: 2046,
+    height: 910,
+  },
+  'stickers/student/notes-ready.png': {
+    source: require('../../../../../../assets/stickers/student/notes-ready.png'),
+    width: 2048,
+    height: 685,
+  },
+  'stickers/student/passed.png': {
+    source: require('../../../../../../assets/stickers/student/passed.png'),
+    width: 2045,
+    height: 939,
+  },
+  'stickers/student/pop-quiz.png': {
+    source: require('../../../../../../assets/stickers/student/pop-quiz.png'),
+    width: 2045,
+    height: 871,
+  },
+  'stickers/student/recess.png': {
+    source: require('../../../../../../assets/stickers/student/recess.png'),
+    width: 2041,
+    height: 1042,
+  },
+  'stickers/student/report-card.png': {
+    source: require('../../../../../../assets/stickers/student/report-card.png'),
+    width: 2046,
+    height: 713,
+  },
+  'stickers/student/semester-done.png': {
+    source: require('../../../../../../assets/stickers/student/semester-done.png'),
+    width: 2048,
+    height: 608,
+  },
+  'stickers/student/study-buddy.png': {
+    source: require('../../../../../../assets/stickers/student/study-buddy.png'),
+    width: 2047,
+    height: 675,
+  },
+  'stickers/student/study-mode.png': {
+    source: require('../../../../../../assets/stickers/student/study-mode.png'),
+    width: 2045,
+    height: 705,
+  },
+  'stickers/student/summer-break.png': {
+    source: require('../../../../../../assets/stickers/student/summer-break.png'),
+    width: 2045,
+    height: 632,
+  },
+  'stickers/student/thesis-mode.png': {
+    source: require('../../../../../../assets/stickers/student/thesis-mode.png'),
+    width: 2044,
+    height: 706,
+  },
+  'stickers/student/uniform-day.png': {
+    source: require('../../../../../../assets/stickers/student/uniform-day.png'),
+    width: 2043,
+    height: 700,
+  },
   'stickers/the-eight/afternoon-slump.png': {
     source: require('../../../../../../assets/stickers/the-eight/afternoon-slump.png'),
     width: 864,
@@ -2186,6 +2936,156 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/the-eight/walang-filter.png'),
     width: 702,
     height: 234,
+  },
+  'stickers/travel/airport-mode.png': {
+    source: require('../../../../../../assets/stickers/travel/airport-mode.png'),
+    width: 2044,
+    height: 643,
+  },
+  'stickers/travel/backpacker.png': {
+    source: require('../../../../../../assets/stickers/travel/backpacker.png'),
+    width: 2042,
+    height: 712,
+  },
+  'stickers/travel/beach-day.png': {
+    source: require('../../../../../../assets/stickers/travel/beach-day.png'),
+    width: 2045,
+    height: 794,
+  },
+  'stickers/travel/bon-voyage.png': {
+    source: require('../../../../../../assets/stickers/travel/bon-voyage.png'),
+    width: 2048,
+    height: 726,
+  },
+  'stickers/travel/camping.png': {
+    source: require('../../../../../../assets/stickers/travel/camping.png'),
+    width: 2044,
+    height: 881,
+  },
+  'stickers/travel/city-lights.png': {
+    source: require('../../../../../../assets/stickers/travel/city-lights.png'),
+    width: 2044,
+    height: 744,
+  },
+  'stickers/travel/ferry-ride.png': {
+    source: require('../../../../../../assets/stickers/travel/ferry-ride.png'),
+    width: 2045,
+    height: 785,
+  },
+  'stickers/travel/hiking-day.png': {
+    source: require('../../../../../../assets/stickers/travel/hiking-day.png'),
+    width: 2045,
+    height: 763,
+  },
+  'stickers/travel/home-sweet-home.png': {
+    source: require('../../../../../../assets/stickers/travel/home-sweet-home.png'),
+    width: 2045,
+    height: 966,
+  },
+  'stickers/travel/homesick.png': {
+    source: require('../../../../../../assets/stickers/travel/homesick.png'),
+    width: 2046,
+    height: 818,
+  },
+  'stickers/travel/hotel-check-in.png': {
+    source: require('../../../../../../assets/stickers/travel/hotel-check-in.png'),
+    width: 2044,
+    height: 1194,
+  },
+  'stickers/travel/jet-lag.png': {
+    source: require('../../../../../../assets/stickers/travel/jet-lag.png'),
+    width: 2042,
+    height: 899,
+  },
+  'stickers/travel/local-eats.png': {
+    source: require('../../../../../../assets/stickers/travel/local-eats.png'),
+    width: 2048,
+    height: 741,
+  },
+  'stickers/travel/lost-but-happy.png': {
+    source: require('../../../../../../assets/stickers/travel/lost-but-happy.png'),
+    width: 2041,
+    height: 1188,
+  },
+  'stickers/travel/mountain-air.png': {
+    source: require('../../../../../../assets/stickers/travel/mountain-air.png'),
+    width: 2047,
+    height: 649,
+  },
+  'stickers/travel/new-city.png': {
+    source: require('../../../../../../assets/stickers/travel/new-city.png'),
+    width: 2044,
+    height: 860,
+  },
+  'stickers/travel/out-of-office.png': {
+    source: require('../../../../../../assets/stickers/travel/out-of-office.png'),
+    width: 2044,
+    height: 636,
+  },
+  'stickers/travel/passport-ready.png': {
+    source: require('../../../../../../assets/stickers/travel/passport-ready.png'),
+    width: 2041,
+    height: 1197,
+  },
+  'stickers/travel/postcard-view.png': {
+    source: require('../../../../../../assets/stickers/travel/postcard-view.png'),
+    width: 2047,
+    height: 623,
+  },
+  'stickers/travel/road-trip.png': {
+    source: require('../../../../../../assets/stickers/travel/road-trip.png'),
+    width: 2042,
+    height: 806,
+  },
+  'stickers/travel/solo-trip.png': {
+    source: require('../../../../../../assets/stickers/travel/solo-trip.png'),
+    width: 2043,
+    height: 807,
+  },
+  'stickers/travel/souvenir-hunt.png': {
+    source: require('../../../../../../assets/stickers/travel/souvenir-hunt.png'),
+    width: 2045,
+    height: 627,
+  },
+  'stickers/travel/sunset-chaser.png': {
+    source: require('../../../../../../assets/stickers/travel/sunset-chaser.png'),
+    width: 2046,
+    height: 629,
+  },
+  'stickers/travel/tourist-mode.png': {
+    source: require('../../../../../../assets/stickers/travel/tourist-mode.png'),
+    width: 2045,
+    height: 651,
+  },
+  'stickers/travel/train-ride.png': {
+    source: require('../../../../../../assets/stickers/travel/train-ride.png'),
+    width: 2042,
+    height: 778,
+  },
+  'stickers/travel/travel-buddy.png': {
+    source: require('../../../../../../assets/stickers/travel/travel-buddy.png'),
+    width: 2043,
+    height: 674,
+  },
+  'stickers/travel/vacation-mode.png': {
+    source: require('../../../../../../assets/stickers/travel/vacation-mode.png'),
+    width: 2048,
+    height: 614,
+  },
+  'stickers/travel/wanderlust.png': {
+    source: require('../../../../../../assets/stickers/travel/wanderlust.png'),
+    width: 2044,
+    height: 715,
+  },
+  'stickers/travel/weekend-getaway.png': {
+    source: require('../../../../../../assets/stickers/travel/weekend-getaway.png'),
+    width: 2045,
+    height: 1195,
+  },
+  'stickers/travel/window-seat.png': {
+    source: require('../../../../../../assets/stickers/travel/window-seat.png'),
+    width: 2048,
+    height: 666,
   },
   'stickers/trentahin/adulting-v2.png': {
     source: require('../../../../../../assets/stickers/trentahin/adulting-v2.png'),

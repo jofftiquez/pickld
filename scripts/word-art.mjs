@@ -11,6 +11,12 @@ const FONTS = {
   bungee: 'bungee/400Regular/Bungee_400Regular.ttf',
   racing: 'racing-sans-one/400Regular/RacingSansOne_400Regular.ttf',
   hand: 'patrick-hand/400Regular/PatrickHand_400Regular.ttf',
+  bangers: 'bangers/400Regular/Bangers_400Regular.ttf',
+  chewy: 'chewy/400Regular/Chewy_400Regular.ttf',
+  marker: 'permanent-marker/400Regular/PermanentMarker_400Regular.ttf',
+  gochi: 'gochi-hand/400Regular/GochiHand_400Regular.ttf',
+  fredoka: 'fredoka/700Bold/Fredoka_700Bold.ttf',
+  titan: 'titan-one/400Regular/TitanOne_400Regular.ttf',
 };
 
 /** @font-face rules with every font inlined (a page made with setContent can't load file:// fonts). */
@@ -116,6 +122,106 @@ const PACKS = {
     strokeW: 3,
     decor: 'speed',
   },
+  gym: {
+    font: 'bangers',
+    size: 46,
+    upper: true,
+    spacing: '0.04em',
+    tilt: [-4, 3, -3, 4],
+    skew: -6,
+    looks: [
+      { fill: 'linear-gradient(180deg,#ff8a5c,#e8352e)', stroke: '#11140d', extrude: '#11140d' },
+      { fill: 'linear-gradient(180deg,#fff3a0,#ffc928)', stroke: '#11140d', extrude: '#e8352e' },
+      { fill: 'linear-gradient(180deg,#ffffff,#cfd6df)', stroke: '#11140d', extrude: '#2f62b8' },
+    ],
+    extrudeDepth: 6,
+    strokeW: 3,
+    decor: 'bolt',
+  },
+  foodie: {
+    font: 'chewy',
+    size: 44,
+    upper: false,
+    spacing: '0.01em',
+    tilt: [-3, 4, -2, 3],
+    skew: 0,
+    looks: [
+      { fill: 'linear-gradient(180deg,#ffd27a,#f08a3c)', stroke: '#6b2d12', extrude: '#6b2d12' },
+      { fill: 'linear-gradient(180deg,#ffc2d1,#ff6f91)', stroke: '#6b1d34', extrude: '#6b1d34' },
+      { fill: 'linear-gradient(180deg,#d6f08a,#7fad33)', stroke: '#2c4a12', extrude: '#2c4a12' },
+    ],
+    extrudeDepth: 5,
+    strokeW: 3,
+    decor: 'steam',
+    shine: true,
+  },
+  travel: {
+    font: 'marker',
+    size: 40,
+    upper: false,
+    spacing: '0.01em',
+    tilt: [-5, 3, -3, 4],
+    skew: 0,
+    looks: [
+      { fill: '#ffffff', stroke: '#1d5a8a', extrude: '#1d5a8a' },
+      { fill: 'linear-gradient(180deg,#9be7ff,#2fa8d8)', stroke: '#0f3550', extrude: '#0f3550' },
+      { fill: 'linear-gradient(180deg,#ffe08a,#f5a623)', stroke: '#5a3416', extrude: '#c4521c' },
+    ],
+    extrudeDepth: 4,
+    strokeW: 3,
+    decor: 'plane',
+    lineHeight: 1.2,
+  },
+  student: {
+    font: 'gochi',
+    size: 46,
+    upper: false,
+    spacing: '0.01em',
+    tilt: [-3, 2, -4, 3],
+    skew: 0,
+    looks: [
+      { fill: '#ffffff', stroke: '#2f62b8', extrude: '#2f62b8' },
+      { fill: 'linear-gradient(180deg,#fff7b0,#ffe066)', stroke: '#11140d', extrude: '#11140d' },
+      { fill: 'linear-gradient(180deg,#ffd1dc,#ff8fab)', stroke: '#4a1748', extrude: '#4a1748' },
+    ],
+    extrudeDepth: 4,
+    strokeW: 3,
+    decor: 'pencil',
+  },
+  parents: {
+    font: 'fredoka',
+    size: 42,
+    upper: false,
+    spacing: '0',
+    tilt: [-3, 3, -2, 2],
+    skew: 0,
+    looks: [
+      { fill: 'linear-gradient(180deg,#c9f0e4,#5cc2a5)', stroke: '#1f5f55', extrude: '#1f5f55' },
+      { fill: 'linear-gradient(180deg,#ffe3b3,#ffb35c)', stroke: '#6b3a12', extrude: '#6b3a12' },
+      { fill: 'linear-gradient(180deg,#e3dcff,#9b86f0)', stroke: '#3a2a7a', extrude: '#3a2a7a' },
+    ],
+    extrudeDepth: 5,
+    strokeW: 3,
+    decor: 'hearts',
+    shine: true,
+  },
+  'fan-life': {
+    font: 'titan',
+    size: 40,
+    upper: true,
+    spacing: '0.02em',
+    tilt: [-4, 4, -3, 3],
+    skew: 0,
+    looks: [
+      { fill: 'linear-gradient(180deg,#ffffff,#ffd6f0)', stroke: '#c2187a', extrude: '#6a1b9a' },
+      { fill: 'linear-gradient(180deg,#b5f1ff,#4fc3f7)', stroke: '#11140d', extrude: '#ff4fa3' },
+      { fill: 'linear-gradient(180deg,#fff59d,#ffca28)', stroke: '#11140d', extrude: '#7b3fe4' },
+    ],
+    extrudeDepth: 6,
+    strokeW: 3,
+    decor: 'sparkle',
+    shine: true,
+  },
 };
 
 export const WORD_ART_PACKS = Object.keys(PACKS);
@@ -145,6 +251,14 @@ const DECOR = {
     `<svg class="d" style="right:-2px;top:-2px" width="30" height="30" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#ff5fa2" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`,
   check: (c) =>
     `<svg class="d" style="right:-4px;top:-2px" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#7fad33" stroke="${c}" stroke-width="3"/><path d="M10 16.5l4 4 8-9" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  bolt: (c) =>
+    `<svg class="d" style="right:-6px;top:-6px" width="34" height="40" viewBox="0 0 24 28"><path d="M14 1L3 16h7l-2 11 11-15h-7z" fill="#ffd93b" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  steam: (c) =>
+    `<svg class="d" style="right:-2px;top:-8px" width="30" height="34" viewBox="0 0 24 28"><g fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round"><path d="M6 26c-3-4 3-6 0-10s3-6 0-10"/><path d="M13 26c-3-4 3-6 0-10s3-6 0-10"/><path d="M20 26c-3-4 3-6 0-10s3-6 0-10"/></g></svg>`,
+  plane: (c) =>
+    `<svg class="d" style="right:-8px;top:-8px" width="38" height="38" viewBox="0 0 24 24"><path d="M2 11l20-8-7 19-3-8z" fill="#ffffff" stroke="${c}" stroke-width="2" stroke-linejoin="round"/><path d="M12 14l10-11" stroke="${c}" stroke-width="1.6"/></svg>`,
+  pencil: (c) =>
+    `<svg class="d" style="right:-6px;top:-6px" width="36" height="36" viewBox="0 0 24 24"><path d="M4 20l1-5L16 4l4 4L9 19z" fill="#ffd93b" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 20l1-5 4 4z" fill="#f5d7b0" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 6l4 4" stroke="${c}" stroke-width="1.6"/></svg>`,
   speed: (c) =>
     `<svg class="d" style="left:-2px;top:50%;transform:translateY(-50%)" width="40" height="46" viewBox="0 0 40 46"><g stroke="${c}" stroke-width="5" stroke-linecap="round"><line x1="8" y1="9" x2="36" y2="9"/><line x1="2" y1="23" x2="34" y2="23"/><line x1="12" y1="37" x2="36" y2="37"/></g></svg>`,
 };
