@@ -5,7 +5,7 @@ import { slots } from '@/theme/tokens';
 
 import type { ServerMoment } from './todayGrid';
 
-/** The milestones (0010, D-8; five more in 0060, eighteen in 0169) by count, the order their Sticker unlocked screens
+/** The milestones (0010, D-8; five more in 0060, eighteen in 0170) by count, the order their Sticker unlocked screens
  * are shown and "Next up" follows. */
 export const milestoneKeys = [
   'first_full_jar',

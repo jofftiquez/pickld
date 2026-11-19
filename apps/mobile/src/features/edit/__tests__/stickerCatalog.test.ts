@@ -14,7 +14,7 @@ const labels = (stickers: { label: string }[]) => stickers.map((s) => s.label);
 const allStickers = (catalog: StickerCatalog) => catalog.packs.flatMap((p) => p.stickers);
 
 describe('bundled art', () => {
-  it('has a PNG for every sticker 0012, 0029, 0032, 0060, 0065, 0135, 0154, 0155 and 0156+ seed, 0168–0169 badges, and nothing else', () => {
+  it('has a PNG for every sticker 0012, 0029, 0032, 0060, 0065, 0135, 0154, 0155 and 0156+ seed, 0168, 0170 badges, and nothing else', () => {
     expect(seededStickers).toHaveLength(50);
     const assetsIn = (migration: string, from = 'insert into') =>
       [
@@ -63,7 +63,7 @@ describe('bundled art', () => {
       ['0165_birthdays.sql', 30],
       ['0166_new_year.sql', 30],
       ['0167_valentines.sql', 30],
-      ['0169_milestones_30.sql', 18],
+      ['0170_milestones_30.sql', 18],
     ] as const;
     const drawnArt = drawn.flatMap(([migration, count]) => {
       const assets = assetsIn(migration);
