@@ -93,6 +93,74 @@ function style(s) {
   return { text: s.label, kind: 'word', tilt: TILT[i], ...PALETTE[i] };
 }
 
+// Milestone badges (0168, -v2 art): a gold rosette with a big number and a ribbon banner, so earning one feels like
+// a reward. The ribbon's colour tells the kind apart: jars green, full jars pink, friends blue, the year purple.
+const RIBBON = { jars: '#5fae2e', full: '#ff5c93', friends: '#2f9bf0', year: '#8b5cf6' };
+function milestoneParts(label) {
+  const n = /^(\d+) (full jars|jars)$/.exec(label);
+  if (n) return { big: n[1], word: n[2], ribbon: n[2] === 'jars' ? RIBBON.jars : RIBBON.full };
+  return (
+    {
+      'First full jar': { big: '1', sup: 'st', word: 'full jar', ribbon: RIBBON.full },
+      '1 year of jars': { big: '1', word: 'year of jars', ribbon: RIBBON.year },
+      'First friend': { big: '1', sup: 'st', word: 'friend', ribbon: RIBBON.friends },
+      'Full jar of friends': { big: '8', word: 'friends joined', ribbon: RIBBON.friends },
+    }[label] ?? { big: '★', word: label, ribbon: RIBBON.jars }
+  );
+}
+function milestoneHtml(label) {
+  const m = milestoneParts(label);
+  const star = (outer, inner, k) =>
+    Array.from({ length: k * 2 }, (_, i) => {
+      const r = i % 2 ? inner : outer;
+      const a = (Math.PI * i) / k - Math.PI / 2;
+      return `${(50 + r * Math.cos(a)).toFixed(2)}% ${(50 + r * Math.sin(a)).toFixed(2)}%`;
+    }).join(',');
+  const ink = '#3d2300';
+  // A smooth outline of width w around everything drawn: dilate the shape, soften it, then cut it back to a crisp edge.
+  const outline = (id, c, w) =>
+    `<filter id="${id}" x="-20%" y="-20%" width="140%" height="140%">` +
+    `<feMorphology in="SourceAlpha" operator="dilate" radius="${w - 1}" result="d"/>` +
+    `<feGaussianBlur in="d" stdDeviation="1" result="b"/>` +
+    `<feComponentTransfer in="b" result="a"><feFuncA type="linear" slope="6" intercept="-1.5"/></feComponentTransfer>` +
+    `<feFlood flood-color="${c}" result="c"/><feComposite in="c" in2="a" operator="in" result="o"/>` +
+    `<feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  const sparkle = (x, y, size, c) =>
+    `<i style="position:absolute;left:${x}px;top:${y}px;width:${size}px;height:${size}px;background:${c};` +
+    `clip-path:polygon(${star(50, 13, 4)})"></i>`;
+  return `<style>@font-face { font-family: Jakarta; src: url('${font}'); font-weight: 800; }
+    #s { display: inline-block; padding: 22px; }
+    .b { position: relative; width: 250px; height: 292px; filter: url(#w) drop-shadow(0 6px 8px rgba(0,0,0,0.22)); }
+    .o { position: absolute; inset: 0; filter: url(#k); }
+    .tail { position: absolute; top: 168px; width: 58px; height: 118px; background: ${m.ribbon};
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.25) 0 30%, rgba(0,0,0,0.08) 70%); }
+    .ros { position: absolute; left: 15px; top: 0; width: 220px; height: 220px; clip-path: polygon(${star(50, 46.5, 26)});
+           background: radial-gradient(circle at 38% 30%, #fff3a6, #ffc928 45%, #f29a00 100%); }
+    .disc { position: absolute; left: 47px; top: 32px; width: 156px; height: 156px; border-radius: 50%; box-sizing: border-box;
+            border: 6px solid #fff0a0; box-shadow: 0 0 0 3px ${ink}, inset 0 -8px 0 rgba(200,110,0,0.35);
+            background: radial-gradient(circle at 35% 28%, #fffbe0, #ffe066 40%, #ffb800 100%); }
+    .shine { position: absolute; left: 76px; top: 52px; width: 46px; height: 20px; border-radius: 50%;
+             background: rgba(255,255,255,0.85); transform: rotate(-28deg); }
+    .num { position: absolute; left: 47px; top: 34px; width: 156px; text-align: center; font: 800 ${m.big.length > 2 ? 62 : 74}px/1 Jakarta;
+           color: #8a4600; text-shadow: 0 3px 0 #fff6c2, 0 -2px 0 rgba(120,60,0,0.25); letter-spacing: -0.02em; padding-top: ${m.big.length > 2 ? 30 : 24}px; }
+    .num sup { font-size: 0.42em; vertical-align: 0.9em; margin-left: 2px; }
+    .band { position: absolute; left: 0; top: 146px; width: 250px; height: 46px; background: ${m.ribbon};
+            clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);
+            background-image: linear-gradient(180deg, rgba(255,255,255,0.3) 0 45%, rgba(0,0,0,0.1) 100%);
+            display: flex; align-items: center; justify-content: center; color: #ffffff; text-transform: uppercase;
+            font: 800 ${m.word.length > 12 ? 16 : 19}px/1 Jakarta; letter-spacing: 0.06em; text-shadow: 0 2px 0 rgba(0,0,0,0.22); }
+  </style><svg width="0" height="0" style="position:absolute">${outline('w', '#ffffff', 6)}${outline('k', ink, 3)}</svg>
+  <div id="s"><div class="b">
+    <div class="o"><div class="tail" style="left:62px;transform:rotate(14deg)"></div><div class="tail" style="left:130px;transform:rotate(-14deg)"></div></div>
+    <div class="o"><div class="ros"></div></div>
+    <div class="disc"></div><div class="shine"></div>
+    <div class="num">${escapeHtml(m.big)}${m.sup ? `<sup>${m.sup}</sup>` : ''}</div>
+    <div class="o"><div class="band">${escapeHtml(m.word)}</div></div>
+    ${sparkle(4, 10, 34, '#ffd84a')}${sparkle(212, 4, 28, '#ffd84a')}
+  </div></div>`;
+}
+
 function escapeHtml(t) {
   return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -139,6 +207,11 @@ for (const s of catalog) {
   }
   if (s.pack_slug === HASHTAG_PACK) {
     await shoot(s, hashtagHtml(s.label, s.sort), bubbleScript);
+    continue;
+  }
+  // The pill milestones (0012, 0060, 0135) are retired in 0168; their committed art stays as it is.
+  if (s.pack_slug === 'milestones' && s.asset_path.endsWith('-v2.png')) {
+    await shoot(s, milestoneHtml(s.label));
     continue;
   }
   const st = style(s);

@@ -10,7 +10,7 @@ select is((select count(*)::int from (
              group by p.id having count(s.id) < 10) short), 0,
           'every pack offers at least 10 stickers');
 select is((select count(*)::int from public.stickers s join public.sticker_packs p on p.id = s.pack_id
-           where p.slug in ('olivia', 'fish-moods') and s.retired_at is null), 46, 'Olivia (30 since 0156) and Fish Moods (16) pictures');
+           where p.slug in ('olivia', 'fish-moods') and s.retired_at is null), 60, 'Olivia and Fish Moods: 30 pictures each (0156, 0157)');
 select is((select count(*)::int from public.sticker_packs
            where slug in ('olivia', 'fish-moods', 'corporate', 'gen-z', 'trentahin', 'pride', 'cyclists')
              and tier = 'premium' and store_product_id = 'me.pickld.pack.' || replace(slug, '-', '_') and description is not null),
@@ -23,7 +23,7 @@ select tests.make_moment(tests.make_jar('owner', p_days_ago => d), 'morning', 'l
 select ok(exists (select 1 from public.milestones where user_id = tests.id('owner') and key = 'jars_7'), '7 jars grants jars_7');
 select ok(not exists (select 1 from public.milestones where user_id = tests.id('owner') and key = 'jars_50'), 'but not jars_50');
 select tests.act_as('owner');
-select is((select array_agg(s.milestone_key order by s.milestone_key) from public.stickers s where s.sticker_usable and s.milestone_key is not null),
+select is((select array_agg(s.milestone_key order by s.milestone_key) from public.stickers s where s.sticker_usable and s.milestone_key is not null and s.retired_at is null),
           array['jars_7'], 'the jars_7 sticker is the only milestone sticker the owner can use');
 
 select * from finish();

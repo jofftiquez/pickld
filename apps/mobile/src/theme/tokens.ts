@@ -479,7 +479,7 @@ export const sizes = {
   unlockJar: 120, // full jar behind the earned sticker (StickerUnlock)
   unlockArt: 240, // jar, halo and sticker area (StickerUnlock); the halo is inset by space.xl
   unlockArtHeight: 260,
-  unlockSticker: 150, // earned sticker's width over the jar; height follows the art
+  unlockSticker: 96, // earned badge's width over the jar; height follows the art (896 × 1024, 0168)
   progressBarWidth: 80, // Milestones progress bar (StickerUnlock)
   progressBarHeight: 6,
   profileCover: 120, // cover band at the top of a profile (Profile, ProfileOther); lowered from 150 (D-142)
@@ -602,6 +602,9 @@ export const stickerTool = {
     student: '#efe8fb',
     parents: '#e6f1d3',
     'fan-life': '#fbe3ea',
+    birthdays: '#fbe3ea',
+    'new-year': '#fbeccd',
+    valentines: '#f6dcd9',
   } as Record<string, string>,
   packTintDefault: '#f0f2ec',
   // The sticker pack tile ending Today's grid: the pack's tint inside a white die-cut edge, tilted a little,

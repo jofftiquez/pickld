@@ -1657,6 +1657,66 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     width: 660,
     height: 354,
   },
+  'stickers/milestones/first-friend-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/first-friend-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/first-full-jar-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/first-full-jar-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jar-of-friends-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jar-of-friends-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-100-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-100-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-30-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-30-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/full-jars-7-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/full-jars-7-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-100-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-100-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-200-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-200-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-30-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-30-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-50-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-50-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/jars-7-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/jars-7-v2.png'),
+    width: 896,
+    height: 1024,
+  },
+  'stickers/milestones/one-year-v2.png': {
+    source: require('../../../../../../assets/stickers/milestones/one-year-v2.png'),
+    width: 896,
+    height: 1024,
+  },
   'stickers/milestones/first-friend.png': {
     source: require('../../../../../../assets/stickers/milestones/first-friend.png'),
     width: 744,
@@ -3486,6 +3546,1216 @@ export const stickerArt: Readonly<Record<string, StickerArt>> = {
     source: require('../../../../../../assets/stickers/work-from-wherever/sticky-notes.png'),
     width: 346,
     height: 360,
+  },
+  'stickers/fish-moods/bored.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/bored.png'),
+    width: 1024,
+    height: 776,
+  },
+  'stickers/fish-moods/excited.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/excited.png'),
+    width: 949,
+    height: 1024,
+  },
+  'stickers/fish-moods/thinking.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/thinking.png'),
+    width: 1024,
+    height: 955,
+  },
+  'stickers/fish-moods/grateful.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/grateful.png'),
+    width: 1024,
+    height: 948,
+  },
+  'stickers/fish-moods/sorry.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/sorry.png'),
+    width: 1024,
+    height: 1003,
+  },
+  'stickers/fish-moods/hug-me.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/hug-me.png'),
+    width: 989,
+    height: 1024,
+  },
+  'stickers/fish-moods/determined.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/determined.png'),
+    width: 1024,
+    height: 1009,
+  },
+  'stickers/fish-moods/cold.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/cold.png'),
+    width: 1024,
+    height: 978,
+  },
+  'stickers/fish-moods/hot.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/hot.png'),
+    width: 1024,
+    height: 796,
+  },
+  'stickers/fish-moods/dizzy.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/dizzy.png'),
+    width: 1011,
+    height: 1024,
+  },
+  'stickers/fish-moods/eye-roll.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/eye-roll.png'),
+    width: 1024,
+    height: 937,
+  },
+  'stickers/fish-moods/wink.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/wink.png'),
+    width: 1024,
+    height: 1006,
+  },
+  'stickers/fish-moods/thumbs-up.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/thumbs-up.png'),
+    width: 1024,
+    height: 977,
+  },
+  'stickers/fish-moods/good-night.png': {
+    source: require('../../../../../../assets/stickers/fish-moods/good-night.png'),
+    width: 1024,
+    height: 956,
+  },
+  'stickers/the-eight/beach-day.png': {
+    source: require('../../../../../../assets/stickers/the-eight/beach-day.png'),
+    width: 917,
+    height: 1024,
+  },
+  'stickers/the-eight/mountain-view.png': {
+    source: require('../../../../../../assets/stickers/the-eight/mountain-view.png'),
+    width: 1024,
+    height: 730,
+  },
+  'stickers/the-eight/art-time.png': {
+    source: require('../../../../../../assets/stickers/the-eight/art-time.png'),
+    width: 1024,
+    height: 808,
+  },
+  'stickers/the-eight/cooking.png': {
+    source: require('../../../../../../assets/stickers/the-eight/cooking.png'),
+    width: 1024,
+    height: 861,
+  },
+  'stickers/the-eight/best-buds.png': {
+    source: require('../../../../../../assets/stickers/the-eight/best-buds.png'),
+    width: 1024,
+    height: 891,
+  },
+  'stickers/the-eight/duck-family.png': {
+    source: require('../../../../../../assets/stickers/the-eight/duck-family.png'),
+    width: 1024,
+    height: 498,
+  },
+  'stickers/the-eight/fresh-tee.png': {
+    source: require('../../../../../../assets/stickers/the-eight/fresh-tee.png'),
+    width: 912,
+    height: 1024,
+  },
+  'stickers/the-eight/bucket-hat.png': {
+    source: require('../../../../../../assets/stickers/the-eight/bucket-hat.png'),
+    width: 1024,
+    height: 722,
+  },
+  'stickers/the-eight/selfie-phone.png': {
+    source: require('../../../../../../assets/stickers/the-eight/selfie-phone.png'),
+    width: 1024,
+    height: 982,
+  },
+  'stickers/the-eight/mirror-check.png': {
+    source: require('../../../../../../assets/stickers/the-eight/mirror-check.png'),
+    width: 685,
+    height: 1024,
+  },
+  'stickers/the-eight/latte.png': {
+    source: require('../../../../../../assets/stickers/the-eight/latte.png'),
+    width: 990,
+    height: 1024,
+  },
+  'stickers/the-eight/ice-cream.png': {
+    source: require('../../../../../../assets/stickers/the-eight/ice-cream.png'),
+    width: 546,
+    height: 1024,
+  },
+  'stickers/the-eight/ramen.png': {
+    source: require('../../../../../../assets/stickers/the-eight/ramen.png'),
+    width: 1024,
+    height: 962,
+  },
+  'stickers/the-eight/sleepy-stars.png': {
+    source: require('../../../../../../assets/stickers/the-eight/sleepy-stars.png'),
+    width: 1024,
+    height: 1020,
+  },
+  'stickers/pinoy-life/sinigang.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/sinigang.png'),
+    width: 1024,
+    height: 925,
+  },
+  'stickers/pinoy-life/turon.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/turon.png'),
+    width: 1024,
+    height: 700,
+  },
+  'stickers/pinoy-life/lumpia.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/lumpia.png'),
+    width: 1024,
+    height: 703,
+  },
+  'stickers/pinoy-life/sapin-sapin.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/sapin-sapin.png'),
+    width: 1024,
+    height: 732,
+  },
+  'stickers/pinoy-life/fishball.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/fishball.png'),
+    width: 732,
+    height: 1024,
+  },
+  'stickers/pinoy-life/sorbetes.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/sorbetes.png'),
+    width: 1024,
+    height: 699,
+  },
+  'stickers/pinoy-life/calamansi.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/calamansi.png'),
+    width: 1005,
+    height: 1024,
+  },
+  'stickers/pinoy-life/kalesa.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/kalesa.png'),
+    width: 1024,
+    height: 686,
+  },
+  'stickers/pinoy-life/bahay-kubo.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/bahay-kubo.png'),
+    width: 1024,
+    height: 868,
+  },
+  'stickers/pinoy-life/tsinelas.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/tsinelas.png'),
+    width: 907,
+    height: 1024,
+  },
+  'stickers/pinoy-life/tabo.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/tabo.png'),
+    width: 1024,
+    height: 831,
+  },
+  'stickers/pinoy-life/walis-tingting.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/walis-tingting.png'),
+    width: 925,
+    height: 1024,
+  },
+  'stickers/pinoy-life/banderitas.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/banderitas.png'),
+    width: 1024,
+    height: 377,
+  },
+  'stickers/pinoy-life/street-hoop.png': {
+    source: require('../../../../../../assets/stickers/pinoy-life/street-hoop.png'),
+    width: 850,
+    height: 1024,
+  },
+  'stickers/everyday/panda.png': {
+    source: require('../../../../../../assets/stickers/everyday/panda.png'),
+    width: 850,
+    height: 1024,
+  },
+  'stickers/everyday/penguin.png': {
+    source: require('../../../../../../assets/stickers/everyday/penguin.png'),
+    width: 998,
+    height: 1024,
+  },
+  'stickers/everyday/fox.png': {
+    source: require('../../../../../../assets/stickers/everyday/fox.png'),
+    width: 807,
+    height: 1024,
+  },
+  'stickers/everyday/koala.png': {
+    source: require('../../../../../../assets/stickers/everyday/koala.png'),
+    width: 932,
+    height: 1024,
+  },
+  'stickers/everyday/hamster.png': {
+    source: require('../../../../../../assets/stickers/everyday/hamster.png'),
+    width: 954,
+    height: 1024,
+  },
+  'stickers/everyday/turtle.png': {
+    source: require('../../../../../../assets/stickers/everyday/turtle.png'),
+    width: 1024,
+    height: 810,
+  },
+  'stickers/everyday/duckling.png': {
+    source: require('../../../../../../assets/stickers/everyday/duckling.png'),
+    width: 824,
+    height: 1024,
+  },
+  'stickers/everyday/pineapple.png': {
+    source: require('../../../../../../assets/stickers/everyday/pineapple.png'),
+    width: 648,
+    height: 1024,
+  },
+  'stickers/everyday/cherries.png': {
+    source: require('../../../../../../assets/stickers/everyday/cherries.png'),
+    width: 1024,
+    height: 960,
+  },
+  'stickers/everyday/lemon.png': {
+    source: require('../../../../../../assets/stickers/everyday/lemon.png'),
+    width: 826,
+    height: 1024,
+  },
+  'stickers/everyday/peach.png': {
+    source: require('../../../../../../assets/stickers/everyday/peach.png'),
+    width: 975,
+    height: 1024,
+  },
+  'stickers/everyday/donut.png': {
+    source: require('../../../../../../assets/stickers/everyday/donut.png'),
+    width: 997,
+    height: 1024,
+  },
+  'stickers/everyday/cupcake.png': {
+    source: require('../../../../../../assets/stickers/everyday/cupcake.png'),
+    width: 735,
+    height: 1024,
+  },
+  'stickers/everyday/popsicle.png': {
+    source: require('../../../../../../assets/stickers/everyday/popsicle.png'),
+    width: 547,
+    height: 1024,
+  },
+  'stickers/everyday/sunny.png': {
+    source: require('../../../../../../assets/stickers/everyday/sunny.png'),
+    width: 986,
+    height: 1024,
+  },
+  'stickers/everyday/cloudy.png': {
+    source: require('../../../../../../assets/stickers/everyday/cloudy.png'),
+    width: 1024,
+    height: 922,
+  },
+  'stickers/everyday/rainbow.png': {
+    source: require('../../../../../../assets/stickers/everyday/rainbow.png'),
+    width: 1024,
+    height: 540,
+  },
+  'stickers/everyday/star.png': {
+    source: require('../../../../../../assets/stickers/everyday/star.png'),
+    width: 1024,
+    height: 958,
+  },
+  'stickers/everyday/flower.png': {
+    source: require('../../../../../../assets/stickers/everyday/flower.png'),
+    width: 812,
+    height: 1024,
+  },
+  'stickers/everyday/teddy.png': {
+    source: require('../../../../../../assets/stickers/everyday/teddy.png'),
+    width: 865,
+    height: 1024,
+  },
+  'stickers/barkada/bonfire.png': {
+    source: require('../../../../../../assets/stickers/barkada/bonfire.png'),
+    width: 1024,
+    height: 847,
+  },
+  'stickers/barkada/camping.png': {
+    source: require('../../../../../../assets/stickers/barkada/camping.png'),
+    width: 1024,
+    height: 790,
+  },
+  'stickers/barkada/game-night.png': {
+    source: require('../../../../../../assets/stickers/barkada/game-night.png'),
+    width: 1024,
+    height: 822,
+  },
+  'stickers/barkada/movie-night.png': {
+    source: require('../../../../../../assets/stickers/barkada/movie-night.png'),
+    width: 1024,
+    height: 1007,
+  },
+  'stickers/barkada/milk-tea-date.png': {
+    source: require('../../../../../../assets/stickers/barkada/milk-tea-date.png'),
+    width: 1020,
+    height: 1024,
+  },
+  'stickers/barkada/friendship-bracelets.png': {
+    source: require('../../../../../../assets/stickers/barkada/friendship-bracelets.png'),
+    width: 1024,
+    height: 845,
+  },
+  'stickers/barkada/beach-ball.png': {
+    source: require('../../../../../../assets/stickers/barkada/beach-ball.png'),
+    width: 669,
+    height: 1024,
+  },
+  'stickers/barkada/picnic.png': {
+    source: require('../../../../../../assets/stickers/barkada/picnic.png'),
+    width: 922,
+    height: 1024,
+  },
+  'stickers/barkada/samgyup.png': {
+    source: require('../../../../../../assets/stickers/barkada/samgyup.png'),
+    width: 1024,
+    height: 894,
+  },
+  'stickers/barkada/share-fries.png': {
+    source: require('../../../../../../assets/stickers/barkada/share-fries.png'),
+    width: 1024,
+    height: 889,
+  },
+  'stickers/barkada/sparklers.png': {
+    source: require('../../../../../../assets/stickers/barkada/sparklers.png'),
+    width: 1024,
+    height: 1020,
+  },
+  'stickers/barkada/pinky-promise.png': {
+    source: require('../../../../../../assets/stickers/barkada/pinky-promise.png'),
+    width: 1024,
+    height: 943,
+  },
+  'stickers/barkada/group-hug.png': {
+    source: require('../../../../../../assets/stickers/barkada/group-hug.png'),
+    width: 970,
+    height: 1024,
+  },
+  'stickers/barkada/bowling.png': {
+    source: require('../../../../../../assets/stickers/barkada/bowling.png'),
+    width: 1024,
+    height: 854,
+  },
+  'stickers/barkada/player-two.png': {
+    source: require('../../../../../../assets/stickers/barkada/player-two.png'),
+    width: 1024,
+    height: 687,
+  },
+  'stickers/barkada/party-popper.png': {
+    source: require('../../../../../../assets/stickers/barkada/party-popper.png'),
+    width: 926,
+    height: 1024,
+  },
+  'stickers/barkada/video-call.png': {
+    source: require('../../../../../../assets/stickers/barkada/video-call.png'),
+    width: 728,
+    height: 1024,
+  },
+  'stickers/barkada/balloons.png': {
+    source: require('../../../../../../assets/stickers/barkada/balloons.png'),
+    width: 845,
+    height: 1024,
+  },
+  'stickers/barkada/walk-together.png': {
+    source: require('../../../../../../assets/stickers/barkada/walk-together.png'),
+    width: 1024,
+    height: 670,
+  },
+  'stickers/barkada/food-crawl.png': {
+    source: require('../../../../../../assets/stickers/barkada/food-crawl.png'),
+    width: 609,
+    height: 1024,
+  },
+  'stickers/barkada/sleepover.png': {
+    source: require('../../../../../../assets/stickers/barkada/sleepover.png'),
+    width: 1024,
+    height: 829,
+  },
+  'stickers/work-from-wherever/cafe-desk.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/cafe-desk.png'),
+    width: 1024,
+    height: 1019,
+  },
+  'stickers/work-from-wherever/beach-desk.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/beach-desk.png'),
+    width: 1024,
+    height: 964,
+  },
+  'stickers/work-from-wherever/bed-desk.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/bed-desk.png'),
+    width: 1024,
+    height: 855,
+  },
+  'stickers/work-from-wherever/five-oclock.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/five-oclock.png'),
+    width: 1024,
+    height: 959,
+  },
+  'stickers/work-from-wherever/all-done.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/all-done.png'),
+    width: 994,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/crunch-time.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/crunch-time.png'),
+    width: 1024,
+    height: 923,
+  },
+  'stickers/work-from-wherever/desk-lamp.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/desk-lamp.png'),
+    width: 1024,
+    height: 964,
+  },
+  'stickers/work-from-wherever/keyboard.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/keyboard.png'),
+    width: 1024,
+    height: 588,
+  },
+  'stickers/work-from-wherever/mouse.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/mouse.png'),
+    width: 861,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/video-meeting.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/video-meeting.png'),
+    width: 1024,
+    height: 947,
+  },
+  'stickers/work-from-wherever/comfy-chair.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/comfy-chair.png'),
+    width: 760,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/workation.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/workation.png'),
+    width: 554,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/full-wifi.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/full-wifi.png'),
+    width: 1024,
+    height: 887,
+  },
+  'stickers/work-from-wherever/low-battery.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/low-battery.png'),
+    width: 1024,
+    height: 950,
+  },
+  'stickers/work-from-wherever/balcony-office.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/balcony-office.png'),
+    width: 1024,
+    height: 680,
+  },
+  'stickers/work-from-wherever/water-bottle.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/water-bottle.png'),
+    width: 745,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/focus-timer.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/focus-timer.png'),
+    width: 1016,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/laptop-bag.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/laptop-bag.png'),
+    width: 1010,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/stretch-break.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/stretch-break.png'),
+    width: 1024,
+    height: 762,
+  },
+  'stickers/work-from-wherever/paperwork.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/paperwork.png'),
+    width: 1024,
+    height: 931,
+  },
+  'stickers/work-from-wherever/bright-idea.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/bright-idea.png'),
+    width: 855,
+    height: 1024,
+  },
+  'stickers/work-from-wherever/train-office.png': {
+    source: require('../../../../../../assets/stickers/work-from-wherever/train-office.png'),
+    width: 1024,
+    height: 890,
+  },
+  'stickers/pet-parent/bath-time.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/bath-time.png'),
+    width: 1002,
+    height: 1024,
+  },
+  'stickers/pet-parent/box-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/box-cat.png'),
+    width: 1024,
+    height: 952,
+  },
+  'stickers/pet-parent/dinner-bowl.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/dinner-bowl.png'),
+    width: 952,
+    height: 1024,
+  },
+  'stickers/pet-parent/yarn-kitten.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/yarn-kitten.png'),
+    width: 1024,
+    height: 895,
+  },
+  'stickers/pet-parent/car-ride.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/car-ride.png'),
+    width: 1024,
+    height: 788,
+  },
+  'stickers/pet-parent/keyboard-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/keyboard-cat.png'),
+    width: 984,
+    height: 1024,
+  },
+  'stickers/pet-parent/sweater-corgi.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/sweater-corgi.png'),
+    width: 946,
+    height: 1024,
+  },
+  'stickers/pet-parent/hamster.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/hamster.png'),
+    width: 1024,
+    height: 931,
+  },
+  'stickers/pet-parent/slipper-crime.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/slipper-crime.png'),
+    width: 1024,
+    height: 773,
+  },
+  'stickers/pet-parent/window-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/window-cat.png'),
+    width: 924,
+    height: 1024,
+  },
+  'stickers/pet-parent/fetch.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/fetch.png'),
+    width: 1024,
+    height: 692,
+  },
+  'stickers/pet-parent/goldfish.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/goldfish.png'),
+    width: 1024,
+    height: 955,
+  },
+  'stickers/pet-parent/bunny.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/bunny.png'),
+    width: 1024,
+    height: 1007,
+  },
+  'stickers/pet-parent/cuddle-pile.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/cuddle-pile.png'),
+    width: 1024,
+    height: 906,
+  },
+  'stickers/pet-parent/glass-push.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/glass-push.png'),
+    width: 1024,
+    height: 855,
+  },
+  'stickers/pet-parent/budgie.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/budgie.png'),
+    width: 874,
+    height: 1024,
+  },
+  'stickers/pet-parent/muddy-pup.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/muddy-pup.png'),
+    width: 1024,
+    height: 837,
+  },
+  'stickers/pet-parent/scratch-post.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/scratch-post.png'),
+    width: 930,
+    height: 1024,
+  },
+  'stickers/pet-parent/leash.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/leash.png'),
+    width: 1024,
+    height: 752,
+  },
+  'stickers/pet-parent/groomed-pup.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/groomed-pup.png'),
+    width: 869,
+    height: 1024,
+  },
+  'stickers/pet-parent/turtle.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/turtle.png'),
+    width: 1024,
+    height: 600,
+  },
+  'stickers/pet-parent/pet-birthday.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/pet-birthday.png'),
+    width: 1024,
+    height: 1000,
+  },
+  'stickers/pet-parent/laundry-cat.png': {
+    source: require('../../../../../../assets/stickers/pet-parent/laundry-cat.png'),
+    width: 972,
+    height: 1024,
+  },
+  'stickers/christmas-2026/christmas-tree.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/christmas-tree.png'),
+    width: 702,
+    height: 1024,
+  },
+  'stickers/christmas-2026/snowman.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/snowman.png'),
+    width: 849,
+    height: 1024,
+  },
+  'stickers/christmas-2026/belen.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/belen.png'),
+    width: 1024,
+    height: 958,
+  },
+  'stickers/christmas-2026/stocking.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/stocking.png'),
+    width: 817,
+    height: 1024,
+  },
+  'stickers/christmas-2026/queso-de-bola.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/queso-de-bola.png'),
+    width: 1024,
+    height: 956,
+  },
+  'stickers/christmas-2026/gingerbread.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/gingerbread.png'),
+    width: 893,
+    height: 1024,
+  },
+  'stickers/christmas-2026/carolers.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/carolers.png'),
+    width: 1024,
+    height: 1002,
+  },
+  'stickers/christmas-2026/reindeer.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/reindeer.png'),
+    width: 779,
+    height: 1024,
+  },
+  'stickers/christmas-2026/salabat.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/salabat.png'),
+    width: 1024,
+    height: 730,
+  },
+  'stickers/christmas-2026/candy-cane.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/candy-cane.png'),
+    width: 675,
+    height: 1024,
+  },
+  'stickers/christmas-2026/hot-cocoa.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/hot-cocoa.png'),
+    width: 829,
+    height: 1024,
+  },
+  'stickers/christmas-2026/ornament.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/ornament.png'),
+    width: 700,
+    height: 1024,
+  },
+  'stickers/christmas-2026/santa.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/santa.png'),
+    width: 922,
+    height: 1024,
+  },
+  'stickers/christmas-2026/milk-cookies.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/milk-cookies.png'),
+    width: 1024,
+    height: 860,
+  },
+  'stickers/christmas-2026/wreath.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/wreath.png'),
+    width: 890,
+    height: 1024,
+  },
+  'stickers/christmas-2026/noche-buena-table.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/noche-buena-table.png'),
+    width: 1024,
+    height: 818,
+  },
+  'stickers/christmas-2026/poinsettia.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/poinsettia.png'),
+    width: 972,
+    height: 1024,
+  },
+  'stickers/christmas-2026/string-lights.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/string-lights.png'),
+    width: 1024,
+    height: 334,
+  },
+  'stickers/christmas-2026/leche-flan.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/leche-flan.png'),
+    width: 1024,
+    height: 722,
+  },
+  'stickers/christmas-2026/gift-opening.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/gift-opening.png'),
+    width: 989,
+    height: 1024,
+  },
+  'stickers/christmas-2026/snow-globe.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/snow-globe.png'),
+    width: 783,
+    height: 1024,
+  },
+  'stickers/christmas-2026/jingle-bells.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/jingle-bells.png'),
+    width: 1024,
+    height: 870,
+  },
+  'stickers/christmas-2026/skating-penguin.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/skating-penguin.png'),
+    width: 875,
+    height: 1024,
+  },
+  'stickers/christmas-2026/balikbayan-box.png': {
+    source: require('../../../../../../assets/stickers/christmas-2026/balikbayan-box.png'),
+    width: 1024,
+    height: 1013,
+  },
+  'stickers/birthdays/birthday-cake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-cake.png'),
+    width: 817,
+    height: 1024,
+  },
+  'stickers/birthdays/balloons.png': {
+    source: require('../../../../../../assets/stickers/birthdays/balloons.png'),
+    width: 941,
+    height: 1024,
+  },
+  'stickers/birthdays/party-hat.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-hat.png'),
+    width: 869,
+    height: 1024,
+  },
+  'stickers/birthdays/party-popper.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-popper.png'),
+    width: 951,
+    height: 1024,
+  },
+  'stickers/birthdays/make-a-wish.png': {
+    source: require('../../../../../../assets/stickers/birthdays/make-a-wish.png'),
+    width: 963,
+    height: 1024,
+  },
+  'stickers/birthdays/gift-stack.png': {
+    source: require('../../../../../../assets/stickers/birthdays/gift-stack.png'),
+    width: 653,
+    height: 1024,
+  },
+  'stickers/birthdays/cake-slice.png': {
+    source: require('../../../../../../assets/stickers/birthdays/cake-slice.png'),
+    width: 875,
+    height: 1024,
+  },
+  'stickers/birthdays/bunting.png': {
+    source: require('../../../../../../assets/stickers/birthdays/bunting.png'),
+    width: 1024,
+    height: 363,
+  },
+  'stickers/birthdays/blow-candles.png': {
+    source: require('../../../../../../assets/stickers/birthdays/blow-candles.png'),
+    width: 1024,
+    height: 997,
+  },
+  'stickers/birthdays/cupcake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/cupcake.png'),
+    width: 727,
+    height: 1024,
+  },
+  'stickers/birthdays/crown.png': {
+    source: require('../../../../../../assets/stickers/birthdays/crown.png'),
+    width: 1024,
+    height: 758,
+  },
+  'stickers/birthdays/pinata.png': {
+    source: require('../../../../../../assets/stickers/birthdays/pinata.png'),
+    width: 967,
+    height: 1024,
+  },
+  'stickers/birthdays/pancit.png': {
+    source: require('../../../../../../assets/stickers/birthdays/pancit.png'),
+    width: 1024,
+    height: 703,
+  },
+  'stickers/birthdays/birthday-card.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-card.png'),
+    width: 845,
+    height: 1024,
+  },
+  'stickers/birthdays/gift-bear.png': {
+    source: require('../../../../../../assets/stickers/birthdays/gift-bear.png'),
+    width: 741,
+    height: 1024,
+  },
+  'stickers/birthdays/party-blower.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-blower.png'),
+    width: 1024,
+    height: 657,
+  },
+  'stickers/birthdays/party-animals.png': {
+    source: require('../../../../../../assets/stickers/birthdays/party-animals.png'),
+    width: 1024,
+    height: 917,
+  },
+  'stickers/birthdays/spaghetti.png': {
+    source: require('../../../../../../assets/stickers/birthdays/spaghetti.png'),
+    width: 1024,
+    height: 883,
+  },
+  'stickers/birthdays/heart-balloon.png': {
+    source: require('../../../../../../assets/stickers/birthdays/heart-balloon.png'),
+    width: 860,
+    height: 1024,
+  },
+  'stickers/birthdays/surprise-cat.png': {
+    source: require('../../../../../../assets/stickers/birthdays/surprise-cat.png'),
+    width: 907,
+    height: 1024,
+  },
+  'stickers/birthdays/ice-cream.png': {
+    source: require('../../../../../../assets/stickers/birthdays/ice-cream.png'),
+    width: 620,
+    height: 1024,
+  },
+  'stickers/birthdays/birthday-photo.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-photo.png'),
+    width: 985,
+    height: 1024,
+  },
+  'stickers/birthdays/lola-cake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/lola-cake.png'),
+    width: 931,
+    height: 1024,
+  },
+  'stickers/birthdays/cheers.png': {
+    source: require('../../../../../../assets/stickers/birthdays/cheers.png'),
+    width: 1024,
+    height: 875,
+  },
+  'stickers/birthdays/birthday-sash.png': {
+    source: require('../../../../../../assets/stickers/birthdays/birthday-sash.png'),
+    width: 674,
+    height: 1024,
+  },
+  'stickers/birthdays/loot-bag.png': {
+    source: require('../../../../../../assets/stickers/birthdays/loot-bag.png'),
+    width: 716,
+    height: 1024,
+  },
+  'stickers/birthdays/sparkler-cake.png': {
+    source: require('../../../../../../assets/stickers/birthdays/sparkler-cake.png'),
+    width: 597,
+    height: 1024,
+  },
+  'stickers/birthdays/big-day.png': {
+    source: require('../../../../../../assets/stickers/birthdays/big-day.png'),
+    width: 965,
+    height: 1024,
+  },
+  'stickers/birthdays/karaoke.png': {
+    source: require('../../../../../../assets/stickers/birthdays/karaoke.png'),
+    width: 1024,
+    height: 999,
+  },
+  'stickers/birthdays/first-birthday.png': {
+    source: require('../../../../../../assets/stickers/birthdays/first-birthday.png'),
+    width: 848,
+    height: 1024,
+  },
+  'stickers/new-year/fireworks.png': {
+    source: require('../../../../../../assets/stickers/new-year/fireworks.png'),
+    width: 1024,
+    height: 1019,
+  },
+  'stickers/new-year/midnight-clock.png': {
+    source: require('../../../../../../assets/stickers/new-year/midnight-clock.png'),
+    width: 1024,
+    height: 954,
+  },
+  'stickers/new-year/round-fruits.png': {
+    source: require('../../../../../../assets/stickers/new-year/round-fruits.png'),
+    width: 1024,
+    height: 850,
+  },
+  'stickers/new-year/jump-for-luck.png': {
+    source: require('../../../../../../assets/stickers/new-year/jump-for-luck.png'),
+    width: 738,
+    height: 1024,
+  },
+  'stickers/new-year/sparkler.png': {
+    source: require('../../../../../../assets/stickers/new-year/sparkler.png'),
+    width: 695,
+    height: 1024,
+  },
+  'stickers/new-year/midnight-toast.png': {
+    source: require('../../../../../../assets/stickers/new-year/midnight-toast.png'),
+    width: 931,
+    height: 1024,
+  },
+  'stickers/new-year/resolutions.png': {
+    source: require('../../../../../../assets/stickers/new-year/resolutions.png'),
+    width: 920,
+    height: 1024,
+  },
+  'stickers/new-year/red-lantern.png': {
+    source: require('../../../../../../assets/stickers/new-year/red-lantern.png'),
+    width: 756,
+    height: 1024,
+  },
+  'stickers/new-year/torotot.png': {
+    source: require('../../../../../../assets/stickers/new-year/torotot.png'),
+    width: 1024,
+    height: 530,
+  },
+  'stickers/new-year/red-envelope.png': {
+    source: require('../../../../../../assets/stickers/new-year/red-envelope.png'),
+    width: 656,
+    height: 1024,
+  },
+  'stickers/new-year/lucky-coins.png': {
+    source: require('../../../../../../assets/stickers/new-year/lucky-coins.png'),
+    width: 890,
+    height: 1024,
+  },
+  'stickers/new-year/biko.png': {
+    source: require('../../../../../../assets/stickers/new-year/biko.png'),
+    width: 1024,
+    height: 772,
+  },
+  'stickers/new-year/disco-ball.png': {
+    source: require('../../../../../../assets/stickers/new-year/disco-ball.png'),
+    width: 1021,
+    height: 1024,
+  },
+  'stickers/new-year/slow-morning.png': {
+    source: require('../../../../../../assets/stickers/new-year/slow-morning.png'),
+    width: 1024,
+    height: 925,
+  },
+  'stickers/new-year/first-sunrise.png': {
+    source: require('../../../../../../assets/stickers/new-year/first-sunrise.png'),
+    width: 1024,
+    height: 666,
+  },
+  'stickers/new-year/party-top-hat.png': {
+    source: require('../../../../../../assets/stickers/new-year/party-top-hat.png'),
+    width: 1024,
+    height: 1002,
+  },
+  'stickers/new-year/media-noche.png': {
+    source: require('../../../../../../assets/stickers/new-year/media-noche.png'),
+    width: 1024,
+    height: 867,
+  },
+  'stickers/new-year/midnight-kiss.png': {
+    source: require('../../../../../../assets/stickers/new-year/midnight-kiss.png'),
+    width: 1002,
+    height: 1024,
+  },
+  'stickers/new-year/fresh-start.png': {
+    source: require('../../../../../../assets/stickers/new-year/fresh-start.png'),
+    width: 1024,
+    height: 928,
+  },
+  'stickers/new-year/firecrackers.png': {
+    source: require('../../../../../../assets/stickers/new-year/firecrackers.png'),
+    width: 1015,
+    height: 1024,
+  },
+  'stickers/new-year/wish-jar.png': {
+    source: require('../../../../../../assets/stickers/new-year/wish-jar.png'),
+    width: 881,
+    height: 1024,
+  },
+  'stickers/new-year/party-pup.png': {
+    source: require('../../../../../../assets/stickers/new-year/party-pup.png'),
+    width: 1014,
+    height: 1024,
+  },
+  'stickers/new-year/moon-and-star.png': {
+    source: require('../../../../../../assets/stickers/new-year/moon-and-star.png'),
+    width: 1024,
+    height: 777,
+  },
+  'stickers/new-year/tikoy.png': {
+    source: require('../../../../../../assets/stickers/new-year/tikoy.png'),
+    width: 1024,
+    height: 741,
+  },
+  'stickers/new-year/countdown.png': {
+    source: require('../../../../../../assets/stickers/new-year/countdown.png'),
+    width: 768,
+    height: 1024,
+  },
+  'stickers/new-year/new-routine.png': {
+    source: require('../../../../../../assets/stickers/new-year/new-routine.png'),
+    width: 1024,
+    height: 937,
+  },
+  'stickers/new-year/polka-dots.png': {
+    source: require('../../../../../../assets/stickers/new-year/polka-dots.png'),
+    width: 749,
+    height: 1024,
+  },
+  'stickers/new-year/confetti-cannon.png': {
+    source: require('../../../../../../assets/stickers/new-year/confetti-cannon.png'),
+    width: 947,
+    height: 1024,
+  },
+  'stickers/new-year/long-noodles.png': {
+    source: require('../../../../../../assets/stickers/new-year/long-noodles.png'),
+    width: 1011,
+    height: 1024,
+  },
+  'stickers/new-year/nye-selfie.png': {
+    source: require('../../../../../../assets/stickers/new-year/nye-selfie.png'),
+    width: 1024,
+    height: 919,
+  },
+  'stickers/valentines/hearts.png': {
+    source: require('../../../../../../assets/stickers/valentines/hearts.png'),
+    width: 1024,
+    height: 791,
+  },
+  'stickers/valentines/roses.png': {
+    source: require('../../../../../../assets/stickers/valentines/roses.png'),
+    width: 834,
+    height: 1024,
+  },
+  'stickers/valentines/chocolates.png': {
+    source: require('../../../../../../assets/stickers/valentines/chocolates.png'),
+    width: 902,
+    height: 1024,
+  },
+  'stickers/valentines/love-letter.png': {
+    source: require('../../../../../../assets/stickers/valentines/love-letter.png'),
+    width: 932,
+    height: 1024,
+  },
+  'stickers/valentines/cupid.png': {
+    source: require('../../../../../../assets/stickers/valentines/cupid.png'),
+    width: 996,
+    height: 1024,
+  },
+  'stickers/valentines/heart-bear.png': {
+    source: require('../../../../../../assets/stickers/valentines/heart-bear.png'),
+    width: 772,
+    height: 1024,
+  },
+  'stickers/valentines/coffee-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/coffee-date.png'),
+    width: 1024,
+    height: 775,
+  },
+  'stickers/valentines/holding-hands.png': {
+    source: require('../../../../../../assets/stickers/valentines/holding-hands.png'),
+    width: 995,
+    height: 1024,
+  },
+  'stickers/valentines/love-lock.png': {
+    source: require('../../../../../../assets/stickers/valentines/love-lock.png'),
+    width: 1024,
+    height: 928,
+  },
+  'stickers/valentines/penguin-pair.png': {
+    source: require('../../../../../../assets/stickers/valentines/penguin-pair.png'),
+    width: 1024,
+    height: 1015,
+  },
+  'stickers/valentines/candlelit-dinner.png': {
+    source: require('../../../../../../assets/stickers/valentines/candlelit-dinner.png'),
+    width: 1024,
+    height: 718,
+  },
+  'stickers/valentines/ring-box.png': {
+    source: require('../../../../../../assets/stickers/valentines/ring-box.png'),
+    width: 816,
+    height: 1024,
+  },
+  'stickers/valentines/sweet-treats.png': {
+    source: require('../../../../../../assets/stickers/valentines/sweet-treats.png'),
+    width: 1024,
+    height: 734,
+  },
+  'stickers/valentines/cat-couple.png': {
+    source: require('../../../../../../assets/stickers/valentines/cat-couple.png'),
+    width: 1024,
+    height: 867,
+  },
+  'stickers/valentines/galentines.png': {
+    source: require('../../../../../../assets/stickers/valentines/galentines.png'),
+    width: 1024,
+    height: 931,
+  },
+  'stickers/valentines/heart-balloon.png': {
+    source: require('../../../../../../assets/stickers/valentines/heart-balloon.png'),
+    width: 783,
+    height: 1024,
+  },
+  'stickers/valentines/finger-heart.png': {
+    source: require('../../../../../../assets/stickers/valentines/finger-heart.png'),
+    width: 1024,
+    height: 674,
+  },
+  'stickers/valentines/single-rose.png': {
+    source: require('../../../../../../assets/stickers/valentines/single-rose.png'),
+    width: 655,
+    height: 1024,
+  },
+  'stickers/valentines/self-love.png': {
+    source: require('../../../../../../assets/stickers/valentines/self-love.png'),
+    width: 1024,
+    height: 864,
+  },
+  'stickers/valentines/mended-heart.png': {
+    source: require('../../../../../../assets/stickers/valentines/mended-heart.png'),
+    width: 1024,
+    height: 897,
+  },
+  'stickers/valentines/rain-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/rain-date.png'),
+    width: 1024,
+    height: 1019,
+  },
+  'stickers/valentines/boba-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/boba-date.png'),
+    width: 1024,
+    height: 926,
+  },
+  'stickers/valentines/lolo-lola.png': {
+    source: require('../../../../../../assets/stickers/valentines/lolo-lola.png'),
+    width: 922,
+    height: 1024,
+  },
+  'stickers/valentines/movie-night.png': {
+    source: require('../../../../../../assets/stickers/valentines/movie-night.png'),
+    width: 1024,
+    height: 791,
+  },
+  'stickers/valentines/picnic-date.png': {
+    source: require('../../../../../../assets/stickers/valentines/picnic-date.png'),
+    width: 1024,
+    height: 834,
+  },
+  'stickers/valentines/video-call.png': {
+    source: require('../../../../../../assets/stickers/valentines/video-call.png'),
+    width: 929,
+    height: 1024,
+  },
+  'stickers/valentines/lovebirds.png': {
+    source: require('../../../../../../assets/stickers/valentines/lovebirds.png'),
+    width: 1024,
+    height: 697,
+  },
+  'stickers/valentines/rose-pup.png': {
+    source: require('../../../../../../assets/stickers/valentines/rose-pup.png'),
+    width: 1024,
+    height: 1015,
+  },
+  'stickers/valentines/heart-pizza.png': {
+    source: require('../../../../../../assets/stickers/valentines/heart-pizza.png'),
+    width: 1024,
+    height: 904,
+  },
+  'stickers/valentines/love-song.png': {
+    source: require('../../../../../../assets/stickers/valentines/love-song.png'),
+    width: 1024,
+    height: 1007,
   },
 };
 
