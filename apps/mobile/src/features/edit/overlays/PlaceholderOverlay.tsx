@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   box: { backgroundColor: colors.overlayPlaceholder, borderRadius: radius.thumb },
 });
 
-const kinds: readonly OverlayType[] = ['sticker', 'bubble', 'text'];
+const kinds: readonly OverlayType[] = ['sticker', 'bubble', 'text', 'place'];
 
 /**
  * Draws every overlay kind that has no real renderer yet as a box with a 1 : 2 aspect, so the transform

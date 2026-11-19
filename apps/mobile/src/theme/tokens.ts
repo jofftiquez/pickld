@@ -855,3 +855,15 @@ export const bubble = {
   flipGlyphWidth: 26, // the small bubble inside it that shows the tail's side
   flipGlyphHeight: 18,
 } as const;
+
+// A place sticker (Place tool): a one-line pill with a pin, in the bubble colors. Laid out in reference
+// points, `referenceHeight` tall and as wide as its text needs (placeLayout.ts), then scaled to its overlay
+// box like a bubble. Its text ignores the system text size: it is part of the picture.
+export const place = {
+  referenceHeight: 40,
+  fontSize: 17,
+  paddingX: 14,
+  icon: 18, // the pin's box
+  gap: 6, // between the pin and the text
+  charWidth: 0.62, // a generous average glyph width (em), as for bubbles
+} as const;

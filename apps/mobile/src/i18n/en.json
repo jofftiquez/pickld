@@ -194,7 +194,7 @@
     "quietTitle": "Nothing new yet",
     "quietBody": "When the people you read add moments, they show up here.",
     "meta": "{{slot}} · {{when}}",
-    "metaAddedLater": "{{slot}} · For {{when}} · Added\u00a0later",
+    "metaAddedLater": "{{slot}} · For {{when}} · Added later",
     "cardLabel": "{{name}}, {{slot}}, {{when}}",
     "private": "Only you can see it",
     "openHint": "Opens the moment’s comments",
@@ -358,7 +358,8 @@
       "filters": "Filters",
       "stickers": "Stickers",
       "bubble": "Bubble",
-      "text": "Text"
+      "text": "Text",
+      "place": "Place"
     },
     "filters": "Filters",
     "filter": {
@@ -474,6 +475,20 @@
     "textHint": "Edits the selected bubble, or adds one",
     "label": "{{shape}} bubble: {{text}}",
     "labelEmpty": "{{shape}} bubble, no text yet"
+  },
+  "editPlace": {
+    "field": "Place",
+    "placeholder": "Where was this?",
+    "fieldHint": "Shows on the photo as you type",
+    "fieldHintSelected": "Edits the selected place",
+    "useCurrent": "Use where I am",
+    "useCurrentHint": "Fills in the town your phone is in. You can change the words",
+    "looking": "Finding your town…",
+    "denied": "Location is off for Pickld. Type the place instead, or turn it on in Settings.",
+    "failed": "Couldn’t find your town. Type the place instead.",
+    "colors": "Place color",
+    "privacy": "Only the words on the sticker are saved. Pickld never saves where you are.",
+    "overlayLabel": "Place: {{text}}"
   },
   "editText": {
     "field": "Your text",
@@ -800,6 +815,9 @@
     "bubbles_other": "{{count}} speech bubbles",
     "texts_one": "text",
     "texts_other": "{{count}} texts",
+    "places_one": "a place",
+    "places_other": "{{count}} places",
+    "list4": "{{a}}, {{b}}, {{c}} and {{d}}",
     "list2": "{{a}} and {{b}}",
     "list3": "{{a}}, {{b}} and {{c}}",
     "jarStamp": "JAR #{{number}}"
@@ -2024,5 +2042,8 @@
     "keepAllTitle_other": "Keep {{count}} days to yourself?",
     "keepAllMessage": "They leave this list. Who can see their moments doesn’t change, and you can still publish them from My jars.",
     "keepAllConfirm": "Keep all"
+  },
+  "location": {
+    "permissionDescription": "Pickld uses your location only when you tap Use where I am, to fill in your town on a place sticker. Your location is never saved."
   }
 }

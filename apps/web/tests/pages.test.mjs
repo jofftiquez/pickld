@@ -133,6 +133,8 @@ const STYLED = {
       scale: 0.5,
       rotation: 0,
     },
+    // A place sticker: only its words and color are stored.
+    { id: 'place', type: 'place', text: 'Baguio', color: 'butter', x: 0.5, y: 0.88, scale: 0.4, rotation: 0 },
   ],
 };
 
@@ -438,6 +440,37 @@ test('text draws as the app lays it out: its lines, its font, sized with its box
   assert.equal(outlined.color, 'rgb(255, 255, 255)');
   assert.equal(outlined.shadows, 16, 'sixteen copies of the words round them');
   assert.ok(outlined.loaded, `${outlined.family} is loaded`);
+  await page.close();
+});
+
+test('a place sticker draws as the app does: a pill in its color, the pin and the name, sized with its box', async () => {
+  const { page } = await open(`/j/${EVERYONE}`);
+  const pill = page.locator('[data-place-overlay="place"]');
+  await pill.waitFor();
+  const got = await pill.evaluate((el) => {
+    const photo = el.closest('[data-overlays]').getBoundingClientRect().width;
+    const box = el.getBoundingClientRect();
+    const s = getComputedStyle(el);
+    return {
+      text: el.textContent,
+      width: box.width / photo,
+      aspect: box.height / box.width,
+      fontSize: parseFloat(s.fontSize) / photo,
+      background: s.backgroundColor,
+      color: s.color,
+      pin: el.querySelectorAll('svg path').length,
+      fits: el.scrollWidth <= el.clientWidth + 1,
+    };
+  });
+  // 'Baguio': 2 × 14 padding + 18 pin + 6 gap + 6 × 17 × 0.62 letters = 116 reference points wide, 40 tall.
+  assert.equal(got.text, 'Baguio');
+  assert.ok(Math.abs(got.width - 0.4) < 0.005, `${got.width} of the photo wide`);
+  assert.ok(Math.abs(got.aspect - 40 / 116) < 0.01, `aspect ${got.aspect}`);
+  assert.ok(Math.abs(got.fontSize - (0.4 * 17) / 116) < 0.0005, `font size ${got.fontSize}`);
+  assert.equal(got.background, 'rgb(255, 224, 138)');
+  assert.equal(got.color, 'rgb(17, 20, 13)');
+  assert.equal(got.pin, 1);
+  assert.ok(got.fits, 'the name fits on its one line');
   await page.close();
 });
 

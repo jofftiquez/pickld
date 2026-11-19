@@ -311,13 +311,13 @@ describe('Editor', () => {
     expect(filterButton('Mono').props.accessibilityState).toMatchObject({ selected: false });
   });
 
-  it('shows all four tool tabs; the later tools open an empty panel and keep the chosen filter', async () => {
+  it('shows all five tool tabs; the later tools open an empty panel and keep the chosen filter', async () => {
     await openEditor('/edit/7');
     await screen.findByTestId('editor-screen');
     await fireEvent.press(filterButton('Kalamansi'));
 
     const tabs = within(screen.getByTestId('editor-tools')).getAllByRole('tab');
-    expect(tabs.map((tab) => tab.props.accessibilityLabel)).toEqual(['Filters', 'Stickers', 'Bubble', 'Text']);
+    expect(tabs.map((tab) => tab.props.accessibilityLabel)).toEqual(['Filters', 'Stickers', 'Bubble', 'Text', 'Place']);
     expect(screen.getByRole('tab', { name: 'Filters' }).props.accessibilityState).toMatchObject({ selected: true });
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Stickers' }));

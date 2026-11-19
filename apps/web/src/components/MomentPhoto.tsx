@@ -8,7 +8,8 @@ import {
   isCloud,
   tailPathData,
 } from '@/features/edit/bubble/bubbleLayout';
-import { parseEdits, type Bubble, type Overlay } from '@/features/edit/edits';
+import { parseEdits, type Bubble, type Overlay, type Place } from '@/features/edit/edits';
+import { PIN_PATH, PIN_VIEWBOX, placeReferenceWidth } from '@/features/edit/place/placeLayout';
 import {
   BACKGROUND_RADIUS,
   layoutText,
@@ -21,7 +22,7 @@ import {
   type TextFont,
   type TextOverlay,
 } from '@/features/edit/text/textOverlay';
-import { bubble, bubbleColors, colors, radius } from '@/theme/tokens';
+import { bubble, bubbleColors, colors, place as placeStyle, radius } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
 import type { PublicMoment } from '~/lib/publicPage';
@@ -165,12 +166,55 @@ function TextArt({ overlay }: { overlay: TextOverlay }) {
   );
 }
 
+/**
+ * A place sticker as the app's PlaceOverlay draws it: a pill in its bubble color with the pin and the
+ * name on one line, laid out in reference points (placeReferenceWidth) and scaled to its box.
+ */
+function PlaceArt({ overlay }: { overlay: Place }) {
+  const pair = bubbleColors[overlay.color];
+  const refWidth = placeReferenceWidth(overlay.text);
+  // Reference points to container width: the box is overlay.scale of the photo and refWidth points wide.
+  const u = (points: number) => `${((points * overlay.scale) / refWidth) * 100}cqw`;
+  return (
+    <span
+      data-place-overlay={overlay.id}
+      style={{
+        ...place(overlay),
+        aspectRatio: `${refWidth} / ${placeStyle.referenceHeight}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: u(placeStyle.gap),
+        padding: `0 ${u(placeStyle.paddingX)}`,
+        boxSizing: 'border-box',
+        borderRadius: 9999,
+        background: pair.fill,
+        color: pair.text,
+        fontSize: u(placeStyle.fontSize),
+        fontWeight: 800,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+      }}
+    >
+      <svg
+        aria-hidden
+        viewBox={`0 0 ${PIN_VIEWBOX} ${PIN_VIEWBOX}`}
+        style={{ width: u(placeStyle.icon), height: u(placeStyle.icon), flexShrink: 0 }}
+      >
+        <path d={PIN_PATH} fill={pair.text} fillRule="evenodd" />
+      </svg>
+      {overlay.text}
+    </span>
+  );
+}
+
 function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: string }) {
   if (overlay.type === 'sticker') {
     // Sticker art is public catalog data, served without a token (D-25).
     return <img src={`${assetBase}/${overlay.asset}`} alt={overlay.label} style={place(overlay)} />;
   }
   if (overlay.type === 'text') return <TextArt overlay={overlay} />;
+  if (overlay.type === 'place') return <PlaceArt overlay={overlay} />;
   const style = bubbleColors[overlay.color];
   const cloud = isCloud(overlay);
   return (

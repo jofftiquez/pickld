@@ -5,7 +5,7 @@ import { textFields } from './text/textOverlay';
 
 // The editor's edits (FR-CAP-08): stored as data in the queue item's and the moment's `edits` JSON and
 // drawn over the photo at display time. They are never burned into the photo: the uploaded file stays
-// the prepared photo. Version 1 holds the color filter and the overlays (stickers, bubbles, text).
+// the prepared photo. Version 1 holds the color filter and the overlays (stickers, bubbles, text, places).
 
 export const EDITS_VERSION = 1;
 
@@ -65,15 +65,31 @@ const bubbleContent = {
   cloud: z.boolean().optional(),
 };
 
+/** Place sticker text limit. */
+export const PLACE_TEXT_MAX = 40;
+
+// A place sticker: only the words the user chose to show, in a bubble color. Never coordinates: a place
+// read from the phone's location becomes text on the phone, and that text is all that is saved (unknown
+// keys are stripped by the schema, so nothing else can ride along).
+const placeFields = {
+  text: z
+    .string()
+    .max(PLACE_TEXT_MAX)
+    .refine((s) => s.trim().length > 0),
+  color: bubbleColorSchema.default('white'),
+};
+
 // One member per overlay kind, discriminated on `type`. M2-13 (transforms) starts from this; the tools
 // add their content fields: M2-15 the sticker id, M2-16 the bubble text and style, M2-17 the text.
 export const overlaySchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sticker'), ...overlayBase, ...stickerFields }),
   z.object({ type: z.literal('bubble'), ...overlayBase, ...bubbleContent }),
   z.object({ type: z.literal('text'), ...overlayBase, ...textFields }),
+  z.object({ type: z.literal('place'), ...overlayBase, ...placeFields }),
 ]);
 export type Overlay = z.infer<typeof overlaySchema>;
 export type Bubble = Extract<Overlay, { type: 'bubble' }>;
+export type Place = Extract<Overlay, { type: 'place' }>;
 
 export const editsSchema = z.object({
   v: z.literal(EDITS_VERSION),
