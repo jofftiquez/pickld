@@ -171,7 +171,7 @@ describe('TodayView', () => {
     await fireEvent.press(screen.getByRole('button', { name: '#morning, now, tap to capture' }));
     await fireEvent.press(screen.getByRole('button', { name: '#evening, empty' }));
     expect(onCapture.mock.calls).toEqual([['morning'], ['evening']]);
-    await fireEvent.press(screen.getByRole('button', { name: 'My days' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'My jars' }));
     expect(onOpenMyDays).toHaveBeenCalledTimes(1);
   });
 

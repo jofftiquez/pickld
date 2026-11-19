@@ -112,9 +112,9 @@ describe('tab shell', () => {
 
   it('opens My days from Today’s calendar button, over the tabs, and Back returns to Today', async () => {
     await renderRouter(routes, { initialUrl: '/today', wrapper });
-    await fireEvent.press(screen.getByRole('button', { name: 'My days' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'My jars' }));
     expect(screen).toHavePathname('/my-days');
-    expect(screen.getByRole('header', { name: 'My days' })).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'My jars' })).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(screen).toHavePathname('/today');
   });

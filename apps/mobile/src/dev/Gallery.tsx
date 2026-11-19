@@ -64,7 +64,7 @@ export function Gallery() {
         <View style={row}>
           <PillButton label="Read" onPress={noop} />
           <PillButton label="Reading" variant="subtle" onPress={noop} />
-          <RoundIconButton icon="myDays" accessibilityLabel="My days" onPress={noop} />
+          <RoundIconButton icon="myDays" accessibilityLabel="My jars" onPress={noop} />
           <View style={{ backgroundColor: colors.ink, padding: space.sm, borderRadius: 999 }}>
             <RoundIconButton icon="close" variant="glass" accessibilityLabel="Close" onPress={noop} />
           </View>

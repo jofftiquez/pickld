@@ -19,11 +19,13 @@ import {
 } from '@/features/days/monthGrid';
 import { useDayJar } from '@/features/days/useDayJar';
 import { useMonthJars } from '@/features/days/useMonthJars';
+import { unpublishedQueryKeys, useUnpublishedJars } from '@/features/days/useUnpublishedJars';
 import { openTodayJar } from '@/features/jar/rollover';
 import { phoneTimeZone, useToday } from '@/features/jar/useToday';
 import { localDateIn } from '@/lib/jars';
 
-// My days (M2-25, M2-26; FR-DAY-01, FR-DAY-02): the month calendar. Tapping a past date opens that day's page
+// My jars (M2-25, M2-26; FR-DAY-01, FR-DAY-02; called My days before): the month calendar, with a Not published
+// row above it while past days from the last week wait (/unpublished). Tapping a past date opens that day's page
 // straight away (D-153), as Go to a date does; there it is filled from the gallery. A stack screen opened
 // from the calendar button on Today, not a tab (D-52).
 export default function MyDaysScreen() {
@@ -38,6 +40,7 @@ export default function MyDaysScreen() {
   const [openedDate, setOpenedDate] = useState<string | null>(null);
   const { userId, jars, firstJarMonth, birthday } = useMonthJars(month);
   const { queue } = useDayJar(null);
+  const { jars: unpublished } = useUnpublishedJars();
   // The jar Today shows: today's, or yesterday's while it is still open after flying west (travel rule).
   const openJarDate = openTodayJar(useToday(now).jar, now)?.jar?.localDate ?? null;
   // The month's jars plus photos still waiting to upload, so a day just filled shows at once (rule 3, D-148).
@@ -57,6 +60,7 @@ export default function MyDaysScreen() {
       if (userId === null) return;
       void queryClient.invalidateQueries({ queryKey: ['month', userId] });
       void queryClient.invalidateQueries({ queryKey: ['day', userId] });
+      void queryClient.invalidateQueries({ queryKey: unpublishedQueryKeys.list(userId) });
       // A day filled before the first jar moves the Previous bound back.
       void queryClient.invalidateQueries({ queryKey: ['firstJarMonth', userId] });
     }, [queryClient, userId]),
@@ -100,6 +104,8 @@ export default function MyDaysScreen() {
       today={today}
       onSelectDay={openDay}
       onMemories={() => router.push('/memories')}
+      unpublishedCount={unpublished?.length ?? 0}
+      onUnpublished={() => router.push('/unpublished')}
     />
   );
 }

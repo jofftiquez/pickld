@@ -32,7 +32,7 @@
       "afternoon": "Good afternoon",
       "evening": "Good evening"
     },
-    "myDays": "My days",
+    "myDays": "My jars",
     "stickers": "Stickers",
     "pendingLabel_one": "Pending uploads, {{count}} moment",
     "pendingLabel_other": "Pending uploads, {{count}} moments",
@@ -267,7 +267,7 @@
   },
   "myDays": {
     "back": "Back",
-    "title": "My days",
+    "title": "My jars",
     "subtitle_one": "{{month}} · {{count}} moment",
     "subtitle_other": "{{month}} · {{count}} moments",
     "momentCount_one": "{{count}} moment",
@@ -296,7 +296,11 @@
     "dayToday": "{{date}}, today, {{count}} of {{total}} moments",
     "dayFuture": "{{date}}, not yet",
     "dayHint": "Opens this day",
-    "memories": "Memories"
+    "memories": "Memories",
+    "unpublished": "Not published",
+    "unpublishedLabel_one": "Not published, {{count}} day",
+    "unpublishedLabel_other": "Not published, {{count}} days",
+    "unpublishedHint": "Lists past days from the last week you haven’t published"
   },
   "brand": {
     "loading": "Pickld is loading"
@@ -1332,7 +1336,7 @@
     },
     "2": {
       "title": "Every moment fills your jar",
-      "body": "Eight moments make a full jar. A fresh jar starts every midnight, and missed a moment? You can fill it in later. Every jar is kept in My days.",
+      "body": "Eight moments make a full jar. A fresh jar starts every midnight, and missed a moment? You can fill it in later. Every jar is kept in My jars.",
       "count": "5 of 8 moments"
     },
     "3": {
@@ -1586,7 +1590,7 @@
     },
     "snap": "Snap whatever’s in front of you. Messy counts.",
     "private": "Not ready to share? Mark any moment private.",
-    "later": "Missed one? Fill it in later from My days.",
+    "later": "Missed one? Fill it in later from My jars.",
     "take": "Take my first moment",
     "look": "Look around first"
   },
@@ -1729,7 +1733,7 @@
       },
       {
         "q": "Why does a moment say “Added later”?",
-        "a": "A moment added after its day ended, from your gallery or from My days, carries an “Added later” badge. Pickld’s server decides this from its own clock, not your phone’s."
+        "a": "A moment added after its day ended, from your gallery or from My jars, carries an “Added later” badge. Pickld’s server decides this from its own clock, not your phone’s."
       },
       {
         "q": "Who can see my jars?",
@@ -1998,5 +2002,27 @@
     "discardTitle": "Discard this photo?",
     "discardMessage": "It’s removed from this phone and won’t upload.",
     "discardConfirm": "Discard"
+  },
+  "unpublished": {
+    "title": "Not published",
+    "back": "Back",
+    "intro": "Days from the last week you didn’t publish. Publish one, or keep it to yourself and it won’t show here again. Older days stay in My jars, where you can still publish them.",
+    "emptyTitle": "All caught up",
+    "empty": "Days from the last week you haven’t published show up here.",
+    "count": "{{count}} of {{total}} moments",
+    "rowLabel": "{{day}}, {{count}}",
+    "openHint": "Opens this day",
+    "publish": "Publish",
+    "publishLabel": "Publish {{day}}",
+    "keep": "Keep",
+    "keepLabel": "Keep {{day}} to myself",
+    "keepHint": "Takes it off this list. Who can see its moments doesn’t change.",
+    "keepFailed": "Couldn’t save that. Check your connection and try again.",
+    "keepAll": "Keep all to myself",
+    "keepAllHint": "Takes every day off this list",
+    "keepAllTitle_one": "Keep {{count}} day to yourself?",
+    "keepAllTitle_other": "Keep {{count}} days to yourself?",
+    "keepAllMessage": "They leave this list. Who can see their moments doesn’t change, and you can still publish them from My jars.",
+    "keepAllConfirm": "Keep all"
   }
 }

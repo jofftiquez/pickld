@@ -47,7 +47,7 @@ appId: me.pickld.app
     id: today-my-days
 - assertVisible:
     id: screen-title
-    text: My days
+    text: My jars
 - takeScreenshot: MyDays-stack
 - tapOn:
     id: my-days-back

@@ -20,7 +20,7 @@ appId: me.pickld.app
     id: today-my-days
 - assertVisible:
     id: screen-title
-    text: My days
+    text: My jars
 - assertVisible:
     id: my-days-calendar
 - assertVisible:
@@ -89,7 +89,7 @@ appId: me.pickld.app
           id: my-days-previous
       - assertVisible:
           id: screen-title
-          text: My days
+          text: My jars
       - assertVisible:
           id: my-days-next
           enabled: false
