@@ -29,6 +29,7 @@ import { PublishError, publishJar, type Visibility } from '@/features/publish/pu
 import { useIsOffline } from '@/lib/connectivity';
 import { currentSlot, localHourIn } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
+import { useScreenFocused } from '@/lib/useScreenFocused';
 
 const MINUTE = 60_000;
 
@@ -113,7 +114,9 @@ export default function TodayScreen() {
 
   // First moment tip (M4-09): once, on the first day while the jar is empty.
   const nowSlot = currentSlot(now, tz);
-  const tip = useFirstMomentTip(userId, jar?.hasAnyJar === false && !tiles.some(holdsSlot));
+  // Only while Today is in front: its sheet is a modal, which would stay over a screen opened from a link.
+  const focused = useScreenFocused();
+  const tip = useFirstMomentTip(userId, focused && jar?.hasAnyJar === false && !tiles.some(holdsSlot));
   // Take my first moment opens Camera once the sheet's modal has closed.
   const takeAfterTip = useRef(false);
 

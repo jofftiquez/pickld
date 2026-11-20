@@ -34,4 +34,20 @@ describe('First moment tip (FR-ONB-08)', () => {
     expect(await shows('u-1', false)).toBe(false);
     expect(await shows('u-1', true)).toBe(true);
   });
+
+  it('closes for good when it stops applying, such as Today leaving the front for a linked screen', async () => {
+    const hook = await renderHook(({ eligible }: { eligible: boolean }) => useFirstMomentTip('u-1', eligible), {
+      initialProps: { eligible: true },
+    });
+    await act(async () => undefined);
+    expect(hook.result.current.visible).toBe(true);
+    await hook.rerender({ eligible: false });
+    await act(async () => undefined);
+    expect(hook.result.current.visible).toBe(false);
+    // Back on Today: it already counted as shown.
+    await hook.rerender({ eligible: true });
+    await act(async () => undefined);
+    expect(hook.result.current.visible).toBe(false);
+    await hook.unmount();
+  });
 });
