@@ -10,7 +10,14 @@ import { z } from 'zod';
 import { track } from '@/lib/analytics';
 import { getSupabase } from '@/lib/supabase';
 
-import { filledCount, milestoneKeys, nextCelebration, type Celebration, type CelebrationsSeen } from './celebrations';
+import {
+  allMilestoneKeys,
+  filledCount,
+  milestoneKeys,
+  nextCelebration,
+  type Celebration,
+  type CelebrationsSeen,
+} from './celebrations';
 import type { TodayJar } from './useToday';
 
 // Only recent jars can be Today's jar again; older ones are dropped to keep the value small.
@@ -64,7 +71,7 @@ export const fullJarParams = z.object({
 /** /sticker-unlocked params: the milestone and how many the user has earned. */
 export const stickerUnlockedParams = z.object({
   key: z.enum(milestoneKeys),
-  earned: z.coerce.number().int().min(1).max(milestoneKeys.length).catch(1),
+  earned: z.coerce.number().int().min(1).max(allMilestoneKeys.length).catch(1),
 });
 
 /** The route for a celebration. Params are strings; the screens validate them with the schemas above. */
@@ -141,7 +148,7 @@ export function useCelebrations(input: {
     void saveCelebrationsSeen(userId, next.seen).catch(() => {});
     const show = next.show;
     if (show === null) return;
-    const earned = milestoneKeys.filter((key) => earnedKeys.includes(key)).length;
+    const earned = allMilestoneKeys.filter((key) => earnedKeys.includes(key)).length;
     if (show.kind === 'sticker') {
       open.current(celebrationHref(show, { jarNumber: null, earned }));
       return;

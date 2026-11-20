@@ -98,7 +98,7 @@ describe('StickerUnlockedView', () => {
     expect(
       screen.getByText('All 8 moments, one real day. You earned the “First full jar” sticker. Next up: 3 full jars.'),
     ).toBeTruthy();
-    expect(screen.getByText('1 of 28 earned')).toBeTruthy();
+    expect(screen.getByText('1 of 30 earned')).toBeTruthy();
     expect(screen.getAllByTestId('confetti-piece', { includeHiddenElements: true })).toHaveLength(8);
     expectMinTapArea(screen.getByRole('button', { name: 'Close' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
@@ -112,10 +112,10 @@ describe('StickerUnlockedView', () => {
     );
     const firstSource: unknown = screen.getByTestId('sticker-unlocked-art').props.source;
     await view.rerender(
-      <StickerUnlockedView milestone="three_years" earned={28} reduceMotion insets={insets} onClose={jest.fn()} />,
+      <StickerUnlockedView milestone="three_years" earned={30} reduceMotion insets={insets} onClose={jest.fn()} />,
     );
     expect(screen.getByTestId('sticker-unlocked-art').props.source).not.toEqual(firstSource);
-    expect(screen.getByText('28 of 28 earned')).toBeTruthy();
+    expect(screen.getByText('30 of 30 earned')).toBeTruthy();
     expect(screen.getByText('Three whole years of real days. You earned the “3 years of jars” sticker.')).toBeTruthy();
   });
 
