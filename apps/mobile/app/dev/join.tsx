@@ -90,7 +90,7 @@ function DevJoin({ params }: { params: Params }) {
       busy={false}
       error={null}
       onBack={back}
-      onProvider={noop}
+      onApple={noop}
       onSubmitEmail={noop}
       onSwitchMode={noop}
       onLegal={noop}

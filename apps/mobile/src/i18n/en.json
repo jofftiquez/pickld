@@ -1430,7 +1430,6 @@
       "title": "Create your account",
       "body": "It takes less than a minute.",
       "apple": "Continue with Apple",
-      "google": "Continue with Google",
       "email": "Continue with email",
       "haveAccount": "Already have an account?",
       "signIn": "Sign in",
@@ -1443,7 +1442,6 @@
       "title": "Welcome back",
       "body": "Your jars are right where you left them.",
       "apple": "Sign in with Apple",
-      "google": "Sign in with Google",
       "hint": "We’ll email you a 6-digit code. No password needed.",
       "send": "Send sign-in code",
       "newHere": "New here? Create an account"

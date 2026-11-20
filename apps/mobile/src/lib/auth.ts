@@ -1,14 +1,16 @@
 // Signing up and in (M4-02; FR-ACC-01, FR-ACC-02). No passwords exist anywhere. Email sends a 6-digit code
-// that Check your email verifies (D-60). Apple and Google go through Supabase OAuth in the system browser with
-// the PKCE flow and come back to pickld://auth/callback?code=…, which the OAuth browser session (or
-// app/auth/callback.tsx) exchanges for a session on this phone.
+// that Check your email verifies (D-60). Apple is native Sign in with Apple on iOS: Apple's sheet returns an
+// identity token that Supabase Auth checks and turns into a session. There is no Google sign-in. An older
+// email link still comes back to pickld://auth/callback?code=…, which app/auth/callback.tsx exchanges.
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Application from 'expo-application';
 import * as WebBrowser from 'expo-web-browser';
 import { z } from 'zod';
 
+import { sha256Hex } from './contactHash';
 import { WEB_BASE_URL } from './links';
 import { getSupabase } from './supabase';
 
-export const AUTH_REDIRECT = 'pickld://auth/callback';
 export const RESEND_SECONDS = 60;
 /** How long an emailed code works (supabase/config.toml `otp_expiry`, configure.sh `mailer_otp_exp`). */
 export const CODE_SECONDS = 600;
@@ -63,7 +65,7 @@ export async function verifyEmailCode(email: string, code: string, sentAt: numbe
   throw new AuthFlowError('failed');
 }
 
-/** The `code` (or the provider's error) from a pickld://auth/callback URL. */
+/** The `code` (or the error) from a pickld://auth/callback URL. */
 export function parseCallback(url: string): { code: string } | { error: string } | null {
   try {
     const u = new URL(url);
@@ -87,18 +89,54 @@ export async function completeSignIn(code: string): Promise<void> {
   if (!data.session) throw new AuthFlowError('failed');
 }
 
-/** Apple or Google in an in-app browser session that returns to the app. */
-export async function signInWithProvider(provider: 'apple' | 'google'): Promise<void> {
-  const { data, error } = await getSupabase().auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: AUTH_REDIRECT, skipBrowserRedirect: true },
+/** True where Sign in with Apple works: iOS 13 and later. Android has no Apple button. */
+export function appleSignInAvailable(): Promise<boolean> {
+  return AppleAuthentication.isAvailableAsync().catch(() => false);
+}
+
+/**
+ * Sign in with Apple, which also signs up: Apple's sheet, then its identity token signs this phone in to
+ * Supabase Auth. Apple hashes the nonce into the token so a copied token can't be replayed. An existing account
+ * with the same confirmed email (not a Hide My Email address) becomes the same account. Apple shares the
+ * person's name only the first time, so it's saved for About you to fill in. Apple's one-time authorization code
+ * goes to fn:apple-token, which keeps a token for revoking the link when the account is deleted.
+ */
+export async function signInWithApple(): Promise<void> {
+  const nonce = randomHex(16);
+  let credential: AppleAuthentication.AppleAuthenticationCredential;
+  try {
+    credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+      nonce: sha256Hex(nonce),
+    });
+  } catch (e) {
+    throw new AuthFlowError((e as { code?: unknown }).code === 'ERR_REQUEST_CANCELED' ? 'cancelled' : 'failed');
+  }
+  if (!credential.identityToken) throw new AuthFlowError('failed');
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.signInWithIdToken({
+    provider: 'apple',
+    token: credential.identityToken,
+    nonce,
   });
-  if (error || !data.url) throw new AuthFlowError('failed');
-  const result = await WebBrowser.openAuthSessionAsync(data.url, AUTH_REDIRECT);
-  if (result.type !== 'success') throw new AuthFlowError('cancelled');
-  const parsed = parseCallback(result.url);
-  if (!parsed || 'error' in parsed) throw new AuthFlowError('failed');
-  await completeSignIn(parsed.code);
+  if (error) throw new AuthFlowError(error.status === 429 ? 'rateLimited' : 'failed');
+  if (credential.authorizationCode && Application.applicationId) {
+    void supabase.functions
+      .invoke('apple-token', { body: { code: credential.authorizationCode, clientId: Application.applicationId } })
+      .catch(() => undefined);
+  }
+  const name = credential.fullName ? AppleAuthentication.formatFullName(credential.fullName).trim() : '';
+  if (name) await supabase.auth.updateUser({ data: { full_name: name } }).catch(() => undefined);
+}
+
+function randomHex(bytes: number): string {
+  const b = new Uint8Array(bytes);
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') crypto.getRandomValues(b);
+  else for (let i = 0; i < b.length; i += 1) b[i] = Math.floor(Math.random() * 256);
+  return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
 }
 
 /** Seconds until Resend is allowed again, never negative. */

@@ -50,7 +50,7 @@ add_secret CSAM_MATCHER hash-list
 add_secret SITE_URL "${WEB_URL:-https://pickld.me}"
 # Optional keys: set on the GitHub environment when the account exists, and the next deploy passes them on.
 for name in SENTRY_DSN OPENAI_API_KEY OPENAI_VISION_MODEL EXPO_ACCESS_TOKEN REVENUECAT_WEBHOOK_SECRET \
-  REVENUECAT_SECRET_KEY WAITLIST_SECRET RESEND_API_KEY EMAIL_FROM; do
+  REVENUECAT_SECRET_KEY WAITLIST_SECRET RESEND_API_KEY EMAIL_FROM APPLE_TEAM_ID APPLE_SIGN_IN_KEY_ID APPLE_SIGN_IN_KEY; do
   [[ -n "${!name:-}" ]] && add_secret "$name" "${!name}"
 done
 
@@ -85,13 +85,16 @@ vault_set anon_key "$anon"
 run_sql "$(cat scripts/deploy/cron.sql)" >/dev/null
 run_sql "select jobname, schedule from cron.job order by jobname" | jq -r '.[] | "\(.jobname)  \(.schedule)"'
 
-echo "== Auth redirects and email code ($env)"
-# Apple and Google sign-in return to pickld://auth/callback. Email sign-in (the app and the console) sends a
-# 6-digit code that works for 10 minutes and no link (D-60), the same as otp_length and otp_expiry in
-# supabase/config.toml. Email is Supabase's built-in sender until an SMTP provider is chosen (runbook, "Later").
+echo "== Auth redirects, email code and Apple ($env)"
+# Email sign-in (the app and the console) sends a 6-digit code that works for 10 minutes and no link (D-60), the
+# same as otp_length and otp_expiry in supabase/config.toml; an older email link returns to pickld://auth/callback.
+# Email is Supabase's built-in sender until an SMTP provider is chosen (runbook, "Later"). Native Sign in with
+# Apple sends Auth an identity token for the app's bundle id, which needs no secret (config.toml, auth.external.apple).
 redirects="pickld://auth/callback"
 site="${WEB_URL:-https://pickld.me}"
+apple_ids="me.pickld.app"
 supabase_api PATCH "/projects/$SUPABASE_PROJECT_REF/config/auth" \
-  "$(jq -n --arg site "$site" --arg list "$redirects" \
-    '{site_url: $site, uri_allow_list: $list, mailer_otp_length: 6, mailer_otp_exp: 600}')" >/dev/null
-echo "site $site; redirects $redirects; email code 6 digits, 10 minutes"
+  "$(jq -n --arg site "$site" --arg list "$redirects" --arg apple "$apple_ids" \
+    '{site_url: $site, uri_allow_list: $list, mailer_otp_length: 6, mailer_otp_exp: 600,
+      external_apple_enabled: true, external_apple_client_id: $apple}')" >/dev/null
+echo "site $site; redirects $redirects; email code 6 digits, 10 minutes; Apple for $apple_ids"

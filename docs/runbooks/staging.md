@@ -74,7 +74,7 @@ Each step is a click in a dashboard; the agent does the rest.
 ## Known limits on staging
 
 - **Sign-in email uses Supabase's built-in sender.** It only delivers to addresses that are members of the Supabase organization, and a few emails an hour. Invite each tester to the Supabase organization (no project access needed beyond that) or wait for the SMTP step below.
-- **Apple and Google sign-in** need their credentials in Supabase Auth (#12); until then, email only.
+- **Sign in with Apple** works on iOS builds once the App ID `me.pickld.app` has the Sign in with Apple capability; `configure.sh` turns Apple on in Supabase Auth. There is no Google sign-in.
 - **App links** (`WEB_BASE_URL` in the app) still point at `https://pickld.me`, which is a placeholder today. Share cards and legal links open that placeholder until pickld.me serves `apps/web`.
 - **Free plan:** the project pauses after a week without traffic (Restore in the dashboard), and there are no downloadable daily backups. M1-28's "daily backups on" and the backup drill (docs/runbooks/backup-restore.md) need a paid plan, which waits for the founders.
 

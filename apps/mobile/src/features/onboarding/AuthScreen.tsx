@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { track } from '@/lib/analytics';
-import { AuthFlowError, openLegal, sendEmailCode, signInWithProvider } from '@/lib/auth';
+import { appleSignInAvailable, AuthFlowError, openLegal, sendEmailCode, signInWithApple } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
 import { JoinCodeCard, type JoinCode } from '@/features/invite/JoinCodeCard';
 import { fetchInvitePreview, inviteTokenFrom, usePendingInvite } from '@/features/invite/join';
@@ -62,7 +62,7 @@ export function useJoinCode(enabled: boolean) {
   return { code, paste };
 }
 
-/** Sign up / Sign in routes. Once a session exists (Apple, Google, or the emailed code) the app's index decides
+/** Sign up / Sign in routes. Once a session exists (Apple or the emailed code) the app's index decides
  * where to go: About you for a new account, Today otherwise. */
 export function AuthScreen({ mode }: { mode: AuthMode }) {
   const { t } = useTranslation();
@@ -74,6 +74,10 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   const [error, setError] = useState<string | null>(null);
   const signUp = mode === 'signUp';
   const { code, paste } = useJoinCode(signUp);
+  const [apple, setApple] = useState(false);
+  useEffect(() => {
+    void appleSignInAvailable().then(setApple);
+  }, []);
 
   if (status === 'signedIn') return <Redirect href="/" />;
 
@@ -82,7 +86,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
     setError(null);
     try {
       await work();
-      // Sign up is done once a provider signed in or the email code went out.
+      // Sign up is done once Apple signed in or the email code went out.
       if (mode === 'signUp') track('signup_step_completed', { step: 'sign_up' });
     } catch (e) {
       const kind = e instanceof AuthFlowError ? e.kind : 'failed';
@@ -104,7 +108,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
       busy={busy}
       error={error}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/welcome'))}
-      onProvider={(provider) => void run(() => signInWithProvider(provider))}
+      onApple={apple ? () => void run(signInWithApple) : null}
       onSubmitEmail={() =>
         void run(async () => {
           const sent = await sendEmailCode(email, mode);
