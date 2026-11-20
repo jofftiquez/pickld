@@ -481,13 +481,16 @@
     "placeholder": "Where was this?",
     "fieldHint": "Shows on the photo as you type",
     "fieldHintSelected": "Edits the selected place",
+    "usePhoto": "Use the photo’s location",
+    "usePhotoHint": "Fills in the town this photo was taken in. You can change the words",
     "useCurrent": "Use where I am",
     "useCurrentHint": "Fills in the town your phone is in. You can change the words",
     "looking": "Finding your town…",
     "denied": "Location is off for Pickld. Type the place instead, or turn it on in Settings.",
     "failed": "Couldn’t find your town. Type the place instead.",
+    "photoFailed": "Couldn’t find the town for this photo. Type the place instead.",
     "colors": "Place color",
-    "privacy": "Only the words on the sticker are saved. Pickld never saves where you are.",
+    "privacy": "Only the words on the sticker are saved. Pickld never saves a location.",
     "overlayLabel": "Place: {{text}}"
   },
   "editText": {

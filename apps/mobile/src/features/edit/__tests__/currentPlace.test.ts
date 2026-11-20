@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 
-import { lookUpCurrentPlace, placeName } from '../place/currentPlace';
+import { lookUpCurrentPlace, lookUpPhotoPlace, placeName } from '../place/currentPlace';
 
 jest.mock('expo-location', () => ({
   Accuracy: { Lowest: 1 },
@@ -50,5 +50,18 @@ describe('the place read from the phone', () => {
     mocked.requestForegroundPermissionsAsync.mockResolvedValue({ granted: true } as never);
     mocked.getCurrentPositionAsync.mockRejectedValue(new Error('no fix'));
     await expect(lookUpCurrentPlace()).resolves.toEqual({ kind: 'failed' });
+  });
+
+  it('the photo’s place geocodes its own coordinates on iOS without asking for location', async () => {
+    mocked.requestForegroundPermissionsAsync.mockClear();
+    mocked.getCurrentPositionAsync.mockClear();
+    mocked.reverseGeocodeAsync.mockResolvedValue([{ ...address, city: 'Sagada' }] as never);
+    await expect(lookUpPhotoPlace({ latitude: 17.08, longitude: 120.9 })).resolves.toEqual({
+      kind: 'found',
+      text: 'Sagada',
+    });
+    expect(mocked.reverseGeocodeAsync).toHaveBeenLastCalledWith({ latitude: 17.08, longitude: 120.9 });
+    expect(mocked.requestForegroundPermissionsAsync).not.toHaveBeenCalled();
+    expect(mocked.getCurrentPositionAsync).not.toHaveBeenCalled();
   });
 });

@@ -15,6 +15,8 @@ import { enqueue, type QueueItem } from '@/lib/queue/store';
 import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
+import { rememberPhotoPlace } from '@/features/edit/place/photoPlace';
+
 import type { FillTarget } from './fillTarget';
 
 export type OpenJar = { id: string; localDate: string; tz: string };
@@ -187,6 +189,9 @@ export type SaveGalleryPhotoInput = {
   crop: CropSpec | null;
   /** The owner's default visibility (D-48), if known; null leaves it to the server. */
   visibility?: Visibility | null;
+  /** The picked photo's EXIF: its coordinates, if any, stay in memory for the editor's Place tool
+   * (photoPlace.ts) and are never queued. */
+  exif?: unknown;
 };
 
 /**
@@ -195,5 +200,8 @@ export type SaveGalleryPhotoInput = {
  * Resolves once queued.
  */
 export async function saveGalleryPhoto(input: SaveGalleryPhotoInput): Promise<QueueItem> {
-  return queueRaw(input.uri, input);
+  const { exif, ...row } = input;
+  const item = await queueRaw(input.uri, row);
+  rememberPhotoPlace(item.id, exif);
+  return item;
 }

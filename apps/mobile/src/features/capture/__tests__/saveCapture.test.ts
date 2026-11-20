@@ -7,6 +7,8 @@ import { prepareItem } from '@/lib/queue/prepare';
 import { requestUploads } from '@/lib/queue/runner';
 import { enqueue } from '@/lib/queue/store';
 
+import { photoPlaceFor } from '@/features/edit/place/photoPlace';
+
 import { captureJarDate, galleryTarget, queueTarget, saveCapture, saveGalleryPhoto } from '../saveCapture';
 
 const mockLog: string[] = [];
@@ -331,5 +333,18 @@ describe('saveGalleryPhoto', () => {
     await expect(saveGalleryPhoto(gallery)).rejects.toThrow('disk full');
     expect(prepareItem).not.toHaveBeenCalled();
     expect(mockDeleted).toEqual([]);
+  });
+
+  it('keeps the photo’s coordinates in memory for the editor, never in the queue row', async () => {
+    const exif = {
+      DateTimeOriginal: '2026:11:08 19:30:00',
+      GPSLatitude: 16.4023,
+      GPSLatitudeRef: 'N',
+      GPSLongitude: 120.596,
+      GPSLongitudeRef: 'E',
+    };
+    const item = await saveGalleryPhoto({ ...gallery, exif });
+    expect(JSON.stringify(jest.mocked(enqueue).mock.calls[0]?.[0])).not.toMatch(/GPS|16\.40|120\.59|exif/);
+    expect(photoPlaceFor(item.id)).toEqual({ latitude: 16.4023, longitude: 120.596 });
   });
 });

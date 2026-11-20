@@ -138,7 +138,15 @@ export default function SharedPhotoScreen() {
         return;
       }
       const visibility = me?.defaultVisibility ?? null;
-      const item = await saveGalleryPhoto({ uri: copy.uri, slot, userId, target, crop: null, visibility });
+      const item = await saveGalleryPhoto({
+        uri: copy.uri,
+        slot,
+        userId,
+        target,
+        crop: null,
+        visibility,
+        exif: picked.exif,
+      });
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
       router.push({ pathname: '/edit/[momentId]', params: { momentId: String(item.id), via: 'share' } });
       setBusy(false);

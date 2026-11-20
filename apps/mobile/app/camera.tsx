@@ -228,7 +228,15 @@ function Camera() {
         return;
       }
       const visibility = me?.defaultVisibility ?? null;
-      const item = await saveGalleryPhoto({ uri: photo.uri, slot, userId, target, crop: null, visibility });
+      const item = await saveGalleryPhoto({
+        uri: photo.uri,
+        slot,
+        userId,
+        target,
+        crop: null,
+        visibility,
+        exif: photo.exif,
+      });
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
       router.replace(`/edit/${item.id}`);
     } catch (error) {

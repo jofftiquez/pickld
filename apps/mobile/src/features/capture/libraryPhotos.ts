@@ -79,16 +79,21 @@ export function chooseMorePhotos(): Promise<void> {
  * The chosen photo as a full-size file Pickld owns, for Crop and the queue: Photos' full-size image (with the
  * user's edits; downloaded from iCloud when needed) copied into the cache, never a `ph://` thumbnail. The
  * size is the photo's pixel size as shown, and the EXIF-style time comes from its date in Photos, the same
- * date the grid shows. Location never leaves the phone: the queue re-encodes without metadata (rule 5).
+ * date the grid shows, with Photos' location for the Place tool. Location never leaves the phone: the queue
+ * re-encodes without metadata (rule 5), and the coordinates stay in memory (photoPlace.ts).
  */
 export async function libraryPhotoFile(photo: LibraryPhoto, tz: string): Promise<PickedPhoto> {
-  const source = new File(await new Asset(photo.id).getUri());
+  const asset = new Asset(photo.id);
+  const source = new File(await asset.getUri());
   const copy = new File(Paths.cache, `gallery-${Date.now()}${source.extension}`);
   await source.copy(copy);
+  // Where Photos says it was taken, for the editor's Place tool only (photoPlace.ts keeps it in memory).
+  const location = await asset.getLocation().catch(() => null);
+  const time = photo.creationTime === null ? null : exifFromCreationTime(photo.creationTime, tz);
   return {
     uri: copy.uri,
     width: photo.width,
     height: photo.height,
-    exif: photo.creationTime === null ? null : exifFromCreationTime(photo.creationTime, tz),
+    exif: location ? { ...time, GPSLatitude: location.latitude, GPSLongitude: location.longitude } : time,
   };
 }

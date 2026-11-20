@@ -18,6 +18,7 @@ import type { PreparedPhoto } from '@/lib/image/pipeline';
 import type { Visibility } from '@/lib/visibility';
 
 import { EditSession } from './EditSession';
+import { forgetPhotoPlace, PhotoPlaceProvider, photoPlaceFor } from './place/photoPlace';
 
 export const queueItemQueryKey = (id: number) => ['queueItem', id] as const;
 
@@ -104,6 +105,7 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onAdded
   // never became a moment.
   const discard = async () => {
     notAdded.current = null;
+    forgetPhotoPlace(item.id);
     try {
       await discardItem(item.id);
     } catch (error) {
@@ -131,38 +133,44 @@ export function QueuedEditSession({ item, focusCaption, insets, onLeave, onAdded
     void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(item.userId) });
   };
 
+  // A picked or shared photo's own coordinates, kept in memory only, for the Place tool (photoPlace.ts).
+  const [photoPlace] = useState(() => photoPlaceFor(item.id));
+
   return (
-    <EditSession
-      photoUri={item.photoUri}
-      // Rotate, Flip and Crop work on the prepared 3:4 photo: off for the moment a just-taken one is prepared.
-      // A photo framed by Fit keeps only Flip: Rotate and a re-crop would cut its frame away.
-      photoTools={{ ready: item.prepared, framed: item.crop?.fit !== undefined, onCrop: (uri) => void openCrop(uri) }}
-      slot={item.slot}
-      shotAt={new Date(item.capturedAt ?? item.createdAt)}
-      tz={item.tz}
-      // D-156: a photo going into a past day's jar names that day, not its own shot date or Today.
-      forDay={pastDayLabel(item.localDate, new Date(), item.tz)}
-      initial={{ ...item, visibility: item.visibility ?? ownerDefault ?? 'readers' }}
-      saveLabel={isNew ? t('edit.addToSlot', { slot: t(`slots.${item.slot}`) }) : t('edit.done')}
-      focusCaption={focusCaption}
-      insets={insets}
-      onLeave={onLeave}
-      onAdded={isNew && onAdded ? () => onAdded(item.localDate, item.tz) : undefined}
-      onBack={onBack && (() => void back(onBack))}
-      unfinished={isNew ? { saveDraft, discard } : undefined}
-      onSave={async (input, photo) => {
-        // Without `draft`, a draft is finished here and uploads.
-        const saved = photo
-          ? await saveEdits(item.id, input, { photoUri: photo.full.uri, thumbUri: photo.thumb.uri })
-          : await saveEdits(item.id, input);
-        added(input.visibility);
-        // Reopening the editor starts from what was saved, not a cached copy from before.
-        queryClient.setQueryData(queueItemQueryKey(item.id), saved);
-        void requestUploads();
-        showToast(isNew ? (offline ? 'momentSavedOffline' : 'momentAdded') : 'changesSaved', {
-          slot: t(`slots.${item.slot}`),
-        });
-      }}
-    />
+    <PhotoPlaceProvider value={photoPlace}>
+      <EditSession
+        photoUri={item.photoUri}
+        // Rotate, Flip and Crop work on the prepared 3:4 photo: off for the moment a just-taken one is prepared.
+        // A photo framed by Fit keeps only Flip: Rotate and a re-crop would cut its frame away.
+        photoTools={{ ready: item.prepared, framed: item.crop?.fit !== undefined, onCrop: (uri) => void openCrop(uri) }}
+        slot={item.slot}
+        shotAt={new Date(item.capturedAt ?? item.createdAt)}
+        tz={item.tz}
+        // D-156: a photo going into a past day's jar names that day, not its own shot date or Today.
+        forDay={pastDayLabel(item.localDate, new Date(), item.tz)}
+        initial={{ ...item, visibility: item.visibility ?? ownerDefault ?? 'readers' }}
+        saveLabel={isNew ? t('edit.addToSlot', { slot: t(`slots.${item.slot}`) }) : t('edit.done')}
+        focusCaption={focusCaption}
+        insets={insets}
+        onLeave={onLeave}
+        onAdded={isNew && onAdded ? () => onAdded(item.localDate, item.tz) : undefined}
+        onBack={onBack && (() => void back(onBack))}
+        unfinished={isNew ? { saveDraft, discard } : undefined}
+        onSave={async (input, photo) => {
+          // Without `draft`, a draft is finished here and uploads.
+          const saved = photo
+            ? await saveEdits(item.id, input, { photoUri: photo.full.uri, thumbUri: photo.thumb.uri })
+            : await saveEdits(item.id, input);
+          added(input.visibility);
+          forgetPhotoPlace(item.id);
+          // Reopening the editor starts from what was saved, not a cached copy from before.
+          queryClient.setQueryData(queueItemQueryKey(item.id), saved);
+          void requestUploads();
+          showToast(isNew ? (offline ? 'momentSavedOffline' : 'momentAdded') : 'changesSaved', {
+            slot: t(`slots.${item.slot}`),
+          });
+        }}
+      />
+    </PhotoPlaceProvider>
   );
 }

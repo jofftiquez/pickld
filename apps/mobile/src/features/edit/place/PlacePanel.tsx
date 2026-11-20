@@ -10,7 +10,8 @@ import { bubble, colors, space } from '@/theme/tokens';
 import { BubbleSwatch } from '../bubble/BubbleSwatch';
 import { bubbleColorSchema, PLACE_TEXT_MAX, type BubbleColor, type Overlay, type Place } from '../edits';
 import { newOverlayId } from '../text/textOverlay';
-import { lookUpCurrentPlace, type PlaceLookup } from './currentPlace';
+import { lookUpCurrentPlace, lookUpPhotoPlace, type PlaceLookup } from './currentPlace';
+import { usePhotoPlace, type Coords } from './photoPlace';
 import { newPlaceScale, rescalePlace } from './placeLayout';
 
 export type PlacePanelProps = {
@@ -21,6 +22,8 @@ export type PlacePanelProps = {
   onUpdate: (id: string, update: (overlay: Overlay) => Overlay, group?: string) => void;
   /** The town the phone is in, asked only on "Use where I am" (tests pass a stand-in). */
   lookUp?: () => Promise<PlaceLookup>;
+  /** The town at the photo's own coordinates, asked only on "Use the photo's location" (tests pass a stand-in). */
+  lookUpPhoto?: (coords: Coords) => Promise<PlaceLookup>;
 };
 
 // Typing into one place is one Undo step until something else happens.
@@ -31,16 +34,24 @@ const NEW_PLACE = { x: 0.5, y: 0.82, rotation: 0 } as const;
 
 /**
  * The Place tool: a sticker that says where the photo was taken, only when the user adds one. They type
- * the place, or tap "Use where I am" to fill in the town the phone is in (asked then, never before), and
- * can change the words either way. Only the words on the sticker are saved, never the location.
+ * the place, tap "Use where I am" to fill in the town the phone is in (asked then, never before), or, for a
+ * picked or shared photo that carries coordinates, "Use the photo's location" (photoPlace.ts); they can
+ * change the words either way. Only the words on the sticker are saved, never the location.
  * With a place selected on the photo, the panel edits it; otherwise typing adds one.
  */
-export function PlacePanel({ selected, onAdd, onUpdate, lookUp = lookUpCurrentPlace }: PlacePanelProps) {
+export function PlacePanel({
+  selected,
+  onAdd,
+  onUpdate,
+  lookUp = lookUpCurrentPlace,
+  lookUpPhoto = lookUpPhotoPlace,
+}: PlacePanelProps) {
   const { t } = useTranslation();
+  const photoCoords = usePhotoPlace();
   const [nextColor, setNextColor] = useState<BubbleColor>('white');
   const color = selected?.color ?? nextColor;
-  const [looking, setLooking] = useState(false);
-  const [problem, setProblem] = useState<'denied' | 'failed' | null>(null);
+  const [looking, setLooking] = useState<'photo' | 'current' | null>(null);
+  const [problem, setProblem] = useState<'denied' | 'failed' | 'photoFailed' | null>(null);
   // The place the first keystroke added, until it comes back selected (fast typing, as in TextPanel).
   const justAdded = useRef<string | null>(null);
   useEffect(() => {
@@ -77,13 +88,13 @@ export function PlacePanel({ selected, onAdd, onUpdate, lookUp = lookUpCurrentPl
     if (trimmed === '') setDraft(selected.text);
     else if (trimmed !== selected.text) setText(selected.id, trimmed, typingGroup(selected.id));
   };
-  const fillFromLocation = async () => {
+  const fillFrom = async (source: 'photo' | 'current') => {
     setProblem(null);
-    setLooking(true);
-    const result = await lookUp();
-    setLooking(false);
+    setLooking(source);
+    const result = source === 'photo' && photoCoords ? await lookUpPhoto(photoCoords) : await lookUp();
+    setLooking(null);
     if (result.kind !== 'found') {
-      setProblem(result.kind);
+      setProblem(result.kind === 'failed' && source === 'photo' ? 'photoFailed' : result.kind);
       return;
     }
     if (selected) setText(selected.id, result.text);
@@ -109,11 +120,22 @@ export function PlacePanel({ selected, onAdd, onUpdate, lookUp = lookUpCurrentPl
         testID="place-text"
       />
       <View style={styles.row}>
+        {photoCoords ? (
+          <PillButton
+            label={looking === 'photo' ? t('editPlace.looking') : t('editPlace.usePhoto')}
+            accessibilityHint={t('editPlace.usePhotoHint')}
+            onPress={() => void fillFrom('photo')}
+            disabled={looking !== null}
+            icon="photo"
+            variant="subtle"
+            testID="place-use-photo"
+          />
+        ) : null}
         <PillButton
-          label={looking ? t('editPlace.looking') : t('editPlace.useCurrent')}
+          label={looking === 'current' ? t('editPlace.looking') : t('editPlace.useCurrent')}
           accessibilityHint={t('editPlace.useCurrentHint')}
-          onPress={() => void fillFromLocation()}
-          disabled={looking}
+          onPress={() => void fillFrom('current')}
+          disabled={looking !== null}
           icon="pin"
           variant="subtle"
           testID="place-use-current"
@@ -153,7 +175,7 @@ export function PlacePanel({ selected, onAdd, onUpdate, lookUp = lookUpCurrentPl
 
 const styles = StyleSheet.create({
   root: { gap: space.md + 2 },
-  row: { flexDirection: 'row' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   // 10 px between the label and the circles, as in the Bubble panel.
   colorRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10 - 4 * bubble.swatchRing },
   label: { minWidth: bubble.colorLabelWidth, color: colors.muted },

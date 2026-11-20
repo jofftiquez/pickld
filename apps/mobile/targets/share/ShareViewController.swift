@@ -79,6 +79,17 @@ final class ShareViewController: UIViewController {
         manifest["DateTimeOriginal"] = exif[kCGImagePropertyExifDateTimeOriginal] as? String
         manifest["OffsetTimeOriginal"] = exif[kCGImagePropertyExifOffsetTimeOriginal] as? String
       }
+      // Where it was taken, for the editor's "Use the photo's location" (photoPlace.ts): the app keeps it in
+      // memory only and deletes this file on reading it; the queued photo is re-encoded without location.
+      if let gps = props[kCGImagePropertyGPSDictionary] as? [CFString: Any],
+        let latitude = gps[kCGImagePropertyGPSLatitude] as? Double,
+        let longitude = gps[kCGImagePropertyGPSLongitude] as? Double
+      {
+        manifest["GPSLatitude"] = latitude
+        manifest["GPSLatitudeRef"] = gps[kCGImagePropertyGPSLatitudeRef] as? String
+        manifest["GPSLongitude"] = longitude
+        manifest["GPSLongitudeRef"] = gps[kCGImagePropertyGPSLongitudeRef] as? String
+      }
     }
     let data = try JSONSerialization.data(withJSONObject: manifest)
     try data.write(to: folder.appendingPathComponent("\(id).json"), options: .atomic)
