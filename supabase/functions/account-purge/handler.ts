@@ -11,7 +11,8 @@
 // (0023) checks again under a row lock, so a profile created in between still stops the delete.
 //
 // Order. The profile check, then the photos (every prefix the app uploads to: moments/, avatars/ and
-// covers/ under the caller's id; normally empty, swept anyway), then account_purge() deletes the auth user
+// covers/ under the caller's id; normally empty, swept anyway), their Sign in with Apple token is revoked
+// (_shared/apple.ts), then account_purge() deletes the auth user
 // and every auth row naming them in one transaction. A failure before that leaves the account signed in
 // and still eligible, so the app retries the same call; deleting a photo twice is harmless. After success
 // the JWT no longer resolves, so a repeat call answers 401.
@@ -21,6 +22,7 @@
 //   → { error: { code, message } }   401 signed out, 403 not_eligible, 405 method
 import type { SupabaseClient } from '../_shared/deps.ts';
 import { bearerToken, fail, ok } from '../_shared/http.ts';
+import { revokeAppleToken } from '../_shared/apple.ts';
 import { deletePrefix } from '../_shared/bucket.ts';
 import { userPrefixes } from '../_shared/object_keys.ts';
 import type { S3Config } from '../_shared/sigv4.ts';
@@ -70,6 +72,7 @@ export function serviceStore(db: SupabaseClient, s3: S3Config): PurgeStore {
     },
     deletePrefix: (prefix) => deletePrefix(s3, prefix),
     async purgeAccount(userId) {
+      await revokeAppleToken(db, userId);
       const { data, error } = await db.rpc('account_purge', { p_user: userId });
       if (error) throw new Error(`account_purge: ${error.code}`);
       return data === true;

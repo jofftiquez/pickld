@@ -12,7 +12,7 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
 import { onboardingPhotos, type OnboardingPhoto } from './photos';
-import { ProviderButton } from './ProviderButton';
+import { AppleButton } from './AppleButton';
 
 export type AuthMode = 'signUp' | 'signIn';
 
@@ -42,7 +42,8 @@ export type AuthViewProps = {
   /** Translated error under the email field. */
   error: string | null;
   onBack: () => void;
-  onProvider: (provider: 'apple' | 'google') => void;
+  /** Sign in with Apple; null where it isn't available (Android), which leaves email only. */
+  onApple: (() => void) | null;
   onSubmitEmail: () => void;
   /** Sign up ↔ Sign in. */
   onSwitchMode: () => void;
@@ -53,7 +54,7 @@ export type AuthViewProps = {
   showFan?: boolean;
 };
 
-/** Sign up and Sign in (FR-ACC-01, FR-ACC-02, FR-PRV-04): Apple, Google, or a 6-digit email code. */
+/** Sign up and Sign in (FR-ACC-01, FR-ACC-02, FR-PRV-04): Apple (iOS) or a 6-digit email code. */
 export function AuthView({
   mode,
   insets,
@@ -62,7 +63,7 @@ export function AuthView({
   busy,
   error,
   onBack,
-  onProvider,
+  onApple,
   onSubmitEmail,
   onSwitchMode,
   onLegal,
@@ -106,29 +107,18 @@ export function AuthView({
           {t(`${k}.title`)}
         </Text>
         {codeCard ?? <Text style={[textStyle('body'), styles.body]}>{t(`${k}.body`)}</Text>}
-        <View style={styles.providers}>
-          <ProviderButton
-            provider="apple"
-            label={t(`${k}.apple`)}
-            showMark={mode === 'signUp'}
-            disabled={busy}
-            onPress={() => onProvider('apple')}
-            testID="auth-apple"
-          />
-          <ProviderButton
-            provider="google"
-            label={t(`${k}.google`)}
-            showMark={mode === 'signUp'}
-            disabled={busy}
-            onPress={() => onProvider('google')}
-            testID="auth-google"
-          />
-        </View>
-        <View style={styles.or} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <View style={styles.rule} />
-          <Text style={[textStyle('bodyMedium'), { color: colors.muted }]}>{t('auth.or')}</Text>
-          <View style={styles.rule} />
-        </View>
+        {onApple ? (
+          <>
+            <View style={styles.providers}>
+              <AppleButton label={t(`${k}.apple`)} disabled={busy} onPress={onApple} testID="auth-apple" />
+            </View>
+            <View style={styles.or} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <View style={styles.rule} />
+              <Text style={[textStyle('bodyMedium'), { color: colors.muted }]}>{t('auth.or')}</Text>
+              <View style={styles.rule} />
+            </View>
+          </>
+        ) : null}
         <TextField
           label={t('auth.email')}
           value={email}

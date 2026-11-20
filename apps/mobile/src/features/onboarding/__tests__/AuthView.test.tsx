@@ -14,7 +14,7 @@ function setup(props: Partial<AuthViewProps>) {
     busy: false,
     error: null,
     onBack: jest.fn(),
-    onProvider: jest.fn(),
+    onApple: jest.fn(),
     onSubmitEmail,
     onSwitchMode: jest.fn(),
     onLegal: jest.fn(),

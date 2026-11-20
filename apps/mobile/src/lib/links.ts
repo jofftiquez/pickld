@@ -54,7 +54,7 @@ export type IncomingLink =
  *   /<username>, /u/<username>  → /u/<username>
  *   /j/<id>                     → /jar/<id>
  *   /i/<code or link id>        → /i/<token> (an invite, INV-06)
- *   /auth/callback?…            → /auth/callback?… (Apple and Google sign-in)
+ *   /auth/callback?…            → /auth/callback?… (an older email sign-in link)
  * Anything else on pickld.me is unknown; legal pages open in the browser.
  */
 export function incomingLink(raw: string): IncomingLink {

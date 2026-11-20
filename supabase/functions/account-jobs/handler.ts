@@ -24,8 +24,9 @@
 //           next run. Then the zip is built from them, the job is marked done with its key, and that folder
 //           is deleted. fn:data-export signs links to the zip.
 //   delete  Every object under the person's prefixes (moments/, avatars/, covers/ and exports/ under
-//           their id; never seed/), then account_delete_purge(): the auth user and every row keyed to
-//           them (the job row too) are deleted. It refuses an account whose profile isn't 'deleted'.
+//           their id; never seed/), then their Sign in with Apple token is revoked (_shared/apple.ts), then
+//           account_delete_purge(): the auth user and every row keyed to them (the job row too) are deleted.
+//           It refuses an account whose profile isn't 'deleted'.
 //
 // A failure puts the job back for another try in 10 minutes, and fails it after the third attempt
 // (account_job_fail). Messages name only the step and a status code, never a key or personal data.
@@ -37,6 +38,7 @@
 //   → { data: { claimed, done, failed, waiting (handed back to draw more), lifted, admitted } }
 //   → { error: { code, message } }   401 wrong secret, 405 method
 import type { SupabaseClient } from '../_shared/deps.ts';
+import { revokeAppleToken } from '../_shared/apple.ts';
 import { deletePrefix, getObject, listAllKeys, MultipartUpload, putObject } from '../_shared/bucket.ts';
 import { fail, ok } from '../_shared/http.ts';
 import {
@@ -417,6 +419,7 @@ export function serviceStore(db: SupabaseClient, s3: S3Config, partSize?: number
       return { profile: profile as ExportProfile, moments, invites: await exportInvites(db, userId) };
     },
     async purgeAccount(userId) {
+      await revokeAppleToken(db, userId);
       const { data, error } = await db.rpc('account_delete_purge', { p_user: userId });
       if (error) throw new Error(`account_delete_purge: ${error.code}`);
       return data === true;

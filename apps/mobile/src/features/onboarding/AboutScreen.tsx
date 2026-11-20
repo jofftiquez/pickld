@@ -46,10 +46,14 @@ export function AboutScreen() {
   const session = useAuthStore((s) => s.session);
   const userId = session?.user.id;
   const [today] = useState(todayYMD);
-  const [form, setForm] = useState<AboutForm>(() => {
-    const name = session?.user.user_metadata?.full_name;
-    return emptyAbout(typeof name === 'string' ? name.slice(0, 40) : '');
-  });
+  const [form, setForm] = useState<AboutForm>(() => emptyAbout(''));
+  // The name from Sign in with Apple, which can land just after this screen opens; never over what was typed.
+  const metaName = session?.user.user_metadata?.full_name;
+  const [seenName, setSeenName] = useState<unknown>(undefined);
+  if (metaName !== seenName) {
+    setSeenName(metaName);
+    if (typeof metaName === 'string' && !form.displayName) setForm({ ...form, displayName: metaName.slice(0, 40) });
+  }
   const [photo, setPhoto] = useState<PreparedImage | null>(null);
   // The new profile's status once saved: waiting during early access, else active.
   const [saved, setSaved] = useState<ProfileStatus | null>(null);

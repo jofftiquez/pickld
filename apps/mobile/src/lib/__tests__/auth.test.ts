@@ -1,16 +1,38 @@
-import { AuthFlowError, parseCallback, resendSecondsLeft, sendEmailCode, verifyEmailCode } from '../auth';
+import {
+  AuthFlowError,
+  parseCallback,
+  resendSecondsLeft,
+  sendEmailCode,
+  signInWithApple,
+  verifyEmailCode,
+} from '../auth';
+import { sha256Hex } from '../contactHash';
 
 const mockSignInWithOtp = jest.fn();
 const mockVerifyOtp = jest.fn();
+const mockSignInWithIdToken = jest.fn();
+const mockUpdateUser = jest.fn();
+const mockInvoke = jest.fn();
 jest.mock('../supabase', () => ({
   getSupabase: () => ({
     auth: {
       signInWithOtp: (args: unknown) => mockSignInWithOtp(args),
       verifyOtp: (args: unknown) => mockVerifyOtp(args),
+      signInWithIdToken: (args: unknown) => mockSignInWithIdToken(args),
+      updateUser: (args: unknown) => mockUpdateUser(args),
     },
+    functions: { invoke: (name: string, args: unknown) => mockInvoke(name, args) },
   }),
 }));
 jest.mock('expo-web-browser', () => ({}));
+jest.mock('expo-application', () => ({ applicationId: 'me.pickld.app' }));
+const mockAppleSignIn = jest.fn();
+jest.mock('expo-apple-authentication', () => ({
+  signInAsync: (args: unknown) => mockAppleSignIn(args),
+  formatFullName: (n: { givenName: string | null; familyName: string | null }) =>
+    [n.givenName, n.familyName].filter(Boolean).join(' '),
+  AppleAuthenticationScope: { FULL_NAME: 0, EMAIL: 1 },
+}));
 
 describe('resendSecondsLeft', () => {
   it.each([
@@ -96,5 +118,52 @@ describe('verifyEmailCode', () => {
     await expect(verifyEmailCode('dale@pickld.test', '123456', sentAt, sentAt + elapsed)).rejects.toEqual(
       new AuthFlowError(kind),
     );
+  });
+});
+
+describe('signInWithApple', () => {
+  beforeEach(() => {
+    mockAppleSignIn.mockReset();
+    mockSignInWithIdToken.mockReset().mockResolvedValue({ error: null });
+    mockUpdateUser.mockReset().mockResolvedValue({ error: null });
+    mockInvoke.mockReset().mockResolvedValue({ data: { stored: true }, error: null });
+  });
+
+  it('gives Apple the hashed nonce and Supabase the raw one, then keeps the first-time name', async () => {
+    mockAppleSignIn.mockResolvedValue({
+      identityToken: 'id-token',
+      authorizationCode: 'auth-code',
+      fullName: { givenName: 'Dale', familyName: 'Cruz' },
+    });
+    await signInWithApple();
+    const { nonce: hashed } = mockAppleSignIn.mock.calls[0][0] as { nonce: string };
+    const sent = mockSignInWithIdToken.mock.calls[0][0] as { provider: string; token: string; nonce: string };
+    expect(sent.provider).toBe('apple');
+    expect(sent.token).toBe('id-token');
+    expect(sent.nonce).not.toBe(hashed);
+    expect(sha256Hex(sent.nonce)).toBe(hashed);
+    expect(mockUpdateUser).toHaveBeenCalledWith({ data: { full_name: 'Dale Cruz' } });
+    expect(mockInvoke).toHaveBeenCalledWith('apple-token', { body: { code: 'auth-code', clientId: 'me.pickld.app' } });
+  });
+
+  it('leaves the name alone when Apple doesn’t share it (every sign-in after the first)', async () => {
+    mockAppleSignIn.mockResolvedValue({ identityToken: 'id-token', fullName: { givenName: null, familyName: null } });
+    await signInWithApple();
+    expect(mockUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('tells a cancelled sheet from a failure, and never reaches Supabase for either', async () => {
+    mockAppleSignIn.mockRejectedValueOnce(Object.assign(new Error('x'), { code: 'ERR_REQUEST_CANCELED' }));
+    await expect(signInWithApple()).rejects.toEqual(new AuthFlowError('cancelled'));
+    mockAppleSignIn.mockRejectedValueOnce(Object.assign(new Error('x'), { code: 'ERR_REQUEST_UNKNOWN' }));
+    await expect(signInWithApple()).rejects.toEqual(new AuthFlowError('failed'));
+    expect(mockSignInWithIdToken).not.toHaveBeenCalled();
+  });
+
+  it('fails when Supabase refuses the token', async () => {
+    mockAppleSignIn.mockResolvedValue({ identityToken: 'id-token', fullName: null });
+    mockSignInWithIdToken.mockResolvedValue({ error: { status: 400, message: 'Provider is not enabled' } });
+    await expect(signInWithApple()).rejects.toEqual(new AuthFlowError('failed'));
+    expect(mockInvoke).not.toHaveBeenCalled();
   });
 });

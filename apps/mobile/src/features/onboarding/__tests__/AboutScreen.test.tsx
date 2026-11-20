@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 
 import type { AboutViewProps } from '../AboutView';
 import { AboutScreen } from '../AboutScreen';
@@ -116,6 +116,21 @@ describe('About you', () => {
     expect(mockSaveStep).toHaveBeenCalledWith('u-1', '/setup/day');
     expect(mockReplace).toHaveBeenCalledWith('/setup/day');
     expect(jest.mocked(track).mock.calls).toEqual([['signup_step_completed', { step: 'about' }]]);
+  });
+
+  it('fills in the name Sign in with Apple saves just after the screen opens, never over a typed one', async () => {
+    const appleSession = { user: { id: 'u-1', user_metadata: { full_name: 'Dale Cruz' } } } as unknown as Session;
+    await render(<AboutScreen />);
+    expect(props().form.displayName).toBe('');
+    await act(async () => useAuthStore.getState().setSession(appleSession));
+    expect(props().form.displayName).toBe('Dale Cruz');
+
+    await screen.unmount();
+    useAuthStore.getState().setSession({ user: { id: 'u-1', user_metadata: {} } } as unknown as Session);
+    await render(<AboutScreen />);
+    await act(async () => props().onChange({ displayName: 'Dee' }));
+    await act(async () => useAuthStore.getState().setSession(appleSession));
+    expect(props().form.displayName).toBe('Dee');
   });
 
   it('a username taken meanwhile is reported and nothing moves on', async () => {

@@ -22,11 +22,6 @@ export const colors = {
   chevron: '#8b9184', // row chevrons (Settings); icon only, 3.3:1 on white meets the 3:1 non-text minimum
   danger: '#b42318',
   dangerTint: '#fdeceb',
-  // Google's four-color G on Continue with Google (Sign up); brand mark colors, used nowhere else.
-  googleBlue: '#4285f4',
-  googleGreen: '#34a853',
-  googleYellow: '#fbbc05',
-  googleRed: '#ea4335',
   likeText: '#a01d14',
   scrim: 'rgba(10,12,8,0.55)',
   glass: 'rgba(10,12,8,0.45)', // controls over photos (with blur)

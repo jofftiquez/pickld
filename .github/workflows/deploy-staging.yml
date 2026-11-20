@@ -38,6 +38,7 @@ jobs:
       ANDROID_CERT_SHA256: ${{ vars.ANDROID_CERT_SHA256 }}
       OPENAI_VISION_MODEL: ${{ vars.OPENAI_VISION_MODEL }}
       EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+      APPLE_SIGN_IN_KEY_ID: ${{ vars.APPLE_SIGN_IN_KEY_ID }}
       # Secrets
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -52,6 +53,7 @@ jobs:
       REVENUECAT_SECRET_KEY: ${{ secrets.REVENUECAT_SECRET_KEY }}
       WAITLIST_SECRET: ${{ secrets.WAITLIST_SECRET }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      APPLE_SIGN_IN_KEY: ${{ secrets.APPLE_SIGN_IN_KEY }}
     steps:
       - name: Staging configured?
         id: ready

@@ -131,6 +131,28 @@ export type Database = {
           },
         ];
       };
+      apple_tokens: {
+        Row: {
+          client_id: string;
+          refresh_token: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_id: string;
+          refresh_token: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          client_id?: string;
+          refresh_token?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       audit_log: {
         Row: {
           action: string;
