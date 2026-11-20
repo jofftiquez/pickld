@@ -1,0 +1,68 @@
+# FR-SOC-07: mute an author you read. dale mutes mika from her profile: he still reads her, her profile says
+# Muted, and her jar leaves his Jars feed; unmuting brings it back.
+# Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
+# maestro test apps/mobile/.maestro/mute.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 60000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- openLink: pickld://u/mika
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: profile-mute
+    timeout: 20000
+- tapOn:
+    id: profile-mute
+- extendedWaitUntil:
+    visible:
+      id: profile-muted
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ProfileMuted-ios
+- tapOn:
+    id: profile-back
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    notVisible:
+      id: feed-card-mika
+    timeout: 20000
+- openLink: pickld://u/mika
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: profile-muted
+    timeout: 20000
+- tapOn:
+    id: profile-mute
+- extendedWaitUntil:
+    notVisible:
+      id: profile-muted
+    timeout: 10000
+- tapOn:
+    id: profile-back
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000

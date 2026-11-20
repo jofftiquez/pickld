@@ -1,0 +1,83 @@
+# INV-06 (FR-INV-01, FR-INV-02): with the invite gate on, sign up with no code → setup → Waiting (place in line,
+# end date) → a code that doesn't work keeps you waiting → a friend's code lets you in, and you read each other.
+# Turn the gate on first (local only; INV-02 runbook), and off again afterwards:
+#   update app_settings set invite_period_ends_at = now() + interval '30 days';
+#   maestro test -e ANON_KEY=$(npx supabase status -o json | jq -r .ANON_KEY) apps/mobile/.maestro/invite-waiting.yaml
+# Uses one of dale's unused codes (invite-code.js). Starts signed out; ends signed in as the new account. Run it
+# before invite-link.yaml: a code kept on the phone from an unfinished invite link is used at About you.
+appId: me.pickld.app
+env:
+  INVITER: dale@pickld.test
+---
+- launchApp:
+    permissions:
+      camera: allow
+      notifications: unset
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 60000
+- tapOn:
+    id: welcome-get-started
+- tapOn:
+    id: intro-skip
+- runFlow: sign-up-new.yaml
+- runFlow: setup-finish.yaml
+- extendedWaitUntil:
+    visible:
+      id: waiting
+    timeout: 30000
+- assertVisible: You’re on the list
+# Place in line and the end date load a moment after the screen.
+- extendedWaitUntil:
+    visible:
+      id: waiting-position
+    timeout: 20000
+- assertVisible: '.*early access ends on.*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Waiting-ios
+# A code that doesn't work: the field says so and the account keeps waiting.
+- tapOn:
+    id: waiting-code
+- inputText: ZZZZZZ
+# The keyboard covers Get in once the code is typed.
+- hideKeyboard
+- tapOn:
+    id: waiting-get-in
+- extendedWaitUntil:
+    visible: That code doesn’t work
+    timeout: 15000
+- assertVisible:
+    id: waiting
+- takeScreenshot: WaitingBadCode-ios
+# A friend's code: in at once, and the toast says you read each other.
+- runScript:
+    file: invite-code.js
+    env:
+      INVITER: ${INVITER}
+      ANON_KEY: ${ANON_KEY}
+- tapOn:
+    id: waiting-code
+- eraseText: 6
+- inputText: ${output.inviteCode}
+- hideKeyboard
+- tapOn:
+    id: waiting-get-in
+# The toast can sit under the first moment tip that opens on Today; Today itself is the check.
+- assertVisible:
+    text: '.*read each other.*'
+    optional: true
+# In: Today opens with its first moment tip.
+- extendedWaitUntil:
+    visible:
+      id: first-tip
+    timeout: 30000
+- assertNotVisible:
+    id: waiting

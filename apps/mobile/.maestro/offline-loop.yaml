@@ -14,6 +14,14 @@
 # /dev/sign-in). Today's jar has SLOT empty (evening, ootd, whoamiwith and afternoon are). To run again:
 # supabase db reset. If a run stops halfway, open pickld://dev/network?offline=0 (or erase the app's data).
 appId: me.pickld.app
+# Back online even when a step fails, so a half-run doesn't leave later flows offline.
+onFlowComplete:
+  - openLink: pickld://dev/network?offline=0
+  - runFlow:
+      when:
+        visible: Open
+      commands:
+        - tapOn: Open
 ---
 # Default SLOT here, not in env: (a flow's env: overrides `maestro test -e` in Maestro 2.12).
 - evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'evening'}"
@@ -116,19 +124,20 @@ appId: me.pickld.app
     text: Open
     optional: true
 - extendedWaitUntil:
-    visible:
+    notVisible:
       id: tile-${output.slot}
-      text: '#${output.slot}, .*(uploading|checking|added).*'
+      text: '#${output.slot}, .*waiting for connection.*'
     timeout: 30000
 - extendedWaitUntil:
     notVisible:
       id: offline-banner
     timeout: 30000
-# Live: a filled tile reads "added" (fn:moderate auto-approves in the early version, D-22).
+# Live: the tile reads its time and who sees it, with no upload state (fn:moderate auto-approves in the early
+# version, D-22).
 - extendedWaitUntil:
     visible:
       id: tile-${output.slot}
-      text: '#${output.slot}, .*added.*'
+      text: '#${output.slot}, [^,]+, (readers can see it|everyone can see it|private)'
     timeout: 45000
 - waitForAnimationToEnd:
     timeout: 5000

@@ -1,0 +1,60 @@
+# FR-STK-07: the sticker shop and buying a pack with the local dev store (APP_ENV=local, no RevenueCat key:
+# every pack costs ₱49 and buying always succeeds; fn:store-sync records it). Opens the shop from Today's sticker
+# button, searches "fish moods", opens Fish Moods, buys it, and the pack then says it's yours; My stickers lists it.
+# Needs dale signed in, not owning Fish Moods (seed data): maestro test apps/mobile/.maestro/sticker-shop.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- openLink: pickld://stickers/shop
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: sticker-shop
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: StickerShop-ios
+- tapOn:
+    id: sticker-shop-search
+- inputText: fish moods
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: sticker-shop-pack-fish-moods
+    timeout: 10000
+- tapOn:
+    id: sticker-shop-pack-fish-moods
+- extendedWaitUntil:
+    visible:
+      id: pack-preview-buy
+    timeout: 20000
+- assertVisible: 'Get Fish Moods · .*'
+- takeScreenshot: PackPreview-ios
+- tapOn:
+    id: pack-preview-buy
+- extendedWaitUntil:
+    visible: You have this pack. Find it in the Stickers tool.
+    timeout: 20000
+- takeScreenshot: PackOwned-ios
+- openLink: pickld://stickers/mine
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: my-stickers-list
+    timeout: 20000
+# The row reads as one label ("Fish Moods, Bought …"), so match it as a pattern.
+- extendedWaitUntil:
+    visible: '.*Fish Moods.*'
+    timeout: 10000

@@ -1,0 +1,61 @@
+# FR-SET-01, FR-SET-02, FR-EXP-03: Settings. The version line at the bottom, Show me in Discover switched off
+# and on again, and Help with its FAQ search.
+# Needs dale signed in: maestro test apps/mobile/.maestro/settings.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- openLink: pickld://settings
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: settings-screen
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Settings-ios
+- scrollUntilVisible:
+    element:
+      id: settings-discoverable
+    direction: DOWN
+- tapOn:
+    id: settings-discoverable
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: SettingsDiscoverOff-ios
+- tapOn:
+    id: settings-discoverable
+- scrollUntilVisible:
+    element:
+      text: 'Pickld 2\.0\.0-dev\.\d+'
+    direction: DOWN
+- takeScreenshot: SettingsVersion-ios
+- scrollUntilVisible:
+    element:
+      id: settings-help
+    direction: UP
+- tapOn:
+    id: settings-help
+- extendedWaitUntil:
+    visible:
+      id: help-screen
+    timeout: 10000
+- tapOn:
+    id: help-faq-0
+- assertVisible:
+    id: help-faq-0-answer
+- tapOn:
+    id: help-search
+- inputText: feed
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: HelpSearch-ios
+- assertNotVisible:
+    id: help-no-results

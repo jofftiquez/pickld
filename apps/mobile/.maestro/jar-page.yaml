@@ -1,5 +1,5 @@
 # M3-07: a feed card opens the author's Jar page (design: Story) with its plain header, Full jar tag, 2 by 4 grid (D-97) and
-# the like, comment and Share jar bar; Back returns to the feed.
+# the like and comment bar (no Share jar: only the owner shares, D-83); Back returns to the feed.
 # Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
 # maestro test apps/mobile/.maestro/jar-page.yaml
 appId: me.pickld.app
@@ -32,7 +32,8 @@ appId: me.pickld.app
     text: .*8 of 8 moments
 - assertVisible:
     id: jar-bar
-- assertVisible:
+# Only the owner shares a jar (D-83).
+- assertNotVisible:
     id: jar-share
 # Let the photos arrive before the screenshot.
 - waitForAnimationToEnd:

@@ -1,0 +1,47 @@
+# Subflow for the invite flows: the setup steps after About you with the fewest taps (Your day: Early bird;
+# Your people: one pick; Pick your jar: Mango; Permissions and Find friends: Continue; the Promise: hold).
+# Run it through runFlow with Your day on screen. Afterwards the app opens Waiting or Today.
+appId: me.pickld.app
+---
+- extendedWaitUntil:
+    visible:
+      id: day-screen
+    timeout: 20000
+- tapOn:
+    id: day-early_bird
+- tapOn:
+    id: day-continue
+- extendedWaitUntil:
+    visible:
+      id: people-screen
+    timeout: 20000
+- tapOn:
+    id: people-whoamiwith-family
+- tapOn:
+    id: people-continue
+- extendedWaitUntil:
+    visible:
+      id: jar-lid-screen
+    timeout: 20000
+- tapOn:
+    id: jar-lid-mango
+- tapOn:
+    id: jar-lid-continue
+- extendedWaitUntil:
+    visible:
+      id: permissions-screen
+    timeout: 20000
+- tapOn:
+    id: permissions-continue
+- extendedWaitUntil:
+    visible:
+      id: friends-screen
+    timeout: 20000
+- tapOn:
+    id: friends-continue
+- extendedWaitUntil:
+    visible:
+      id: promise-screen
+    timeout: 20000
+- longPressOn:
+    id: promise-hold

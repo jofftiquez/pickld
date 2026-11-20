@@ -1,7 +1,8 @@
-# M4-11 (FR-SOC-10): Share jar on mika's Jar page opens the Share jar card (design: ShareCard): 9:16 card with
-# author, date, the moments, last caption, logo and pickld.me/mika. Include captions toggles the caption,
-# Copy link copies, and Save image saves the rendered card to Photos.
-# Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
+# M4-11 (FR-SOC-10): Share jar on dale's own Jar page opens the Share jar card (design: ShareCard): 9:16 card
+# with author, date, the moments, last caption, logo and pickld.me/dale. A background swatch restyles it,
+# Include captions (in the Options sheet) toggles the caption, Copy link copies, and Save image saves the
+# rendered card to Photos. Only the owner shares a jar (D-83).
+# Needs the seed data (dale's full, published jar from yesterday) and dale signed in:
 # maestro test apps/mobile/.maestro/share-card.yaml
 appId: me.pickld.app
 ---
@@ -16,14 +17,12 @@ appId: me.pickld.app
     notVisible:
       id: splash-overlay
     timeout: 10000
-- tapOn:
-    id: tab-jars
-- extendedWaitUntil:
-    visible:
-      id: feed-card-mika
-    timeout: 40000
-- tapOn:
-    id: feed-card-mika
+- openLink: pickld://jar/b0000000-0000-4000-8000-000000000102
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
 - extendedWaitUntil:
     visible:
       id: jar-share
@@ -39,6 +38,19 @@ appId: me.pickld.app
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: ShareCard-ios
+# A background swatch restyles the card.
+- tapOn:
+    id: share-bg-ink
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: ShareCardInk-ios
+# Include captions sits in the Options sheet.
+- tapOn:
+    id: share-options
+- extendedWaitUntil:
+    visible:
+      id: share-captions
+    timeout: 5000
 - tapOn:
     id: share-captions
 - waitForAnimationToEnd:
@@ -46,6 +58,11 @@ appId: me.pickld.app
 - takeScreenshot: ShareCardNoCaption-ios
 - tapOn:
     id: share-captions
+# Close the sheet by tapping the dimmed card above it.
+- tapOn:
+    point: 50%,25%
+- waitForAnimationToEnd:
+    timeout: 2000
 - tapOn:
     id: share-copy
 - extendedWaitUntil:

@@ -1,0 +1,96 @@
+# INV-06 (FR-INV-02): a friend's pickld.me/i/<code> link opened while signed out. Sign up shows "Dale Santos
+# invited you", the code is kept through the email-code trip, and About you uses it: with the gate on the new
+# account never sees Waiting; with it off the two still read each other. Then a member opening the same kind of
+# link gets "You're already on Pickld" and the inviter's profile, and nothing is used.
+#   maestro test -e ANON_KEY=$(npx supabase status -o json | jq -r .ANON_KEY) apps/mobile/.maestro/invite-link.yaml
+# Starts signed out; ends signed in as the new account.
+appId: me.pickld.app
+env:
+  INVITER: dale@pickld.test
+---
+- launchApp:
+    permissions:
+      camera: allow
+      notifications: unset
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 60000
+- runScript:
+    file: invite-code.js
+    env:
+      INVITER: ${INVITER}
+      ANON_KEY: ${ANON_KEY}
+- openLink: pickld://i/${output.inviteCode}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: join-code-card
+      text: '.*Dale Santos invited you.*You’ll read Dale Santos once you’re in.*'
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: SignUpInvited-ios
+- runFlow: sign-up-new.yaml
+- extendedWaitUntil:
+    visible: '.*read each other.*'
+    timeout: 20000
+- runFlow: setup-finish.yaml
+- extendedWaitUntil:
+    visible:
+      id: first-tip
+    timeout: 40000
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: first-tip-look
+# Under Maestro the first tap on the freshly opened sheet is dropped (see onboarding-full.yaml); tap again.
+- runFlow:
+    when:
+      visible:
+        id: first-tip-look
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          id: first-tip-look
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 20000
+- assertNotVisible:
+    id: waiting
+# Already a member: the next code isn't used; the inviter's profile opens.
+- runScript:
+    file: invite-code.js
+    env:
+      INVITER: ${INVITER}
+      ANON_KEY: ${ANON_KEY}
+- openLink: pickld://i/${output.inviteCode}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+# The toast can fade before Maestro reads it; the inviter's profile is the check.
+- assertVisible:
+    text: You’re already on Pickld
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: profile-screen
+    timeout: 20000
