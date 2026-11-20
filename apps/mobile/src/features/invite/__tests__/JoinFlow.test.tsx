@@ -54,12 +54,15 @@ const mockProfile = { status: 'active' as string | null, birthday: '1990-03-14' 
 jest.mock('@/lib/supabase', () => ({
   getSupabase: () => ({
     functions: { invoke: (...a: unknown[]) => mockInvoke(...a) },
-    rpc: (...a: unknown[]) => mockRpc(...a),
+    // my_profile() is the only way to read your own birthday (column grants).
+    rpc: (name: string, ...a: unknown[]) =>
+      name === 'my_profile'
+        ? { select: () => ({ single: async () => ({ data: { birthday: mockProfile.birthday }, error: null }) }) }
+        : mockRpc(name, ...a),
     from: () => ({
       select: () => ({
         eq: () => ({
           maybeSingle: async () => ({ data: mockProfile.status ? { status: mockProfile.status } : null, error: null }),
-          single: async () => ({ data: { birthday: mockProfile.birthday }, error: null }),
         }),
       }),
     }),

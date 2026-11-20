@@ -35,7 +35,8 @@ export function WaitingScreen() {
     queryFn: async () => {
       const [position, profile, endsAt] = await Promise.all([
         getSupabase().rpc('waiting_position'),
-        getSupabase().from('profiles').select('birthday').eq('id', userId!).single(),
+        // The birthday is readable only through my_profile() (column grants, 0001).
+        getSupabase().rpc('my_profile').select('birthday').single(),
         getSupabase().rpc('invite_period_ends_at'),
       ]);
       if (position.error) throw position.error;
