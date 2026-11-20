@@ -540,6 +540,7 @@
     "letIn": {
       "title": "Let people in early",
       "body": "{{count}} accounts are waiting. Let the oldest in now; each gets a push.",
+      "howMany": "How many",
       "button": "Let in the oldest {{count}}",
       "founders": "Founders only.",
       "done_one": "Let {{count}} person in.",
