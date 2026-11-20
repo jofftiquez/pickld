@@ -1,4 +1,5 @@
-# M3-06: someone who reads nobody sees "Your feed is quiet" on the Jars tab.
+# M3-06: someone who reads nobody sees "Read a few friends' days" with Find people and Invite friends on the Jars
+# tab, above their own jars (lola has one).
 # Needs the seed data (lola reads nobody) and lola signed in:
 # maestro test apps/mobile/.maestro/jars-empty.yaml
 appId: me.pickld.app
@@ -16,9 +17,9 @@ appId: me.pickld.app
     id: tab-jars
 - extendedWaitUntil:
     visible:
-      id: feed-empty
+      id: feed-find-people-card
     timeout: 40000
-- assertVisible: Your feed is quiet
+- assertVisible: Read a few friends’ days
 - assertVisible:
     id: feed-find-people
 - assertVisible:

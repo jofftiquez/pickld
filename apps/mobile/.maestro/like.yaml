@@ -1,0 +1,60 @@
+# FR-SOC-05: like and unlike a moment from Moment detail. The heart fills and the count goes up by one; a second
+# tap takes it back. Likes never reorder anything (rule 15).
+# Needs the seed data (dale reads mika; mika has a full Everyone jar today; dale hasn't liked her #ootd) and dale
+# signed in: maestro test apps/mobile/.maestro/like.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- tapOn:
+    id: feed-card-mika
+- extendedWaitUntil:
+    visible:
+      id: jar-tile-ootd
+    timeout: 40000
+- tapOn:
+    id: jar-tile-ootd
+- extendedWaitUntil:
+    visible:
+      id: moment-likes
+    timeout: 20000
+- assertVisible:
+    id: like-heart
+# The count as the button reads it ("3 likes"), kept to compare after each tap.
+- copyTextFrom:
+    id: moment-likes
+- evalScript: ${output.before = parseInt(maestro.copiedText, 10)}
+- tapOn:
+    id: moment-likes
+- extendedWaitUntil:
+    visible:
+      id: like-heart-pop
+    timeout: 10000
+- copyTextFrom:
+    id: moment-likes
+- assertTrue: ${parseInt(maestro.copiedText, 10) === output.before + 1}
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: MomentLiked-ios
+- tapOn:
+    id: moment-likes
+- extendedWaitUntil:
+    visible:
+      id: like-heart
+    timeout: 10000
+- copyTextFrom:
+    id: moment-likes
+- assertTrue: ${parseInt(maestro.copiedText, 10) === output.before}

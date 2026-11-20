@@ -27,10 +27,10 @@ appId: me.pickld.app
     id: preview-visibility-action
 - tapOn:
     id: moment-options-visibility-only_me
+# The dot shows only on the selected row (Maestro reads iOS 26 radios' checked state as false).
 - extendedWaitUntil:
     visible:
-      id: moment-options-visibility-only_me
-      checked: true
+      id: moment-options-visibility-only_me-dot
     timeout: 10000
 - tapOn:
     id: moment-options-cancel

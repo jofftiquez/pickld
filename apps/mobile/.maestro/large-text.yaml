@@ -66,9 +66,9 @@ appId: me.pickld.app
       id: jar-tile-ootd
 - tapOn:
     id: jar-tile-ootd
+# At this size the sheet's ids don't reach Maestro's view tree; its slot pill does.
 - extendedWaitUntil:
-    visible:
-      id: moment-detail
+    visible: '#ootd'
     timeout: 30000
 - waitForAnimationToEnd
 - takeScreenshot: large-moment
@@ -90,7 +90,7 @@ appId: me.pickld.app
       id: help-screen
     timeout: 30000
 - takeScreenshot: large-help
-- openLink: pickld://share/b0000000-0000-4000-8000-000000000201
+- openLink: pickld://share/b0000000-0000-4000-8000-000000000102
 - extendedWaitUntil:
     visible:
       id: share-screen

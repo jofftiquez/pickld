@@ -1,0 +1,60 @@
+# INV-07 (FR-INV-03): dale's Invite page. Available tab with a card per unused code, the eye reveals a code, QR
+# opens the QR sheet, the link card, and the Invited tab lists friends who joined.
+#   maestro test -e ANON_KEY=$(npx supabase status -o json | jq -r .ANON_KEY) apps/mobile/.maestro/invite-page.yaml
+# Needs dale signed in (seed data; his codes unlock with his live moments).
+appId: me.pickld.app
+env:
+  INVITER: dale@pickld.test
+---
+- runScript:
+    file: invite-code.js
+    env:
+      INVITER: ${INVITER}
+      ANON_KEY: ${ANON_KEY}
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- openLink: pickld://invite
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: invite-screen
+    timeout: 20000
+- assertVisible:
+    id: invite-tabs
+- assertVisible: 'Available \(\d+\)'
+- assertVisible:
+    id: invite-link
+- assertVisible:
+    id: invite-card-${output.inviteCode}
+- assertNotVisible: ${output.inviteCode}
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Invite-ios
+- tapOn:
+    id: invite-eye-${output.inviteCode}
+- assertVisible: '.*${output.inviteCode}.*'
+- tapOn:
+    id: invite-qr-${output.inviteCode}
+- extendedWaitUntil:
+    visible: Scan to join Pickld
+    timeout: 10000
+- assertVisible: '.*This code works once.*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: InviteQr-ios
+- tapOn: Done
+- extendedWaitUntil:
+    notVisible: Scan to join Pickld
+    timeout: 10000
+- tapOn: 'Invited \(\d+\)'
+- extendedWaitUntil:
+    visible: 'Friends who joined with your codes.*'
+    timeout: 10000
+- takeScreenshot: InviteInvited-ios

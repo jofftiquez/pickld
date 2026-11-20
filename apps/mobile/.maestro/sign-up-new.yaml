@@ -1,0 +1,71 @@
+# Subflow for the invite flows: from Sign up, a fresh email (new-email.js), its code from Mailpit, and About you
+# filled in as an adult born 14 April 1990, then Continue. Leaves output.email and output.username set.
+# Run it through runFlow with Sign up on screen; it isn't meant to run alone.
+appId: me.pickld.app
+---
+- extendedWaitUntil:
+    visible:
+      id: sign-up-screen
+    timeout: 15000
+- runScript: new-email.js
+- tapOn:
+    id: auth-email
+- inputText: ${output.email}
+- tapOn: Create your account
+- tapOn:
+    id: auth-submit
+- extendedWaitUntil:
+    visible:
+      id: check-email-screen
+    timeout: 15000
+- runScript:
+    file: mailpit-code.js
+    env:
+      EMAIL: ${output.email}
+- tapOn:
+    id: check-email-code
+- inputText: ${output.code}
+- extendedWaitUntil:
+    visible:
+      id: about-screen
+    timeout: 30000
+- tapOn:
+    id: about-name
+- inputText: New Tester
+- tapOn:
+    id: about-username
+- inputText: ${output.username}
+- tapOn: About you
+- extendedWaitUntil:
+    visible:
+      id: about-username-available
+    timeout: 10000
+- tapOn:
+    id: about-month
+- tapOn:
+    id: about-month-3
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-day
+- scrollUntilVisible:
+    element:
+      id: about-day-14
+    direction: DOWN
+- tapOn:
+    id: about-day-14
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-year
+- scrollUntilVisible:
+    element:
+      id: about-year-1990
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: about-year-1990
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: about-continue

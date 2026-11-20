@@ -1,0 +1,72 @@
+# FR-PRV-03: a new account deletes itself. Sign up (gate off), finish setup, Settings → Delete account → the
+# button turns on only after DELETE is typed → back on Welcome, signed out.
+#   maestro test apps/mobile/.maestro/delete-account.yaml
+# Starts signed out; ends signed out. Sign dale back in afterwards (sign-in-email.yaml).
+appId: me.pickld.app
+---
+- launchApp:
+    permissions:
+      camera: allow
+      notifications: unset
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 60000
+- tapOn:
+    id: welcome-get-started
+- tapOn:
+    id: intro-skip
+- runFlow: sign-up-new.yaml
+- runFlow: setup-finish.yaml
+- extendedWaitUntil:
+    visible:
+      id: first-tip
+    timeout: 40000
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    id: first-tip-look
+# Under Maestro the first tap on the freshly opened sheet is dropped (see onboarding-full.yaml); tap again.
+- runFlow:
+    when:
+      visible:
+        id: first-tip-look
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - tapOn:
+          id: first-tip-look
+- openLink: pickld://settings/delete
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: delete-screen
+    timeout: 20000
+- assertVisible:
+    id: delete-submit
+    enabled: false
+- tapOn:
+    id: delete-confirm
+- inputText: DELETE
+# Close the keyboard first (tap the field's label): under Maestro a tap on the button with the keyboard up doesn't
+# register, and iOS hideKeyboard is unreliable here.
+- tapOn: Type DELETE to confirm
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: DeleteAccount-ios
+- tapOn:
+    id: delete-submit
+- extendedWaitUntil:
+    visible:
+      id: welcome-screen
+    timeout: 30000
