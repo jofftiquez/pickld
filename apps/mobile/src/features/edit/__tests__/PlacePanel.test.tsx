@@ -9,6 +9,7 @@ import { editsSchema, type Edits, type Place } from '../edits';
 import { OverlayLayer } from '../overlays/OverlayLayer';
 import { unregisterOverlayRenderer } from '../overlays/registry';
 import type { PlaceLookup } from '../place/currentPlace';
+import { PhotoPlaceProvider, type Coords } from '../place/photoPlace';
 import { PlacePanel } from '../place/PlacePanel';
 import { registerPlaceRenderer } from '../place/PlaceOverlay';
 import { useEditorState } from '../useEditorState';
@@ -19,30 +20,43 @@ jest.mock('react-native-reanimated', () => jest.requireActual('./reanimatedStand
 
 const EMPTY: Edits = { v: 1, filter: 'original', overlays: [] };
 
-function Harness({ initial = EMPTY, lookUp }: { initial?: Edits; lookUp: () => Promise<PlaceLookup> }) {
+function Harness({
+  initial = EMPTY,
+  lookUp,
+  photo = null,
+  lookUpPhoto,
+}: {
+  initial?: Edits;
+  lookUp: () => Promise<PlaceLookup>;
+  photo?: Coords | null;
+  lookUpPhoto?: (coords: Coords) => Promise<PlaceLookup>;
+}) {
   const editor = useEditorState(initial);
   const selected = editor.edits.overlays.find((o): o is Place => o.type === 'place' && o.id === editor.selectedId);
   return (
-    <GestureHandlerRootView>
-      <OverlayLayer
-        overlays={editor.edits.overlays}
-        selectedId={editor.selectedId}
-        width={300}
-        height={400}
-        onSelect={editor.selectOverlay}
-        onTransform={editor.transformOverlay}
-        onBringToFront={editor.bringToFront}
-        onDelete={editor.deleteOverlay}
-      />
-      <PlacePanel
-        selected={selected ?? null}
-        onAdd={editor.addOverlay}
-        onUpdate={editor.updateOverlay}
-        lookUp={lookUp}
-      />
-      <Pressable accessibilityLabel="Undo" onPress={editor.undo} testID="undo" />
-      <Text testID="edits">{JSON.stringify(editor.edits)}</Text>
-    </GestureHandlerRootView>
+    <PhotoPlaceProvider value={photo}>
+      <GestureHandlerRootView>
+        <OverlayLayer
+          overlays={editor.edits.overlays}
+          selectedId={editor.selectedId}
+          width={300}
+          height={400}
+          onSelect={editor.selectOverlay}
+          onTransform={editor.transformOverlay}
+          onBringToFront={editor.bringToFront}
+          onDelete={editor.deleteOverlay}
+        />
+        <PlacePanel
+          selected={selected ?? null}
+          onAdd={editor.addOverlay}
+          onUpdate={editor.updateOverlay}
+          lookUp={lookUp}
+          lookUpPhoto={lookUpPhoto ?? (() => Promise.reject(new Error('no photo lookup in this test')))}
+        />
+        <Pressable accessibilityLabel="Undo" onPress={editor.undo} testID="undo" />
+        <Text testID="edits">{JSON.stringify(editor.edits)}</Text>
+      </GestureHandlerRootView>
+    </PhotoPlaceProvider>
   );
 }
 
@@ -60,7 +74,7 @@ describe('PlacePanel', () => {
     await render(<Harness lookUp={lookUp} />);
     expect(edits().overlays).toEqual([]);
     expect(lookUp).not.toHaveBeenCalled();
-    expect(screen.getByText('Only the words on the sticker are saved. Pickld never saves where you are.')).toBeTruthy();
+    expect(screen.getByText('Only the words on the sticker are saved. Pickld never saves a location.')).toBeTruthy();
 
     await fireEvent.changeText(field(), 'Sa');
     await fireEvent.changeText(field(), 'Sagada');
@@ -87,6 +101,39 @@ describe('PlacePanel', () => {
     expect(field().props.value).toBe('Baguio');
     await fireEvent.changeText(field(), 'Session Road, Baguio');
     expect(edits().overlays).toMatchObject([{ type: 'place', text: 'Session Road, Baguio' }]);
+  });
+
+  it('offers no photo location for a photo without one (a camera shot)', async () => {
+    await render(<Harness lookUp={never} />);
+    expect(screen.queryByRole('button', { name: 'Use the photo’s location' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Use where I am' })).toBeTruthy();
+  });
+
+  it('offers the photo’s location for a photo that carries one, and fills in its town on the tap', async () => {
+    const lookUpPhoto = jest.fn(() => Promise.resolve<PlaceLookup>({ kind: 'found', text: 'Sagada' }));
+    const lookUp = jest.fn(never);
+    await render(<Harness lookUp={lookUp} lookUpPhoto={lookUpPhoto} photo={{ latitude: 17.08, longitude: 120.9 }} />);
+    expect(lookUpPhoto).not.toHaveBeenCalled(); // nothing is looked up until the tap
+    await fireEvent.press(screen.getByRole('button', { name: 'Use the photo’s location' }));
+    expect(lookUpPhoto).toHaveBeenCalledWith({ latitude: 17.08, longitude: 120.9 });
+    expect(lookUp).not.toHaveBeenCalled();
+    expect(edits().overlays).toMatchObject([{ type: 'place', text: 'Sagada' }]);
+    expect(JSON.stringify(edits())).not.toMatch(/17\.08|120\.9|latitude/);
+  });
+
+  it('says when the photo’s town isn’t found', async () => {
+    await render(
+      <Harness
+        lookUp={never}
+        lookUpPhoto={() => Promise.resolve({ kind: 'failed' })}
+        photo={{ latitude: 17.08, longitude: 120.9 }}
+      />,
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Use the photo’s location' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Couldn’t find the town for this photo. Type the place instead.',
+    );
+    expect(edits().overlays).toEqual([]);
   });
 
   it('says so when location is off or the town isn’t found, and adds nothing', async () => {

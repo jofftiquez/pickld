@@ -139,6 +139,7 @@ export function MomentCropScreen() {
         crop: spec(),
         // D-48: a new moment starts at the owner's default (Today's cached profile); null lets the server decide.
         visibility: queryClient.getQueryData<Me>(todayQueryKeys.me(pending.userId))?.defaultVisibility ?? null,
+        exif: pending.photo.exif,
       });
       queuedId = item.id;
       // The editor must draw the cropped file, not the raw photo: drawn to cover its 3:4 canvas, the raw

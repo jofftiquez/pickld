@@ -288,6 +288,7 @@ describe('Day page route', () => {
       target: { localDate: '2026-11-08', tz: 'Asia/Manila', capturedAt: '2026-11-08T21:00:00+08:00' },
       crop: null,
       visibility: 'private',
+      exif: { DateTimeOriginal: '2026:11:08 21:00:00', OffsetTimeOriginal: '+08:00' },
     });
   });
 

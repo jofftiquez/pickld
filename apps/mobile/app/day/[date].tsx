@@ -105,7 +105,15 @@ export default function DayScreen() {
         return;
       }
       const visibility = me?.defaultVisibility ?? null; // D-48: a new moment starts at the owner's default
-      const item = await saveGalleryPhoto({ uri: photo.uri, slot, userId, target, crop: null, visibility });
+      const item = await saveGalleryPhoto({
+        uri: photo.uri,
+        slot,
+        userId,
+        target,
+        crop: null,
+        visibility,
+        exif: photo.exif,
+      });
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
       router.push(`/edit/${item.id}`);
     } catch (error) {

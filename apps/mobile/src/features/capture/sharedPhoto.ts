@@ -28,6 +28,11 @@ const manifestSchema = z.object({
   height: z.number().int().positive().optional(),
   DateTimeOriginal: z.string().optional(),
   OffsetTimeOriginal: z.string().optional(),
+  // Where it was taken, for the editor's Place tool only (photoPlace.ts keeps it in memory, never queued).
+  GPSLatitude: z.number().optional(),
+  GPSLatitudeRef: z.string().optional(),
+  GPSLongitude: z.number().optional(),
+  GPSLongitudeRef: z.string().optional(),
 });
 
 /** The App Group folder the extension writes to: `group.<app bundle id>` (app.config.ts). */
@@ -50,7 +55,14 @@ async function take(id: string): Promise<PickedPhoto> {
   const manifest = manifestSchema.parse(JSON.parse(await manifestFile.text()));
   if (!manifest.photo.startsWith(`${id}.`)) throw new Error('Shared photo manifest names another photo');
   const original = handoffFile(manifest.photo);
-  const exif = { DateTimeOriginal: manifest.DateTimeOriginal, OffsetTimeOriginal: manifest.OffsetTimeOriginal };
+  const exif = {
+    DateTimeOriginal: manifest.DateTimeOriginal,
+    OffsetTimeOriginal: manifest.OffsetTimeOriginal,
+    GPSLatitude: manifest.GPSLatitude,
+    GPSLatitudeRef: manifest.GPSLatitudeRef,
+    GPSLongitude: manifest.GPSLongitude,
+    GPSLongitudeRef: manifest.GPSLongitudeRef,
+  };
   try {
     const ext = manifest.photo.split('.').pop() ?? '';
     if (manifest.width && manifest.height && ext !== 'heic' && ext !== 'heif') {

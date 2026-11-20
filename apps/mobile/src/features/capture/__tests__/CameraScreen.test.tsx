@@ -422,6 +422,7 @@ describe('Camera on the Simulator (dev mock camera)', () => {
       target: expect.objectContaining({ localDate: '2026-11-11', tz: 'Asia/Manila' }),
       crop: null,
       visibility: null,
+      exif: null,
     });
     expect(screen).toHavePathname('/edit/4');
     expect(saveCapture).not.toHaveBeenCalled();
