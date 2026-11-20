@@ -22,6 +22,7 @@ const status = JSON.parse(out.slice(out.indexOf('{')));
 const admin = createClient(status.API_URL, status.SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
 const MOD_EMAIL = 'mod-e2e-invites@pickld.test';
+const FOUNDER_EMAIL = 'founder-e2e-invites@pickld.test';
 const tag = randomUUID().slice(0, 6);
 const note = `e2e meetup ${tag}`;
 const people = [];
@@ -184,6 +185,48 @@ test('a moderator who is not a founder cannot let people in early', async () => 
   await card.getByRole('alert').getByText('Only founders can let people in early.').waitFor();
   const [profile] = must(await admin.from('profiles').select('status').eq('id', waiting.id));
   assert.equal(profile.status, 'waiting');
+});
+
+test('a founder chooses how many waiting accounts to let in', async () => {
+  const { users } = must(await admin.auth.admin.listUsers({ perPage: 1000 }));
+  // Long-lived like the moderator: admit_waiting leaves audit rows that keep the account.
+  const founder =
+    users.find((u) => u.email === FOUNDER_EMAIL) ??
+    must(
+      await admin.auth.admin.createUser({
+        email: FOUNDER_EMAIL,
+        email_confirm: true,
+        app_metadata: { role: 'moderator', founder: true },
+      }),
+    ).user;
+  must(
+    await admin.from('profiles').upsert(
+      {
+        id: founder.id,
+        username: 'founder_e2e_invites',
+        display_name: 'Invites Founder',
+        birthday: '1990-01-01',
+        home_tz: 'Asia/Manila',
+      },
+      { onConflict: 'id', ignoreDuplicates: true },
+    ),
+  );
+  await person(`wa_${tag}`, { status: 'waiting' });
+  await person(`wb_${tag}`, { status: 'waiting' });
+  const waiting = async () =>
+    (await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'waiting')).count;
+  const before = await waiting();
+  assert.ok(before >= 2);
+
+  const founderPage = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+  await signInWithCode(founderPage, { base, admin, email: FOUNDER_EMAIL });
+  await founderPage.goto(`${base}/invites`);
+  const card = founderPage.getByRole('region', { name: 'Let people in early' });
+  await card.getByLabel('How many').fill('1');
+  await card.getByRole('button', { name: 'Let in the oldest 1', exact: true }).click();
+  await card.getByRole('status').getByText('Let 1 person in.').waitFor();
+  assert.equal(await waiting(), before - 1);
+  await founderPage.context().close();
 });
 
 async function brought(inviter, invitee) {

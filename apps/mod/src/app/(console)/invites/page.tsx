@@ -117,7 +117,7 @@ export default async function Invites() {
           <p style={{ margin: 0, fontSize: 14 }}>
             {t('invites.letIn.body', { count: summary.waiting.toLocaleString('en-US') })}
           </p>
-          <LetInForm count={letIn} />
+          <LetInForm waiting={summary.waiting} suggested={letIn} />
         </section>
       </div>
       <p style={{ margin: 0, color: colors.muted, fontSize: 12 }}>{t('invites.waitlistLater')}</p>
