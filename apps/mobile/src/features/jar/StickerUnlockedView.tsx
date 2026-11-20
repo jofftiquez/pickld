@@ -10,7 +10,7 @@ import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, shadow, sizes, space, type } from '@/theme/tokens';
 
 import { CelebrationReveal } from './CelebrationReveal';
-import { milestoneKeys, type MilestoneKey } from './celebrations';
+import { allMilestoneKeys, milestoneKeys, type MilestoneKey } from './celebrations';
 import { Confetti } from './Confetti';
 
 // The Milestones pack badges (0168: stickers/milestones/<name>-v2.png), bundled so they show offline.
@@ -62,7 +62,8 @@ export type StickerUnlockedViewProps = {
 export function StickerUnlockedView({ milestone, earned, reduceMotion, insets, onClose }: StickerUnlockedViewProps) {
   const { t } = useTranslation();
   const name = t(`stickerUnlocked.names.${milestone}`);
-  const total = milestoneKeys.length;
+  // Out of every milestone, as My stickers counts the Milestones pack.
+  const total = allMilestoneKeys.length;
   const count = Math.max(1, Math.min(total, earned));
   // The milestone the screen suggests next ("Next up: 7 jars"): the one after it in order; none after a year.
   const next = milestoneKeys[milestoneKeys.indexOf(milestone) + 1] ?? null;

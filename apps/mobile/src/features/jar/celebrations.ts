@@ -39,6 +39,13 @@ export const milestoneKeys = [
 ] as const;
 export type MilestoneKey = (typeof milestoneKeys)[number];
 
+/** Milestones earned by inviting friends (0135): stickers in the Milestones pack too, without a Sticker unlocked
+ * screen of their own. */
+export const inviteMilestoneKeys = ['first_friend', 'full_jar_of_friends'] as const;
+
+/** Every milestone, as the Milestones pack in My stickers counts them. */
+export const allMilestoneKeys: readonly string[] = [...milestoneKeys, ...inviteMilestoneKeys];
+
 /** Jars and milestones this phone already celebrated (or found already there, see `nextCelebration`). */
 export type CelebrationsSeen = { jars: readonly string[]; milestones: readonly string[] };
 

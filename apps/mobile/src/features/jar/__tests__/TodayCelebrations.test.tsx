@@ -197,7 +197,8 @@ describe('Today celebrations', () => {
 
   it('opens the Full jar celebration at 8 moments with the jar number, then Sticker unlocked once it closes', async () => {
     mockBackend.moments = [...moments(7), ...moments(8, 'checking').slice(7)];
-    mockBackend.milestones = ['first_full_jar'];
+    // An invite milestone counts toward the progress too, as in My stickers.
+    mockBackend.milestones = ['first_friend', 'first_full_jar'];
     await launch();
     await calls(1);
     expect(mockPush).toHaveBeenLastCalledWith({
@@ -210,7 +211,7 @@ describe('Today celebrations', () => {
     await calls(2);
     expect(mockPush).toHaveBeenLastCalledWith({
       pathname: '/sticker-unlocked',
-      params: { key: 'first_full_jar', earned: '1' },
+      params: { key: 'first_full_jar', earned: '2' },
     });
 
     await refocus(); // Sticker unlocked closed: nothing more
