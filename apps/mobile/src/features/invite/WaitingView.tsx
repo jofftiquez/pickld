@@ -1,5 +1,14 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type ScrollViewInstance,
+} from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { JarGraphic } from '@/components/JarGraphic';
@@ -51,9 +60,17 @@ export function WaitingView({
 }: WaitingViewProps) {
   const { t, i18n } = useTranslation();
   const top = insets.top + space.lg;
+  // The whole code is in: bring Get in into view above the keyboard. (Closing the keyboard instead left the
+  // next tap with the code field on iOS, so Get in didn't answer.)
+  const scroll = useRef<ScrollViewInstance>(null);
+  const full = code.length === CODE_LENGTH;
+  useEffect(() => {
+    if (full) scroll.current?.scrollToEnd({ animated: true });
+  }, [full]);
   return (
-    <View style={styles.root} testID="waiting">
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined} testID="waiting">
       <ScrollView
+        ref={scroll}
         contentContainerStyle={[
           styles.content,
           { paddingTop: top + sizes.roundButton, paddingBottom: insets.bottom + space.xxl },
@@ -135,7 +152,7 @@ export function WaitingView({
           testID="waiting-settings"
         />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

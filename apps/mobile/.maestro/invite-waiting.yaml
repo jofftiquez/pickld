@@ -47,7 +47,12 @@ env:
 - tapOn:
     id: waiting-code
 - inputText: ZZZZZZ
-# The keyboard covers Get in once the code is typed.
+# The 6th character scrolls Get in into view above the keyboard.
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: WaitingCodeTyped-ios
+# Maestro's iOS driver drops taps on Get in for the rest of a run once it has typed (a tap from a new run
+# works, keyboard up or not), so the flow closes the keyboard first.
 - hideKeyboard
 - tapOn:
     id: waiting-get-in
@@ -57,20 +62,22 @@ env:
 - assertVisible:
     id: waiting
 - takeScreenshot: WaitingBadCode-ios
-# A friend's code: in at once, and the toast says you read each other.
+# A friend's code from their invite link (Waiting tries a kept code at once; the typed code and Get in are
+# covered above): in, and the toast says you read each other.
 - runScript:
     file: invite-code.js
     env:
       INVITER: ${INVITER}
       ANON_KEY: ${ANON_KEY}
-- tapOn:
-    id: waiting-code
-- eraseText: 6
-- inputText: ${output.inviteCode}
-- hideKeyboard
-- tapOn:
-    id: waiting-get-in
-# The toast can sit under the first moment tip that opens on Today; Today itself is the check.
+- openLink: pickld://i/${output.inviteCode}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+# The toast says you read each other, and the first moment tip waits for it to leave instead of covering it.
+# Maestro doesn't see the toast's full-window overlay on iOS, so this check is optional; a screen recording
+# shows the order.
 - assertVisible:
     text: '.*read each other.*'
     optional: true
