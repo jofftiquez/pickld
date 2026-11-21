@@ -1,3 +1,5 @@
+// Gesture-handler's own jest mocks for its native module (the day swipe on Today).
+import 'react-native-gesture-handler/jestSetup';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
@@ -13,6 +15,13 @@ import Index from '../../../../app/index';
 // See TabShell.test.tsx: Reanimated can't load here, and the jar isn't under test.
 // Moment options' bottom sheet needs the full Reanimated and gesture-handler mocks; it has its own tests.
 jest.mock('@/features/moment/MomentOptions', () => ({ MomentOptions: () => null }));
+// The day swipe's gesture detector looks for these two in the router harness's Reanimated mock.
+jest.mock('react-native-reanimated/mock', () => ({
+  __esModule: true,
+  default: { createAnimatedComponent: <T,>(component: T) => component },
+  isSharedValue: () => false,
+  useReducedMotion: () => false,
+}));
 jest.mock('@/features/onboarding/FirstMomentTip', () => ({ FirstMomentTip: () => null }));
 jest.mock('@/features/publish/JarVisibilitySheet', () => ({ JarVisibilitySheet: () => null }));
 // The tiles' pop and the publish burst (D-58) use Reanimated, which the router test harness can't load; they

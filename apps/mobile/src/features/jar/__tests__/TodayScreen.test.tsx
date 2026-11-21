@@ -1,3 +1,5 @@
+// Gesture-handler's own jest mocks for its native module (the day swipe on Today).
+import 'react-native-gesture-handler/jestSetup';
 import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
@@ -214,7 +216,7 @@ describe('Today screen', () => {
       disabled: true,
     });
     await fireEvent.press(screen.getByRole('button', { name: 'Previous day, Sun, Nov 8' }));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/day/[date]', params: { date: '2026-11-08' } });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/day/[date]', params: { date: '2026-11-08', via: 'step' } });
   });
 
   it('a published jar: the Published line, likes and chip; the chip changes who can see it (M3-02)', async () => {

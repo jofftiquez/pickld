@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-native-gesture-handler';
 
 import { MomentTile } from '@/components/MomentTile';
 import { DayStepper, type DayStepperProps } from '@/features/days/DayStepper';
@@ -91,11 +92,26 @@ export type TodayViewProps = {
   /** Today's sticker pack (`useFeaturedPack`): the 9th tile, ending the 3×3 grid. Never shown on a past day. */
   featuredPack?: { slug: string; name: string; stickers: readonly { asset: string; label: string }[] } | null;
   onOpenPack?: (slug: string) => void;
-  /** Previous day / Next day in the header (Joff); missing hides them. */
+  /** Previous day / Next day in the header, and swiping right or left on the page (Joff); missing turns both off. */
   step?: Omit<DayStepperProps, 'locale'> | null;
 };
 
 const COLUMNS = 3;
+// Swiping changes the day (Joff): a sideways drag this far, or a quicker flick, steps a day; a vertical
+// drag scrolls instead. The left edge stays iOS's swipe back on the day page.
+const SWIPE_START = 24;
+const SWIPE_SLOP_Y = 16;
+const SWIPE_DISTANCE = 64;
+const SWIPE_FLICK = 600;
+const BACK_EDGE = 24;
+
+/** Which way a finished swipe steps: right is the day before, left the day after; 0 when it is too short. */
+function swipeStep(translationX: number, velocityX: number): -1 | 0 | 1 {
+  const far = Math.abs(translationX) >= SWIPE_DISTANCE;
+  const flick = Math.abs(velocityX) >= SWIPE_FLICK && Math.sign(velocityX) === Math.sign(translationX);
+  if (!far && !flick) return 0;
+  return translationX > 0 ? -1 : 1;
+}
 
 /** Today (design: Main; first day: EmptyToday), or a past day's page (Day). Presentational; app/(tabs)/today.tsx
  * and app/day/[date].tsx load the data. */
@@ -153,145 +169,163 @@ export function TodayView({
   const pastDay = day ? pastDayLabel(day.date, now, tz) : null;
   const screenStyle = pastDay ? [styles.screen, styles.pastDay] : styles.screen;
   const stepper = step ? <DayStepper {...step} /> : null;
+  const swipe = usePanGesture({
+    runOnJS: true,
+    enabled: step !== null,
+    maxPointers: 1,
+    activeOffsetX: [-SWIPE_START, SWIPE_START],
+    failOffsetY: [-SWIPE_SLOP_Y, SWIPE_SLOP_Y],
+    hitSlop: day ? { left: -BACK_EDGE } : undefined,
+    testID: 'day-swipe',
+    onDeactivate: (e) => {
+      if (!step || e.canceled) return;
+      const direction = swipeStep(e.translationX, e.velocityX);
+      if (direction === -1) step.onStep(step.previous);
+      else if (direction === 1 && step.next !== null) step.onStep(step.next);
+    },
+  });
 
   return (
-    <View style={screenStyle} testID={pastDay ? 'past-day-screen' : undefined}>
-      <ScrollView
-        style={screenStyle}
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + sizes.headerTop, paddingBottom: bottomPadding },
-        ]}
-        testID={day ? 'day-scroll' : 'today-scroll'}
-      >
-        {day ? (
-          <DayHeader date={day.date} onBack={day.onBack} stepper={stepper} />
-        ) : (
-          <TodayHeader
-            date={formatShortDate(now, tz)}
-            greeting={greetingFor(currentSlot(now, tz))}
-            displayName={displayName}
-            avatarUrl={avatarUrl}
-            onOpenMyDays={onOpenMyDays}
-            onOpenStickers={onOpenStickers}
-            pendingCount={pendingCount}
-            onOpenPending={onOpenPending}
-            onOpenNotifications={onOpenNotifications}
-            hasUnread={hasUnread}
-            onOpenProfile={onOpenProfile}
-            zoneTag={zoneTag}
-            stepper={stepper}
-          />
-        )}
-        {pastDay ? (
-          <View style={styles.banner}>
-            <PastDayBanner date={pastDay} fillable={missing} onBackToToday={day?.onBackToToday} />
-          </View>
-        ) : null}
-        {suspension ? <View style={styles.banner}>{suspension}</View> : null}
-        {zoneBanner ? <View style={suspension ? styles.cardUnderBanner : styles.banner}>{zoneBanner}</View> : null}
-        {offlineCount !== null ? (
-          <View style={suspension || zoneBanner ? styles.cardUnderBanner : styles.banner}>
-            <OfflineBanner count={offlineCount} />
-          </View>
-        ) : null}
-        <View style={suspension || offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.card}>
-          <JarCard
-            count={count}
-            readerCount={readerCount}
-            lidColor={lidColor}
-            firstDay={!day && hasAnyJar === false && count === 0}
-            pastDay={day !== null}
-            onViewJar={day?.onViewJar}
-            onPublish={onPublish}
-            published={
-              published
-                ? {
-                    visibility: published.visibility,
-                    likeCount: published.likeCount,
-                    time: formatTime(new Date(published.publishedAt), tz),
-                  }
-                : null
-            }
-            onOpenVisibility={onOpenVisibility}
-            closeLid={celebratePublish}
-          />
-        </View>
-        <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
-          {rows.map((row, r) => (
-            <View key={r} style={styles.gridRow}>
-              {row.map((tile) => {
-                if (tile === 'pack') {
-                  return pack && onOpenPack ? (
-                    <View key="pack" style={styles.cell}>
-                      <StickerPackTile
-                        slug={pack.slug}
-                        name={pack.name}
-                        stickers={pack.stickers}
-                        onPress={() => onOpenPack(pack.slug)}
-                      />
-                    </View>
-                  ) : null;
-                }
-                const capturable = tile.state === 'empty' || tile.state === 'now';
-                const { queueId, momentId } = tile;
-                const openable = tile.state === 'checking' || tile.state === 'removed';
-                return (
-                  <View key={tile.slot} style={styles.cell}>
-                    <TilePop play={poppingSlots?.has(tile.slot) ?? false} slot={tile.slot}>
-                      <MomentTile
-                        slot={tile.slot}
-                        state={tile.state}
-                        uri={tile.uri}
-                        photoView={
-                          tile.uri !== null && hasVisibleEdits(tile.edits) ? (
-                            <MomentCover
-                              uri={tile.uri}
-                              edits={tile.edits}
-                              stamp={tile.stamp}
-                              accessible={false}
-                              testID={`tile-${tile.slot}-moment`}
-                            />
-                          ) : undefined
-                        }
-                        time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
-                        visibility={tile.visibility}
-                        addedLater={tile.addedLater}
-                        cover={tile.state === 'filled' && momentId !== null && momentId === coverMomentId}
-                        onPress={
-                          capturable
-                            ? () => onCapture(tile.slot)
-                            : tile.state === 'draft' && queueId !== null && onOpenDraft
-                              ? () => onOpenDraft(queueId)
-                              : openable && momentId !== null && onOpenMoment
-                                ? () => onOpenMoment(momentId)
-                                : opensPreview(tile) && onOpenPreview
-                                  ? () => onOpenPreview(tile)
-                                  : undefined
-                        }
-                        accessibilityHint={opensPreview(tile) && onOpenPreview ? t('preview.openHint') : undefined}
-                        onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}
-                        testID={`tile-${tile.slot}`}
-                      />
-                    </TilePop>
-                  </View>
-                );
-              })}
-              {Array.from({ length: COLUMNS - row.length }, (_, i) => (
-                <View key={`spacer-${i}`} style={styles.cell} />
-              ))}
+    // The app has no gesture root, so the page brings its own for the day swipe.
+    <GestureHandlerRootView style={screenStyle} testID={pastDay ? 'past-day-screen' : undefined}>
+      <GestureDetector gesture={swipe}>
+        <ScrollView
+          style={screenStyle}
+          contentContainerStyle={[
+            styles.content,
+            { paddingTop: insets.top + sizes.headerTop, paddingBottom: bottomPadding },
+          ]}
+          testID={day ? 'day-scroll' : 'today-scroll'}
+        >
+          {day ? (
+            <DayHeader date={day.date} onBack={day.onBack} stepper={stepper} />
+          ) : (
+            <TodayHeader
+              date={formatShortDate(now, tz)}
+              greeting={greetingFor(currentSlot(now, tz))}
+              displayName={displayName}
+              avatarUrl={avatarUrl}
+              onOpenMyDays={onOpenMyDays}
+              onOpenStickers={onOpenStickers}
+              pendingCount={pendingCount}
+              onOpenPending={onOpenPending}
+              onOpenNotifications={onOpenNotifications}
+              hasUnread={hasUnread}
+              onOpenProfile={onOpenProfile}
+              zoneTag={zoneTag}
+              stepper={stepper}
+            />
+          )}
+          {pastDay ? (
+            <View style={styles.banner}>
+              <PastDayBanner date={pastDay} fillable={missing} onBackToToday={day?.onBackToToday} />
             </View>
-          ))}
-        </View>
-        {/* The past-day banner says it on a past day (D-156). */}
-        {day && missing && !pastDay ? (
-          <Text style={[textStyle('bodySmall'), styles.note]} testID="day-added-later-note">
-            {t('day.addedLaterNote')}
-          </Text>
-        ) : null}
-      </ScrollView>
+          ) : null}
+          {suspension ? <View style={styles.banner}>{suspension}</View> : null}
+          {zoneBanner ? <View style={suspension ? styles.cardUnderBanner : styles.banner}>{zoneBanner}</View> : null}
+          {offlineCount !== null ? (
+            <View style={suspension || zoneBanner ? styles.cardUnderBanner : styles.banner}>
+              <OfflineBanner count={offlineCount} />
+            </View>
+          ) : null}
+          <View style={suspension || offlineCount !== null || zoneBanner ? styles.cardUnderBanner : styles.card}>
+            <JarCard
+              count={count}
+              readerCount={readerCount}
+              lidColor={lidColor}
+              firstDay={!day && hasAnyJar === false && count === 0}
+              pastDay={day !== null}
+              onViewJar={day?.onViewJar}
+              onPublish={onPublish}
+              published={
+                published
+                  ? {
+                      visibility: published.visibility,
+                      likeCount: published.likeCount,
+                      time: formatTime(new Date(published.publishedAt), tz),
+                    }
+                  : null
+              }
+              onOpenVisibility={onOpenVisibility}
+              closeLid={celebratePublish}
+            />
+          </View>
+          <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
+            {rows.map((row, r) => (
+              <View key={r} style={styles.gridRow}>
+                {row.map((tile) => {
+                  if (tile === 'pack') {
+                    return pack && onOpenPack ? (
+                      <View key="pack" style={styles.cell}>
+                        <StickerPackTile
+                          slug={pack.slug}
+                          name={pack.name}
+                          stickers={pack.stickers}
+                          onPress={() => onOpenPack(pack.slug)}
+                        />
+                      </View>
+                    ) : null;
+                  }
+                  const capturable = tile.state === 'empty' || tile.state === 'now';
+                  const { queueId, momentId } = tile;
+                  const openable = tile.state === 'checking' || tile.state === 'removed';
+                  return (
+                    <View key={tile.slot} style={styles.cell}>
+                      <TilePop play={poppingSlots?.has(tile.slot) ?? false} slot={tile.slot}>
+                        <MomentTile
+                          slot={tile.slot}
+                          state={tile.state}
+                          uri={tile.uri}
+                          photoView={
+                            tile.uri !== null && hasVisibleEdits(tile.edits) ? (
+                              <MomentCover
+                                uri={tile.uri}
+                                edits={tile.edits}
+                                stamp={tile.stamp}
+                                accessible={false}
+                                testID={`tile-${tile.slot}-moment`}
+                              />
+                            ) : undefined
+                          }
+                          time={tile.time ? formatTime(new Date(tile.time), tz) : undefined}
+                          visibility={tile.visibility}
+                          addedLater={tile.addedLater}
+                          cover={tile.state === 'filled' && momentId !== null && momentId === coverMomentId}
+                          onPress={
+                            capturable
+                              ? () => onCapture(tile.slot)
+                              : tile.state === 'draft' && queueId !== null && onOpenDraft
+                                ? () => onOpenDraft(queueId)
+                                : openable && momentId !== null && onOpenMoment
+                                  ? () => onOpenMoment(momentId)
+                                  : opensPreview(tile) && onOpenPreview
+                                    ? () => onOpenPreview(tile)
+                                    : undefined
+                          }
+                          accessibilityHint={opensPreview(tile) && onOpenPreview ? t('preview.openHint') : undefined}
+                          onRetry={tile.canRetry && queueId !== null && onRetry ? () => onRetry(queueId) : undefined}
+                          testID={`tile-${tile.slot}`}
+                        />
+                      </TilePop>
+                    </View>
+                  );
+                })}
+                {Array.from({ length: COLUMNS - row.length }, (_, i) => (
+                  <View key={`spacer-${i}`} style={styles.cell} />
+                ))}
+              </View>
+            ))}
+          </View>
+          {/* The past-day banner says it on a past day (D-156). */}
+          {day && missing && !pastDay ? (
+            <Text style={[textStyle('bodySmall'), styles.note]} testID="day-added-later-note">
+              {t('day.addedLaterNote')}
+            </Text>
+          ) : null}
+        </ScrollView>
+      </GestureDetector>
       {celebratePublish ? <PublishBurst /> : null}
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

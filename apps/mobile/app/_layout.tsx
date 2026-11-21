@@ -95,7 +95,17 @@ export default function RootLayout() {
         <Stack.Screen name="comments/[jarId]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="notifications" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="my-days" options={{ animation: reduceMotion ? 'none' : 'default' }} />
-        <Stack.Screen name="day/[date]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        {/* Opened by stepping from Today (‹ or a swipe), the day page fades in instead of sliding against the swipe. */}
+        <Stack.Screen
+          name="day/[date]"
+          options={({ route }) => ({
+            animation: reduceMotion
+              ? 'none'
+              : (route.params as { via?: string } | undefined)?.via === 'step'
+                ? 'fade'
+                : 'default',
+          })}
+        />
         <Stack.Screen name="pending" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="unpublished" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         {/* The Stickers page also opens over the editor (a full-screen modal), so these present as modals too. */}
