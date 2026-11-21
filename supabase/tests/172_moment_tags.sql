@@ -1,10 +1,11 @@
 -- 0172: Mention stickers and caption @mentions. Only mutual readers can be tagged (tried as owner with a mutual
 -- reader, a one-way reader, an outsider and a blocked user); tags are visible to the owner, the tagged person and
 -- people who can see the moment, never to the blocked; the tagged person is told once, when the moment is live and
--- not Only me, unless they muted the author; they can take the tag off; a block takes it off.
+-- not Only me, unless they muted the author; they can take the tag off; a block takes it off. 0173: a mention that
+-- comes back doesn't tell them twice, and Only me takes the notification back.
 begin;
 \ir _helpers.psql
-select plan(32);
+select plan(36);
 
 select tests.world();
 select tests.create_user('pal');   -- mutual reader who mutes owner
@@ -145,6 +146,24 @@ select tests.act_as('owner');
 select is((select count(*)::int from public.moment_tags where tagged_id = tests.id('pal')), 0,
           'and every tag between the two');
 select tests.reset_role();
+
+-- ---------------------------------------------------------------- told once; private takes it back (0173)
+create function pg_temp.notes_on(p_name text, p_moment uuid) returns int language sql as $$
+  select count(*)::int from public.notifications where user_id = tests.id(p_name) and type = 'tag' and moment_id = p_moment
+$$;
+insert into t values ('m3', tests.make_moment((select id from t where k = 'jar'), 'afternoon', 'live'));
+update public.moments set caption = 'with @t_reader' where id = (select id from t where k = 'm3');
+select is(pg_temp.notes_on('reader', (select id from t where k = 'm3')), 1, 'control: a caption mention tells them');
+update public.moments set caption = 'lunch' where id = (select id from t where k = 'm3');
+update public.moments set caption = 'lunch with @t_reader' where id = (select id from t where k = 'm3');
+select is(pg_temp.notes_on('reader', (select id from t where k = 'm3')), 1,
+          'taking the mention out and putting it back doesn''t tell them twice');
+update public.moments set visibility = 'only_me' where id = (select id from t where k = 'm3');
+select is(pg_temp.notes_on('reader', (select id from t where k = 'm3')), 0,
+          'the moment turning Only me takes the tag notification back');
+update public.moments set visibility = 'readers' where id = (select id from t where k = 'm3');
+select is(pg_temp.notes_on('reader', (select id from t where k = 'm3')), 0,
+          'sharing it again doesn''t tell them again');
 
 -- ---------------------------------------------------------------- the push switch
 select tests.act_as('reader');
