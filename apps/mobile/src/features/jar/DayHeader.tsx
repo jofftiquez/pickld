@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -10,11 +11,13 @@ export type DayHeaderProps = {
   /** The past day shown, "YYYY-MM-DD". */
   date: string;
   onBack: () => void;
+  /** Previous day / Next day (`DayStepper`), across from Back. */
+  stepper?: ReactNode;
   locale?: string;
 };
 
 /** The day page's header (D-55; Day, from Main): Back, then the date and its weekday as the title. */
-export function DayHeader({ date, onBack, locale }: DayHeaderProps) {
+export function DayHeader({ date, onBack, stepper = null, locale }: DayHeaderProps) {
   const { t } = useTranslation();
   // The calendar date itself, whatever the phone zone.
   const fullDate = formatDate(new Date(`${date}T12:00:00Z`), 'UTC', locale);
@@ -22,6 +25,7 @@ export function DayHeader({ date, onBack, locale }: DayHeaderProps) {
     <View style={styles.header}>
       <View style={styles.topBar}>
         <RoundIconButton icon="back" accessibilityLabel={t('day.back')} onPress={onBack} testID="day-back" />
+        {stepper}
       </View>
       <View style={styles.titles}>
         <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]} testID="day-subtitle">
@@ -43,6 +47,6 @@ export function DayHeader({ date, onBack, locale }: DayHeaderProps) {
 
 const styles = StyleSheet.create({
   header: { gap: space.sm },
-  topBar: { flexDirection: 'row' },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   titles: { gap: space.xs / 2 },
 });

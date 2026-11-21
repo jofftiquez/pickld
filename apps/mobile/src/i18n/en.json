@@ -93,6 +93,12 @@
       "lookingBackBody": "This is a past day, not today. Every moment is in this jar.",
       "backToToday": "Back to Today",
       "backToTodayHint": "Opens today’s jar"
+    },
+    "step": {
+      "previous": "Previous day, {{date}}",
+      "next": "Next day, {{date}}",
+      "nextToday": "Next day, Today",
+      "noNext": "Next day"
     }
   },
   "jarVisibility": {

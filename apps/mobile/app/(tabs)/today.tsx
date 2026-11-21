@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt';
+import { stepToday } from '@/features/days/pastDay';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
@@ -27,7 +28,7 @@ import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
 import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
-import { currentSlot, localHourIn } from '@/lib/jars';
+import { addDays, currentSlot, localHourIn } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
 import { useScreenFocused } from '@/lib/useScreenFocused';
 
@@ -183,6 +184,12 @@ export default function TodayScreen() {
         celebratePublish={celebratePublish}
         featuredPack={featuredPack}
         onOpenPack={(slug) => router.push({ pathname: '/stickers/pack/[slug]', params: { slug } })}
+        // Previous day opens the day before this jar's date, in its own zone (Joff); there is no next day.
+        step={{
+          previous: addDays(stepToday(jar?.jar?.localDate ?? localDate, localDate), -1),
+          next: null,
+          onStep: (date) => router.push({ pathname: '/day/[date]', params: { date } }),
+        }}
       />
       {published && openJar ? (
         <JarVisibilitySheet

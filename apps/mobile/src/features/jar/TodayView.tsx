@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MomentTile } from '@/components/MomentTile';
+import { DayStepper, type DayStepperProps } from '@/features/days/DayStepper';
 import { PastDayBanner } from '@/features/days/PastDayBanner';
 import { pastDayLabel } from '@/features/days/pastDay';
 import { MomentCover } from '@/features/moment/MomentCover';
@@ -90,6 +91,8 @@ export type TodayViewProps = {
   /** Today's sticker pack (`useFeaturedPack`): the 9th tile, ending the 3×3 grid. Never shown on a past day. */
   featuredPack?: { slug: string; name: string; stickers: readonly { asset: string; label: string }[] } | null;
   onOpenPack?: (slug: string) => void;
+  /** Previous day / Next day in the header (Joff); missing hides them. */
+  step?: Omit<DayStepperProps, 'locale'> | null;
 };
 
 const COLUMNS = 3;
@@ -131,6 +134,7 @@ export function TodayView({
   celebratePublish = false,
   featuredPack = null,
   onOpenPack,
+  step = null,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -148,6 +152,7 @@ export function TodayView({
   // D-156: only a date before today (in the jar's zone) is a past day; today never gets the past-day look.
   const pastDay = day ? pastDayLabel(day.date, now, tz) : null;
   const screenStyle = pastDay ? [styles.screen, styles.pastDay] : styles.screen;
+  const stepper = step ? <DayStepper {...step} /> : null;
 
   return (
     <View style={screenStyle} testID={pastDay ? 'past-day-screen' : undefined}>
@@ -160,7 +165,7 @@ export function TodayView({
         testID={day ? 'day-scroll' : 'today-scroll'}
       >
         {day ? (
-          <DayHeader date={day.date} onBack={day.onBack} />
+          <DayHeader date={day.date} onBack={day.onBack} stepper={stepper} />
         ) : (
           <TodayHeader
             date={formatShortDate(now, tz)}
@@ -175,6 +180,7 @@ export function TodayView({
             hasUnread={hasUnread}
             onOpenProfile={onOpenProfile}
             zoneTag={zoneTag}
+            stepper={stepper}
           />
         )}
         {pastDay ? (

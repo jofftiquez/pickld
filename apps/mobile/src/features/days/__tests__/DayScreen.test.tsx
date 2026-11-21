@@ -59,8 +59,13 @@ jest.mock('@/features/capture/libraryPhotos', () => ({
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
-  useToday: () => ({ me: { readerCount: 12, lidColor: 'brand', defaultVisibility: 'private' } }),
+  useToday: () => ({
+    me: { readerCount: 12, lidColor: 'brand', defaultVisibility: 'private' },
+    jar: mockTodayJar.current,
+  }),
 }));
+// Today's open jar from Today's query; none unless a test sets one.
+const mockTodayJar: { current: unknown } = { current: undefined };
 
 const mockDays: Record<string, DayJar> = {};
 const mockDayJar = jest.fn((date: string | null) => ({
@@ -160,6 +165,7 @@ beforeEach(() => {
   // 12:00 on 2026-11-11 in Manila.
   jest.useFakeTimers({ now: new Date('2026-11-11T04:00:00Z'), advanceTimers: true });
   mockDayJar.mockClear();
+  mockTodayJar.current = undefined;
   usePendingCrop.setState({ pending: null });
   jest.mocked(askLibraryAccess).mockReset().mockResolvedValue('all');
   jest
@@ -371,6 +377,43 @@ describe('Day page route', () => {
     await fireEvent.press(screen.getByTestId('tile-whereami'));
     expect(await screen.findByTestId('gallery-grid')).toBeTruthy();
     expect(screen).toHavePathname('/day/2026-11-03');
+  });
+
+  // Joff: the day arrows step through days on this page, so Back still leads where the page was opened from.
+  it('Previous day and Next day step through days in place; Back still goes to My days', async () => {
+    await renderRouter(routes, { initialUrl: '/today', wrapper });
+    const { router } = jest.requireActual<typeof import('expo-router')>('expo-router');
+    await act(async () => router.push('/my-days'));
+    await act(async () => router.push('/day/2026-11-08'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Previous day, Sat, Nov 7' }));
+    expect(screen).toHavePathname('/day/2026-11-07');
+    expect(screen.getByTestId('screen-title')).toHaveTextContent('Saturday');
+    expect(screen.getByText('1 of 8 moments')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Previous day, Fri, Nov 6' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Next day, Sat, Nov 7' }));
+    expect(screen).toHavePathname('/day/2026-11-07');
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(screen).toHavePathname('/my-days');
+  });
+
+  it('Next day from yesterday is Today', async () => {
+    await renderRouter(routes, { initialUrl: '/day/2026-11-10', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'Next day, Today' }));
+    expect(screen).toHavePathname('/today');
+    expect(screen.getByText('Today stub')).toBeTruthy();
+  });
+
+  // Today's jar keeps its own zone: still in Los Angeles' Tue, Nov 10 while the phone reads Wed, Nov 11 in
+  // Manila, the day after Mon, Nov 9 is Today, not a past-day page for that open jar's date.
+  it('Next day reaches Today at the open jar’s own date', async () => {
+    mockTodayJar.current = {
+      hasAnyJar: true,
+      jar: { id: 'jar-10', localDate: '2026-11-10', tz: 'America/Los_Angeles', endsAt: null },
+      moments: [],
+    };
+    await renderRouter(routes, { initialUrl: '/day/2026-11-09', wrapper });
+    await fireEvent.press(screen.getByRole('button', { name: 'Next day, Today' }));
+    expect(screen).toHavePathname('/today');
   });
 
   it('Back with no history lands on My days', async () => {

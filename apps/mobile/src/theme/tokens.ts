@@ -351,6 +351,7 @@ export const sizes = {
   toggleHeight: 28,
   toggleThumb: 24,
   roundButton: 44,
+  dayStepper: 36, // the Previous day / Next day pill on Today and the day page; hitSlop brings each arrow to 44
   snapGuideWidth: 1.5, // centre snap guides (SnapGuides, D-158)
   snapThreshold: 6, // how close (points on screen) a dragged centre must come to snap to the photo's centre (D-158)
   cardPadding: 14, // Settings cards
