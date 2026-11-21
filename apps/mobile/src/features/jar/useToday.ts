@@ -203,13 +203,17 @@ export function useToday(now: Date) {
   });
 
   // Upload states change while Today is open: re-read the queue, and the jar once an item has reached the
-  // server and left the queue, so its tile shows the server moment instead of going empty.
+  // server and left the queue, so its tile shows the server moment instead of going empty. The owner's jar
+  // pages are re-read too: one opened while the upload was still running would otherwise miss the moment.
   const queryClient = useQueryClient();
   useEffect(() => {
     if (userId === null) return;
     return subscribeQueue((change) => {
       void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
-      if (change === 'removed') void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+      if (change === 'removed') {
+        void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
+        void queryClient.invalidateQueries({ queryKey: ['jarPage', userId] });
+      }
     });
   }, [queryClient, userId]);
 

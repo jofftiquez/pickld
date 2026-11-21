@@ -18,6 +18,8 @@ import type { TodayJar } from '../useToday';
 const USER = '6f1c1f7e-8a43-4c1e-9d0b-3c0f5d1e2a10';
 
 type Row = Record<string, unknown>;
+/** The SQLite queue's change listeners, so a test can report an upload leaving the queue. */
+const mockQueueListeners = new Set<(change: string) => void>();
 const mockBackend = {
   offline: false,
   /** profiles.status and, through my_profile(), suspended_until (FR-SAF-06). */
@@ -99,7 +101,10 @@ jest.mock('@/lib/queue/store', () => ({
   // Pending uploads' count reads it (FR-CAP-04).
   isHeldForEditing: jest.requireActual<typeof import('@/lib/queue/store')>('@/lib/queue/store').isHeldForEditing,
   listQueue: async () => mockBackend.queue,
-  subscribeQueue: () => () => {},
+  subscribeQueue: (listener: (change: string) => void) => {
+    mockQueueListeners.add(listener);
+    return () => mockQueueListeners.delete(listener);
+  },
   retryItem: jest.fn(async () => ({})),
   replaceItem: jest.fn(async () => ({})),
   removeItem: jest.fn(async () => {}),
@@ -195,6 +200,29 @@ describe('Today screen', () => {
     await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
     await fireEvent.press(screen.getByRole('button', { name: 'Publish' }));
     expect(mockPush).toHaveBeenCalledWith('/publish');
+  });
+
+  it('an upload leaving the queue re-reads the owner’s jar pages, not other people’s', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [
+      {
+        id: 'jar-10',
+        local_date: '2026-11-10',
+        tz: 'Asia/Manila',
+        ends_at: null,
+        visibility: 'readers',
+        published_at: null,
+      },
+    ];
+    const client = newClient();
+    // A jar page opened while the upload was still running, and someone else's jar page.
+    client.setQueryData(['jarPage', USER, 'jar-10'], { moments: [] });
+    client.setQueryData(['jarPage', 'someone-else', 'jar-10'], { moments: [] });
+    await renderScreen(client);
+    await waitFor(() => expect(mockQueueListeners.size).toBeGreaterThan(0));
+    await act(async () => mockQueueListeners.forEach((listener) => listener('removed')));
+    expect(client.getQueryState(['jarPage', USER, 'jar-10'])?.isInvalidated).toBe(true);
+    expect(client.getQueryState(['jarPage', 'someone-else', 'jar-10'])?.isInvalidated).toBe(false);
   });
 
   it('the header’s stickers button opens the Stickers page (D-61)', async () => {
