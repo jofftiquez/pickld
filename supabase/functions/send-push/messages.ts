@@ -88,6 +88,9 @@ function one(n: DueNotification): Push | null {
     case 'invite_joined':
       // Someone joined with one of the person's invite codes or their link (0135).
       return { ...base, title: actor, body: 'joined with your invite. Say hi?', data };
+    case 'tag':
+      // Someone tagged the person in a moment (0172); never sent for an Only me moment.
+      return { ...base, title: actor, body: 'tagged you in a moment.', data };
     case 'admitted':
       // The invite period let this account in (0131).
       return { ...base, title: "You're in", body: 'Fill your first jar.', data };

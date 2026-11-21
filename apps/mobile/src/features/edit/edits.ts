@@ -5,7 +5,7 @@ import { textFields } from './text/textOverlay';
 
 // The editor's edits (FR-CAP-08): stored as data in the queue item's and the moment's `edits` JSON and
 // drawn over the photo at display time. They are never burned into the photo: the uploaded file stays
-// the prepared photo. Version 1 holds the color filter and the overlays (stickers, bubbles, text, places).
+// the prepared photo. Version 1 holds the color filter and the overlays (stickers, bubbles, text, places, mentions).
 
 export const EDITS_VERSION = 1;
 
@@ -79,6 +79,18 @@ const placeFields = {
   color: bubbleColorSchema.default('white'),
 };
 
+/** Pickld usernames (0001): 3 to 20 letters, digits, dots and underscores. */
+export const USERNAME_PATTERN = /^[A-Za-z0-9._]{3,20}$/;
+
+// A mention sticker (0172): the tagged person's id and the username it shows, in a bubble color. Only mutual
+// readers can be tagged; the database drops any other mention and keeps the username current, and the tag
+// leaves the moment when the person removes it or a block comes between them.
+const mentionFields = {
+  userId: z.guid(),
+  username: z.string().regex(USERNAME_PATTERN),
+  color: bubbleColorSchema.default('white'),
+};
+
 // One member per overlay kind, discriminated on `type`. M2-13 (transforms) starts from this; the tools
 // add their content fields: M2-15 the sticker id, M2-16 the bubble text and style, M2-17 the text.
 export const overlaySchema = z.discriminatedUnion('type', [
@@ -86,10 +98,12 @@ export const overlaySchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('bubble'), ...overlayBase, ...bubbleContent }),
   z.object({ type: z.literal('text'), ...overlayBase, ...textFields }),
   z.object({ type: z.literal('place'), ...overlayBase, ...placeFields }),
+  z.object({ type: z.literal('mention'), ...overlayBase, ...mentionFields }),
 ]);
 export type Overlay = z.infer<typeof overlaySchema>;
 export type Bubble = Extract<Overlay, { type: 'bubble' }>;
 export type Place = Extract<Overlay, { type: 'place' }>;
+export type Mention = Extract<Overlay, { type: 'mention' }>;
 
 export const editsSchema = z.object({
   v: z.literal(EDITS_VERSION),

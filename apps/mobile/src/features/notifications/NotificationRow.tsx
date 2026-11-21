@@ -45,7 +45,8 @@ type SentenceKey =
   | 'notifications.removed'
   | 'notifications.appealDecided'
   | 'notifications.admitted'
-  | 'notifications.inviteJoined';
+  | 'notifications.inviteJoined'
+  | 'notifications.tag';
 
 /** The sentence for an entry, with <bold> parts, as a translation key and its values. */
 function sentence(
@@ -101,6 +102,8 @@ function sentence(
       return { key: 'notifications.admitted', values: {} };
     case 'invite_joined':
       return { key: 'notifications.inviteJoined', values: { name } };
+    case 'tag':
+      return { key: 'notifications.tag', values: { name } };
   }
 }
 

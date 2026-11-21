@@ -28,6 +28,7 @@ import {
   INK,
   isCloud,
   layoutText,
+  mentionReferenceWidth,
   outlineOffsets,
   PHOTO_ASPECT,
   PIN_PATH,
@@ -105,6 +106,12 @@ const overlaySchema = z.discriminatedUnion('type', [
     type: z.literal('place'),
     ...base,
     text: z.string().max(40).refine((s) => s.trim().length > 0),
+    color: colorName.default('white'),
+  }),
+  z.object({
+    type: z.literal('mention'),
+    ...base,
+    username: z.string().regex(/^[A-Za-z0-9._]{3,20}$/),
     color: colorName.default('white'),
   }),
 ]);
@@ -318,6 +325,8 @@ function draw(k: Kit, input: FinishedInput, edits: FinishedEdits, art: Map<strin
         ? bubbleAspect(o.text, o.shape)
         : o.type === 'place'
         ? PLACE.referenceHeight / placeReferenceWidth(o.text)
+        : o.type === 'mention'
+        ? PLACE.referenceHeight / mentionReferenceWidth(o.username)
         : layoutText(o).height / layoutText(o).width;
       const w = o.scale * W;
       const h = w * aspect;
@@ -330,6 +339,7 @@ function draw(k: Kit, input: FinishedInput, edits: FinishedEdits, art: Map<strin
       if (o.type === 'sticker') drawSticker(k, canvas, keep, o, sticker, w, h, u, input);
       else if (o.type === 'bubble') drawBubble(k, canvas, keep, o, w, h, u);
       else if (o.type === 'place') drawPlace(k, canvas, keep, o, w, h);
+      else if (o.type === 'mention') drawMention(k, canvas, keep, o, w, h);
       else drawText(k, canvas, keep, o, w);
       canvas.restore();
     }
@@ -634,6 +644,48 @@ function drawPlace(k: Kit, canvas: Canvas, keep: Keep, o: Extract<Overlay, { typ
   canvas.save();
   canvas.clipRect(ck.XYWHRect(left + icon + gap, 0, inner, h), ck.ClipOp.Intersect, true);
   canvas.drawParagraph(p, left + icon + gap, (h - p.getHeight()) / 2);
+  canvas.restore();
+}
+
+/** MentionOverlay: "@username" centred in a pill of its bubble color (the place pill without the pin). */
+function drawMention(
+  k: Kit,
+  canvas: Canvas,
+  keep: Keep,
+  o: Extract<Overlay, { type: 'mention' }>,
+  w: number,
+  h: number,
+) {
+  const { ck } = k;
+  const s = h / PLACE.referenceHeight;
+  const pair = BUBBLE_COLORS[o.color];
+  const fill = keep(new ck.Paint());
+  fill.setAntiAlias(true);
+  fill.setColor(color(ck, pair.fill));
+  canvas.drawRRect(rrect(0, 0, w, h, [h / 2, h / 2, h / 2, h / 2]), fill);
+
+  const inner = w - 2 * PLACE.paddingX * s;
+  let size = PLACE.fontSize * s;
+  const make = () =>
+    paragraph(k, keep, `@${o.username}`, {
+      family: 'jakarta-800',
+      size,
+      lineHeight: size * 1.2,
+      color: pair.text,
+      align: 'left',
+      maxLines: 1,
+      width: 1e5,
+    });
+  let p = make();
+  // adjustsFontSizeToFit (minimumFontScale 0.5) on one line.
+  if (p.getMaxIntrinsicWidth() > inner) {
+    size *= Math.max(0.5, inner / p.getMaxIntrinsicWidth());
+    p = make();
+  }
+  const textWidth = Math.min(inner, p.getMaxIntrinsicWidth());
+  canvas.save();
+  canvas.clipRect(ck.XYWHRect(PLACE.paddingX * s, 0, inner, h), ck.ClipOp.Intersect, true);
+  canvas.drawParagraph(p, (w - textWidth) / 2, (h - p.getHeight()) / 2);
   canvas.restore();
 }
 

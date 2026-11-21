@@ -238,6 +238,12 @@ export function placeReferenceWidth(text: string): number {
   return Math.ceil(2 * PLACE.paddingX + PLACE.icon + PLACE.gap + chars * PLACE.fontSize * PLACE.charWidth);
 }
 
+/** mentionLayout.ts: a mention pill (the place pill without the pin) holding "@username", in reference points. */
+export function mentionReferenceWidth(username: string): number {
+  const chars = Array.from(`@${username}`).length;
+  return Math.ceil(2 * PLACE.paddingX + chars * PLACE.fontSize * PLACE.charWidth);
+}
+
 /** stickerRenderer.ts: a sticker whose art is missing keeps this height ÷ width. */
 export const STICKER_FALLBACK_ASPECT = 0.4;
 

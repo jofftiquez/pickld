@@ -135,6 +135,18 @@ const STYLED = {
     },
     // A place sticker: only its words and color are stored.
     { id: 'place', type: 'place', text: 'Baguio', color: 'butter', x: 0.5, y: 0.88, scale: 0.4, rotation: 0 },
+    // A mention sticker (0172): the person's id and username.
+    {
+      id: 'mention',
+      type: 'mention',
+      userId: '6f0c1c39-3d4c-4f8e-9a2b-1c2d3e4f5a6b',
+      username: 'mara.lim',
+      color: 'sky',
+      x: 0.3,
+      y: 0.3,
+      scale: 0.4,
+      rotation: 0,
+    },
   ],
 };
 
@@ -448,6 +460,30 @@ test('text draws as the app lays it out: its lines, its font, sized with its box
   assert.equal(outlined.color, 'rgb(255, 255, 255)');
   assert.equal(outlined.shadows, 16, 'sixteen copies of the words round them');
   assert.ok(outlined.loaded, `${outlined.family} is loaded`);
+  await page.close();
+});
+
+test('a mention sticker draws as the app does, as plain text that links nowhere', async () => {
+  const { page } = await open(`/j/${EVERYONE}`);
+  const pill = page.locator('[data-mention-overlay="mention"]');
+  await pill.waitFor();
+  const got = await pill.evaluate((el) => {
+    const photo = el.closest('[data-overlays]').getBoundingClientRect().width;
+    const box = el.getBoundingClientRect();
+    return {
+      text: el.textContent,
+      aspect: box.height / box.width,
+      background: getComputedStyle(el).backgroundColor,
+      link: el.closest('a') !== null || el.querySelector('a') !== null,
+      width: box.width / photo,
+    };
+  });
+  // '@mara.lim': 2 × 14 padding + 9 × 17 × 0.62 letters = 123 reference points wide, 40 tall.
+  assert.equal(got.text, '@mara.lim');
+  assert.ok(Math.abs(got.width - 0.4) < 0.005, `${got.width} of the photo wide`);
+  assert.ok(Math.abs(got.aspect - 40 / 123) < 0.01, `aspect ${got.aspect}`);
+  assert.equal(got.background, 'rgb(219, 232, 243)');
+  assert.equal(got.link, false);
   await page.close();
 });
 

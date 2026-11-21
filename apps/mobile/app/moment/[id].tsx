@@ -6,6 +6,7 @@ import { useJarPage } from '@/features/jar/useJarPage';
 import { useLike } from '@/features/jar/useLike';
 import { MomentDetailView } from '@/features/moment/MomentDetailView';
 import { OwnMomentView } from '@/features/moment/OwnMomentView';
+import { useMomentTags, useRemoveTag } from '@/features/moment/momentTags';
 import { useOwnMoment } from '@/features/moment/useOwnMoment';
 import { ReportSheet } from '@/features/safety/ReportSheet';
 import { useBlockFlow } from '@/features/safety/useBlockFlow';
@@ -30,6 +31,8 @@ export default function MomentScreen() {
   // Re-signed when the author changes their photo (D-93).
   const avatars = useAvatarUrls(page.data ? [{ id: page.data.jar.user_id, path: page.data.author.avatar_path }] : []);
   const blockFlow = useBlockFlow(() => router.replace('/jars'));
+  const tags = useMomentTags(page.data?.moments.map((m) => m.id) ?? []);
+  const removeTag = useRemoveTag(() => void tags.refetch());
 
   const close = () => {
     if (router.canGoBack()) router.back();
@@ -59,6 +62,10 @@ export default function MomentScreen() {
         }}
         onMore={setReporting}
         onRetry={() => void page.refresh()}
+        tags={tags.data}
+        onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}
+        onRemoveTag={(momentId) => removeTag.mutate(momentId)}
+        removingTag={removeTag.isPending}
       />
       <ReportSheet
         visible={reporting !== null}

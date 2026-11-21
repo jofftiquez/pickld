@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -19,6 +20,8 @@ import { Icon } from '@/components/Icon';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import { parseEdits } from '@/features/edit/edits';
+import { mentionAspect } from '@/features/edit/mention/mentionLayout';
+import { toPixels } from '@/features/edit/overlays/transform';
 import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from '@/features/jar/jarPage';
 import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
@@ -28,6 +31,7 @@ import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space } from '@/theme/tokens';
 
+import { captionParts, type MomentTag } from './momentTags';
 import { MomentView } from './MomentView';
 
 export type MomentDetailViewProps = {
@@ -50,6 +54,13 @@ export type MomentDetailViewProps = {
   /** More options on someone else's moment: Report (M3-21). Not shown to the owner. */
   onMore?: (momentId: string) => void;
   onRetry: () => void;
+  /** Tags the viewer may see, by moment id (0172): they link to profiles. */
+  tags?: Record<string, MomentTag[]>;
+  /** Opens a tagged person's profile. */
+  onOpenProfile?: (username: string) => void;
+  /** The viewer, tagged on the moment on screen, takes their tag off. */
+  onRemoveTag?: (momentId: string) => void;
+  removingTag?: boolean;
   locale?: string;
 };
 
@@ -71,6 +82,10 @@ export function MomentDetailView({
   onToggleLike,
   onShare,
   onRetry,
+  tags = {},
+  onOpenProfile,
+  onRemoveTag,
+  removingTag = false,
   locale = deviceLocale(),
 }: MomentDetailViewProps) {
   const { t } = useTranslation();
@@ -120,6 +135,8 @@ export function MomentDetailView({
   const at = new Date(moment.captured_at ?? moment.added_at);
   const slot = t(`slots.${moment.slot}`);
   const caption = moment.caption?.trim() ? moment.caption.trim() : null;
+  const momentTags = tags[moment.id] ?? [];
+  const viewerTagged = momentTags.some((tag) => tag.userId === data.viewerId);
 
   const goTo = (next: number) => {
     if (next < 0 || next >= moments.length) return;
@@ -157,7 +174,15 @@ export function MomentDetailView({
             initialScrollIndex={start}
             getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
             onMomentumScrollEnd={onScrollEnd}
-            renderItem={({ item }) => <Page moment={item} width={width} tz={data.jar.tz} />}
+            renderItem={({ item }) => (
+              <Page
+                moment={item}
+                width={width}
+                tz={data.jar.tz}
+                tags={tags[item.id] ?? []}
+                onOpenProfile={onOpenProfile}
+              />
+            )}
             testID="moment-pager"
           />
         </View>
@@ -257,8 +282,56 @@ export function MomentDetailView({
         </View>
         {caption ? (
           <Text style={[textStyle('momentCaption'), styles.caption]} testID="moment-caption">
-            {caption}
+            {captionParts(caption, momentTags).map((part, i) =>
+              part.kind === 'mention' && part.tag && onOpenProfile ? (
+                <Text
+                  key={i}
+                  style={styles.mention}
+                  onPress={() => part.tag && onOpenProfile(part.tag.username)}
+                  accessibilityRole="link"
+                  testID={`moment-caption-mention-${part.tag.username}`}
+                >
+                  {part.text}
+                </Text>
+              ) : (
+                part.text
+              ),
+            )}
           </Text>
+        ) : null}
+        {momentTags.length > 0 ? (
+          <View style={styles.tagged} testID="moment-tagged">
+            <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]}>{t('moment.tags.label')}</Text>
+            {momentTags.map((tag) => (
+              <Pressable
+                key={tag.userId}
+                onPress={() => onOpenProfile?.(tag.username)}
+                accessibilityRole="link"
+                accessibilityLabel={t('moment.tags.open', { username: tag.username })}
+                hitSlop={space.sm}
+                style={styles.tagChip}
+                testID={`moment-tag-${tag.username}`}
+              >
+                <Text style={[textStyle('bodySmall', '700'), { color: colors.brandLink }]}>@{tag.username}</Text>
+              </Pressable>
+            ))}
+            {viewerTagged && onRemoveTag ? (
+              <Pressable
+                onPress={() => onRemoveTag(moment.id)}
+                disabled={removingTag}
+                accessibilityRole="button"
+                accessibilityLabel={t('moment.tags.remove')}
+                accessibilityHint={t('moment.tags.removeHint')}
+                hitSlop={space.sm}
+                style={styles.tagChip}
+                testID="moment-remove-tag"
+              >
+                <Text style={[textStyle('bodySmall', '700'), { color: colors.danger }]}>
+                  {removingTag ? t('moment.tags.removing') : t('moment.tags.remove')}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
         ) : null}
         <Text style={[textStyle('bodySmall', '400'), { color: colors.muted }]} testID="moment-position">
           {current < moments.length - 1
@@ -297,16 +370,57 @@ export function MomentDetailView({
   );
 }
 
-function Page({ moment, width, tz }: { moment: JarMoment; width: number; tz: string }) {
+function Page({
+  moment,
+  width,
+  tz,
+  tags,
+  onOpenProfile,
+}: {
+  moment: JarMoment;
+  width: number;
+  tz: string;
+  tags: readonly MomentTag[];
+  onOpenProfile?: (username: string) => void;
+}) {
+  const edits = parseEdits(moment.edits);
+  const size = { width, height: width / photo.aspect };
+  // A mention sticker opens its person's profile when the viewer may see the tag; the sheet's Tagged row is the
+  // same for screen readers, so these taps stay out of the accessibility tree.
+  const links = onOpenProfile
+    ? edits.overlays.flatMap((o) => {
+        if (o.type !== 'mention') return [];
+        const tag = tags.find((t) => t.userId === o.userId);
+        return tag ? [{ id: o.id, username: tag.username, box: toPixels(o, size, mentionAspect(o)) }] : [];
+      })
+    : [];
   return (
     <View style={{ width }} testID={`moment-page-${moment.slot}`}>
       <MomentView
         uri={moment.fullUrl ?? moment.thumbUrl}
-        edits={parseEdits(moment.edits)}
+        edits={edits}
         width={width}
         stamp={{ capturedAt: new Date(moment.captured_at ?? moment.added_at), tz }}
         accessible={false}
       />
+      {links.map(({ id, username, box }) => (
+        <Pressable
+          key={id}
+          onPress={() => onOpenProfile?.(username)}
+          accessible={false}
+          importantForAccessibility="no"
+          style={[
+            styles.stickerLink,
+            {
+              left: box.cx - Math.max(box.width, sizes.minTap) / 2,
+              top: box.cy - Math.max(box.height, sizes.minTap) / 2,
+              width: Math.max(box.width, sizes.minTap),
+              height: Math.max(box.height, sizes.minTap),
+            },
+          ]}
+          testID={`moment-mention-link-${username}`}
+        />
+      ))}
     </View>
   );
 }
@@ -371,5 +485,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.subtle,
   },
   caption: { color: colors.ink, lineHeight: 24 },
+  mention: { color: colors.brandLink, fontWeight: '700' },
+  tagged: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: space.md, rowGap: space.xs },
+  tagChip: { paddingVertical: space.xs },
+  stickerLink: { position: 'absolute' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
 });

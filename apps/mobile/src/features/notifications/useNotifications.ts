@@ -59,7 +59,7 @@ export async function fetchNotifications(viewerId: string): Promise<Notification
   const rows = z.array(notificationRow).parse(data);
 
   const actorIds = [...new Set(rows.flatMap((r) => (r.actor ? [r.actor.id] : [])))];
-  const photoTypes = new Set(['like', 'comment', 'reply']);
+  const photoTypes = new Set(['like', 'comment', 'reply', 'tag']);
   const withPhoto = rows.filter((r) => photoTypes.has(r.type));
   const jarIds = [
     ...new Set(

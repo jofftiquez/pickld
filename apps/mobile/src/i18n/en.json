@@ -367,7 +367,8 @@
       "stickers": "Stickers",
       "bubble": "Bubble",
       "text": "Text",
-      "place": "Place"
+      "place": "Place",
+      "mention": "Mention"
     },
     "filters": "Filters",
     "filter": {
@@ -401,6 +402,8 @@
       "failed": "Couldn’t change the photo. Try again."
     },
     "caption": "Caption",
+    "mentionSuggestions": "People you can tag",
+    "mentionSuggestion": "Tag {{name}}, @{{username}}",
     "captionPrompt": {
       "whereami": "Where are you right now?",
       "mebusywith": "What’s keeping you busy?",
@@ -500,6 +503,23 @@
     "colors": "Place color",
     "privacy": "Only the words on the sticker are saved. Pickld never saves a location.",
     "overlayLabel": "Place: {{text}}"
+  },
+  "editMention": {
+    "field": "Tag someone",
+    "placeholder": "Search people you both read",
+    "fieldHint": "Pick someone to add an @mention to the photo",
+    "fieldHintSelected": "Pick someone to change who the selected mention tags",
+    "loading": "Finding people",
+    "failed": "Couldn’t load people. Check your connection and try again.",
+    "nobody": "You can tag people you read who also read you. Nobody yet.",
+    "noMatch": "Nobody you both read matches that.",
+    "person": "{{name}}, @{{username}}",
+    "addHint": "Adds an @mention to the photo",
+    "swapHint": "Tags this person instead",
+    "alreadyTagged": "Already tagged on this photo",
+    "colors": "Mention color",
+    "rules": "Only people you both read. They’re told once, and they can remove the tag.",
+    "overlayLabel": "Tagged @{{username}}"
   },
   "editText": {
     "field": "Your text",
@@ -626,6 +646,13 @@
       "share": "Share",
       "shareHint": "Opens Share for this moment",
       "notAvailable": "It may be private, or its owner hasn’t shared it with you."
+    },
+    "tags": {
+      "label": "Tagged",
+      "open": "Opens @{{username}}’s profile",
+      "remove": "Remove my tag",
+      "removeHint": "Takes your tag off this moment for everyone. They won’t be told.",
+      "removing": "Removing…"
     }
   },
   "fullJar": {
@@ -882,6 +909,9 @@
     "texts_other": "{{count}} texts",
     "places_one": "a place",
     "places_other": "{{count}} places",
+    "mentions_one": "a tag",
+    "mentions_other": "{{count}} tags",
+    "list5": "{{a}}, {{b}}, {{c}}, {{d}} and {{e}}",
     "list4": "{{a}}, {{b}}, {{c}} and {{d}}",
     "list2": "{{a}} and {{b}}",
     "list3": "{{a}}, {{b}} and {{c}}",
@@ -1319,6 +1349,7 @@
     "friendJoined": "<bold>{{name}}</bold> joined Pickld. Say hi?",
     "admitted": "<bold>You're in.</bold> Fill your first jar.",
     "inviteJoined": "<bold>{{name}}</bold> joined with your invite. Say hi?",
+    "tag": "<bold>{{name}}</bold> tagged you in a moment",
     "unread": "Unread",
     "openHint": "Opens it",
     "reminderBody": {
@@ -1759,7 +1790,8 @@
       "comment": "Comments",
       "reply": "Replies to your comments",
       "full_jar": "Full jars from people you read",
-      "friend_joined": "Friends who join Pickld"
+      "friend_joined": "Friends who join Pickld",
+      "tag": "Tags in moments"
     },
     "quietHours": "Quiet hours",
     "quietHoursBody": "No pushes from {{start}} to {{end}}",

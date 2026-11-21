@@ -5,13 +5,15 @@ import Animated from 'react-native-reanimated';
 
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextField } from '@/components/TextField';
+import { completeMention, typingMention } from '@/features/moment/momentTags';
 import { MomentView } from '@/features/moment/MomentView';
 import { VISIBILITIES, VISIBILITY_KEY, type Visibility } from '@/lib/visibility';
 import { textStyle } from '@/theme/text';
-import { colors, radius, space, type Slot } from '@/theme/tokens';
+import { colors, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import type { Edits } from './edits';
 import { editorPhotoStyles, useEditorPhotoFrame } from './editorPhotoFrame';
+import { useTaggablePeople } from './mention/useTaggablePeople';
 import { useStampMoment } from './stickers/stamps';
 
 export type EditDetailsStepProps = {
@@ -64,6 +66,10 @@ export function EditDetailsStep({
   const scroller = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const raiseSheet = () => scroller.current?.scrollTo({ y: panelTop, animated: !reduceMotion });
   const hashtag = t(`slots.${slot}`);
+  // Typing @ at the end of the caption suggests people it can tag: mutual readers only (0172).
+  const typing = typingMention(caption);
+  const suggestions = useTaggablePeople(typing ?? '', { enabled: typing !== null, limit: 5 });
+  const people = typing !== null ? (suggestions.data ?? []) : [];
 
   return (
     <Animated.ScrollView
@@ -111,6 +117,32 @@ export function EditDetailsStep({
           onFocus={raiseSheet}
           testID="editor-caption"
         />
+        {people.length > 0 ? (
+          <View
+            style={styles.suggestions}
+            accessibilityLabel={t('edit.mentionSuggestions')}
+            testID="editor-caption-mentions"
+          >
+            {people.map((person) => (
+              <Pressable
+                key={person.id}
+                onPress={() => onChangeCaption(completeMention(caption, person.username).slice(0, CAPTION_MAX))}
+                accessibilityRole="button"
+                accessibilityLabel={t('edit.mentionSuggestion', {
+                  name: person.displayName,
+                  username: person.username,
+                })}
+                hitSlop={space.xs}
+                style={styles.suggestion}
+                testID={`editor-caption-mention-${person.username}`}
+              >
+                <Text style={[textStyle('bodySmall', '700'), styles.suggestionText]} numberOfLines={1}>
+                  @{person.username}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         <View
           style={styles.row}
           accessible
@@ -166,5 +198,15 @@ const styles = StyleSheet.create({
   },
   hashtagText: { color: colors.brandText },
   visibility: { gap: space.sm },
+  suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: -space.sm },
+  suggestion: {
+    backgroundColor: colors.subtle,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    minHeight: sizes.minTap - 2 * space.xs,
+    justifyContent: 'center',
+  },
+  suggestionText: { color: colors.brandLink },
   error: { color: colors.danger },
 });

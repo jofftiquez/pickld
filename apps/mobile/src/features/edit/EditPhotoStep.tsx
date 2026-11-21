@@ -10,7 +10,7 @@ import { textStyle } from '@/theme/text';
 import { colors, space, type Slot } from '@/theme/tokens';
 
 import { BubblePanel } from './bubble/BubblePanel';
-import type { Overlay, Place } from './edits';
+import type { Mention, Overlay, Place } from './edits';
 import { editorPhotoStyles, useEditorPhotoFrame } from './editorPhotoFrame';
 import { FilteredPhoto } from './FilteredPhoto';
 import { FILTER_GAP, filterThumbSize } from './filterGrid';
@@ -18,6 +18,7 @@ import { filterIdSchema, filterMatrices, type FilterId } from './filters';
 import { FilterThumbnail } from './FilterThumbnail';
 import { OverlayLayer } from './overlays/OverlayLayer';
 import { PhotoTools, type PhotoToolsProps } from './PhotoTools';
+import { MentionPanel } from './mention/MentionPanel';
 import { PlacePanel } from './place/PlacePanel';
 import type { Transform } from './overlays/transform';
 import type { CatalogSticker } from './stickers/catalog';
@@ -25,7 +26,7 @@ import { StickersPanel } from './stickers/StickersPanel';
 import { TextPanel } from './text/TextPanel';
 import { applyTextChange, type TextOverlay } from './text/textOverlay';
 
-export const editorTools = ['filters', 'stickers', 'bubble', 'text', 'place'] as const;
+export const editorTools = ['filters', 'stickers', 'bubble', 'text', 'place', 'mention'] as const;
 export type EditorTool = (typeof editorTools)[number];
 
 export type EditPhotoStepProps = {
@@ -45,9 +46,9 @@ export type EditPhotoStepProps = {
   onDeleteOverlay: (id: string) => void;
   /** A sticker tapped in the Stickers tool (M2-15). */
   onAddSticker: (sticker: CatalogSticker) => void;
-  /** Adds an overlay on top and selects it (Bubble, Text and Place tools); see useEditorState.addOverlay. */
+  /** Adds an overlay on top and selects it (Bubble, Text, Place and Mention tools); see useEditorState.addOverlay. */
   onAddOverlay: (overlay: Overlay, group?: string) => void;
-  /** Changes an overlay's content (Bubble, Text and Place tools); see useEditorState.updateOverlay. */
+  /** Changes an overlay's content (Bubble, Text, Place and Mention tools); see useEditorState.updateOverlay. */
   onUpdateOverlay: (id: string, update: (overlay: Overlay) => Overlay, group?: string) => void;
   onSelectTool: (tool: EditorTool) => void;
   canUndo: boolean;
@@ -63,7 +64,7 @@ export type EditPhotoStepProps = {
 
 /**
  * The editor's first step (D-103; design: EditPhoto): the 3:4 photo as large as fits, with the filter and
- * overlays, then the tool tabs (Filters, Stickers, Bubble, Text, Place), the tool's panel and Undo. No caption or
+ * overlays, then the tool tabs (Filters, Stickers, Bubble, Text, Place, Mention), the tool's panel and Undo. No caption or
  * visibility here: Next opens the details step.
  */
 export function EditPhotoStep({
@@ -98,6 +99,8 @@ export function EditPhotoStep({
   const [overlayGesture, setOverlayGesture] = useState(false);
   const selectedText = overlays.find((o): o is TextOverlay => o.type === 'text' && o.id === selectedOverlayId) ?? null;
   const selectedPlace = overlays.find((o): o is Place => o.type === 'place' && o.id === selectedOverlayId) ?? null;
+  const selectedMention =
+    overlays.find((o): o is Mention => o.type === 'mention' && o.id === selectedOverlayId) ?? null;
 
   const scroller = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const scrollPanel = (to: 'top' | 'photo') =>
@@ -198,6 +201,13 @@ export function EditPhotoStep({
           />
         ) : tool === 'place' ? (
           <PlacePanel selected={selectedPlace} onAdd={onAddOverlay} onUpdate={onUpdateOverlay} />
+        ) : tool === 'mention' ? (
+          <MentionPanel
+            selected={selectedMention}
+            taggedIds={overlays.flatMap((o) => (o.type === 'mention' ? [o.userId] : []))}
+            onAdd={onAddOverlay}
+            onUpdate={onUpdateOverlay}
+          />
         ) : (
           <TextPanel
             selected={selectedText}
