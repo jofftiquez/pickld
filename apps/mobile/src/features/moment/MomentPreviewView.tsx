@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,6 +26,7 @@ import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import type { OptionError } from './momentActions';
 import { canShare, previewActions, resolveIndex, type PreviewItem } from './momentPreview';
+import { captionParts, type MomentTag } from './momentTags';
 import { MomentView } from './MomentView';
 import { PreviewActionButton } from './PreviewActionButton';
 
@@ -49,6 +51,9 @@ export type MomentPreviewViewProps = {
   busy?: boolean;
   /** Why the last action failed, shown above the bar. */
   error?: OptionError | null;
+  /** The people tagged on live moments (0172), by moment id: the Tagged row and caption @names link to them. */
+  tags?: Readonly<Record<string, readonly MomentTag[]>>;
+  onOpenProfile?: (username: string) => void;
   locale?: string;
 };
 
@@ -73,6 +78,8 @@ export function MomentPreviewView({
   onDelete,
   busy = false,
   error = null,
+  tags = {},
+  onOpenProfile,
   locale = deviceLocale(),
 }: MomentPreviewViewProps) {
   const { t } = useTranslation();
@@ -138,6 +145,7 @@ export function MomentPreviewView({
   const visibilityLabel = t(`visibility.${VISIBILITY_KEY[item.visibility]}`);
   const actions = previewActions(item).filter((action) => action !== 'cover' || onSetCover !== undefined);
   const shareable = canShare(item);
+  const momentTags = item.kind === 'live' ? (tags[item.key] ?? []) : [];
   const note = item.kind === 'queued' ? (item.uploading ? t('preview.uploading') : t('preview.queued')) : null;
 
   // Large text: the whole screen scrolls (photo, details, then actions) instead of only the details, which
@@ -228,8 +236,41 @@ export function MomentPreviewView({
           </View>
           {item.caption ? (
             <Text style={[textStyle('momentCaption'), styles.caption]} testID="preview-caption">
-              {item.caption}
+              {captionParts(item.caption, momentTags).map((part, i) =>
+                part.kind === 'mention' && part.tag && onOpenProfile ? (
+                  <Text
+                    key={i}
+                    style={styles.mention}
+                    onPress={() => part.tag && onOpenProfile(part.tag.username)}
+                    accessibilityRole="link"
+                    testID={`preview-caption-mention-${part.tag.username}`}
+                  >
+                    {part.text}
+                  </Text>
+                ) : (
+                  part.text
+                ),
+              )}
             </Text>
+          ) : null}
+          {momentTags.length > 0 ? (
+            <View style={styles.tagged} testID="preview-tagged">
+              <Text style={[textStyle('bodySmall', '600'), styles.muted]}>{t('moment.tags.label')}</Text>
+              {momentTags.map((tag) => (
+                <Pressable
+                  key={tag.userId}
+                  onPress={() => onOpenProfile?.(tag.username)}
+                  disabled={!onOpenProfile}
+                  accessibilityRole="link"
+                  accessibilityLabel={t('moment.tags.open', { username: tag.username })}
+                  hitSlop={space.sm}
+                  style={styles.tagChip}
+                  testID={`preview-tag-${tag.username}`}
+                >
+                  <Text style={[textStyle('bodySmall', '700'), { color: colors.brandLink }]}>@{tag.username}</Text>
+                </Pressable>
+              ))}
+            </View>
           ) : null}
           {item.likeCount !== null && item.commentCount !== null ? (
             <Text style={[textStyle('bodySmall', '600'), styles.ink]} testID="preview-counts">
@@ -411,6 +452,9 @@ const styles = StyleSheet.create({
   muted: { color: colors.muted, flexShrink: 1 },
   ink: { color: colors.ink },
   caption: { color: colors.ink },
+  mention: { color: colors.brandLink, fontWeight: '700' },
+  tagged: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: space.md, rowGap: space.xs },
+  tagChip: { paddingVertical: space.xs },
   error: { color: colors.danger },
   actions: { flexDirection: 'row', gap: space.sm },
   actionsWide: { flexWrap: 'wrap', rowGap: space.sm },

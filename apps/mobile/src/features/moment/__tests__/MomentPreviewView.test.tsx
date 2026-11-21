@@ -87,6 +87,26 @@ describe('MomentPreviewView', () => {
     }
   });
 
+  it('a tagged moment: the Tagged row and the caption’s tagged @name open the profile; other @words stay plain', async () => {
+    const onOpenProfile = jest.fn();
+    const tagged = items.map((item) =>
+      item.key === 'm-whereami' ? { ...item, caption: 'lunch with @aya and @nobody' } : item,
+    );
+    await setup({
+      items: tagged,
+      tags: { 'm-whereami': [{ userId: 'u-aya', username: 'aya' }] },
+      onOpenProfile,
+    });
+    expect(screen.getByTestId('preview-caption')).toHaveTextContent('lunch with @aya and @nobody');
+    expect(screen.queryByTestId('preview-caption-mention-nobody')).toBeNull();
+    await fireEvent.press(screen.getByTestId('preview-caption-mention-aya'));
+    await fireEvent.press(screen.getByRole('link', { name: 'Opens @aya’s profile' }));
+    expect(onOpenProfile.mock.calls).toEqual([['aya'], ['aya']]);
+    // The next moment has no tags: no Tagged row.
+    await swipeTo(1);
+    expect(screen.queryByTestId('preview-tagged')).toBeNull();
+  });
+
   it('offers the owner Set as cover in the bar, and shows Cover instead on the jar’s cover (D-98)', async () => {
     const onSetCover = jest.fn();
     const withCover = items.map((i) => (i.slot === 'ootd' ? { ...i, isCover: true } : i));

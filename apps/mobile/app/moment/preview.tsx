@@ -20,6 +20,7 @@ import type { MomentOptionsMode } from '@/features/moment/MomentOptionsSheet';
 import { MomentPreviewView } from '@/features/moment/MomentPreviewView';
 import { deleteMoment, MomentOptionError, type OptionError } from '@/features/moment/momentActions';
 import { buildPreviewItems, canSetCover, type PreviewItem } from '@/features/moment/momentPreview';
+import { useMomentTags } from '@/features/moment/momentTags';
 import { useSetJarCover } from '@/features/moment/useSetJarCover';
 import { currentSlot } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
@@ -80,6 +81,9 @@ export default function MomentPreviewScreen() {
     (pastDate ? day : jarData) === undefined
       ? undefined
       : buildPreviewItems({ tiles, queue, jarId, page: page.data, defaultVisibility: me?.defaultVisibility });
+
+  // Who is tagged on the live moments (0172), for the Tagged row and the caption's @names.
+  const tags = useMomentTags(items?.filter((item) => item.kind === 'live').map((item) => item.key) ?? []);
 
   // A moment posted since the jar page was read (an upload that finished while the preview was open, or the
   // editor's Back re-reading the page before the upload landed) isn't on the cached page, so the preview would
@@ -188,6 +192,8 @@ export default function MomentPreviewScreen() {
           insets={insets}
           busy={busy}
           error={error}
+          tags={tags.data}
+          onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}
           onClose={close}
           onEdit={(item) => router.push(editHref(item))}
           onShare={(item) => {

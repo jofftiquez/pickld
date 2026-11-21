@@ -1,6 +1,6 @@
 # FR-CAP-08: tag a mutual reader. Dale takes a photo into SLOT, adds a Mention sticker for Aya (the Mention tool
 # offers only mutual readers: Aya and Mika, not Jun, who reads Dale one way), then types "@ay" in the caption and
-# picks Aya from the suggestions. Saved and live, Dale's preview shows it. Aya is told
+# picks Aya from the suggestions. Saved and live, Dale's preview shows Tagged @aya. Aya is told
 # ("Dale Santos tagged you in a moment"), the row opens Moment detail with the Tagged row, and Remove tag takes
 # it off.
 # Needs the seed data, dale signed in and SLOT empty in his open jar (default afternoon):
@@ -95,11 +95,14 @@ env:
     timeout: 60000
 - tapOn:
     id: jar-tile-${SLOT}
-# The owner's tile opens the moment preview (the sticker is drawn into the photo there); the Tagged row and
-# its links are on Moment detail, checked from Aya's side below.
+# The owner's tile opens the moment preview: the caption's @aya and the Tagged row link to Aya.
 - extendedWaitUntil:
     visible: lunch with @aya
     timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: preview-tag-aya
+    timeout: 15000
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: MomentTagged-ios
