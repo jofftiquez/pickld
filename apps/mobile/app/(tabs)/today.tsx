@@ -184,11 +184,12 @@ export default function TodayScreen() {
         celebratePublish={celebratePublish}
         featuredPack={featuredPack}
         onOpenPack={(slug) => router.push({ pathname: '/stickers/pack/[slug]', params: { slug } })}
-        // Previous day opens the day before this jar's date, in its own zone (Joff); there is no next day.
+        // Previous day (‹ or a swipe right) opens the day before this jar's date, in its own zone (Joff); there is
+        // no next day. `via: 'step'` fades the day page in, so it doesn't slide in against the swipe.
         step={{
           previous: addDays(stepToday(jar?.jar?.localDate ?? localDate, localDate), -1),
           next: null,
-          onStep: (date) => router.push({ pathname: '/day/[date]', params: { date } }),
+          onStep: (date) => router.push({ pathname: '/day/[date]', params: { date, via: 'step' } }),
         }}
       />
       {published && openJar ? (

@@ -1,3 +1,5 @@
+// Gesture-handler's own jest mocks for its native module (the day swipe on Today).
+import 'react-native-gesture-handler/jestSetup';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 import { useReducedMotion } from 'react-native-reanimated';

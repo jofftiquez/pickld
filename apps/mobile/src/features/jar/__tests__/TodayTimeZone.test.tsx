@@ -1,3 +1,5 @@
+// Gesture-handler's own jest mocks for its native module (the day swipe on Today).
+import 'react-native-gesture-handler/jestSetup';
 import type { Session } from '@supabase/supabase-js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';

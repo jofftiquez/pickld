@@ -1,4 +1,6 @@
-import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import 'react-native-gesture-handler/jestSetup';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
+import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
 import { filterMatrices } from '@/features/edit/filters';
 import { colors, sizes, space } from '@/theme/tokens';
@@ -47,7 +49,45 @@ async function renderToday(props: Partial<TodayViewProps> = {}) {
   return { onCapture, onOpenMyDays, onRetry, onOpenMoment };
 }
 
+/** A sideways drag on the page, as far and as fast as given. */
+async function swipe(translationX: number, velocityX = 0, translationY = 0) {
+  const pan = createGestureController('day-swipe');
+  await act(() => {
+    pan.begin({ translationX: 0, translationY: 0 });
+    pan.activate({ translationX: 0, translationY: 0 });
+    pan.update({ translationX, translationY, velocityX });
+    pan.end({ translationX, translationY, velocityX });
+  });
+}
+
 describe('TodayView', () => {
+  // Joff: swiping right steps to the day before, left to the day after, like ‹ and ›.
+  it('a swipe right steps to the day before and a swipe left to the day after; a short drag does nothing', async () => {
+    const onStep = jest.fn();
+    await renderToday({
+      day: { date: '2026-11-08', onBack: jest.fn() },
+      step: { previous: '2026-11-07', next: '2026-11-09', onStep },
+    });
+    await swipe(30);
+    expect(onStep).not.toHaveBeenCalled();
+    await swipe(120);
+    expect(onStep).toHaveBeenLastCalledWith('2026-11-07');
+    await swipe(-120);
+    expect(onStep).toHaveBeenLastCalledWith('2026-11-09');
+    // A quick flick counts even when it is short.
+    await swipe(-40, -900);
+    expect(onStep).toHaveBeenCalledTimes(3);
+  });
+
+  it('on Today a swipe left does nothing: there are no future days', async () => {
+    const onStep = jest.fn();
+    await renderToday({ step: { previous: '2026-11-09', next: null, onStep } });
+    await swipe(-120);
+    expect(onStep).not.toHaveBeenCalled();
+    await swipe(120);
+    expect(onStep).toHaveBeenCalledWith('2026-11-09');
+  });
+
   it('shows the Pending uploads button with its count only when something is pending', async () => {
     const onOpenPending = jest.fn();
     await renderToday({ onOpenPending, pendingCount: 0 });
