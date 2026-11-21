@@ -16,6 +16,7 @@ import {
   PIN_VIEWBOX as SERVER_PIN_VIEWBOX,
   PLACE,
   placeReferenceWidth as serverPlaceReferenceWidth,
+  mentionReferenceWidth as serverMentionReferenceWidth,
   STAMP,
   stampText as serverStampText,
   SURFACE,
@@ -35,6 +36,7 @@ import {
   isCloud,
 } from '../bubble/bubbleLayout';
 import { filterMatrices } from '../filters';
+import { mentionReferenceWidth } from '../mention/mentionLayout';
 import { PIN_PATH, PIN_VIEWBOX, placeReferenceWidth } from '../place/placeLayout';
 import { stampText } from '../stickers/stamps';
 import { textFontStyle } from '../text/textFonts';
@@ -188,6 +190,13 @@ describe('the export renderer matches the app', () => {
       expect(PLACE).toEqual(place);
       expect([SERVER_PIN_PATH, SERVER_PIN_VIEWBOX]).toEqual([PIN_PATH, PIN_VIEWBOX]);
       expect(serverPlaceReferenceWidth(text)).toBe(placeReferenceWidth(text));
+    },
+  );
+
+  it.each(['abc', 'joff', 'mara.lim_2026', 'twenty_characters_x'])(
+    'sizes the mention sticker @%s the same way',
+    (name) => {
+      expect(serverMentionReferenceWidth(name)).toBe(mentionReferenceWidth(name));
     },
   );
 });

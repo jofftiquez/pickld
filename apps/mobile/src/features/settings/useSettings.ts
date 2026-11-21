@@ -16,7 +16,7 @@ import type { DaySlot } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
 
 /** The push types a person can turn off (FR-NOT-04). Removal and appeal notices stay on: they are about safety. */
-export const PUSH_TYPES = ['new_reader', 'like', 'comment', 'reply', 'full_jar', 'friend_joined'] as const;
+export const PUSH_TYPES = ['new_reader', 'like', 'comment', 'reply', 'full_jar', 'friend_joined', 'tag'] as const;
 export type PushType = (typeof PUSH_TYPES)[number];
 
 const prefsRow = z.object({
@@ -26,6 +26,7 @@ const prefsRow = z.object({
   reply: z.boolean(),
   full_jar: z.boolean(),
   friend_joined: z.boolean(),
+  tag: z.boolean(),
   quiet_hours: z.boolean(),
   quiet_start: z.string(),
   quiet_end: z.string(),
@@ -85,7 +86,7 @@ async function fetchAccount(userId: string): Promise<SettingsAccount> {
 async function fetchPrefs(userId: string): Promise<NotificationPrefs> {
   const { data, error } = await getSupabase()
     .from('notification_prefs')
-    .select('new_reader, like, comment, reply, full_jar, friend_joined, quiet_hours, quiet_start, quiet_end')
+    .select('new_reader, like, comment, reply, full_jar, friend_joined, tag, quiet_hours, quiet_start, quiet_end')
     .eq('user_id', userId)
     .single();
   if (error) throw new Error(error.message);

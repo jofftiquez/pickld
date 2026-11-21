@@ -173,3 +173,37 @@ describe('place overlays', () => {
     ).toEqual([{ ...placeOverlay, color: 'white' }]);
   });
 });
+
+describe('mention overlays', () => {
+  const mention = {
+    id: 'mn1',
+    type: 'mention',
+    x: 0.5,
+    y: 0.4,
+    scale: 0.3,
+    rotation: 0,
+    userId: '6f0c1c39-3d4c-4f8e-9a2b-1c2d3e4f5a6b',
+    username: 'mara.lim',
+    color: 'sky',
+  } as const;
+
+  it('round-trip with the person and the color only', () => {
+    const stored: unknown = JSON.parse(
+      JSON.stringify({ v: 1, filter: 'original', overlays: [{ ...mention, extra: 1 }] }),
+    );
+    expect(parseEdits(stored).overlays).toEqual([mention]);
+  });
+
+  it('drops a mention without a real id or with a name Pickld would refuse', () => {
+    expect(
+      parseEdits({
+        filter: 'original',
+        overlays: [
+          { ...mention, id: 'a', userId: 'not-an-id' },
+          { ...mention, id: 'b', username: 'no spaces' },
+          { ...mention, id: 'c', username: 'ab' },
+        ],
+      }).overlays,
+    ).toEqual([]);
+  });
+});

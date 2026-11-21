@@ -127,6 +127,17 @@ describe('targetOf', () => {
     expect(buildSections([row({ id: '2', type: 'invite_joined', created_at: at })], NOW, TZ)).toEqual([]);
   });
 
+  it('opens a moment someone tagged you in through its jar, from the row or the push (0172)', () => {
+    const want = { pathname: '/moment/[id]', params: { id: 'm1', jar: 'j1' } };
+    expect(
+      targetOf(entry(row({ id: '1', type: 'tag', actor: mika, moment_id: 'm1', jar_id: 'j1', created_at: at }))),
+    ).toEqual(want);
+    expect(pushTarget({ type: 'tag', notificationIds: ['n1'], jarId: 'j1', momentId: 'm1' })).toEqual(want);
+    expect(
+      buildSections([row({ id: '2', type: 'tag', moment_id: 'm1', jar_id: 'j1', created_at: at })], NOW, TZ),
+    ).toEqual([]);
+  });
+
   it('has nothing to open when the target is gone', () => {
     expect(targetOf(entry(row({ id: '1', type: 'full_jar', created_at: at })))).toBeNull();
   });

@@ -117,6 +117,11 @@ Deno.test('the inviter hears who joined with their invite (0135)', () => {
   assertEquals([p?.title, p?.body, p?.data.type], ['Ana', 'joined with your invite. Say hi?', 'invite_joined']);
 });
 
+Deno.test('a tagged person hears who tagged them, and the push opens that moment (0172)', () => {
+  const [p] = composePushes([row({ id: 'tg', type: 'tag', actor_name: 'Joff', moment_id: 'm1', jar_id: 'j1' })]);
+  assertEquals([p?.title, p?.body, p?.data.momentId, p?.data.jarId], ['Joff', 'tagged you in a moment.', 'm1', 'j1']);
+});
+
 Deno.test('an admitted account hears it is in (0131)', () => {
   const [p] = composePushes([row({ id: 'ad', type: 'admitted', actor_name: null, jar_id: null, jar_local_date: null })]);
   assertEquals([p?.title, p?.body, p?.data.type], ["You're in", 'Fill your first jar.', 'admitted']);

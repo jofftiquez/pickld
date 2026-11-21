@@ -15,6 +15,7 @@ export const notificationType = z.enum([
   'friend_joined',
   'admitted',
   'invite_joined',
+  'tag',
 ]);
 export type NotificationType = z.infer<typeof notificationType>;
 
@@ -63,6 +64,7 @@ const NEEDS_ACTOR: ReadonlySet<NotificationType> = new Set([
   'reply',
   'friend_joined',
   'invite_joined',
+  'tag',
 ]);
 
 function toEntry(row: NotificationRow): NotificationEntry {
@@ -133,6 +135,7 @@ export type NotificationTarget =
   | { pathname: '/u/[username]'; params: { username: string } }
   | { pathname: '/jar/[id]'; params: { id: string } }
   | { pathname: '/moment/[id]'; params: { id: string } }
+  | { pathname: '/moment/[id]'; params: { id: string; jar: string } }
   | { pathname: '/comments/[jarId]'; params: { jarId: string; momentId?: string } }
   | { pathname: '/(tabs)/today' };
 
@@ -156,6 +159,11 @@ export function targetOf(entry: NotificationEntry): NotificationTarget | null {
     case 'appeal_decided':
       if (entry.momentId) return { pathname: '/moment/[id]', params: { id: entry.momentId } };
       return entry.jarId ? { pathname: '/jar/[id]', params: { id: entry.jarId } } : null;
+    case 'tag':
+      // Someone else's moment: opened through its jar, as from a timeline (0172).
+      return entry.momentId && entry.jarId
+        ? { pathname: '/moment/[id]', params: { id: entry.momentId, jar: entry.jarId } }
+        : null;
     case 'full_jar':
       return entry.jarId ? { pathname: '/jar/[id]', params: { id: entry.jarId } } : null;
     case 'admitted':

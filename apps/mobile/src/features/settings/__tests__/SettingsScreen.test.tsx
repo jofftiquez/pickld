@@ -93,6 +93,7 @@ jest.mock('@/lib/supabase', () => ({
               reply: true,
               full_jar: true,
               friend_joined: true,
+              tag: true,
               quiet_hours: true,
               quiet_start: '22:00:00',
               quiet_end: '07:00:00',

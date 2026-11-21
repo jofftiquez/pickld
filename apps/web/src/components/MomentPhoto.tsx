@@ -8,7 +8,8 @@ import {
   isCloud,
   tailPathData,
 } from '@/features/edit/bubble/bubbleLayout';
-import { parseEdits, type Bubble, type Overlay, type Place } from '@/features/edit/edits';
+import { parseEdits, type Bubble, type Mention, type Overlay, type Place } from '@/features/edit/edits';
+import { mentionReferenceWidth, mentionText } from '@/features/edit/mention/mentionLayout';
 import { PIN_PATH, PIN_VIEWBOX, placeReferenceWidth } from '@/features/edit/place/placeLayout';
 import {
   BACKGROUND_RADIUS,
@@ -208,6 +209,39 @@ function PlaceArt({ overlay }: { overlay: Place }) {
   );
 }
 
+/**
+ * A mention sticker as the app's MentionOverlay draws it: "@username" in a pill of its bubble color. Plain text
+ * here, never a link: the shared page doesn't send visitors to profiles (0172).
+ */
+function MentionArt({ overlay }: { overlay: Mention }) {
+  const pair = bubbleColors[overlay.color];
+  const refWidth = mentionReferenceWidth(overlay.username);
+  const u = (points: number) => `${((points * overlay.scale) / refWidth) * 100}cqw`;
+  return (
+    <span
+      data-mention-overlay={overlay.id}
+      style={{
+        ...place(overlay),
+        aspectRatio: `${refWidth} / ${placeStyle.referenceHeight}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: `0 ${u(placeStyle.paddingX)}`,
+        boxSizing: 'border-box',
+        borderRadius: 9999,
+        background: pair.fill,
+        color: pair.text,
+        fontSize: u(placeStyle.fontSize),
+        fontWeight: 800,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+      }}
+    >
+      {mentionText(overlay.username)}
+    </span>
+  );
+}
+
 function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: string }) {
   if (overlay.type === 'sticker') {
     // Sticker art is public catalog data, served without a token (D-25).
@@ -215,6 +249,7 @@ function OverlayView({ overlay, assetBase }: { overlay: Overlay; assetBase: stri
   }
   if (overlay.type === 'text') return <TextArt overlay={overlay} />;
   if (overlay.type === 'place') return <PlaceArt overlay={overlay} />;
+  if (overlay.type === 'mention') return <MentionArt overlay={overlay} />;
   const style = bubbleColors[overlay.color];
   const cloud = isCloud(overlay);
   return (

@@ -962,6 +962,70 @@ export type Database = {
           },
         ];
       };
+      moment_tags: {
+        Row: {
+          author_id: string;
+          created_at: string;
+          moment_id: string;
+          notified_at: string | null;
+          removed_at: string | null;
+          tagged_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id: string;
+          created_at?: string;
+          moment_id: string;
+          notified_at?: string | null;
+          removed_at?: string | null;
+          tagged_id: string;
+        };
+        Update: {
+          author_id?: string;
+          created_at?: string;
+          moment_id?: string;
+          notified_at?: string | null;
+          removed_at?: string | null;
+          tagged_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'moment_tags_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moment_tags_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moment_tags_moment_id_fkey';
+            columns: ['moment_id'];
+            isOneToOne: false;
+            referencedRelation: 'moments';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moment_tags_tagged_id_fkey';
+            columns: ['tagged_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'moment_tags_tagged_id_fkey';
+            columns: ['tagged_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       moments: {
         Row: {
           added_at: string;
@@ -1131,6 +1195,7 @@ export type Database = {
           quiet_start: string;
           removed: boolean;
           reply: boolean;
+          tag: boolean;
           updated_at: string;
           user_id: string;
         };
@@ -1147,6 +1212,7 @@ export type Database = {
           quiet_start?: string;
           removed?: boolean;
           reply?: boolean;
+          tag?: boolean;
           updated_at?: string;
           user_id: string;
         };
@@ -1162,6 +1228,7 @@ export type Database = {
           quiet_start?: string;
           removed?: boolean;
           reply?: boolean;
+          tag?: boolean;
           updated_at?: string;
           user_id?: string;
         };
@@ -2114,6 +2181,17 @@ export type Database = {
         }[];
       };
       can_appeal: { Args: { item: string; uid?: string }; Returns: boolean };
+      can_see_tag: {
+        Args: {
+          t: Omit<
+            Database['public']['Tables']['moment_tags']['Row'],
+            Database['public']['Tables']['moment_tags']['ComputedFields']
+          >;
+          viewer: string;
+        };
+        Returns: boolean;
+      };
+      can_tag: { Args: { p_author: string; p_moment: string; p_tagged: string }; Returns: boolean };
       can_view_comment_thread: { Args: { p_jar: string; p_moment: string; viewer: string }; Returns: boolean };
       can_view_jar: {
         Args: {
@@ -2136,6 +2214,7 @@ export type Database = {
         Args: { t: Database['public']['Enums']['target_type']; tid: string; viewer: string };
         Returns: boolean;
       };
+      caption_mentioned: { Args: { p_caption: string }; Returns: string[] };
       check_iana_zone: { Args: { p_tz: string }; Returns: undefined };
       contact_hashes_pending: {
         Args: { p_limit?: number };
@@ -2209,6 +2288,7 @@ export type Database = {
         }[];
       };
       discover_via: { Args: { p_author: string; viewer: string }; Returns: string };
+      edits_allowed_mentions: { Args: { p_author: string; p_edits: Json; p_moment: string }; Returns: Json };
       ensure_jar: {
         Args: { local_date: string; tz: string };
         Returns: {
@@ -2830,6 +2910,7 @@ export type Database = {
         }[];
       };
       push_tickets_save: { Args: { p_ticket_ids: string[]; p_tokens: string[] }; Returns: undefined };
+      remove_moment_tag: { Args: { p_moment: string }; Returns: undefined };
       resolved_cover_id: {
         Args: {
           j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;
@@ -2892,6 +2973,16 @@ export type Database = {
           username: string;
         }[];
       };
+      taggable_people: {
+        Args: { p_limit?: number; p_query?: string };
+        Returns: {
+          avatar_path: string;
+          display_name: string;
+          id: string;
+          username: string;
+        }[];
+      };
+      untag_moment: { Args: { p_moment: string; p_tagged: string }; Returns: undefined };
       username_available: { Args: { candidate: string }; Returns: string };
       waiting_position: { Args: Record<PropertyKey, never>; Returns: number };
       waitlist_join:
