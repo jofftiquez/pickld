@@ -1,10 +1,11 @@
 # M4-02: Sign in with an email code through local Mailpit, then land on Today (FR-ACC-02). Also captures
 # Sign in and Check your email. Starts signed out; ends with dale signed in again.
 # maestro test apps/mobile/.maestro/sign-in-email.yaml
+# Another account: maestro test -e EMAIL=aya@pickld.test …, or runFlow with env EMAIL. (A flow-level env block
+# would win over the caller's EMAIL, so the default is set here instead.)
 appId: me.pickld.app
-env:
-  EMAIL: dale@pickld.test
 ---
+- evalScript: "${output.email = (typeof EMAIL !== 'undefined' && EMAIL) ? EMAIL : 'dale@pickld.test'}"
 - launchApp
 - openLink: pickld://dev/sign-out
 - runFlow:
@@ -24,7 +25,7 @@ env:
     timeout: 10000
 - tapOn:
     id: auth-email
-- inputText: ${EMAIL}
+- inputText: ${output.email}
 # The email field's return key is Send (M5-01), which hideKeyboard can't use; tapping the title dismisses it.
 - tapOn: Welcome back
 - waitForAnimationToEnd:
@@ -44,7 +45,7 @@ env:
 - runScript:
     file: mailpit-code.js
     env:
-      EMAIL: ${EMAIL}
+      EMAIL: ${output.email}
 # The code field has focus; it checks the code at the 6th digit.
 - tapOn:
     id: check-email-code
