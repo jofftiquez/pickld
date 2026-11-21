@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Logo } from '~/components/Logo';
 import { t } from '~/i18n/t';
+import { waitlistOpen } from '~/lib/env';
 
 /** Wordmark, page links, the legal links (FR-PRV-04) and the copyright line. */
 export function MarketingFooter() {
@@ -28,9 +29,11 @@ export function MarketingFooter() {
           <li>
             <Link href="/#faq">{t('marketing.nav.faq')}</Link>
           </li>
-          <li>
-            <Link href="/waitlist">{t('marketing.nav.join')}</Link>
-          </li>
+          {waitlistOpen() && (
+            <li>
+              <Link href="/waitlist">{t('marketing.nav.join')}</Link>
+            </li>
+          )}
         </ul>
         <ul aria-label={t('legal.footer')}>
           <li>

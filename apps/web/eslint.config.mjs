@@ -18,7 +18,7 @@ const jsxCopy = [
 export default defineConfig([
   ...next,
   ...nextTs,
-  { ignores: ['.next/*', 'next-env.d.ts'] },
+  { ignores: ['.next/*', '.open-next/*', '.wrangler/*', 'next-env.d.ts'] },
   {
     files: ['src/**/*.{ts,tsx}'],
     rules: {

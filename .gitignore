@@ -15,6 +15,9 @@ supabase/.branches/
 .amp/*
 !.amp/services.yaml
 .next/
+.open-next/
+.wrangler/
+.dev.vars*
 # Docs stay private (the repo is public): only the runbooks are tracked.
 /docs/*
 !/docs/runbooks/

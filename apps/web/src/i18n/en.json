@@ -323,6 +323,7 @@
       "freeA": "Yes. Jars, readers and the free sticker packs cost nothing. Some extra sticker packs will cost a little, and what you buy is yours to keep.",
       "androidQ": "Is it on Android?",
       "androidA": "Pickld starts on iPhone. Android comes later; join the waitlist and we’ll tell you when it’s ready.",
+      "androidASoon": "Pickld starts on iPhone. Android comes later.",
       "whoQ": "Who can see my jar?",
       "whoA": "Your readers, unless you choose otherwise. Make a jar Everyone to share it with a link, or Only me to keep it to yourself. You can block anyone.",
       "fullQ": "Do I have to fill all eight?",
@@ -335,7 +336,8 @@
     },
     "final": {
       "title": "You deserve to be you.",
-      "body": "The easiest way to tell your story. Join the waitlist and be first in when Pickld opens."
+      "body": "The easiest way to tell your story. Join the waitlist and be first in when Pickld opens.",
+      "bodySoon": "The easiest way to tell your story. Pickld is coming soon to iPhone."
     },
     "footer": {
       "copyright": "© 2026 Pickld"
@@ -499,7 +501,8 @@
     "videoPlay": "Play “You Deserve to Be You!”, the first Pickld video from 2016, from YouTube",
     "videoFrame": "You Deserve to Be You!, the first Pickld video, on YouTube",
     "finalTitle": "You deserve to be you.",
-    "finalBody": "That was true ten years ago, and it’s still why we make Pickld. Join the waitlist to be among the first to fill a jar."
+    "finalBody": "That was true ten years ago, and it’s still why we make Pickld. Join the waitlist to be among the first to fill a jar.",
+    "finalBodySoon": "That was true ten years ago, and it’s still why we make Pickld. It’s coming soon to iPhone."
   },
   "why": {
     "metaTitle": "Why Pickld · Pickld",
@@ -610,7 +613,8 @@
     "readStudyLabel": "Read “{{title}}”",
     "missionLink": "Read our mission",
     "finalTitle": "Keep up with your people.",
-    "finalBody": "More than ten years on, it’s still a simple way to keep your days and be yourself. Pickld is coming to iPhone; join the waitlist to be among the first to fill a jar."
+    "finalBody": "More than ten years on, it’s still a simple way to keep your days and be yourself. Pickld is coming to iPhone; join the waitlist to be among the first to fill a jar.",
+    "finalBodySoon": "More than ten years on, it’s still a simple way to keep your days and be yourself. Pickld is coming soon to iPhone."
   },
   "mission": {
     "metaTitle": "Our mission · Pickld",
@@ -655,6 +659,7 @@
     "promise": "Follow who matters. See what they share. Discover who connects you.",
     "whyLink": "How Pickld works",
     "finalTitle": "Fill a jar with your day.",
-    "finalBody": "Pickld is coming to iPhone. Join the waitlist to be among the first to try it."
+    "finalBody": "Pickld is coming to iPhone. Join the waitlist to be among the first to try it.",
+    "finalBodySoon": "Pickld is coming soon to iPhone."
   }
 }

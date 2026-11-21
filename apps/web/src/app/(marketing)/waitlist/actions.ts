@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-import { waitlistEnv } from '~/lib/env';
+import { waitlistEnv, waitlistOpen } from '~/lib/env';
 
 // Joining the waitlist makes a verified account (INV-12):
 //   1. requestCode: check the Turnstile token, then Supabase Auth emails a 6-digit code (creating the auth user).
@@ -82,6 +82,7 @@ async function sendCode(form: FormData): Promise<WaitlistStatus | 'sent'> {
 
 /** Step 1, the waitlist forms' action. Answers are pages, so a refused captcha or address still lands somewhere. */
 export async function requestCode(form: FormData): Promise<void> {
+  if (!waitlistOpen()) redirect('/'); // a stale page or a hand-made POST while the waitlist is closed
   const result = await sendCode(form);
   if (result === 'sent') redirect('/waitlist/code');
   done(result);
@@ -89,6 +90,7 @@ export async function requestCode(form: FormData): Promise<void> {
 
 /** The address waiting for its code, for the code page; null when the 15 minutes are up. */
 export async function pendingEmail(): Promise<string | null> {
+  if (!waitlistOpen()) return null;
   const raw = (await cookies()).get(COOKIE)?.value;
   if (!raw) return null;
   try {
@@ -138,6 +140,7 @@ async function join(form: FormData): Promise<WaitlistStatus | 'badcode'> {
 
 /** Step 2: a wrong code stays on the code page; every other answer ends the attempt. */
 export async function verifyCode(form: FormData): Promise<void> {
+  if (!waitlistOpen()) redirect('/');
   const result = await join(form);
   if (result === 'badcode') redirect('/waitlist/code?error=badcode');
   (await cookies()).delete({ name: COOKIE, path: '/waitlist' });

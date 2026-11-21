@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { Logo } from '~/components/Logo';
 import { t } from '~/i18n/t';
-import { WaitlistForm } from '~/marketing/WaitlistForm';
+import { WaitlistForm, waitlistText } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
   title: t('why.metaTitle'),
@@ -146,7 +146,7 @@ export default function Why() {
         <div className="mk-wrap">
           <div className="mk-final mk-dark">
             <h2 id="final">{t('why.finalTitle')}</h2>
-            <p className="mk-lead">{t('why.finalBody')}</p>
+            <p className="mk-lead">{waitlistText('why.finalBody')}</p>
             <WaitlistForm id="final" source="why" />
           </div>
         </div>

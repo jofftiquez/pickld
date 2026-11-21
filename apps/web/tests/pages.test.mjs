@@ -18,7 +18,7 @@ const EVERYONE = '11111111-1111-4111-8111-111111111111';
 const READERS = '22222222-2222-4222-8222-222222222222';
 const COVERED = '66666666-6666-4666-8666-666666666666';
 
-let stub, stubUrl, web, base, browser;
+let stub, stubUrl, web, webEnv, base, browser;
 const SITE = 'https://pickld.test';
 const TEAM = 'ABCDE12345';
 const TURNSTILE_SECRET = 'stub-turnstile-secret-0123456789';
@@ -266,33 +266,41 @@ before(async () => {
 
   const port = 3200 + Math.floor(Math.random() * 500);
   base = `http://127.0.0.1:${port}`;
+  webEnv = {
+    ...process.env,
+    SUPABASE_URL: stubUrl,
+    SUPABASE_ANON_KEY: ANON,
+    TURNSTILE_SECRET_KEY: TURNSTILE_SECRET,
+    TURNSTILE_VERIFY_URL: `${stubUrl}/turnstile`,
+    SITE_URL: SITE,
+    APP_STORE_URL: `${stubUrl}/store`,
+    WAITLIST_SECRET: FORWARD_SECRET,
+    APPLE_TEAM_ID: TEAM,
+    ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} `,
+    WAITLIST_OPEN: 'true', // the build is open too (see the test script)
+  };
+  web = await startWeb(port, webEnv);
+  browser = await chromium.launch();
+});
+
+/** `next start` on the build in .next with these settings, once it answers. */
+async function startWeb(port, env) {
   const nextBin = createRequire(import.meta.url).resolve('next/dist/bin/next');
-  web = spawn(process.execPath, [nextBin, 'start', '-p', String(port), '-H', '127.0.0.1'], {
+  const child = spawn(process.execPath, [nextBin, 'start', '-p', String(port), '-H', '127.0.0.1'], {
     cwd: path.join(here, '..'),
-    env: {
-      ...process.env,
-      SUPABASE_URL: stubUrl,
-      SUPABASE_ANON_KEY: ANON,
-      TURNSTILE_SECRET_KEY: TURNSTILE_SECRET,
-      TURNSTILE_VERIFY_URL: `${stubUrl}/turnstile`,
-      SITE_URL: SITE,
-      APP_STORE_URL: `${stubUrl}/store`,
-      WAITLIST_SECRET: FORWARD_SECRET,
-      APPLE_TEAM_ID: TEAM,
-      ANDROID_CERT_SHA256: ` ${CERT.toLowerCase()} `,
-    },
+    env,
     stdio: ['ignore', 'ignore', 'inherit'],
   });
   for (let i = 0; i < 100; i++) {
     try {
-      if ((await fetch(base)).ok) break;
+      if ((await fetch(`http://127.0.0.1:${port}`)).ok) break;
     } catch {
       /* not up yet */
     }
     await new Promise((r) => setTimeout(r, 200));
   }
-  browser = await chromium.launch();
-});
+  return child;
+}
 
 after(async () => {
   await browser?.close();
@@ -629,6 +637,42 @@ test('joining the waitlist checks the captcha, emails a code, then joins as the 
   );
   assert.deepEqual(await page.context().cookies(), [], 'nothing is left behind');
   await page.close();
+});
+
+test('with the waitlist closed, its pages 404 and its actions email no one, even when posted by hand', async () => {
+  resetWaitlist();
+  const port = 3700 + Math.floor(Math.random() * 200);
+  const closedBase = `http://127.0.0.1:${port}`;
+  const closed = await startWeb(port, { ...webEnv, WAITLIST_OPEN: '' });
+  try {
+    for (const route of ['/waitlist', '/waitlist/code']) {
+      assert.equal((await fetch(closedBase + route)).status, 404, route);
+    }
+    // The same build's action ids, posted the way a stale page or a script would.
+    const manifest = JSON.parse(
+      readFileSync(path.join(here, '../.next/server/server-reference-manifest.json'), 'utf8'),
+    );
+    const ids = Object.entries(manifest.node).filter(([, v]) => ['requestCode', 'verifyCode'].includes(v.exportedName));
+    assert.equal(ids.length, 2);
+    const post = (origin, id) => {
+      // What a browser without JavaScript posts for <form action={serverAction}>.
+      const form = new FormData();
+      form.set(`$ACTION_ID_${id}`, '');
+      form.set('email', 'mika@example.com');
+      form.set('source', 'hero');
+      form.set('cf-turnstile-response', 'stub-token');
+      form.set('code', CODE);
+      return fetch(`${origin}/`, { method: 'POST', headers: { Origin: origin }, body: form, redirect: 'manual' });
+    };
+    // Control: the open server takes this post as far as the captcha check.
+    await post(base, ids.find(([, v]) => v.exportedName === 'requestCode')[0]);
+    assert.equal(waitlist.captcha.length, 1);
+    resetWaitlist();
+    for (const [id] of ids) await post(closedBase, id);
+    assert.deepEqual([waitlist.captcha, waitlist.otp, waitlist.verify, waitlist.rpc], [[], [], [], []]);
+  } finally {
+    closed.kill();
+  }
 });
 
 test('an email that already has an account or is on the list gets its own answer', async () => {

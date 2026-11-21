@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 import { t } from '~/i18n/t';
+import { waitlistOpen } from '~/lib/env';
 import { WaitlistForm } from '~/marketing/WaitlistForm';
 
 import type { WaitlistStatus } from './actions';
@@ -13,6 +15,7 @@ const final: WaitlistStatus[] = ['joined', 'already', 'member', 'limited'];
 
 /** Join the waitlist on its own, and the answer page every waitlist form lands on. */
 export default async function Waitlist({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  if (!waitlistOpen()) notFound();
   const raw = (await searchParams).status;
   const status = statuses.find((s) => s === raw);
   const title = status ? t(`marketing.waitlist.${status}Title`) : t('marketing.waitlist.title');

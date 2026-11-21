@@ -4,8 +4,9 @@ import { z } from 'zod';
 // server anyway: pages are rendered there and the browser only gets HTML and signed photo URLs.
 const supabase = z.object({ SUPABASE_URL: z.url(), SUPABASE_ANON_KEY: z.string().min(20) });
 
+/** The Supabase project, or null when the site runs without one (the coming-soon deploy): shared links 404. */
 export function env() {
-  return supabase.parse(process.env);
+  return supabase.safeParse(process.env).data ?? null;
 }
 
 const optionalUrl = z.url().optional().catch(undefined);
@@ -39,6 +40,15 @@ export function appIdentity() {
 }
 
 export const APP_ID = 'me.pickld.app';
+
+/**
+ * The waitlist switch: open only when WAITLIST_OPEN is "true". Closed, every form shows "coming soon", the
+ * waitlist pages 404 and the server actions refuse. Static pages read it at build time and the actions at
+ * request time, so a deploy sets it for both.
+ */
+export function waitlistOpen(): boolean {
+  return process.env.WAITLIST_OPEN === 'true';
+}
 
 /**
  * The waitlist form's server settings (INV-12): Supabase Auth on SUPABASE_URL with the anon key, and the
