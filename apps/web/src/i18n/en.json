@@ -95,7 +95,8 @@
       "faq": "FAQ",
       "join": "Join the waitlist",
       "mission": "Our mission",
-      "moments": "The eight moments"
+      "moments": "The eight moments",
+      "menu": "Menu"
     },
     "hero": {
       "eyebrow": "Coming soon to iPhone",
@@ -340,6 +341,9 @@
       "bodySoon": "The easiest way to tell your story. Pickld is coming soon to iPhone."
     },
     "footer": {
+      "tagline": "Eight moments. One real day. A photo diary for the day you actually had.",
+      "product": "Pickld",
+      "about": "About",
       "copyright": "© 2026 Pickld"
     },
     "waitlist": {

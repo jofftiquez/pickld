@@ -621,6 +621,27 @@ test('the home page shows the pitch, the eight moments and loaded screenshots wi
   await page.close();
 });
 
+test('on a phone the header’s Menu reaches every marketing page and closes after a pick', async () => {
+  const { page } = await open('/');
+  const header = page.getByRole('banner');
+  const visible = await header.locator('a:visible').allTextContents();
+  assert.ok(!visible.includes('Why Pickld') && !visible.includes('Stickers'), 'page links wait behind Menu');
+  await header.getByText('Menu').click();
+  const items = header.locator('.mk-menu').getByRole('link');
+  assert.deepEqual(await items.allTextContents(), [
+    'The eight moments',
+    'Why Pickld',
+    'Our mission',
+    'Stickers',
+    'Our story',
+    'FAQ',
+  ]);
+  await items.filter({ hasText: 'Our mission' }).click();
+  await page.waitForURL(`${base}/mission`);
+  assert.equal(await header.locator('.mk-menu').evaluate((d) => d.open), false);
+  await page.close();
+});
+
 test('the moments page gives each moment its own fanned row with the app’s question and eight ideas', async () => {
   const { page, status } = await open('/moments');
   assert.equal(status, 200);
