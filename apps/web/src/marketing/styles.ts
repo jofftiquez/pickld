@@ -16,8 +16,23 @@ export const css = `
 .mk-top .mk-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:64px}
 .mk-nav{display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0}
 .mk-nav a{display:flex;align-items:center;min-height:44px;padding:0 10px;color:${colors.ink};text-decoration:none;font-weight:700;font-size:14px}
+.mk-topnav{display:flex;align-items:center;gap:6px}
 .mk-nav .mk-wide{display:none}
-@media (min-width:560px){.mk-nav .mk-wide{display:flex}}
+.mk-menu{position:relative}
+.mk-menu summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border-radius:${radius.pill}px;background:${colors.subtle};color:${colors.ink};font-weight:800;font-size:14px;cursor:pointer}
+.mk-menu summary::-webkit-details-marker{display:none}
+.mk-menu-icon,.mk-menu-icon::before,.mk-menu-icon::after{display:block;width:16px;height:2px;border-radius:2px;background:${colors.ink}}
+.mk-menu-icon{position:relative}
+.mk-menu-icon::before,.mk-menu-icon::after{content:'';position:absolute;left:0}
+.mk-menu-icon::before{top:-5px}
+.mk-menu-icon::after{top:5px}
+.mk-menu[open] .mk-menu-icon{background:transparent}
+.mk-menu[open] .mk-menu-icon::before{top:0;transform:rotate(45deg)}
+.mk-menu[open] .mk-menu-icon::after{top:0;transform:rotate(-45deg)}
+.mk-menu ul{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:min(280px,calc(100vw - 40px));list-style:none;margin:0;padding:8px;background:${colors.surface};border:1px solid ${colors.divider};border-radius:${radius.card}px;box-shadow:0 18px 40px -16px ${colors.scrim}}
+.mk-menu a{display:flex;align-items:center;min-height:48px;padding:0 14px;border-radius:${radius.thumbLg}px;color:${colors.ink};text-decoration:none;font-weight:700;font-size:16px}
+.mk-menu a:hover{background:${colors.subtle}}
+@media (min-width:760px){.mk-nav .mk-wide{display:flex}.mk-menu{display:none}}
 .mk-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border:0;border-radius:${radius.pill}px;background:${colors.brand};color:${colors.surface}!important;font:inherit;font-weight:800;font-size:15px;text-decoration:none;cursor:pointer}
 .mk-nav .mk-btn{min-height:40px;padding:0 16px;font-size:13px;margin-left:4px}
 .mk .mk-eyebrow{display:inline-block;margin:0 0 14px;padding:6px 12px;border-radius:${radius.pill}px;background:${colors.brandTint};color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
@@ -115,11 +130,17 @@ export const css = `
 .mk-faq details p{padding:0 18px 18px;max-width:780px}
 .mk-final{border-radius:${radius.card}px;padding:36px 24px;display:flex;flex-direction:column;gap:12px}
 .mk-final .mk-form{margin-top:12px}
-.mk-foot{padding:40px 0 28px}
-.mk-foot .mk-wrap{display:flex;flex-direction:column;gap:18px}
-.mk-foot ul{display:flex;flex-wrap:wrap;gap:4px 18px;list-style:none;margin:0;padding:0}
-.mk-foot a{display:inline-flex;align-items:center;min-height:44px;color:${colors.muted};font-size:14px;font-weight:700}
-.mk-foot small{color:${colors.muted};font-size:13px}
+.mk-foot{background:${colors.ink};padding:56px 0 32px;margin-top:auto}
+.mk-foot .mk-wrap{display:flex;flex-direction:column;gap:40px}
+.mk-foot-main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 24px}
+.mk-foot-brand{grid-column:1/-1;display:flex;flex-direction:column;gap:14px}
+.mk .mk-foot-brand p{color:${colors.onDarkMuted};font-size:16px;max-width:22em}
+.mk .mk-foot-brand .mk-foot-soon{align-self:flex-start;padding:6px 12px;border-radius:${radius.pill}px;background:${colors.brandTint};color:${colors.brandText};font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.mk .mk-foot-col h2{color:${colors.surface};font-size:13px;line-height:1.4;letter-spacing:.08em;text-transform:uppercase}
+.mk-foot-col ul{list-style:none;margin:10px 0 0;padding:0}
+.mk-foot a{display:inline-flex;align-items:center;min-height:44px;color:${colors.onDarkMuted};font-size:16px;font-weight:700;text-decoration:none}
+.mk-foot a:hover{color:${colors.surface};text-decoration:underline}
+.mk-foot small{display:block;padding-top:24px;border-top:1px solid ${colors.inkSoft};color:${colors.onDarkMuted};font-size:14px}
 .mk-packs{display:flex;flex-direction:column;gap:16px}
 .mk-pack{background:${colors.surface};border-radius:${radius.card}px;padding:22px}
 .mk-pack-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
@@ -151,7 +172,8 @@ export const css = `
   .mk-cards.mk-cards-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mk-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
   .mk-olivia{grid-template-columns:repeat(8,minmax(0,1fr))}
-  .mk-foot .mk-wrap{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center}
+  .mk-foot-main{grid-template-columns:1.6fr repeat(3,minmax(0,1fr))}
+  .mk-foot-brand{grid-column:auto}
 }
 @media (min-width:900px){
   .mk-hero{grid-template-columns:1.1fr .9fr;padding-top:72px;padding-bottom:88px}

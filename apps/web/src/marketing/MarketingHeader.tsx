@@ -3,8 +3,12 @@ import Link from 'next/link';
 import { Logo } from '~/components/Logo';
 import { t } from '~/i18n/t';
 import { waitlistOpen } from '~/lib/env';
+import { MarketingMenu } from '~/marketing/MarketingMenu';
 
-/** The marketing pages' top bar: wordmark, Stickers, Our story, FAQ and Join the waitlist (while it is open). */
+/**
+ * The marketing pages' top bar: wordmark, then Why Pickld, Stickers, Our story and FAQ from tablet width up, or a
+ * Menu with every page on phones; Join the waitlist (while it is open) on both.
+ */
 export function MarketingHeader() {
   return (
     <header className="mk-top">
@@ -16,12 +20,12 @@ export function MarketingHeader() {
         >
           <Logo height={24} />
         </Link>
-        <nav aria-label={t('marketing.nav.label')}>
+        <nav aria-label={t('marketing.nav.label')} className="mk-topnav">
           <ul className="mk-nav">
             <li className="mk-wide">
               <Link href="/why">{t('marketing.nav.why')}</Link>
             </li>
-            <li>
+            <li className="mk-wide">
               <Link href="/stickers">{t('marketing.nav.stickers')}</Link>
             </li>
             <li className="mk-wide">
@@ -38,6 +42,17 @@ export function MarketingHeader() {
               </li>
             )}
           </ul>
+          <MarketingMenu
+            label={t('marketing.nav.menu')}
+            links={[
+              { href: '/moments', label: t('marketing.nav.moments') },
+              { href: '/why', label: t('marketing.nav.why') },
+              { href: '/mission', label: t('marketing.nav.mission') },
+              { href: '/stickers', label: t('marketing.nav.stickers') },
+              { href: '/story', label: t('marketing.nav.story') },
+              { href: '/#faq', label: t('marketing.nav.faq') },
+            ]}
+          />
         </nav>
       </div>
     </header>
