@@ -294,6 +294,8 @@
     "calendar": "{{month}} calendar",
     "day": "{{date}}, {{count}} of {{total}} moments",
     "dayToday": "{{date}}, today, {{count}} of {{total}} moments",
+    "dayPublished": "{{date}}, {{count}} of {{total}} moments, published",
+    "dayTodayPublished": "{{date}}, today, {{count}} of {{total}} moments, published",
     "dayFuture": "{{date}}, not yet",
     "dayHint": "Opens this day",
     "memories": "Memories",

@@ -1,15 +1,12 @@
-import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { PRESSED_OPACITY } from '@/components/BaseButton';
+import { JarGraphic, VIEW_H, VIEW_W } from '@/components/JarGraphic';
 import { maxTextScale, textStyle } from '@/theme/text';
-import { colors, radius, sizes } from '@/theme/tokens';
+import { colors, radius, sizes, space } from '@/theme/tokens';
 
-import { fillFraction, type DayCell } from './monthGrid';
-import { photoCacheKey, photoSource } from '@/lib/image/photoCache';
-import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
-import { usePhotoRetry } from '@/lib/image/usePhotoRetry';
+import type { DayCell } from './monthGrid';
 
 export type CalendarDayProps = {
   cell: DayCell;
@@ -18,6 +15,8 @@ export type CalendarDayProps = {
   /** What a tap does, already translated; left out for future days, which can't be tapped. */
   accessibilityHint?: string;
   selected: boolean;
+  /** The owner's lid color, on the jars of published days. */
+  lidColor?: string;
   onPress: () => void;
 };
 
@@ -25,14 +24,24 @@ export type CalendarDayProps = {
 const slop = Math.floor(sizes.dayGap / 2);
 const HIT_SLOP = { top: slop, bottom: slop, left: slop, right: slop };
 
-/** One day of the My days month (Calendar): cover photo, day number and fill bar; future days disabled. */
-export function CalendarDay({ cell, accessibilityLabel, accessibilityHint, selected, onPress }: CalendarDayProps) {
+/**
+ * One day of the My jars month (Calendar): the day number over a jar that fills one layer per moment, with
+ * the lid on once the day is published; future days disabled.
+ */
+export function CalendarDay({
+  cell,
+  accessibilityLabel,
+  accessibilityHint,
+  selected,
+  lidColor,
+  onPress,
+}: CalendarDayProps) {
   const [pressed, setPressed] = useState(false);
+  // The jar grows with the day number at large text sizes, up to the same cap.
+  const { fontScale } = useWindowDimensions();
+  const jarSize = Math.round(sizes.calendarJar * Math.min(Math.max(fontScale, 1), maxTextScale.tile));
   const { jar, isFuture, isToday } = cell;
-  const cover = isFuture ? null : (jar?.coverUrl ?? null);
   const count = isFuture ? 0 : (jar?.moment_count ?? 0);
-  const retry = usePhotoRetry(cover ? (photoCacheKey(cover) ?? cover) : null);
-  const numberColor = cover ? colors.surface : isFuture ? colors.dayFuture : colors.ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -52,30 +61,25 @@ export function CalendarDay({ cell, accessibilityLabel, accessibilityHint, selec
         pressed && !isFuture ? { opacity: PRESSED_OPACITY } : null,
       ]}
     >
-      {cover ? (
-        <>
-          <Image
-            key={retry.attempt}
-            testID="day-cover"
-            source={photoSource(cover)}
-            onError={retry.onError}
-            placeholder={photoPlaceholder(cover)}
-            placeholderContentFit="cover"
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            accessible={false}
-          />
-          <View style={[StyleSheet.absoluteFill, styles.scrim]} />
-        </>
-      ) : null}
-      <Text maxFontSizeMultiplier={maxTextScale.tile} style={[textStyle('bodySmall', '700'), { color: numberColor }]}>
+      <Text
+        maxFontSizeMultiplier={maxTextScale.tile}
+        style={[textStyle('bodySmall', '700'), { color: isFuture ? colors.dayFuture : colors.ink }]}
+      >
         {cell.day}
       </Text>
-      {count > 0 ? (
-        <View testID="day-fill" style={[styles.track, { backgroundColor: cover ? colors.fillTrack : colors.border }]}>
-          <View style={[styles.fill, { width: `${fillFraction(count) * 100}%` }]} />
-        </View>
-      ) : null}
+      {/* The same space with or without a jar, so day numbers line up across a week. */}
+      <View style={{ height: (jarSize * VIEW_H) / VIEW_W }}>
+        {count > 0 ? (
+          <JarGraphic
+            count={count}
+            size={jarSize}
+            lidColor={lidColor}
+            open={!jar?.published_at}
+            decorative
+            testID="day-jar"
+          />
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -88,20 +92,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: sizes.fillBar,
+    gap: space.xs / 2,
+    paddingVertical: space.xs,
   },
   past: { backgroundColor: colors.dayCellEmpty },
   today: { borderWidth: sizes.todayRing, borderColor: colors.brand },
   selected: { borderWidth: sizes.todayRing, borderColor: colors.ink },
-  scrim: { backgroundColor: colors.dayCellScrim },
-  track: {
-    position: 'absolute',
-    left: sizes.fillBarInset,
-    right: sizes.fillBarInset,
-    bottom: sizes.fillBarInset,
-    height: sizes.fillBar,
-    borderRadius: radius.fillBar,
-    overflow: 'hidden',
-  },
-  fill: { height: sizes.fillBar, borderRadius: radius.fillBar, backgroundColor: colors.brand },
 });

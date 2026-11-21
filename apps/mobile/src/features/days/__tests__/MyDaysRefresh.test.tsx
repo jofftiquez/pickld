@@ -12,7 +12,16 @@ import type { MonthJarRow } from '../monthGrid';
 
 // D-148: a day filled in the past shows on the My days calendar at once, with the real data hooks. Only the
 // server (Supabase) and the offline queue (SQLite) are faked.
-jest.mock('@/components/JarGraphic', () => ({ JarGraphic: () => null, MAX_LAYERS: 8 }));
+jest.mock('@/components/JarGraphic', () => {
+  const { createElement } = jest.requireActual<typeof import('react')>('react');
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    JarGraphic: ({ testID }: { testID?: string }) => createElement(View, { testID }),
+    MAX_LAYERS: 8,
+    VIEW_W: 48,
+    VIEW_H: 60,
+  };
+});
 jest.mock('react-native-reanimated/mock', () => ({
   __esModule: true,
   default: {},
@@ -92,7 +101,7 @@ it('a moment added to a past day fills it on the open calendar, queued and after
   await renderRouter(routes, { initialUrl: '/my-days', wrapper });
   const tenth = () => screen.getByTestId('day-2026-11-10');
   await waitFor(() => expect(mockMonthJars).toHaveBeenCalled());
-  expect(within(tenth()).queryByTestId('day-fill')).toBeNull();
+  expect(within(tenth()).queryByTestId('day-jar')).toBeNull();
 
   // Fill this jar for November 10: the photo is in the queue, the server hasn't seen it yet.
   mockQueue = [
@@ -106,7 +115,7 @@ it('a moment added to a past day fills it on the open calendar, queued and after
     },
   ];
   await emit('added');
-  await waitFor(() => expect(within(tenth()).getByTestId('day-fill')).toBeTruthy());
+  await waitFor(() => expect(within(tenth()).getByTestId('day-jar')).toBeTruthy());
 
   // The upload finishes: ensure_jar made the jar, the row leaves the queue.
   mockServerJars = [
@@ -116,8 +125,6 @@ it('a moment added to a past day fills it on the open calendar, queued and after
       tz: 'Asia/Manila',
       moment_count: 1,
       is_full: false,
-      cover_moment_id: 'm-1',
-      cover_thumb_path: 'u-1/m-1/thumb.webp',
     },
   ];
   mockQueue = [];
@@ -125,6 +132,6 @@ it('a moment added to a past day fills it on the open calendar, queued and after
   // The queue no longer holds the photo; the day stays filled from the server.
   await waitFor(() => expect(client.getQueryData(['queue', 'u-1'])).toEqual([]));
   await act(() => jest.runOnlyPendingTimersAsync()); // let the screen render that empty queue
-  await waitFor(() => expect(within(tenth()).getByTestId('day-fill')).toBeTruthy());
+  await waitFor(() => expect(within(tenth()).getByTestId('day-jar')).toBeTruthy());
   expect(tenth()).toHaveProp('accessibilityLabel', expect.stringMatching(/1 of 8/));
 });
