@@ -87,12 +87,10 @@
     "viewJar": "View jar",
     "viewJarHint": "Opens this day’s jar page",
     "past": {
-      "fillingTitle": "Filling in {{date}} · Added later",
+      "fillingTitle": "Past day · Added later",
       "fillingBody": "This is a past day, not today. Moments you add here show as “Added later”.",
-      "lookingBackTitle": "{{date}} · Added later",
-      "lookingBackBody": "This is a past day, not today. Every moment is in this jar.",
-      "backToToday": "Back to Today",
-      "backToTodayHint": "Opens today’s jar"
+      "lookingBackTitle": "Past day",
+      "lookingBackBody": "This is a past day, not today. Every moment is in this jar."
     },
     "step": {
       "previous": "Previous day, {{date}}",

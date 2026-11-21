@@ -222,35 +222,18 @@ describe('Day page route', () => {
   });
 
   // D-156: a past day looks like one, so it is never mistaken for Today.
-  it('a past day shows the past-day banner naming the day, on warm paper', async () => {
+  it('a past day shows the past-day tag by the date, on warm paper', async () => {
     await renderRouter(routes, { initialUrl: '/day/2026-11-08', wrapper });
     expect(screen.getByTestId('past-day-screen')).toBeTruthy();
-    expect(screen.getByTestId('past-day-title')).toHaveTextContent('Filling in Sun, Nov 8 · Added later');
-    expect(screen.getByText('This is a past day, not today. Moments you add here show as “Added later”.')).toBeTruthy();
+    expect(screen.getByTestId('past-day-title')).toHaveTextContent('Past day · Added later');
+    expect(
+      screen.getByLabelText('This is a past day, not today. Moments you add here show as “Added later”.'),
+    ).toBeTruthy();
   });
 
-  it('a full past day says "Sun, Nov 1 · Added later", without "Filling in"', async () => {
+  it('a full past day says "Past day", without "Added later"', async () => {
     await renderRouter(routes, { initialUrl: '/day/2026-11-01', wrapper });
-    expect(screen.getByTestId('past-day-title')).toHaveTextContent('Sun, Nov 1 · Added later');
-    expect(screen.queryByText(/Filling in/)).toBeNull();
-  });
-
-  it('Back to Today goes to the Today tab, past My days below', async () => {
-    await renderRouter(routes, { initialUrl: '/today', wrapper });
-    const { router } = jest.requireActual<typeof import('expo-router')>('expo-router');
-    await act(async () => router.push('/my-days'));
-    await act(async () => router.push('/day/2026-11-08'));
-    await fireEvent.press(screen.getByRole('button', { name: 'Back to Today' }));
-    expect(screen).toHavePathname('/today');
-    expect(screen.getByText('Today stub')).toBeTruthy();
-    expect(screen.queryByTestId('past-day-banner')).toBeNull();
-  });
-
-  it('Back to Today with no history opens the Today tab', async () => {
-    await renderRouter(routes, { initialUrl: '/day/2026-11-07', wrapper });
-    await fireEvent.press(screen.getByRole('button', { name: 'Back to Today' }));
-    expect(screen).toHavePathname('/today');
-    expect(screen.getByText('Today stub')).toBeTruthy();
+    expect(screen.getByTestId('past-day-title')).toHaveTextContent(/^Past day$/);
   });
 
   it('an empty tile opens the gallery on that day, never the camera, and its photo goes to Crop for that slot', async () => {

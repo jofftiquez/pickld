@@ -61,8 +61,8 @@ export const colors = {
   // A past day's page (D-156): warm paper instead of Today's background, so a filled-in day never passes for
   // today. Muted text is 5.7:1 on it, ink 16:1.
   pastDayPaper: '#f3ecdc',
-  pastDayWell: '#ebdfc2', // icon well on the past-day banner
-  pastDayInk: '#5b4516', // icon on that well; 6.8:1 on pastDayWell
+  pastDayWell: '#ebdfc2', // the past-day tag on the day page's date line
+  pastDayInk: '#5b4516', // its icon and words; 6.8:1 on pastDayWell
   overlayOutline: 'rgba(255,255,255,0.95)', // dashed outline around the selected overlay (Stickers)
   overlayPlaceholder: 'rgba(127,173,51,0.6)', // dev/test-only box drawn for overlays with no renderer yet
   textOverlayShadow: 'rgba(0,0,0,0.45)', // soft shadow under light text on photos (Text)
