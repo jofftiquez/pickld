@@ -43,6 +43,8 @@ export type MyDaysViewProps = {
   onPickDate?: (date: string) => void;
   /** Today in the phone zone, "YYYY-MM-DD", for the date picker. */
   today?: string;
+  /** The owner's lid color, on the jars of published days. */
+  lidColor?: string;
   locale?: string;
 };
 
@@ -84,6 +86,7 @@ export function MyDaysView({
   onPickMonth,
   onPickDate,
   today,
+  lidColor,
   locale = deviceLocale(),
 }: MyDaysViewProps) {
   const { t } = useTranslation();
@@ -104,6 +107,7 @@ export function MyDaysView({
     const date = dayLabel(cell.date, locale);
     if (cell.isFuture) return t('myDays.dayFuture', { date });
     const values = { date, count: cell.jar?.moment_count ?? 0, total: MOMENTS_PER_JAR };
+    if (cell.jar?.published_at) return t(cell.isToday ? 'myDays.dayTodayPublished' : 'myDays.dayPublished', values);
     return cell.isToday ? t('myDays.dayToday', values) : t('myDays.day', values);
   };
 
@@ -227,6 +231,7 @@ export function MyDaysView({
                     accessibilityLabel={labelFor(cell)}
                     accessibilityHint={cell.isFuture ? undefined : t('myDays.dayHint')}
                     selected={cell.date === selectedDate}
+                    lidColor={lidColor}
                     onPress={() => onSelectDay(cell.date)}
                   />
                 ),

@@ -44,11 +44,9 @@ export const colors = {
   badge: 'rgba(10,12,8,0.6)', // "Added later" badge over photos (Story)
   ringTrack: 'rgba(255,255,255,0.3)', // unfilled part of the upload ring
   textShadow: 'rgba(0,0,0,0.4)', // labels drawn straight on photos
-  dayCellEmpty: '#eef0ea', // a past day without a cover photo (Calendar)
-  dayCellScrim: 'rgba(10,12,8,0.32)', // over a day's cover photo so its number stays readable (Calendar)
+  dayCellEmpty: '#eef0ea', // a past day on the calendar, and Not published rows without a photo (Calendar)
   dayFuture: '#6f7568', // future day numbers (Calendar); 4.8:1 on white
   slotLabelEmpty: '#6f7568', // an empty slot's tag on Publish review; darker than the design's #7d8476 for AA
-  fillTrack: 'rgba(255,255,255,0.35)', // unfilled part of a day's fill bar (Calendar)
   camera: '#000000', // Camera screen background
   cameraGrid: 'rgba(255,255,255,0.35)', // rule-of-thirds lines over the viewfinder (Camera)
   onDarkControl: 'rgba(255,255,255,0.14)', // flip button fill on the camera
@@ -390,10 +388,9 @@ export const sizes = {
   jarCardGraphic: 52,
   headerTop: 26, // space above the screen title block (Main)
   todayMetaGap: 10, // Today: the date and greeting line to the title row
-  dayCell: 46, // My days calendar cell height (Calendar); grows with large text
+  dayCell: 54, // My jars calendar cell height (Calendar); grows with large text
   dayGap: 5, // gap between calendar cells and weekday columns (Calendar)
-  fillBar: 3, // fill bar height in a calendar cell
-  fillBarInset: 4, // fill bar distance from the cell's sides and bottom
+  calendarJar: 26, // jar in a calendar cell, one layer per moment; grows with large text up to the tile cap
   todayRing: 2.5, // outline around today's cell
   monthButton: 36, // My days month chooser pill that opens the month picker; hitSlop brings it to 44 (D-140)
   monthButtonIcon: 16, // its chevron

@@ -7,22 +7,19 @@ import { slots } from '@/theme/tokens';
 export const MOMENTS_PER_JAR = slots.length;
 
 /**
- * One row of `month_jars(month)` (0009). The generated types mark the cover columns non-null, but an
- * empty jar has no cover, so they are parsed as nullable here.
+ * One row of `month_jars(month)` (0009), the columns the calendar's jars draw from. `published_at` is
+ * optional because months cached before it was read don't have it; a missing one draws as not published.
  */
 export const monthJarRow = z.object({
   jar_id: z.string(),
   local_date: z.string(),
   tz: z.string(),
+  published_at: z.string().nullish(),
   moment_count: z.number().int().min(0),
   is_full: z.boolean(),
-  cover_moment_id: z.string().nullable(),
-  cover_thumb_path: z.string().nullable(),
 });
 export type MonthJarRow = z.infer<typeof monthJarRow>;
-
-/** A month_jars row plus the signed thumbnail URL for its cover (null without a cover or offline). */
-export type MonthJar = MonthJarRow & { coverUrl: string | null };
+export type MonthJar = MonthJarRow;
 
 export type DayCell = {
   kind: 'day';
@@ -169,25 +166,21 @@ export type QueuedForMonth = {
   localDate: string;
   state: string;
   replace?: boolean;
-  thumbUri: string | null;
-  photoUri: string;
 };
 
 /**
  * The month's jars with the photos still in the offline queue added (rule 3), so a day filled a moment ago
  * shows on the calendar before its upload reaches the server. Each queued slot that isn't on the server yet
- * counts once (a replacement or a slot conflict adds nothing; an uploaded row is about to leave the queue);
- * a day without a server jar gets one from the queue, and a jar without a cover shows the queued photo.
+ * counts once (a replacement or a slot conflict adds nothing; an uploaded row is about to leave the queue),
+ * and a day without a server jar gets one from the queue.
  */
 export function withQueued(jars: readonly MonthJar[], queue: readonly QueuedForMonth[]): MonthJar[] {
   const slotsByDate = new Map<string, Set<string>>();
-  const coverByDate = new Map<string, string>();
   for (const item of queue) {
     if (item.replace === true || item.state === 'uploaded' || item.state === 'conflict') continue;
     const daySlots = slotsByDate.get(item.localDate) ?? new Set<string>();
     daySlots.add(item.slot);
     slotsByDate.set(item.localDate, daySlots);
-    if (!coverByDate.has(item.localDate)) coverByDate.set(item.localDate, item.thumbUri ?? item.photoUri);
   }
   if (slotsByDate.size === 0) return [...jars];
   const merged = jars.map((jar) => {
@@ -198,7 +191,6 @@ export function withQueued(jars: readonly MonthJar[], queue: readonly QueuedForM
       ...jar,
       moment_count: momentCount,
       is_full: momentCount >= MOMENTS_PER_JAR,
-      coverUrl: jar.coverUrl ?? coverByDate.get(jar.local_date) ?? null,
     };
   });
   const known = new Set(jars.map((jar) => jar.local_date));
@@ -209,11 +201,9 @@ export function withQueued(jars: readonly MonthJar[], queue: readonly QueuedForM
       jar_id: `queued-${date}`,
       local_date: date,
       tz: '',
+      published_at: null,
       moment_count: momentCount,
       is_full: momentCount >= MOMENTS_PER_JAR,
-      cover_moment_id: null,
-      cover_thumb_path: null,
-      coverUrl: coverByDate.get(date) ?? null,
     });
   }
   return merged;
@@ -222,9 +212,4 @@ export function withQueued(jars: readonly MonthJar[], queue: readonly QueuedForM
 /** Moments across the month's jars, for the "November 2026 · 50 moments" line. */
 export function monthMomentCount(jars: readonly MonthJarRow[]): number {
   return jars.reduce((sum, j) => sum + j.moment_count, 0);
-}
-
-/** Fill bar width as a fraction of a full jar, 0…1. */
-export function fillFraction(momentCount: number): number {
-  return Math.min(1, Math.max(0, momentCount / MOMENTS_PER_JAR));
 }

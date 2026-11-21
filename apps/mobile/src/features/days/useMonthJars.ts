@@ -1,5 +1,4 @@
-// Data for My days (FR-DAY-01): one month of the user's jars from `month_jars` (0009, owner-only) with
-// cover thumbnail URLs, plus the month of the first jar and the birthday, which bound how far back it goes
+// Data for My days (FR-DAY-01): one month of the user's jars from `month_jars` (0009, owner-only), plus the month of the first jar and the birthday, which bound how far back it goes
 // (D-141). All are React Query queries, so the persisted cache (src/lib/queryClient.ts) keeps them readable offline (NFR-OFF-03).
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -16,7 +15,7 @@ const photoUrlsResponse = z.object({
   data: z.object({ moments: z.array(z.object({ id: z.string(), thumb: z.string().nullable() })) }),
 });
 
-/** Cover URLs from `fn:photo-urls` (as useToday does); a failure leaves cells without a photo. */
+/** Cover URLs from `fn:photo-urls` (as useToday does), for Not published; a failure leaves rows without a photo. */
 export async function coverUrls(momentIds: string[]): Promise<Map<string, string | null>> {
   if (momentIds.length === 0) return new Map();
   const { data, error } = await getSupabase().functions.invoke<unknown>('photo-urls', { body: { momentIds } });
@@ -29,9 +28,7 @@ export async function coverUrls(momentIds: string[]): Promise<Map<string, string
 async function fetchMonthJars(month: string): Promise<MonthJar[]> {
   const { data, error } = await getSupabase().rpc('month_jars', { month: `${month}-01` });
   if (error) throw new Error(error.message);
-  const rows = z.array(monthJarRow).parse(data);
-  const urls = await coverUrls(rows.flatMap((r) => (r.cover_moment_id ? [r.cover_moment_id] : [])));
-  return rows.map((r) => ({ ...r, coverUrl: r.cover_moment_id ? (urls.get(r.cover_moment_id) ?? null) : null }));
+  return z.array(monthJarRow).parse(data);
 }
 
 async function fetchFirstJarMonth(userId: string): Promise<string | null> {

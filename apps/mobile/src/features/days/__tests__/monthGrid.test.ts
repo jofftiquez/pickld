@@ -4,7 +4,6 @@ import {
   daysInMonth,
   earliestMonth,
   floorMonth,
-  fillFraction,
   monthJarRow,
   monthMomentCount,
   monthNav,
@@ -22,16 +21,14 @@ const trailingBlanks = (weeks: GridCell[][]) => {
   return last.length - 1 - last.map((c) => c.kind).lastIndexOf('day');
 };
 
-function jar(localDate: string, count: number, cover: string | null = null): MonthJar {
+function jar(localDate: string, count: number): MonthJar {
   return {
     jar_id: `j-${localDate}`,
     local_date: localDate,
     tz: 'Asia/Manila',
+    published_at: null,
     moment_count: count,
     is_full: count === 8,
-    cover_moment_id: cover ? `m-${localDate}` : null,
-    cover_thumb_path: cover ? `thumbs/${localDate}.webp` : null,
-    coverUrl: cover,
   };
 }
 
@@ -108,10 +105,10 @@ describe('buildMonthGrid', () => {
   });
 
   it('merges month_jars rows onto their dates, ignoring other months', () => {
-    const rows = [jar('2026-11-06', 3, 'https://photos/x.webp'), jar('2026-11-08', 0), jar('2026-10-31', 8, 'u')];
+    const rows = [jar('2026-11-06', 3), jar('2026-11-08', 0), jar('2026-10-31', 8)];
     const grid = days(buildMonthGrid({ month: '2026-11', today: '2026-11-09', jars: rows }).weeks);
-    expect(grid.find((d) => d.day === 6)?.jar?.coverUrl).toBe('https://photos/x.webp');
-    expect(grid.find((d) => d.day === 8)?.jar).toMatchObject({ moment_count: 0, coverUrl: null });
+    expect(grid.find((d) => d.day === 6)?.jar).toMatchObject({ moment_count: 3 });
+    expect(grid.find((d) => d.day === 8)?.jar).toMatchObject({ moment_count: 0 });
     expect(grid.filter((d) => d.jar).map((d) => d.day)).toEqual([6, 8]);
   });
 });
@@ -178,20 +175,13 @@ describe('month helpers', () => {
     expect(weekStartFrom(9)).toBe(0);
   });
 
-  it('fill fraction is the moment count of 8, clamped', () => {
-    expect(fillFraction(0)).toBe(0);
-    expect(fillFraction(3)).toBe(3 / 8);
-    expect(fillFraction(8)).toBe(1);
-    expect(fillFraction(12)).toBe(1);
-  });
-
   it('sums the month moments', () => {
     expect(monthMomentCount([jar('2026-11-01', 8), jar('2026-11-02', 5), jar('2026-11-04', 0)])).toBe(13);
   });
 });
 
 describe('monthJarRow', () => {
-  it('accepts an empty jar with null cover columns (the generated types say non-null)', () => {
+  it('keeps published_at for the lid and drops the columns the calendar does not draw', () => {
     const row = {
       jar_id: 'j1',
       local_date: '2026-11-04',
@@ -204,6 +194,16 @@ describe('monthJarRow', () => {
       cover_slot: null,
       cover_thumb_path: null,
     };
-    expect(monthJarRow.parse(row)).toMatchObject({ cover_moment_id: null, cover_thumb_path: null });
+    expect(monthJarRow.parse(row)).toEqual({
+      jar_id: 'j1',
+      local_date: '2026-11-04',
+      tz: 'Asia/Manila',
+      published_at: null,
+      moment_count: 0,
+      is_full: false,
+    });
+    expect(monthJarRow.parse({ ...row, published_at: '2026-11-05T01:00:00Z' }).published_at).toBe(
+      '2026-11-05T01:00:00Z',
+    );
   });
 });

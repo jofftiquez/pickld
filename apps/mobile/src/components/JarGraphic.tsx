@@ -51,6 +51,8 @@ export type JarGraphicProps = {
   onDark?: boolean;
   /** Hide from screen readers when the count is already read next to it. */
   decorative?: boolean;
+  /** No lid: a day that isn't published yet (My jars calendar), as the lid only drops shut on publishing. */
+  open?: boolean;
   /** The day was just published (D-58): the lid drops shut, or fades in with Reduce Motion. Plays when it turns true. */
   closeLid?: boolean;
   /** The easter egg (D-131): each time this number grows the lid hops up and rattles back. Off with Reduce
@@ -66,6 +68,7 @@ export function JarGraphic({
   size = sizes.jarCardGraphic,
   onDark = false,
   decorative = false,
+  open = false,
   closeLid = false,
   lidHop = 0,
   testID,
@@ -165,15 +168,17 @@ export function JarGraphic({
         </G>
         <Rect {...BODY} fill="none" stroke={stroke} strokeWidth={STROKE_WIDTH} />
         <Rect {...NECK} fill="none" stroke={stroke} strokeWidth={STROKE_WIDTH} />
-        <AnimatedRect
-          testID="jar-lid"
-          x={LID.x}
-          width={LID.width}
-          height={LID.height}
-          rx={LID.rx}
-          fill={lidColor}
-          animatedProps={lidProps}
-        />
+        {open ? null : (
+          <AnimatedRect
+            testID="jar-lid"
+            x={LID.x}
+            width={LID.width}
+            height={LID.height}
+            rx={LID.rx}
+            fill={lidColor}
+            animatedProps={lidProps}
+          />
+        )}
         <Path
           d={`M${HIGHLIGHT.x} ${HIGHLIGHT.top}V${HIGHLIGHT.bottom}`}
           stroke={jar.highlight}

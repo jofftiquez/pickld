@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { buildMonthGrid, earliestMonth, floorMonth, monthNav, monthsBetween, type MonthJar } from '../monthGrid';
@@ -33,25 +33,23 @@ jest.mock('@gorhom/bottom-sheet', () => {
 
 const TODAY = '2026-11-09';
 
-function jar(localDate: string, count: number, coverUrl: string | null): MonthJar {
+function jar(localDate: string, count: number, publishedAt: string | null = null): MonthJar {
   return {
     jar_id: `j-${localDate}`,
     local_date: localDate,
     tz: 'Asia/Manila',
+    published_at: publishedAt,
     moment_count: count,
     is_full: count === 8,
-    cover_moment_id: coverUrl ? `m-${localDate}` : null,
-    cover_thumb_path: coverUrl ? `thumbs/${localDate}.webp` : null,
-    coverUrl,
   };
 }
 
 const JARS = [
-  jar('2026-11-06', 3, 'https://photos.example/6.webp'),
-  // An empty jar (no cover) and a jar whose cover URL couldn't be signed (offline or fn failure).
-  jar('2026-11-07', 0, null),
-  { ...jar('2026-11-08', 5, null), cover_moment_id: 'm-8', cover_thumb_path: 'thumbs/8.webp' },
-  jar('2026-11-09', 2, 'https://photos.example/9.webp'),
+  jar('2026-11-06', 3),
+  // An empty jar (ensure_jar made it, nothing was added).
+  jar('2026-11-07', 0),
+  jar('2026-11-08', 5, '2026-11-08T14:00:00Z'),
+  jar('2026-11-09', 2),
 ];
 
 async function renderMyDays(props: Partial<MyDaysViewProps> = {}) {
@@ -115,6 +113,7 @@ describe('MyDaysView', () => {
   it('labels days with their moment count, today, and future days as not yet (disabled)', async () => {
     const { onSelectDay } = await renderMyDays();
     expect(screen.getByRole('button', { name: 'November 6, 3 of 8 moments' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'November 8, 5 of 8 moments, published' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'November 1, 0 of 8 moments' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'November 9, today, 2 of 8 moments' })).toBeTruthy();
     const future = screen.getByRole('button', { name: 'November 10, not yet' });
@@ -125,13 +124,18 @@ describe('MyDaysView', () => {
     expect(onSelectDay).toHaveBeenCalledWith('2026-11-06');
   });
 
-  it('draws covers only where there is a URL and fill bars only for jars with moments', async () => {
+  it('draws a jar with a layer per moment on days with moments, and the lid only on published days', async () => {
     await renderMyDays();
-    // Covers: the 6th and the 9th. The empty jar and the unsigned cover show no photo.
-    expect(screen.getAllByTestId('day-cover')).toHaveLength(2);
-    expect(screen.getByTestId('day-2026-11-07')).toBeTruthy();
-    // Fill bars: 6th, 8th (no photo but 5 moments) and 9th.
-    expect(screen.getAllByTestId('day-fill')).toHaveLength(3);
+    const day = (date: string) => within(screen.getByTestId(`day-${date}`));
+    const layers = (date: string) => day(date).queryAllByTestId('jar-layer', { includeHiddenElements: true });
+    const lid = (date: string) => day(date).queryByTestId('jar-lid', { includeHiddenElements: true });
+    // No jar on the empty jar's day or on a day without one.
+    expect(day('2026-11-07').queryByTestId('day-jar', { includeHiddenElements: true })).toBeNull();
+    expect(day('2026-11-05').queryByTestId('day-jar', { includeHiddenElements: true })).toBeNull();
+    expect(layers('2026-11-06')).toHaveLength(3);
+    expect(lid('2026-11-06')).toBeNull();
+    expect(layers('2026-11-08')).toHaveLength(5);
+    expect(lid('2026-11-08')).toBeTruthy();
   });
 
   it('draws weekday letters in the grid order, hidden from screen readers', async () => {

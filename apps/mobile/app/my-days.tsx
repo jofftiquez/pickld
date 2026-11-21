@@ -42,7 +42,8 @@ export default function MyDaysScreen() {
   const { queue } = useDayJar(null);
   const { jars: unpublished } = useUnpublishedJars();
   // The jar Today shows: today's, or yesterday's while it is still open after flying west (travel rule).
-  const openJarDate = openTodayJar(useToday(now).jar, now)?.jar?.localDate ?? null;
+  const { jar: todayJar, me } = useToday(now);
+  const openJarDate = openTodayJar(todayJar, now)?.jar?.localDate ?? null;
   // The month's jars plus photos still waiting to upload, so a day just filled shows at once (rule 3, D-148).
   const monthJars = withQueued(
     jars ?? [],
@@ -102,6 +103,7 @@ export default function MyDaysScreen() {
       onPickMonth={(picked) => pickableMonths.includes(picked) && setMonth(picked)}
       onPickDate={openDay}
       today={today}
+      lidColor={me?.lidColor}
       onSelectDay={openDay}
       onMemories={() => router.push('/memories')}
       unpublishedCount={unpublished?.length ?? 0}
