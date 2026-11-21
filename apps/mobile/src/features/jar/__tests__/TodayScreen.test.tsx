@@ -202,6 +202,21 @@ describe('Today screen', () => {
     expect(mockPush).toHaveBeenCalledWith('/stickers');
   });
 
+  // Joff: the day arrows. Still in a jar from Los Angeles (Mon, Nov 9 there) while the phone reads Tue, Nov 10
+  // in Manila, Previous day follows the jar's own date; there is no next day after Today.
+  it('Previous day opens the day before the open jar’s own date; Next day is off', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-9', local_date: '2026-11-09', tz: 'America/Los_Angeles', ends_at: null }];
+    mockBackend.moments = [liveMoment('ootd')];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
+    expect(screen.getByRole('button', { name: 'Next day' }).props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
+    await fireEvent.press(screen.getByRole('button', { name: 'Previous day, Sun, Nov 8' }));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/day/[date]', params: { date: '2026-11-08' } });
+  });
+
   it('a published jar: the Published line, likes and chip; the chip changes who can see it (M3-02)', async () => {
     jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
     mockBackend.moments = [liveMoment('ootd')];

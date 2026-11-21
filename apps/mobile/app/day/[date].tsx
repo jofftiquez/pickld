@@ -9,9 +9,11 @@ import { parseDevPhotoParam, pickDevPhoto } from '@/features/capture/mockCamera'
 import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { galleryTarget, saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { useGalleryPicker } from '@/features/capture/useGalleryPicker';
+import { nextDay, stepToday } from '@/features/days/pastDay';
 import { useDayJar } from '@/features/days/useDayJar';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TodayView } from '@/features/jar/TodayView';
+import { openTodayJar } from '@/features/jar/rollover';
 import { useFillPops } from '@/features/jar/useFillPops';
 import { retryUpload } from '@/features/jar/retryUpload';
 import { buildTodayGrid, offlineBannerCount } from '@/features/jar/todayGrid';
@@ -20,7 +22,7 @@ import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
 import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
-import { localDateIn } from '@/lib/jars';
+import { addDays, localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
 import type { Slot } from '@/theme/tokens';
@@ -43,10 +45,11 @@ export default function DayScreen() {
   const params = useLocalSearchParams<{ date?: string; devPhoto?: string }>();
   const [now] = useState(() => new Date());
   const phoneTz = phoneTimeZone();
-  const date = parseFillDateParam(params.date, localDateIn(now, phoneTz));
+  const phoneToday = localDateIn(now, phoneTz);
+  const date = parseFillDateParam(params.date, phoneToday);
   const { userId, day, queue, queueLoaded } = useDayJar(date);
-  // The profile (readers, lid color, suspension) from Today's cached query.
-  const { me } = useToday(now);
+  // The profile (readers, lid color, suspension) and today's jar from Today's cached query.
+  const { me, jar: todayJar } = useToday(now);
   const offline = useIsOffline();
 
   // Coming back (from Crop, the editor, the preview or Publish) re-reads the day, the queue and the
@@ -171,6 +174,13 @@ export default function DayScreen() {
         }}
         poppingSlots={poppingSlots}
         celebratePublish={celebratePublish}
+        // Joff: step a day at a time on this page, so Back still leads where it came from; the day after
+        // the last past day is Today (its jar's own date).
+        step={{
+          previous: addDays(date, -1),
+          next: nextDay(date, stepToday(openTodayJar(todayJar, now)?.jar?.localDate ?? phoneToday, phoneToday)),
+          onStep: (to) => (to === 'today' ? router.dismissTo('/today') : router.setParams({ date: to })),
+        }}
       />
       {published && jar ? (
         <JarVisibilitySheet

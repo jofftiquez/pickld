@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -30,6 +31,8 @@ export type TodayHeaderProps = {
   onOpenProfile?: () => void;
   /** "Tokyo time" on a jar that started in a new zone; replaces the greeting (TimeZone). */
   zoneTag?: string | null;
+  /** Previous day / Next day (`DayStepper`), at the end of the date line. */
+  stepper?: ReactNode;
 };
 
 /** Date, greeting and the "Today" title, with the Stickers and My days shortcuts and avatar (Main). */
@@ -46,6 +49,7 @@ export function TodayHeader({
   hasUnread = false,
   onOpenProfile,
   zoneTag = null,
+  stepper = null,
 }: TodayHeaderProps) {
   const { t } = useTranslation();
   // Main greets by first name ("Good afternoon, Dale"), which keeps the line short.
@@ -59,14 +63,19 @@ export function TodayHeader({
     // alone and the line wraps only at large text sizes.
     <View style={styles.header}>
       {/* The date stays muted; the greeting (or the zone tag) is in ink so the line reads first. */}
-      <Text style={[textStyle('cardTitle', '600'), { color: colors.muted }]} testID="today-subtitle">
-        <Trans
-          t={t}
-          i18nKey={zoneTag ? 'timeZone.subtitle' : 'today.subtitle'}
-          values={zoneTag ? { date, tag: zoneTag } : { date, greeting: greetingText }}
-          components={{ bold: <Text style={[textStyle('cardTitle', '700'), { color: colors.ink }]} /> }}
-        />
-      </Text>
+      {/* The day arrows sit at the end of this line, above the round buttons, so the title row keeps its room. The
+          line is as tall as the day page's Back row, so the arrows are in the same spot there. */}
+      <View style={styles.metaRow}>
+        <Text style={[textStyle('cardTitle', '600'), styles.meta]} testID="today-subtitle">
+          <Trans
+            t={t}
+            i18nKey={zoneTag ? 'timeZone.subtitle' : 'today.subtitle'}
+            values={zoneTag ? { date, tag: zoneTag } : { date, greeting: greetingText }}
+            components={{ bold: <Text style={[textStyle('cardTitle', '700'), { color: colors.ink }]} /> }}
+          />
+        </Text>
+        {stepper}
+      </View>
       <View style={styles.row}>
         <Text
           maxFontSizeMultiplier={maxTextScale.title}
@@ -149,6 +158,8 @@ export function TodayHeader({
 
 const styles = StyleSheet.create({
   header: { gap: sizes.todayMetaGap },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: sizes.roundButton },
+  meta: { flex: 1, color: colors.muted },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
   title: { color: colors.ink, flexShrink: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
