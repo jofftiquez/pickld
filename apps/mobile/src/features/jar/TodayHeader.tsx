@@ -63,7 +63,8 @@ export function TodayHeader({
     // alone and the line wraps only at large text sizes.
     <View style={styles.header}>
       {/* The date stays muted; the greeting (or the zone tag) is in ink so the line reads first. */}
-      {/* The day arrows sit at the end of this line, above the round buttons, so the title row keeps its room. */}
+      {/* The day arrows sit at the end of this line, above the round buttons, so the title row keeps its room. The
+          line is as tall as the day page's Back row, so the arrows are in the same spot there. */}
       <View style={styles.metaRow}>
         <Text style={[textStyle('cardTitle', '600'), styles.meta]} testID="today-subtitle">
           <Trans
@@ -157,7 +158,7 @@ export function TodayHeader({
 
 const styles = StyleSheet.create({
   header: { gap: sizes.todayMetaGap },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: sizes.roundButton },
   meta: { flex: 1, color: colors.muted },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md },
   title: { color: colors.ink, flexShrink: 1 },

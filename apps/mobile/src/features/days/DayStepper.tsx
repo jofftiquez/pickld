@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -17,9 +18,13 @@ export type DayStepperProps = {
   locale?: string;
 };
 
-const ARROW_WIDTH = sizes.minTap;
+// hitSlop brings each arrow to 44 × 44 (rule 11); the pill stays narrow so the greeting beside it fits.
+const ARROW_WIDTH = 40;
 
-/** Previous day and Next day (Joff): one pill with two arrows, at the top right of Today and the day page. */
+/**
+ * Previous day and Next day (Joff): one pill with two arrows, at the top right of Today and the day page, in the
+ * same spot on both, so tapping ‹ again and again keeps stepping back.
+ */
 export function DayStepper({ previous, next, onStep, locale }: DayStepperProps) {
   const { t } = useTranslation();
   // The calendar date itself, whatever the phone zone.
@@ -62,6 +67,8 @@ function Arrow({
   testID: string;
 }) {
   const disabled = onPress === undefined;
+  // Pressed is tracked by hand, as in RoundIconButton: a style function on Pressable isn't applied here.
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
@@ -69,12 +76,11 @@ function Arrow({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
       hitSlop={hitSlopFor(ARROW_WIDTH, sizes.dayStepper)}
       testID={testID}
-      style={({ pressed }) => [
-        styles.arrow,
-        disabled ? { opacity: DISABLED_OPACITY } : pressed ? { opacity: PRESSED_OPACITY } : null,
-      ]}
+      style={[styles.arrow, disabled ? { opacity: DISABLED_OPACITY } : pressed ? { opacity: PRESSED_OPACITY } : null]}
     >
       <Icon name={icon} color="ink" size={20} strokeWidth={2} />
     </Pressable>
