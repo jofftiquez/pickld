@@ -5,7 +5,7 @@ import { t } from '~/i18n/t';
 import { Phone } from '~/marketing/Phone';
 import * as shot from '~/marketing/shots';
 import { packs, stickerLabel } from '~/marketing/stickers';
-import { WaitlistForm } from '~/marketing/WaitlistForm';
+import { WaitlistForm, waitlistText } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
   title: t('stickers.metaTitle'),
@@ -58,7 +58,7 @@ export default function Stickers() {
         <div className="mk-wrap">
           <div className="mk-final mk-dark">
             <h2 id="final">{t('marketing.final.title')}</h2>
-            <p className="mk-lead">{t('marketing.final.body')}</p>
+            <p className="mk-lead">{waitlistText('marketing.final.body')}</p>
             <WaitlistForm id="final" source="final" />
           </div>
         </div>

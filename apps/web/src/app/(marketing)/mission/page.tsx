@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { Logo } from '~/components/Logo';
 import { t } from '~/i18n/t';
-import { WaitlistForm } from '~/marketing/WaitlistForm';
+import { WaitlistForm, waitlistText } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
   title: t('mission.metaTitle'),
@@ -73,7 +73,7 @@ export default function Mission() {
         <div className="mk-wrap">
           <div className="mk-final mk-dark">
             <h2 id="final">{t('mission.finalTitle')}</h2>
-            <p className="mk-lead">{t('mission.finalBody')}</p>
+            <p className="mk-lead">{waitlistText('mission.finalBody')}</p>
             <WaitlistForm id="final" source="mission" />
           </div>
         </div>

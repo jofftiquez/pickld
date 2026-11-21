@@ -1,6 +1,6 @@
 import { requestCode } from '~/app/(marketing)/waitlist/actions';
 import { t } from '~/i18n/t';
-import { turnstileSiteKey } from '~/lib/env';
+import { turnstileSiteKey, waitlistOpen } from '~/lib/env';
 import { Turnstile } from '~/marketing/Turnstile';
 
 /**
@@ -9,6 +9,7 @@ import { Turnstile } from '~/marketing/Turnstile';
  * pairs unique when a page has two forms.
  */
 export function WaitlistForm({ id, source }: { id: string; source: string }) {
+  if (!waitlistOpen()) return null; // the copy around it says "coming soon" (waitlistText)
   return (
     <form className="mk-form" action={requestCode}>
       <label htmlFor={`${id}-email`}>{t('marketing.form.label')}</label>
@@ -33,4 +34,9 @@ export function WaitlistForm({ id, source }: { id: string; source: string }) {
       <p className="mk-form-note">{t('marketing.form.note')}</p>
     </form>
   );
+}
+
+/** Copy that mentions the waitlist: its `…Soon` variant while the waitlist is closed. */
+export function waitlistText(key: string): string {
+  return t(waitlistOpen() ? key : `${key}Soon`);
 }

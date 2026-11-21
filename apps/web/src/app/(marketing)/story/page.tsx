@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Logo } from '~/components/Logo';
 import { t } from '~/i18n/t';
 import video2016 from '~/marketing/video-2016.jpg';
-import { WaitlistForm } from '~/marketing/WaitlistForm';
+import { WaitlistForm, waitlistText } from '~/marketing/WaitlistForm';
 import { YouTubeVideo } from '~/marketing/YouTubeVideo';
 
 export const metadata: Metadata = {
@@ -64,7 +64,7 @@ export default function Story() {
         <div className="mk-wrap">
           <div className="mk-final mk-dark">
             <h2 id="final">{t('story.finalTitle')}</h2>
-            <p className="mk-lead">{t('story.finalBody')}</p>
+            <p className="mk-lead">{waitlistText('story.finalBody')}</p>
             <WaitlistForm id="final" source="story" />
           </div>
         </div>

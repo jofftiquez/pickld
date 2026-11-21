@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 import { t } from '~/i18n/t';
+import { waitlistOpen } from '~/lib/env';
 
 import { pendingEmail, verifyCode } from '../actions';
 
@@ -9,6 +11,7 @@ export const metadata: Metadata = { title: t('marketing.code.metaTitle'), robots
 
 /** Join the waitlist, step 2 (INV-12): the 6-digit code Supabase Auth emailed. */
 export default async function WaitlistCode({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  if (!waitlistOpen()) notFound();
   const email = await pendingEmail();
   const wrong = (await searchParams).error === 'badcode';
   if (!email) {

@@ -1,0 +1,26 @@
+// pickld.me as a Cloudflare Worker, built by OpenNext (`pnpm cf:build`) and deployed by scripts/deploy/web.sh.
+// Settings live on the Worker: plain variables and secrets set at deploy time, never in this file.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "pickld-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  // The link-preview images read their fonts from disk; cf:build copies them next to the worker and these
+  // rules ship them in its read-only file system.
+  "find_additional_modules": true,
+  "rules": [{ "type": "Data", "globs": ["src/fonts/*.ttf"], "fallthrough": true }],
+  "observability": { "enabled": true },
+  "env": {
+    "staging": { "name": "pickld-web-staging", "workers_dev": true },
+    "production": {
+      "name": "pickld-web-production",
+      "workers_dev": false,
+      "routes": [
+        { "pattern": "pickld.me", "custom_domain": true },
+        { "pattern": "www.pickld.me", "custom_domain": true },
+      ],
+    },
+  },
+}

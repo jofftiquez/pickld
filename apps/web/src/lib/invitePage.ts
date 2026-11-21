@@ -39,8 +39,9 @@ async function forwardHeaders(): Promise<Record<string, string>> {
 /** Cached per request, so generateMetadata and the page share one check. */
 export const getInvite = cache(async (raw: string): Promise<InvitePage> => {
   const token = normalizeToken(raw);
-  if (!token) return { state: 'unavailable' };
-  const { SUPABASE_URL, SUPABASE_ANON_KEY } = env();
+  const config = env();
+  if (!token || !config) return { state: 'unavailable' };
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = config;
   const res = await fetch(`${SUPABASE_URL}/functions/v1/invite`, {
     method: 'POST',
     headers: {

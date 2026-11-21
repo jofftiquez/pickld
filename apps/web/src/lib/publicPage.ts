@@ -65,7 +65,9 @@ const jarPage = z.object({
 export type JarPage = z.infer<typeof jarPage>;
 
 async function call(body: { username: string } | { jarId: string }): Promise<unknown | null> {
-  const { SUPABASE_URL, SUPABASE_ANON_KEY } = env();
+  const config = env();
+  if (!config) return null;
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = config;
   const res = await fetch(`${SUPABASE_URL}/functions/v1/public-page`, {
     method: 'POST',
     headers: {

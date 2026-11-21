@@ -9,7 +9,7 @@ import { Phone } from '~/marketing/Phone';
 import * as shot from '~/marketing/shots';
 import { MomentFan } from '~/marketing/MomentFan';
 import { pack, stickerLabel } from '~/marketing/stickers';
-import { WaitlistForm } from '~/marketing/WaitlistForm';
+import { WaitlistForm, waitlistText } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
   title: t('marketing.metaTitle'),
@@ -193,7 +193,7 @@ export default function Home() {
             {faqs.map((q) => (
               <details key={q}>
                 <summary>{t(`marketing.faq.${q}Q`)}</summary>
-                <p>{t(`marketing.faq.${q}A`)}</p>
+                <p>{q === 'android' ? waitlistText('marketing.faq.androidA') : t(`marketing.faq.${q}A`)}</p>
               </details>
             ))}
           </div>
@@ -204,7 +204,7 @@ export default function Home() {
         <div className="mk-wrap">
           <div className="mk-final mk-dark">
             <h2 id="final">{t('marketing.final.title')}</h2>
-            <p className="mk-lead">{t('marketing.final.body')}</p>
+            <p className="mk-lead">{waitlistText('marketing.final.body')}</p>
             <WaitlistForm id="final" source="final" />
           </div>
         </div>

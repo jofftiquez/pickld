@@ -42,7 +42,7 @@ Pickld helps people keep up with each other instead of competing for their atten
 | Safety | Cloudflare CSAM Scanning Tool; OpenAI `omni-moderation-latest` (free) on thumbnail + caption; vision-AI second opinion only for borderline scores |
 | Push | `expo-notifications` (local reminders) + Expo push service (social) |
 | Purchases (P1) | RevenueCat |
-| Web | Next.js on Vercel: `apps/web` (pickld.me shared links), `apps/mod` (moderation console) |
+| Web | Next.js: `apps/web` (pickld.me marketing and shared links) on Cloudflare Workers via OpenNext; `apps/mod` (moderation console) on Vercel for now |
 | Monitoring | Sentry, PostHog |
 
 ## Repo layout

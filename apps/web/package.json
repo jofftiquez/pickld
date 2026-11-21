@@ -7,7 +7,8 @@
     "start": "next start -p 3100",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "next build && node --test tests/*.test.mjs"
+    "test": "WAITLIST_OPEN=true next build && node --test tests/*.test.mjs",
+    "cf:build": "opennextjs-cloudflare build && mkdir -p .open-next/src/fonts && cp src/fonts/PlusJakartaSans_*.ttf .open-next/src/fonts/"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -16,11 +17,13 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "1.20.18",
     "@types/node": "^26.6.6",
     "@types/react": "~19.3.0",
     "@types/react-dom": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.6",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "wrangler": "4.165.0"
   }
 }

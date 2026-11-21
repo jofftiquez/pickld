@@ -28,10 +28,11 @@ jobs:
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID_WEB: ${{ vars.VERCEL_PROJECT_ID_WEB }}
       VERCEL_PROJECT_ID_MOD: ${{ vars.VERCEL_PROJECT_ID_MOD }}
       WEB_URL: ${{ vars.WEB_URL }}
       MOD_URL: ${{ vars.MOD_URL }}
+      TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+      WAITLIST_OPEN: ${{ vars.WAITLIST_OPEN }}
       APP_STORE_URL: ${{ vars.APP_STORE_URL }}
       PLAY_STORE_URL: ${{ vars.PLAY_STORE_URL }}
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
@@ -52,6 +53,7 @@ jobs:
       REVENUECAT_WEBHOOK_SECRET: ${{ secrets.REVENUECAT_WEBHOOK_SECRET }}
       REVENUECAT_SECRET_KEY: ${{ secrets.REVENUECAT_SECRET_KEY }}
       WAITLIST_SECRET: ${{ secrets.WAITLIST_SECRET }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       APPLE_SIGN_IN_KEY: ${{ secrets.APPLE_SIGN_IN_KEY }}
     steps:
@@ -78,13 +80,16 @@ jobs:
         if: steps.ready.outputs.ok == 'true'
         with:
           deno-version: v2.x
+      - name: Install
+        if: steps.ready.outputs.ok == 'true'
+        run: pnpm install --frozen-lockfile
       - name: Database, Edge Functions, photo Worker, sticker art
         if: steps.ready.outputs.ok == 'true'
         run: scripts/deploy/deploy.sh staging
       - name: Secrets, cron jobs, auth redirects
         if: steps.ready.outputs.ok == 'true'
         run: scripts/deploy/configure.sh staging
-      - name: Web apps (Vercel)
+      - name: Web site (Cloudflare Worker) and console (Vercel)
         if: steps.ready.outputs.ok == 'true'
         run: scripts/deploy/web.sh staging
       - name: Smoke test

@@ -4,7 +4,7 @@ import { invite, slots } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
 import { MomentFan } from '~/marketing/MomentFan';
-import { WaitlistForm } from '~/marketing/WaitlistForm';
+import { WaitlistForm, waitlistText } from '~/marketing/WaitlistForm';
 
 export const metadata: Metadata = {
   title: t('marketing.moments.metaTitle'),
@@ -72,7 +72,7 @@ export default function Moments() {
         <div className="mk-wrap">
           <div className="mk-final mk-dark">
             <h2 id="final">{t('marketing.final.title')}</h2>
-            <p className="mk-lead">{t('marketing.final.body')}</p>
+            <p className="mk-lead">{waitlistText('marketing.final.body')}</p>
             <WaitlistForm id="final" source="moments" />
           </div>
         </div>

@@ -9,7 +9,7 @@ Use this when the production database must be rolled back, for example after a b
 | Accounts, jars, moments, follows, comments, reports, audit log | Supabase Postgres (Singapore) | Supabase's daily backups, kept for the plan's retention. Point-in-time recovery is a paid add-on and isn't enabled (it would need approval) |
 | Photos, thumbnails, avatars, exports | Cloudflare R2 | **Not backed up.** A restore brings back rows whose photos still exist in R2. Photos deleted after the backup was taken stay deleted |
 | Edge Function code, migrations | GitHub (`supabase/`) | The repository |
-| Secrets (R2 keys, photo token, jobs secret) | Supabase function secrets, Vercel, EAS | The founders' password manager |
+| Secrets (R2 keys, photo token, jobs secret) | Supabase function secrets, Cloudflare Worker secrets, Vercel (console), EAS | The founders' password manager |
 
 ## Before restoring production
 
