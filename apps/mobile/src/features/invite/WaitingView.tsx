@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
 import { JarGraphic } from '@/components/JarGraphic';
@@ -59,6 +59,7 @@ export function WaitingView({
           { paddingTop: top + sizes.roundButton, paddingBottom: insets.bottom + space.xxl },
         ]}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
         <View style={styles.art}>
           <JarGraphic count={join.waitingLayers} size={join.waitingJar} decorative />
@@ -80,7 +81,11 @@ export function WaitingView({
           <CodeField
             kind="invite"
             value={code}
-            onChangeText={onChangeCode}
+            onChangeText={(value) => {
+              onChangeCode(value);
+              // The whole code is in: close the keyboard, which covers Get in on most phones.
+              if (value.length === CODE_LENGTH) Keyboard.dismiss();
+            }}
             label={t('join.codeLabel')}
             invalid={error === 'unavailable'}
             editable={!busy}
