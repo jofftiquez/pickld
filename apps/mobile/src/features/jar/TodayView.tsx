@@ -5,7 +5,7 @@ import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-na
 
 import { MomentTile } from '@/components/MomentTile';
 import { DayStepper, type DayStepperProps } from '@/features/days/DayStepper';
-import { PastDayBanner } from '@/features/days/PastDayBanner';
+import { PastDayTag } from '@/features/days/PastDayTag';
 import { pastDayLabel } from '@/features/days/pastDay';
 import { MomentCover } from '@/features/moment/MomentCover';
 import { opensPreview } from '@/features/moment/momentPreview';
@@ -82,9 +82,9 @@ export type TodayViewProps = {
    * A past day instead of today: the day page (D-55, FR-DAY-02; app/day/[date].tsx). The header shows that
    * date and Back instead of the greeting, nothing is the Now tile, and the page sits above the tab bar.
    * `onViewJar` (a published jar, D-153) puts View jar on the jar card. A past day (D-156) sits on warm paper
-   * with the past-day banner under the header, and `onBackToToday` puts Back to Today on it.
+   * with the past-day tag on the header's date line.
    */
-  day?: { date: string; onBack: () => void; onViewJar?: () => void; onBackToToday?: () => void } | null;
+  day?: { date: string; onBack: () => void; onViewJar?: () => void } | null;
   /** Slots that just filled: their tiles pop in (D-58; `useFillPops`). */
   poppingSlots?: ReadonlySet<Slot>;
   /** The jar was just published (D-58; `usePublishCelebration`): confetti and the lid closing on the card. */
@@ -166,7 +166,7 @@ export function TodayView({
   const bottomPadding = Math.max(insets.bottom, space.lg) + (day ? 0 : tabBarClearance);
   const missing = tiles.some((tile) => tile.state === 'empty');
   // D-156: only a date before today (in the jar's zone) is a past day; today never gets the past-day look.
-  const pastDay = day ? pastDayLabel(day.date, now, tz) : null;
+  const pastDay = day ? pastDayLabel(day.date, now, tz) !== null : false;
   const screenStyle = pastDay ? [styles.screen, styles.pastDay] : styles.screen;
   const stepper = step ? <DayStepper {...step} /> : null;
   const swipe = usePanGesture({
@@ -198,7 +198,12 @@ export function TodayView({
           testID={day ? 'day-scroll' : 'today-scroll'}
         >
           {day ? (
-            <DayHeader date={day.date} onBack={day.onBack} stepper={stepper} />
+            <DayHeader
+              date={day.date}
+              onBack={day.onBack}
+              stepper={stepper}
+              tag={pastDay ? <PastDayTag fillable={missing} /> : null}
+            />
           ) : (
             <TodayHeader
               date={formatShortDate(now, tz)}
@@ -216,11 +221,6 @@ export function TodayView({
               stepper={stepper}
             />
           )}
-          {pastDay ? (
-            <View style={styles.banner}>
-              <PastDayBanner date={pastDay} fillable={missing} onBackToToday={day?.onBackToToday} />
-            </View>
-          ) : null}
           {suspension ? <View style={styles.banner}>{suspension}</View> : null}
           {zoneBanner ? <View style={suspension ? styles.cardUnderBanner : styles.banner}>{zoneBanner}</View> : null}
           {offlineCount !== null ? (
@@ -316,7 +316,7 @@ export function TodayView({
               </View>
             ))}
           </View>
-          {/* The past-day banner says it on a past day (D-156). */}
+          {/* The past-day tag says it on a past day (D-156). */}
           {day && missing && !pastDay ? (
             <Text style={[textStyle('bodySmall'), styles.note]} testID="day-added-later-note">
               {t('day.addedLaterNote')}

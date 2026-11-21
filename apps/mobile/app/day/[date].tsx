@@ -37,7 +37,7 @@ import type { Slot } from '@/theme/tokens';
 // that day; Publish reviews that day's jar, and a published one has View jar. Only past days have a page:
 // today (or a future or malformed date) goes to the Today tab. Dev-only `?devPhoto=` picks a bundled photo
 // instead of the gallery, as on the camera, so Maestro can fill a day. A past day looks like one (D-156): warm
-// paper, and a banner naming the day with Back to Today, so it is never mistaken for Today.
+// paper, and a "Past day" tag by the date, so it is never mistaken for Today.
 export default function DayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -166,8 +166,6 @@ export default function DayScreen() {
         day={{
           date,
           onBack: () => (router.canGoBack() ? router.back() : router.replace('/my-days')),
-          // D-156: the past-day banner's Back to Today, past My days and any other day below.
-          onBackToToday: () => router.dismissTo('/today'),
           // D-153: in place of the removed My days card's link.
           onViewJar:
             published && jar ? () => router.push({ pathname: '/jar/[id]', params: { id: jar.id } }) : undefined,
