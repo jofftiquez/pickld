@@ -26,6 +26,10 @@ appId: me.pickld.app
 - assertVisible:
     id: my-days-next
     enabled: false
+# Days with moments draw a jar that fills with them (FR-DAY-01); a published day says so to VoiceOver.
+- assertVisible:
+    id: day-jar
+- assertVisible: '.*8 of 8 moments, published'
 - waitForAnimationToEnd:
     timeout: 5000
 - takeScreenshot: Calendar-ios

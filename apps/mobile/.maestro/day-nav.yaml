@@ -1,0 +1,90 @@
+# FR-DAY-02: Previous day and Next day, by the arrows and by swiping, on Today and the day page. Today has no
+# next day; ‹ or a swipe right opens the day before; on a day page › or a swipe left goes forward, and the day
+# after the last past day is Today. Dates are compared as the header shows them, so the Simulator's zone doesn't
+# matter. Needs dale signed in (seed data): maestro test apps/mobile/.maestro/day-nav.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- extendedWaitUntil:
+    notVisible:
+      id: splash-overlay
+    timeout: 10000
+# Today: no next day.
+- assertVisible:
+    id: day-step-next
+    enabled: false
+- tapOn:
+    id: day-step-previous
+- extendedWaitUntil:
+    visible:
+      id: past-day-screen
+    timeout: 15000
+- assertVisible:
+    id: day-step-next
+    text: Next day, Today
+- copyTextFrom:
+    id: day-subtitle
+- evalScript: ${output.yesterday = maestro.copiedText}
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: DayStep-ios
+# ‹ again: the day before.
+- tapOn:
+    id: day-step-previous
+- copyTextFrom:
+    id: day-subtitle
+- assertTrue: ${maestro.copiedText !== output.yesterday}
+- evalScript: ${output.twoDaysAgo = maestro.copiedText}
+# › back to yesterday.
+- tapOn:
+    id: day-step-next
+- copyTextFrom:
+    id: day-subtitle
+- assertTrue: ${maestro.copiedText === output.yesterday}
+# Swipe right: the day before. Starts away from the left edge, which stays iOS's swipe back.
+- swipe:
+    start: 30%, 55%
+    end: 90%, 55%
+    duration: 300
+- copyTextFrom:
+    id: day-subtitle
+- assertTrue: ${maestro.copiedText === output.twoDaysAgo}
+# Swipe left: the day after.
+- swipe:
+    start: 80%, 55%
+    end: 15%, 55%
+    duration: 300
+- copyTextFrom:
+    id: day-subtitle
+- assertTrue: ${maestro.copiedText === output.yesterday}
+# › from yesterday is Today.
+- tapOn:
+    id: day-step-next
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000
+- assertNotVisible:
+    id: past-day-screen
+# A swipe right on Today opens yesterday too.
+- swipe:
+    start: 30%, 55%
+    end: 90%, 55%
+    duration: 300
+- extendedWaitUntil:
+    visible:
+      id: past-day-screen
+    timeout: 15000
+- copyTextFrom:
+    id: day-subtitle
+- assertTrue: ${maestro.copiedText === output.yesterday}
+- tapOn:
+    id: day-back
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 15000

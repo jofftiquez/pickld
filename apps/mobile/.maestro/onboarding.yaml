@@ -33,6 +33,10 @@ appId: me.pickld.app
     visible:
       id: sign-up-screen
     timeout: 10000
+# Sign in with Apple (FR-ACC-01) is offered; no Google.
+- assertVisible:
+    id: auth-apple
+- assertNotVisible: '.*Google.*'
 - tapOn:
     id: auth-back
 - tapOn:
