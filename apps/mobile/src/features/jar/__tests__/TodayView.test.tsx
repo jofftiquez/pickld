@@ -341,7 +341,8 @@ describe('TodayView: three 3:4 tiles to a row, with the sticker pack tile ninth'
   function rowsOfTiles(label = 'Today’s moments') {
     // Each grid row holds its tiles; read them back as testIDs (spacer cells have none).
     const grid = screen.getByLabelText(label);
-    const cell = /^(tile-(whereami|mebusywith|whoamiwith|ootd|selfie|morning|afternoon|evening)|today-pack-tile)$/;
+    const cell =
+      /^(tile-(whereami|mebusywith|whoamiwith|ootd|selfie|morning|afternoon|evening)|today-(pack|stickers)-tile)$/;
     return grid.children.map((row) =>
       within(row as never)
         .queryAllByTestId(cell)
@@ -362,6 +363,20 @@ describe('TodayView: three 3:4 tiles to a row, with the sticker pack tile ninth'
     expect(screen.getByText('See pack')).toBeTruthy();
     await fireEvent.press(packTile);
     expect(onOpenPack).toHaveBeenCalledWith('olivia');
+  });
+
+  it('owning every pack, the ninth cell becomes My stickers and opens the collection', async () => {
+    const onOpenPack = jest.fn();
+    const onOpenStickers = jest.fn();
+    await renderToday({ hasAnyJar: true, featuredPack: { ...featuredPack, mine: true }, onOpenPack, onOpenStickers });
+    expect(rowsOfTiles()[2]).toEqual(['tile-afternoon', 'tile-evening', 'today-stickers-tile']);
+    const tile = screen.getByRole('button', { name: 'My stickers' });
+    expect(tile.props.accessibilityHint).toBe('Opens your sticker collection');
+    expect(screen.getByText('See all')).toBeTruthy();
+    expect(screen.queryByText('Olivia')).toBeNull();
+    await fireEvent.press(tile);
+    expect(onOpenStickers).toHaveBeenCalledTimes(1);
+    expect(onOpenPack).not.toHaveBeenCalled();
   });
 
   it('a past day never shows it, and without a pack the last row keeps two tiles', async () => {

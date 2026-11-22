@@ -49,6 +49,12 @@
       "label": "{{name}} sticker pack",
       "hint": "Opens the pack in the sticker shop"
     },
+    "stickersTile": {
+      "title": "My stickers",
+      "seeAll": "See all",
+      "label": "My stickers",
+      "hint": "Opens your sticker collection"
+    },
     "offline": {
       "title": "You’re offline.",
       "body_one": "{{count}} moment is saved on your phone and will upload when you’re back.",

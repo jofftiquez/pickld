@@ -47,7 +47,7 @@ export type TodayViewProps = {
   onCapture: (slot: Slot) => void;
   /** Today's calendar button; left out on the day page. */
   onOpenMyDays?: () => void;
-  /** Opens the Stickers page from the header's stickers button (D-61); left out on the day page. */
+  /** Opens the Stickers page from the header's stickers button (D-61) and the My stickers tile; left out on the day page. */
   onOpenStickers?: () => void;
   /** Pending uploads (FR-CAP-04): the header button and its count; left out on the day page. */
   pendingCount?: number;
@@ -89,8 +89,16 @@ export type TodayViewProps = {
   poppingSlots?: ReadonlySet<Slot>;
   /** The jar was just published (D-58; `usePublishCelebration`): confetti and the lid closing on the card. */
   celebratePublish?: boolean;
-  /** Today's sticker pack (`useFeaturedPack`): the 9th tile, ending the 3×3 grid. Never shown on a past day. */
-  featuredPack?: { slug: string; name: string; stickers: readonly { asset: string; label: string }[] } | null;
+  /**
+   * Today's sticker pack (`useFeaturedPack`): the 9th tile, ending the 3×3 grid. Never shown on a past day.
+   * `mine` (the user owns every pack on sale) turns it into My stickers, opening `onOpenStickers` like the header.
+   */
+  featuredPack?: {
+    slug: string;
+    name: string;
+    stickers: readonly { asset: string; label: string }[];
+    mine?: boolean;
+  } | null;
   onOpenPack?: (slug: string) => void;
   /** Previous day / Next day in the header, and swiping right or left on the page (Joff); missing turns both off. */
   step?: Omit<DayStepperProps, 'locale'> | null;
@@ -155,8 +163,14 @@ export function TodayView({
   const { t } = useTranslation();
   const count = momentCount(tiles);
   // Three 3:4 tiles to a row, so a Fit-framed photo shows whole. On Today the sticker pack tile fills the
-  // ninth cell; otherwise the last row keeps empty cells so its tiles stay the same width.
-  const pack = !day && featuredPack && onOpenPack ? featuredPack : null;
+  // ninth cell (My stickers once the user owns every pack); otherwise the last row keeps empty cells so its
+  // tiles stay the same width.
+  const openPack = featuredPack?.mine
+    ? onOpenStickers
+    : featuredPack && onOpenPack
+      ? () => onOpenPack(featuredPack.slug)
+      : undefined;
+  const pack = !day && featuredPack && openPack ? featuredPack : null;
   const cells: (GridTile | 'pack')[] = pack ? [...tiles, 'pack'] : [...tiles];
   const rows: (GridTile | 'pack')[][] = [];
   for (let i = 0; i < cells.length; i += COLUMNS) rows.push(cells.slice(i, i + COLUMNS));
@@ -255,13 +269,14 @@ export function TodayView({
               <View key={r} style={styles.gridRow}>
                 {row.map((tile) => {
                   if (tile === 'pack') {
-                    return pack && onOpenPack ? (
+                    return pack && openPack ? (
                       <View key="pack" style={styles.cell}>
                         <StickerPackTile
                           slug={pack.slug}
                           name={pack.name}
                           stickers={pack.stickers}
-                          onPress={() => onOpenPack(pack.slug)}
+                          mine={pack.mine}
+                          onPress={openPack}
                         />
                       </View>
                     ) : null;
