@@ -52,14 +52,21 @@ describe('featuredPack (Today’s sticker pack tile)', () => {
     expect(['olivia', 'corporate', 'pride']).toContain(at('2027-01-01', 0));
   });
 
-  it('is null once the user owns every pack on sale, which hides the tile', () => {
-    expect(
-      featuredPack(
-        packs.map((p) => ({ ...p, owned: true })),
-        '2026-11-16',
-        12,
-      ),
-    ).toBeNull();
+  it('once the user owns every pack on sale, walks their own packs instead, marked mine', () => {
+    const allOwned = packs.map((p) => ({ ...p, owned: true }));
+    // Owned packs include the free one and one no longer on sale; a pack without stickers has nothing to show.
+    allOwned.push(pack('empty', { owned: true, stickers: [] }));
+    const day = [0, 4, 8, 12, 16, 20].map((h) => featuredPack(allOwned, '2026-11-16', h));
+    expect(day.every((p) => p?.mine === true)).toBe(true);
+    expect(new Set(day.map((p) => p?.slug))).toEqual(
+      new Set(['everyday', 'olivia', 'fish-moods', 'corporate', 'christmas-2025', 'pride']),
+    );
+    // While something is left to buy, the tile is a shop pack, not mine.
+    expect(featuredPack(packs, '2026-11-16', 12)?.mine).toBe(false);
+  });
+
+  it('is null only when there is nothing to buy and nothing owned', () => {
     expect(featuredPack([], '2026-11-16', 12)).toBeNull();
+    expect(featuredPack([pack('olivia', { onSale: false })], '2026-11-16', 12)).toBeNull();
   });
 });

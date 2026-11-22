@@ -15,23 +15,30 @@ function dayNumber(localDate: string): number {
   return Math.floor(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / DAY_MS);
 }
 
+/** Today's 9th tile: a pack to see in the shop, or (`mine`) one of the user's own, opening their stickers. */
+export type FeaturedPack = ShopPack & { mine: boolean };
+
 /**
  * The sticker pack Today's 9th tile shows: a paid pack on sale that the user doesn't own. It changes every
  * `FEATURED_PACK_HOURS` hours of the jar's local clock, walking through the candidates in turn within a day;
- * each day starts from a different pack, so the same time of day doesn't always show the same one. Null
- * once the user owns every pack on sale, which hides the tile.
+ * each day starts from a different pack, so the same time of day doesn't always show the same one. Once the
+ * user owns every pack on sale it walks their own packs the same way instead (`mine`, Joff), so the cell stays
+ * filled and opens their stickers. Null only when there is neither.
  */
-export function featuredPack(packs: readonly ShopPack[], localDate: string, localHour: number): ShopPack | null {
-  const pool = packs.filter((p) => p.onSale && !p.owned);
+export function featuredPack(packs: readonly ShopPack[], localDate: string, localHour: number): FeaturedPack | null {
+  const shop = packs.filter((p) => p.onSale && !p.owned);
+  const mine = shop.length === 0;
+  const pool = mine ? packs.filter((p) => p.owned && p.stickers.length > 0) : shop;
   if (pool.length === 0) return null;
   const window = Math.floor(localHour / FEATURED_PACK_HOURS);
   // A cheap integer hash of the day picks where the day's walk starts.
   const dayStart = Math.imul(dayNumber(localDate), 2654435761) >>> 0;
-  return pool[(dayStart + window) % pool.length] ?? null;
+  const pack = pool[(dayStart + window) % pool.length];
+  return pack ? { ...pack, mine } : null;
 }
 
 /** Today's featured pack from the shop's cached rows; null while they load. */
-export function useFeaturedPack(localDate: string, localHour: number): ShopPack | null {
+export function useFeaturedPack(localDate: string, localHour: number): FeaturedPack | null {
   const rows = useShopRows();
   const window = Math.floor(localHour / FEATURED_PACK_HOURS);
   return useMemo(

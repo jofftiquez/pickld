@@ -15,6 +15,8 @@ export type StickerPackTileProps = {
   name: string;
   /** The pack's stickers in catalog order; the tile shows the first one or two. */
   stickers: readonly { asset: string; label: string }[];
+  /** One of the user's own packs (they own every pack on sale): titled My stickers, opening their collection. */
+  mine?: boolean;
   onPress: () => void;
   testID?: string;
 };
@@ -73,9 +75,17 @@ function flapPath(w: number, dx = 0, dy = 0): string {
 /**
  * The 9th tile on Today: a sticker pack from the shop, drawn as a sticker. The pack's own tint sits inside a
  * white die-cut edge, the card tilts a little, and its top-right corner folds over. It ends the 3×3 grid so
- * the last row is full, and opens the pack's page.
+ * the last row is full, and opens the pack's page. With `mine` it shows one of the user's own packs the same
+ * way, titled My stickers, and opens their sticker collection.
  */
-export function StickerPackTile({ slug, name, stickers, onPress, testID = 'today-pack-tile' }: StickerPackTileProps) {
+export function StickerPackTile({
+  slug,
+  name,
+  stickers,
+  mine = false,
+  onPress,
+  testID = mine ? 'today-stickers-tile' : 'today-pack-tile',
+}: StickerPackTileProps) {
   const { t } = useTranslation();
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const [pressed, setPressed] = useState(false);
@@ -85,8 +95,8 @@ export function StickerPackTile({ slug, name, stickers, onPress, testID = 'today
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t('today.packTile.label', { name })}
-      accessibilityHint={t('today.packTile.hint')}
+      accessibilityLabel={mine ? t('today.stickersTile.label') : t('today.packTile.label', { name })}
+      accessibilityHint={mine ? t('today.stickersTile.hint') : t('today.packTile.hint')}
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
@@ -126,14 +136,14 @@ export function StickerPackTile({ slug, name, stickers, onPress, testID = 'today
           minimumFontScale={0.75}
           style={[textStyle('bodySmall', '700'), { color: colors.ink }]}
         >
-          {name}
+          {mine ? t('today.stickersTile.title') : name}
         </Text>
         <Text
           maxFontSizeMultiplier={maxTextScale.tile}
           numberOfLines={1}
           style={[textStyle('label', '700'), { color: colors.brandLink }]}
         >
-          {t('today.packTile.seePack')}
+          {mine ? t('today.stickersTile.seeAll') : t('today.packTile.seePack')}
         </Text>
       </View>
     </Pressable>
