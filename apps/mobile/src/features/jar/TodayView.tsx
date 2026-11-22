@@ -102,6 +102,8 @@ export type TodayViewProps = {
   onOpenPack?: (slug: string) => void;
   /** Previous day / Next day in the header, and swiping right or left on the page (Joff); missing turns both off. */
   step?: Omit<DayStepperProps, 'locale'> | null;
+  /** A first-time guide tip (FR-ONB-10), between the jar card and the grid. */
+  guideTip?: ReactNode;
 };
 
 const COLUMNS = 3;
@@ -159,6 +161,7 @@ export function TodayView({
   featuredPack = null,
   onOpenPack,
   step = null,
+  guideTip = null,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -264,6 +267,7 @@ export function TodayView({
               closeLid={celebratePublish}
             />
           </View>
+          {guideTip ? <View style={styles.guideTip}>{guideTip}</View> : null}
           <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
             {rows.map((row, r) => (
               <View key={r} style={styles.gridRow}>
@@ -352,6 +356,7 @@ const styles = StyleSheet.create({
   banner: { marginTop: sizes.cardPadding },
   cardUnderBanner: { marginTop: sizes.bannerGap },
   grid: { marginTop: space.lg, gap: space.md },
+  guideTip: { marginTop: space.md },
   gridRow: { flexDirection: 'row', gap: space.md },
   cell: { flex: 1 },
   note: { marginTop: space.lg, color: colors.muted },

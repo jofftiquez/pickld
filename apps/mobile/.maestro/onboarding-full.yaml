@@ -3,7 +3,8 @@
 # 7:00 AM · 12:30 PM · 7:00 PM and Change moves the evening to 7:30 PM. Your people, Pick your jar (Mango),
 # Permissions (camera preset to allowed; Notifications names the chosen times and Allow shows the prompt),
 # Find friends (contacts preset to allowed; Be a reader follows Mika), the Pickld Promise (held), the First moment
-# tip, whose Take my first moment opens Camera on the current slot, the first moment saved to Today, and a back swipe from Today staying on Today.
+# tip, whose Take my first moment opens Camera on the current slot, the first-time guide's tips on the editor's two
+# steps and on Today (FR-ONB-10), the first moment saved to Today, and a back swipe from Today staying on Today.
 # Before the first run on a Simulator, add the seed contacts:
 #   xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf
 # Ends signed in as the new account: sign dale back in afterwards (scripts/dev-sign-in.sh).
@@ -269,14 +270,39 @@ appId: me.pickld.app
     visible:
       id: editor-screen
     timeout: 10000
+# The first-time guide (FR-ONB-10): one tip on each editor step, closed with Got it.
+- extendedWaitUntil:
+    visible:
+      id: guide-tip-editor
+    timeout: 10000
+- takeScreenshot: GuideTipEditor-ios
+- tapOn:
+    id: guide-tip-ok
+- assertNotVisible:
+    id: guide-tip-editor
 - tapOn:
     id: editor-next
+- extendedWaitUntil:
+    visible:
+      id: guide-tip-details
+    timeout: 10000
+- takeScreenshot: GuideTipDetails-ios
+- tapOn:
+    id: guide-tip-ok
 - tapOn:
     id: editor-save
 - extendedWaitUntil:
     visible:
       id: tab-today
     timeout: 15000
+# Back on Today with a moment in the jar: the eight slots tip, after the Moment added toast leaves.
+- extendedWaitUntil:
+    visible:
+      id: guide-tip-today
+    timeout: 20000
+- takeScreenshot: GuideTipToday-ios
+- tapOn:
+    id: guide-tip-ok
 # Saved to the queue first, then uploading, checking or already added (D-22 auto-approves locally).
 - extendedWaitUntil:
     visible:

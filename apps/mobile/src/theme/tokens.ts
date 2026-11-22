@@ -212,6 +212,7 @@ export const radius = {
   input: 16, // text fields (EditProfile)
   banner: 16, // offline banner on Today (UploadStates)
   zoneBanner: 18, // Time zone banner on Today (TimeZone)
+  guideTip: 16, // first-time guide tip card (FR-ONB-10)
   zoneIcon: 13, // icon well on that banner
   notifyIcon: 13, // icon wells on Notifications (the reminder card, Full jar rows)
   reminderCard: 22, // pinned reminder card on Notifications

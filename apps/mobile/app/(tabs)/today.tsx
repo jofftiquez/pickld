@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt';
@@ -9,6 +10,8 @@ import { stepToday } from '@/features/days/pastDay';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
+import { GuideTip } from '@/features/guide/GuideTip';
+import { useGuideTip } from '@/features/guide/useGuideTip';
 import { useFeaturedPack } from '@/features/stickers/featuredPack';
 import { retryUpload } from '@/features/jar/retryUpload';
 import { openTodayJar, useRollover } from '@/features/jar/rollover';
@@ -140,8 +143,21 @@ export default function TodayScreen() {
       ? { visibility: openJar.visibility, publishedAt: openJar.publishedAt, likeCount: openJar.likeCount ?? 0 }
       : null;
 
+  // First-time guide tips (FR-ONB-10), one per visit: the eight slots once the first moment is in (the First
+  // moment sheet covers the empty first day), then Publish while today's jar can be published. Never over a
+  // sheet or the Publish celebration.
+  const holdsMoment = tiles.some(holdsSlot);
+  const calm = !tip.visible && !visibilityOpen && !celebratePublish;
+  const guide = useGuideTip(
+    [
+      { id: 'today', when: calm && (jar?.hasAnyJar === true || holdsMoment) },
+      { id: 'publish', when: calm && openJar !== null && !openJar.publishedAt && holdsMoment },
+    ],
+    focused,
+  );
+
   return (
-    <>
+    <View style={styles.root} {...guide.catchTaps}>
       <TodayView
         now={now}
         tz={tz}
@@ -191,6 +207,16 @@ export default function TodayScreen() {
           next: null,
           onStep: (date) => router.push({ pathname: '/day/[date]', params: { date, via: 'step' } }),
         }}
+        guideTip={
+          guide.tip === 'today' || guide.tip === 'publish' ? (
+            <GuideTip
+              id={guide.tip}
+              arrow={guide.tip === 'today' ? { side: 'bottom', align: 'start' } : { side: 'top', align: 'end' }}
+              onClose={guide.close}
+              tipRef={guide.tipRef}
+            />
+          ) : null
+        }
       />
       {published && openJar ? (
         <JarVisibilitySheet
@@ -226,6 +252,10 @@ export default function TodayScreen() {
       />
       {/* An upload whose slot was taken asks whether to Replace (M2-22). */}
       <ConflictReplacePrompt queue={queue} />
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

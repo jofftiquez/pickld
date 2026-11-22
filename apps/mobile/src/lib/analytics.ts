@@ -1,6 +1,7 @@
 import PostHog from 'posthog-react-native';
 import { z } from 'zod';
 
+import { GUIDE_TIPS } from '@/features/guide/tipIds';
 import { slots } from '@/theme/tokens';
 
 import { readMonitoringEnv } from './env';
@@ -42,6 +43,8 @@ export const analyticsEvents = {
   invite_scan: z.strictObject({ outcome: z.enum(['invite', 'not_invite', 'denied']) }),
   // Leaving Waiting: with a code, or let in another way (a founder, or early access ended).
   waiting_admitted: z.strictObject({ reason: z.enum(['code', 'let_in']) }),
+  // First-time guide (FR-ONB-10): which tip closed and how, to learn whether tips get in the way.
+  guide_tip_closed: z.strictObject({ tip: z.enum(GUIDE_TIPS), how: z.enum(['got_it', 'tap', 'turn_off']) }),
 } as const;
 
 export type AnalyticsEvent = keyof typeof analyticsEvents;

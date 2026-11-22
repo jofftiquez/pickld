@@ -1710,6 +1710,46 @@
     "take": "Take my first moment",
     "look": "Look around first"
   },
+  "guide": {
+    "gotIt": "Got it",
+    "turnOff": "Turn off tips",
+    "turnOffHint": "Closes this tip and stops all the others",
+    "tips": {
+      "today": {
+        "title": "Eight slots, one jar",
+        "body": "Each slot holds one photo. The green Now tile fits the time of day, and the ninth tile is today’s stickers. A new jar starts at midnight."
+      },
+      "editor": {
+        "title": "Make it yours",
+        "body": "Color filters, stickers, text, places and mentions. Pickld has color filters only, no beauty or face filters."
+      },
+      "details": {
+        "title": "You choose for each moment",
+        "body": "Once it’s up, the people you pick here can see it. Only me keeps it just for you, even after you publish the jar."
+      },
+      "publish": {
+        "title": "Publish when you’re ready",
+        "body": "Publishing puts today’s jar in your readers’ Jars tab. Choose Readers, Everyone or Only me. Add more moments after, if you like."
+      },
+      "feed": {
+        "title": "Your people, in order",
+        "body": "Only people you read, newest first. A jar moves up when they add a moment. Likes and reader counts never change the order."
+      },
+      "discover": {
+        "title": "Meet people through your people",
+        "body": "People your authors read come first, then everyone else who posts publicly, newest first. Rather not be here? Turn off Show me in Discover in Settings.",
+        "bodyMinor": "People your authors read come first, then everyone else who posts publicly, newest first. Under 18, your posts stay out of Discover."
+      },
+      "profile": {
+        "title": "Be a reader",
+        "body": "Their jars show up in your Jars tab. Stop reading, mute or block them any time."
+      },
+      "unpublished": {
+        "title": "Days you didn’t publish",
+        "body": "Days from the last week wait here. Publish one, or keep it to yourself and it leaves the list."
+      }
+    }
+  },
   "share": {
     "title": "Share jar",
     "titleMoment": "Share moment",

@@ -25,6 +25,17 @@ const mockBackend = {
   updateError: null as { code: string; message: string } | null,
 };
 
+// The phone's key-value store (first-time guide tips read it on these screens).
+jest.mock('expo-sqlite/kv-store', () => {
+  const disk = new Map<string, string>();
+  return {
+    __esModule: true,
+    default: {
+      getItem: async (k: string) => disk.get(k) ?? null,
+      setItem: async (k: string, v: string) => void disk.set(k, v),
+    },
+  };
+});
 jest.mock('@/lib/supabase', () => {
   const query = (table: string) => {
     let patch: Row | null = null;

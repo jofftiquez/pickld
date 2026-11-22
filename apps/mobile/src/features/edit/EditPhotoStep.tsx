@@ -1,6 +1,6 @@
 import type { SkImage } from '@shopify/react-native-skia';
 import { useTranslation } from 'react-i18next';
-import { useRef, useState, type ComponentRef } from 'react';
+import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -51,6 +51,8 @@ export type EditPhotoStepProps = {
   /** Changes an overlay's content (Bubble, Text, Place and Mention tools); see useEditorState.updateOverlay. */
   onUpdateOverlay: (id: string, update: (overlay: Overlay) => Overlay, group?: string) => void;
   onSelectTool: (tool: EditorTool) => void;
+  /** A first-time guide tip (FR-ONB-10), above the tool tabs. */
+  guideTip?: ReactNode;
   canUndo: boolean;
   onUndo: () => void;
   /** The quick photo buttons on the photo (Rotate, Flip, Crop), where the photo can be changed. */
@@ -88,6 +90,7 @@ export function EditPhotoStep({
   canUndo,
   onUndo,
   photoTools,
+  guideTip,
   adjustFailed = false,
 }: EditPhotoStepProps) {
   const { t } = useTranslation();
@@ -167,6 +170,7 @@ export function EditPhotoStep({
           { minHeight: panelMinHeight, paddingBottom: bottomInset + space.xxl },
         ]}
       >
+        {guideTip}
         <SegmentedControl
           segments={editorTools.map((key) => ({ key, label: t(`edit.tool.${key}`) }))}
           selected={tool}

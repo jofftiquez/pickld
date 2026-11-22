@@ -19,6 +19,17 @@ import { getItem, keepAsDraft, saveEdits, type QueueItem } from '@/lib/queue/sto
 // sticker adds it at the centre as one Undo step, and Done saves it as data. Skia and the queue are
 // replaced as in EditScreen.test.
 
+// The phone's key-value store (first-time guide tips read it on these screens).
+jest.mock('expo-sqlite/kv-store', () => {
+  const disk = new Map<string, string>();
+  return {
+    __esModule: true,
+    default: {
+      getItem: async (k: string) => disk.get(k) ?? null,
+      setItem: async (k: string, v: string) => void disk.set(k, v),
+    },
+  };
+});
 jest.mock('@shopify/react-native-skia', () => {
   const { View: MockView } = jest.requireActual<typeof import('react-native')>('react-native');
   return {

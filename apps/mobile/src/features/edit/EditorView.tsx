@@ -1,5 +1,5 @@
 import type { SkImage } from '@shopify/react-native-skia';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, StyleSheet, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -76,6 +76,9 @@ export type EditorViewProps = {
   saving: boolean;
   saveFailed: boolean;
   onSave: () => void;
+  /** First-time guide tips (FR-ONB-10) for the photo step and the details step. */
+  photoTip?: ReactNode;
+  detailsTip?: ReactNode;
 };
 
 // The step change slides like a navigation push: the details step comes in from the right while the
@@ -131,6 +134,8 @@ export function EditorView({
   saving,
   saveFailed,
   onSave,
+  photoTip,
+  detailsTip,
 }: EditorViewProps) {
   const { t } = useTranslation();
   const window = useWindowDimensions();
@@ -223,6 +228,7 @@ export function EditorView({
           onUndo={onUndo}
           photoTools={photoTools}
           adjustFailed={adjustFailed}
+          guideTip={photoTip}
         />
       </Animated.View>
       {detailsOpened ? (
@@ -247,6 +253,7 @@ export function EditorView({
               onChangeVisibility={onChangeVisibility}
               saveFailed={saveFailed}
               onEditPhoto={back}
+              guideTip={detailsTip}
             />
           </Animated.View>
         </GestureDetector>

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { turnOnGuideTips } from '@/features/guide/guideTips';
 import { fetchMe, phoneTimeZone, todayQueryKeys } from '@/features/jar/useToday';
 import { track } from '@/lib/analytics';
 import { useAuthStore } from '@/lib/authStore';
@@ -34,6 +35,8 @@ export function PromiseScreen() {
     if (!userId) return;
     track('signup_step_completed', { step: 'promise' });
     await saveSetupStep(userId, null);
+    // Setup is finished: the first-time guide's tips start (FR-ONB-10).
+    await turnOnGuideTips(userId);
     resetTo(router, '/');
   };
 
