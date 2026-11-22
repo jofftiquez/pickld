@@ -68,6 +68,7 @@ export function SettingsScreen() {
       onMyStickers={() => router.push({ pathname: '/stickers', params: { tab: 'mine' } })}
       onInvite={() => router.push('/invite')}
       invitesLeft={leftToGive(invites)}
+      onHowItWorks={() => router.push({ pathname: '/guide', params: { from: 'settings' } })}
       onHelp={() => router.push('/settings/help')}
       onLegal={() => openLegal('terms')}
       onSignOut={() => void signOut()}

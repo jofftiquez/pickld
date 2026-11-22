@@ -121,8 +121,8 @@ export default function TodayScreen() {
   // Only while Today is in front: its sheet is a modal, which would stay over a screen opened from a link.
   const focused = useScreenFocused();
   const tip = useFirstMomentTip(userId, focused && jar?.hasAnyJar === false && !tiles.some(holdsSlot));
-  // Take my first moment opens Camera once the sheet's modal has closed.
-  const takeAfterTip = useRef(false);
+  // Take my first moment opens Camera, and See how Pickld works the guide, once the sheet's modal has closed.
+  const afterTip = useRef<'camera' | 'guide' | null>(null);
 
   // The jar's visibility menu (M3-02). Once published, RLS shares every new live, non-private moment with
   // whoever the visibility allows (FR-PUB-04), so changing it is the only step. The jars trigger keeps
@@ -241,13 +241,18 @@ export default function TodayScreen() {
         lidColor={me?.lidColor}
         onClose={tip.close}
         onTake={() => {
-          takeAfterTip.current = true;
+          afterTip.current = 'camera';
+          tip.close();
+        }}
+        onHowItWorks={() => {
+          afterTip.current = 'guide';
           tip.close();
         }}
         onClosed={() => {
-          if (!takeAfterTip.current) return;
-          takeAfterTip.current = false;
-          router.push(nowSlot ? { pathname: '/camera', params: { slot: nowSlot } } : '/camera');
+          const next = afterTip.current;
+          afterTip.current = null;
+          if (next === 'camera') router.push(nowSlot ? { pathname: '/camera', params: { slot: nowSlot } } : '/camera');
+          else if (next === 'guide') router.push({ pathname: '/guide', params: { from: 'first_tip' } });
         }}
       />
       {/* An upload whose slot was taken asks whether to Replace (M2-22). */}

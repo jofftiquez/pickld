@@ -22,10 +22,22 @@ export type HelpViewProps = {
   onContact: () => void;
   onFeedback: () => void;
   onGuidelines: () => void;
+  /** How Pickld works and Show tips again (FR-ONB-10). */
+  onGuide: () => void;
+  onShowTips: () => void;
 };
 
 /** Help & feedback (FR-SET-02; design: Help). */
-export function HelpView({ insets, noMail, onBack, onContact, onFeedback, onGuidelines }: HelpViewProps) {
+export function HelpView({
+  insets,
+  noMail,
+  onBack,
+  onContact,
+  onFeedback,
+  onGuidelines,
+  onGuide,
+  onShowTips,
+}: HelpViewProps) {
   const { t } = useTranslation();
   const faq = t('help.faq', { returnObjects: true }) as unknown as Faq[];
   const [query, setQuery] = useState('');
@@ -93,6 +105,32 @@ export function HelpView({ insets, noMail, onBack, onContact, onFeedback, onGuid
             testID="help-search"
           />
         </View>
+
+        <Text accessibilityRole="header" style={[textStyle('bodySmall', '700'), styles.section]}>
+          {t('help.newSection')}
+        </Text>
+        {action({
+          icon: 'compass',
+          tint: true,
+          title: t('help.guide'),
+          body: t('help.guideBody'),
+          label: t('help.guideAction'),
+          a11y: t('help.guideLabel'),
+          primary: true,
+          onPress: onGuide,
+          testID: 'help-guide',
+        })}
+        {action({
+          icon: 'sparkle',
+          tint: false,
+          title: t('help.tips'),
+          body: t('help.tipsBody'),
+          label: t('help.tipsAction'),
+          a11y: t('help.tipsLabel'),
+          primary: false,
+          onPress: onShowTips,
+          testID: 'help-tips',
+        })}
 
         <Text accessibilityRole="header" style={[textStyle('bodySmall', '700'), styles.section]}>
           {t('help.common')}

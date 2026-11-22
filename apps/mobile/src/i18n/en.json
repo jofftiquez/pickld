@@ -1432,7 +1432,8 @@
     "blocked": "Blocked",
     "unblocked": "Unblocked",
     "packAdded": "Sticker pack added",
-    "coverSet": "Cover set"
+    "coverSet": "Cover set",
+    "tipsOn": "Tips will show again"
   },
   "welcome": {
     "title": "Eight moments.\nOne real day.",
@@ -1708,7 +1709,8 @@
     "private": "Not ready to share? Mark any moment private.",
     "later": "Missed one? Fill it in later from My jars.",
     "take": "Take my first moment",
-    "look": "Look around first"
+    "look": "Look around first",
+    "howItWorks": "See how Pickld works"
   },
   "guide": {
     "gotIt": "Got it",
@@ -1748,6 +1750,40 @@
         "title": "Days you didn’t publish",
         "body": "Days from the last week wait here. Publish one, or keep it to yourself and it leaves the list."
       }
+    },
+    "title": "How Pickld works",
+    "next": "Next",
+    "back": "Back",
+    "done": "Done",
+    "doneA11y": "Close How Pickld works",
+    "page": "Page {{page}} of {{count}}",
+    "pages": [
+      {
+        "title": "Your day, one jar",
+        "body": "Eight slots, one photo each: where you are, what keeps you busy, who you’re with, your outfit, a selfie, and your morning, afternoon and evening. A new jar starts at midnight. Missed one? Fill it in later from My jars."
+      },
+      {
+        "title": "Snap, then make it yours",
+        "body": "Take a photo or pick one from your gallery. Add a color filter, stickers, text, a place or a mention, then a caption. Pickld has no beauty or face filters."
+      },
+      {
+        "title": "Share on your terms",
+        "body": "Each moment is Readers, Everyone or Only me, and those people can see it once it’s up. Publish puts your jar in your readers’ Jars tab. Days you didn’t publish wait in Not published."
+      },
+      {
+        "title": "Your people, in order",
+        "body": "Moments and Jars show only people you read, newest first. Likes and reader counts never change the order. Read, stop reading, mute or block anyone, any time."
+      },
+      {
+        "title": "Discover through your people",
+        "body": "Public posts from people your authors read come first, marked “Read by @name”, then everyone else, newest first. Turn off Show me in Discover to stay out. Under 18, you stay out."
+      }
+    ],
+    "art": {
+      "readBy": "Read by @mika",
+      "network": "From your network",
+      "beyond": "Beyond your network",
+      "public": "Public"
     }
   },
   "share": {
@@ -1870,7 +1906,8 @@
     "saveFailed": "Couldn’t save that change. Check your connection and try again.",
     "failed": "Couldn’t load your settings.",
     "retry": "Try again",
-    "myStickers": "My stickers"
+    "myStickers": "My stickers",
+    "howItWorks": "How Pickld works"
   },
   "help": {
     "title": "Help & feedback",
@@ -1920,7 +1957,16 @@
       "supportSubject": "Pickld support",
       "feedbackSubject": "Pickld feedback",
       "body": "\n\n—\nPickld {{version}} · {{platform}} {{os}}"
-    }
+    },
+    "newSection": "New to Pickld",
+    "guide": "How Pickld works",
+    "guideBody": "Five short pages.",
+    "guideAction": "Open",
+    "guideLabel": "Open How Pickld works",
+    "tips": "Show tips again",
+    "tipsBody": "Each screen’s tip shows once more.",
+    "tipsAction": "Show",
+    "tipsLabel": "Show tips again"
   },
   "deleteAccount": {
     "title": "Delete account",

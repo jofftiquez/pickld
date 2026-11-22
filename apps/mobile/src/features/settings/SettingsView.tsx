@@ -59,6 +59,7 @@ export type SettingsViewProps = {
   /** Codes left to give, shown on the row; undefined while loading or while invites are locked or paused. */
   invitesLeft?: number;
   onHelp: () => void;
+  onHowItWorks: () => void;
   onLegal: () => void;
   onSignOut: () => void;
   onDelete: () => void;
@@ -296,6 +297,7 @@ export function SettingsView(props: SettingsViewProps) {
             {t('settings.accountSection')}
           </Text>
           <Card style={styles.listCard}>
+            <ListRow label={t('settings.howItWorks')} onPress={props.onHowItWorks} testID="settings-guide" />
             <ListRow label={t('settings.help')} onPress={props.onHelp} testID="settings-help" />
             <ListRow label={t('settings.legal')} onPress={props.onLegal} testID="settings-legal" />
             <ListRow

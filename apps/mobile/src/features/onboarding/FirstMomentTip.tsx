@@ -24,12 +24,22 @@ export type FirstMomentTipProps = {
   lidColor?: string;
   onTake: () => void;
   onClose: () => void;
+  /** See how Pickld works (FR-ONB-10): opens the guide once the sheet has closed. */
+  onHowItWorks?: () => void;
   /** The sheet's modal is gone: only now can Camera open (iOS can't present over a closing modal). */
   onClosed?: () => void;
 };
 
 /** First moment tip (FR-ONB-08, design: Coach): a sheet over the first-day Today. */
-export function FirstMomentTip({ visible, slot, lidColor, onTake, onClose, onClosed }: FirstMomentTipProps) {
+export function FirstMomentTip({
+  visible,
+  slot,
+  lidColor,
+  onTake,
+  onClose,
+  onHowItWorks,
+  onClosed,
+}: FirstMomentTipProps) {
   const { t } = useTranslation();
   return (
     <BottomSheet
@@ -70,6 +80,20 @@ export function FirstMomentTip({ visible, slot, lidColor, onTake, onClose, onClo
         >
           <Text style={[textStyle('bodyMedium', '700'), { color: colors.muted }]}>{t('firstTip.look')}</Text>
         </Pressable>
+        {onHowItWorks ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('firstTip.howItWorks')}
+            onPress={onHowItWorks}
+            hitSlop={hitSlopFor(undefined, 24)}
+            style={styles.look}
+            testID="first-tip-guide"
+          >
+            <Text style={[textStyle('bodyMedium', '700'), { color: colors.brandLink }]}>
+              {t('firstTip.howItWorks')}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     </BottomSheet>
   );
