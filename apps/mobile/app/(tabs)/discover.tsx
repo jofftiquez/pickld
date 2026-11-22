@@ -1,13 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DiscoverView } from '@/features/explore/DiscoverView';
 import { searchTerm } from '@/features/explore/explore';
 import { useDiscoverJars, useDiscoverMoments, type DiscoverTab } from '@/features/explore/useDiscover';
 import { useExplore, useExploreReading, usePeopleSearch } from '@/features/explore/useExplore';
+import { GuideTip } from '@/features/guide/GuideTip';
+import { useGuideStore } from '@/features/guide/guideTips';
+import { useGuideTip } from '@/features/guide/useGuideTip';
+import { useAccountSettings } from '@/features/settings/useSettings';
 import { useAuthStore } from '@/lib/authStore';
 import { useAvatarUrls } from '@/lib/avatars';
+import { useScreenFocused } from '@/lib/useScreenFocused';
 
 const MINUTE = 60_000;
 
@@ -43,52 +49,75 @@ export default function DiscoverScreen() {
     return () => clearInterval(id);
   }, []);
 
+  // First-time guide (FR-ONB-10): how Discover is ordered, once. Under 18 it says posts stay out of Discover,
+  // so it waits until the account's age is known (read only while tips are on).
+  const tipsOn = useGuideStore((s) => s.on);
+  const account = useAccountSettings(viewerId, tipsOn);
+  const guide = useGuideTip([{ id: 'discover', when: account.data !== undefined }], useScreenFocused());
+
   return (
-    <DiscoverView
-      data={explore.data}
-      failed={explore.isError}
-      insets={insets}
-      query={query}
-      onQueryChange={setQuery}
-      results={search.term === null ? undefined : search.data}
-      searching={searchTerm(query) !== null}
-      searchFailed={search.term !== null && search.isError}
-      busy={reading.busy}
-      tab={tab}
-      onTabChange={(next) => {
-        if (next === 'jars') setSeenJars(true);
-        setTab(next);
-      }}
-      moments={moments.moments}
-      jars={jars.jars}
-      listLoading={shown === undefined && !list.isError}
-      listFailed={shown === undefined && list.isError}
-      isRefreshing={pulling}
-      isFetchingNextPage={list.isFetchingNextPage}
-      viewerId={viewerId}
-      avatars={avatars}
-      now={now}
-      onRefresh={() => {
-        setPulling(true);
-        setNow(new Date());
-        void Promise.all([explore.refetch(), list.refresh()]).finally(() => setPulling(false));
-      }}
-      onBackToTop={(mode) => {
-        if (mode === 'reload') void list.refresh();
-      }}
-      onEndReached={() => {
-        if (list.hasNextPage && !list.isFetchingNextPage) list.fetchNextPage();
-      }}
-      onRetry={() => void explore.refetch()}
-      onRetryList={() => void list.refresh()}
-      onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}
-      onSetReading={(person, next) => reading.setReading(person.id, next)}
-      onReadAuthor={(authorId) => reading.setReading(authorId, true)}
-      onOpenMoment={(m) =>
-        router.push({ pathname: '/comments/[jarId]', params: { jarId: m.jar_id, momentId: m.moment_id } })
-      }
-      onToggleLike={moments.toggleLike}
-      onOpenJar={(id) => router.push({ pathname: '/jar/[id]', params: { id } })}
-    />
+    <View style={styles.root} {...guide.catchTaps}>
+      <DiscoverView
+        data={explore.data}
+        failed={explore.isError}
+        insets={insets}
+        query={query}
+        onQueryChange={setQuery}
+        results={search.term === null ? undefined : search.data}
+        searching={searchTerm(query) !== null}
+        searchFailed={search.term !== null && search.isError}
+        busy={reading.busy}
+        tab={tab}
+        onTabChange={(next) => {
+          if (next === 'jars') setSeenJars(true);
+          setTab(next);
+        }}
+        moments={moments.moments}
+        jars={jars.jars}
+        listLoading={shown === undefined && !list.isError}
+        listFailed={shown === undefined && list.isError}
+        isRefreshing={pulling}
+        isFetchingNextPage={list.isFetchingNextPage}
+        viewerId={viewerId}
+        avatars={avatars}
+        now={now}
+        onRefresh={() => {
+          setPulling(true);
+          setNow(new Date());
+          void Promise.all([explore.refetch(), list.refresh()]).finally(() => setPulling(false));
+        }}
+        onBackToTop={(mode) => {
+          if (mode === 'reload') void list.refresh();
+        }}
+        onEndReached={() => {
+          if (list.hasNextPage && !list.isFetchingNextPage) list.fetchNextPage();
+        }}
+        onRetry={() => void explore.refetch()}
+        onRetryList={() => void list.refresh()}
+        onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}
+        onSetReading={(person, next) => reading.setReading(person.id, next)}
+        onReadAuthor={(authorId) => reading.setReading(authorId, true)}
+        onOpenMoment={(m) =>
+          router.push({ pathname: '/comments/[jarId]', params: { jarId: m.jar_id, momentId: m.moment_id } })
+        }
+        onToggleLike={moments.toggleLike}
+        onOpenJar={(id) => router.push({ pathname: '/jar/[id]', params: { id } })}
+        guideTip={
+          guide.tip === 'discover' ? (
+            <GuideTip
+              id="discover"
+              arrow={{ side: 'top', align: 'start' }}
+              minor={account.data?.minor ?? false}
+              onClose={guide.close}
+              tipRef={guide.tipRef}
+            />
+          ) : null
+        }
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

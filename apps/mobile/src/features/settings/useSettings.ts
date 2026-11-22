@@ -121,6 +121,16 @@ function useOptimistic<T, V>(
 
 export type ReminderChange = { slot: DaySlot; minutes?: number; enabled?: boolean };
 
+/** The account's settings alone, sharing Settings' cache; off until `enabled` (Discover's guide tip asks
+ * whether the account is under 18, FR-ONB-10). */
+export function useAccountSettings(userId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: settingsQueryKeys.account(userId ?? ''),
+    queryFn: () => fetchAccount(userId ?? ''),
+    enabled: enabled && userId !== null,
+  });
+}
+
 export function useSettings(userId: string) {
   const queryClient = useQueryClient();
   const account = useQuery({ queryKey: settingsQueryKeys.account(userId), queryFn: () => fetchAccount(userId) });

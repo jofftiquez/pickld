@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -35,6 +36,8 @@ import type { Explore, Person, Suggestion } from './explore';
 import type { DiscoverTab } from './useDiscover';
 
 export type DiscoverViewProps = {
+  /** A first-time guide tip (FR-ONB-10), under the screen title. */
+  guideTip?: ReactNode;
   /** Suggested authors; undefined while loading. */
   data: Explore | undefined;
   failed?: boolean;
@@ -144,6 +147,7 @@ export function DiscoverView({
   onOpenMoment,
   onToggleLike,
   onOpenJar,
+  guideTip = null,
 }: DiscoverViewProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -172,6 +176,7 @@ export function DiscoverView({
           {t('explore.title')}
         </Text>
       </View>
+      {guideTip ? <View style={styles.guideTip}>{guideTip}</View> : null}
 
       <View style={styles.search}>
         <Icon name="search" size={20} strokeWidth={2} color="muted" />
@@ -518,6 +523,7 @@ const styles = StyleSheet.create({
   cardButton: { alignItems: 'center' },
   tabs: { paddingHorizontal: space.xl, marginTop: space.xl, marginBottom: space.md },
   cardWrap: { paddingHorizontal: space.xl },
+  guideTip: { paddingHorizontal: space.xl, marginBottom: space.md },
   sectionHead: { gap: space.xs, paddingTop: space.sm },
   sectionTitle: { color: colors.ink },
   muted: { color: colors.muted },

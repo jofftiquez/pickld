@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -20,6 +20,8 @@ import type { FeedAuthor, FeedJar } from './feedModel';
 import { StoryAvatar } from './StoryAvatar';
 
 export type FeedViewProps = {
+  /** A first-time guide tip (FR-ONB-10), under the screen title. */
+  guideTip?: ReactNode;
   jars: FeedJar[] | undefined;
   authors: FeedAuthor[] | undefined;
   /** The signed-in user's display name, for the "You" avatar. */
@@ -80,6 +82,7 @@ export function FeedView({
   onOpenProfile,
   onFindPeople,
   onInvite,
+  guideTip = null,
 }: FeedViewProps) {
   const { t } = useTranslation();
   // Content scrolls under the floating tab bar; this keeps the last card clear of it.
@@ -115,6 +118,7 @@ export function FeedView({
           {t('jars.title')}
         </Text>
       </View>
+      {guideTip ? <View style={styles.cardWrap}>{guideTip}</View> : null}
       {readsNobody && hasJars ? (
         <View style={[styles.cardWrap, styles.findPeople]}>
           <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} aboveOwnJars />

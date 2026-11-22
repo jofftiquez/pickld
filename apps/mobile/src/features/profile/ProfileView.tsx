@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import type { TFunction } from 'i18next';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
@@ -33,6 +33,8 @@ import { photoSource } from '@/lib/image/photoCache';
 export type ProfileTab = 'jars' | 'moments';
 
 export type ProfileViewProps = {
+  /** A first-time guide tip (FR-ONB-10), under the Read button. */
+  guideTip?: ReactNode;
   /** Undefined while loading; null when the profile isn't available to this viewer. */
   data: ProfilePage | null | undefined;
   /** The request failed and nothing is cached. */
@@ -128,6 +130,7 @@ export function ProfileView({
   onRetry,
   locale = deviceLocale(),
   today: todayProp,
+  guideTip = null,
 }: ProfileViewProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -275,6 +278,7 @@ export function ProfileView({
               ) : null}
             </View>
           </View>
+          {guideTip ? <View style={styles.guideTip}>{guideTip}</View> : null}
           {/* The name and @handle share a row with the counts (D-142). The row wraps on the name column's
               natural width: a short name keeps the counts on its right, a long name or large text pushes
               them under it. */}
@@ -483,6 +487,7 @@ export function ProfileView({
 }
 
 const styles = StyleSheet.create({
+  guideTip: { marginTop: space.sm },
   screen: { flex: 1, backgroundColor: colors.background },
   centered: { alignItems: 'center', justifyContent: 'center' },
   topBar: {

@@ -1,18 +1,22 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Share } from 'react-native';
+import { Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { GuideTip } from '@/features/guide/GuideTip';
+import { useGuideTip } from '@/features/guide/useGuideTip';
 import { leftToGive } from '@/features/invite/invites';
 import { useInvites } from '@/features/invite/useInvites';
 import { ProfileView } from '@/features/profile/ProfileView';
+import { isOwnProfile } from '@/features/profile/profileModel';
 import { useFollow } from '@/features/profile/useFollow';
 import { useMute } from '@/features/profile/useMute';
 import { useProfile } from '@/features/profile/useProfile';
 import { ReportSheet } from '@/features/safety/ReportSheet';
 import { useBlockFlow } from '@/features/safety/useBlockFlow';
 import { profileUrl } from '@/lib/links';
+import { useScreenFocused } from '@/lib/useScreenFocused';
 
 // /u/[username] (M3-13; FR-SOC-08): My profile when the username is the viewer's, else Other profile.
 // The username is validated with Zod in useProfile; a bad one is "not available".
@@ -33,8 +37,14 @@ export default function ProfileScreen() {
     else router.replace('/jars');
   };
 
+  // First-time guide (FR-ONB-10): what reading someone means, once, on a profile of someone not read yet.
+  const guide = useGuideTip(
+    [{ id: 'profile', when: data != null && !isOwnProfile(data) && !data.relationship.reading && !reporting }],
+    useScreenFocused(),
+  );
+
   return (
-    <>
+    <View style={styles.root} {...guide.catchTaps}>
       <ProfileView
         data={data}
         failed={failed}
@@ -81,6 +91,16 @@ export default function ProfileScreen() {
         }}
         onMore={() => setReporting(true)}
         onRetry={() => void refresh()}
+        guideTip={
+          guide.tip === 'profile' ? (
+            <GuideTip
+              id="profile"
+              arrow={{ side: 'top', align: 'center' }}
+              onClose={guide.close}
+              tipRef={guide.tipRef}
+            />
+          ) : null
+        }
       />
       <ReportSheet
         visible={reporting}
@@ -92,6 +112,10 @@ export default function ProfileScreen() {
         }}
       />
       {blockFlow.dialog}
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

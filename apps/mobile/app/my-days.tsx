@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getCalendars } from 'expo-localization';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MyDaysView } from '@/features/days/MyDaysView';
@@ -18,11 +19,14 @@ import {
   withQueued,
 } from '@/features/days/monthGrid';
 import { useDayJar } from '@/features/days/useDayJar';
+import { GuideTip } from '@/features/guide/GuideTip';
+import { useGuideTip } from '@/features/guide/useGuideTip';
 import { useMonthJars } from '@/features/days/useMonthJars';
 import { unpublishedQueryKeys, useUnpublishedJars } from '@/features/days/useUnpublishedJars';
 import { openTodayJar } from '@/features/jar/rollover';
 import { phoneTimeZone, useToday } from '@/features/jar/useToday';
 import { localDateIn } from '@/lib/jars';
+import { useScreenFocused } from '@/lib/useScreenFocused';
 
 // My jars (M2-25, M2-26; FR-DAY-01, FR-DAY-02; called My days before): the month calendar, with a Not published
 // row above it while past days from the last week wait (/unpublished). Tapping a past date opens that day's page
@@ -89,25 +93,44 @@ export default function MyDaysScreen() {
     else router.push({ pathname: '/day/[date]', params: { date } });
   };
 
+  // First-time guide (FR-ONB-10): what Not published is, once, the first time the row shows.
+  const guide = useGuideTip([{ id: 'unpublished', when: (unpublished?.length ?? 0) > 0 }], useScreenFocused());
+
   return (
-    <MyDaysView
-      grid={grid}
-      momentCount={monthMomentCount(monthJars)}
-      nav={nav}
-      selectedDate={openedDate}
-      insets={insets}
-      onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
-      onPrevious={() => nav.canGoPrevious && setMonth(addMonths(month, -1))}
-      onNext={() => nav.canGoNext && setMonth(addMonths(month, 1))}
-      pickableMonths={pickableMonths}
-      onPickMonth={(picked) => pickableMonths.includes(picked) && setMonth(picked)}
-      onPickDate={openDay}
-      today={today}
-      lidColor={me?.lidColor}
-      onSelectDay={openDay}
-      onMemories={() => router.push('/memories')}
-      unpublishedCount={unpublished?.length ?? 0}
-      onUnpublished={() => router.push('/unpublished')}
-    />
+    <View style={styles.root} {...guide.catchTaps}>
+      <MyDaysView
+        grid={grid}
+        momentCount={monthMomentCount(monthJars)}
+        nav={nav}
+        selectedDate={openedDate}
+        insets={insets}
+        onBack={() => (router.canGoBack() ? router.back() : router.replace('/today'))}
+        onPrevious={() => nav.canGoPrevious && setMonth(addMonths(month, -1))}
+        onNext={() => nav.canGoNext && setMonth(addMonths(month, 1))}
+        pickableMonths={pickableMonths}
+        onPickMonth={(picked) => pickableMonths.includes(picked) && setMonth(picked)}
+        onPickDate={openDay}
+        today={today}
+        lidColor={me?.lidColor}
+        onSelectDay={openDay}
+        onMemories={() => router.push('/memories')}
+        unpublishedCount={unpublished?.length ?? 0}
+        onUnpublished={() => router.push('/unpublished')}
+        guideTip={
+          guide.tip === 'unpublished' ? (
+            <GuideTip
+              id="unpublished"
+              arrow={{ side: 'top', align: 'start' }}
+              onClose={guide.close}
+              tipRef={guide.tipRef}
+            />
+          ) : null
+        }
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});
