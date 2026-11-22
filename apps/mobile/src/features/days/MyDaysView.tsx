@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -16,6 +16,8 @@ import { MonthPickerSheet } from './MonthPickerSheet';
 import { MOMENTS_PER_JAR, type DayCell, type MonthGrid, type MonthNav } from './monthGrid';
 
 export type MyDaysViewProps = {
+  /** A first-time guide tip (FR-ONB-10), under the Not published row. */
+  guideTip?: ReactNode;
   grid: MonthGrid;
   /** Moments across the shown month's jars. */
   momentCount: number;
@@ -88,6 +90,7 @@ export function MyDaysView({
   today,
   lidColor,
   locale = deviceLocale(),
+  guideTip = null,
 }: MyDaysViewProps) {
   const { t } = useTranslation();
   const month = monthLabel(grid.month, locale);
@@ -208,6 +211,7 @@ export function MyDaysView({
           <Icon name="chevronRight" size={sizes.monthButtonIcon} strokeWidth={2.4} color="chevron" />
         </Pressable>
       ) : null}
+      {guideTip ? <View style={styles.guideTip}>{guideTip}</View> : null}
 
       <View style={styles.card} accessibilityLabel={t('myDays.calendar', { month })} testID="my-days-calendar">
         {/* The day labels already say the date, so the weekday letters are hidden from screen readers. */}
@@ -335,6 +339,7 @@ const styles = StyleSheet.create({
     gap: space.sm,
     ...shadow.card,
   },
+  guideTip: { marginHorizontal: space.lg, marginBottom: space.md },
   unpublished: {
     flexDirection: 'row',
     alignItems: 'center',

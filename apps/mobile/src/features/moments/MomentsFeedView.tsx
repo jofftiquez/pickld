@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
@@ -21,6 +21,8 @@ import { MomentFeedCard } from './MomentFeedCard';
 import { cardPhotoUrl, type FeedMoment } from './momentsModel';
 
 export type MomentsFeedViewProps = {
+  /** A first-time guide tip (FR-ONB-10), under the screen title. */
+  guideTip?: ReactNode;
   moments: FeedMoment[] | undefined;
   /** The authors the user reads (`feed_authors`): none means the Find people card (D-53). */
   authors: FeedAuthor[] | undefined;
@@ -73,6 +75,7 @@ export function MomentsFeedView({
   onOpenComments,
   onFindPeople,
   onInvite,
+  guideTip = null,
 }: MomentsFeedViewProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -120,6 +123,7 @@ export function MomentsFeedView({
           {t('moments.title')}
         </Text>
       </View>
+      {guideTip ? <View style={styles.cardWrap}>{guideTip}</View> : null}
       {readsNobody && hasMoments ? (
         <View style={[styles.cardWrap, styles.findPeople]}>
           <FeedEmpty onFindPeople={onFindPeople} onInvite={onInvite} aboveOwnJars timeline="moments" />

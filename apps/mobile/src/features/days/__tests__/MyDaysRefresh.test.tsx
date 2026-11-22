@@ -12,6 +12,17 @@ import type { MonthJarRow } from '../monthGrid';
 
 // D-148: a day filled in the past shows on the My days calendar at once, with the real data hooks. Only the
 // server (Supabase) and the offline queue (SQLite) are faked.
+// The phone's key-value store (first-time guide tips read it on these screens).
+jest.mock('expo-sqlite/kv-store', () => {
+  const disk = new Map<string, string>();
+  return {
+    __esModule: true,
+    default: {
+      getItem: async (k: string) => disk.get(k) ?? null,
+      setItem: async (k: string, v: string) => void disk.set(k, v),
+    },
+  };
+});
 jest.mock('@/components/JarGraphic', () => {
   const { createElement } = jest.requireActual<typeof import('react')>('react');
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
