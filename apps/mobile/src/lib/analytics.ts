@@ -44,6 +44,7 @@ export const analyticsEvents = {
   // Leaving Waiting: with a code, or let in another way (a founder, or early access ended).
   waiting_admitted: z.strictObject({ reason: z.enum(['code', 'let_in']) }),
   // First-time guide (FR-ONB-10): which tip closed and how, to learn whether tips get in the way.
+  guide_opened: z.strictObject({ from: z.enum(['first_tip', 'help', 'settings']) }),
   guide_tip_closed: z.strictObject({ tip: z.enum(GUIDE_TIPS), how: z.enum(['got_it', 'tap', 'turn_off']) }),
 } as const;
 

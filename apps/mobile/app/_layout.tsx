@@ -92,6 +92,11 @@ export default function RootLayout() {
         <Stack.Screen name="settings/profile" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="settings/blocked" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="invite" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        {/* How Pickld works (FR-ONB-10) opens over the screen it came from. */}
+        <Stack.Screen
+          name="guide"
+          options={{ presentation: 'fullScreenModal', animation: reduceMotion ? 'none' : 'slide_from_bottom' }}
+        />
         <Stack.Screen name="comments/[jarId]" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="notifications" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="my-days" options={{ animation: reduceMotion ? 'none' : 'default' }} />

@@ -5,8 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { Linking, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { turnOnGuideTips } from '@/features/guide/guideTips';
 import { appVersion } from '@/lib/appVersion';
+import { useAuthStore } from '@/lib/authStore';
 import { GUIDELINES_URL, SUPPORT_EMAIL } from '@/lib/links';
+import { showToast } from '@/lib/toast';
 
 import { mailtoUrl } from './helpModel';
 import { HelpView } from './HelpView';
@@ -17,6 +20,7 @@ export function HelpScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [noMail, setNoMail] = useState<string | null>(null);
+  const userId = useAuthStore((s) => s.session?.user.id ?? null);
 
   async function email(subject: string) {
     const body = t('help.mail.body', {
@@ -40,6 +44,11 @@ export function HelpScreen() {
       onContact={() => void email(t('help.mail.supportSubject'))}
       onFeedback={() => void email(t('help.mail.feedbackSubject'))}
       onGuidelines={() => void WebBrowser.openBrowserAsync(GUIDELINES_URL)}
+      onGuide={() => router.push({ pathname: '/guide', params: { from: 'help' } })}
+      onShowTips={() => {
+        if (!userId) return;
+        void turnOnGuideTips(userId).then(() => showToast('tipsOn'));
+      }}
     />
   );
 }
