@@ -1,12 +1,17 @@
 import { File } from 'expo-file-system';
 import { useNavigation, usePreventRemove } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, type GestureResponderEvent } from 'react-native';
 import type { EdgeInsets } from 'react-native-safe-area-context';
+
+import { GuideTip } from '@/features/guide/GuideTip';
+import { useGuideTip } from '@/features/guide/useGuideTip';
 
 import { formatShortDate, formatTime } from '@/lib/format';
 import { preparePhoto, type PreparedPhoto } from '@/lib/image/pipeline';
 import { localDateIn } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
+import { useScreenFocused } from '@/lib/useScreenFocused';
 import { newMomentId } from '@/lib/queue/uploader';
 import type { SaveEditsInput } from '@/lib/queue/store';
 import type { Visibility } from '@/lib/visibility';
@@ -238,8 +243,24 @@ export function EditSession({
     } else onLeave();
   };
 
+  // First-time guide tips (FR-ONB-10): the tools on the photo step, Who can see it on the details step. Each
+  // step counts as its own visit, so both can show the first time; never while the Leave dialog is up.
+  const focused = useScreenFocused();
+  const photoTip = useGuideTip([{ id: 'editor', when: step === 'photo' && !asking }], focused);
+  const detailsTip = useGuideTip([{ id: 'details', when: step === 'details' && !asking }], focused);
+  const catchTaps = {
+    onTouchStartCapture: (e: GestureResponderEvent) => {
+      photoTip.catchTaps.onTouchStartCapture(e);
+      detailsTip.catchTaps.onTouchStartCapture(e);
+    },
+    onTouchEndCapture: (e: GestureResponderEvent) => {
+      photoTip.catchTaps.onTouchEndCapture(e);
+      detailsTip.catchTaps.onTouchEndCapture(e);
+    },
+  };
+
   return (
-    <>
+    <View style={styles.root} {...catchTaps}>
       <EditorView
         step={step}
         onChangeStep={setStep}
@@ -295,6 +316,26 @@ export function EditSession({
         saving={saving}
         saveFailed={saveFailed}
         onSave={() => void save()}
+        photoTip={
+          photoTip.tip ? (
+            <GuideTip
+              id={photoTip.tip}
+              arrow={{ side: 'bottom', align: 'center' }}
+              onClose={photoTip.close}
+              tipRef={photoTip.tipRef}
+            />
+          ) : null
+        }
+        detailsTip={
+          detailsTip.tip ? (
+            <GuideTip
+              id={detailsTip.tip}
+              arrow={{ side: 'top', align: 'center' }}
+              onClose={detailsTip.close}
+              tipRef={detailsTip.tipRef}
+            />
+          ) : null
+        }
       />
       {unfinished ? (
         <LeaveDraftDialog
@@ -305,6 +346,10 @@ export function EditSession({
           onClose={keepEditing}
         />
       ) : null}
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

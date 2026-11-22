@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { parseFillDateParam } from '@/features/capture/fillTarget';
 import { useDayJar } from '@/features/days/useDayJar';
+import { markGuideTipSeen } from '@/features/guide/guideTips';
 import { openTodayJar } from '@/features/jar/rollover';
 import { buildTodayGrid } from '@/features/jar/todayGrid';
 import { phoneTimeZone, useToday } from '@/features/jar/useToday';
@@ -54,6 +55,8 @@ export default function PublishScreen() {
       successHaptic();
       markJarPublished(input.jarId);
       if (userId !== null) {
+        // Published: the guide's Publish tip has nothing left to explain (FR-ONB-10).
+        void markGuideTipSeen(userId, 'publish');
         void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
         void queryClient.invalidateQueries({ queryKey: ['day', userId] });
         void queryClient.invalidateQueries({ queryKey: ['unpublished', userId] });

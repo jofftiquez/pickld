@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useRef, type ComponentRef } from 'react';
+import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -31,6 +31,8 @@ export type EditDetailsStepProps = {
   /** Who can see the moment (D-48): Readers, Everyone or Only me, starting at the owner's default. */
   visibility: Visibility;
   onChangeVisibility: (visibility: Visibility) => void;
+  /** A first-time guide tip (FR-ONB-10), under Who can see this moment. */
+  guideTip?: ReactNode;
   saveFailed: boolean;
   /** Goes back to the photo step, as the toolbar's Back does. */
   onEditPhoto: () => void;
@@ -56,6 +58,7 @@ export function EditDetailsStep({
   onChangeVisibility,
   saveFailed,
   onEditPhoto,
+  guideTip,
 }: EditDetailsStepProps) {
   const { t } = useTranslation();
   const stamp = useStampMoment();
@@ -65,6 +68,11 @@ export function EditDetailsStep({
   // field sits above the keyboard with the photo's top still in view.
   const scroller = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const raiseSheet = () => scroller.current?.scrollTo({ y: panelTop, animated: !reduceMotion });
+  // A first-time guide tip sits under Who can see this moment, below the fold: bring it into view once.
+  const hasTip = guideTip != null;
+  useEffect(() => {
+    if (hasTip) scroller.current?.scrollToEnd({ animated: !reduceMotion });
+  }, [hasTip, reduceMotion]);
   const hashtag = t(`slots.${slot}`);
   // Typing @ at the end of the caption suggests people it can tag: mutual readers only (0172).
   const typing = typingMention(caption);
@@ -170,6 +178,7 @@ export function EditDetailsStep({
             testID="editor-visibility"
           />
         </View>
+        {guideTip}
         {saveFailed ? (
           <Text
             style={[textStyle('bodySmall'), styles.error]}

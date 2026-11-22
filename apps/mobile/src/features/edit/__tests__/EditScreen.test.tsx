@@ -29,6 +29,17 @@ import type { Session } from '@supabase/supabase-js';
 // canvas is replaced by plain views that expose what would be drawn. The queue is an in-memory fake
 // with the store's save semantics (the store's own test runs them on real SQLite).
 
+// The phone's key-value store (first-time guide tips read it on these screens).
+jest.mock('expo-sqlite/kv-store', () => {
+  const disk = new Map<string, string>();
+  return {
+    __esModule: true,
+    default: {
+      getItem: async (k: string) => disk.get(k) ?? null,
+      setItem: async (k: string, v: string) => void disk.set(k, v),
+    },
+  };
+});
 jest.mock('@shopify/react-native-skia', () => {
   const { View: MockView } = jest.requireActual<typeof import('react-native')>('react-native');
   return {
