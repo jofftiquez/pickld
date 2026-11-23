@@ -8,6 +8,7 @@ import { leftToGive } from '@/features/invite/invites';
 import { useInvites } from '@/features/invite/useInvites';
 import { usePendingUploads } from '@/features/pending/usePendingUploads';
 import { useBlockedAccounts } from '@/features/safety/block';
+import { useCloseFriendIds } from '@/features/settings/closeFriends';
 import { appVersion } from '@/lib/appVersion';
 import { openLegal } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
@@ -28,6 +29,7 @@ export function SettingsScreen() {
   const { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable, savePrivate } =
     useSettings(userId);
   const blocked = useBlockedAccounts();
+  const closeFriends = useCloseFriendIds();
   const { invites } = useInvites();
   const [mirrorSelfies, setMirrorSelfies] = useMirrorSelfies();
   const pending = usePendingUploads();
@@ -47,6 +49,7 @@ export function SettingsScreen() {
       reminders={reminders.data}
       prefs={prefs.data}
       blockedCount={blocked.rows?.length}
+      closeFriendsCount={closeFriends.ids?.length}
       version={appVersion()}
       failed={account.isError || reminders.isError || prefs.isError}
       saveFailed={saveFailed}
@@ -65,6 +68,7 @@ export function SettingsScreen() {
       onDiscoverable={(on) => saveDiscoverable.mutate(on, onSaved)}
       onPrivate={(on) => savePrivate.mutate(on, onSaved)}
       onBlocked={() => router.push('/settings/blocked')}
+      onCloseFriends={() => router.push('/settings/close-friends')}
       pendingCount={pending.count}
       onPending={() => router.push('/pending')}
       onMyStickers={() => router.push({ pathname: '/stickers', params: { tab: 'mine' } })}

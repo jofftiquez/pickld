@@ -247,6 +247,54 @@ export type Database = {
           },
         ];
       };
+      close_friends: {
+        Row: {
+          created_at: string;
+          friend_id: string;
+          owner_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          friend_id: string;
+          owner_id: string;
+        };
+        Update: {
+          created_at?: string;
+          friend_id?: string;
+          owner_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'close_friends_friend_id_fkey';
+            columns: ['friend_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'close_friends_friend_id_fkey';
+            columns: ['friend_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'close_friends_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'close_friends_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       comments: {
         Row: {
           body: string;
@@ -2312,6 +2360,15 @@ export type Database = {
         Returns: boolean;
       };
       can_tag: { Args: { p_author: string; p_moment: string; p_tagged: string }; Returns: boolean };
+      can_tag_on: {
+        Args: {
+          p_author: string;
+          p_moment: string;
+          p_tagged: string;
+          p_visibility: Database['public']['Enums']['jar_visibility'];
+        };
+        Returns: boolean;
+      };
       can_view_comment_thread: { Args: { p_jar: string; p_moment: string; viewer: string }; Returns: boolean };
       can_view_jar: {
         Args: {
@@ -2336,6 +2393,7 @@ export type Database = {
       };
       caption_mentioned: { Args: { p_caption: string }; Returns: string[] };
       check_iana_zone: { Args: { p_tz: string }; Returns: undefined };
+      close_friend_of: { Args: { p_friend: string; p_owner: string }; Returns: boolean };
       contact_hashes_pending: {
         Args: { p_limit?: number };
         Returns: {
@@ -2409,6 +2467,7 @@ export type Database = {
       };
       discover_via: { Args: { p_author: string; viewer: string }; Returns: string };
       edits_allowed_mentions: { Args: { p_author: string; p_edits: Json; p_moment: string }; Returns: Json };
+      edits_close_friend_mentions: { Args: { p_author: string; p_edits: Json; p_moment: string }; Returns: Json };
       ensure_jar: {
         Args: { local_date: string; tz: string };
         Returns: {
@@ -2550,6 +2609,7 @@ export type Database = {
       is_active_user: { Args: { uid?: string }; Returns: boolean };
       is_blocked_between: { Args: { a: string; b: string }; Returns: boolean };
       is_client_role: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_close_friend: { Args: { p_friend: string; p_owner: string }; Returns: boolean };
       is_moderator: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_reserved_username: { Args: { candidate: string }; Returns: boolean };
       is_valid_tz: { Args: { name: string }; Returns: boolean };
@@ -3160,7 +3220,7 @@ export type Database = {
       day_slot: 'morning' | 'afternoon' | 'evening';
       day_type: 'early_bird' | 'coffee_first' | 'night_owl';
       invite_kind: 'personal' | 'waitlist' | 'admin';
-      jar_visibility: 'readers' | 'everyone' | 'only_me';
+      jar_visibility: 'readers' | 'everyone' | 'only_me' | 'close_friends';
       mod_source: 'auto_check' | 'report' | 'appeal';
       mod_status: 'pending' | 'kept' | 'removed' | 'escalated';
       moment_status: 'uploading' | 'checking' | 'live' | 'removed';
@@ -3283,7 +3343,7 @@ export const Constants = {
       day_slot: ['morning', 'afternoon', 'evening'],
       day_type: ['early_bird', 'coffee_first', 'night_owl'],
       invite_kind: ['personal', 'waitlist', 'admin'],
-      jar_visibility: ['readers', 'everyone', 'only_me'],
+      jar_visibility: ['readers', 'everyone', 'only_me', 'close_friends'],
       mod_source: ['auto_check', 'report', 'appeal'],
       mod_status: ['pending', 'kept', 'removed', 'escalated'],
       moment_status: ['uploading', 'checking', 'live', 'removed'],

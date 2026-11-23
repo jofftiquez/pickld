@@ -91,7 +91,7 @@ const Moment = z.object({
   local_date: z.string(),
   slot: z.string(),
   status: z.enum(['uploading', 'checking', 'live', 'removed']),
-  visibility: z.enum(['readers', 'everyone', 'only_me']),
+  visibility: z.enum(['readers', 'everyone', 'close_friends', 'only_me']),
   caption: z.string().nullable(),
   added_at: z.string(),
   hidden: z.boolean(),

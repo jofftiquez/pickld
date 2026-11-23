@@ -157,6 +157,7 @@ export function PublishReviewView({
 const SLOT_LABEL = {
   readers: 'publish.slotReaders',
   everyone: 'publish.slotEveryone',
+  close_friends: 'publish.slotCloseFriends',
   only_me: 'publish.slotPrivate',
 } as const;
 

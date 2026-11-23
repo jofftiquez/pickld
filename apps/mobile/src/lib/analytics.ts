@@ -22,7 +22,7 @@ export const analyticsEvents = {
   first_moment: z.strictObject({ slot, is_private: notPrivate, backfilled: z.boolean() }),
   moment_added: z.strictObject({ slot, is_private: notPrivate, backfilled: z.boolean() }),
   jar_full: z.strictObject({}),
-  jar_published: z.strictObject({ visibility: z.enum(['readers', 'everyone', 'only_me']) }),
+  jar_published: z.strictObject({ visibility: z.enum(['readers', 'everyone', 'close_friends', 'only_me']) }),
   share_card_exported: z.strictObject({ destination: z.enum(['save', 'share']) }),
   follow: z.strictObject({}),
   report_submitted: z.strictObject({ target: z.enum(['jar', 'moment', 'comment', 'profile']) }),

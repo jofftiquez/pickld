@@ -74,10 +74,13 @@ export function MomentFeedCard({
   const large = useLargeText();
   // Only the owner ever gets an Only me moment here (0067); the check keeps it that way for a stale cache.
   const isPrivate = moment.visibility === 'only_me' && moment.author_id === viewerId;
+  // The owner and their close friends see this badge; nobody else ever gets the moment (0179).
+  const closeFriends = moment.visibility === 'close_friends';
   const label = [
     describedLabel(t('moments.cardLabel', { name: moment.author_display_name, slot, when }), edits, t),
     addedLater ? t('tile.addedLater') : null,
     isPrivate ? t('moments.private') : null,
+    closeFriends ? t('moments.closeFriends') : null,
     caption,
   ]
     .filter((part): part is string => part !== null)
@@ -147,6 +150,10 @@ export function MomentFeedCard({
           {isPrivate ? (
             <View style={styles.badge} pointerEvents="none">
               <VisibilityBadge visibility="only_me" testID="moments-private" />
+            </View>
+          ) : closeFriends ? (
+            <View style={styles.badge} pointerEvents="none">
+              <VisibilityBadge visibility="close_friends" testID="moments-close-friends" />
             </View>
           ) : null}
         </View>
