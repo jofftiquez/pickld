@@ -258,7 +258,14 @@ describe('MomentView: content', () => {
     expect(screen.getByRole('image', { name: 'Photo' })).toBeTruthy();
   });
 
-  it('is one image for screen readers, labelled without the user’s words, with nothing to press', async () => {
+  it('reads the owner’s photo description after what is drawn on it (0174)', async () => {
+    await render(<MomentView uri={URI} edits={{ ...edits, alt: 'Lola blowing out candles' }} width={390} />);
+    expect(
+      screen.getByRole('image', { name: 'Photo with 2 stickers, a speech bubble and text: Lola blowing out candles' }),
+    ).toBeTruthy();
+  });
+
+  it('is one image for screen readers, labelled without the user’s other words, with nothing to press', async () => {
     const view = await render(<MomentView uri={URI} edits={edits} width={390} testID="mv" />);
     const root = screen.getByTestId('mv');
     expect(root.props.pointerEvents).toBe('none');

@@ -11,7 +11,7 @@ import { StampMomentProvider, type StampMoment } from '@/features/edit/stickers/
 import { colors, photo } from '@/theme/tokens';
 
 import { FilteredMomentPhoto } from './FilteredMomentPhoto';
-import { momentLabel } from './momentRender';
+import { describedLabel, momentLabel } from './momentRender';
 import { photoCacheKey, photoSource } from '@/lib/image/photoCache';
 import { photoPlaceholder } from '@/lib/image/photoPlaceholders';
 import { usePhotoRetry } from '@/lib/image/usePhotoRetry';
@@ -39,7 +39,8 @@ export type MomentViewProps = {
  * and sized as a fraction of the width and laid out at its own reference width, so the picture is the
  * same at every size, only scaled. Stickers draw by asset path from the art bundled with the app, or art
  * downloaded from the photo Worker (D-131), so a viewer sees them without owning the pack (FR-STK-04). No gestures, selection or touch targets: the
- * whole view is one image for screen readers, labelled without any of the user's words. Overlays appear only
+ * whole view is one image for screen readers, labelled with the owner's photo description (0174) and no other
+ * words of theirs. Overlays appear only
  * once the photo is drawn: over the grey box or the blurred placeholder they would look like they float.
  */
 export function MomentView({ uri, edits, width, stamp = null, accessible = true, testID }: MomentViewProps) {
@@ -64,7 +65,7 @@ export function MomentView({ uri, edits, width, stamp = null, accessible = true,
       pointerEvents="none"
       accessible={accessible}
       accessibilityRole={accessible ? 'image' : undefined}
-      accessibilityLabel={accessible ? momentLabel(edits, t) : undefined}
+      accessibilityLabel={accessible ? describedLabel(momentLabel(edits, t), edits, t) : undefined}
       accessibilityElementsHidden={!accessible}
       importantForAccessibility={accessible ? 'yes' : 'no-hide-descendants'}
       testID={testID}

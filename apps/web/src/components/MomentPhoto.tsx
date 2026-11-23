@@ -312,7 +312,11 @@ export function MomentPhoto({
       {src ? (
         <LoadedPhoto
           src={src}
-          alt={t('jar.photo', { name: authorName, slot: moment.slot })}
+          alt={
+            edits.alt
+              ? t('jar.photoDescribed', { name: authorName, slot: moment.slot, description: edits.alt })
+              : t('jar.photo', { name: authorName, slot: moment.slot })
+          }
           style={{
             width: '100%',
             height: '100%',

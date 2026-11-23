@@ -660,6 +660,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     await fireEvent.press(filterButton('Kalamansi'));
     await goToDetails();
     await fireEvent.changeText(screen.getByLabelText('Caption'), '  Lunch break, finally!  ');
+    await fireEvent.changeText(screen.getByLabelText('Photo description'), ' A bowl of pancit on a desk ');
     await fireEvent.press(visibilityTab('Only me'));
     expect(selectedVisibility()).toEqual(['Only me']);
 
@@ -671,7 +672,7 @@ describe('Caption, visibility, Undo and save (M2-12)', () => {
     expect(saveEdits).toHaveBeenCalledWith(7, {
       caption: 'Lunch break, finally!',
       visibility: 'only_me',
-      edits: { v: 1, filter: 'kalamansi', overlays: [] },
+      edits: { v: 1, filter: 'kalamansi', overlays: [], alt: 'A bowl of pancit on a desk' },
     });
     expect(rows.get(7)?.photoUri).toBe(item.photoUri);
     expect(screen).toHavePathname('/today');
@@ -1041,6 +1042,22 @@ describe('An uploaded moment, from Moment options (M2-23)', () => {
       { caption: 'fresh from the server', visibility: 'everyone', edits: { v: 1, filter: 'ube', overlays: [] } },
     );
     expect(screen).toHavePathname('/today');
+  });
+
+  it('shows the saved photo description, and clearing it saves the moment without one (0174)', async () => {
+    mockServer.row = { ...serverRow, edits: { ...serverRow.edits, alt: 'A green shirt on a hanger' } };
+    await openEditor(`/edit/${MOMENT}?focus=caption`);
+    await screen.findByTestId('editor-details');
+    const description = screen.getByLabelText('Photo description');
+    expect(description.props.value).toBe('A green shirt on a hanger');
+    await fireEvent.changeText(description, '   ');
+    await fireEvent.press(saveButton());
+    await act(async () => {});
+    expect(saveMomentEdits).toHaveBeenCalledWith(
+      expect.anything(),
+      { kind: 'server', momentId: MOMENT, jarId: JAR },
+      { caption: 'fresh from the server', visibility: 'readers', edits: { v: 1, filter: 'mono', overlays: [] } },
+    );
   });
 
   it('says it couldn’t open a removed moment', async () => {

@@ -105,10 +105,18 @@ export type Bubble = Extract<Overlay, { type: 'bubble' }>;
 export type Place = Extract<Overlay, { type: 'place' }>;
 export type Mention = Extract<Overlay, { type: 'mention' }>;
 
+/** Photo description limit (0174 refuses anything longer). */
+export const PHOTO_DESCRIPTION_MAX = 250;
+
+// The photo description screen readers read to everyone who can see the moment (0174). Not drawn: it rides in
+// edits so it is checked and shown with them. Absent when there is none; the database refuses an empty one.
+const descriptionSchema = z.string().trim().min(1).max(PHOTO_DESCRIPTION_MAX);
+
 export const editsSchema = z.object({
   v: z.literal(EDITS_VERSION),
   filter: filterIdSchema,
   overlays: z.array(overlaySchema),
+  alt: descriptionSchema.optional(),
 });
 export type Edits = z.infer<typeof editsSchema>;
 
@@ -119,6 +127,7 @@ export const DEFAULT_EDITS: Edits = { v: EDITS_VERSION, filter: 'original', over
 const storedSchema = z.object({
   filter: filterIdSchema.catch(DEFAULT_EDITS.filter),
   overlays: z.array(z.unknown()).catch([]),
+  alt: descriptionSchema.optional().catch(undefined),
 });
 
 /**
@@ -135,5 +144,14 @@ export function parseEdits(raw: unknown): Edits {
     seen.add(overlay.data.id);
     return [overlay.data];
   });
-  return { v: EDITS_VERSION, filter: stored.data.filter, overlays };
+  const { alt } = stored.data;
+  return { v: EDITS_VERSION, filter: stored.data.filter, overlays, ...(alt === undefined ? {} : { alt }) };
+}
+
+/** `edits` with the photo description set to `text`, or without one when it is blank. */
+export function withDescription(edits: Edits, text: string): Edits {
+  const alt = text.trim().slice(0, PHOTO_DESCRIPTION_MAX);
+  const next: Edits = { ...edits, alt };
+  if (alt === '') delete next.alt;
+  return next;
 }

@@ -406,6 +406,9 @@
       "failed": "Couldn’t change the photo. Try again."
     },
     "caption": "Caption",
+    "description": "Photo description",
+    "descriptionPlaceholder": "What’s in the photo?",
+    "descriptionHint": "Optional. Screen readers read it aloud to people who can see this moment.",
     "mentionSuggestions": "People you can tag",
     "mentionSuggestion": "Tag {{name}}, @{{username}}",
     "captionPrompt": {
@@ -905,6 +908,7 @@
   "momentRenderer": {
     "photo": "Photo",
     "photoWith": "Photo with {{items}}",
+    "described": "{{label}}: {{description}}",
     "stickers_one": "a sticker",
     "stickers_other": "{{count}} stickers",
     "bubbles_one": "a speech bubble",

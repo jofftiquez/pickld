@@ -1,5 +1,5 @@
 // The moderation provider seam (M2-19, M2-20; D-22, T-105). fn:moderate asks a provider about the content a
-// moment would show (its photo, thumbnail and caption) and applies the verdict. The full check
+// moment would show (its photo, thumbnail, caption and photo description) and applies the verdict. The full check
 // (pipeline.ts: CSAM hash match, OpenAI omni-moderation on the thumbnail and caption, thresholds, a vision
 // second opinion on borderline scores) is chosen in config.ts; autoApprove, which calls nothing, is kept
 // for local work and refused in production. Text (comments; M3-10) goes through the same provider.
@@ -11,6 +11,8 @@ export interface ModerationContent {
   photoPath: string | null;
   thumbPath: string | null;
   caption: string | null;
+  /** The photo description screen readers read (`alt` in edits, 0174); scored with the caption. */
+  description: string | null;
 }
 
 /** Text someone wrote that others will read. Only comments are held back while checked (0016). */

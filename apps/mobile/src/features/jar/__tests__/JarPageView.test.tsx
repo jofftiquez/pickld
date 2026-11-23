@@ -97,6 +97,16 @@ describe('JarPageView', () => {
     expect(screen.queryByTestId('jar-tile-morning-cover')).toBeNull();
   });
 
+  it('reads a reader the photo description after the badges (0174)', async () => {
+    const alt = 'A wet street from a jeepney window';
+    const moments = daleJar.moments.map((m) =>
+      m.slot === 'whereami' ? { ...m, edits: { v: 1, filter: 'original', overlays: [], alt } } : m,
+    );
+    await setup({ data: { ...daleJar, moments } });
+    expect(screen.getByLabelText(`#whereami, added later: ${alt}`)).toBeTruthy();
+    expect(screen.getByLabelText('#mebusywith')).toBeTruthy();
+  });
+
   it('opens a tile with the moment’s id', async () => {
     const onOpenMoment = jest.fn();
     await setup({ onOpenMoment });

@@ -26,6 +26,7 @@ import { colors, photo, radius, sizes, space, type Slot } from '@/theme/tokens';
 
 import type { OptionError } from './momentActions';
 import { canShare, previewActions, resolveIndex, type PreviewItem } from './momentPreview';
+import { describedLabel } from './momentRender';
 import { captionParts, type MomentTag } from './momentTags';
 import { MomentView } from './MomentView';
 import { PreviewActionButton } from './PreviewActionButton';
@@ -157,7 +158,11 @@ export function MomentPreviewView({
         <View
           accessible
           accessibilityRole="adjustable"
-          accessibilityLabel={t('moment.detail.photo', { slot, position: index + 1, count })}
+          accessibilityLabel={describedLabel(
+            t('moment.detail.photo', { slot, position: index + 1, count }),
+            item.edits,
+            t,
+          )}
           accessibilityHint={count > 1 ? t('preview.pagerHint') : undefined}
           accessibilityValue={{ min: 1, max: count, now: index + 1 }}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
