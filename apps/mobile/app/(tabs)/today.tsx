@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt';
 import { stepToday } from '@/features/days/pastDay';
+import { DayLine } from '@/features/jar/DayLine';
+import { useSaveJarLine } from '@/features/jar/jarLine';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
@@ -138,6 +140,7 @@ export default function TodayScreen() {
     },
   });
   const openJar = jar?.jar ?? null;
+  const saveLine = useSaveJarLine(userId);
   const published =
     openJar?.publishedAt && openJar.visibility
       ? { visibility: openJar.visibility, publishedAt: openJar.publishedAt, likeCount: openJar.likeCount ?? 0 }
@@ -207,6 +210,15 @@ export default function TodayScreen() {
           next: null,
           onStep: (date) => router.push({ pathname: '/day/[date]', params: { date, via: 'step' } }),
         }}
+        dayLine={
+          openJar ? (
+            <DayLine
+              key={openJar.id}
+              line={openJar.line ?? null}
+              onSave={(line) => saveLine.mutateAsync({ jarId: openJar.id, line })}
+            />
+          ) : null
+        }
         guideTip={
           guide.tip === 'today' || guide.tip === 'publish' ? (
             <GuideTip

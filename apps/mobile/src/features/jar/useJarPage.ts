@@ -49,7 +49,9 @@ async function fetchJarRow(id: string): Promise<JarRow | null> {
   const supabase = getSupabase();
   const { data: jar, error } = await supabase
     .from('jars')
-    .select('id, user_id, local_date, tz, moment_count, visible_count, like_count, comment_count, resolved_cover_id')
+    .select(
+      'id, user_id, local_date, tz, moment_count, visible_count, like_count, comment_count, resolved_cover_id, line',
+    )
     .eq('id', id)
     .maybeSingle();
   if (error) throw new Error(error.message);

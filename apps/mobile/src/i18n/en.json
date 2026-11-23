@@ -216,11 +216,23 @@
     "label": "Jump to a date",
     "hint": "Swipe up or down to move a day."
   },
+  "dayLine": {
+    "add": "Add a line for the day",
+    "field": "Line for the day",
+    "placeholder": "Moved into the new flat",
+    "quoted": "“{{line}}”",
+    "label": "Line for the day: {{line}}",
+    "editHint": "Write one line that sums up the day. Whoever can see this jar sees it.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "failed": "Couldn’t save your line. Check your connection and try again."
+  },
   "jarPage": {
     "title": "{{name}}’s {{weekday}}",
     "subtitle_one": "{{date}} · {{count}} of {{max}} moment",
     "subtitle_other": "{{date}} · {{count}} of {{max}} moments",
     "fullJar": "Full jar",
+    "line": "“{{line}}”",
     "grid": "Moments",
     "back": "Back",
     "openMomentHint": "Opens the moment",
