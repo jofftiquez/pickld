@@ -133,6 +133,15 @@ Deno.test('a request to read you and its approval are pushed with the actor as t
   ]);
 });
 
+Deno.test('the author hears a Together request and the tagged person hears it was added (0174)', () => {
+  const [ask, added] = composePushes([
+    row({ id: 'tr', type: 'together_request', actor_name: 'Mika', moment_id: 'm1', jar_id: 'j1' }),
+    row({ id: 'ta', user_id: 'u2', type: 'together_added', actor_name: 'Joff', moment_id: 'm1', jar_id: 'j1' }),
+  ]);
+  assertEquals([ask?.title, ask?.body, ask?.data.momentId], ['Mika', 'wants to add your moment to their Together page.', 'm1']);
+  assertEquals([added?.title, added?.data.type], ['Joff', 'together_added']);
+});
+
 Deno.test('an admitted account hears it is in (0131)', () => {
   const [p] = composePushes([row({ id: 'ad', type: 'admitted', actor_name: null, jar_id: null, jar_local_date: null })]);
   assertEquals([p?.title, p?.body, p?.data.type], ["You're in", 'Fill your first jar.', 'admitted']);

@@ -80,6 +80,9 @@ export default function ProfileScreen() {
             router.push({ pathname: '/u/[username]/readers', params: { username: data.profile.username, list } });
           }
         }}
+        onOpenTogether={() => {
+          if (data) router.push({ pathname: '/u/[username]/together', params: { username: data.profile.username } });
+        }}
         onShare={() => {
           if (data) {
             void Share.share({

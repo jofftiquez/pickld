@@ -33,6 +33,7 @@ import { colors, photo, radius, sizes, space } from '@/theme/tokens';
 
 import { describedLabel } from './momentRender';
 import { captionParts, type MomentTag } from './momentTags';
+import type { TogetherAction, TogetherRow } from './momentTogether';
 import { MomentView } from './MomentView';
 
 export type MomentDetailViewProps = {
@@ -62,6 +63,13 @@ export type MomentDetailViewProps = {
   /** The viewer, tagged on the moment on screen, takes their tag off. */
   onRemoveTag?: (momentId: string) => void;
   removingTag?: boolean;
+  /** Together rows the viewer may see, by moment id (0174): their own as the tagged person, all as author. */
+  together?: Record<string, TogetherRow[]>;
+  /** Asks, answers or takes a Together moment off. */
+  onTogether?: (action: TogetherAction) => void;
+  togetherBusy?: boolean;
+  /** The last Together action failed. */
+  togetherFailed?: boolean;
   locale?: string;
 };
 
@@ -87,6 +95,10 @@ export function MomentDetailView({
   onOpenProfile,
   onRemoveTag,
   removingTag = false,
+  together = {},
+  onTogether,
+  togetherBusy = false,
+  togetherFailed = false,
   locale = deviceLocale(),
 }: MomentDetailViewProps) {
   const { t } = useTranslation();
@@ -138,6 +150,17 @@ export function MomentDetailView({
   const caption = moment.caption?.trim() ? moment.caption.trim() : null;
   const momentTags = tags[moment.id] ?? [];
   const viewerTagged = momentTags.some((tag) => tag.userId === data.viewerId);
+  const isAuthor = data.jar.user_id === data.viewerId;
+  const togetherRows = together[moment.id] ?? [];
+  const myTogether = togetherRows.find((r) => r.user_id === data.viewerId);
+  const authorName = firstName(data.author.display_name);
+  // As author: requests and approvals, each with the tagged person's username (the author sees every tag).
+  const authorTogether = isAuthor
+    ? togetherRows.flatMap((r) => {
+        const tag = momentTags.find((x) => x.userId === r.user_id);
+        return tag && r.status !== 'declined' ? [{ row: r, username: tag.username }] : [];
+      })
+    : [];
 
   const goTo = (next: number) => {
     if (next < 0 || next >= moments.length) return;
@@ -338,6 +361,130 @@ export function MomentDetailView({
             ) : null}
           </View>
         ) : null}
+        {onTogether && viewerTagged && !isAuthor && myTogether?.status !== 'declined' ? (
+          <View style={styles.tagged} testID="moment-together">
+            {myTogether === undefined ? (
+              <Pressable
+                onPress={() => onTogether({ kind: 'request', momentId: moment.id })}
+                disabled={togetherBusy}
+                accessibilityRole="button"
+                accessibilityLabel={t('moment.together.add')}
+                accessibilityHint={t('moment.together.addHint', { name: authorName })}
+                hitSlop={space.sm}
+                style={styles.togetherChip}
+                testID="moment-together-add"
+              >
+                <Text style={[textStyle('bodySmall', '700'), { color: colors.brandLink }]}>
+                  {t('moment.together.add')}
+                </Text>
+              </Pressable>
+            ) : myTogether.status === 'requested' ? (
+              <Pressable
+                onPress={() => onTogether({ kind: 'remove', momentId: moment.id, userId: data.viewerId })}
+                disabled={togetherBusy}
+                accessibilityRole="button"
+                accessibilityLabel={t('moment.together.asked', { name: authorName })}
+                accessibilityHint={t('moment.together.askedHint', { name: authorName })}
+                hitSlop={space.sm}
+                style={styles.togetherChip}
+                testID="moment-together-asked"
+              >
+                <Text style={[textStyle('bodySmall', '600'), { color: colors.muted }]}>
+                  {t('moment.together.asked', { name: authorName })}
+                </Text>
+              </Pressable>
+            ) : (
+              <>
+                <Text
+                  style={[textStyle('bodySmall', '600'), { color: colors.brandText }]}
+                  testID="moment-together-added"
+                >
+                  {t('moment.together.added')}
+                </Text>
+                <Pressable
+                  onPress={() => onTogether({ kind: 'remove', momentId: moment.id, userId: data.viewerId })}
+                  disabled={togetherBusy}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('moment.together.takeOff')}
+                  accessibilityHint={t('moment.together.takeOffHint', { name: authorName })}
+                  hitSlop={space.sm}
+                  style={styles.togetherChip}
+                  testID="moment-together-take-off"
+                >
+                  <Text style={[textStyle('bodySmall', '700'), { color: colors.danger }]}>
+                    {t('moment.together.takeOff')}
+                  </Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        ) : null}
+        {onTogether && authorTogether.length > 0 ? (
+          <View style={styles.togetherList} testID="moment-together-author">
+            {authorTogether.map(({ row, username }) => (
+              <View key={row.user_id} style={styles.tagged} testID={`moment-together-${username}`}>
+                <Text style={[textStyle('bodySmall', '600'), styles.togetherText]}>
+                  {row.status === 'requested'
+                    ? t('moment.together.requested', { username })
+                    : t('moment.together.onTheirs', { username })}
+                </Text>
+                {row.status === 'requested' ? (
+                  <>
+                    <Pressable
+                      onPress={() =>
+                        onTogether({ kind: 'answer', momentId: moment.id, userId: row.user_id, approve: true })
+                      }
+                      disabled={togetherBusy}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('moment.together.approveA11y', { username })}
+                      hitSlop={space.sm}
+                      style={styles.togetherChip}
+                      testID={`moment-together-approve-${username}`}
+                    >
+                      <Text style={[textStyle('bodySmall', '700'), { color: colors.brandLink }]}>
+                        {t('moment.together.approve')}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() =>
+                        onTogether({ kind: 'answer', momentId: moment.id, userId: row.user_id, approve: false })
+                      }
+                      disabled={togetherBusy}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('moment.together.declineA11y', { username })}
+                      hitSlop={space.sm}
+                      style={styles.togetherChip}
+                      testID={`moment-together-decline-${username}`}
+                    >
+                      <Text style={[textStyle('bodySmall', '700'), { color: colors.muted }]}>
+                        {t('moment.together.decline')}
+                      </Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <Pressable
+                    onPress={() => onTogether({ kind: 'remove', momentId: moment.id, userId: row.user_id })}
+                    disabled={togetherBusy}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('moment.together.takeBackA11y', { username })}
+                    hitSlop={space.sm}
+                    style={styles.togetherChip}
+                    testID={`moment-together-remove-${username}`}
+                  >
+                    <Text style={[textStyle('bodySmall', '700'), { color: colors.danger }]}>
+                      {t('moment.together.takeBack')}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            ))}
+          </View>
+        ) : null}
+        {togetherFailed ? (
+          <Text style={[textStyle('bodySmall'), { color: colors.danger }]} accessibilityLiveRegion="polite">
+            {t('moment.together.failed')}
+          </Text>
+        ) : null}
         <Text style={[textStyle('bodySmall', '400'), { color: colors.muted }]} testID="moment-position">
           {current < moments.length - 1
             ? t('moment.detail.positionSwipe', { position: current + 1, count: moments.length })
@@ -493,6 +640,9 @@ const styles = StyleSheet.create({
   mention: { color: colors.brandLink, fontWeight: '700' },
   tagged: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: space.md, rowGap: space.xs },
   tagChip: { paddingVertical: space.xs },
+  togetherChip: { paddingVertical: space.xs },
+  togetherList: { gap: space.xs },
+  togetherText: { color: colors.inkSoft, flexShrink: 1 },
   stickerLink: { position: 'absolute' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
 });

@@ -138,6 +138,16 @@ describe('targetOf', () => {
     ).toEqual([]);
   });
 
+  it('opens the tagged moment through its jar for a Together request or approval (0174)', () => {
+    const want = { pathname: '/moment/[id]', params: { id: 'm1', jar: 'j1' } };
+    for (const type of ['together_request', 'together_added'] as const) {
+      expect(
+        targetOf(entry(row({ id: '1', type, actor: mika, moment_id: 'm1', jar_id: 'j1', created_at: at }))),
+      ).toEqual(want);
+      expect(pushTarget({ type, notificationIds: ['n1'], jarId: 'j1', momentId: 'm1' })).toEqual(want);
+    }
+  });
+
   it('has nothing to open when the target is gone', () => {
     expect(targetOf(entry(row({ id: '1', type: 'full_jar', created_at: at })))).toBeNull();
   });

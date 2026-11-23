@@ -23,7 +23,7 @@ const photoUrlsResponse = z.object({
 });
 
 /** Thumbnail URLs from `fn:photo-urls`, in batches; a failed batch leaves its tiles on their placeholder. */
-async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null>> {
+export async function thumbUrls(momentIds: string[]): Promise<Map<string, string | null>> {
   const batches: string[][] = [];
   for (let i = 0; i < momentIds.length; i += PHOTO_BATCH) batches.push(momentIds.slice(i, i + PHOTO_BATCH));
   const results = await Promise.all(
@@ -59,6 +59,8 @@ export type ProfilePage = ProfileData & {
   jars: ProfileJar[];
   /** Optional: caches from before M3-15 lack it. */
   images?: ProfileImages;
+  /** Together moments (0174) this viewer may see on the profile's Together page. Optional for older caches. */
+  togetherCount?: number;
 };
 
 const followRow = z.object({ reader_id: z.string(), author_id: z.string() });
@@ -74,7 +76,7 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
   if (error) throw new Error(error.message);
   if (!data) return null;
   const profile = profileRow.parse(data);
-  const [follows, jars, mutes, requests, approves] = await Promise.all([
+  const [follows, jars, mutes, requests, approves, together] = await Promise.all([
     supabase
       .from('follows')
       .select('reader_id, author_id')
@@ -93,6 +95,12 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
     // Requests are readable by their two ends only (0176): this is the viewer's own, if any.
     supabase.from('follow_requests').select('author_id').eq('reader_id', viewerId).eq('author_id', profile.id),
     supabase.rpc('needs_reader_approval', { p_id: profile.id }),
+    // RLS shows only the approved ones this viewer may see (0174).
+    supabase
+      .from('together_moments')
+      .select('moment_id', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .eq('status', 'approved'),
   ]);
   if (requests.error) throw new Error(requests.error.message);
   if (approves.error) throw new Error(approves.error.message);
@@ -128,6 +136,7 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
     ),
     viewerId,
     images,
+    togetherCount: together.error ? 0 : (together.count ?? 0),
     jars: buildProfileJars(
       jarRows,
       rows.map((m) => ({ ...m, thumbUrl: urls.get(m.id) ?? null, fullUrl: null })),

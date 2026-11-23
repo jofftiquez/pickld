@@ -64,6 +64,8 @@ export type ProfileViewProps = {
   followBusy?: boolean;
   /** Opens Readers & authors on that list. */
   onOpenList?: (list: FollowList) => void;
+  /** Opens the Together page (0174): on your own profile always, on others' when they show any to you. */
+  onOpenTogether?: () => void;
   onShare: () => void;
   /** More options on someone else's profile: Report (M3-21). */
   onMore?: () => void;
@@ -125,6 +127,7 @@ export function ProfileView({
   muteBusy = false,
   followBusy = false,
   onOpenList,
+  onOpenTogether,
   onShare,
   onMore,
   onRetry,
@@ -192,6 +195,18 @@ export function ProfileView({
   const empty = tab === 'jars' ? jars.length === 0 : moments.length === 0;
   // A Private account the viewer doesn't read yet shows its header only (0176).
   const locked = !isOwner && profile.is_private && !relationship.reading;
+  const togetherCount = data.togetherCount ?? 0;
+  const togetherRow = (divider: boolean) =>
+    onOpenTogether ? (
+      <ListRow
+        label={t('profile.together')}
+        value={togetherCount > 0 ? togetherCount.toLocaleString(locale) : undefined}
+        accessibilityHint={t('profile.togetherHint')}
+        onPress={onOpenTogether}
+        divider={divider}
+        testID="profile-together"
+      />
+    ) : null;
 
   return (
     <View style={styles.screen} testID="profile-screen">
@@ -351,8 +366,9 @@ export function ProfileView({
               {profile.bio.trim()}
             </Text>
           ) : null}
-          {isOwner && (onOpenStickers || onOpenInvite) ? (
+          {isOwner && (onOpenStickers || onOpenInvite || onOpenTogether) ? (
             <Card style={styles.rowCard}>
+              {togetherRow(onOpenInvite !== undefined || onOpenStickers !== undefined)}
               {onOpenInvite ? (
                 <ListRow
                   label={t('invite.rowTitle')}
@@ -372,6 +388,8 @@ export function ProfileView({
                 />
               ) : null}
             </Card>
+          ) : !isOwner && togetherCount > 0 && onOpenTogether ? (
+            <Card style={styles.rowCard}>{togetherRow(false)}</Card>
           ) : null}
           <SegmentedControl
             segments={[

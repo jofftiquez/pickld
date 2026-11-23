@@ -96,6 +96,12 @@ function one(n: DueNotification): Push | null {
     case 'tag':
       // Someone tagged the person in a moment (0172); never sent for an Only me moment.
       return { ...base, title: actor, body: 'tagged you in a moment.', data };
+    case 'together_request':
+      // Someone the author tagged asks to show the moment on their Together page (0174).
+      return { ...base, title: actor, body: 'wants to add your moment to their Together page.', data };
+    case 'together_added':
+      // The author agreed: the moment is on the person's Together page (0174).
+      return { ...base, title: actor, body: 'said yes. Your moment together is on your Together page.', data };
     case 'admitted':
       // The invite period let this account in (0131).
       return { ...base, title: "You're in", body: 'Fill your first jar.', data };

@@ -18,6 +18,8 @@ export const notificationType = z.enum([
   'tag',
   'reader_request',
   'reader_approved',
+  'together_request',
+  'together_added',
 ]);
 export type NotificationType = z.infer<typeof notificationType>;
 
@@ -69,6 +71,8 @@ const NEEDS_ACTOR: ReadonlySet<NotificationType> = new Set([
   'tag',
   'reader_request',
   'reader_approved',
+  'together_request',
+  'together_added',
 ]);
 
 function toEntry(row: NotificationRow): NotificationEntry {
@@ -167,7 +171,10 @@ export function targetOf(entry: NotificationEntry): NotificationTarget | null {
       if (entry.momentId) return { pathname: '/moment/[id]', params: { id: entry.momentId } };
       return entry.jarId ? { pathname: '/jar/[id]', params: { id: entry.jarId } } : null;
     case 'tag':
-      // Someone else's moment: opened through its jar, as from a timeline (0172).
+    case 'together_request':
+    case 'together_added':
+      // A tagged moment, opened through its jar, as from a timeline (0172). A Together request is answered
+      // there by the author, and an approval shows there too (0174).
       return entry.momentId && entry.jarId
         ? { pathname: '/moment/[id]', params: { id: entry.momentId, jar: entry.jarId } }
         : null;

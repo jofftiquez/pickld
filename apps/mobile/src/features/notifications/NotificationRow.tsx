@@ -51,7 +51,9 @@ type SentenceKey =
   | 'notifications.inviteJoined'
   | 'notifications.tag'
   | 'notifications.readerRequest'
-  | 'notifications.readerApproved';
+  | 'notifications.readerApproved'
+  | 'notifications.togetherRequest'
+  | 'notifications.togetherAdded';
 
 /** The sentence for an entry, with <bold> parts, as a translation key and its values. */
 function sentence(
@@ -113,6 +115,10 @@ function sentence(
       return { key: 'notifications.readerRequest', values: { name } };
     case 'reader_approved':
       return { key: 'notifications.readerApproved', values: { name } };
+    case 'together_request':
+      return { key: 'notifications.togetherRequest', values: { name } };
+    case 'together_added':
+      return { key: 'notifications.togetherAdded', values: { name } };
   }
 }
 

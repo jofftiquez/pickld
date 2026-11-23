@@ -675,7 +675,39 @@
       "remove": "Remove my tag",
       "removeHint": "Takes your tag off this moment for everyone. They won’t be told.",
       "removing": "Removing…"
+    },
+    "together": {
+      "add": "Add to my Together",
+      "addHint": "Asks {{name}} to show this moment on your Together page too",
+      "asked": "Asked {{name}}",
+      "askedHint": "Waiting for {{name}} to say yes. Tap to cancel.",
+      "added": "On your Together page",
+      "takeOff": "Take off",
+      "takeOffHint": "Takes it off your Together page. {{name}} isn’t told.",
+      "requested": "@{{username}} wants this on their Together page",
+      "approve": "Approve",
+      "approveA11y": "Let @{{username}} show this on their Together page",
+      "decline": "Decline",
+      "declineA11y": "Don’t let @{{username}} show this on their Together page",
+      "onTheirs": "On @{{username}}’s Together page",
+      "takeBack": "Remove",
+      "takeBackA11y": "Take this off @{{username}}’s Together page. They can’t ask for it again.",
+      "failed": "Couldn’t update Together. Try again."
     }
+  },
+  "together": {
+    "title": "Together",
+    "back": "Back",
+    "introMine": "Moments people tagged you in, added with their OK. They stay in the author’s jar.",
+    "introOther": "Moments people tagged {{name}} in, added with their OK. They stay in the author’s jar.",
+    "emptyTitle": "Nothing together yet",
+    "emptyMine": "When someone tags you, open the moment and tap Add to my Together.",
+    "emptyOther": "{{name}} has no moments together that you can see yet.",
+    "with": "with @{{username}}",
+    "tile": "{{slot}} with {{name}}, {{date}}",
+    "openHint": "Opens the moment in {{name}}’s jar",
+    "failed": "Couldn’t load Together.",
+    "retry": "Try again"
   },
   "fullJar": {
     "eyebrow": "Full jar",
@@ -1202,7 +1234,9 @@
     "failed": "Couldn’t load this profile.",
     "retry": "Try again",
     "openMine": "Opens your profile",
-    "openListHint": "Opens the list"
+    "openListHint": "Opens the list",
+    "together": "Together",
+    "togetherHint": "Opens moments shown together with people who tagged them"
   },
   "emptyState": {
     "pullToRefresh": "Pull down to refresh"
@@ -1389,6 +1423,8 @@
     "tag": "<bold>{{name}}</bold> tagged you in a moment",
     "readerRequest": "<bold>{{name}}</bold> wants to read your days",
     "readerApproved": "<bold>{{name}}</bold> approved you. You can read their days now",
+    "togetherRequest": "<bold>{{name}}</bold> wants to add your moment to their Together page",
+    "togetherAdded": "<bold>{{name}}</bold> said yes. Your moment together is on your Together page",
     "unread": "Unread",
     "openHint": "Opens it",
     "reminderBody": {
@@ -1909,7 +1945,8 @@
       "reply": "Replies to your comments",
       "full_jar": "Full jars from people you read",
       "friend_joined": "Friends who join Pickld",
-      "tag": "Tags in moments"
+      "tag": "Tags in moments",
+      "together": "Together moments"
     },
     "quietHours": "Quiet hours",
     "quietHoursBody": "No pushes from {{start}} to {{end}}",
