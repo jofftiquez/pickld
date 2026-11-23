@@ -59,16 +59,24 @@ interface MomentRow {
   pending_photo_path: string | null;
   pending_thumb_path: string | null;
   pending_caption: string | null;
+  edits: unknown;
+  pending_edits: unknown;
   pending_since: string | null;
 }
 
 const COLUMNS =
-  'id, user_id, status, photo_path, thumb_path, caption, pending_photo_path, pending_thumb_path, pending_caption, pending_since';
+  'id, user_id, status, photo_path, thumb_path, caption, pending_photo_path, pending_thumb_path, pending_caption, edits, pending_edits, pending_since';
 
 async function load(db: SupabaseClient, momentId: string): Promise<MomentRow | null> {
   const { data, error } = await db.from('moments').select(COLUMNS).eq('id', momentId).maybeSingle();
   if (error) throw new Error(`moment lookup: ${error.message}`);
   return data as MomentRow | null;
+}
+
+/** The photo description in `edits` (0174: a non-empty string when present). */
+function descriptionOf(edits: unknown): string | null {
+  const alt = (edits as { alt?: unknown } | null)?.alt;
+  return typeof alt === 'string' ? alt : null;
 }
 
 /** The content that would become visible: the pending proposal when there is one. */
@@ -80,6 +88,7 @@ function contentOf(m: MomentRow): ModerationContent {
     photoPath: pending ? m.pending_photo_path : m.photo_path,
     thumbPath: pending ? m.pending_thumb_path : m.thumb_path,
     caption: pending ? m.pending_caption : m.caption,
+    description: descriptionOf(pending ? m.pending_edits : m.edits),
   };
 }
 

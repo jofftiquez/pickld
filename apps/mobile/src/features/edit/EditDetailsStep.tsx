@@ -11,7 +11,7 @@ import { VISIBILITIES, VISIBILITY_KEY, type Visibility } from '@/lib/visibility'
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space, type Slot } from '@/theme/tokens';
 
-import type { Edits } from './edits';
+import { PHOTO_DESCRIPTION_MAX, type Edits } from './edits';
 import { editorPhotoStyles, useEditorPhotoFrame } from './editorPhotoFrame';
 import { useTaggablePeople } from './mention/useTaggablePeople';
 import { useStampMoment } from './stickers/stamps';
@@ -28,6 +28,9 @@ export type EditDetailsStepProps = {
   onChangeCaption: (caption: string) => void;
   /** Opened from Moment options' Edit caption (M2-23, D-104): the caption field starts focused. */
   focusCaption: boolean;
+  /** The photo description screen readers read to everyone who can see the moment (0174). */
+  description: string;
+  onChangeDescription: (description: string) => void;
   /** Who can see the moment (D-48): Readers, Everyone or Only me, starting at the owner's default. */
   visibility: Visibility;
   onChangeVisibility: (visibility: Visibility) => void;
@@ -42,7 +45,7 @@ export const CAPTION_MAX = 150;
 
 /**
  * The editor's second step (D-103; design: EditDetails): the edited photo at the size and place it has on
- * the photo step, with the same parallax under the sheet (drawn by MomentView, so it looks as it will in the jar), the caption, the slot's hashtag (fixed by the slot, read-only) and
+ * the photo step, with the same parallax under the sheet (drawn by MomentView, so it looks as it will in the jar), the caption, the photo description for screen readers, the slot's hashtag (fixed by the slot, read-only) and
  * who can see the moment. Save is in the toolbar.
  */
 export function EditDetailsStep({
@@ -54,6 +57,8 @@ export function EditDetailsStep({
   caption,
   onChangeCaption,
   focusCaption,
+  description,
+  onChangeDescription,
   visibility,
   onChangeVisibility,
   saveFailed,
@@ -151,6 +156,28 @@ export function EditDetailsStep({
             ))}
           </View>
         ) : null}
+        <View style={styles.description}>
+          <TextField
+            label={t('edit.description')}
+            value={description}
+            onChangeText={onChangeDescription}
+            maxLength={PHOTO_DESCRIPTION_MAX}
+            multiline
+            returnKeyType="done"
+            submitBehavior="blurAndSubmit"
+            placeholder={t('edit.descriptionPlaceholder')}
+            accessibilityHint={t('edit.descriptionHint')}
+            onFocus={raiseSheet}
+            testID="editor-description"
+          />
+          <Text
+            style={[textStyle('label', '500'), styles.hint]}
+            importantForAccessibility="no"
+            accessibilityElementsHidden
+          >
+            {t('edit.descriptionHint')}
+          </Text>
+        </View>
         <View
           style={styles.row}
           accessible
@@ -207,6 +234,7 @@ const styles = StyleSheet.create({
   },
   hashtagText: { color: colors.brandText },
   visibility: { gap: space.sm },
+  description: { gap: space.xs },
   suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: -space.sm },
   suggestion: {
     backgroundColor: colors.subtle,

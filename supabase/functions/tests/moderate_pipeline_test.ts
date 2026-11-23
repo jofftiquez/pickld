@@ -20,6 +20,7 @@ const content: ModerationContent = {
   photoPath: 'moments/u/m/full.jpg',
   thumbPath: 'moments/u/m/thumb.jpg',
   caption: 'beach day',
+  description: 'Two friends on the sand',
 };
 const read = (key: string) =>
   Promise.resolve(key.endsWith('full.jpg') ? PHOTO : key.endsWith('thumb.jpg') ? THUMB : null);
@@ -74,7 +75,7 @@ Deno.test('a hash match blocks before any score is asked', async () => {
   if (v.decision === 'block') assertEquals(v.match, { sha256: await sha256(PHOTO) });
 });
 
-Deno.test('the matcher sees the full photo, the scorer the thumbnail', async () => {
+Deno.test('the matcher sees the full photo, the scorer the thumbnail with the caption and description', async () => {
   const seen: string[] = [];
   const check = fullCheck({
     matcher: {
@@ -95,7 +96,7 @@ Deno.test('the matcher sees the full photo, the scorer the thumbnail', async () 
     thresholds: THRESHOLDS,
   });
   assertEquals(await check.check(content), { decision: 'approve' });
-  assertEquals(seen, ['match:full photo bytes', 'score:thumb bytes:beach day']);
+  assertEquals(seen, ['match:full photo bytes', 'score:thumb bytes:beach day\nTwo friends on the sand']);
 });
 
 Deno.test('borderline: queued with a second opinion and the thresholds version', async () => {

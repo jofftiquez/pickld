@@ -31,6 +31,7 @@ import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
 import { textStyle } from '@/theme/text';
 import { colors, photo, radius, sizes, space } from '@/theme/tokens';
 
+import { describedLabel } from './momentRender';
 import { captionParts, type MomentTag } from './momentTags';
 import { MomentView } from './MomentView';
 
@@ -160,7 +161,11 @@ export function MomentDetailView({
         <View
           accessible
           accessibilityRole="adjustable"
-          accessibilityLabel={t('moment.detail.photo', { slot, position: current + 1, count: moments.length })}
+          accessibilityLabel={describedLabel(
+            t('moment.detail.photo', { slot, position: current + 1, count: moments.length }),
+            parseEdits(moment.edits),
+            t,
+          )}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
           onAccessibilityAction={onAccessibilityAction}
         >

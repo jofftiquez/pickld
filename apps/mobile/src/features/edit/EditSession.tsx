@@ -17,7 +17,7 @@ import type { SaveEditsInput } from '@/lib/queue/store';
 import type { Visibility } from '@/lib/visibility';
 import type { Slot } from '@/theme/tokens';
 
-import { parseEdits } from './edits';
+import { parseEdits, withDescription } from './edits';
 import { EditorView, type EditorStep, type EditorTool } from './EditorView';
 import { LeaveDraftDialog } from './LeaveDraftDialog';
 import { flipped, isAdjusted, rotatedClockwise, type PhotoAdjust } from './photoAdjust';
@@ -94,8 +94,8 @@ const adjustKey = (photoUri: string, adjust: PhotoAdjust) => `${adjust.rotate}${
 
 /**
  * One editing session on a moment (FR-CAP-04, FR-CAP-05, FR-CAP-08, FR-CAP-09) over the editor's two steps
- * (D-103): the filter and overlays with Undo on the photo step, then the caption and the visibility choice
- * (D-48) on the details step, saved together through `onSave` by Add to #slot / Done. Going between the
+ * (D-103): the filter and overlays with Undo on the photo step, then the caption, the photo description
+ * (0174) and the visibility choice (D-48) on the details step, saved together through `onSave` by Add to #slot / Done. Going between the
  * steps keeps everything; nothing is saved before that. Edits are data; only Rotate and Flip change the
  * photo: each makes the changed 3:4 photo at once (the preparation pipeline, so what shows is what is saved),
  * and Done saves it with the edits.
@@ -117,7 +117,8 @@ export function EditSession({
   onSave,
   unfinished,
 }: EditSessionProps) {
-  const editor = useEditorState(parseEdits(initial.edits));
+  const [initialEdits] = useState(() => parseEdits(initial.edits));
+  const editor = useEditorState(initialEdits);
   // Photos made by Rotate and Flip, by adjust and the photo they were made from, kept so Undo shows them
   // again at once. Each is a cache file, deleted when the editor closes (Done copies the one it saves).
   const [adjusted, setAdjusted] = useState<ReadonlyMap<string, PreparedPhoto>>(() => new Map());
@@ -144,6 +145,8 @@ export function EditSession({
   const [step, setStep] = useState<EditorStep>(focusCaption ? 'details' : 'photo');
   const [tool, setTool] = useState<EditorTool>('filters');
   const [caption, setCaption] = useState(initial.caption ?? '');
+  // Kept beside the edits, not in their Undo history: it is written on the details step like the caption.
+  const [description, setDescription] = useState(initialEdits.alt ?? '');
   const [visibility, setVisibility] = useState(initial.visibility);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -173,7 +176,7 @@ export function EditSession({
 
   const currentInput = (): SaveEditsInput => {
     const trimmed = caption.trim();
-    return { caption: trimmed === '' ? null : trimmed, visibility, edits: editor.edits };
+    return { caption: trimmed === '' ? null : trimmed, visibility, edits: withDescription(editor.edits, description) };
   };
 
   // An unfinished photo never leaves the editor unasked: every removal of this screen (Close, Android back,
@@ -298,6 +301,8 @@ export function EditSession({
         caption={caption}
         onChangeCaption={setCaption}
         focusCaption={focusCaption}
+        description={description}
+        onChangeDescription={setDescription}
         visibility={visibility}
         onChangeVisibility={setVisibility}
         canUndo={editor.canUndo}

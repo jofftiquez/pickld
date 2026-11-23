@@ -25,6 +25,7 @@ import { RoundIconButton } from '@/components/RoundIconButton';
 import { SecondaryButton } from '@/components/SecondaryButton';
 import type { Edits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
+import { describedLabel } from '@/features/moment/momentRender';
 import { MomentView } from '@/features/moment/MomentView';
 import type { AvatarUrls } from '@/lib/avatars';
 import { hitSlopFor } from '@/lib/hitSlop';
@@ -201,7 +202,7 @@ export function CommentsView({
             <View
               accessible
               accessibilityRole="image"
-              accessibilityLabel={t('moment.photo', { slot: moment.slot })}
+              accessibilityLabel={describedLabel(t('moment.photo', { slot: moment.slot }), moment.edits, t)}
               style={styles.momentPhoto}
               testID="comments-moment-photo"
             >

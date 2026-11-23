@@ -64,7 +64,9 @@ export function fullCheck(deps: PipelineDeps): ModerationProvider {
       if (csam.matched) return { decision: 'block', matcher: deps.matcher.name, match: csam.details ?? {} };
 
       const thumb = await readRequired(deps.read, content.thumbPath);
-      const { model, scores } = await deps.scorer.scoreImage(thumb, content.caption);
+      // The photo description is read with the photo like the caption, so it is scored with it (0174).
+      const words = [content.caption, content.description].filter((w) => w).join('\n') || null;
+      const { model, scores } = await deps.scorer.scoreImage(thumb, words);
       noteModel(model);
       const outcome = decide(scores, thresholds.photo);
       if (outcome.decision === 'approve') return { decision: 'approve' };
@@ -73,7 +75,7 @@ export function fullCheck(deps: PipelineDeps): ModerationProvider {
       let secondOpinion;
       if (outcome.decision === 'review' && deps.secondOpinion) {
         try {
-          secondOpinion = await deps.secondOpinion.ask(thumb, content.caption, outcome.reason);
+          secondOpinion = await deps.secondOpinion.ask(thumb, words, outcome.reason);
         } catch (error) {
           console.error('moderate: second opinion failed', error instanceof Error ? error.message : '');
         }

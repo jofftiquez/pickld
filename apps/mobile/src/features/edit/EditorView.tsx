@@ -63,6 +63,9 @@ export type EditorViewProps = {
   onChangeCaption: (caption: string) => void;
   /** Opened from Moment options' Edit caption (M2-23): the caption field starts focused. */
   focusCaption?: boolean;
+  /** The photo description screen readers read (0174). */
+  description: string;
+  onChangeDescription: (description: string) => void;
   /** Who can see the moment (D-48): Readers, Everyone or Only me, starting at the owner's default. */
   visibility: Visibility;
   onChangeVisibility: (visibility: Visibility) => void;
@@ -124,6 +127,8 @@ export function EditorView({
   caption,
   onChangeCaption,
   focusCaption = false,
+  description,
+  onChangeDescription,
   visibility,
   onChangeVisibility,
   canUndo,
@@ -249,6 +254,8 @@ export function EditorView({
               caption={caption}
               onChangeCaption={onChangeCaption}
               focusCaption={focusCaption}
+              description={description}
+              onChangeDescription={onChangeDescription}
               visibility={visibility}
               onChangeVisibility={onChangeVisibility}
               saveFailed={saveFailed}

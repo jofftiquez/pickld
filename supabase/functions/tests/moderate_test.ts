@@ -180,6 +180,30 @@ Deno.test('a proposal changed during the check is checked again, never approved 
   assertEquals((await row(id)).caption, 'v3', 'the version that was checked last is the one that went live');
 });
 
+Deno.test('a changed photo description is checked before readers hear it (0174)', async () => {
+  const edits = (alt: string) => ({ v: 1, filter: 'original', overlays: [], alt });
+  const id = await addMoment('whoamiwith');
+  await userClient(owner.jwt).from('moments').update({ edits: edits('A grey cat') }).eq('id', id);
+  await call({ momentId: id }, owner);
+  await userClient(owner.jwt).from('moments').update({ edits: edits('A grey cat asleep on a desk') }).eq('id', id);
+  const heard = async () =>
+    ((await userClient(reader.jwt).from('moments').select('edits').eq('id', id).single()).data?.edits as {
+      alt?: string;
+    }).alt;
+  assertEquals(await heard(), 'A grey cat', 'readers keep the checked description meanwhile');
+
+  const seen: (string | null)[] = [];
+  const capturing: ModerationProvider = {
+    ...autoApprove,
+    name: 'stub-capturing',
+    check: (c) => (seen.push(c.description), Promise.resolve({ decision: 'approve' })),
+  };
+  const { json } = await call({ momentId: id }, owner, capturing);
+  assertEquals(seen, ['A grey cat asleep on a desk'], 'the proposed description is the one checked');
+  assertEquals(json.data.outcome, 'swapped');
+  assertEquals(await heard(), 'A grey cat asleep on a desk');
+});
+
 // ---------------------------------------------------------------- text path (M3-10, 0016)
 
 /** The reader comments on the owner's jar the way the app does: as themselves, hidden until checked. */

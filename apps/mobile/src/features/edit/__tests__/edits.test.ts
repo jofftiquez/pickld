@@ -1,4 +1,4 @@
-import { DEFAULT_EDITS, editsSchema, overlaySchema, parseEdits, type Edits } from '../edits';
+import { DEFAULT_EDITS, editsSchema, overlaySchema, parseEdits, withDescription, type Edits } from '../edits';
 import { kape } from './stickerFixture';
 
 // The `edits` JSON (FR-CAP-08): what the editor stores is what it reads back, and anything else stored
@@ -25,6 +25,22 @@ describe('edits schema', () => {
     const stored: unknown = JSON.parse(JSON.stringify(edits));
     expect(editsSchema.parse(stored)).toEqual(edits);
     expect(parseEdits(stored)).toEqual(edits);
+  });
+
+  it('keeps the photo description (0174) and drops only a bad one', () => {
+    const edits: Edits = { v: 1, filter: 'dusk', overlays: [sticker], alt: 'A bowl of sinigang on a wooden table' };
+    expect(parseEdits(JSON.parse(JSON.stringify(edits)))).toEqual(edits);
+    expect(editsSchema.parse(edits)).toEqual(edits);
+    const plain = { v: 1, filter: 'dusk', overlays: [sticker] };
+    for (const alt of ['', '   ', 42, 'a'.repeat(251)]) expect(parseEdits({ ...plain, alt })).toEqual(plain);
+  });
+
+  it('sets the description trimmed, and removes it when blank', () => {
+    const edits: Edits = { v: 1, filter: 'mono', overlays: [text] };
+    expect(withDescription(edits, '  Two kids on a jeepney  ')).toEqual({ ...edits, alt: 'Two kids on a jeepney' });
+    const described = withDescription(edits, 'Two kids');
+    expect(withDescription(described, '  ')).toEqual(edits);
+    expect('alt' in withDescription(described, '')).toBe(false);
   });
 
   it('defaults to version 1, Original and no overlays', () => {

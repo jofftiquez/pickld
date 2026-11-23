@@ -10,6 +10,7 @@
     "meta": "{{link}} · {{date}} · {{count}} of 8 moments",
     "caption": "“{{caption}}”",
     "photo": "{{name}}’s #{{slot}} moment",
+    "photoDescribed": "{{name}}’s #{{slot}} moment: {{description}}",
     "addedLater": "Added later",
     "avatar": "{{name}}’s photo",
     "readersTitle": "Only {{name}}’s readers can see this jar",

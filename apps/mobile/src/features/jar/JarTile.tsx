@@ -8,7 +8,7 @@ import { PhotoTile } from '@/components/PhotoTile';
 import { parseEdits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
 import { MomentCover } from '@/features/moment/MomentCover';
-import { hasVisibleEdits } from '@/features/moment/momentRender';
+import { describedLabel, hasVisibleEdits } from '@/features/moment/momentRender';
 import { maxTextScale, textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 
@@ -35,8 +35,8 @@ export function JarTile({ moment, width, stamp, isCover = false, onPress, access
   const edits = parseEdits(moment.edits);
   const slot = t(`slots.${moment.slot}`);
   const onlyMe = moment.visibility === 'only_me';
-  // "#slot, cover, private, added later": every badge is spoken.
-  const label = [
+  // "#slot, cover, private, added later", then the photo description: every badge is spoken.
+  const badges = [
     slot,
     isCover ? t('tile.a11y.cover') : null,
     onlyMe ? t('tile.a11y.private') : null,
@@ -44,6 +44,7 @@ export function JarTile({ moment, width, stamp, isCover = false, onPress, access
   ]
     .filter((part): part is string => part !== null)
     .join(', ');
+  const label = describedLabel(badges, edits, t);
   return (
     <Pressable
       accessibilityRole={onPress ? 'button' : 'image'}

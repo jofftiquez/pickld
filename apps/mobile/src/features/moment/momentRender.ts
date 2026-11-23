@@ -12,8 +12,8 @@ export function hasVisibleEdits(edits: Edits): boolean {
 
 /**
  * One spoken label for the whole picture, e.g. "Photo with 2 stickers and text". It counts the overlay
- * kinds and never includes what a bubble, text or place says, who a mention tags, nor the caption: the label is safe to show
- * anywhere the photo is (rule 10 keeps it out of analytics anyway).
+ * kinds and never includes what a bubble, text or place says, who a mention tags, nor the caption. MomentView
+ * adds the photo description with describedLabel.
  */
 export function momentLabel(edits: Edits, t: TFunction): string {
   const count = (type: Edits['overlays'][number]['type']) => edits.overlays.filter((o) => o.type === type).length;
@@ -39,6 +39,15 @@ export function momentLabel(edits: Edits, t: TFunction): string {
             ? t('momentRenderer.list4', { a, b, c, d })
             : t('momentRenderer.list5', { a, b, c, d, e });
   return t('momentRenderer.photoWith', { items });
+}
+
+/**
+ * `label` followed by the owner's photo description (0174), when the moment has one: "#ootd: A blue dress on
+ * a rooftop". The description is the owner's own words, but it is shown only with the photo it describes, to
+ * people who can see that photo; never send it to analytics (rule 10).
+ */
+export function describedLabel(label: string, edits: Edits, t: TFunction): string {
+  return edits.alt ? t('momentRenderer.described', { label, description: edits.alt }) : label;
 }
 
 /** Where a moment drawn at `width` (and 4:3 of it tall) sits in its frame. */

@@ -52,7 +52,7 @@ export type AnalyticsEvent = keyof typeof analyticsEvents;
 export type AnalyticsProps<E extends AnalyticsEvent> = z.infer<(typeof analyticsEvents)[E]>;
 
 // Defence in depth: refuse property names that look like content even if a schema is later loosened.
-const FORBIDDEN_KEY = /caption|photo|image|uri|url|text|comment_body|moment_id|thumb/i;
+const FORBIDDEN_KEY = /caption|description|photo|image|uri|url|text|comment_body|moment_id|thumb|edits/i;
 
 export interface AnalyticsSink {
   capture: (event: string, properties: Record<string, string | number | boolean>) => void;

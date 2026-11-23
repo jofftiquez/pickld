@@ -7,6 +7,7 @@ import { VisibilityBadge } from '@/components/VisibilityBadge';
 import { parseEdits } from '@/features/edit/edits';
 import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
+import { describedLabel } from '@/features/moment/momentRender';
 import { MomentView } from '@/features/moment/MomentView';
 import { FollowButton } from '@/features/profile/FollowButton';
 import { deviceLocale, formatDate, formatShortDate, formatTime } from '@/lib/format';
@@ -68,12 +69,13 @@ export function MomentFeedCard({
         date: formatShortDate(at, moment.jar_tz, locale).replace(/ /g, '\u00a0'),
       });
   const caption = moment.caption?.trim() ? moment.caption.trim() : null;
+  const edits = parseEdits(moment.edits);
   // At large text the name and the button no longer fit side by side (the name shrank to "J."): stack them.
   const large = useLargeText();
   // Only the owner ever gets an Only me moment here (0067); the check keeps it that way for a stale cache.
   const isPrivate = moment.visibility === 'only_me' && moment.author_id === viewerId;
   const label = [
-    t('moments.cardLabel', { name: moment.author_display_name, slot, when }),
+    describedLabel(t('moments.cardLabel', { name: moment.author_display_name, slot, when }), edits, t),
     addedLater ? t('tile.addedLater') : null,
     isPrivate ? t('moments.private') : null,
     caption,
@@ -137,7 +139,7 @@ export function MomentFeedCard({
         <View style={[styles.photo, { width: photoWidth }]}>
           <MomentView
             uri={cardPhotoUrl(moment)}
-            edits={parseEdits(moment.edits)}
+            edits={edits}
             width={photoWidth}
             stamp={{ capturedAt: at, tz: moment.jar_tz }}
             accessible={false}
