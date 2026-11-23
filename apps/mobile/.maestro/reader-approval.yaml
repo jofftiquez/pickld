@@ -1,0 +1,123 @@
+# 0176: Approve who reads you. Mika asks to read Aya, who is Private (the seed's aya with
+# `update profiles set is_private = true where username = 'aya'`): Aya's profile is locked, and Be a reader
+# becomes Requested. Aya sees the request in Notifications and on her Readers list, approves it there, and has the
+# Private account switch in Settings. Each sign-in link comes from scripts/dev-sign-in.sh, made just before the
+# run (a code works once, for 10 minutes):
+#   maestro test -e MIKA="$(scripts/dev-sign-in.sh mika@pickld.test)" -e AYA="$(scripts/dev-sign-in.sh aya@pickld.test)" \
+#     apps/mobile/.maestro/reader-approval.yaml
+appId: me.pickld.app
+---
+- launchApp
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- openLink: ${MIKA}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: today-scroll
+    timeout: 60000
+
+# ---------------------------------------------------------------- Mika: a locked profile, then Requested
+- openLink: pickld://u/aya
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: profile-follow
+    timeout: 30000
+- assertVisible: This account is private
+- assertVisible: Be Aya Tanaka.s reader
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ReaderApproval-locked-ios
+- tapOn:
+    id: profile-follow
+- extendedWaitUntil:
+    visible: Requested to read Aya Tanaka
+    timeout: 10000
+- assertVisible: You asked to read Aya.*
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ReaderApproval-requested-ios
+
+# ---------------------------------------------------------------- Aya: the request, approved
+- openLink: pickld://dev/sign-out
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- openLink: ${AYA}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: today-scroll
+    timeout: 60000
+- openLink: pickld://notifications
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: notification-approve
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ReaderApproval-notifications-ios
+- openLink: pickld://u/aya/readers
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: readers-requests
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ReaderApproval-requests-ios
+- tapOn:
+    id: request-row-mika-approve
+- extendedWaitUntil:
+    notVisible:
+      id: request-row-mika
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      id: follow-row-mika
+    timeout: 10000
+- openLink: pickld://settings
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: settings-screen
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: settings-discoverable
+    direction: DOWN
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ReaderApproval-settings-ios

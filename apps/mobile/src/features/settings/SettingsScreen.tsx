@@ -25,7 +25,8 @@ export function SettingsScreen() {
   const queryClient = useQueryClient();
   const session = useAuthStore((s) => s.session);
   const userId = session?.user.id ?? '';
-  const { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable } = useSettings(userId);
+  const { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable, savePrivate } =
+    useSettings(userId);
   const blocked = useBlockedAccounts();
   const { invites } = useInvites();
   const [mirrorSelfies, setMirrorSelfies] = useMirrorSelfies();
@@ -62,6 +63,7 @@ export function SettingsScreen() {
       onMirrorSelfies={setMirrorSelfies}
       onVisibility={(v) => saveVisibility.mutate(v, onSaved)}
       onDiscoverable={(on) => saveDiscoverable.mutate(on, onSaved)}
+      onPrivate={(on) => savePrivate.mutate(on, onSaved)}
       onBlocked={() => router.push('/settings/blocked')}
       pendingCount={pending.count}
       onPending={() => router.push('/pending')}

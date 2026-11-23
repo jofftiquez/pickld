@@ -72,6 +72,7 @@ jest.mock('@/lib/supabase', () => ({
             display_name: 'Dale',
             default_visibility: 'readers',
             discoverable: true,
+            is_private: false,
             birthday: '1995-05-05',
           },
           error: null,
@@ -187,6 +188,13 @@ describe('Settings', () => {
     expect(props().account?.minor).toBe(false);
     await act(async () => props().onDiscoverable(false));
     await waitFor(() => expect(mockDb.writes).toContainEqual(['profiles', 'update', { discoverable: false }]));
+  });
+
+  it('Private account starts off and is saved to the profile (0176)', async () => {
+    await renderScreen();
+    await waitFor(() => expect(props().account?.isPrivate).toBe(false));
+    await act(async () => props().onPrivate(true));
+    await waitFor(() => expect(mockDb.writes).toContainEqual(['profiles', 'update', { is_private: true }]));
   });
 
   it('a failed save puts the switch back and says so', async () => {

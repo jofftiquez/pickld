@@ -47,8 +47,9 @@ function page(viewerId: string, readsYou: boolean): ProfilePage {
       reader_count: 1234,
       author_count: 203,
       jar_count: 1,
+      is_private: false,
     },
-    relationship: { reading: false, readsYou, muted: false },
+    relationship: { reading: false, readsYou, muted: false, requested: false, approves: false },
     viewerId,
     jars: buildProfileJars([mikaJar], [moment({ id: 'm1', jar_id: 'jar-1', slot: 'evening' })], viewerId),
   };
@@ -150,7 +151,7 @@ describe('ProfileView', () => {
     expect(onOpenList).toHaveBeenCalledWith('authors');
     const reading = page('dale-id', true);
     await renderView({
-      data: { ...reading, relationship: { reading: true, readsYou: true, muted: false } },
+      data: { ...reading, relationship: { reading: true, readsYou: true, muted: false, requested: false, approves: false } },
       onToggleReading,
     });
     expect(screen.getByTestId('profile-follow')).toHaveTextContent('Reading');

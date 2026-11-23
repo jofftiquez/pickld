@@ -700,7 +700,7 @@
     "readersBody_other": "{{count}} people who read your days",
     "readersBodyUnknown": "People who read your days",
     "everyone": "Everyone",
-    "everyoneBody": "Anyone on Pickld",
+    "everyoneBody": "Anyone on Pickld, unless your account is Private",
     "onlyMe": "Only me",
     "onlyMeBody": "Keep this jar just for you",
     "notePrivate_one": "{{count}} private moment won’t be shared.",
@@ -1187,6 +1187,9 @@
     "emptyMomentsTitleMine": "No moments yet",
     "emptyMomentsMine": "Your moments show up here once you add one.",
     "emptyTitleOther": "Nothing here yet",
+    "privateTitle": "This account is private",
+    "privateBody": "Be {{name}}’s reader to see their days. They approve new readers.",
+    "privateRequested": "You asked to read {{name}}. Their days show here once they say yes.",
     "emptyOther": "{{name}} hasn’t shared any jars with you yet.",
     "emptyMomentsOther": "{{name}} hasn’t shared any moments with you yet.",
     "addMoment": "Add a moment",
@@ -1210,7 +1213,10 @@
     "readingA11y": "Reading {{name}}",
     "readHint": "Their jars show up in your Jars tab",
     "readBackHint": "They read you; their jars show up in your Jars tab",
-    "readingHint": "Stops reading their days"
+    "readingHint": "Stops reading their days",
+    "requested": "Requested",
+    "requestedA11y": "Requested to read {{name}}",
+    "requestedHint": "Cancels your request"
   },
   "readers": {
     "back": "Back",
@@ -1236,7 +1242,15 @@
     "remove": "Remove reader",
     "removeTitle": "Remove {{name}}?",
     "removeMessage": "They won’t see your readers-only jars anymore. We won’t tell them.",
-    "removeTip": "Press and hold a reader to remove them."
+    "removeTip": "Press and hold a reader to remove them.",
+    "requests_one": "{{count}} wants to read you",
+    "requests_other": "{{count}} want to read you",
+    "approve": "Approve",
+    "approveA11y": "Approve {{name}}",
+    "approveHint": "They become your reader and see your readers-only jars",
+    "decline": "Decline",
+    "declineA11y": "Decline {{name}}",
+    "declineHint": "We won’t tell them. They can ask again."
   },
   "editProfile": {
     "title": "Edit profile",
@@ -1370,6 +1384,8 @@
     "admitted": "<bold>You're in.</bold> Fill your first jar.",
     "inviteJoined": "<bold>{{name}}</bold> joined with your invite. Say hi?",
     "tag": "<bold>{{name}}</bold> tagged you in a moment",
+    "readerRequest": "<bold>{{name}}</bold> wants to read your days",
+    "readerApproved": "<bold>{{name}}</bold> approved you. You can read their days now",
     "unread": "Unread",
     "openHint": "Opens it",
     "reminderBody": {
@@ -1445,6 +1461,9 @@
     "alreadyMember": "You’re already on Pickld",
     "joined": "You’re in. Welcome to Pickld",
     "unfollowed": "You stopped reading @{{username}}",
+    "requested": "Asked to read @{{username}}",
+    "requestCancelled": "Request to @{{username}} cancelled",
+    "readerApproved": "@{{username}} reads you now",
     "blocked": "Blocked",
     "unblocked": "Unblocked",
     "packAdded": "Sticker pack added",
@@ -1901,6 +1920,10 @@
     "discoverable": "Show me in Discover",
     "discoverableBody": "People outside your readers can find your public posts in Discover and see you in suggestions",
     "discoverableMinor": "Under 18, your posts stay out of Discover and suggestions",
+    "discoverablePrivate": "Private accounts stay out of Discover and suggestions",
+    "private": "Private account",
+    "privateBody": "You approve new readers, and only your readers see your posts. Turning this off approves anyone waiting",
+    "privateMinor": "Under 18, you always approve new readers. Private also keeps your posts to your readers only",
     "visibilityTitle": "Default visibility",
     "visibilityBody": "New jars start with this. You can change it on each jar.",
     "visibility": {
@@ -1947,7 +1970,7 @@
       },
       {
         "q": "Who can see my jars?",
-        "a": "You choose for each jar: Readers (people who read you), Everyone, or Only me. Private moments are never shown to anyone else, in any jar. Set the default in Settings."
+        "a": "You choose for each jar: Readers (people who read you), Everyone, or Only me. Private moments are never shown to anyone else, in any jar. Set the default in Settings. With a Private account, Everyone jars reach your readers only, and you approve each new reader. Under 18, you always approve new readers."
       },
       {
         "q": "What happens when I travel?",
@@ -2092,7 +2115,7 @@
     "everyone": "Everyone",
     "onlyMe": "Only me",
     "readersBody": "People who read your days",
-    "everyoneBody": "Anyone on Pickld",
+    "everyoneBody": "Anyone on Pickld, unless your account is Private",
     "onlyMeBody": "Only you will see this moment"
   },
   "invite": {

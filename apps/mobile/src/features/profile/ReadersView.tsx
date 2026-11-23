@@ -17,7 +17,9 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 
 import { FollowRow } from './FollowRow';
 import { compactCount, type ProfileRow } from './profileModel';
+import { RequestsCard } from './RequestsCard';
 import type { FollowList, FollowListRow } from './useFollowList';
+import type { ReaderRequest } from './useReaderRequests';
 
 export type ReadersViewProps = {
   /** Whose lists these are; undefined while loading, null when the profile isn't available. */
@@ -39,6 +41,10 @@ export type ReadersViewProps = {
   onOpenProfile: (username: string) => void;
   onToggleReading: (row: FollowListRow) => void;
   onRemoveReader: (row: FollowListRow) => void;
+  /** Your own Readers list: people waiting for your approval (0176). Empty or undefined shows no card. */
+  requests?: ReaderRequest[];
+  requestsBusy?: boolean;
+  onAnswerRequest?: (request: ReaderRequest, approve: boolean) => void;
   /** Your own empty Authors list: Find people opens Explore (D-87). */
   onFindPeople?: () => void;
   onRetry: () => void;
@@ -48,7 +54,8 @@ export type ReadersViewProps = {
 /**
  * Readers & authors (Readers; FR-SOC-09, FR-SOC-07): the person's username, a switch between their readers
  * and authors with counts, a search field and a card of rows with Read / Read back / Reading. On your own
- * Readers list, long press a row to remove that reader.
+ * Readers list, people waiting for your approval come first with Approve and Decline (0176), and long press a
+ * row to remove that reader.
  */
 export function ReadersView({
   profile,
@@ -66,6 +73,9 @@ export function ReadersView({
   onOpenProfile,
   onToggleReading,
   onRemoveReader,
+  requests = [],
+  requestsBusy = false,
+  onAnswerRequest,
   onFindPeople,
   onRetry,
   locale = deviceLocale(),
@@ -140,6 +150,15 @@ export function ReadersView({
               testID="readers-search"
             />
           </View>
+          {isOwner && list === 'readers' && query.trim() === '' && requests.length > 0 && onAnswerRequest ? (
+            <RequestsCard
+              requests={requests}
+              avatars={avatars}
+              busy={requestsBusy}
+              onOpenProfile={onOpenProfile}
+              onAnswer={onAnswerRequest}
+            />
+          ) : null}
           {rows === undefined && failed ? (
             <View style={styles.message}>
               <Text style={[textStyle('body'), styles.centerText, { color: colors.muted }]}>{t('readers.failed')}</Text>

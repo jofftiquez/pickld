@@ -1,6 +1,7 @@
 // Settings data (M4-16; FR-SET-01, FR-NOT-04). Everything is read and written as the user, through RLS:
 // reminder_settings (owner, all), notification_prefs (owner select and update; a row per user, 0014) and
-// profiles.default_visibility and profiles.discoverable (owner update; read back through my_profile, 0150). Saves update the cache first so switches move at once, and
+// profiles.default_visibility, profiles.discoverable (0150) and profiles.is_private (0176) (owner update; read back through
+// my_profile). Saves update the cache first so switches move at once, and
 // roll back if the write fails. A reminder change invalidates ['reminders', userId], which Today's
 // useReminderSync watches, so the phone's scheduled reminders follow (FR-NOT-01).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -39,6 +40,7 @@ const accountRow = z.object({
   display_name: z.string(),
   default_visibility: z.enum(['everyone', 'readers', 'only_me']),
   discoverable: z.boolean(),
+  is_private: z.boolean(),
   birthday: z.string(),
 });
 
@@ -48,7 +50,10 @@ export type SettingsAccount = {
   defaultVisibility: Visibility;
   /** Show me in Discover and suggestions (0150). */
   discoverable: boolean;
-  /** Under 18: kept out of Discover whatever `discoverable` says (in_discover, 0150). */
+  /** Private account (0176): readers need approval and posts reach approved readers only. */
+  isPrivate: boolean;
+  /** Under 18: kept out of Discover whatever `discoverable` says (in_discover, 0150), and approves every new
+   * reader whatever `isPrivate` says (needs_reader_approval, 0176). */
   minor: boolean;
   avatar: string | null;
 };
@@ -68,7 +73,7 @@ async function fetchAccount(userId: string): Promise<SettingsAccount> {
   // my_profile: the owner's full row; discoverable and birthday aren't readable from profiles by others.
   const { data, error } = await getSupabase()
     .rpc('my_profile')
-    .select('username, display_name, default_visibility, discoverable, birthday')
+    .select('username, display_name, default_visibility, discoverable, is_private, birthday')
     .single();
   if (error) throw new Error(error.message);
   const row = accountRow.parse(data);
@@ -78,6 +83,7 @@ async function fetchAccount(userId: string): Promise<SettingsAccount> {
     displayName: row.display_name,
     defaultVisibility: row.default_visibility,
     discoverable: row.discoverable,
+    isPrivate: row.is_private,
     minor: isMinor(row.birthday, new Date().toISOString().slice(0, 10)),
     avatar: images.avatar,
   };
@@ -191,5 +197,20 @@ export function useSettings(userId: string) {
     },
   );
 
-  return { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable };
+  // Turning Private off approves everyone waiting (0176), so the Readers list and profiles are read again.
+  const savePrivate = useOptimistic<SettingsAccount, boolean>(
+    settingsQueryKeys.account(userId),
+    (a, on) => ({ ...a, isPrivate: on }),
+    async (on) => {
+      const { error } = await getSupabase().from('profiles').update({ is_private: on }).eq('id', userId);
+      if (error) throw new Error(error.message);
+    },
+    () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: ['followList'] });
+      void queryClient.invalidateQueries({ queryKey: ['readerRequests'] });
+    },
+  );
+
+  return { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable, savePrivate };
 }

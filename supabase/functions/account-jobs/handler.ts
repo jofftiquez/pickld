@@ -32,10 +32,12 @@
 // (account_job_fail). Messages name only the step and a status code, never a key or personal data.
 //
 // Each run also ends strike suspensions whose 7 days are over (moderation_lift_suspensions, 0041; D-11), and
-// once the invite period is over lets in every account still waiting for a code (admit_all_waiting, 0131).
+// once the invite period is over lets in every account still waiting for a code (admit_all_waiting, 0131), and
+// approves requests waiting on people who no longer approve readers, such as on their 18th birthday
+// (approve_waiting_readers, 0176).
 //
 // POST {}  (x-jobs-secret: …)
-//   → { data: { claimed, done, failed, waiting (handed back to draw more), lifted, admitted } }
+//   → { data: { claimed, done, failed, waiting (handed back to draw more), lifted, admitted, approved } }
 //   → { error: { code, message } }   401 wrong secret, 405 method
 import type { SupabaseClient } from '../_shared/deps.ts';
 import { revokeAppleToken } from '../_shared/apple.ts';
@@ -127,6 +129,8 @@ export interface JobsStore {
   liftSuspensions(): Promise<number>;
   /** admit_all_waiting() (0131): when the invite period is over, lets every waiting account in. */
   admitAll(): Promise<number>;
+  /** approve_waiting_readers() (0176): approves requests to people who no longer approve readers. */
+  approveWaitingReaders(): Promise<number>;
 }
 
 export interface AccountJobsDeps {
@@ -275,6 +279,7 @@ export async function handleAccountJobs(req: Request, deps: AccountJobsDeps): Pr
   const store = deps.store();
   const lifted = await store.liftSuspensions();
   const admitted = await store.admitAll();
+  const approved = await store.approveWaitingReaders();
   const jobs = await store.claim(BATCH);
   const run: ExportRun = {
     renderer: deps.renderer ?? finishedRenderer,
@@ -300,7 +305,7 @@ export async function handleAccountJobs(req: Request, deps: AccountJobsDeps): Pr
       await store.fail(job.id, e instanceof Error ? e.message : 'failed');
     }
   }
-  return ok({ claimed: jobs.length, done, failed, waiting, lifted, admitted });
+  return ok({ claimed: jobs.length, done, failed, waiting, lifted, admitted, approved });
 }
 
 const PAGE = 1000;
@@ -432,6 +437,11 @@ export function serviceStore(db: SupabaseClient, s3: S3Config, partSize?: number
     async admitAll() {
       const { data, error } = await db.rpc('admit_all_waiting');
       if (error) throw new Error(`admit_all_waiting: ${error.code}`);
+      return Number(data ?? 0);
+    },
+    async approveWaitingReaders() {
+      const { data, error } = await db.rpc('approve_waiting_readers');
+      if (error) throw new Error(`approve_waiting_readers: ${error.code}`);
       return Number(data ?? 0);
     },
     getObject: (key) => getObject(s3, key),

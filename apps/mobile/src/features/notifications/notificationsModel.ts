@@ -16,6 +16,8 @@ export const notificationType = z.enum([
   'admitted',
   'invite_joined',
   'tag',
+  'reader_request',
+  'reader_approved',
 ]);
 export type NotificationType = z.infer<typeof notificationType>;
 
@@ -65,6 +67,8 @@ const NEEDS_ACTOR: ReadonlySet<NotificationType> = new Set([
   'friend_joined',
   'invite_joined',
   'tag',
+  'reader_request',
+  'reader_approved',
 ]);
 
 function toEntry(row: NotificationRow): NotificationEntry {
@@ -143,7 +147,10 @@ export function targetOf(entry: NotificationEntry): NotificationTarget | null {
   switch (entry.type) {
     case 'new_reader':
     case 'friend_joined':
-    case 'invite_joined': {
+    case 'invite_joined':
+    // Someone asks to read you, or approved your request (0176): their profile.
+    case 'reader_request':
+    case 'reader_approved': {
       const who = entry.actors[0];
       return who ? { pathname: '/u/[username]', params: { username: who.username } } : null;
     }

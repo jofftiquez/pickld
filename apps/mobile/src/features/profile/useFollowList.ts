@@ -19,6 +19,8 @@ export const followListRow = z.object({
   is_following: z.boolean(),
   /** They read the viewer (Read back). */
   follows_viewer: z.boolean(),
+  /** The viewer asked to read them and waits for approval (Requested, 0176). */
+  requested: z.boolean(),
 });
 export type FollowListRow = z.infer<typeof followListRow>;
 

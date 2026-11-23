@@ -122,6 +122,17 @@ Deno.test('a tagged person hears who tagged them, and the push opens that moment
   assertEquals([p?.title, p?.body, p?.data.momentId, p?.data.jarId], ['Joff', 'tagged you in a moment.', 'm1', 'j1']);
 });
 
+Deno.test('a request to read you and its approval are pushed with the actor as the title (0176)', () => {
+  const pushes = composePushes([
+    row({ id: 'q', type: 'reader_request', actor_name: 'Mika Reyes', jar_id: null, jar_local_date: null }),
+    row({ id: 'a', type: 'reader_approved', actor_name: 'Aya', jar_id: null, jar_local_date: null }),
+  ]);
+  assertEquals(pushes.map((p) => [p.title, p.body, p.data.type]), [
+    ['Mika Reyes', 'wants to read your days.', 'reader_request'],
+    ['Aya', 'approved you. You can read their days now.', 'reader_approved'],
+  ]);
+});
+
 Deno.test('an admitted account hears it is in (0131)', () => {
   const [p] = composePushes([row({ id: 'ad', type: 'admitted', actor_name: null, jar_id: null, jar_local_date: null })]);
   assertEquals([p?.title, p?.body, p?.data.type], ["You're in", 'Fill your first jar.', 'admitted']);

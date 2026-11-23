@@ -190,6 +190,8 @@ export function ProfileView({
   const moments = tab === 'moments' ? profileMoments(jars) : [];
   const momentDays = profileMomentDays(moments);
   const empty = tab === 'jars' ? jars.length === 0 : moments.length === 0;
+  // A Private account the viewer doesn't read yet shows its header only (0176).
+  const locked = !isOwner && profile.is_private && !relationship.reading;
 
   return (
     <View style={styles.screen} testID="profile-screen">
@@ -385,20 +387,26 @@ export function ProfileView({
             <EmptyState
               illustration={tab === 'jars' ? 'jar' : 'photo'}
               title={
-                !isOwner
-                  ? t('profile.emptyTitleOther')
-                  : tab === 'jars'
-                    ? t('profile.emptyJarsTitleMine')
-                    : t('profile.emptyMomentsTitleMine')
+                locked
+                  ? t('profile.privateTitle')
+                  : !isOwner
+                    ? t('profile.emptyTitleOther')
+                    : tab === 'jars'
+                      ? t('profile.emptyJarsTitleMine')
+                      : t('profile.emptyMomentsTitleMine')
               }
               body={
-                isOwner
-                  ? tab === 'jars'
-                    ? t('profile.emptyMine')
-                    : t('profile.emptyMomentsMine')
-                  : tab === 'jars'
-                    ? t('profile.emptyOther', { name: profile.display_name })
-                    : t('profile.emptyMomentsOther', { name: profile.display_name })
+                locked
+                  ? t(relationship.requested ? 'profile.privateRequested' : 'profile.privateBody', {
+                      name: profile.display_name,
+                    })
+                  : isOwner
+                    ? tab === 'jars'
+                      ? t('profile.emptyMine')
+                      : t('profile.emptyMomentsMine')
+                    : tab === 'jars'
+                      ? t('profile.emptyOther', { name: profile.display_name })
+                      : t('profile.emptyMomentsOther', { name: profile.display_name })
               }
               action={
                 isOwner && onAddMoment

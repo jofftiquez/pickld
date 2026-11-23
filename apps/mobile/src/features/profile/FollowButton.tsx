@@ -13,13 +13,14 @@ export type FollowButtonProps = {
   testID?: string;
 };
 
-/** Be a reader / Read back (brand green) and Reading (subtle; tapping it stops reading). Copy per D-7, D-86.
+/** Be a reader / Read back (brand green), Reading (subtle; tapping it stops reading) and Requested (subtle; tapping
+ * it cancels the request, 0176). Copy per D-7, D-86.
  * The pill grows with its label and wraps to a second line rather than clipping at large text. */
 export function FollowButton({ action, name, onPress, disabled, testID }: FollowButtonProps) {
   const { t } = useTranslation();
   return (
     <PillButton
-      variant={action === 'reading' ? 'subtle' : 'primary'}
+      variant={action === 'reading' || action === 'requested' ? 'subtle' : 'primary'}
       label={t(`follow.${action}`)}
       accessibilityLabel={t(`follow.${action}A11y`, { name })}
       accessibilityHint={t(`follow.${action}Hint`)}

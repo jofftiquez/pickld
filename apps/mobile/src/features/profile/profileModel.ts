@@ -16,6 +16,8 @@ export const profileRow = z.object({
   author_count: z.number(),
   /** Jars with at least one moment that isn't removed (FR-JAR-08; kept by the jars triggers). */
   jar_count: z.number(),
+  /** Private account (0176): only readers see their posts. Caches from before 0176 lack it. */
+  is_private: z.boolean().default(false),
 });
 export type ProfileRow = z.infer<typeof profileRow>;
 
@@ -26,28 +28,45 @@ export type Relationship = {
   readsYou: boolean;
   /** The viewer muted this person (0151): still read, out of the viewer's timelines. */
   muted: boolean;
+  /** The viewer asked to read this person and waits for their approval (0176). */
+  requested: boolean;
+  /** This person approves new readers: Private, or under 18 (needs_reader_approval, 0176). */
+  approves: boolean;
 };
 
 export type ProfileData = { profile: ProfileRow; relationship: Relationship; viewerId: string };
 
-/** The follow button's state (D-7): Reading unfollows; Read back when they already read you; else Read. */
-export type FollowAction = 'read' | 'readBack' | 'reading';
+/** The follow button's state (D-7): Reading unfollows; Requested cancels the request (0176); Read back when they
+ * already read you; else Read. */
+export type FollowAction = 'read' | 'readBack' | 'reading' | 'requested';
 
-export function followAction({ reading, readsYou }: Pick<Relationship, 'reading' | 'readsYou'>): FollowAction {
-  return reading ? 'reading' : readsYou ? 'readBack' : 'read';
+export function followAction({
+  reading,
+  readsYou,
+  requested = false,
+}: Pick<Relationship, 'reading' | 'readsYou'> & { requested?: boolean }): FollowAction {
+  return reading ? 'reading' : requested ? 'requested' : readsYou ? 'readBack' : 'read';
 }
 
 /**
  * The profile with the viewer reading (or no longer reading) it, and its reader count moved by one: the
- * optimistic update (FR-SOC-07). Setting the state it already has changes nothing.
+ * optimistic update (FR-SOC-07). For someone who approves readers, starting is a request and the count stays
+ * (0176); stopping also cancels a request. Setting the state it already has changes nothing.
  */
 export function withReading<T extends Pick<ProfileData, 'profile' | 'relationship'>>(data: T, reading: boolean): T {
-  if (data.relationship.reading === reading) return data;
+  const { relationship } = data;
+  if (reading ? relationship.reading || relationship.requested : !relationship.reading && !relationship.requested) {
+    return data;
+  }
+  if (reading && relationship.approves) return { ...data, relationship: { ...relationship, requested: true } };
   return {
     ...data,
-    profile: { ...data.profile, reader_count: Math.max(0, data.profile.reader_count + (reading ? 1 : -1)) },
+    profile: {
+      ...data.profile,
+      reader_count: Math.max(0, data.profile.reader_count + (reading ? 1 : relationship.reading ? -1 : 0)),
+    },
     // Stopping reading ends a mute (0151).
-    relationship: { ...data.relationship, reading, muted: reading && data.relationship.muted },
+    relationship: { ...relationship, reading, requested: false, muted: reading && relationship.muted },
   };
 }
 
@@ -67,11 +86,15 @@ export function relationshipOf(
   viewerId: string,
   profileId: string,
   muted = false,
+  requested = false,
+  approves = false,
 ): Relationship {
   return {
     reading: rows.some((r) => r.reader_id === viewerId && r.author_id === profileId),
     readsYou: rows.some((r) => r.reader_id === profileId && r.author_id === viewerId),
     muted,
+    requested,
+    approves,
   };
 }
 

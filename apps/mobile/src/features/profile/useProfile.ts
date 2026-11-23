@@ -68,13 +68,13 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, display_name, bio, lid_color, reader_count, author_count, jar_count')
+    .select('id, username, display_name, bio, lid_color, reader_count, author_count, jar_count, is_private')
     .eq('username', name)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) return null;
   const profile = profileRow.parse(data);
-  const [follows, jars, mutes] = await Promise.all([
+  const [follows, jars, mutes, requests, approves] = await Promise.all([
     supabase
       .from('follows')
       .select('reader_id, author_id')
@@ -90,7 +90,12 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
       .limit(PROFILE_JAR_LIMIT),
     // Only the viewer's own mutes are readable (0151).
     supabase.from('mutes').select('muted_id').eq('muted_id', profile.id),
+    // Requests are readable by their two ends only (0176): this is the viewer's own, if any.
+    supabase.from('follow_requests').select('author_id').eq('reader_id', viewerId).eq('author_id', profile.id),
+    supabase.rpc('needs_reader_approval', { p_id: profile.id }),
   ]);
+  if (requests.error) throw new Error(requests.error.message);
+  if (approves.error) throw new Error(approves.error.message);
   if (follows.error) throw new Error(follows.error.message);
   if (mutes.error) throw new Error(mutes.error.message);
   if (jars.error) throw new Error(jars.error.message);
@@ -118,6 +123,8 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
       viewerId,
       profile.id,
       (mutes.data ?? []).length > 0,
+      (requests.data ?? []).length > 0,
+      approves.data === true,
     ),
     viewerId,
     images,

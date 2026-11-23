@@ -38,6 +38,8 @@ export type NotificationsViewProps = {
   onCapture: (slot: DaySlot) => void;
   onOpen: (target: NotificationTarget) => void;
   onFollow: (entry: NotificationEntry) => void;
+  /** Approve or Decline a request to read you (0176). */
+  onAnswerRequest?: (entry: NotificationEntry, approve: boolean) => void;
   locale?: string;
 };
 
@@ -58,6 +60,7 @@ export function NotificationsView({
   onCapture,
   onOpen,
   onFollow,
+  onAnswerRequest,
   locale = deviceLocale(),
 }: NotificationsViewProps) {
   const { t } = useTranslation();
@@ -162,6 +165,7 @@ export function NotificationsView({
                       divider={i < section.entries.length - 1}
                       onOpen={target ? () => onOpen(target) : null}
                       onFollow={() => onFollow(entry)}
+                      onAnswer={onAnswerRequest ? (approve) => onAnswerRequest(entry, approve) : undefined}
                       locale={locale}
                     />
                   );

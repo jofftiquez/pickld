@@ -72,7 +72,7 @@ export function FollowRow({
       </Pressable>
       {isViewer ? null : (
         <FollowButton
-          action={followAction({ reading: row.is_following, readsYou: row.follows_viewer })}
+          action={followAction({ reading: row.is_following, readsYou: row.follows_viewer, requested: row.requested })}
           name={row.display_name}
           onPress={onToggleReading}
           disabled={disabled}

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Avatar } from '@/components/Avatar';
 import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { Icon } from '@/components/Icon';
+import { PillButton } from '@/components/PillButton';
 import { formatWeekday } from '@/lib/format';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
@@ -26,6 +27,8 @@ export type NotificationRowProps = {
   divider: boolean;
   onOpen: (() => void) | null;
   onFollow: () => void;
+  /** A request to read you (0176): Approve or Decline in the row. */
+  onAnswer?: (approve: boolean) => void;
   locale: string;
 };
 
@@ -46,7 +49,9 @@ type SentenceKey =
   | 'notifications.appealDecided'
   | 'notifications.admitted'
   | 'notifications.inviteJoined'
-  | 'notifications.tag';
+  | 'notifications.tag'
+  | 'notifications.readerRequest'
+  | 'notifications.readerApproved';
 
 /** The sentence for an entry, with <bold> parts, as a translation key and its values. */
 function sentence(
@@ -104,11 +109,15 @@ function sentence(
       return { key: 'notifications.inviteJoined', values: { name } };
     case 'tag':
       return { key: 'notifications.tag', values: { name } };
+    case 'reader_request':
+      return { key: 'notifications.readerRequest', values: { name } };
+    case 'reader_approved':
+      return { key: 'notifications.readerApproved', values: { name } };
   }
 }
 
-/** One Notifications row (Notifications): avatar or icon, the sentence and its age, then a thumbnail or a
- * Read / Read back button. The whole row opens the related screen. */
+/** One Notifications row (Notifications): avatar or icon, the sentence and its age, then a thumbnail, a
+ * Read / Read back button, or Decline and Approve on a request to read you (0176). The whole row opens the related screen. */
 export function NotificationRow({
   entry,
   age,
@@ -118,6 +127,7 @@ export function NotificationRow({
   divider,
   onOpen,
   onFollow,
+  onAnswer,
   locale,
 }: NotificationRowProps) {
   const { t } = useTranslation();
@@ -175,6 +185,25 @@ export function NotificationRow({
       {follow !== null && actor ? (
         <FollowButton action={follow} name={actor.display_name} onPress={onFollow} testID="notification-follow" />
       ) : null}
+      {entry.type === 'reader_request' && actor && onAnswer ? (
+        <View style={styles.answer}>
+          <PillButton
+            variant="subtle"
+            label={t('readers.decline')}
+            accessibilityLabel={t('readers.declineA11y', { name: actor.display_name })}
+            accessibilityHint={t('readers.declineHint')}
+            onPress={() => onAnswer(false)}
+            testID="notification-decline"
+          />
+          <PillButton
+            label={t('readers.approve')}
+            accessibilityLabel={t('readers.approveA11y', { name: actor.display_name })}
+            accessibilityHint={t('readers.approveHint')}
+            onPress={() => onAnswer(true)}
+            testID="notification-approve"
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -187,6 +216,7 @@ const styles = StyleSheet.create({
   mainLarge: { flexBasis: '100%' },
   main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: sizes.minTap },
   text: { flex: 1, gap: 2 },
+  answer: { flexDirection: 'row', gap: space.sm },
   sentence: { color: colors.ink, lineHeight: 19 },
   iconWell: {
     width: sizes.notifyAvatar,
