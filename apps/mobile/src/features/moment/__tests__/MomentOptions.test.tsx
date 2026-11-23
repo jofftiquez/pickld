@@ -192,6 +192,7 @@ describe('Moment options', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['jar', USER] });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['queue', USER] });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['jarPage', USER] });
     expect(useToastStore.getState().current?.key).toBe('momentDeleted');
   });
 
@@ -211,6 +212,7 @@ describe('Moment options', () => {
     expect(setMomentVisibility).toHaveBeenCalledWith(mockClient, server.target, 'only_me');
     expect(choice(/^Only me/).props.accessibilityState).toMatchObject({ checked: true });
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['jar', USER] });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['jarPage', USER] });
 
     jest.mocked(setMomentVisibility).mockRejectedValueOnce(new Error('Network request failed'));
     await fireEvent.press(choice(/^Everyone/));

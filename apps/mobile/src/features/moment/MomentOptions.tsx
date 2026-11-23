@@ -76,6 +76,8 @@ export function MomentOptions({ visible, mode, selection, userId, freeSlots, tz,
     void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
     // The day page and its preview (D-55) read a past day through ['day', userId, date].
     void queryClient.invalidateQueries({ queryKey: ['day', userId] });
+    // The owner's jar page, which opens the preview too: its tiles, badges and count.
+    void queryClient.invalidateQueries({ queryKey: ['jarPage', userId] });
     void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
   };
 
