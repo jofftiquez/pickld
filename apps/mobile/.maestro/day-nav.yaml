@@ -26,6 +26,8 @@ appId: me.pickld.app
 - assertVisible:
     id: day-step-next
     text: Next day, Today
+# The past-day tag beside the date (#488): "Past day", or "Past day · Added later" while the jar has room.
+- assertVisible: 'Past day.*'
 - copyTextFrom:
     id: day-subtitle
 - evalScript: ${output.yesterday = maestro.copiedText}
