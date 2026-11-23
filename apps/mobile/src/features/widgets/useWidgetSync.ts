@@ -97,6 +97,9 @@ export function useWidgetSync(userId: string | null, filledSlots: readonly Enums
       nextUp: (tag) => t('widgets.nextUp', { tag }),
       full: t('widgets.full'),
       captureLabel: t('widgets.capture'),
+      short: (count, total) => t('widgets.short', { count, total }),
+      inlineNext: (short, tag) => t('widgets.inlineNext', { short, tag }),
+      inlineFull: (short) => t('widgets.inlineFull', { short }),
     };
     const entries = todayTimeline(key === '' ? [] : (key.split(',') as Enums<'slot'>[]), new Date(), tz, strings);
     try {
