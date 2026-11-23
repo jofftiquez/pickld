@@ -25,6 +25,7 @@ import { toPixels } from '@/features/edit/overlays/transform';
 import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from '@/features/jar/jarPage';
 import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
+import { useHideLikeCounts } from '@/features/settings/likeCounts';
 import { firstName } from '@/features/jar/shareJar';
 import { onCard } from '@/features/share/shareCard';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
@@ -102,6 +103,7 @@ export function MomentDetailView({
   locale = deviceLocale(),
 }: MomentDetailViewProps) {
   const { t } = useTranslation();
+  const hideLikes = useHideLikeCounts();
   const { width } = useWindowDimensions();
   const moments = data ? buildJarPage(data).moments : [];
   const start = moments.findIndex((m) => m.id === momentId.toLowerCase());
@@ -506,6 +508,7 @@ export function MomentDetailView({
             liked={isLiked(data, { kind: 'moment', id: moment.id })}
             height={sizes.momentAction}
             onPress={() => onToggleLike?.({ kind: 'moment', id: moment.id })}
+            hideCount={hideLikes}
             testID="moment-likes"
           />
           <CommentsButton

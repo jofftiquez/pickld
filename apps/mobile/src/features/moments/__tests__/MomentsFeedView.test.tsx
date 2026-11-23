@@ -4,6 +4,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { createGestureController } from 'react-native-gesture-handler/jest-utils';
 
 import type { FeedAuthor } from '@/features/feed/feedModel';
+import { useLikeCountsStore } from '@/features/settings/likeCounts';
+import { useAuthStore } from '@/lib/authStore';
+import type { Session } from '@supabase/supabase-js';
 
 import type { FeedMoment } from '../momentsModel';
 import { MomentsFeedView, type MomentsFeedViewProps } from '../MomentsFeedView';
@@ -150,6 +153,25 @@ describe('MomentsFeedView', () => {
     expect(screen.getByTestId('moments-like-m1').props.accessibilityState).toEqual({ selected: true });
     expect(screen.getByTestId('moments-like-m1').props.accessibilityLabel).toMatch(/4/);
     expect(screen.getByTestId('moments-comments-m1').props.accessibilityLabel).toMatch(/2/);
+  });
+
+  it('Hide like counts takes the number off the like pill, which still likes (calm controls)', async () => {
+    useAuthStore.getState().setSession({ user: { id: ME } } as Session);
+    useLikeCountsStore.setState({ userId: ME, hide: true });
+    try {
+      const h = await setup();
+      const like = screen.getByTestId('moments-like-m1');
+      expect(like.props.accessibilityLabel).toBe('Like');
+      expect(screen.queryByText('4')).toBeNull();
+      expect(screen.getByText('2')).toBeTruthy(); // comments keep their count
+      await fireEvent.press(like);
+      expect(h.onToggleLike).toHaveBeenCalledWith(mika);
+    } finally {
+      await act(async () => {
+        useLikeCountsStore.setState({ userId: null, hide: false });
+        useAuthStore.getState().setSession(null);
+      });
+    }
   });
 
   it('reading nobody, the user’s own moments sit under a Find people card (D-53)', async () => {

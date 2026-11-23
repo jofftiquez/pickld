@@ -15,6 +15,7 @@ import { colors, radius, shadow, sizes, space } from '@/theme/tokens';
 import { buildJarPage, isLiked, type JarMoment, type JarPageData, type LikeTarget } from './jarPage';
 import { CommentsButton } from './CommentsButton';
 import { LikeButton } from './LikeButton';
+import { useHideLikeCounts } from '@/features/settings/likeCounts';
 import { JarTile } from './JarTile';
 import { jarTitle } from './shareJar';
 
@@ -74,6 +75,7 @@ export function JarPageView({
   locale = deviceLocale(),
 }: JarPageViewProps) {
   const { t } = useTranslation();
+  const hideLikes = useHideLikeCounts();
   const { width } = useWindowDimensions();
 
   if (!data) {
@@ -205,6 +207,7 @@ export function JarPageView({
           liked={isLiked(data, { kind: 'jar' })}
           height={sizes.minTap}
           onPress={() => onToggleLike?.({ kind: 'jar' })}
+          hideCount={hideLikes}
           testID="jar-likes"
         />
         <CommentsButton

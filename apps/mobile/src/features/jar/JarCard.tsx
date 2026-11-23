@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MAX_LAYERS } from '@/components/JarGraphic';
 import { PillButton } from '@/components/PillButton';
 import type { Visibility } from '@/features/publish/publishJar';
+import { useHideLikeCounts } from '@/features/settings/likeCounts';
 import { PRESSED_OPACITY } from '@/components/BaseButton';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
@@ -61,18 +62,23 @@ export function JarCard({
   // Published: likes and the time go on their own line under who sees it, in the text column, instead of
   // a third line under the jar that said who sees it again. Two pieces, so at large sizes the time wraps
   // whole under the likes.
-  const likes = published ? t('today.likesDot', { likes: t('today.likes', { count: published.likeCount }) }) : null;
+  // Hide like counts (calm controls) leaves just the time.
+  const hideLikes = useHideLikeCounts();
+  const likes =
+    published && !hideLikes ? t('today.likesDot', { likes: t('today.likes', { count: published.likeCount }) }) : null;
   const publishedAt = published ? t('today.publishedAt', { time: published.time }) : null;
-  const publishedLine = likes !== null && publishedAt !== null ? `${likes} ${publishedAt}` : null;
+  const publishedLine = publishedAt === null ? null : likes === null ? publishedAt : `${likes} ${publishedAt}`;
   const lines = (
     <>
       <Text style={[textStyle('jarCardTitle'), { color: colors.surface }]}>{title}</Text>
       <Text style={[textStyle(firstDay ? 'bodySmall' : 'label', '500'), { color: colors.onDarkMuted }]}>
         {subtitle}
       </Text>
-      {likes !== null && publishedAt !== null ? (
+      {publishedAt !== null ? (
         <View style={styles.publishedLine} testID="today-published-line">
-          <Text style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}>{likes}</Text>
+          {likes !== null ? (
+            <Text style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}>{likes}</Text>
+          ) : null}
           <Text style={[textStyle('label', '500'), { color: colors.onDarkMuted }]}>{publishedAt}</Text>
         </View>
       ) : null}

@@ -8,6 +8,7 @@ import { parseEdits } from '@/features/edit/edits';
 import { CommentsButton } from '@/features/jar/CommentsButton';
 import { LikeButton } from '@/features/jar/LikeButton';
 import { describedLabel } from '@/features/moment/momentRender';
+import { useHideLikeCounts } from '@/features/settings/likeCounts';
 import { MomentView } from '@/features/moment/MomentView';
 import { FollowButton } from '@/features/profile/FollowButton';
 import { deviceLocale, formatDate, formatShortDate, formatTime } from '@/lib/format';
@@ -56,6 +57,7 @@ export function MomentFeedCard({
   locale = deviceLocale(),
 }: MomentFeedCardProps) {
   const { t } = useTranslation();
+  const hideLikes = useHideLikeCounts();
   const at = new Date(moment.captured_at ?? moment.added_at);
   const slot = t(`slots.${moment.slot}`);
   // A backfilled moment sits with the day it was added (the timeline is ordered by added_at), so the line names
@@ -169,6 +171,7 @@ export function MomentFeedCard({
           liked={moment.liked}
           height={sizes.momentAction}
           onPress={onToggleLike}
+          hideCount={hideLikes}
           testID={`moments-like-${moment.moment_id}`}
         />
         <CommentsButton

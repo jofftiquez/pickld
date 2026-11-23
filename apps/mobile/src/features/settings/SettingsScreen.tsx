@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMirrorSelfies } from '@/features/capture/cameraPrefs';
 import { leftToGive } from '@/features/invite/invites';
 import { useInvites } from '@/features/invite/useInvites';
+import { phoneTimeZone } from '@/features/jar/useToday';
 import { usePendingUploads } from '@/features/pending/usePendingUploads';
 import { useBlockedAccounts } from '@/features/safety/block';
 import { useCloseFriendIds } from '@/features/settings/closeFriends';
@@ -14,9 +15,10 @@ import { openLegal } from '@/lib/auth';
 import { useAuthStore } from '@/lib/authStore';
 import { resetTo } from '@/lib/navigation';
 
+import { setHideLikeCounts, useHideLikeCounts } from './likeCounts';
 import { SettingsView } from './SettingsView';
 import { signOutHere } from './signOut';
-import { useSettings } from './useSettings';
+import { breakEnds, useSettings } from './useSettings';
 
 /** /settings (M4-16): wires Settings to the user's data, the reminder schedule, this phone's camera
  * preference and sign-out. */
@@ -26,8 +28,18 @@ export function SettingsScreen() {
   const queryClient = useQueryClient();
   const session = useAuthStore((s) => s.session);
   const userId = session?.user.id ?? '';
-  const { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable, savePrivate } =
-    useSettings(userId);
+  const {
+    account,
+    reminders,
+    prefs,
+    saveReminder,
+    savePref,
+    saveBreak,
+    saveVisibility,
+    saveDiscoverable,
+    savePrivate,
+  } = useSettings(userId);
+  const hideLikeCounts = useHideLikeCounts();
   const blocked = useBlockedAccounts();
   const closeFriends = useCloseFriendIds();
   const { invites } = useInvites();
@@ -62,6 +74,11 @@ export function SettingsScreen() {
       onEditProfile={() => router.push('/settings/profile')}
       onReminder={(slot, change) => saveReminder.mutate({ slot, ...change }, onSaved)}
       onPref={(key, value) => savePref.mutate({ key, value }, onSaved)}
+      hideLikeCounts={hideLikeCounts}
+      onHideLikeCounts={(hide) => void setHideLikeCounts(userId, hide).catch(() => {})}
+      onBreak={(days) =>
+        saveBreak.mutate(days === null ? null : breakEnds(days, new Date(), phoneTimeZone()).toISOString(), onSaved)
+      }
       mirrorSelfies={mirrorSelfies}
       onMirrorSelfies={setMirrorSelfies}
       onVisibility={(v) => saveVisibility.mutate(v, onSaved)}

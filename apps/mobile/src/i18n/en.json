@@ -197,7 +197,9 @@
     "cardLabel_other": "{{name}}’s jar, {{count}} of {{max}} moments. {{updated}}. {{likes}} likes, {{comments}} comments",
     "caughtUp": "You’re all caught up",
     "caughtUpJars": "Jars you’ve already seen are below.",
-    "caughtUpMoments": "Moments you’ve already seen are below."
+    "caughtUpMoments": "Moments you’ve already seen are below.",
+    "cardLabelNoLikes_one": "{{name}}’s jar, {{count}} of {{max}} moment. {{updated}}. {{comments}} comments",
+    "cardLabelNoLikes_other": "{{name}}’s jar, {{count}} of {{max}} moments. {{updated}}. {{comments}} comments"
   },
   "moments": {
     "title": "Moments",
@@ -243,6 +245,7 @@
     "openMomentHint": "Opens the moment",
     "likeHint": "Likes it",
     "unlikeHint": "Removes your like",
+    "like": "Like",
     "likes_one": "{{count}} like",
     "likes_other": "{{count}} likes",
     "comments_one": "{{count}} comment",
@@ -1973,6 +1976,22 @@
     },
     "quietHours": "Quiet hours",
     "quietHoursBody": "No pushes from {{start}} to {{end}}",
+    "calm": "Calm",
+    "hideLikes": "Hide like counts",
+    "hideLikesBody": "No like numbers on posts, yours included. You can still like things.",
+    "takeBreak": "Take a break",
+    "takeBreakHint": "Pauses your reminders and pushes for a while",
+    "breakOff": "Off",
+    "breakUntil": "Until {{date}}",
+    "breakBody": "Your reminders and pushes about readers, likes, comments and tags stop until the break ends. Everything still waits in Notifications. Nobody is told you’re away.",
+    "breakOnBody": "Paused through {{date}}. Pick a new length or end it now.",
+    "breakFor": {
+      "1": "For the rest of today",
+      "3": "For 3 days",
+      "7": "For a week",
+      "14": "For 2 weeks"
+    },
+    "breakEnd": "End break now",
     "camera": "Camera",
     "pending": "Pending uploads",
     "mirrorSelfies": "Mirror selfies",

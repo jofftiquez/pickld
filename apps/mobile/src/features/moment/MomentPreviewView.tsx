@@ -18,6 +18,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 import { GlassSurface } from '@/components/GlassSurface';
 import { RoundIconButton } from '@/components/RoundIconButton';
 import { VISIBILITY_ICON, VisibilityBadge } from '@/components/VisibilityBadge';
+import { useHideLikeCounts } from '@/features/settings/likeCounts';
 import { deviceLocale, formatShortDate, formatTime } from '@/lib/format';
 import { useLargeText } from '@/lib/useLargeText';
 import { VISIBILITY_KEY } from '@/lib/visibility';
@@ -86,6 +87,7 @@ export function MomentPreviewView({
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const large = useLargeText();
+  const hideLikes = useHideLikeCounts();
   // The moment on screen, by key, so a refresh (a move, a delete, an upload) keeps it or its neighbour.
   const [shown, setShown] = useState<{ key: string; slot: Slot }>({ key: '', slot: startSlot });
   const list = useRef<FlatList<PreviewItem>>(null);
@@ -279,7 +281,9 @@ export function MomentPreviewView({
           ) : null}
           {item.likeCount !== null && item.commentCount !== null ? (
             <Text style={[textStyle('bodySmall', '600'), styles.ink]} testID="preview-counts">
-              {t('preview.likes', { count: item.likeCount })} · {t('preview.comments', { count: item.commentCount })}
+              {hideLikes
+                ? t('preview.comments', { count: item.commentCount })
+                : `${t('preview.likes', { count: item.likeCount })} · ${t('preview.comments', { count: item.commentCount })}`}
             </Text>
           ) : null}
           {note ? (

@@ -5,6 +5,7 @@ import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { JarGraphic, MAX_LAYERS } from '@/components/JarGraphic';
 import { FollowButton } from '@/features/profile/FollowButton';
+import { useHideLikeCounts } from '@/features/settings/likeCounts';
 import { deviceLocale, formatDate } from '@/lib/format';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
@@ -39,6 +40,7 @@ export function FeedJarCard({
 }: FeedJarCardProps) {
   const { t } = useTranslation();
   const large = useLargeText();
+  const hideLikes = useHideLikeCounts();
   const age = ageOf(jar.feed_at, now);
   const updatedAgo = t(`feed.updated.${age.unit}`, { count: age.count });
   // The timeline is ordered by when things were added, so a backfilled jar sits with today's posts: say which
@@ -49,7 +51,7 @@ export function FeedJarCard({
         date: formatDate(new Date(`${jar.local_date}T12:00:00Z`), 'UTC', locale),
       })
     : updatedAgo;
-  const label = t('feed.cardLabel', {
+  const label = t(hideLikes ? 'feed.cardLabelNoLikes' : 'feed.cardLabel', {
     name: jar.author_display_name,
     count: jar.visible_count,
     max: MAX_LAYERS,
@@ -84,10 +86,12 @@ export function FeedJarCard({
       </View>
       <FeedMosaic mosaic={buildMosaic(jar)} />
       <View style={styles.footer}>
-        <View style={styles.stat}>
-          <Icon name="heart" color="muted" size={16} />
-          <Text style={[textStyle('bodySmall', '500'), { color: colors.muted }]}>{jar.like_count}</Text>
-        </View>
+        {hideLikes ? null : (
+          <View style={styles.stat} testID="feed-jar-likes">
+            <Icon name="heart" color="muted" size={16} />
+            <Text style={[textStyle('bodySmall', '500'), { color: colors.muted }]}>{jar.like_count}</Text>
+          </View>
+        )}
         <View style={styles.stat}>
           <Icon name="comment" color="muted" size={16} />
           <Text style={[textStyle('bodySmall', '500'), { color: colors.muted }]}>{jar.comment_count}</Text>

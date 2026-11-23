@@ -1,7 +1,8 @@
 // Runs the reminder plan and the push token on Today (FR-NOT-01, FR-NOT-02): on open (Today mounting and the
 // app coming back to the foreground, which also catches a zone change), when a slot fills or empties, and
 // when the reminder settings change. Nothing happens until notifications are allowed; the Permissions
-// screen (M4-07) asks. Reminder settings come from reminder_settings over the defaults, read as the user.
+// screen (M4-07) asks. Reminder settings come from reminder_settings over the defaults, and a break's end
+// from notification_prefs.break_until (0180), both read as the user.
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +38,23 @@ export async function fetchReminderSettings(userId: string): Promise<ReminderSet
   );
 }
 
-export const reminderQueryKeys = { settings: (userId: string) => ['reminders', userId] as const };
+/** Take a break (0180): when the break ends, or null when there is none. */
+export async function fetchBreakUntil(userId: string): Promise<Date | null> {
+  const { data, error } = await getSupabase()
+    .from('notification_prefs')
+    .select('break_until')
+    .eq('user_id', userId)
+    .single();
+  if (error) throw new Error(error.message);
+  const until = z.object({ break_until: z.string().nullable() }).parse(data).break_until;
+  return until === null ? null : new Date(until);
+}
+
+/** Both under ['reminders', userId], so invalidating that refreshes the plan's inputs together. */
+export const reminderQueryKeys = {
+  settings: (userId: string) => ['reminders', userId] as const,
+  breakUntil: (userId: string) => ['reminders', userId, 'break'] as const,
+};
 
 /** `filled`: the day slots of today's jar that hold a photo (server or queued). */
 export function useReminderSync(userId: string | null, filled: readonly DaySlot[]) {
@@ -46,6 +63,11 @@ export function useReminderSync(userId: string | null, filled: readonly DaySlot[
   const settings = useQuery({
     queryKey: reminderQueryKeys.settings(userId ?? ''),
     queryFn: () => fetchReminderSettings(userId ?? ''),
+    enabled: userId !== null,
+  });
+  const breakUntil = useQuery({
+    queryKey: reminderQueryKeys.breakUntil(userId ?? ''),
+    queryFn: () => fetchBreakUntil(userId ?? ''),
     enabled: userId !== null,
   });
 
@@ -64,8 +86,14 @@ export function useReminderSync(userId: string | null, filled: readonly DaySlot[
 
   const filledKey = [...filled].sort().join(',');
   const settingsData = settings.data;
+  // Waits for the break to load; if it can't be read, reminders are planned as if there were none.
+  const breakMs = breakUntil.isError
+    ? null
+    : breakUntil.data === undefined
+      ? undefined
+      : (breakUntil.data?.getTime() ?? null);
   useEffect(() => {
-    if (userId === null || settingsData === undefined) return;
+    if (userId === null || settingsData === undefined || breakMs === undefined) return;
     let cancelled = false;
     void (async () => {
       if (!(await notificationsAllowed()) || cancelled) return;
@@ -74,6 +102,7 @@ export function useReminderSync(userId: string | null, filled: readonly DaySlot[
         tz: phoneTimeZone(),
         now: new Date(),
         filledToday: new Set(filledKey === '' ? [] : (filledKey.split(',') as DaySlot[])),
+        breakUntil: breakMs === null ? null : new Date(breakMs),
       });
       await syncReminders(
         plan,
@@ -87,5 +116,5 @@ export function useReminderSync(userId: string | null, filled: readonly DaySlot[
     return () => {
       cancelled = true;
     };
-  }, [userId, settingsData, filledKey, openedAt, t]);
+  }, [userId, settingsData, breakMs, filledKey, openedAt, t]);
 }

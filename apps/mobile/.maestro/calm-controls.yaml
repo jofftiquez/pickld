@@ -1,0 +1,107 @@
+# Calm controls (FR-NOT-04): Hide like counts takes the number off the Jars feed and the Jar page's like pill,
+# and Take a break pauses reminders and pushes until a chosen day, then ends early. Leaves both off again.
+# Needs the seed data (dale reads mika; mika has a jar today) and dale signed in:
+# maestro test apps/mobile/.maestro/calm-controls.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- openLink: pickld://settings
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: settings-screen
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: settings-break
+    direction: DOWN
+    centerElement: true
+- assertVisible: Calm
+- assertVisible: 'Take a break, Off'
+- tapOn:
+    id: settings-hide-likes
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: CalmSettings-ios
+- tapOn:
+    id: settings-break
+- extendedWaitUntil:
+    visible:
+      id: settings-break-3
+    timeout: 5000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: TakeABreakSheet-ios
+- tapOn:
+    id: settings-break-3
+- extendedWaitUntil:
+    visible: 'Take a break, Until .*'
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: OnABreak-ios
+
+# The feed and the Jar page without like numbers.
+- tapOn:
+    id: settings-back
+- extendedWaitUntil:
+    visible:
+      id: tab-jars
+    timeout: 10000
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 40000
+- assertNotVisible:
+    id: feed-jar-likes
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: JarsNoLikeCounts-ios
+- tapOn:
+    id: feed-card-mika
+- extendedWaitUntil:
+    visible:
+      id: jar-likes
+    timeout: 40000
+- assertVisible:
+    id: jar-likes
+    text: Like
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: JarPageNoLikeCount-ios
+
+# Both off again.
+- openLink: pickld://settings
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: settings-screen
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      id: settings-break
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: settings-break
+- tapOn:
+    id: settings-break-end
+- extendedWaitUntil:
+    visible: 'Take a break, Off'
+    timeout: 10000
+- tapOn:
+    id: settings-hide-likes

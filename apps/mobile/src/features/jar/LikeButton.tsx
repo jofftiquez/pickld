@@ -17,6 +17,8 @@ export type LikeButtonProps = {
   /** Pill height: 44 on the Jar page bar, 46 in Moment detail's sheet, 40 on Pack preview. */
   height: number;
   onPress: () => void;
+  /** Hide like counts (calm controls): the heart without the number. */
+  hideCount?: boolean;
   testID?: string;
 };
 
@@ -25,7 +27,7 @@ const HEART_POP_FROM = 0.6;
 
 /** The like count pill on the Jar page, Moment detail, the Moments timeline (Story, Moment; FR-SOC-05) and Pack
  * preview (FR-STK-07): a green heart, filled once liked, which pops in with a light haptic (D-58). */
-export function LikeButton({ count, liked, height, onPress, testID }: LikeButtonProps) {
+export function LikeButton({ count, liked, height, onPress, hideCount = false, testID }: LikeButtonProps) {
   const { t } = useTranslation();
   const [pressed, setPressed] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -33,7 +35,7 @@ export function LikeButton({ count, liked, height, onPress, testID }: LikeButton
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t('jarPage.likes', { count })}
+      accessibilityLabel={hideCount ? t('jarPage.like') : t('jarPage.likes', { count })}
       accessibilityHint={liked ? t('jarPage.unlikeHint') : t('jarPage.likeHint')}
       accessibilityState={{ selected: liked }}
       onPress={() => {
@@ -49,7 +51,7 @@ export function LikeButton({ count, liked, height, onPress, testID }: LikeButton
       <Animated.View style={heart} testID={liked ? `like-heart-${reduceMotion ? 'fade' : 'pop'}` : 'like-heart'}>
         <Icon name="heart" color="brandText" size={16} strokeWidth={2.2} filled={liked} />
       </Animated.View>
-      <Text style={[textStyle('bodyMedium', '700'), { color: colors.brandText }]}>{count}</Text>
+      {hideCount ? null : <Text style={[textStyle('bodyMedium', '700'), { color: colors.brandText }]}>{count}</Text>}
     </Pressable>
   );
 }

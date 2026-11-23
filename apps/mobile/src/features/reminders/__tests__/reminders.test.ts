@@ -33,6 +33,22 @@ describe('planReminders', () => {
     expect(ids(plan)).toContain('2026-11-12:evening');
   });
 
+  it('on a break, nothing fires before it ends and reminders pick up right after', () => {
+    // Ends 13:30 on Sat in Manila: Sat's morning and afternoon (13:00) are held, Sat's evening is the first.
+    const breakUntil = new Date('2026-11-14T05:30:00Z');
+    const plan = planReminders({ settings: DEFAULT_REMINDERS, tz: MANILA, now, filledToday: new Set(), breakUntil });
+    expect(ids(plan)[0]).toBe('2026-11-14:evening');
+    expect(plan).toHaveLength(7 * 3 - 1 - 7);
+    const ended = planReminders({
+      settings: DEFAULT_REMINDERS,
+      tz: MANILA,
+      now,
+      filledToday: new Set(),
+      breakUntil: new Date('2026-11-11T00:00:00Z'),
+    });
+    expect(ended).toHaveLength(7 * 3 - 1);
+  });
+
   it('leaves out a slot turned off, every day', () => {
     const settings = mergeSettings([{ slot: 'evening', minutes: 19 * 60 + 30, enabled: false }]);
     const plan = planReminders({ settings, tz: MANILA, now, filledToday: new Set() });

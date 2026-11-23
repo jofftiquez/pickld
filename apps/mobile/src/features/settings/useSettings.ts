@@ -3,7 +3,8 @@
 // profiles.default_visibility, profiles.discoverable (0150) and profiles.is_private (0176) (owner update; read back through
 // my_profile). Saves update the cache first so switches move at once, and
 // roll back if the write fails. A reminder change invalidates ['reminders', userId], which Today's
-// useReminderSync watches, so the phone's scheduled reminders follow (FR-NOT-01).
+// useReminderSync watches, so the phone's scheduled reminders follow (FR-NOT-01). Take a break
+// (notification_prefs.break_until, 0180) invalidates it too: Today leaves out reminders before the break ends.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
@@ -13,7 +14,7 @@ import { fetchReminderSettings, reminderQueryKeys } from '@/features/reminders/u
 import type { ReminderSetting } from '@/features/reminders/reminderPlan';
 import type { Visibility } from '@/features/publish/publishJar';
 import { todayQueryKeys } from '@/features/jar/useToday';
-import type { DaySlot } from '@/lib/jars';
+import { addDays, localDateIn, localTimeToInstant, type DaySlot } from '@/lib/jars';
 import { getSupabase } from '@/lib/supabase';
 
 /** The push types a person can turn off (FR-NOT-04). Removal and appeal notices stay on: they are about safety. */
@@ -41,9 +42,19 @@ const prefsRow = z.object({
   quiet_hours: z.boolean(),
   quiet_start: z.string(),
   quiet_end: z.string(),
+  break_until: z.string().nullable(),
 });
 export type NotificationPrefs = z.infer<typeof prefsRow>;
 export type PrefKey = PushType | 'quiet_hours';
+
+/** Take a break lengths, in days: today, 3 days, a week, 2 weeks. */
+export const BREAK_DAYS = [1, 3, 7, 14] as const;
+export type BreakDays = (typeof BREAK_DAYS)[number];
+
+/** A break of `days` days, today included, ends at the local midnight after its last day. */
+export function breakEnds(days: BreakDays, now: Date, tz: string): Date {
+  return localTimeToInstant(addDays(localDateIn(now, tz), days), 0, tz);
+}
 
 const accountRow = z.object({
   username: z.string(),
@@ -103,7 +114,7 @@ async function fetchPrefs(userId: string): Promise<NotificationPrefs> {
   const { data, error } = await getSupabase()
     .from('notification_prefs')
     .select(
-      'new_reader, like, comment, reply, full_jar, friend_joined, tag, together, quiet_hours, quiet_start, quiet_end',
+      'new_reader, like, comment, reply, full_jar, friend_joined, tag, together, quiet_hours, quiet_start, quiet_end, break_until',
     )
     .eq('user_id', userId)
     .single();
@@ -189,6 +200,21 @@ export function useSettings(userId: string) {
     },
   );
 
+  /** Take a break: when it ends (ISO), or null to end it now. */
+  const saveBreak = useOptimistic<NotificationPrefs, string | null>(
+    settingsQueryKeys.prefs(userId),
+    (p, until) => ({ ...p, break_until: until }),
+    async (until) => {
+      const { error } = await getSupabase()
+        .from('notification_prefs')
+        .update({ break_until: until })
+        .eq('user_id', userId);
+      if (error) throw new Error(error.message);
+    },
+    // Today's useReminderSync re-plans the phone's reminders from the new end.
+    () => void queryClient.invalidateQueries({ queryKey: reminderQueryKeys.settings(userId) }),
+  );
+
   const saveVisibility = useOptimistic<SettingsAccount, Visibility>(
     settingsQueryKeys.account(userId),
     (a, v) => ({ ...a, defaultVisibility: v }),
@@ -224,5 +250,15 @@ export function useSettings(userId: string) {
     },
   );
 
-  return { account, reminders, prefs, saveReminder, savePref, saveVisibility, saveDiscoverable, savePrivate };
+  return {
+    account,
+    reminders,
+    prefs,
+    saveReminder,
+    savePref,
+    saveBreak,
+    saveVisibility,
+    saveDiscoverable,
+    savePrivate,
+  };
 }

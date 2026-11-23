@@ -42,6 +42,10 @@ jest.mock('expo-sqlite/kv-store', () => ({
     setItem: async (k: string, v: string) => void mockDisk.set(k, v),
   },
 }));
+jest.mock('@/features/jar/useToday', () => ({
+  ...jest.requireActual('@/features/jar/useToday'),
+  phoneTimeZone: () => 'Asia/Manila',
+}));
 jest.mock('@/features/safety/block', () => ({ useBlockedAccounts: () => ({ rows: [] }) }));
 jest.mock('@/features/profile/useProfile', () => ({
   profileImages: async () => ({ avatar: null, cover: null }),
@@ -99,6 +103,7 @@ jest.mock('@/lib/supabase', () => ({
               quiet_hours: true,
               quiet_start: '22:00:00',
               quiet_end: '07:00:00',
+              break_until: null,
             };
       const select = () => {
         const q = {
@@ -196,6 +201,42 @@ describe('Settings', () => {
     await waitFor(() => expect(props().account?.isPrivate).toBe(false));
     await act(async () => props().onPrivate(true));
     await waitFor(() => expect(mockDb.writes).toContainEqual(['profiles', 'update', { is_private: true }]));
+  });
+
+  it('Take a break saves the midnight after its last day, re-plans reminders, and can end early (0180)', async () => {
+    jest.useFakeTimers({
+      now: new Date('2026-11-23T02:00:00Z'),
+      doNotFake: ['setTimeout', 'setImmediate', 'nextTick'],
+    });
+    try {
+      const { invalidate } = await renderScreen();
+      // Mon 10:00 in Manila: 3 days is Mon to Wed, so it ends at Thu 00:00 Manila (Wed 16:00 UTC).
+      await act(async () => props().onBreak(3));
+      await waitFor(() =>
+        expect(mockDb.writes).toContainEqual([
+          'notification_prefs',
+          'update',
+          { break_until: '2026-11-25T16:00:00.000Z' },
+        ]),
+      );
+      await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: reminderQueryKeys.settings('u-1') }));
+      await act(async () => props().onBreak(null));
+      await waitFor(() =>
+        expect(mockDb.writes).toContainEqual(['notification_prefs', 'update', { break_until: null }]),
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('Hide like counts is off by default and kept on this phone for this account only', async () => {
+    mockDisk.clear();
+    await renderScreen();
+    await waitFor(() => expect(props().hideLikeCounts).toBe(false));
+    await act(async () => props().onHideLikeCounts(true));
+    expect(props().hideLikeCounts).toBe(true);
+    await waitFor(() => expect(mockDisk.get('hideLikeCounts:u-1')).toBe('on'));
+    expect(mockDb.writes).toEqual([]);
   });
 
   it('a failed save puts the switch back and says so', async () => {
