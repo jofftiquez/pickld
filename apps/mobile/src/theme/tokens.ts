@@ -452,6 +452,7 @@ export const sizes = {
   notifyReminderIcon: 44, // slot icon well on the pinned reminder card
   countJar: 14, // jar icon in a feed card's "6/8" pill
   zoneIcon: 38, // icon well on the Time zone banner (TimeZone)
+  caughtUpIcon: 32, // check circle on the "You're all caught up" line in Moments and Jars
   shutter: 84, // camera shutter ring (Camera)
   shutterInner: 68,
   shutterRing: 4,

@@ -1,4 +1,4 @@
-import { hasUnread, newestJarAt, newestMomentAt, SEEN_EMPTY, seenKey, seenUpdate } from '../tabUnread';
+import { caughtUpRow, hasUnread, newestJarAt, newestMomentAt, SEEN_EMPTY, seenKey, seenUpdate } from '../tabUnread';
 
 const me = 'user-me';
 const friend = 'user-friend';
@@ -124,5 +124,37 @@ describe('tab unread dots (FR-EXP-04, D-157)', () => {
     expect(seenKey('moments', me)).toBe('unreadSeen:moments:user-me');
     expect(seenKey('jars', me)).toBe('unreadSeen:jars:user-me');
     expect(new Set([seenKey('moments', me), seenKey('jars', me), seenKey('moments', friend)]).size).toBe(3);
+  });
+});
+
+describe('"You’re all caught up" line', () => {
+  const row = (r: { id: string; author_id: string; added_at: string }) => ({
+    key: r.id,
+    authorId: r.author_id,
+    at: r.added_at,
+  });
+  const m = (id: string, author_id: string, added_at: string) => ({ id, author_id, added_at });
+  const seenAt = '2026-11-14T10:00:00Z';
+
+  it('sits above the first row from the last visit, counting a row seen at exactly the seen time as old', () => {
+    const rows = [
+      m('a', friend, '2026-11-14T12:00:00Z'),
+      m('b', me, '2026-11-14T11:00:00Z'),
+      // Same instant as seenAt, written the Postgres way: already seen.
+      m('c', friend, '2026-11-14T10:00:00.000000+00:00'),
+      m('d', friend, '2026-11-14T09:00:00Z'),
+    ];
+    expect(caughtUpRow(rows, seenAt, me, row)).toBe('c');
+  });
+
+  it('shows nothing when nothing above is new from someone else, on a first run, or when all rows are new', () => {
+    const onlyMine = [m('a', me, '2026-11-14T12:00:00Z'), m('b', friend, '2026-11-14T09:00:00Z')];
+    expect(caughtUpRow(onlyMine, seenAt, me, row)).toBeNull();
+    const nothingNew = [m('a', friend, '2026-11-14T09:00:00Z')];
+    expect(caughtUpRow(nothingNew, seenAt, me, row)).toBeNull();
+    const old = [m('a', friend, '2026-11-14T12:00:00Z'), m('b', friend, '2026-11-14T09:00:00Z')];
+    expect(caughtUpRow(old, null, me, row)).toBeNull();
+    // The seen rows are on a page that hasn't loaded yet: no line at the end of what's loaded.
+    expect(caughtUpRow([m('a', friend, '2026-11-14T12:00:00Z')], seenAt, me, row)).toBeNull();
   });
 });

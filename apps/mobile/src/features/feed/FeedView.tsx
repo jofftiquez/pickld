@@ -14,6 +14,7 @@ import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { useBackToTop, type BackToTopMode } from '@/lib/useBackToTop';
 import { colors, sizes, space } from '@/theme/tokens';
 
+import { CaughtUpLine } from './CaughtUpLine';
 import { FeedEmpty } from './FeedEmpty';
 import { FeedJarCard } from './FeedJarCard';
 import type { FeedAuthor, FeedJar } from './feedModel';
@@ -49,6 +50,8 @@ export type FeedViewProps = {
   onOpenProfile?: (username: string | null) => void;
   onFindPeople: () => void;
   onInvite: () => void;
+  /** The row the "You're all caught up" line sits above: the first one already there on the last visit. */
+  caughtUpBefore?: string | null;
 };
 
 /** First name for an avatar label ("Mika Reyes" → "Mika"). */
@@ -82,6 +85,7 @@ export function FeedView({
   onOpenProfile,
   onFindPeople,
   onInvite,
+  caughtUpBefore = null,
   guideTip = null,
 }: FeedViewProps) {
   const { t } = useTranslation();
@@ -170,8 +174,10 @@ export function FeedView({
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
         data={jars ?? []}
         keyExtractor={(jar) => jar.jar_id}
+        extraData={caughtUpBefore}
         renderItem={({ item }) => (
           <View style={styles.cardWrap}>
+            {item.jar_id === caughtUpBefore ? <CaughtUpLine timeline="jars" /> : null}
             <FeedJarCard
               jar={item}
               now={now}

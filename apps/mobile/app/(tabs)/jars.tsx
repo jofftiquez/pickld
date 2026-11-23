@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GuideTip } from '@/features/guide/GuideTip';
 import { useGuideTip } from '@/features/guide/useGuideTip';
 import { FeedView } from '@/features/feed/FeedView';
+import { caughtUpRow } from '@/features/feed/tabUnread';
 import { useFeed } from '@/features/feed/useFeed';
+import { useSeenBeforeVisit } from '@/features/feed/useTabUnread';
 import { fetchMe, todayQueryKeys } from '@/features/jar/useToday';
 import { useTimelineJump } from '@/features/scrubber/useTimelineJump';
 import { useAvatarUrls } from '@/lib/avatars';
@@ -35,6 +37,13 @@ export default function JarsScreen() {
   ]);
   // The spinner shows only for a pull, not for background refetches (focus, reconnect, app start).
   const [pulling, setPulling] = useState(false);
+  // "You're all caught up" above the first jar that was already here on the last visit; order unchanged.
+  const seenAt = useSeenBeforeVisit('jars');
+  const caughtUpBefore = useMemo(
+    () =>
+      caughtUpRow(feed.jars ?? [], seenAt, userId, (j) => ({ key: j.jar_id, authorId: j.author_id, at: j.feed_at })),
+    [feed.jars, seenAt, userId],
+  );
   // "Updated 2h ago" follows the clock.
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -95,6 +104,7 @@ export default function JarsScreen() {
         }}
         onFindPeople={() => router.navigate('/discover')}
         onInvite={() => router.push('/invite')}
+        caughtUpBefore={caughtUpBefore}
         guideTip={
           guide.tip === 'feed' ? (
             <GuideTip id="feed" arrow={{ side: 'top', align: 'start' }} onClose={guide.close} tipRef={guide.tipRef} />
