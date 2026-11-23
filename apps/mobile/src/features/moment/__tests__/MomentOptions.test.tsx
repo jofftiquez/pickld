@@ -195,13 +195,14 @@ describe('Moment options', () => {
     expect(useToastStore.getState().current?.key).toBe('momentDeleted');
   });
 
-  it('Visibility opens Readers, Everyone and Only me; a choice applies at once, a failure keeps the old one', async () => {
+  it('Visibility opens Readers, Everyone, Close friends and Only me; a choice applies at once, a failure keeps the old one', async () => {
     const { onClose } = await renderOptions();
     await fireEvent.press(row('Visibility: Readers'));
     const choice = (name: RegExp) => screen.getByRole('radio', { name });
     expect(screen.getAllByRole('radio').map((r) => r.props.accessibilityLabel)).toEqual([
       'Readers, People who read your days',
       'Everyone, Anyone on Pickld, unless your account is Private',
+      'Close friends, People on your Close friends list',
       'Only me, Only you will see this moment',
     ]);
     expect(choice(/^Readers/).props.accessibilityState).toMatchObject({ checked: true });

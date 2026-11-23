@@ -306,6 +306,10 @@ export function MomentDetailView({
             <View accessible accessibilityLabel={t('tile.a11y.private')} testID="moment-private">
               <Icon name="lock" color="muted" size={16} strokeWidth={2} />
             </View>
+          ) : moment.visibility === 'close_friends' ? (
+            <View accessible accessibilityLabel={t('moments.closeFriends')} testID="moment-close-friends">
+              <Icon name="star" color="muted" size={16} strokeWidth={2} />
+            </View>
           ) : null}
         </View>
         {caption ? (

@@ -91,6 +91,7 @@ export default function RootLayout() {
         <Stack.Screen name="u/[username]/readers" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="settings/profile" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="settings/blocked" options={{ animation: reduceMotion ? 'none' : 'default' }} />
+        <Stack.Screen name="settings/close-friends" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         <Stack.Screen name="invite" options={{ animation: reduceMotion ? 'none' : 'default' }} />
         {/* How Pickld works (FR-ONB-10) opens over the screen it came from. */}
         <Stack.Screen

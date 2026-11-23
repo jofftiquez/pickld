@@ -36,6 +36,8 @@ export type SettingsViewProps = {
   reminders: ReminderSetting[] | undefined;
   prefs: NotificationPrefs | undefined;
   blockedCount: number | undefined;
+  /** How many people are on the Close friends list (0179); undefined while unknown. */
+  closeFriendsCount: number | undefined;
   version: string;
   failed: boolean;
   saveFailed: boolean;
@@ -55,6 +57,7 @@ export type SettingsViewProps = {
   /** Private account (0176). */
   onPrivate: (on: boolean) => void;
   onBlocked: () => void;
+  onCloseFriends: () => void;
   onMyStickers: () => void;
   /** Invite friends (INV-07): opens the Invite page. */
   onInvite?: () => void;
@@ -269,6 +272,13 @@ export function SettingsView(props: SettingsViewProps) {
               accessibilityHint={t('settings.defaultVisibilityHint')}
               onPress={() => setVisibilityOpen(true)}
               testID="settings-visibility"
+            />
+            <ListRow
+              label={t('settings.closeFriends')}
+              value={props.closeFriendsCount ? String(props.closeFriendsCount) : undefined}
+              accessibilityHint={t('settings.closeFriendsHint')}
+              onPress={props.onCloseFriends}
+              testID="settings-close-friends"
             />
             <View style={styles.switchRow}>
               <View style={styles.rowLabel} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>

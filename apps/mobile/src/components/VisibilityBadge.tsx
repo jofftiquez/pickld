@@ -6,10 +6,14 @@ import { colors, radius, sizes } from '@/theme/tokens';
 import { Icon } from './Icon';
 import type { IconName } from './icons';
 
-/** The icon for each visibility (D-48): two people for Readers, a globe for Everyone, a lock for Only me. */
+/**
+ * The icon for each visibility (D-48): two people for Readers, a globe for Everyone, a star for Close friends
+ * (0179), a lock for Only me.
+ */
 export const VISIBILITY_ICON = {
   readers: 'readers',
   everyone: 'globe',
+  close_friends: 'star',
   only_me: 'lock',
 } as const satisfies Record<Visibility, IconName>;
 

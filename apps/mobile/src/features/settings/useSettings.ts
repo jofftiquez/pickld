@@ -48,7 +48,7 @@ export type PrefKey = PushType | 'quiet_hours';
 const accountRow = z.object({
   username: z.string(),
   display_name: z.string(),
-  default_visibility: z.enum(['everyone', 'readers', 'only_me']),
+  default_visibility: z.enum(['everyone', 'readers', 'close_friends', 'only_me']),
   discoverable: z.boolean(),
   is_private: z.boolean(),
   birthday: z.string(),

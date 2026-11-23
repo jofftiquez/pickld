@@ -27,7 +27,7 @@ export type JarTileProps = {
 
 /**
  * One moment in the Jar page's 2 by 4 grid (Story, D-97): the whole 3:4 photo with its edits, #slot,
- * "Cover" and "Added later" badges, and a lock for the owner.
+ * "Cover" and "Added later" badges, a lock for the owner, and a star on Close friends moments (0179).
  */
 export function JarTile({ moment, width, stamp, isCover = false, onPress, accessibilityHint }: JarTileProps) {
   const { t } = useTranslation();
@@ -35,11 +35,13 @@ export function JarTile({ moment, width, stamp, isCover = false, onPress, access
   const edits = parseEdits(moment.edits);
   const slot = t(`slots.${moment.slot}`);
   const onlyMe = moment.visibility === 'only_me';
-  // "#slot, cover, private, added later", then the photo description: every badge is spoken.
+  const closeFriends = moment.visibility === 'close_friends';
+  // "#slot, cover, private, close friends, added later", then the photo description: every badge is spoken.
   const badges = [
     slot,
     isCover ? t('tile.a11y.cover') : null,
     onlyMe ? t('tile.a11y.private') : null,
+    closeFriends ? t('tile.a11y.closeFriends') : null,
     moment.is_backfilled ? t('tile.a11y.addedLater') : null,
   ]
     .filter((part): part is string => part !== null)
@@ -87,7 +89,7 @@ export function JarTile({ moment, width, stamp, isCover = false, onPress, access
           ) : null
         }
         topRight={
-          moment.is_backfilled || onlyMe ? (
+          moment.is_backfilled || onlyMe || closeFriends ? (
             <>
               {moment.is_backfilled ? (
                 <View style={styles.badge} testID={`jar-tile-${moment.slot}-added-later`}>
@@ -103,6 +105,11 @@ export function JarTile({ moment, width, stamp, isCover = false, onPress, access
               {onlyMe ? (
                 <View style={styles.lock} testID={`jar-tile-${moment.slot}-lock`}>
                   <Icon name="lock" color="surface" size={12} strokeWidth={2} />
+                </View>
+              ) : null}
+              {closeFriends ? (
+                <View style={styles.lock} testID={`jar-tile-${moment.slot}-close-friends`}>
+                  <Icon name="star" color="surface" size={12} strokeWidth={2} />
                 </View>
               ) : null}
             </>

@@ -344,6 +344,7 @@
       "visibility": {
         "readers": "Readers",
         "everyone": "Everyone",
+        "close_friends": "Close friends",
         "only_me": "Only me"
       },
       "status": {

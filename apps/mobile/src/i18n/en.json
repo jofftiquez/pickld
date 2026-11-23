@@ -69,6 +69,7 @@
     "shared": {
       "readers": "Shared with readers",
       "everyone": "Shared with everyone",
+      "close_friends": "Shared with close friends",
       "only_me": "Only you"
     },
     "likeHint": "Likes it",
@@ -210,6 +211,7 @@
     "metaAddedLater": "{{slot}} · For {{when}} · Added later",
     "cardLabel": "{{name}}, {{slot}}, {{when}}",
     "private": "Only you can see it",
+    "closeFriends": "Close friends",
     "openHint": "Opens the moment’s comments",
     "goToJar": "Go to jar",
     "goToJarLabel": "Go to {{name}}’s jar",
@@ -369,11 +371,13 @@
       "failed": "didn’t upload",
       "checking": "checking",
       "private": "private",
+      "closeFriends": "close friends",
       "addedLater": "added later",
       "cover": "cover",
       "visibility": {
         "readers": "readers can see it",
         "everyone": "everyone can see it",
+        "closeFriends": "close friends can see it",
         "onlyMe": "private"
       }
     }
@@ -729,6 +733,7 @@
     "slotPrivate": "{{slot}}, private",
     "slotReaders": "{{slot}}, readers",
     "slotEveryone": "{{slot}}, everyone",
+    "slotCloseFriends": "{{slot}}, close friends",
     "visibilityTitle": "Who can see this jar",
     "readers": "Readers",
     "readersBody_one": "{{count}} person who reads your days",
@@ -736,6 +741,8 @@
     "readersBodyUnknown": "People who read your days",
     "everyone": "Everyone",
     "everyoneBody": "Anyone on Pickld, unless your account is Private",
+    "closeFriends": "Close friends",
+    "closeFriendsBody": "People on your Close friends list",
     "onlyMe": "Only me",
     "onlyMeBody": "Keep this jar just for you",
     "notePrivate_one": "{{count}} private moment won’t be shared.",
@@ -1482,6 +1489,22 @@
     "failed": "Couldn’t load blocked accounts.",
     "retry": "Try again"
   },
+  "closeFriends": {
+    "title": "Close friends",
+    "back": "Back",
+    "intro": "Only people on this list see moments and jars you share with Close friends. Everyone else can’t tell they exist. Nobody is told when you add or remove them.",
+    "count_one": "{{count}} person on your list",
+    "count_other": "{{count}} people on your list",
+    "search": "Search your readers",
+    "toggleA11y": "{{name}} on your Close friends list",
+    "emptyTitle": "No readers yet",
+    "empty": "Only people who read you can be close friends. When someone reads you, they show up here.",
+    "noMatchTitle": "No one found",
+    "noMatch": "None of your readers match that name.",
+    "failed": "Couldn’t load your readers.",
+    "failedSave": "Couldn’t save that change. Check your connection and try again.",
+    "retry": "Try again"
+  },
   "toast": {
     "momentAdded": "Moment added to {{slot}}",
     "momentSavedOffline": "Saved to {{slot}}. It uploads when you’re online.",
@@ -1957,6 +1980,8 @@
     "privacy": "Privacy",
     "defaultVisibility": "Default visibility",
     "defaultVisibilityHint": "Who sees a new jar unless you choose otherwise",
+    "closeFriends": "Close friends",
+    "closeFriendsHint": "Choose who sees moments you share with Close friends",
     "discoverable": "Show me in Discover",
     "discoverableBody": "People outside your readers can find your public posts in Discover and see you in suggestions",
     "discoverableMinor": "Under 18, your posts stay out of Discover and suggestions",
@@ -1969,6 +1994,7 @@
     "visibility": {
       "readers": "Readers",
       "everyone": "Everyone",
+      "close_friends": "Close friends",
       "only_me": "Only me"
     },
     "blocked": "Blocked accounts",
@@ -2156,9 +2182,11 @@
   "visibility": {
     "readers": "Readers",
     "everyone": "Everyone",
+    "closeFriends": "Close friends",
     "onlyMe": "Only me",
     "readersBody": "People who read your days",
     "everyoneBody": "Anyone on Pickld, unless your account is Private",
+    "closeFriendsBody": "People on your Close friends list",
     "onlyMeBody": "Only you will see this moment"
   },
   "invite": {
