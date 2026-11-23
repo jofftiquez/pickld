@@ -1,9 +1,12 @@
 // The tab bar's unread dots (FR-EXP-04), for both tab bars. Each tab reads its own list's first page from the cache
 // entry its screen uses (same query key, no second fetch) and compares the newest item from someone else with the
-// last one seen there, kept on the phone per tab per user (`tabUnread.ts`).
+// last one seen there, kept on the phone per tab per user (`tabUnread.ts`). The same time, as it was when the tab
+// opened, places the "You're all caught up" line in that tab's list.
 import { useInfiniteQuery } from '@tanstack/react-query';
 import Storage from 'expo-sqlite/kv-store';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
+import { create } from 'zustand';
 
 import { fetchMomentsPage, momentsQueryKeys } from '@/features/moments/useMomentsFeed';
 import type { PageCursor } from '@/features/scrubber/scrubberModel';
@@ -16,6 +19,31 @@ import { fetchFeedPage, feedQueryKeys } from './useFeed';
 const STALE_TIME = 5 * 60_000;
 
 const useUserId = () => useAuthStore((s) => s.session?.user.id ?? null);
+
+/** Each tab's last seen time as it was when this visit began, before the open tab moved it on; null for none. */
+const useVisitSeen = create<Record<UnreadTab, string | null>>()(() => ({ moments: null, jars: null }));
+
+/** Where `tab`'s "You're all caught up" line goes: rows at or before this time were there on the last visit. */
+export function useSeenBeforeVisit(tab: UnreadTab): string | null {
+  return useVisitSeen((s) => s[tab]);
+}
+
+/** Counts the app's returns to the front from the background; each one starts a new visit to the open tab. */
+function useForegrounds(): number {
+  const [count, setCount] = useState(0);
+  const wasBackground = useRef(false);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') wasBackground.current = true;
+      else if (state === 'active' && wasBackground.current) {
+        wasBackground.current = false;
+        setCount((n) => n + 1);
+      }
+    });
+    return () => sub.remove();
+  }, []);
+  return count;
+}
 
 /**
  * True while `tab`'s list has an item from someone else newer than the newest one seen with the tab open; false
@@ -38,6 +66,21 @@ function useUnreadDot(tab: UnreadTab, focused: boolean, newest: string | null, l
       active = false;
     };
   }, [tab, userId]);
+
+  // A visit is the tab opening, or the app coming back with it open. Its start keeps the last seen time from before
+  // the effect below moves it to what is on screen now. Runs first: that write lands in `seen` a render later.
+  const foregrounds = useForegrounds();
+  const visit = useRef<number | null>(null);
+  useEffect(() => {
+    if (!loaded || !focused) {
+      visit.current = null;
+      if (!loaded) useVisitSeen.setState({ [tab]: null });
+      return;
+    }
+    if (visit.current === foregrounds) return;
+    visit.current = foregrounds;
+    useVisitSeen.setState({ [tab]: stored });
+  }, [tab, loaded, focused, foregrounds, stored]);
 
   useEffect(() => {
     if (userId === null || !loaded) return;

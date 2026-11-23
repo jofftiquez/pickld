@@ -1,8 +1,10 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { caughtUpRow } from '@/features/feed/tabUnread';
+import { useSeenBeforeVisit } from '@/features/feed/useTabUnread';
 import { GuideTip } from '@/features/guide/GuideTip';
 import { useGuideTip } from '@/features/guide/useGuideTip';
 import { MomentsFeedView } from '@/features/moments/MomentsFeedView';
@@ -24,6 +26,17 @@ export default function MomentsScreen() {
   const avatars = useAvatarUrls((feed.moments ?? []).map((m) => ({ id: m.author_id, path: m.author_avatar_path })));
   // The spinner shows only for a pull, not for background refetches.
   const [pulling, setPulling] = useState(false);
+  // "You're all caught up" above the first moment that was already here on the last visit; order unchanged.
+  const seenAt = useSeenBeforeVisit('moments');
+  const caughtUpBefore = useMemo(
+    () =>
+      caughtUpRow(feed.moments ?? [], seenAt, userId, (m) => ({
+        key: m.moment_id,
+        authorId: m.author_id,
+        at: m.added_at,
+      })),
+    [feed.moments, seenAt, userId],
+  );
 
   // First-time guide (FR-ONB-10): how Moments and Jars are ordered, once, on whichever opens first.
   const guide = useGuideTip([{ id: 'feed', when: true }], useScreenFocused());
@@ -66,6 +79,7 @@ export default function MomentsScreen() {
         }
         onFindPeople={() => router.navigate('/discover')}
         onInvite={() => router.push('/invite')}
+        caughtUpBefore={caughtUpBefore}
         guideTip={
           guide.tip === 'feed' ? (
             <GuideTip id="feed" arrow={{ side: 'top', align: 'start' }} onClose={guide.close} tipRef={guide.tipRef} />

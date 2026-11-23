@@ -193,7 +193,10 @@
     "more": "+{{count}}",
     "caption": "“{{caption}}”",
     "cardLabel_one": "{{name}}’s jar, {{count}} of {{max}} moment. {{updated}}. {{likes}} likes, {{comments}} comments",
-    "cardLabel_other": "{{name}}’s jar, {{count}} of {{max}} moments. {{updated}}. {{likes}} likes, {{comments}} comments"
+    "cardLabel_other": "{{name}}’s jar, {{count}} of {{max}} moments. {{updated}}. {{likes}} likes, {{comments}} comments",
+    "caughtUp": "You’re all caught up",
+    "caughtUpJars": "Jars you’ve already seen are below.",
+    "caughtUpMoments": "Moments you’ve already seen are below."
   },
   "moments": {
     "title": "Moments",

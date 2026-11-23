@@ -8,6 +8,7 @@ import { FeedScrubber } from '@/features/scrubber/FeedScrubber';
 import { dayOf, type TimelineScrubber } from '@/features/scrubber/scrubberModel';
 import { useScrubberVisibility } from '@/features/scrubber/useScrubberVisibility';
 import { useTopRowDay } from '@/features/scrubber/useTopRowDay';
+import { CaughtUpLine } from '@/features/feed/CaughtUpLine';
 import { FeedEmpty } from '@/features/feed/FeedEmpty';
 import type { FeedAuthor } from '@/features/feed/feedModel';
 import type { AvatarUrls } from '@/lib/avatars';
@@ -48,6 +49,8 @@ export type MomentsFeedViewProps = {
   onOpenComments: (moment: FeedMoment) => void;
   onFindPeople: () => void;
   onInvite: () => void;
+  /** The row the "You're all caught up" line sits above: the first one already there on the last visit. */
+  caughtUpBefore?: string | null;
 };
 
 /**
@@ -75,6 +78,7 @@ export function MomentsFeedView({
   onOpenComments,
   onFindPeople,
   onInvite,
+  caughtUpBefore = null,
   guideTip = null,
 }: MomentsFeedViewProps) {
   const { t } = useTranslation();
@@ -142,8 +146,10 @@ export function MomentsFeedView({
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: bottomPadding }}
         data={moments ?? []}
         keyExtractor={(m) => m.moment_id}
+        extraData={caughtUpBefore}
         renderItem={({ item }) => (
           <View style={styles.cardWrap}>
+            {item.moment_id === caughtUpBefore ? <CaughtUpLine timeline="moments" /> : null}
             <MomentFeedCard
               moment={item}
               photoWidth={photoWidth}

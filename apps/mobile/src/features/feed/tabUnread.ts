@@ -66,6 +66,29 @@ export function seenUpdate(input: {
   return focused && hasUnread(newest, stored) ? newest : null;
 }
 
+/**
+ * Where the "You're all caught up" line goes: the key of the first row that was already in the list on the last
+ * visit (its time is at or before `seenAt`, the last seen time as it was when the tab opened), or null for no line.
+ * The line only marks a place in the list; the rows keep the order they came in. It shows only under at least one
+ * row from someone else that is new since then, so it never sits at the very top or under only the viewer's own
+ * posts, and not at all on a first run (`seenAt` null).
+ */
+export function caughtUpRow<T>(
+  rows: readonly T[],
+  seenAt: string | null,
+  userId: string | null,
+  row: (item: T) => { key: string; authorId: string; at: string },
+): string | null {
+  if (seenAt === null) return null;
+  let newAbove = false;
+  for (const item of rows) {
+    const { key, authorId, at } = row(item);
+    if (isLater(at, seenAt)) newAbove ||= authorId !== userId;
+    else return newAbove ? key : null;
+  }
+  return null;
+}
+
 /** Where a tab's last seen time is kept for a user. */
 export function seenKey(tab: UnreadTab, userId: string): string {
   return `unreadSeen:${tab}:${userId}`;

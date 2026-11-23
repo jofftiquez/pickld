@@ -6,7 +6,7 @@ import { momentsQueryKeys } from '@/features/moments/useMomentsFeed';
 import { useAuthStore } from '@/lib/authStore';
 
 import { feedQueryKeys } from '../useFeed';
-import { useJarsUnread, useMomentsUnread } from '../useTabUnread';
+import { useJarsUnread, useMomentsUnread, useSeenBeforeVisit } from '../useTabUnread';
 
 // The dots read the timelines' own cache entries: with those filled, nothing is fetched.
 const mockRpc = jest.fn();
@@ -97,6 +97,40 @@ describe('Moments dot', () => {
     await settle();
     expect(hook.result.current).toBe(false);
     expect(mockRpc).not.toHaveBeenCalled();
+  });
+});
+
+describe('Seen time for the caught-up line', () => {
+  it('keeps the seen time from before the visit while the open tab moves the stored one on, and takes the new one next visit', async () => {
+    const key = momentsQueryKeys.feed(me);
+    mockDisk.set('unreadSeen:moments:u1', '2026-11-14T08:00:00Z');
+    client.setQueryData(key, pages('moments', [moment(friend, '2026-11-14T10:00:00Z')]));
+    const hook = await renderHook(
+      ({ focused }: { focused: boolean }) => ({
+        dot: useMomentsUnread(focused),
+        seenAt: useSeenBeforeVisit('moments'),
+      }),
+      { wrapper, initialProps: { focused: true } },
+    );
+    await settle();
+    // The open tab stored what it shows, but the line still marks where the last visit ended.
+    expect(mockDisk.get('unreadSeen:moments:u1')).toBe('2026-11-14T10:00:00Z');
+    expect(hook.result.current.seenAt).toBe('2026-11-14T08:00:00Z');
+
+    // More arrives while open: the line stays put.
+    await update(
+      key,
+      pages('moments', [moment(friend, '2026-11-14T11:00:00Z'), moment(friend, '2026-11-14T10:00:00Z')]),
+    );
+    expect(mockDisk.get('unreadSeen:moments:u1')).toBe('2026-11-14T11:00:00Z');
+    expect(hook.result.current.seenAt).toBe('2026-11-14T08:00:00Z');
+
+    // Leave and come back: the next visit starts from what was seen.
+    await hook.rerender({ focused: false });
+    await settle();
+    await hook.rerender({ focused: true });
+    await settle();
+    expect(hook.result.current.seenAt).toBe('2026-11-14T11:00:00Z');
   });
 });
 

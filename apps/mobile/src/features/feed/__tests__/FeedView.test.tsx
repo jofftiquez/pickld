@@ -113,6 +113,16 @@ describe('FeedView', () => {
     expect(screen.getByText('Mika')).toBeTruthy();
   });
 
+  it('puts the caught-up line above the given jar without moving any jar, and shows none without one', async () => {
+    const jars = ['Ana', 'Ben', 'Cy'].map((name) => ({ ...mika, jar_id: `jar-${name}`, author_display_name: name }));
+    const order = () => screen.getAllByText(/^(Ana|Ben|Cy|You’re all caught up)$/).map((t) => t.props.children);
+    await setup({ jars, caughtUpBefore: 'jar-Ben' });
+    expect(order()).toEqual(['Ana', 'You’re all caught up', 'Ben', 'Cy']);
+    expect(screen.getByLabelText('You’re all caught up. Jars you’ve already seen are below.')).toBeTruthy();
+    await setup({ jars, caughtUpBefore: null });
+    expect(order()).toEqual(['Ana', 'Ben', 'Cy']);
+  });
+
   it('has no bell: it lives on Today', async () => {
     await setup();
     expect(screen.queryByRole('button', { name: 'Notifications' })).toBeNull();
