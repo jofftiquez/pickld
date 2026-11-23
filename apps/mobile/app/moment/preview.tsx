@@ -49,10 +49,12 @@ export default function MomentPreviewScreen() {
   const [now] = useState(() => new Date());
   const tz = phoneTimeZone();
   const { userId, localDate, jar: jarData, me, queue } = useToday(now);
-  // Deep links are untrusted: only a real past date picks a past jar; anything else is Today's.
-  const pastDate = parseFillDateParam(params.date, localDate);
-  const { day } = useDayJar(pastDate);
   const today = useMemo(() => openTodayJar(jarData, now), [jarData, now]);
+  // Deep links are untrusted: only a real past date picks a past jar; anything else is Today's. Past is before
+  // Today's open jar, whose date (in its own zone, the travel rule) can be a day ahead of the phone's: the day
+  // before it, opened from its jar page, is still a past day, not Today.
+  const pastDate = parseFillDateParam(params.date, today?.jar?.localDate ?? localDate);
+  const { day } = useDayJar(pastDate);
   const shown = pastDate ? day : today;
   const jarId = shown?.jar?.id ?? null;
   const page = useJarPage(jarId ?? undefined);
