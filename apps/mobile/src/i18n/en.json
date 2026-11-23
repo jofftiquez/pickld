@@ -2110,6 +2110,9 @@
     "moments": "{{count}} of {{total}} moments",
     "nextUp": "Next up: {{tag}}",
     "full": "Your jar is full",
+    "short": "{{count}}/{{total}}",
+    "inlineNext": "{{short}} · Next {{tag}}",
+    "inlineFull": "{{short}} · Jar full",
     "capture": "Capture a moment",
     "friendEmpty": "Moments from people you read show up here."
   },

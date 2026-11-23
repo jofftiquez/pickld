@@ -19,11 +19,15 @@ const TOTAL = SLOT_ORDER.length;
 /** WidgetKit asks again when the timeline runs out; entries every 30 minutes keep "Next up" current. */
 export const STEP_MINUTES = 30;
 
-/** Props of the medium Today widget. */
+/** Props of the Today widget, in every size: home screen, StandBy and Lock Screen. */
 export type TodayWidgetProps = {
   title: string;
   headline: string;
   subline: string;
+  /** "3/8", inside the Lock Screen gauge. */
+  short: string;
+  /** One line for the Lock Screen's inline spot above the clock. */
+  inline: string;
   /** 0…1, how full the jar graphic is. */
   fill: number;
   url: string;
@@ -47,6 +51,9 @@ export type WidgetStrings = {
   nextUp: (slotTag: string) => string;
   full: string;
   captureLabel: string;
+  short: (count: number, total: number) => string;
+  inlineNext: (short: string, slotTag: string) => string;
+  inlineFull: (short: string) => string;
 };
 
 /**
@@ -61,10 +68,13 @@ export function nextSlot(filled: ReadonlySet<Slot>, instant: Date, tz: string): 
 
 function todayProps(filled: ReadonlySet<Slot>, instant: Date, tz: string, s: WidgetStrings): TodayWidgetProps {
   const next = nextSlot(filled, instant, tz);
+  const short = s.short(filled.size, TOTAL);
   return {
     title: s.title,
     headline: s.moments(filled.size, TOTAL),
     subline: next === null ? s.full : s.nextUp(`#${next}`),
+    short,
+    inline: next === null ? s.inlineFull(short) : s.inlineNext(short, `#${next}`),
     fill: filled.size / TOTAL,
     url: 'pickld://today',
     captureUrl: 'pickld://camera',

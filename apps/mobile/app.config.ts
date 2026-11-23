@@ -125,6 +125,7 @@ const config: ExpoConfig = {
       },
     ],
     // Home screen widgets (FR-WID-01): Today (medium) and a friend's latest moment (small). iOS only (D-15).
+    // Today also comes small, which StandBy shows, and in the three Lock Screen sizes.
     [
       'expo-widgets',
       {
@@ -135,7 +136,15 @@ const config: ExpoConfig = {
             name: 'TodayJar',
             displayName: en.widgets.todayName,
             description: en.widgets.todayDescription,
-            ios: { supportedFamilies: ['systemMedium'] },
+            ios: {
+              supportedFamilies: [
+                'systemMedium',
+                'systemSmall',
+                'accessoryCircular',
+                'accessoryRectangular',
+                'accessoryInline',
+              ],
+            },
           },
           {
             name: 'FriendMoment',

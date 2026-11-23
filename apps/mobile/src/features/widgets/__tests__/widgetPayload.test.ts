@@ -7,6 +7,9 @@ const strings: WidgetStrings = {
   nextUp: (tag) => `Next up: ${tag}`,
   full: 'Jar full',
   captureLabel: 'Capture',
+  short: (count, total) => `${count}/${total}`,
+  inlineNext: (short, tag) => `${short} · Next ${tag}`,
+  inlineFull: (short) => `${short} · Jar full`,
 };
 // 14:10 in Manila is 06:10 UTC.
 const afternoon = new Date('2026-11-12T06:10:00Z');
@@ -44,6 +47,13 @@ describe('todayTimeline', () => {
     const after = entries.filter((e) => e.date.getTime() >= midnight);
     expect(after[0]?.date.getTime()).toBe(midnight);
     expect(after[0]?.props).toMatchObject({ headline: '0 of 8 moments', subline: 'Next up: #whereami', fill: 0 });
+  });
+
+  it('gives the Lock Screen a short count and one line with what is next, or that the jar is full', () => {
+    expect(entries[0]?.props).toMatchObject({ short: '5/8', inline: '5/8 · Next #afternoon' });
+    const all = ['whereami', 'mebusywith', 'whoamiwith', 'ootd', 'selfie', 'morning', 'afternoon', 'evening'] as const;
+    const full = todayTimeline(all, afternoon, tz, strings)[0]?.props;
+    expect(full).toMatchObject({ short: '8/8', inline: '8/8 · Jar full', subline: 'Jar full' });
   });
 });
 
