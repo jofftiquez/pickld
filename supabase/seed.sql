@@ -162,6 +162,9 @@ insert into public.comments (id, jar_id, user_id, parent_id, body, is_hidden, cr
 -- Private: photos are read only through the photo Worker with a token (D-12); uploads use presigned
 -- URLs from fn:upload-url. `cd workers/photos && deno task seed` fills it with design/images and the sticker
 -- art (assets/stickers, image/png; user uploads stay webp/jpeg, enforced by fn:upload-url). Data exports
--- (fn:account-jobs) are zips under exports/.
+-- (fn:account-jobs) are zips under exports/. `supabase migration down` keeps the storage schema and
+-- reruns this file, so an existing bucket is updated instead of failing the whole seed.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('photos', 'photos', false, 5242880, array['image/webp', 'image/jpeg', 'image/png', 'application/zip']);
+values ('photos', 'photos', false, 5242880, array['image/webp', 'image/jpeg', 'image/png', 'application/zip'])
+on conflict (id) do update set name = excluded.name, public = excluded.public,
+  file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
