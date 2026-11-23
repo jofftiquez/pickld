@@ -38,8 +38,12 @@ export async function fetchReminderSettings(userId: string): Promise<ReminderSet
   );
 }
 
-/** Take a break (0180): when the break ends, or null when there is none. */
-export async function fetchBreakUntil(userId: string): Promise<Date | null> {
+/**
+ * Take a break (0180): when the break ends, as the server's ISO time, or null when there is none. Kept as text, not
+ * a Date: the query cache is saved to disk as JSON (NFR-OFF-03), so a Date would come back as a string after a
+ * restart.
+ */
+export async function fetchBreakUntil(userId: string): Promise<string | null> {
   const { data, error } = await getSupabase()
     .from('notification_prefs')
     .select('break_until')
@@ -47,7 +51,7 @@ export async function fetchBreakUntil(userId: string): Promise<Date | null> {
     .single();
   if (error) throw new Error(error.message);
   const until = z.object({ break_until: z.string().nullable() }).parse(data).break_until;
-  return until === null ? null : new Date(until);
+  return until;
 }
 
 /** Both under ['reminders', userId], so invalidating that refreshes the plan's inputs together. */
@@ -91,7 +95,9 @@ export function useReminderSync(userId: string | null, filled: readonly DaySlot[
     ? null
     : breakUntil.data === undefined
       ? undefined
-      : (breakUntil.data?.getTime() ?? null);
+      : breakUntil.data === null
+        ? null
+        : Date.parse(breakUntil.data);
   useEffect(() => {
     if (userId === null || settingsData === undefined || breakMs === undefined) return;
     let cancelled = false;
