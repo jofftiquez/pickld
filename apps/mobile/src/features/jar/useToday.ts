@@ -1,6 +1,6 @@
 // Data for the Today screen (FR-JAR-01): the open jar and its moments from Supabase, the signed-in
 // profile, and the offline queue. Everything is read as the user, so RLS decides what comes back.
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { getCalendars } from 'expo-localization';
 import { useEffect } from 'react';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ import { useAuthStore } from '@/lib/authStore';
 import { fetchAvatarUrls } from '@/lib/avatars';
 import { trackNetwork } from '@/lib/connectivity';
 import { findOpenJar, localDateIn, normalizeZone } from '@/lib/jars';
-import { listQueue, subscribeQueue } from '@/lib/queue/store';
+import { listQueue, subscribeQueue, type QueueChange } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
 
 import type { Visibility } from '@/features/publish/publishJar';
@@ -180,6 +180,25 @@ export const todayQueryKeys = {
   queue: (userId: string) => ['queue', userId] as const,
 };
 
+/**
+ * Every screen that shows the queue re-reads it through this when it changes. Once an upload has reached the
+ * server and left the queue, the owner's jar, jar pages and day pages are read first and the queue after
+ * them, so a tile goes from the queued photo straight to the server moment. Re-reading the queue first left
+ * the slot empty until the jar came back, which also closed the first-time guide's tip for good (FR-ONB-10).
+ * A read already on its way is joined, not restarted, so the order holds whichever screens are mounted.
+ */
+export function refreshAfterQueueChange(queryClient: QueryClient, userId: string, change: QueueChange): void {
+  const queue = () => queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
+  if (change !== 'removed') {
+    void queue();
+    return;
+  }
+  const server = [['jar', userId], ['jarPage', userId], ['day', userId]].map((queryKey) =>
+    queryClient.invalidateQueries({ queryKey }, { cancelRefetch: false }),
+  );
+  void Promise.allSettled(server).then(queue);
+}
+
 export function useToday(now: Date) {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const localDate = localDateIn(now, phoneTimeZone());
@@ -205,19 +224,11 @@ export function useToday(now: Date) {
     staleTime: 0,
   });
 
-  // Upload states change while Today is open: re-read the queue, and the jar once an item has reached the
-  // server and left the queue, so its tile shows the server moment instead of going empty. The owner's jar
-  // pages are re-read too: one opened while the upload was still running would otherwise miss the moment.
+  // Upload states change while Today is open: re-read the queue, and the jar once an item has left it.
   const queryClient = useQueryClient();
   useEffect(() => {
     if (userId === null) return;
-    return subscribeQueue((change) => {
-      void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
-      if (change === 'removed') {
-        void queryClient.invalidateQueries({ queryKey: ['jar', userId] });
-        void queryClient.invalidateQueries({ queryKey: ['jarPage', userId] });
-      }
-    });
+    return subscribeQueue((change) => refreshAfterQueueChange(queryClient, userId, change));
   }, [queryClient, userId]);
 
   return {
