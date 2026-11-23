@@ -138,7 +138,7 @@ describe('targetOf', () => {
     ).toEqual([]);
   });
 
-  it('opens the tagged moment through its jar for a Together request or approval (0174)', () => {
+  it('opens the tagged moment through its jar for a Together request or approval (0176)', () => {
     const want = { pathname: '/moment/[id]', params: { id: 'm1', jar: 'j1' } };
     for (const type of ['together_request', 'together_added'] as const) {
       expect(

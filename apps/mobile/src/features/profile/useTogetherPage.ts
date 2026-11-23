@@ -1,4 +1,4 @@
-// A profile's Together page (0174): moments others tagged this person in and agreed to show here, read as the
+// A profile's Together page (0176): moments others tagged this person in and agreed to show here, read as the
 // viewer through together_page, so the database decides which ones they may see. Thumbnails come from
 // fn:photo-urls, which checks each moment again.
 import { useQuery } from '@tanstack/react-query';

@@ -59,7 +59,7 @@ export type ProfilePage = ProfileData & {
   jars: ProfileJar[];
   /** Optional: caches from before M3-15 lack it. */
   images?: ProfileImages;
-  /** Together moments (0174) this viewer may see on the profile's Together page. Optional for older caches. */
+  /** Together moments (0176) this viewer may see on the profile's Together page. Optional for older caches. */
   togetherCount?: number;
 };
 

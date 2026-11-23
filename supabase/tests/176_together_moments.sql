@@ -1,4 +1,4 @@
--- 0174: Together moments. Only the person tagged right now asks, only the author answers; a request is seen
+-- 0176: Together moments. Only the person tagged right now asks, only the author answers; a request is seen
 -- by the two only. An approved one shows on the tagged person's Together page to: the tagged person, the author,
 -- a reader of both; not to a reader of the author only (tagged person on Readers), a reader of the tagged person
 -- who can't see the moment, an outsider, someone the author blocked, someone blocked with the tagged person, or

@@ -1,4 +1,4 @@
--- 0174 — Together moments: someone tagged in a moment (0172) asks to show it on the Together page of their
+-- 0176 — Together moments: someone tagged in a moment (0172) asks to show it on the Together page of their
 -- profile, and it shows there once the author agrees. Additive: one table, functions and triggers, two
 -- notification types and one push switch. Nothing is dropped or rewritten; notify and push_take (0172) are
 -- replaced with the new types added.
@@ -35,7 +35,7 @@ create table public.together_moments (
   foreign key (moment_id, user_id) references public.moment_tags(moment_id, tagged_id) on delete cascade
 );
 comment on table public.together_moments is
-  'Moments a tagged person shows on their profile''s Together page, with the author''s consent (0174).';
+  'Moments a tagged person shows on their profile''s Together page, with the author''s consent (0176).';
 create index together_moments_user_idx on public.together_moments (user_id, status);
 create index together_moments_author_idx on public.together_moments (author_id);
 
@@ -227,7 +227,7 @@ alter table public.notifications
 
 alter table public.notification_prefs add column together boolean not null default true;
 comment on column public.notification_prefs.together is
-  'Push for Together moments: a request to the author, an approval to the tagged person (0174).';
+  'Push for Together moments: a request to the author, an approval to the tagged person (0176).';
 grant update (together) on public.notification_prefs to authenticated;
 
 -- As 0172, with the together types added to what an Only me moment never notifies.

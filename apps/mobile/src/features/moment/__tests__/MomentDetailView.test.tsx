@@ -136,7 +136,7 @@ describe('MomentDetailView', () => {
     expect(screen.queryByTestId('moment-share')).toBeNull();
   });
 
-  describe('Together (0174)', () => {
+  describe('Together (0176)', () => {
     const tags = { ootd: [{ userId: READER, username: 'rea' }] };
     const together = (status: 'requested' | 'approved' | 'declined') => ({
       ootd: [{ moment_id: 'ootd', user_id: READER, author_id: 'dale-id', status }],

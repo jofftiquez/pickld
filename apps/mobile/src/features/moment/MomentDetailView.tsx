@@ -63,7 +63,7 @@ export type MomentDetailViewProps = {
   /** The viewer, tagged on the moment on screen, takes their tag off. */
   onRemoveTag?: (momentId: string) => void;
   removingTag?: boolean;
-  /** Together rows the viewer may see, by moment id (0174): their own as the tagged person, all as author. */
+  /** Together rows the viewer may see, by moment id (0176): their own as the tagged person, all as author. */
   together?: Record<string, TogetherRow[]>;
   /** Asks, answers or takes a Together moment off. */
   onTogether?: (action: TogetherAction) => void;
