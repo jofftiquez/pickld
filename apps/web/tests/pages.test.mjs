@@ -621,6 +621,21 @@ test('the home page shows the pitch, the eight moments and loaded screenshots wi
   await page.close();
 });
 
+test('New in Pickld shows two featured screenshots and a handful of features, linked from the footer', async () => {
+  const { page } = await open('/');
+  await page.getByRole('contentinfo').getByRole('link', { name: 'New in Pickld' }).click();
+  await page.waitForURL(`${base}/features`);
+  assert.match(await page.locator('h1').innerText(), /Made for your people\./);
+  assert.deepEqual(await page.locator('.mk-panel h3').allTextContents(), ['Close friends', 'Calm controls']);
+  assert.equal(await page.locator('.mk-card').count(), 6);
+  for (const img of await page.locator('.mk-phone img').all()) {
+    await img.scrollIntoViewIfNeeded();
+    assert.ok(await img.evaluate((i) => i.complete && i.naturalWidth > 0), await img.getAttribute('alt'));
+  }
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'no side scroll');
+  await page.close();
+});
+
 test('on a phone the header’s Menu reaches every marketing page and closes after a pick', async () => {
   const { page } = await open('/');
   const header = page.getByRole('banner');
@@ -630,6 +645,7 @@ test('on a phone the header’s Menu reaches every marketing page and closes aft
   const items = header.locator('.mk-menu').getByRole('link');
   assert.deepEqual(await items.allTextContents(), [
     'The eight moments',
+    'New in Pickld',
     'Why Pickld',
     'Our mission',
     'Stickers',
@@ -1049,6 +1065,7 @@ test('the AASA file lets the app open profile, jar and sign-in links but not leg
     '/why',
     '/mission',
     '/moments',
+    '/features',
     '/waitlist',
     '/waitlist/*',
     '/.well-known/*',

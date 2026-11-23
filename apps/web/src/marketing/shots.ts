@@ -1,5 +1,7 @@
 // Real screenshots of the iOS app (QA captures and the M6 milestone shots), 600 px wide. The photos inside
 // them are the design placeholders; swap the captures before the site goes public.
+export { default as calm } from './shots/calm.jpg';
+export { default as closeFriends } from './shots/close-friends.jpg';
 export { default as filters } from './shots/filters.jpg';
 export { default as jar } from './shots/jar.jpg';
 export { default as memories } from './shots/memories.jpg';

@@ -22,6 +22,7 @@ export function GET() {
             { '/': '/why', exclude: true },
             { '/': '/mission', exclude: true },
             { '/': '/moments', exclude: true },
+            { '/': '/features', exclude: true },
             { '/': '/waitlist', exclude: true },
             { '/': '/waitlist/*', exclude: true },
             { '/': '/.well-known/*', exclude: true },

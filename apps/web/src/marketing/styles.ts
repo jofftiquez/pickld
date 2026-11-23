@@ -97,6 +97,7 @@ export const css = `
 .mk-panel h3{font-size:clamp(26px,5vw,34px);letter-spacing:-.03em;margin-top:14px}
 .mk-panel .mk-lead{margin-top:12px}
 .mk-step-n{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${colors.brandTint};color:${colors.brandText};font-weight:800;font-size:18px}
+.mk-pill-new{display:inline-block;padding:5px 12px;border-radius:${radius.pill}px;background:${colors.brandTint};color:${colors.brandText};font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .mk-points{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
 .mk-points li{position:relative;padding-left:28px;color:${colors.ink};font-size:16px;line-height:1.45}
 .mk-points li::before{content:'';position:absolute;left:4px;top:7px;width:10px;height:10px;border-radius:50%;background:${colors.brand}}

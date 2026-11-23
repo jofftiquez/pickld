@@ -46,6 +46,7 @@ export function MarketingHeader() {
             label={t('marketing.nav.menu')}
             links={[
               { href: '/moments', label: t('marketing.nav.moments') },
+              { href: '/features', label: t('marketing.nav.features') },
               { href: '/why', label: t('marketing.nav.why') },
               { href: '/mission', label: t('marketing.nav.mission') },
               { href: '/stickers', label: t('marketing.nav.stickers') },

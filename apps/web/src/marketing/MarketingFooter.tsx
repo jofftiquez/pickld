@@ -13,6 +13,7 @@ export function MarketingFooter() {
       title: t('marketing.footer.product'),
       links: [
         { href: '/moments', label: t('marketing.nav.moments') },
+        { href: '/features', label: t('marketing.nav.features') },
         { href: '/stickers', label: t('marketing.nav.stickers') },
         { href: '/#faq', label: t('marketing.nav.faq') },
         ...(waitlistOpen() ? [{ href: '/waitlist', label: t('marketing.nav.join') }] : []),
