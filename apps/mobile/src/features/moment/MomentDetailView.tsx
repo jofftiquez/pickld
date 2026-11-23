@@ -422,14 +422,19 @@ export function MomentDetailView({
         {onTogether && authorTogether.length > 0 ? (
           <View style={styles.togetherList} testID="moment-together-author">
             {authorTogether.map(({ row, username }) => (
-              <View key={row.user_id} style={styles.tagged} testID={`moment-together-${username}`}>
+              <View
+                key={row.user_id}
+                // A request's sentence takes its own line, so Approve and Decline stay side by side under it.
+                style={row.status === 'requested' ? styles.togetherList : styles.tagged}
+                testID={`moment-together-${username}`}
+              >
                 <Text style={[textStyle('bodySmall', '600'), styles.togetherText]}>
                   {row.status === 'requested'
                     ? t('moment.together.requested', { username })
                     : t('moment.together.onTheirs', { username })}
                 </Text>
                 {row.status === 'requested' ? (
-                  <>
+                  <View style={styles.tagged}>
                     <Pressable
                       onPress={() =>
                         onTogether({ kind: 'answer', momentId: moment.id, userId: row.user_id, approve: true })
@@ -460,7 +465,7 @@ export function MomentDetailView({
                         {t('moment.together.decline')}
                       </Text>
                     </Pressable>
-                  </>
+                  </View>
                 ) : (
                   <Pressable
                     onPress={() => onTogether({ kind: 'remove', momentId: moment.id, userId: row.user_id })}
