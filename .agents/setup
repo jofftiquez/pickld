@@ -41,6 +41,9 @@ deno_install() {
 }
 
 deps() {
+  # A snapshot can carry this hoisted package with its own nested node_modules, which pnpm refuses to
+  # install over ("the indexed file map already contains a node_modules/ entry"). pnpm links it again.
+  rm -rf node_modules/@tailwindcss/oxide-wasm32-wasi node_modules/@tailwindcss/*_pacquet-stage_*
   pnpm install --frozen-lockfile
   # Design captures (scripts/capture-design.mjs) and sticker rendering use Playwright's Chromium.
   pnpm exec playwright install chromium >/dev/null
