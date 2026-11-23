@@ -65,6 +65,11 @@ function one(n: DueNotification): Push | null {
   switch (n.type) {
     case 'new_reader':
       return { ...base, title: actor, body: 'started reading your days. Read back?', data };
+    case 'reader_request':
+      // Someone asks to read a person who approves readers (0176).
+      return { ...base, title: actor, body: 'wants to read your days.', data };
+    case 'reader_approved':
+      return { ...base, title: actor, body: 'approved you. You can read their days now.', data };
     case 'comment': {
       // A comment in a moment's own thread carries the moment (0068, D-51).
       const said = n.comment_body ? quote(n.comment_body) : null;

@@ -6,6 +6,7 @@ import { ReadersView } from '@/features/profile/ReadersView';
 import { useFollow } from '@/features/profile/useFollow';
 import { useFollowList, type FollowList } from '@/features/profile/useFollowList';
 import { useProfile } from '@/features/profile/useProfile';
+import { useReaderRequests } from '@/features/profile/useReaderRequests';
 import { useAvatarUrls } from '@/lib/avatars';
 
 // /u/[username]/readers?list=readers|authors (M3-14; FR-SOC-09, FR-SOC-07): Readers & authors, from a
@@ -20,8 +21,12 @@ export default function ReadersScreen() {
   const owner = profile.data?.profile ?? null;
   const { viewerId, rows, failed, refresh } = useFollowList(owner?.id ?? null, list, query);
   const follow = useFollow(viewerId);
+  // Your own Readers list starts with who is waiting for your approval (0176).
+  const requests = useReaderRequests(viewerId, owner !== null && owner.id === viewerId && list === 'readers');
   // Re-signed when someone changes their photo (D-93).
-  const avatars = useAvatarUrls((rows ?? []).map((r) => ({ id: r.id, path: r.avatar_path })));
+  const avatars = useAvatarUrls(
+    [...(requests.requests ?? []), ...(rows ?? [])].map((r) => ({ id: r.id, path: r.avatar_path })),
+  );
 
   return (
     <ReadersView
@@ -46,9 +51,12 @@ export default function ReadersScreen() {
       onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}
       onFindPeople={() => router.navigate('/discover')}
       onToggleReading={(row) =>
-        follow.setReading({ authorId: row.id, username: row.username, reading: !row.is_following })
+        follow.setReading({ authorId: row.id, username: row.username, reading: !(row.is_following || row.requested) })
       }
       onRemoveReader={(row) => follow.removeReader(row.id)}
+      requests={requests.requests}
+      requestsBusy={requests.busy}
+      onAnswerRequest={requests.answer}
       onRetry={() => {
         void profile.refresh();
         void refresh();

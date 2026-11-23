@@ -447,6 +447,54 @@ export type Database = {
           },
         ];
       };
+      follow_requests: {
+        Row: {
+          author_id: string;
+          created_at: string;
+          reader_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id: string;
+          created_at?: string;
+          reader_id: string;
+        };
+        Update: {
+          author_id?: string;
+          created_at?: string;
+          reader_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'follow_requests_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'follow_requests_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'follow_requests_reader_id_fkey';
+            columns: ['reader_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'follow_requests_reader_id_fkey';
+            columns: ['reader_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       follows: {
         Row: {
           author_id: string;
@@ -1527,6 +1575,7 @@ export type Database = {
           feed_seen_at: string | null;
           home_tz: string;
           id: string;
+          is_private: boolean;
           jar_count: number;
           lid_color: string;
           reader_count: number;
@@ -1548,6 +1597,7 @@ export type Database = {
           feed_seen_at?: string | null;
           home_tz?: string;
           id: string;
+          is_private?: boolean;
           jar_count?: number;
           lid_color?: string;
           reader_count?: number;
@@ -1568,6 +1618,7 @@ export type Database = {
           feed_seen_at?: string | null;
           home_tz?: string;
           id?: string;
+          is_private?: boolean;
           jar_count?: number;
           lid_color?: string;
           reader_count?: number;
@@ -2173,6 +2224,8 @@ export type Database = {
       admit_all_waiting: { Args: Record<PropertyKey, never>; Returns: number };
       admit_profiles: { Args: { p_actor: string; p_ids: string[]; p_reason: string }; Returns: number };
       admit_waiting: { Args: { p_count: number }; Returns: number };
+      approve_reader: { Args: { p_reader: string }; Returns: boolean };
+      approve_waiting_readers: { Args: Record<PropertyKey, never>; Returns: number };
       blocked_accounts: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -2384,6 +2437,8 @@ export type Database = {
           visible_count: number;
         }[];
       };
+      follow_request_take: { Args: { p_author: string }; Returns: boolean };
+      follow_requests_approve: { Args: { p_author: string; p_reader?: string }; Returns: number };
       full_jars_today: {
         Args: { max_count?: number };
         Returns: {
@@ -2817,6 +2872,7 @@ export type Database = {
           feed_seen_at: string | null;
           home_tz: string;
           id: string;
+          is_private: boolean;
           jar_count: number;
           lid_color: string;
           reader_count: number;
@@ -2841,6 +2897,7 @@ export type Database = {
         }[];
       };
       my_waitlist_status: { Args: Record<PropertyKey, never>; Returns: string };
+      needs_reader_approval: { Args: { p_id: string }; Returns: boolean };
       notify: {
         Args: {
           p_actor?: string;
@@ -2914,6 +2971,16 @@ export type Database = {
         }[];
       };
       push_tickets_save: { Args: { p_ticket_ids: string[]; p_tokens: string[] }; Returns: undefined };
+      reader_requests: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          avatar_path: string;
+          display_name: string;
+          id: string;
+          requested_at: string;
+          username: string;
+        }[];
+      };
       remove_moment_tag: { Args: { p_moment: string }; Returns: undefined };
       resolved_cover_id: {
         Args: {
@@ -2929,6 +2996,7 @@ export type Database = {
           follows_viewer: boolean;
           id: string;
           is_following: boolean;
+          requested: boolean;
           username: string;
         }[];
       };

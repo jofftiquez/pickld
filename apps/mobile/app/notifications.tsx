@@ -7,6 +7,7 @@ import { phoneTimeZone, useToday } from '@/features/jar/useToday';
 import { NotificationsView } from '@/features/notifications/NotificationsView';
 import { useNotifications } from '@/features/notifications/useNotifications';
 import { useFollow } from '@/features/profile/useFollow';
+import { useReaderRequests } from '@/features/profile/useReaderRequests';
 import { DAY_SLOTS } from '@/features/reminders/reminderPlan';
 import { currentSlot } from '@/lib/jars';
 
@@ -18,6 +19,8 @@ export default function NotificationsScreen() {
   const tz = phoneTimeZone();
   const { userId, data, failed, refresh, markAllRead } = useNotifications();
   const follow = useFollow(userId);
+  // Approve / Decline on a request row (0176); answering removes the request and its notification.
+  const requests = useReaderRequests(userId, false);
   const today = useToday(now);
   const [pulling, setPulling] = useState(false);
 
@@ -68,6 +71,10 @@ export default function NotificationsScreen() {
           follow.setReading({ authorId: actor.id, username: actor.username, reading: true });
           void refresh();
         }
+      }}
+      onAnswerRequest={(entry, approve) => {
+        const actor = entry.actors[0];
+        if (actor) requests.answer({ id: actor.id, username: actor.username }, approve);
       }}
     />
   );

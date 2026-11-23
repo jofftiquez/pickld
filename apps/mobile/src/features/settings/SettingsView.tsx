@@ -52,6 +52,8 @@ export type SettingsViewProps = {
   onPending?: () => void;
   onVisibility: (visibility: Visibility) => void;
   onDiscoverable: (on: boolean) => void;
+  /** Private account (0176). */
+  onPrivate: (on: boolean) => void;
   onBlocked: () => void;
   onMyStickers: () => void;
   /** Invite friends (INV-07): opens the Invite page. */
@@ -76,6 +78,12 @@ export function SettingsView(props: SettingsViewProps) {
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const loading = account === undefined || reminders === undefined || prefs === undefined;
+  const privateBody = account?.minor ? 'settings.privateMinor' : 'settings.privateBody';
+  const discoverableBody = account?.minor
+    ? 'settings.discoverableMinor'
+    : account?.isPrivate
+      ? 'settings.discoverablePrivate'
+      : 'settings.discoverableBody';
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]} testID="settings-screen">
@@ -264,18 +272,26 @@ export function SettingsView(props: SettingsViewProps) {
             />
             <View style={styles.switchRow}>
               <View style={styles.rowLabel} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-                <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.discoverable')}</Text>
-                <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>
-                  {t(account.minor ? 'settings.discoverableMinor' : 'settings.discoverableBody')}
-                </Text>
+                <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.private')}</Text>
+                <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>{t(privateBody)}</Text>
               </View>
               <Toggle
-                value={account.discoverable && !account.minor}
+                value={account.isPrivate}
+                onValueChange={props.onPrivate}
+                accessibilityLabel={`${t('settings.private')}. ${t(privateBody)}`}
+                testID="settings-private"
+              />
+            </View>
+            <View style={styles.switchRow}>
+              <View style={styles.rowLabel} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+                <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.discoverable')}</Text>
+                <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>{t(discoverableBody)}</Text>
+              </View>
+              <Toggle
+                value={account.discoverable && !account.minor && !account.isPrivate}
                 onValueChange={props.onDiscoverable}
-                disabled={account.minor}
-                accessibilityLabel={`${t('settings.discoverable')}. ${t(
-                  account.minor ? 'settings.discoverableMinor' : 'settings.discoverableBody',
-                )}`}
+                disabled={account.minor || account.isPrivate}
+                accessibilityLabel={`${t('settings.discoverable')}. ${t(discoverableBody)}`}
                 testID="settings-discoverable"
               />
             </View>

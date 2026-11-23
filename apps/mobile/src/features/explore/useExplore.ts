@@ -10,6 +10,7 @@ import { hashAddressBook, matchContacts } from '@/features/onboarding/findFriend
 import { setReading } from '@/features/profile/useFollow';
 import { useAuthStore } from '@/lib/authStore';
 import { getSupabase } from '@/lib/supabase';
+import { showToast } from '@/lib/toast';
 
 import {
   fullJarRow,
@@ -155,6 +156,11 @@ export function useExploreReading() {
     },
     onError: (_error, _vars, context) => {
       for (const [key, rows] of context?.lists ?? []) queryClient.setQueryData(key, rows);
+    },
+    // Someone who approves readers (0176): the tap asked to read them, so say so; the row reads back unread.
+    onSuccess: (result, { authorId }, context) => {
+      const person = (context?.lists ?? []).flatMap(([, rows]) => rows ?? []).find((r) => r.id === authorId);
+      if (result === 'requested' && person) showToast('requested', { username: person.username });
     },
     onSettled: () =>
       Promise.all(

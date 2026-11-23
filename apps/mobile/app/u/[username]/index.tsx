@@ -59,7 +59,8 @@ export default function ProfileScreen() {
             follow.setReading({
               authorId: data.profile.id,
               username: data.profile.username,
-              reading: !data.relationship.reading,
+              // Requested cancels the request (0176).
+              reading: !(data.relationship.reading || data.relationship.requested),
             });
           }
         }}

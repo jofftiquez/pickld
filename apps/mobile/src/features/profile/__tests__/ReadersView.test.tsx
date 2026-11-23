@@ -30,6 +30,7 @@ const dale: ProfileRow = {
   reader_count: 1,
   author_count: 1250,
   jar_count: 3,
+  is_private: false,
 };
 
 function row(username: string, over: Partial<FollowListRow> = {}): FollowListRow {
@@ -40,6 +41,7 @@ function row(username: string, over: Partial<FollowListRow> = {}): FollowListRow
     avatar_path: null,
     is_following: false,
     follows_viewer: false,
+    requested: false,
     ...over,
   };
 }
@@ -49,6 +51,7 @@ const rows = [
   row('jun', { follows_viewer: true }),
   row('lola'),
   row('dale', { id: 'dale-id' }),
+  row('kai', { requested: true }),
 ];
 
 async function renderView(props: Partial<ReadersViewProps>) {
@@ -86,6 +89,24 @@ describe('ReadersView', () => {
     expect(screen.getByTestId('follow-row-jun-button')).toHaveTextContent('Read back');
     expect(screen.getByTestId('follow-row-lola-button')).toHaveTextContent('Be a reader');
     expect(screen.queryByTestId('follow-row-dale-button')).toBeNull();
+    expect(screen.getByTestId('follow-row-kai-button')).toHaveTextContent('Requested');
+  });
+
+  it('puts requests first on the owner’s own Readers list, with Approve and Decline (0176)', async () => {
+    const requests = [
+      { id: 'ana-id', username: 'ana', display_name: 'Ana', avatar_path: null, requested_at: '2026-11-23T01:00:00Z' },
+    ];
+    const onAnswerRequest = jest.fn();
+    await renderView({ requests, onAnswerRequest });
+    expect(screen.getByTestId('readers-requests')).toHaveTextContent(/1 wants to read you/);
+    await fireEvent.press(screen.getByTestId('request-row-ana-approve'));
+    expect(onAnswerRequest).toHaveBeenCalledWith(requests[0], true);
+    await fireEvent.press(screen.getByTestId('request-row-ana-decline'));
+    expect(onAnswerRequest).toHaveBeenLastCalledWith(requests[0], false);
+    await renderView({ requests, onAnswerRequest, list: 'authors' });
+    expect(screen.queryByTestId('readers-requests')).toBeNull();
+    await renderView({ requests, onAnswerRequest, viewerId: 'mika-id' });
+    expect(screen.queryByTestId('readers-requests')).toBeNull();
   });
 
   it('toggles reading and opens a profile', async () => {

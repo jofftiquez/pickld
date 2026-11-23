@@ -172,8 +172,20 @@ describe('profileMomentDays (D-146)', () => {
 describe('relationshipOf', () => {
   it('tells reading apart from reads-you', () => {
     const rows = [{ reader_id: 'mika', author_id: 'dale' }];
-    expect(relationshipOf(rows, 'dale', 'mika')).toEqual({ reading: false, readsYou: true, muted: false });
-    expect(relationshipOf(rows, 'mika', 'dale', true)).toEqual({ reading: true, readsYou: false, muted: true });
+    expect(relationshipOf(rows, 'dale', 'mika')).toEqual({
+      reading: false,
+      readsYou: true,
+      muted: false,
+      requested: false,
+      approves: false,
+    });
+    expect(relationshipOf(rows, 'mika', 'dale', true)).toEqual({
+      reading: true,
+      readsYou: false,
+      muted: true,
+      requested: false,
+      approves: false,
+    });
   });
 });
 
@@ -212,14 +224,15 @@ describe('withReading', () => {
       reader_count: 2,
       author_count: 1,
       jar_count: 1,
+      is_private: false,
     },
-    relationship: { reading: false, readsYou: true, muted: false },
+    relationship: { reading: false, readsYou: true, muted: false, requested: false, approves: false },
   };
 
   it('moves the reader count with the state, once', () => {
     const on = withReading(data, true);
     expect(on.profile.reader_count).toBe(3);
-    expect(on.relationship).toEqual({ reading: true, readsYou: true, muted: false });
+    expect(on.relationship).toEqual({ reading: true, readsYou: true, muted: false, requested: false, approves: false });
     expect(withReading(on, true)).toBe(on);
     expect(withReading(on, false).profile.reader_count).toBe(2);
   });
@@ -228,13 +241,28 @@ describe('withReading', () => {
     const odd = {
       ...data,
       profile: { ...data.profile, reader_count: 0 },
-      relationship: { reading: true, readsYou: false, muted: false },
+      relationship: { ...data.relationship, reading: true, readsYou: false },
     };
     expect(withReading(odd, false).profile.reader_count).toBe(0);
   });
 
   it('stopping reading ends a mute (0151)', () => {
-    const muted = { ...data, relationship: { reading: true, readsYou: false, muted: true } };
+    const muted = { ...data, relationship: { ...data.relationship, reading: true, readsYou: false, muted: true } };
     expect(withReading(muted, false).relationship.muted).toBe(false);
+  });
+
+  it('someone who approves readers gets a request, and the count waits for their yes (0176)', () => {
+    const approves = { ...data, relationship: { ...data.relationship, approves: true } };
+    const asked = withReading(approves, true);
+    expect([asked.relationship.reading, asked.relationship.requested, asked.profile.reader_count]).toEqual([
+      false,
+      true,
+      2,
+    ]);
+    expect(followAction(asked.relationship)).toBe('requested');
+    expect(withReading(asked, true)).toBe(asked);
+    const cancelled = withReading(asked, false);
+    expect([cancelled.relationship.requested, cancelled.profile.reader_count]).toEqual([false, 2]);
+    expect(followAction(cancelled.relationship)).toBe('readBack');
   });
 });

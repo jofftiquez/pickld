@@ -201,7 +201,7 @@ describe('Moment options', () => {
     const choice = (name: RegExp) => screen.getByRole('radio', { name });
     expect(screen.getAllByRole('radio').map((r) => r.props.accessibilityLabel)).toEqual([
       'Readers, People who read your days',
-      'Everyone, Anyone on Pickld',
+      'Everyone, Anyone on Pickld, unless your account is Private',
       'Only me, Only you will see this moment',
     ]);
     expect(choice(/^Readers/).props.accessibilityState).toMatchObject({ checked: true });

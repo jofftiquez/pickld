@@ -2,7 +2,8 @@
 // lets a user add only their own follow (and 0005 only while active and not blocked), follows_delete lets
 // the reader or the author remove one, and follows_sync keeps reader_count and author_count right on both
 // profiles. The viewed profile changes at once (optimistic); afterwards every cached profile, follow list
-// and the feed are read again, so the counts on both profiles match the server.
+// and the feed are read again, so the counts on both profiles match the server. For someone who approves readers
+// (Private or under 18, 0176) the same insert becomes a request on the server; Requested cancels it.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { track } from '@/lib/analytics';
@@ -13,16 +14,37 @@ import { withReading } from './profileModel';
 import type { FollowListRow } from './useFollowList';
 import { profileQueryKeys, type ProfilePage } from './useProfile';
 
-/** Starts or stops `viewerId` reading `authorId`. Already in that state (another device) is fine. A Read or
- * Read back that went through is one `follow` event (NFR-ANL-01), wherever it was tapped. */
-export async function setReading(viewerId: string, authorId: string, reading: boolean): Promise<void> {
+/** What a Read or Reading tap did: started reading, asked to (0176), stopped reading, or cancelled a request. */
+export type ReadingResult = 'reading' | 'requested' | 'stopped' | 'cancelled';
+
+/** Starts or stops `viewerId` reading `authorId`; stopping also cancels a request. Already in that state (another
+ * device) is fine. A Read or Read back that went through is one `follow` event (NFR-ANL-01), wherever it was
+ * tapped; a request is not, until it is approved. */
+export async function setReading(viewerId: string, authorId: string, reading: boolean): Promise<ReadingResult> {
   const supabase = getSupabase();
-  const row = { reader_id: viewerId, author_id: authorId };
-  const { error } = reading
-    ? await supabase.from('follows').upsert(row, { onConflict: 'reader_id,author_id', ignoreDuplicates: true })
-    : await supabase.from('follows').delete().eq('reader_id', viewerId).eq('author_id', authorId);
-  if (error) throw new Error(error.message);
-  if (reading) track('follow', {});
+  if (reading) {
+    const row = { reader_id: viewerId, author_id: authorId };
+    const { error } = await supabase
+      .from('follows')
+      .upsert(row, { onConflict: 'reader_id,author_id', ignoreDuplicates: true });
+    if (error) throw new Error(error.message);
+    const request = await supabase
+      .from('follow_requests')
+      .select('author_id')
+      .eq('reader_id', viewerId)
+      .eq('author_id', authorId);
+    if (request.error) throw new Error(request.error.message);
+    if ((request.data ?? []).length > 0) return 'requested';
+    track('follow', {});
+    return 'reading';
+  }
+  const [follow, request] = await Promise.all([
+    supabase.from('follows').delete().eq('reader_id', viewerId).eq('author_id', authorId),
+    supabase.from('follow_requests').delete().eq('reader_id', viewerId).eq('author_id', authorId).select('author_id'),
+  ]);
+  if (follow.error) throw new Error(follow.error.message);
+  if (request.error) throw new Error(request.error.message);
+  return (request.data ?? []).length > 0 ? 'cancelled' : 'stopped';
 }
 
 /** The author `viewerId` removes `readerId` from their readers. */
@@ -55,7 +77,8 @@ export function useFollow(viewerId: string | null) {
         if (rows) {
           queryClient.setQueryData(
             listKey,
-            rows.map((r) => (r.id === authorId ? { ...r, is_following: reading } : r)),
+            // A request shows as Requested once the server says so (onSettled reads the lists again).
+            rows.map((r) => (r.id === authorId ? { ...r, is_following: reading, requested: false } : r)),
           );
         }
       }
@@ -65,7 +88,13 @@ export function useFollow(viewerId: string | null) {
       if (context?.before !== undefined) queryClient.setQueryData(context.key, context.before);
       for (const [listKey, rows] of context?.lists ?? []) queryClient.setQueryData(listKey, rows);
     },
-    onSuccess: (_data, { username, reading }) => showToast(reading ? 'following' : 'unfollowed', { username }),
+    onSuccess: (result, { username }) =>
+      showToast(
+        ({ reading: 'following', requested: 'requested', stopped: 'unfollowed', cancelled: 'requestCancelled' } as const)[
+          result
+        ],
+        { username },
+      ),
     onSettled: refetch,
   });
 
