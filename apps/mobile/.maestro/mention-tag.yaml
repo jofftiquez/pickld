@@ -67,7 +67,9 @@ env:
 - takeScreenshot: MentionSuggest-ios
 - tapOn:
     id: editor-caption-mention-aya
-- hideKeyboard
+# The details step's return key is a ✓ (since the photo description field), which Maestro's hideKeyboard
+# can't use; tapping the Caption label closes the keyboard.
+- tapOn: Caption
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

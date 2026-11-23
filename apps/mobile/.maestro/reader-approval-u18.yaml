@@ -1,0 +1,115 @@
+# FR-SOC-07 (0176): an under-18 account approves its readers even with Private off. Lola (an outsider) asks to
+# read Jun, who is 16 and public: Be a reader becomes Requested and Jun's profile is not locked (2a). Jun declines
+# in Readers (silent), Lola asks again, and Jun approves; Lola then reads Jun.
+# Needs the seed data plus, on local Supabase only:
+#   update profiles set birthday = (current_date - interval '16 years')::date where username = 'jun';
+#   maestro test apps/mobile/.maestro/reader-approval-u18.yaml
+# Ends signed in as Lola; sign Dale back in afterwards (sign-in-email.yaml).
+appId: me.pickld.app
+---
+# ---------------------------------------------------------------- Lola asks
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: lola@pickld.test
+- openLink: pickld://u/jun
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: profile-follow
+    timeout: 30000
+- assertNotVisible: This account is private
+- tapOn:
+    id: profile-follow
+- extendedWaitUntil:
+    visible: Requested to read Jun Cruz
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: ReaderApprovalU18-requested-ios
+
+# ---------------------------------------------------------------- Jun declines
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: jun@pickld.test
+- openLink: pickld://u/jun/readers
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: request-row-lola
+    timeout: 30000
+- takeScreenshot: ReaderApprovalU18-request-ios
+- tapOn:
+    id: request-row-lola-decline
+- extendedWaitUntil:
+    notVisible:
+      id: request-row-lola
+    timeout: 10000
+- assertNotVisible:
+    id: follow-row-lola
+
+# ---------------------------------------------------------------- Lola asks again
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: lola@pickld.test
+- openLink: pickld://u/jun
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: profile-follow
+    timeout: 30000
+- assertNotVisible: Requested to read Jun Cruz
+- tapOn:
+    id: profile-follow
+- extendedWaitUntil:
+    visible: Requested to read Jun Cruz
+    timeout: 10000
+
+# ---------------------------------------------------------------- Jun approves
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: jun@pickld.test
+- openLink: pickld://u/jun/readers
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: request-row-lola
+    timeout: 30000
+- tapOn:
+    id: request-row-lola-approve
+- extendedWaitUntil:
+    visible:
+      id: follow-row-lola
+    timeout: 10000
+- takeScreenshot: ReaderApprovalU18-approved-ios
+
+# ---------------------------------------------------------------- Lola reads Jun and is told
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: lola@pickld.test
+- tapOn:
+    id: today-notifications
+- extendedWaitUntil:
+    visible: '.*Jun Cruz.*approved you.*'
+    timeout: 30000
+- takeScreenshot: ReaderApprovalU18-told-ios

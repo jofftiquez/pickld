@@ -58,7 +58,9 @@ appId: me.pickld.app
     id: editor-caption
 - eraseText: 160
 - inputText: Coffee first
-- hideKeyboard
+# The details step's return key is a ✓ (since the photo description field), which Maestro's hideKeyboard
+# can't use; tapping the Caption label closes the keyboard.
+- tapOn: Caption
 - tapOn:
     id: editor-save
 - extendedWaitUntil:

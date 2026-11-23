@@ -1,0 +1,121 @@
+# FR-PUB-03 (0179): the Close friends audience. Dale adds Aya to Close friends in Settings, then turns yesterday's
+# #ootd (seed jar ...102, Readers, published) Close friends from the moment preview. Aya (on the list) sees it
+# with the star badge; Jun (a reader off the list) sees the jar without it and with no sign it exists.
+# Needs the seed data and dale signed in (readers aya, jun, mika):
+#   maestro test apps/mobile/.maestro/close-friends.yaml
+# Ends signed in as Jun; sign Dale back in afterwards (sign-in-email.yaml).
+appId: me.pickld.app
+env:
+  JAR: b0000000-0000-4000-8000-000000000102
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+
+# ---------------------------------------------------------------- Settings › Close friends: add Aya
+- openLink: pickld://settings/close-friends
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: close-friends-list
+    timeout: 30000
+- assertVisible:
+    id: close-friends-row-aya
+- assertVisible:
+    id: close-friends-row-jun
+- tapOn:
+    id: close-friends-toggle-aya
+- extendedWaitUntil:
+    visible:
+      id: close-friends-count
+      text: '.*1.*'
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: CloseFriends-list-ios
+
+# ---------------------------------------------------------------- Dale: #ootd → Close friends
+- openLink: pickld://jar/${JAR}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: jar-tile-ootd
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: jar-tile-ootd
+- extendedWaitUntil:
+    visible:
+      id: preview-visibility-action
+    timeout: 20000
+- tapOn:
+    id: preview-visibility-action
+- tapOn:
+    id: moment-options-visibility-close_friends
+- extendedWaitUntil:
+    visible:
+      id: moment-options-visibility-close_friends-dot
+    timeout: 10000
+- takeScreenshot: CloseFriends-options-ios
+- tapOn:
+    id: moment-options-cancel
+- tapOn:
+    id: preview-close
+# The star badge sits inside the tile, which iOS reads as one element: its label says close friends.
+- scrollUntilVisible:
+    element:
+      id: jar-tile-ootd
+      text: '#ootd, close friends.*'
+    direction: DOWN
+    timeout: 20000
+- takeScreenshot: CloseFriends-owner-jar-ios
+
+# ---------------------------------------------------------------- Aya, on the list: the star
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: aya@pickld.test
+- openLink: pickld://jar/${JAR}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: jar-tile-ootd
+      text: '#ootd, close friends.*'
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: CloseFriends-aya-jar-ios
+
+# ---------------------------------------------------------------- Jun, off the list: no #ootd, no hint
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: jun@pickld.test
+- openLink: pickld://jar/${JAR}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: jar-tile-evening
+    direction: DOWN
+    timeout: 30000
+- assertNotVisible:
+    id: jar-tile-ootd
+- assertNotVisible: .*[Cc]lose friends.*
+- takeScreenshot: CloseFriends-jun-jar-ios

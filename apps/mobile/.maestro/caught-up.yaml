@@ -1,0 +1,77 @@
+# FR-SOC-01: You're all caught up. Jun (reads Dale and Mika) opens Jars, which remembers what he saw (Mika's jar
+# today, Dale's from yesterday). Dale then publishes today's jar. When Jun opens Jars again, Dale's new jar is on
+# top and the line sits under it, above what was already there. The order is unchanged: newest first.
+# Needs the seed data after `pnpm db:reset` (dale's jar today is unpublished; mika's is published):
+#   maestro test apps/mobile/.maestro/caught-up.yaml
+# Ends signed in as Jun; sign Dale back in afterwards (sign-in-email.yaml).
+appId: me.pickld.app
+---
+# ---------------------------------------------------------------- Jun: nothing new, no line
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: jun@pickld.test
+# Two visits: the first marks what is there as seen (the phone keeps the last visit, even across a database
+# reset), so the second has nothing new and no line.
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 30000
+- tapOn:
+    id: tab-today
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-mika
+    timeout: 30000
+- assertNotVisible:
+    id: caught-up-line
+- takeScreenshot: CaughtUp-nothing-new-ios
+- tapOn:
+    id: tab-today
+
+# ---------------------------------------------------------------- Dale publishes today
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: dale@pickld.test
+- scrollUntilVisible:
+    element:
+      id: today-publish
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: today-publish
+- extendedWaitUntil:
+    visible:
+      id: publish-review
+    timeout: 15000
+- tapOn:
+    id: publish-submit
+- extendedWaitUntil:
+    visible:
+      id: today-published
+    timeout: 30000
+
+# ---------------------------------------------------------------- Jun again: Dale on top, then the line
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: jun@pickld.test
+- tapOn:
+    id: tab-jars
+- extendedWaitUntil:
+    visible:
+      id: feed-card-dale
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: caught-up-line
+    timeout: 15000
+- assertVisible: '.*all caught up.*'
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: CaughtUp-line-ios

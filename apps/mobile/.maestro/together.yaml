@@ -1,0 +1,150 @@
+# FR-CAP-08 (0177): Together moments. Aya is tagged in Dale's #whereami from yesterday (seed jar ...102,
+# Readers). She asks to add it to her Together page; Dale is told and approves it from Moment detail. Then who sees
+# it on Aya's Together page: Aya (tagged), Mika (reads both Dale and Aya) yes; Jun (reads Dale only) no.
+# Needs the seed data plus, on local Supabase only:
+#   insert into follows (reader_id, author_id) select m.id, a.id from profiles m, profiles a
+#     where m.username = 'mika' and a.username = 'aya' on conflict do nothing;
+#   insert into moment_tags (moment_id, tagged_id, author_id, notified_at)
+#     select mo.id, a.id, mo.user_id, now() from moments mo, profiles a
+#     where mo.jar_id = 'b0000000-0000-4000-8000-000000000102' and mo.slot = 'whereami' and a.username = 'aya';
+#   maestro test -e MOMENT=<that moment's id> apps/mobile/.maestro/together.yaml
+# Ends signed in as Jun; sign Dale back in afterwards (sign-in-email.yaml).
+appId: me.pickld.app
+env:
+  JAR: b0000000-0000-4000-8000-000000000102
+---
+# ---------------------------------------------------------------- Aya asks
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: aya@pickld.test
+- openLink: pickld://moment/${MOMENT}?jar=${JAR}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: moment-together-add
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: moment-together-add
+- extendedWaitUntil:
+    visible:
+      id: moment-together-asked
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: Together-asked-ios
+# Nothing on her Together page until Dale says yes.
+- openLink: pickld://u/aya/together
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: together-empty
+    timeout: 20000
+
+# ---------------------------------------------------------------- Dale approves
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: dale@pickld.test
+- tapOn:
+    id: today-notifications
+- extendedWaitUntil:
+    visible: '.*Aya Tanaka.*wants to add your moment to their Together page.*'
+    timeout: 30000
+- takeScreenshot: Together-request-notification-ios
+- openLink: pickld://moment/${MOMENT}?jar=${JAR}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: moment-together-approve-aya
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: Together-author-request-ios
+- tapOn:
+    id: moment-together-approve-aya
+- extendedWaitUntil:
+    visible: '.*On @aya.s Together page.*'
+    timeout: 15000
+- takeScreenshot: Together-approved-ios
+
+# ---------------------------------------------------------------- Aya: told, and on her page
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: aya@pickld.test
+- tapOn:
+    id: today-notifications
+- extendedWaitUntil:
+    visible: '.*Dale Santos.*said yes.*'
+    timeout: 30000
+- openLink: pickld://u/aya/together
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: together-moment-${MOMENT}
+    timeout: 20000
+- takeScreenshot: Together-page-aya-ios
+
+# ---------------------------------------------------------------- Mika reads both: sees it
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: mika@pickld.test
+- openLink: pickld://u/aya
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: profile-together
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: profile-together
+- extendedWaitUntil:
+    visible:
+      id: together-moment-${MOMENT}
+    timeout: 20000
+- takeScreenshot: Together-page-mika-ios
+
+# ---------------------------------------------------------------- Jun reads Dale only: doesn't
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: jun@pickld.test
+- openLink: pickld://u/aya/together
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: together-screen
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible:
+      id: together-loading
+    timeout: 20000
+- assertNotVisible:
+    id: together-moment-${MOMENT}
+- takeScreenshot: Together-page-jun-ios
