@@ -176,6 +176,11 @@ export function JarPageView({
             <Text style={[textStyle('label', '500'), { color: colors.muted }]} testID="jar-subtitle">
               {subtitle}
             </Text>
+            {jar.line ? (
+              <Text style={[textStyle('body', '500'), styles.line]} testID="jar-line">
+                {t('jarPage.line', { line: jar.line })}
+              </Text>
+            ) : null}
           </View>
         </View>
 
@@ -252,6 +257,7 @@ const styles = StyleSheet.create({
   authorRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   author: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm + 2 },
   name: { flexShrink: 1, color: colors.ink },
+  line: { color: colors.inkSoft, marginTop: space.sm },
   fullTag: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -737,6 +737,7 @@ export type Database = {
           is_full: boolean | null;
           kept_at: string | null;
           like_count: number;
+          line: string | null;
           local_date: string;
           moment_count: number;
           published_at: string | null;
@@ -758,6 +759,7 @@ export type Database = {
           is_full?: never;
           kept_at?: string | null;
           like_count?: number;
+          line?: string | null;
           local_date: string;
           moment_count?: number;
           published_at?: string | null;
@@ -776,6 +778,7 @@ export type Database = {
           is_full?: never;
           kept_at?: string | null;
           like_count?: number;
+          line?: string | null;
           local_date?: string;
           moment_count?: number;
           published_at?: string | null;
@@ -2300,6 +2303,7 @@ export type Database = {
           is_full: boolean | null;
           kept_at: string | null;
           like_count: number;
+          line: string | null;
           local_date: string;
           moment_count: number;
           published_at: string | null;

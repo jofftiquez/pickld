@@ -11,6 +11,8 @@ import { galleryTarget, saveGalleryPhoto } from '@/features/capture/saveCapture'
 import { useGalleryPicker } from '@/features/capture/useGalleryPicker';
 import { nextDay, stepToday } from '@/features/days/pastDay';
 import { useDayJar } from '@/features/days/useDayJar';
+import { DayLine } from '@/features/jar/DayLine';
+import { useSaveJarLine } from '@/features/jar/jarLine';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TodayView } from '@/features/jar/TodayView';
 import { openTodayJar } from '@/features/jar/rollover';
@@ -81,6 +83,7 @@ export default function DayScreen() {
   });
 
   const jar = day?.jar ?? null;
+  const saveLine = useSaveJarLine(userId);
   const tiles =
     date === null
       ? []
@@ -172,6 +175,15 @@ export default function DayScreen() {
         }}
         poppingSlots={poppingSlots}
         celebratePublish={celebratePublish}
+        dayLine={
+          jar ? (
+            <DayLine
+              key={jar.id}
+              line={jar.line ?? null}
+              onSave={(line) => saveLine.mutateAsync({ jarId: jar.id, line })}
+            />
+          ) : null
+        }
         // Joff: step a day at a time on this page, so Back still leads where it came from; the day after
         // the last past day is Today (its jar's own date).
         step={{

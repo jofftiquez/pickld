@@ -104,6 +104,8 @@ export type TodayViewProps = {
   step?: Omit<DayStepperProps, 'locale'> | null;
   /** A first-time guide tip (FR-ONB-10), between the jar card and the grid. */
   guideTip?: ReactNode;
+  /** The owner's line for the day (0175; `DayLine`), under the jar card; left out until the jar exists. */
+  dayLine?: ReactNode;
 };
 
 const COLUMNS = 3;
@@ -162,6 +164,7 @@ export function TodayView({
   onOpenPack,
   step = null,
   guideTip = null,
+  dayLine = null,
 }: TodayViewProps) {
   const { t } = useTranslation();
   const count = momentCount(tiles);
@@ -213,6 +216,8 @@ export function TodayView({
             { paddingTop: insets.top + sizes.headerTop, paddingBottom: bottomPadding },
           ]}
           testID={day ? 'day-scroll' : 'today-scroll'}
+          // The line for the day's Save and Cancel work on the first tap while the keyboard is up.
+          keyboardShouldPersistTaps="handled"
         >
           {day ? (
             <DayHeader
@@ -267,6 +272,7 @@ export function TodayView({
               closeLid={celebratePublish}
             />
           </View>
+          {dayLine ? <View style={styles.dayLine}>{dayLine}</View> : null}
           {guideTip ? <View style={styles.guideTip}>{guideTip}</View> : null}
           <View accessibilityLabel={day ? t('day.grid') : t('today.grid')} style={styles.grid}>
             {rows.map((row, r) => (
@@ -357,6 +363,7 @@ const styles = StyleSheet.create({
   cardUnderBanner: { marginTop: sizes.bannerGap },
   grid: { marginTop: space.lg, gap: space.md },
   guideTip: { marginTop: space.md },
+  dayLine: { marginTop: space.md },
   gridRow: { flexDirection: 'row', gap: space.md },
   cell: { flex: 1 },
   note: { marginTop: space.lg, color: colors.muted },

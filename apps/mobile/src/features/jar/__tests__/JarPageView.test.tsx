@@ -107,6 +107,13 @@ describe('JarPageView', () => {
     expect(screen.getByLabelText('#mebusywith')).toBeTruthy();
   });
 
+  it('shows the owner’s line for the day under the date, and nothing when there is none (0175)', async () => {
+    await setup({ data: { ...daleJar, jar: { ...daleJar.jar, line: 'Moved into the new flat' } } });
+    expect(screen.getByTestId('jar-line')).toHaveTextContent('“Moved into the new flat”');
+    await setup();
+    expect(screen.queryByTestId('jar-line')).toBeNull();
+  });
+
   it('opens a tile with the moment’s id', async () => {
     const onOpenMoment = jest.fn();
     await setup({ onOpenMoment });

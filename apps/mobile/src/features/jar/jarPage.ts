@@ -23,6 +23,8 @@ export const jarRow = z.object({
    * else the newest caption, else the first slot. Absent from `moment_jar` rows and older caches.
    */
   resolved_cover_id: z.string().nullish(),
+  /** The owner's line for the day (0175). Absent from `moment_jar` rows and older caches. */
+  line: z.string().nullish(),
 });
 export type JarRow = z.infer<typeof jarRow>;
 
