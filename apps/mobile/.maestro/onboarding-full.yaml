@@ -4,7 +4,7 @@
 # Permissions (camera preset to allowed; Notifications names the chosen times and Allow shows the prompt),
 # Find friends (contacts preset to allowed; Be a reader follows Mika), the Pickld Promise (held), the First moment
 # tip, whose Take my first moment opens Camera on the current slot, the first-time guide's tips on the editor's two
-# steps and on Today (FR-ONB-10), the first moment saved to Today, and a back swipe from Today staying on Today.
+# steps and on Today (FR-ONB-10), the first moment saved to Today, and a swipe right from Today not reopening setup.
 # Before the first run on a Simulator, add the seed contacts:
 #   xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf
 # Ends signed in as the new account: sign dale back in afterwards (scripts/dev-sign-in.sh).
@@ -301,13 +301,23 @@ appId: me.pickld.app
       id: guide-tip-today
     timeout: 20000
 - takeScreenshot: GuideTipToday-ios
-- tapOn:
-    id: guide-tip-ok
-# Saved to the queue first, then uploading, checking or already added (D-22 auto-approves locally).
+# The upload settles under the tip (it stays up), and the jar's line row then appears above it, moving the
+# tip down: wait for that row before tapping Got it. D-22 auto-approves the moment locally.
 - extendedWaitUntil:
     visible:
-      text: '.*(waiting for connection|uploading|checking|added).*'
-    timeout: 20000
+      id: day-line
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: guide-tip-today
+- tapOn:
+    id: guide-tip-ok
+- assertNotVisible:
+    id: guide-tip-today
+- assertVisible:
+    id: tile-whereami
+    text: '#whereami, .*'
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: FirstMoment-ios
@@ -317,9 +327,19 @@ appId: me.pickld.app
     end: 80%, 50%
 - waitForAnimationToEnd:
     timeout: 3000
-- assertVisible:
-    id: tab-today
 - assertNotVisible:
     id: promise-screen
 - assertNotVisible:
     id: friends-screen
+# On Today a swipe right is the day swipe: it opens yesterday's day page, whose back button returns to Today.
+- runFlow:
+    when:
+      visible:
+        id: day-back
+    commands:
+      - tapOn:
+          id: day-back
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 10000

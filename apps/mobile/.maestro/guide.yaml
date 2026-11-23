@@ -1,0 +1,111 @@
+# FR-ONB-10 and FR-STK-07: How Pickld works from Settings (five pages, Done), Help › Show tips again (the Moments
+# tip shows once and Got it closes it), and Today's ninth tile as My stickers once every pack is owned.
+# Needs the seed data and dale signed in, plus, on local Supabase only, every pack owned:
+#   insert into owned_packs (user_id, pack_id, source) select p.id, s.id, 'earned' from profiles p, sticker_packs s
+#     where p.username = 'dale' on conflict do nothing;
+#   maestro test apps/mobile/.maestro/guide.yaml
+appId: me.pickld.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+
+# ---------------------------------------------------------------- My stickers tile
+- scrollUntilVisible:
+    element:
+      id: today-stickers-tile
+    direction: DOWN
+    timeout: 20000
+- assertNotVisible:
+    id: today-pack-tile
+- takeScreenshot: Today-my-stickers-tile-ios
+- tapOn:
+    id: today-stickers-tile
+- extendedWaitUntil:
+    visible:
+      id: my-stickers
+    timeout: 20000
+- takeScreenshot: Stickers-mine-ios
+
+# ---------------------------------------------------------------- How Pickld works
+- openLink: pickld://settings
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: settings-guide
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: settings-guide
+- extendedWaitUntil:
+    visible:
+      id: guide-next
+    timeout: 15000
+- takeScreenshot: Guide-page1-ios
+- repeat:
+    times: 4
+    commands:
+      - tapOn:
+          id: guide-next
+      - waitForAnimationToEnd:
+          timeout: 2000
+- extendedWaitUntil:
+    visible:
+      id: guide-done
+    timeout: 10000
+- takeScreenshot: Guide-page5-ios
+- tapOn:
+    id: guide-done
+- extendedWaitUntil:
+    visible:
+      id: settings-screen
+    timeout: 15000
+
+# ---------------------------------------------------------------- Show tips again → the Moments tip, once
+- openLink: pickld://settings/help
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- extendedWaitUntil:
+    visible:
+      id: help-tips
+    timeout: 20000
+- tapOn:
+    id: help-tips
+- waitForAnimationToEnd:
+    timeout: 3000
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- tapOn:
+    id: tab-moments
+- extendedWaitUntil:
+    visible:
+      id: guide-tip-feed
+    timeout: 20000
+- takeScreenshot: Guide-tip-feed-ios
+- tapOn:
+    id: guide-tip-ok
+- extendedWaitUntil:
+    notVisible:
+      id: guide-tip-feed
+    timeout: 10000
+- tapOn:
+    id: tab-today
+- tapOn:
+    id: tab-moments
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertNotVisible:
+    id: guide-tip-feed

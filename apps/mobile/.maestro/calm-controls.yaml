@@ -19,9 +19,10 @@ appId: me.pickld.app
     visible:
       id: settings-screen
     timeout: 20000
+# Centred on Hide like counts: centring Take a break leaves the row above it under the header.
 - scrollUntilVisible:
     element:
-      id: settings-break
+      id: settings-hide-likes
     direction: DOWN
     centerElement: true
 - assertVisible: Calm
@@ -93,7 +94,7 @@ appId: me.pickld.app
     timeout: 20000
 - scrollUntilVisible:
     element:
-      id: settings-break
+      id: settings-hide-likes
     direction: DOWN
     centerElement: true
 - tapOn:

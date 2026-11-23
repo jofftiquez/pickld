@@ -1,0 +1,87 @@
+# NFR-A11Y (0174): a photo description. Dale writes one on yesterday's live #evening (seed jar ...102, Readers)
+# from the moment preview's Edit; the change goes through fn:moderate. Aya, a reader, then hears it on the jar
+# tile and on Moment detail (the description follows the slot label in the accessibility label).
+# Needs the seed data and dale signed in:
+#   maestro test apps/mobile/.maestro/photo-description.yaml
+# Ends signed in as Aya; sign Dale back in afterwards (sign-in-email.yaml).
+appId: me.pickld.app
+env:
+  JAR: b0000000-0000-4000-8000-000000000102
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: tab-today
+    timeout: 60000
+- openLink: pickld://jar/${JAR}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: jar-tile-evening
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: jar-tile-evening
+- extendedWaitUntil:
+    visible:
+      id: preview-edit
+    timeout: 20000
+- tapOn:
+    id: preview-edit
+- extendedWaitUntil:
+    visible:
+      id: editor-screen
+    timeout: 15000
+- tapOn:
+    id: editor-next
+- scrollUntilVisible:
+    element:
+      id: editor-description
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: editor-description
+- inputText: Lanterns over a quiet street
+# The field's return key is a ✓, which Maestro's hideKeyboard can't use; tapping the label closes the keyboard.
+- tapOn: Photo description
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: PhotoDescription-editor-ios
+- tapOn:
+    id: editor-save
+- extendedWaitUntil:
+    visible:
+      id: moment-preview
+    timeout: 20000
+- tapOn:
+    id: preview-close
+
+# ---------------------------------------------------------------- Aya hears it
+- runFlow:
+    file: sign-in-email.yaml
+    env:
+      EMAIL: aya@pickld.test
+- openLink: pickld://jar/${JAR}
+- runFlow:
+    when:
+      visible: Open
+    commands:
+      - tapOn: Open
+- scrollUntilVisible:
+    element:
+      id: jar-tile-evening
+      text: '.*#evening.*Lanterns over a quiet street.*'
+    direction: DOWN
+    timeout: 60000
+- tapOn:
+    id: jar-tile-evening
+- extendedWaitUntil:
+    visible: '.*#evening.*Lanterns over a quiet street.*'
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: PhotoDescription-detail-ios

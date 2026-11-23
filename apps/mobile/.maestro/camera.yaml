@@ -50,7 +50,9 @@ appId: me.pickld.app
 - tapOn:
     id: editor-caption
 - inputText: Sinigang at the office pantry
-- hideKeyboard
+# The details step's return key is a ✓ (since the photo description field), which Maestro's hideKeyboard
+# can't use; tapping the Caption label closes the keyboard.
+- tapOn: Caption
 - waitForAnimationToEnd:
     timeout: 3000
 - takeScreenshot: Capture-with-caption-ios
