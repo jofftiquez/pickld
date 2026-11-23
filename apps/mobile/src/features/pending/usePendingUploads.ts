@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-import { todayQueryKeys } from '@/features/jar/useToday';
+import { refreshAfterQueueChange, todayQueryKeys } from '@/features/jar/useToday';
 import { useAuthStore } from '@/lib/authStore';
 import { listQueue, subscribeQueue } from '@/lib/queue/store';
 
@@ -26,7 +26,7 @@ export function usePendingUploads() {
 
   useEffect(() => {
     if (userId === null) return;
-    return subscribeQueue(() => void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) }));
+    return subscribeQueue((change) => refreshAfterQueueChange(queryClient, userId, change));
   }, [queryClient, userId]);
 
   return {

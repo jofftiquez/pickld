@@ -28,6 +28,8 @@ const mockBackend = {
   jars: [] as Row[],
   moments: [] as Row[],
   queue: [] as Partial<QueueItem>[],
+  /** While set, reads of moments wait for it (a slow jar re-read). */
+  momentsGate: null as Promise<void> | null,
   updates: [] as { table: string; values: Row; eq: [string, unknown][] }[],
 };
 // The jar's visibility menu is a bottom sheet (own tests); here only the props Today gives it matter.
@@ -79,7 +81,10 @@ jest.mock('@/lib/supabase', () => {
       limit: () => builder,
       single: async () => answer(table),
       // Awaitable like supabase-js's query builder.
-      then: (resolve: (value: unknown) => unknown) => Promise.resolve(answer(table)).then(resolve),
+      then: (resolve: (value: unknown) => unknown) =>
+        (table === 'moments' && mockBackend.momentsGate ? mockBackend.momentsGate : Promise.resolve())
+          .then(() => answer(table))
+          .then(resolve),
     };
     return builder;
   };
@@ -171,6 +176,7 @@ beforeEach(() => {
   mockBackend.jars = [];
   mockBackend.moments = [];
   mockBackend.queue = [];
+  mockBackend.momentsGate = null;
   mockBackend.updates = [];
   mockSheet.props = null;
   reportNetworkResult(null);
@@ -223,6 +229,29 @@ describe('Today screen', () => {
     await act(async () => mockQueueListeners.forEach((listener) => listener('removed')));
     expect(client.getQueryState(['jarPage', USER, 'jar-10'])?.isInvalidated).toBe(true);
     expect(client.getQueryState(['jarPage', 'someone-else', 'jar-10'])?.isInvalidated).toBe(false);
+  });
+
+  // FR-ONB-10: the slot never goes empty between the queue dropping the photo and the jar returning the moment.
+  it('an upload leaving the queue keeps its tile filled until the jar has the moment', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.jars = [{ id: 'jar-10', local_date: '2026-11-10', tz: 'Asia/Manila', ends_at: null }];
+    mockBackend.queue = [queued(21, 'whereami', 'uploading')];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('Uploading')).toBeTruthy());
+    await waitFor(() => expect(mockQueueListeners.size).toBeGreaterThan(0));
+
+    // The upload lands: the queue is empty, and the jar's re-read is still on its way.
+    let release = () => {};
+    mockBackend.momentsGate = new Promise<void>((resolve) => (release = resolve));
+    mockBackend.queue = [];
+    mockBackend.moments = [liveMoment('whereami')];
+    await act(async () => mockQueueListeners.forEach((listener) => listener('removed')));
+    await act(() => jest.advanceTimersByTimeAsync(100));
+    expect(screen.getByText('Uploading')).toBeTruthy();
+
+    await act(async () => release());
+    await waitFor(() => expect(screen.queryByText('Uploading')).toBeNull());
+    expect(screen.getByText('1 of 8 moments')).toBeTruthy();
   });
 
   it('the header’s stickers button opens the Stickers page (D-61)', async () => {

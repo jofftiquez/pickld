@@ -50,6 +50,8 @@ jest.mock('@gorhom/bottom-sheet', () => ({
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
+  refreshAfterQueueChange:
+    jest.requireActual<typeof import('@/features/jar/useToday')>('@/features/jar/useToday').refreshAfterQueueChange,
   useToday: () => ({ jar: undefined }),
 }));
 

@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import type { QueuedMoment, ServerMoment } from '@/features/jar/todayGrid';
 import type { Visibility } from '@/features/publish/publishJar';
-import { todayQueryKeys } from '@/features/jar/useToday';
+import { refreshAfterQueueChange, todayQueryKeys } from '@/features/jar/useToday';
 import { useAuthStore } from '@/lib/authStore';
 import { listQueue, subscribeQueue } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
@@ -101,10 +101,7 @@ export function useDayJar(localDate: string | null) {
   const queryClient = useQueryClient();
   useEffect(() => {
     if (userId === null) return;
-    return subscribeQueue((change) => {
-      void queryClient.invalidateQueries({ queryKey: todayQueryKeys.queue(userId) });
-      if (change === 'removed') void queryClient.invalidateQueries({ queryKey: ['day', userId] });
-    });
+    return subscribeQueue((change) => refreshAfterQueueChange(queryClient, userId, change));
   }, [queryClient, userId]);
 
   return {
