@@ -97,7 +97,8 @@
       "join": "Join the waitlist",
       "mission": "Our mission",
       "moments": "The eight moments",
-      "menu": "Menu"
+      "menu": "Menu",
+      "features": "New in Pickld"
     },
     "hero": {
       "eyebrow": "Coming soon to iPhone",
@@ -664,6 +665,67 @@
     "promise": "Follow who matters. See what they share. Discover who connects you.",
     "whyLink": "How Pickld works",
     "finalTitle": "Fill a jar with your day.",
+    "finalBody": "Pickld is coming to iPhone. Join the waitlist to be among the first to try it.",
+    "finalBodySoon": "Pickld is coming soon to iPhone."
+  },
+  "features": {
+    "metaTitle": "New in Pickld · Pickld",
+    "metaDescription": "Close friends, calm controls, a Lock Screen widget and more: a look at what’s new in Pickld, the photo diary for the day you actually had.",
+    "eyebrow": "New in Pickld",
+    "title1": "Made for your people.",
+    "title2": "Calm by design.",
+    "lead": "Pickld keeps getting better at one thing: keeping up with the people you care about, without asking for more of your time. Here are a few of our newest features.",
+    "heroAlt": "Today on Pickld: eight 3:4 tiles for the day’s moments, from #whereami to #evening",
+    "spotlightTitle": "Featured",
+    "close": {
+      "tag": "New",
+      "title": "Close friends",
+      "body": "Some days are just for your inner circle. Pick Close friends when you publish, and only the people on your list see it.",
+      "p1": "Choose your list from the people who read you.",
+      "p2": "Everyone else can’t tell those moments exist.",
+      "p3": "Nobody is told when you add or remove them.",
+      "alt": "Close friends on Pickld: a list of your readers with a switch for each, and 2 people on the list"
+    },
+    "calm": {
+      "tag": "New",
+      "title": "Calm controls",
+      "body": "Pickld is calm by default, and now you can make it quieter still.",
+      "p1": "Hide like counts: no like numbers on posts, yours included. You can still like things.",
+      "p2": "Take a break: pause your reminders and pushes for up to two weeks.",
+      "p3": "Everything waits in Notifications, and nobody is told you’re away.",
+      "alt": "Calm settings on Pickld: Hide like counts and Take a break, under Quiet hours"
+    },
+    "moreTitle": "And a few more",
+    "moreBody": "Small things that make a big difference to how Pickld feels.",
+    "more": {
+      "private": {
+        "title": "Approve who reads you",
+        "body": "Make your account private and you approve each new reader. Accounts under 18 always do."
+      },
+      "widget": {
+        "title": "Lock Screen and StandBy",
+        "body": "See today’s jar at a glance: how many moments you’ve added and which one is next."
+      },
+      "describe": {
+        "title": "Photo descriptions",
+        "body": "Add a short description to a photo, and VoiceOver reads it to everyone who can see the moment."
+      },
+      "mention": {
+        "title": "Tag your people",
+        "body": "Add a mention sticker to tag someone. You can tag people who read each other with you."
+      },
+      "place": {
+        "title": "Place stickers",
+        "body": "Say where you are in your own words. Pickld keeps only the words, never your exact location."
+      },
+      "straighten": {
+        "title": "Straighten",
+        "body": "A fine tilt dial in Crop levels a crooked horizon in a second."
+      }
+    },
+    "saving": "There’s more we’re saving for launch day.",
+    "momentsLink": "See the eight moments",
+    "finalTitle": "Be among the first.",
     "finalBody": "Pickld is coming to iPhone. Join the waitlist to be among the first to try it.",
     "finalBodySoon": "Pickld is coming soon to iPhone."
   }
