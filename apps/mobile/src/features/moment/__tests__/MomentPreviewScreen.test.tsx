@@ -39,6 +39,8 @@ const moment = (id: string, slot: ServerMoment['slot']): ServerMoment => ({
   thumbUrl: null,
 });
 
+/** The phone's own date; a day behind Today's open jar after flying west (the travel rule, D-1). */
+const mockPhone = { localDate: '2026-11-11' };
 const mockToday: TodayJar = {
   hasAnyJar: true,
   jar: { id: 'jar-11', localDate: '2026-11-11', tz: 'Asia/Manila', endsAt: '2026-11-11T16:00:00Z' },
@@ -51,7 +53,7 @@ const mockDay: DayJar = {
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
-  useToday: () => ({ userId: 'u-1', localDate: '2026-11-11', jar: mockToday, me: undefined, queue: [] }),
+  useToday: () => ({ userId: 'u-1', localDate: mockPhone.localDate, jar: mockToday, me: undefined, queue: [] }),
 }));
 const mockDayJar = jest.fn((date: string | null) => ({ userId: 'u-1', day: date ? mockDay : undefined, queue: [] }));
 jest.mock('@/features/days/useDayJar', () => ({ useDayJar: (date: string | null) => mockDayJar(date) }));
@@ -83,6 +85,7 @@ beforeEach(() => {
   // 12:00 on 2026-11-11 in Manila.
   jest.useFakeTimers({ now: new Date('2026-11-11T04:00:00Z'), advanceTimers: true });
   mockView.props = null;
+  mockPhone.localDate = '2026-11-11';
   mockDayJar.mockClear();
   jest.clearAllMocks();
   mockJarPage.data = undefined;
@@ -119,6 +122,15 @@ describe('/moment/preview', () => {
       const props = await renderScreen();
       expect(props.items?.map((item) => item.key)).toEqual(['m-today']);
     }
+  });
+
+  it('after flying west, the day before Today’s open jar is a past day even though it is the phone’s date', async () => {
+    mockPhone.localDate = '2026-11-10';
+    mockParams = { slot: 'evening', date: '2026-11-10' };
+    const props = await renderScreen();
+    expect(mockDayJar).toHaveBeenCalledWith('2026-11-10');
+    expect(props.items?.map((item) => item.key)).toEqual(['m-past-1', 'm-past-2']);
+    expect(props.startSlot).toBe('evening');
   });
 
   it('re-reads a jar page that lacks a moment posted since, so the photo isn’t its stretched thumbnail', async () => {
