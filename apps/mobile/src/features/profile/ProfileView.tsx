@@ -64,7 +64,7 @@ export type ProfileViewProps = {
   followBusy?: boolean;
   /** Opens Readers & authors on that list. */
   onOpenList?: (list: FollowList) => void;
-  /** Opens the Together page (0176): on your own profile always, on others' when they show any to you. */
+  /** Opens the Together page (0177): on your own profile always, on others' when they show any to you. */
   onOpenTogether?: () => void;
   onShare: () => void;
   /** More options on someone else's profile: Report (M3-21). */

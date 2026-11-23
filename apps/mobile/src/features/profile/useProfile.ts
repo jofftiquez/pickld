@@ -59,7 +59,7 @@ export type ProfilePage = ProfileData & {
   jars: ProfileJar[];
   /** Optional: caches from before M3-15 lack it. */
   images?: ProfileImages;
-  /** Together moments (0176) this viewer may see on the profile's Together page. Optional for older caches. */
+  /** Together moments (0177) this viewer may see on the profile's Together page. Optional for older caches. */
   togetherCount?: number;
 };
 
@@ -95,7 +95,7 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
     // Requests are readable by their two ends only (0176): this is the viewer's own, if any.
     supabase.from('follow_requests').select('author_id').eq('reader_id', viewerId).eq('author_id', profile.id),
     supabase.rpc('needs_reader_approval', { p_id: profile.id }),
-    // RLS shows only the approved ones this viewer may see (0174).
+    // RLS shows only the approved ones this viewer may see (0177).
     supabase
       .from('together_moments')
       .select('moment_id', { count: 'exact', head: true })

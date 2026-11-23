@@ -1,13 +1,13 @@
--- 0176: Together moments. Only the person tagged right now asks, only the author answers; a request is seen
+-- 0177: Together moments. Only the person tagged right now asks, only the author answers; a request is seen
 -- by the two only. An approved one shows on the tagged person's Together page to: the tagged person, the author,
 -- a reader of both; not to a reader of the author only (tagged person on Readers), a reader of the tagged person
 -- who can't see the moment, an outsider, someone the author blocked, someone blocked with the tagged person, or
--- anon. Everyone settings on both sides let an outsider see it. It leaves when the mention goes, the tag is
+-- anon. Everyone settings on both sides let an outsider see it, unless the tagged person is Private (0176). It leaves when the mention goes, the tag is
 -- removed, a block lands, the moment turns Only me, is removed or deleted, or either person takes it off; a hidden
 -- moment drops off until it's live again. Never joins a jar.
 begin;
 \ir _helpers.psql
-select plan(53);
+select plan(55);
 
 select tests.world();
 select tests.create_user('tagee');   -- mutual reader of owner: the tagged person
@@ -127,6 +127,13 @@ insert into public.blocks (blocker_id, blocked_id) values (tests.id('tagee'), te
 select tests.act_as('tblock');
 select is(pg_temp.page(), 0, 'someone blocked with the tagged person doesn''t');
 select tests.reset_role();
+update public.profiles set is_private = true where id = tests.id('tagee');
+select tests.act_as('outsider');
+select is(pg_temp.page(), 0, 'a Private tagged person: their Everyone counts as Readers, so an outsider doesn''t (0176)');
+select tests.act_as('both');
+select is(pg_temp.page(), 1, 'and their reader still does');
+select tests.reset_role();
+update public.profiles set is_private = false where id = tests.id('tagee');
 update public.profiles set default_visibility = 'readers' where id = tests.id('tagee');
 update public.moments set visibility = 'readers' where id = pg_temp.m('m');
 

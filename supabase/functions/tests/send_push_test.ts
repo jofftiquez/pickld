@@ -133,7 +133,7 @@ Deno.test('a request to read you and its approval are pushed with the actor as t
   ]);
 });
 
-Deno.test('the author hears a Together request and the tagged person hears it was added (0174)', () => {
+Deno.test('the author hears a Together request and the tagged person hears it was added (0177)', () => {
   const [ask, added] = composePushes([
     row({ id: 'tr', type: 'together_request', actor_name: 'Mika', moment_id: 'm1', jar_id: 'j1' }),
     row({ id: 'ta', user_id: 'u2', type: 'together_added', actor_name: 'Joff', moment_id: 'm1', jar_id: 'j1' }),

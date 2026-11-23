@@ -1,7 +1,7 @@
--- 0176 — Together moments: someone tagged in a moment (0172) asks to show it on the Together page of their
+-- 0177 — Together moments: someone tagged in a moment (0172) asks to show it on the Together page of their
 -- profile, and it shows there once the author agrees. Additive: one table, functions and triggers, two
--- notification types and one push switch. Nothing is dropped or rewritten; notify and push_take (0172) are
--- replaced with the new types added.
+-- notification types and one push switch. Nothing is dropped or rewritten; notify (0172) and push_take (0176)
+-- are replaced with the new types added.
 --
 -- The rules (decided by Joff):
 --   * Never in jars: a together moment never takes a slot or joins anyone's jar, feed, Discover or counts. It
@@ -15,8 +15,9 @@
 --     themselves) and ask again later.
 --   * Who sees it on the Together page: people who can see the author's moment (can_view_moment) and who also
 --     pass the tagged person's default visibility (everyone: anyone; readers: people who read them; Only me:
---     nobody else), aren't blocked either way with the tagged person, and while that account is active. The
---     author and the tagged person see it whenever they can see the moment.
+--     nobody else), aren't blocked either way with the tagged person, and while that account is active. A
+--     Private tagged person's Everyone counts as Readers, as their own posts do (0176). The author and the
+--     tagged person see it whenever they can see the moment.
 --   * It leaves (the row goes, no copy is kept) when the moment is deleted, removed by moderation or turned
 --     Only me, when the tag goes (the author takes the mention out, the tagged person removes their tag, or a
 --     block either way, 0172), or when either person takes it off. A hidden moment drops off until it's live
@@ -35,7 +36,7 @@ create table public.together_moments (
   foreign key (moment_id, user_id) references public.moment_tags(moment_id, tagged_id) on delete cascade
 );
 comment on table public.together_moments is
-  'Moments a tagged person shows on their profile''s Together page, with the author''s consent (0176).';
+  'Moments a tagged person shows on their profile''s Together page, with the author''s consent (0177).';
 create index together_moments_user_idx on public.together_moments (user_id, status);
 create index together_moments_author_idx on public.together_moments (author_id);
 
@@ -50,8 +51,8 @@ language sql stable security definer set search_path = public as $$
           or (not is_blocked_between(viewer, t.user_id)
               and exists (select 1 from profiles p
                           where p.id = t.user_id and p.status = 'active'
-                            and (p.default_visibility = 'everyone'
-                                 or (p.default_visibility = 'readers'
+                            and ((p.default_visibility = 'everyone' and not p.is_private)
+                                 or (p.default_visibility in ('readers', 'everyone')
                                      and exists (select 1 from follows
                                                  where reader_id = viewer and author_id = t.user_id))))))
 $$;
@@ -222,12 +223,12 @@ alter table public.notifications drop constraint notifications_type_known;
 alter table public.notifications
   add constraint notifications_type_known check (type in (
     'new_reader', 'like', 'comment', 'reply', 'full_jar', 'removed', 'appeal_decided', 'friend_joined', 'admitted',
-    'invite_joined', 'tag', 'together_request', 'together_added'
+    'invite_joined', 'tag', 'reader_request', 'reader_approved', 'together_request', 'together_added'
   ));
 
 alter table public.notification_prefs add column together boolean not null default true;
 comment on column public.notification_prefs.together is
-  'Push for Together moments: a request to the author, an approval to the tagged person (0176).';
+  'Push for Together moments: a request to the author, an approval to the tagged person (0177).';
 grant update (together) on public.notification_prefs to authenticated;
 
 -- As 0172, with the together types added to what an Only me moment never notifies.
@@ -261,7 +262,7 @@ begin
   values (p_user, p_type, p_actor, p_jar, p_moment, p_comment);
 end $$;
 
--- As 0172, with the together types following notification_prefs.together.
+-- As 0176, with the together types following notification_prefs.together.
 create or replace function public.push_take(p_settle interval default interval '60 seconds', p_limit int default 500)
 returns table (
   id uuid,
@@ -292,6 +293,8 @@ begin
   where n.pushed_at is null and np.user_id = n.user_id
     and not case n.type
       when 'new_reader' then np.new_reader
+      when 'reader_request' then np.new_reader
+      when 'reader_approved' then np.new_reader
       when 'like' then np."like"
       when 'comment' then np.comment
       when 'reply' then np.reply

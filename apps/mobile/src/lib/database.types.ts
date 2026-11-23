@@ -1247,6 +1247,7 @@ export type Database = {
           removed: boolean;
           reply: boolean;
           tag: boolean;
+          together: boolean;
           updated_at: string;
           user_id: string;
         };
@@ -1264,6 +1265,7 @@ export type Database = {
           removed?: boolean;
           reply?: boolean;
           tag?: boolean;
+          together?: boolean;
           updated_at?: string;
           user_id: string;
         };
@@ -1280,6 +1282,7 @@ export type Database = {
           removed?: boolean;
           reply?: boolean;
           tag?: boolean;
+          together?: boolean;
           updated_at?: string;
           user_id?: string;
         };
@@ -1938,6 +1941,56 @@ export type Database = {
           },
         ];
       };
+      together_moments: {
+        Row: {
+          author_id: string;
+          decided_at: string | null;
+          moment_id: string;
+          requested_at: string;
+          status: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id: string;
+          decided_at?: string | null;
+          moment_id: string;
+          requested_at?: string;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          author_id?: string;
+          decided_at?: string | null;
+          moment_id?: string;
+          requested_at?: string;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'together_moments_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'together_moments_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'together_moments_moment_id_user_id_fkey';
+            columns: ['moment_id', 'user_id'];
+            isOneToOne: true;
+            referencedRelation: 'moment_tags';
+            referencedColumns: ['moment_id', 'tagged_id'];
+          },
+        ];
+      };
       user_pack_prefs: {
         Row: {
           hidden: boolean;
@@ -2224,6 +2277,7 @@ export type Database = {
       admit_all_waiting: { Args: Record<PropertyKey, never>; Returns: number };
       admit_profiles: { Args: { p_actor: string; p_ids: string[]; p_reason: string }; Returns: number };
       admit_waiting: { Args: { p_count: number }; Returns: number };
+      answer_together: { Args: { p_approve: boolean; p_moment: string; p_user: string }; Returns: undefined };
       approve_reader: { Args: { p_reader: string }; Returns: boolean };
       approve_waiting_readers: { Args: Record<PropertyKey, never>; Returns: number };
       blocked_accounts: {
@@ -2242,6 +2296,16 @@ export type Database = {
           t: Omit<
             Database['public']['Tables']['moment_tags']['Row'],
             Database['public']['Tables']['moment_tags']['ComputedFields']
+          >;
+          viewer: string;
+        };
+        Returns: boolean;
+      };
+      can_see_together: {
+        Args: {
+          t: Omit<
+            Database['public']['Tables']['together_moments']['Row'],
+            Database['public']['Tables']['together_moments']['ComputedFields']
           >;
           viewer: string;
         };
@@ -2982,6 +3046,8 @@ export type Database = {
         }[];
       };
       remove_moment_tag: { Args: { p_moment: string }; Returns: undefined };
+      remove_together: { Args: { p_moment: string; p_user: string }; Returns: undefined };
+      request_together: { Args: { p_moment: string }; Returns: string };
       resolved_cover_id: {
         Args: {
           j: Omit<Database['public']['Tables']['jars']['Row'], Database['public']['Tables']['jars']['ComputedFields']>;
@@ -3052,6 +3118,24 @@ export type Database = {
           display_name: string;
           id: string;
           username: string;
+        }[];
+      };
+      together_forget: { Args: { p_moment: string; p_user: string }; Returns: undefined };
+      together_page: {
+        Args: { p_limit?: number; p_user: string };
+        Returns: {
+          added_at: string;
+          added_together_at: string;
+          author_id: string;
+          author_name: string;
+          author_username: string;
+          captured_at: string;
+          edits: Json;
+          jar_id: string;
+          local_date: string;
+          moment_id: string;
+          slot: Database['public']['Enums']['slot'];
+          tz: string;
         }[];
       };
       untag_moment: { Args: { p_moment: string; p_tagged: string }; Returns: undefined };

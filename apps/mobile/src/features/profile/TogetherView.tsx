@@ -39,7 +39,7 @@ function formatTileDate(localDate: string, locale: string): string {
 }
 
 /**
- * A profile's Together page (0176): moments other people tagged this person in and agreed to show here, newest
+ * A profile's Together page (0177): moments other people tagged this person in and agreed to show here, newest
  * first, as a 3-column grid like the profile's. Each tile names its author and opens the moment in their jar;
  * nothing here is in this person's own jars.
  */

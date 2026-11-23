@@ -1,4 +1,4 @@
-// Together moments (0176): a person tagged on a moment asks to show it on their profile's Together page, and
+// Together moments (0177): a person tagged on a moment asks to show it on their profile's Together page, and
 // the author says yes or no. The database decides who may ask, answer and see (together_moments RLS and its
 // functions); the app only shows what it reads and calls them.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

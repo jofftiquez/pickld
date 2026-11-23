@@ -174,7 +174,7 @@ export function targetOf(entry: NotificationEntry): NotificationTarget | null {
     case 'together_request':
     case 'together_added':
       // A tagged moment, opened through its jar, as from a timeline (0172). A Together request is answered
-      // there by the author, and an approval shows there too (0176).
+      // there by the author, and an approval shows there too (0177).
       return entry.momentId && entry.jarId
         ? { pathname: '/moment/[id]', params: { id: entry.momentId, jar: entry.jarId } }
         : null;
