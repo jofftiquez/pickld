@@ -19,15 +19,15 @@ import type { Visibility } from '@/features/publish/publishJar';
 import { VisibilityOptions } from '@/features/publish/VisibilityOptions';
 import type { ReminderSetting } from '@/features/reminders/reminderPlan';
 import { parseLocalTime } from '@/features/reminders/reminderPlan';
-import { formatTime } from '@/lib/format';
+import { formatShortDate, formatTime } from '@/lib/format';
 import { hitSlopFor } from '@/lib/hitSlop';
 import type { DaySlot } from '@/lib/jars';
 import { textStyle } from '@/theme/text';
 import { colors, radius, sizes, space } from '@/theme/tokens';
 import { useLargeText } from '@/lib/useLargeText';
 
-import type { NotificationPrefs, PrefKey, SettingsAccount } from './useSettings';
-import { PUSH_TYPES } from './useSettings';
+import type { BreakDays, NotificationPrefs, PrefKey, SettingsAccount } from './useSettings';
+import { BREAK_DAYS, PUSH_TYPES } from './useSettings';
 
 export type SettingsViewProps = {
   insets: EdgeInsets;
@@ -46,6 +46,11 @@ export type SettingsViewProps = {
   onEditProfile: () => void;
   onReminder: (slot: DaySlot, change: { minutes?: number; enabled?: boolean }) => void;
   onPref: (key: PrefKey, value: boolean) => void;
+  /** Hide like counts (calm controls), saved on this phone for this account. */
+  hideLikeCounts: boolean;
+  onHideLikeCounts: (hide: boolean) => void;
+  /** Take a break for a number of days, or null to end it now (0180). */
+  onBreak: (days: BreakDays | null) => void;
   /** Saved on this phone only (D-66). */
   mirrorSelfies: boolean;
   onMirrorSelfies: (on: boolean) => void;
@@ -80,6 +85,14 @@ export function SettingsView(props: SettingsViewProps) {
   const large = useLargeText();
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [breakOpen, setBreakOpen] = useState(false);
+  // Read once per visit: Settings is reopened to see a break that ended meanwhile.
+  const [openedAt] = useState(() => Date.now());
+  // A break whose end has passed is over; the column keeps the old date until the next change.
+  const breakEnd = prefs?.break_until ? new Date(prefs.break_until) : null;
+  const onBreak = breakEnd !== null && breakEnd.getTime() > openedAt;
+  // Its last day: the end is the midnight after it.
+  const breakLastDay = onBreak ? formatShortDate(new Date(breakEnd.getTime() - 60_000)) : null;
   const loading = account === undefined || reminders === undefined || prefs === undefined;
   const privateBody = account?.minor ? 'settings.privateMinor' : 'settings.privateBody';
   const discoverableBody = account?.minor
@@ -237,6 +250,32 @@ export function SettingsView(props: SettingsViewProps) {
           </Card>
 
           <Text accessibilityRole="header" style={[textStyle('bodySmall', '700'), styles.section]}>
+            {t('settings.calm')}
+          </Text>
+          <Card style={styles.listCard}>
+            <View style={[styles.switchRow, styles.divider]}>
+              <View style={styles.rowLabel} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+                <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.hideLikes')}</Text>
+                <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>{t('settings.hideLikesBody')}</Text>
+              </View>
+              <Toggle
+                value={props.hideLikeCounts}
+                onValueChange={props.onHideLikeCounts}
+                accessibilityLabel={`${t('settings.hideLikes')}. ${t('settings.hideLikesBody')}`}
+                testID="settings-hide-likes"
+              />
+            </View>
+            <ListRow
+              label={t('settings.takeBreak')}
+              value={breakLastDay ? t('settings.breakUntil', { date: breakLastDay }) : t('settings.breakOff')}
+              accessibilityHint={t('settings.takeBreakHint')}
+              onPress={() => setBreakOpen(true)}
+              divider={false}
+              testID="settings-break"
+            />
+          </Card>
+
+          <Text accessibilityRole="header" style={[textStyle('bodySmall', '700'), styles.section]}>
             {t('settings.camera')}
           </Text>
           <Card style={styles.listCard}>
@@ -370,6 +409,45 @@ export function SettingsView(props: SettingsViewProps) {
           </View>
         </BottomSheet>
       ) : null}
+
+      <BottomSheet
+        visible={breakOpen}
+        onClose={() => setBreakOpen(false)}
+        accessibilityLabel={t('settings.takeBreak')}
+        testID="settings-break-sheet"
+      >
+        <Text accessibilityRole="header" style={[textStyle('body', '700'), { color: colors.ink }]}>
+          {t('settings.takeBreak')}
+        </Text>
+        <Text style={[textStyle('label', '500'), styles.sheetBody]}>
+          {breakLastDay ? t('settings.breakOnBody', { date: breakLastDay }) : t('settings.breakBody')}
+        </Text>
+        <View>
+          {BREAK_DAYS.map((days, i) => (
+            <ListRow
+              key={days}
+              label={t(`settings.breakFor.${days}`)}
+              onPress={() => {
+                setBreakOpen(false);
+                props.onBreak(days);
+              }}
+              divider={onBreak || i < BREAK_DAYS.length - 1}
+              testID={`settings-break-${days}`}
+            />
+          ))}
+          {onBreak ? (
+            <ListRow
+              label={t('settings.breakEnd')}
+              onPress={() => {
+                setBreakOpen(false);
+                props.onBreak(null);
+              }}
+              divider={false}
+              testID="settings-break-end"
+            />
+          ) : null}
+        </View>
+      </BottomSheet>
 
       <Dialog
         visible={confirmSignOut}

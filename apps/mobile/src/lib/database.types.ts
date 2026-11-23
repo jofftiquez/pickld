@@ -1284,6 +1284,7 @@ export type Database = {
       notification_prefs: {
         Row: {
           appeal_decided: boolean;
+          break_until: string | null;
           comment: boolean;
           friend_joined: boolean;
           full_jar: boolean;
@@ -1302,6 +1303,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           appeal_decided?: boolean;
+          break_until?: string | null;
           comment?: boolean;
           friend_joined?: boolean;
           full_jar?: boolean;
@@ -1319,6 +1321,7 @@ export type Database = {
         };
         Update: {
           appeal_decided?: boolean;
+          break_until?: string | null;
           comment?: boolean;
           friend_joined?: boolean;
           full_jar?: boolean;

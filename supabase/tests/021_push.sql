@@ -1,7 +1,7 @@
 -- M3-17 (0020): push_take() and the receipt helpers behind fn:send-push (FR-NOT-02, FR-NOT-04).
 begin;
 \ir _helpers.psql
-select plan(27);
+select plan(34);
 
 select tests.world();
 insert into public.push_tokens (user_id, token, platform) values
@@ -79,6 +79,41 @@ select is(pg_temp.result((select id from n where k = 'f1')) || ' ' || pg_temp.re
 insert into n values ('f3', pg_temp.note('reader', 'friend_joined', 'blocker'));
 select is((select count(*) from public.push_take(interval '60 seconds')), 0::bigint,
           'another the same day is not pushed');
+
+-- ---------------------------------------------------------------- take a break (0180)
+update public.notification_prefs set "like" = true, break_until = now() + interval '1 day'
+where user_id = tests.id('owner');
+insert into n values ('b_like', pg_temp.note('owner', 'like', 'reader'));
+insert into n values ('b_tag', pg_temp.note('owner', 'tag', 'reader'));
+insert into n values ('b_req', pg_temp.note('owner', 'reader_request', 'reader'));
+insert into n values ('b_tog', pg_temp.note('owner', 'together_request', 'reader'));
+insert into n values ('b_removed', pg_temp.note('owner', 'removed'));
+select is((select count(*) from public.push_take(interval '60 seconds')), 1::bigint, 'on a break only the removal goes');
+select is(pg_temp.result((select id from n where k = 'b_like')) || ' ' || pg_temp.result((select id from n where k = 'b_tag'))
+          || ' ' || pg_temp.result((select id from n where k = 'b_req')) || ' ' || pg_temp.result((select id from n where k = 'b_tog')),
+          'on_break on_break on_break on_break', 'social pushes, reader and together requests included, settle as on_break');
+select is(pg_temp.result((select id from n where k = 'b_removed')), 'sent', 'safety notices still go');
+update public.notification_prefs set break_until = now() - interval '1 minute' where user_id = tests.id('owner');
+insert into n values ('b_after', pg_temp.note('owner', 'like', 'reader'));
+select is((select count(*) from public.push_take(interval '60 seconds')), 1::bigint,
+          'once the break has ended pushes go again, and the held ones stay unsent');
+
+-- Owner-only: the owner sets their break; a reader, an outsider or a blocked account can neither see nor set it.
+select tests.act_as('owner');
+update public.notification_prefs set break_until = now() + interval '3 days' where user_id = tests.id('owner');
+select ok((select break_until > now() from public.notification_prefs where user_id = tests.id('owner')),
+          'the owner sets their break');
+select tests.act_as('reader');
+select is((select count(*) from public.notification_prefs where user_id = tests.id('owner')), 0::bigint,
+          'a reader cannot see someone''s break');
+select tests.act_as('outsider');
+update public.notification_prefs set break_until = null where user_id = tests.id('owner');
+select tests.act_as('blocker');
+update public.notification_prefs set break_until = null where user_id = tests.id('owner');
+select tests.reset_role();
+select ok((select break_until is not null from public.notification_prefs where user_id = tests.id('owner')),
+          'an outsider or a blocked account cannot end it');
+update public.notification_prefs set break_until = null;
 
 -- ---------------------------------------------------------------- retry and receipts
 select public.push_retry(array[(select id from n where k = 'f1')]);

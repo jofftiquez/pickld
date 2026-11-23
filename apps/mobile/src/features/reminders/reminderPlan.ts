@@ -1,7 +1,8 @@
 // Slot reminders (FR-NOT-01; design: LockScreen). Local notifications at each enabled slot time for the next
 // 7 days, in the phone's current zone, so a trip moves them with the person. Today's reminder for a slot
 // that is already filled (a server moment or one waiting in the offline queue) is left out, and so is any
-// time already past. Copy rotates through a few gentle lines per slot and never mentions streaks. Pure.
+// time already past, as is every reminder before the end of a break (Take a break, 0180). Copy rotates
+// through a few gentle lines per slot and never mentions streaks. Pure.
 import { addDays, localDateIn, localTimeToInstant, type DaySlot } from '@/lib/jars';
 
 export const DAY_SLOTS = ['morning', 'afternoon', 'evening'] as const satisfies readonly DaySlot[];
@@ -56,9 +57,12 @@ export function planReminders(input: {
   now: Date;
   /** Day slots already filled in today's jar (server or queued). */
   filledToday: ReadonlySet<DaySlot>;
+  /** Take a break: nothing fires before this instant. */
+  breakUntil?: Date | null;
   days?: number;
 }): PlannedReminder[] {
-  const { settings, tz, now, filledToday, days = REMINDER_DAYS } = input;
+  const { settings, tz, now, filledToday, breakUntil, days = REMINDER_DAYS } = input;
+  const notBefore = Math.max(now.getTime(), breakUntil?.getTime() ?? 0);
   const today = localDateIn(now, tz);
   const planned: PlannedReminder[] = [];
   for (let d = 0; d < days; d += 1) {
@@ -67,7 +71,7 @@ export function planReminders(input: {
       if (!setting.enabled) continue;
       if (d === 0 && filledToday.has(setting.slot)) continue;
       const fireAt = localTimeToInstant(localDate, setting.minutes, tz);
-      if (fireAt.getTime() <= now.getTime()) continue;
+      if (fireAt.getTime() <= notBefore) continue;
       planned.push({
         id: `${REMINDER_ID_PREFIX}${localDate}:${setting.slot}`,
         slot: setting.slot,
