@@ -136,6 +136,42 @@ describe('MomentDetailView', () => {
     expect(screen.queryByTestId('moment-share')).toBeNull();
   });
 
+  describe('Together (0177)', () => {
+    const tags = { ootd: [{ userId: READER, username: 'rea' }] };
+    const together = (status: 'requested' | 'approved' | 'declined') => ({
+      ootd: [{ moment_id: 'ootd', user_id: READER, author_id: 'dale-id', status }],
+    });
+
+    it('lets the person tagged ask', async () => {
+      const onTogether = jest.fn();
+      await setup({ tags, onTogether });
+      fireEvent.press(screen.getByTestId('moment-together-add'));
+      expect(onTogether).toHaveBeenLastCalledWith({ kind: 'request', momentId: 'ootd' });
+    });
+
+    it('shows a pending ask, which a tap cancels', async () => {
+      const onTogether = jest.fn();
+      await setup({ tags, onTogether, together: together('requested') });
+      expect(screen.getByTestId('moment-together-asked')).toHaveTextContent('Asked Dale');
+      fireEvent.press(screen.getByTestId('moment-together-asked'));
+      expect(onTogether).toHaveBeenLastCalledWith({ kind: 'remove', momentId: 'ootd', userId: READER });
+    });
+
+    it('offers nothing after a decline', async () => {
+      await setup({ tags, onTogether: jest.fn(), together: together('declined') });
+      expect(screen.queryByTestId('moment-together')).toBeNull();
+    });
+
+    it('shows the author the request by username, to approve', async () => {
+      const onTogether = jest.fn();
+      await setup({ tags, onTogether, together: together('requested'), data: { ...jar, viewerId: 'dale-id' } });
+      expect(screen.queryByTestId('moment-together-add')).toBeNull();
+      expect(screen.getByTestId('moment-together-rea')).toHaveTextContent(/@rea wants this on their Together page/);
+      fireEvent.press(screen.getByTestId('moment-together-approve-rea'));
+      expect(onTogether).toHaveBeenLastCalledWith({ kind: 'answer', momentId: 'ootd', userId: READER, approve: true });
+    });
+  });
+
   it('offers Share only to the moment’s owner (D-83)', async () => {
     const { onShare } = await setup();
     expect(screen.queryByTestId('moment-share')).toBeNull();

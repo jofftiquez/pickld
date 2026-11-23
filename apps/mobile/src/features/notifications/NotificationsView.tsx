@@ -141,9 +141,15 @@ export function NotificationsView({
                   const actor = entry.actors[0];
                   const social =
                     entry.type === 'new_reader' || entry.type === 'friend_joined' || entry.type === 'invite_joined';
-                  // Likes, comments, replies and tags show the photo they are about (the jar's first one for the whole jar).
+                  // Likes, comments, replies, tags and Together show the photo they are about (the jar's first one
+                  // for the whole jar).
                   const photo =
-                    entry.type === 'like' || entry.type === 'comment' || entry.type === 'reply' || entry.type === 'tag';
+                    entry.type === 'like' ||
+                    entry.type === 'comment' ||
+                    entry.type === 'reply' ||
+                    entry.type === 'tag' ||
+                    entry.type === 'together_request' ||
+                    entry.type === 'together_added';
                   const momentId = photo
                     ? (entry.momentId ?? (entry.jarId ? data.jarMoment[entry.jarId] : undefined))
                     : undefined;

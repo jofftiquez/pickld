@@ -7,6 +7,7 @@ import { useLike } from '@/features/jar/useLike';
 import { MomentDetailView } from '@/features/moment/MomentDetailView';
 import { OwnMomentView } from '@/features/moment/OwnMomentView';
 import { useMomentTags, useRemoveTag } from '@/features/moment/momentTags';
+import { useMomentTogether, useTogetherAction } from '@/features/moment/momentTogether';
 import { useOwnMoment } from '@/features/moment/useOwnMoment';
 import { ReportSheet } from '@/features/safety/ReportSheet';
 import { useBlockFlow } from '@/features/safety/useBlockFlow';
@@ -33,6 +34,8 @@ export default function MomentScreen() {
   const blockFlow = useBlockFlow(() => router.replace('/jars'));
   const tags = useMomentTags(page.data?.moments.map((m) => m.id) ?? []);
   const removeTag = useRemoveTag(() => void tags.refetch());
+  const together = useMomentTogether(page.data?.moments.map((m) => m.id) ?? []);
+  const togetherAction = useTogetherAction();
 
   const close = () => {
     if (router.canGoBack()) router.back();
@@ -66,6 +69,10 @@ export default function MomentScreen() {
         onOpenProfile={(username) => router.push({ pathname: '/u/[username]', params: { username } })}
         onRemoveTag={(momentId) => removeTag.mutate(momentId)}
         removingTag={removeTag.isPending}
+        together={together.data}
+        onTogether={(action) => togetherAction.mutate(action)}
+        togetherBusy={togetherAction.isPending}
+        togetherFailed={togetherAction.isError}
       />
       <ReportSheet
         visible={reporting !== null}
