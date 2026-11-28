@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { t } from '~/i18n/t';
 import { waitlistOpen } from '~/lib/env';
+import { SubmitButton } from '~/marketing/SubmitButton';
 
 import { pendingEmail, verifyCode } from '../actions';
 
@@ -49,9 +50,7 @@ export default async function WaitlistCode({ searchParams }: { searchParams: Pro
               aria-invalid={wrong || undefined}
               aria-describedby={wrong ? 'waitlist-code-error' : undefined}
             />
-            <button className="mk-btn" type="submit">
-              {t('marketing.code.submit')}
-            </button>
+            <SubmitButton label={t('marketing.code.submit')} pendingLabel={t('marketing.code.pending')} />
           </div>
           {wrong ? (
             <p id="waitlist-code-error" className="mk-form-error" role="alert">

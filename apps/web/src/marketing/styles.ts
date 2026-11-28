@@ -49,7 +49,9 @@ export const css = `
 .mk-form label{display:block;font-size:13px;font-weight:700;color:${colors.ink};margin-bottom:6px}
 .mk-form-row{display:flex;flex-wrap:wrap;gap:10px}
 .mk-input{flex:1 1 220px;min-height:48px;padding:0 16px;border:1px solid ${colors.border};border-radius:${radius.pill}px;background:${colors.surface};color:${colors.ink};font:inherit;font-size:16px}
-.mk-form .mk-btn{flex:1 0 auto}
+.mk-form .mk-btn{flex:1 0 auto;gap:10px}
+.mk-btn:disabled{cursor:progress;opacity:.75}
+.mk-spinner{width:16px;height:16px;flex:none;border:2px solid currentColor;border-right-color:transparent;border-radius:${radius.pill}px}
 .mk-form-note{margin-top:10px!important;font-size:13px!important;color:${colors.muted}!important}
 .mk-dark .mk-form label{color:${colors.surface}}
 .mk-dark .mk-form-note{color:${colors.onDarkMuted}!important}
@@ -198,7 +200,9 @@ export const css = `
 @media (prefers-reduced-motion:no-preference){
   html{scroll-behavior:smooth}
   .mk-btn{transition:transform .15s ease}
-  .mk-btn:hover{transform:translateY(-1px)}
+  .mk-btn:hover:not(:disabled){transform:translateY(-1px)}
+  .mk-spinner{animation:mk-spin .8s linear infinite}
+  @keyframes mk-spin{to{transform:rotate(360deg)}}
   .mk-chip{transition:transform .15s ease}
   .mk-chip:hover{transform:translateY(-2px)}
   .mk-fan-card{transition:transform .3s ease}
