@@ -29,7 +29,7 @@ const localVariant = process.env.PICKLD_IOS_VARIANT === 'local';
 const bundleId = localVariant ? 'me.pickld.app.local' : 'me.pickld.app';
 const appGroup = `group.${bundleId}`;
 
-// The shown version is `version-releaseTag.N`, e.g. 2.0.0-dev.1423; clear the tag for a store release. iOS
+// The shown version is `version-releaseTag.N`, e.g. 4.0.0-dev.1423; clear the tag for a store release. iOS
 // needs `version` to stay plain X.Y.Z. N is the store build number on EAS (auto-incremented); local builds
 // all have build number 1, so they use the git commit count, which expo-constants re-reads on every Xcode
 // build even without a new prebuild.
@@ -49,7 +49,7 @@ function commitCount(): string | undefined {
 const config: ExpoConfig = {
   name: localVariant ? 'Pickld Local' : 'Pickld',
   slug: 'pickld',
-  version: '2.0.0',
+  version: '4.0.0',
   orientation: 'portrait',
   scheme: 'pickld',
   userInterfaceStyle: 'light',

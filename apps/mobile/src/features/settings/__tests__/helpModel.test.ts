@@ -25,8 +25,8 @@ describe('searchFaq', () => {
 
 describe('mailtoUrl', () => {
   it('encodes the subject and a body carrying the app version', () => {
-    const url = mailtoUrl('Pickld feedback', '\n\n—\nPickld 2.0.0 · ios 27.2', 'support@pickld.me');
+    const url = mailtoUrl('Pickld feedback', '\n\n—\nPickld 4.0.0 · ios 27.2', 'support@pickld.me');
     expect(url.startsWith('mailto:support@pickld.me?subject=Pickld%20feedback&body=')).toBe(true);
-    expect(decodeURIComponent(url.split('body=')[1]!)).toBe('\n\n—\nPickld 2.0.0 · ios 27.2');
+    expect(decodeURIComponent(url.split('body=')[1]!)).toBe('\n\n—\nPickld 4.0.0 · ios 27.2');
   });
 });

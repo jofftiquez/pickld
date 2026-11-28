@@ -33,7 +33,7 @@ jest.mock('expo-router', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock('expo-constants', () => ({ expoConfig: { version: '2.0.0' } }));
+jest.mock('expo-constants', () => ({ expoConfig: { version: '4.0.0' } }));
 const mockDisk = new Map<string, string>();
 jest.mock('expo-sqlite/kv-store', () => ({
   __esModule: true,
