@@ -6,6 +6,10 @@ begin;
 \ir _helpers.psql
 select plan(66);
 
+-- The runner claims any due job, so jobs already in the database (a local one after manual testing) would be
+-- claimed with this file's own. Set them aside; the rollback at the end puts them back.
+update public.account_jobs set status = 'failed' where status in ('pending', 'running');
+
 select tests.world();
 select tests.create_user('susp');
 select tests.create_user('quick');
