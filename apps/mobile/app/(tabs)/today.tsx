@@ -6,7 +6,6 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt';
-import { stepToday } from '@/features/days/pastDay';
 import { DayLine } from '@/features/jar/DayLine';
 import { ensureLineJar, useSaveJarLine } from '@/features/jar/jarLine';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
@@ -52,7 +51,7 @@ export default function TodayScreen() {
     return () => clearInterval(id);
   }, []);
 
-  const { userId, localDate, jar: jarData, me, queue, queueLoaded } = useToday(now);
+  const { userId, localDate, todayDate, jar: jarData, me, queue, queueLoaded } = useToday(now);
   const pending = usePendingUploads();
   // The bell lives on Today only (Joff, QA): its dot follows unread notifications.
   const unread = useUnreadNotifications();
@@ -170,6 +169,7 @@ export default function TodayScreen() {
       <TodayView
         now={now}
         tz={tz}
+        todayDate={todayDate}
         tiles={tiles}
         coverMomentId={jar?.jar?.coverMomentId ?? null}
         hasAnyJar={jar ? jar.hasAnyJar : null}
@@ -212,7 +212,7 @@ export default function TodayScreen() {
         // Previous day (‹ or a swipe right) opens the day before this jar's date, in its own zone (Joff); there is
         // no next day. `via: 'step'` fades the day page in, so it doesn't slide in against the swipe.
         step={{
-          previous: addDays(stepToday(jar?.jar?.localDate ?? localDate, localDate), -1),
+          previous: addDays(todayDate, -1),
           next: null,
           onStep: (date) => router.push({ pathname: '/day/[date]', params: { date, via: 'step' } }),
         }}

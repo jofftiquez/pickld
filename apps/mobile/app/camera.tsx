@@ -36,7 +36,7 @@ import { useReplaceConfirm } from '@/features/capture/useReplaceConfirm';
 import { buildTodayGrid, holdsSlot } from '@/features/jar/todayGrid';
 import { phoneTimeZone, todayQueryKeys, useToday } from '@/features/jar/useToday';
 import { formatTime } from '@/lib/format';
-import { currentSlot, localDateIn } from '@/lib/jars';
+import { currentSlot } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import type { Slot } from '@/theme/tokens';
 
@@ -48,7 +48,12 @@ const MINUTE = 60_000;
 // (D-153): `?date=` a past day (an old link) opens that day's page instead.
 export default function CameraScreen() {
   const { date } = useLocalSearchParams<{ date?: string }>();
-  const pastDate = parseFillDateParam(date, localDateIn(new Date(), phoneTimeZone()));
+  const [now] = useState(() => new Date());
+  // Past is before Today's open jar, whose own date can be a day off the phone's (the travel rule); with a
+  // date, wait until that jar is read.
+  const { todayDate, jarPending } = useToday(now);
+  if (date !== undefined && jarPending) return null;
+  const pastDate = parseFillDateParam(date, todayDate);
   if (pastDate !== null) return <Redirect href={`/day/${pastDate}`} />;
   return <Camera />;
 }

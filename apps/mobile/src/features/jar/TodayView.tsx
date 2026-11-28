@@ -1,19 +1,17 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-native-gesture-handler';
 
 import { MomentTile } from '@/components/MomentTile';
 import { DayStepper, type DayStepperProps } from '@/features/days/DayStepper';
 import { PastDayTag } from '@/features/days/PastDayTag';
-import { pastDayLabel } from '@/features/days/pastDay';
 import { MomentCover } from '@/features/moment/MomentCover';
 import { opensPreview } from '@/features/moment/momentPreview';
 import { StickerPackTile } from '@/features/stickers/StickerPackTile';
 import { hasVisibleEdits } from '@/features/moment/momentRender';
 import { formatShortDate, formatTime } from '@/lib/format';
 import { currentSlot } from '@/lib/jars';
-import { textStyle } from '@/theme/text';
 import { useTabBarClearance } from '@/lib/tabBarClearance';
 import { colors, sizes, space, type Slot } from '@/theme/tokens';
 
@@ -29,8 +27,13 @@ import { greetingFor, momentCount, type GridTile } from './todayGrid';
 
 export type TodayViewProps = {
   now: Date;
-  /** The phone's IANA zone: date, greeting and capture times are shown in it. */
+  /** The phone's IANA zone: the greeting and capture times are shown in it. */
   tz: string;
+  /**
+   * Today's date for the header: the open jar's own date, which can be a day off the phone's in the travel
+   * window (`useToday().todayDate`). The phone's date in `tz` by default.
+   */
+  todayDate?: string;
   tiles: readonly GridTile[];
   /** The jar's cover (D-56): its tile gets a small "Cover" badge (D-98). */
   coverMomentId?: string | null;
@@ -130,6 +133,7 @@ function swipeStep(translationX: number, velocityX: number): -1 | 0 | 1 {
 export function TodayView({
   now,
   tz,
+  todayDate,
   tiles,
   coverMomentId = null,
   hasAnyJar,
@@ -185,8 +189,9 @@ export function TodayView({
   const tabBarClearance = useTabBarClearance();
   const bottomPadding = Math.max(insets.bottom, space.lg) + (day ? 0 : tabBarClearance);
   const missing = tiles.some((tile) => tile.state === 'empty');
-  // D-156: only a date before today (in the jar's zone) is a past day; today never gets the past-day look.
-  const pastDay = day ? pastDayLabel(day.date, now, tz) !== null : false;
+  // D-156: a day page is always a past day, before Today's open jar (`useToday().todayDate`, which can be a day
+  // off the phone's date in the travel window); Today never gets the past-day look.
+  const pastDay = day !== null && day !== undefined;
   const screenStyle = pastDay ? [styles.screen, styles.pastDay] : styles.screen;
   const stepper = step ? <DayStepper {...step} /> : null;
   const swipe = usePanGesture({
@@ -228,7 +233,7 @@ export function TodayView({
             />
           ) : (
             <TodayHeader
-              date={formatShortDate(now, tz)}
+              date={todayDate ? formatShortDate(new Date(`${todayDate}T12:00:00Z`), 'UTC') : formatShortDate(now, tz)}
               greeting={greetingFor(currentSlot(now, tz))}
               displayName={displayName}
               avatarUrl={avatarUrl}
@@ -341,12 +346,6 @@ export function TodayView({
               </View>
             ))}
           </View>
-          {/* The past-day tag says it on a past day (D-156). */}
-          {day && missing && !pastDay ? (
-            <Text style={[textStyle('bodySmall'), styles.note]} testID="day-added-later-note">
-              {t('day.addedLaterNote')}
-            </Text>
-          ) : null}
         </ScrollView>
       </GestureDetector>
       {celebratePublish ? <PublishBurst /> : null}
@@ -366,5 +365,4 @@ const styles = StyleSheet.create({
   dayLine: { marginTop: space.md },
   gridRow: { flexDirection: 'row', gap: space.md },
   cell: { flex: 1 },
-  note: { marginTop: space.lg, color: colors.muted },
 });

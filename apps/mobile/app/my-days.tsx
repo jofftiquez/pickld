@@ -23,9 +23,7 @@ import { GuideTip } from '@/features/guide/GuideTip';
 import { useGuideTip } from '@/features/guide/useGuideTip';
 import { useMonthJars } from '@/features/days/useMonthJars';
 import { unpublishedQueryKeys, useUnpublishedJars } from '@/features/days/useUnpublishedJars';
-import { openTodayJar } from '@/features/jar/rollover';
-import { phoneTimeZone, useToday } from '@/features/jar/useToday';
-import { localDateIn } from '@/lib/jars';
+import { useToday } from '@/features/jar/useToday';
 import { useScreenFocused } from '@/lib/useScreenFocused';
 
 // My jars (M2-25, M2-26; FR-DAY-01, FR-DAY-02; called My days before): the month calendar, with a Not published
@@ -37,7 +35,9 @@ export default function MyDaysScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const now = new Date();
-  const today = localDateIn(now, phoneTimeZone());
+  // Today is the open jar's own date, which can be a day off the phone's (the travel rule): the day before it
+  // is a past day, the jar Today shows is Today.
+  const { me, todayDate: today } = useToday(now);
   const currentMonth = monthOf(today);
   const [month, setMonth] = useState(currentMonth);
   // The day last opened, marked on the calendar when coming back to it.
@@ -45,9 +45,6 @@ export default function MyDaysScreen() {
   const { userId, jars, firstJarMonth, birthday } = useMonthJars(month);
   const { queue } = useDayJar(null);
   const { jars: unpublished } = useUnpublishedJars();
-  // The jar Today shows: today's, or yesterday's while it is still open after flying west (travel rule).
-  const { jar: todayJar, me } = useToday(now);
-  const openJarDate = openTodayJar(todayJar, now)?.jar?.localDate ?? null;
   // The month's jars plus photos still waiting to upload, so a day just filled shows at once (rule 3, D-148).
   const monthJars = withQueued(
     jars ?? [],
@@ -89,7 +86,7 @@ export default function MyDaysScreen() {
     if (date > today || !pickableMonths.includes(monthOf(date))) return;
     setMonth(monthOf(date));
     setOpenedDate(date);
-    if (date === today || date === openJarDate) router.navigate('/today');
+    if (date === today) router.navigate('/today');
     else router.push({ pathname: '/day/[date]', params: { date } });
   };
 

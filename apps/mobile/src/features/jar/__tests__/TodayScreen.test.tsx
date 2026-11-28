@@ -312,6 +312,21 @@ describe('Today screen', () => {
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/day/[date]', params: { date: '2026-11-08', via: 'step' } });
   });
 
+  // The travel rule the other way: flown west from Auckland, Today's jar is a day ahead of the phone in Manila.
+  // Today is that jar's date, and the day before it, still the phone's own date, is a past day.
+  it('with the open jar a day ahead of the phone, the header shows its date and Previous day the phone’s', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T20:00:00+08:00') }); // 01:00 on Wed, Nov 11 in Auckland
+    mockBackend.jars = [
+      { id: 'jar-11', local_date: '2026-11-11', tz: 'Pacific/Auckland', ends_at: '2026-11-11T11:00:00Z' },
+    ];
+    mockBackend.moments = [liveMoment('ootd')];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('1 of 8 moments')).toBeTruthy());
+    expect(screen.getByTestId('today-subtitle')).toHaveTextContent(/^Wed, Nov 11/);
+    await fireEvent.press(screen.getByRole('button', { name: 'Previous day, Tue, Nov 10' }));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/day/[date]', params: { date: '2026-11-10', via: 'step' } });
+  });
+
   it('a published jar: the Published line, likes and chip; the chip changes who can see it (M3-02)', async () => {
     jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
     mockBackend.moments = [liveMoment('ootd')];

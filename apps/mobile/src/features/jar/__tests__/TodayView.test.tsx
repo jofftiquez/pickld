@@ -618,8 +618,6 @@ describe('TodayView for a past day', () => {
     expect(
       screen.getByLabelText('This is a past day, not today. Moments you add here show as “Added later”.'),
     ).toBeTruthy();
-    // The tag says it, so the note under the grid doesn't repeat it.
-    expect(screen.queryByTestId('day-added-later-note')).toBeNull();
   });
 
   // D-156: a past day never passes for Today.
@@ -655,16 +653,6 @@ describe('TodayView for a past day', () => {
     });
     expect(screen.getByTestId('past-day-title')).toHaveTextContent(/^Past day$/);
     expect(screen.getByLabelText('This is a past day, not today. Every moment is in this jar.')).toBeTruthy();
-  });
-
-  it('guards today’s date: no past-day look even on the day page', async () => {
-    await renderToday({
-      hasAnyJar: true,
-      tiles: buildTodayGrid({ localDate: '2026-11-10', moments: [], queue: [], nowSlot: null }),
-      day: { date: '2026-11-10', onBack: jest.fn() },
-    });
-    expect(screen.queryByTestId('past-day-banner')).toBeNull();
-    expect(screen.queryByTestId('past-day-screen')).toBeNull();
   });
 
   it('offers Publish only when given one, and pads the bottom without the tab bar', async () => {

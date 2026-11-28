@@ -90,7 +90,6 @@
     "inJarReaders_one": "in this jar · {{count}} reader",
     "inJarReaders_other": "in this jar · {{count}} readers",
     "publishHint": "Review this day’s jar and choose who can see it",
-    "addedLaterNote": "Moments added now show an “Added later” badge.",
     "viewJar": "View jar",
     "viewJarHint": "Opens this day’s jar page",
     "past": {
