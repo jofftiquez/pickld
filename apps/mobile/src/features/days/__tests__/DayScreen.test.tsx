@@ -59,13 +59,21 @@ jest.mock('@/features/capture/libraryPhotos', () => ({
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
-  useToday: () => ({
+  useToday: (now: Date) => ({
     me: { readerCount: 12, lidColor: 'brand', defaultVisibility: 'private' },
     jar: mockTodayJar.current,
+    todayDate: jest
+      .requireActual<typeof import('@/features/jar/useToday')>('@/features/jar/useToday')
+      .todayDateOf(
+        mockTodayJar.current,
+        now,
+        jest.requireActual<typeof import('@/lib/jars')>('@/lib/jars').localDateIn(now, 'Asia/Manila'),
+      ),
+    jarPending: false,
   }),
 }));
 // Today's open jar from Today's query; none unless a test sets one.
-const mockTodayJar: { current: unknown } = { current: undefined };
+const mockTodayJar: { current: import('@/features/jar/useToday').TodayJar | undefined } = { current: undefined };
 
 const mockDays: Record<string, DayJar> = {};
 const mockDayJar = jest.fn((date: string | null) => ({
@@ -397,6 +405,24 @@ describe('Day page route', () => {
     await renderRouter(routes, { initialUrl: '/day/2026-11-09', wrapper });
     await fireEvent.press(screen.getByRole('button', { name: 'Next day, Today' }));
     expect(screen).toHavePathname('/today');
+  });
+
+  // The travel rule the other way: flown west from Auckland, Today's jar is a day ahead of the phone in Manila,
+  // so the phone's own date is the day before Today, a past day with its own page.
+  it('the phone’s date is a past day while Today’s open jar is a day ahead of it', async () => {
+    jest.setSystemTime(new Date('2026-11-11T12:00:00Z')); // 20:00 on Nov 11 in Manila, 01:00 on Nov 12 in Auckland
+    mockDays['2026-11-11'] = { jar: null, moments: [] };
+    mockTodayJar.current = {
+      hasAnyJar: true,
+      jar: { id: 'jar-12', localDate: '2026-11-12', tz: 'Pacific/Auckland', endsAt: '2026-11-12T11:00:00Z' },
+      moments: [],
+    };
+    await renderRouter(routes, { initialUrl: '/day/2026-11-11', wrapper });
+    await act(async () => {});
+    expect(screen).toHavePathname('/day/2026-11-11');
+    expect(screen.getByTestId('day-subtitle')).toHaveTextContent('Nov 11, 2026');
+    expect(screen.getByRole('button', { name: 'Next day, Today' })).toBeTruthy();
+    delete mockDays['2026-11-11'];
   });
 
   it('Back with no history lands on My days', async () => {

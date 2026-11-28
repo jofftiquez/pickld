@@ -52,7 +52,11 @@ jest.mock('@/features/jar/useToday', () => ({
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
   refreshAfterQueueChange:
     jest.requireActual<typeof import('@/features/jar/useToday')>('@/features/jar/useToday').refreshAfterQueueChange,
-  useToday: () => ({ jar: undefined }),
+  useToday: (now: Date) => ({
+    jar: undefined,
+    todayDate: jest.requireActual<typeof import('@/lib/jars')>('@/lib/jars').localDateIn(now, 'Asia/Manila'),
+    jarPending: false,
+  }),
 }));
 
 let mockServerJars: MonthJarRow[] = [];

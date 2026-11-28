@@ -53,7 +53,17 @@ const mockDay: DayJar = {
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
   todayQueryKeys: { queue: (userId: string) => ['queue', userId] },
-  useToday: () => ({ userId: 'u-1', localDate: mockPhone.localDate, jar: mockToday, me: undefined, queue: [] }),
+  useToday: (now: Date) => ({
+    userId: 'u-1',
+    localDate: mockPhone.localDate,
+    todayDate: jest
+      .requireActual<typeof import('@/features/jar/useToday')>('@/features/jar/useToday')
+      .todayDateOf(mockToday, now, mockPhone.localDate),
+    jarPending: false,
+    jar: mockToday,
+    me: undefined,
+    queue: [],
+  }),
 }));
 const mockDayJar = jest.fn((date: string | null) => ({ userId: 'u-1', day: date ? mockDay : undefined, queue: [] }));
 jest.mock('@/features/days/useDayJar', () => ({ useDayJar: (date: string | null) => mockDayJar(date) }));

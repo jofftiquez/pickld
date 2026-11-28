@@ -44,9 +44,20 @@ jest.mock('@gorhom/bottom-sheet', () => {
 let mockTodayJar: { localDate: string; tz: string; endsAt: string } | null = null;
 jest.mock('@/features/jar/useToday', () => ({
   phoneTimeZone: () => 'Asia/Manila',
-  useToday: () => ({
-    jar: { hasAnyJar: true, jar: mockTodayJar ? { id: 'jar-open', ...mockTodayJar } : null, moments: [] },
-  }),
+  useToday: (now: Date) => {
+    const jar = { hasAnyJar: true, jar: mockTodayJar ? { id: 'jar-open', ...mockTodayJar } : null, moments: [] };
+    return {
+      jar,
+      todayDate: jest
+        .requireActual<typeof import('@/features/jar/useToday')>('@/features/jar/useToday')
+        .todayDateOf(
+          jar,
+          now,
+          jest.requireActual<typeof import('@/lib/jars')>('@/lib/jars').localDateIn(now, 'Asia/Manila'),
+        ),
+      jarPending: false,
+    };
+  },
 }));
 jest.mock('../useMonthJars', () => ({
   useMonthJars: () => ({ userId: 'u-1', jars: [], firstJarMonth: '2026-11', birthday: '2023-05-20' }),
@@ -203,7 +214,7 @@ describe('My days date picker', () => {
     mockTodayJar = { localDate: '2026-11-10', tz: 'America/Los_Angeles', endsAt: '2026-11-11T08:00:00Z' };
     await renderRouter(routes, { initialUrl: '/my-days', wrapper });
     await fireEvent.press(screen.getByRole('button', { name: 'Go to a date' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Tuesday, November 10, 2026' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Tuesday, November 10, 2026, today' }));
     expect(screen).toHavePathname('/today');
   });
 });

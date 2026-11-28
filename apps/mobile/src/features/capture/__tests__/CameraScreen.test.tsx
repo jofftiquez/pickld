@@ -181,6 +181,8 @@ jest.mock('@/features/jar/useToday', () => ({
   useToday: () => ({
     userId: mockToday.userId,
     localDate: mockToday.jar.localDate,
+    todayDate: mockToday.jar.localDate,
+    jarPending: false,
     jar: { hasAnyJar: true, jar: mockToday.jar, moments: [] },
     queue: mockToday.queue,
   }),

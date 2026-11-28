@@ -29,9 +29,10 @@ export default function PublishScreen() {
   const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ date?: string }>();
   const [now] = useState(() => new Date());
-  const { userId, localDate, jar: jarData, me, queue } = useToday(now);
-  // Deep links are untrusted: only a real past date picks a past jar; anything else is today's open jar.
-  const pastDate = parseFillDateParam(params.date, localDate);
+  const { userId, localDate, todayDate, jar: jarData, me, queue } = useToday(now);
+  // Deep links are untrusted: only a real past date picks a past jar; anything else is today's open jar. Past
+  // is before the open jar's own date, which can be a day off the phone's (the travel rule).
+  const pastDate = parseFillDateParam(params.date, todayDate);
   const { day } = useDayJar(pastDate);
   const jar = pastDate ? (day?.jar ?? null) : (openTodayJar(jarData, now)?.jar ?? null);
   const loaded = pastDate ? day !== undefined : jarData !== undefined;

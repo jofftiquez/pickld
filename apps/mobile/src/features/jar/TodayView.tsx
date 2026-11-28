@@ -29,8 +29,13 @@ import { greetingFor, momentCount, type GridTile } from './todayGrid';
 
 export type TodayViewProps = {
   now: Date;
-  /** The phone's IANA zone: date, greeting and capture times are shown in it. */
+  /** The phone's IANA zone: the greeting and capture times are shown in it. */
   tz: string;
+  /**
+   * Today's date for the header: the open jar's own date, which can be a day off the phone's in the travel
+   * window (`useToday().todayDate`). The phone's date in `tz` by default.
+   */
+  todayDate?: string;
   tiles: readonly GridTile[];
   /** The jar's cover (D-56): its tile gets a small "Cover" badge (D-98). */
   coverMomentId?: string | null;
@@ -130,6 +135,7 @@ function swipeStep(translationX: number, velocityX: number): -1 | 0 | 1 {
 export function TodayView({
   now,
   tz,
+  todayDate,
   tiles,
   coverMomentId = null,
   hasAnyJar,
@@ -228,7 +234,7 @@ export function TodayView({
             />
           ) : (
             <TodayHeader
-              date={formatShortDate(now, tz)}
+              date={todayDate ? formatShortDate(new Date(`${todayDate}T12:00:00Z`), 'UTC') : formatShortDate(now, tz)}
               greeting={greetingFor(currentSlot(now, tz))}
               displayName={displayName}
               avatarUrl={avatarUrl}

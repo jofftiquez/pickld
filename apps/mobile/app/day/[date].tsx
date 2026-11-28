@@ -9,7 +9,7 @@ import { parseDevPhotoParam, pickDevPhoto } from '@/features/capture/mockCamera'
 import { usePendingCrop } from '@/features/capture/pendingCrop';
 import { galleryTarget, saveGalleryPhoto } from '@/features/capture/saveCapture';
 import { useGalleryPicker } from '@/features/capture/useGalleryPicker';
-import { nextDay, stepToday } from '@/features/days/pastDay';
+import { nextDay } from '@/features/days/pastDay';
 import { useDayJar } from '@/features/days/useDayJar';
 import { DayLine } from '@/features/jar/DayLine';
 import { useSaveJarLine } from '@/features/jar/jarLine';
@@ -24,7 +24,7 @@ import { JarVisibilitySheet } from '@/features/publish/JarVisibilitySheet';
 import { usePublishCelebration } from '@/features/publish/publishCelebration';
 import { PublishError, publishJar, type Visibility } from '@/features/publish/publishJar';
 import { useIsOffline } from '@/lib/connectivity';
-import { addDays, localDateIn } from '@/lib/jars';
+import { addDays } from '@/lib/jars';
 import { captureError } from '@/lib/monitoring';
 import { getSupabase } from '@/lib/supabase';
 import type { Slot } from '@/theme/tokens';
@@ -47,11 +47,11 @@ export default function DayScreen() {
   const params = useLocalSearchParams<{ date?: string; devPhoto?: string }>();
   const [now] = useState(() => new Date());
   const phoneTz = phoneTimeZone();
-  const phoneToday = localDateIn(now, phoneTz);
-  const date = parseFillDateParam(params.date, phoneToday);
+  // The profile (readers, lid color, suspension) and today's jar from Today's cached query. A past day is one
+  // before Today's open jar, whose own date can be a day off the phone's (the travel rule).
+  const { me, jar: todayJar, todayDate, jarPending } = useToday(now);
+  const date = parseFillDateParam(params.date, todayDate);
   const { userId, day, queue, queueLoaded } = useDayJar(date);
-  // The profile (readers, lid color, suspension) and today's jar from Today's cached query.
-  const { me, jar: todayJar } = useToday(now);
   const offline = useIsOffline();
 
   // Coming back (from Crop, the editor, the preview or Publish) re-reads the day, the queue and the
@@ -103,7 +103,9 @@ export default function DayScreen() {
     try {
       const photo = devPhoto ? await pickDevPhoto(devPhoto) : await gallery.pick();
       if (photo === null) return;
-      const fill = fillTarget(date, jar, phoneTz);
+      // A day with no jar yet gets one in the open jar's zone, where the day has ended: in the phone's zone it
+      // could still be running in the travel window, a second open jar.
+      const fill = fillTarget(date, jar, openTodayJar(todayJar, now)?.jar?.tz ?? phoneTz);
       const target = galleryTarget({ exif: photo.exif, tz: phoneTz, now: new Date(), openJar: null, fill });
       if (!isThreeByFour(photo)) {
         setPendingCrop({ photo, slot, userId, target });
@@ -129,7 +131,8 @@ export default function DayScreen() {
     }
   };
 
-  if (date === null) return <Redirect href="/today" />;
+  // Until Today's jar is read, only the phone's date is known: a day before the open jar could look like Today.
+  if (date === null) return jarPending ? null : <Redirect href="/today" />;
 
   const tz = jar?.tz ?? phoneTz;
   const published =
@@ -188,7 +191,7 @@ export default function DayScreen() {
         // the last past day is Today (its jar's own date).
         step={{
           previous: addDays(date, -1),
-          next: nextDay(date, stepToday(openTodayJar(todayJar, now)?.jar?.localDate ?? phoneToday, phoneToday)),
+          next: nextDay(date, todayDate),
           onStep: (to) => (to === 'today' ? router.dismissTo('/today') : router.setParams({ date: to })),
         }}
       />

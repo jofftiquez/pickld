@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { useAuthStore } from '@/lib/authStore';
 import { fetchAvatarUrls } from '@/lib/avatars';
 import { trackNetwork } from '@/lib/connectivity';
-import { findOpenJar, localDateIn, normalizeZone } from '@/lib/jars';
+import { findOpenJar, isJarOpen, localDateIn, normalizeZone } from '@/lib/jars';
 import { listQueue, subscribeQueue, type QueueChange } from '@/lib/queue/store';
 import { getSupabase } from '@/lib/supabase';
 
@@ -193,10 +193,24 @@ export function refreshAfterQueueChange(queryClient: QueryClient, userId: string
     void queue();
     return;
   }
-  const server = [['jar', userId], ['jarPage', userId], ['day', userId]].map((queryKey) =>
-    queryClient.invalidateQueries({ queryKey }, { cancelRefetch: false }),
-  );
+  const server = [
+    ['jar', userId],
+    ['jarPage', userId],
+    ['day', userId],
+  ].map((queryKey) => queryClient.invalidateQueries({ queryKey }, { cancelRefetch: false }));
   void Promise.allSettled(server).then(queue);
+}
+
+/**
+ * Today's date as the app means it. Today's open jar keeps its own zone until its midnight (the travel rule,
+ * D-1), so its date can be a day before or after the phone's: while it is open, Today is its date, else the
+ * phone's. Day pages, the day stepper, Publish and My days decide "Today or a past day" by it.
+ */
+export function todayDateOf(data: TodayJar | undefined, now: Date, phoneDate: string): string {
+  const open = data?.jar;
+  return open && isJarOpen({ local_date: open.localDate, tz: open.tz, ends_at: open.endsAt ?? null }, now)
+    ? open.localDate
+    : phoneDate;
 }
 
 export function useToday(now: Date) {
@@ -234,6 +248,10 @@ export function useToday(now: Date) {
   return {
     userId,
     localDate,
+    /** Today as the app means it: the open jar's own date, else the phone's. Dates before it are past days. */
+    todayDate: todayDateOf(jar.data, now, localDate),
+    /** Until Today's jar has been read once, `todayDate` is only the phone's date. */
+    jarPending: jar.isPending,
     jar: jar.data,
     me: me.data,
     queue: queue.data ?? [],
