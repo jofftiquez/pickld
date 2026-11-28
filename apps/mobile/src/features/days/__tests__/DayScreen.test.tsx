@@ -421,6 +421,7 @@ describe('Day page route', () => {
     await act(async () => {});
     expect(screen).toHavePathname('/day/2026-11-11');
     expect(screen.getByTestId('day-subtitle')).toHaveTextContent('Nov 11, 2026');
+    expect(screen.getByTestId('past-day-screen')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next day, Today' })).toBeTruthy();
     delete mockDays['2026-11-11'];
   });
