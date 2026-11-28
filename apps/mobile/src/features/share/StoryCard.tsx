@@ -169,27 +169,24 @@ export function StoryCard(props: StoryCardProps) {
             </Text>
           </View>
           <View style={{ alignItems: 'flex-end', flexShrink: 1, maxWidth: '50%' }}>
-            {/* The member number sits beside the wordmark, so the footer is no taller with it. */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: px(16) }}>
-              {memberNumber != null ? (
-                // a11y-fixed-size: drawn into the shared image at the image's scale
-                <Text
-                  allowFontScaling={false}
-                  numberOfLines={1}
-                  style={[font('semibold', m.linkSize), { opacity: 0.85 }]}
-                  testID="share-card-member-number"
-                >
-                  {t('profile.memberNumber', { number: formatMemberNumber(memberNumber) })}
-                </Text>
-              ) : null}
-              <Image
-                source={logo}
-                style={{ width: px(m.logoWidth), height: px(m.logoWidth / m.logoAspect) }}
-                contentFit="contain"
-                tintColor={palette.logoTint ?? undefined}
-                accessible={false}
-              />
-            </View>
+            <Image
+              source={logo}
+              style={{ width: px(m.logoWidth), height: px(m.logoWidth / m.logoAspect) }}
+              contentFit="contain"
+              tintColor={palette.logoTint ?? undefined}
+              accessible={false}
+            />
+            {memberNumber != null ? (
+              // a11y-fixed-size: drawn into the shared image at the image's scale
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                style={font('semibold', m.linkSize)}
+                testID="share-card-member-number"
+              >
+                {t('profile.memberNumber', { number: formatMemberNumber(memberNumber) })}
+              </Text>
+            ) : null}
             {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
             <Text allowFontScaling={false} numberOfLines={1} style={font('semibold', m.linkSize)}>
               {card.link}
