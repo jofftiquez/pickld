@@ -18,7 +18,9 @@ secrets_file="$(mktemp)"
 trap 'rm -f "$secrets_file"' EXIT
 chmod 600 "$secrets_file"
 add_secret() { printf '%s=%s\n' "$1" "$2" >>"$secrets_file"; }
-random_secret() { local v; v="$(openssl rand -hex 32)"; mask "$v"; printf %s "$v"; }
+# Sets $secret to a new random value and masks it in the Actions log. Not called as $(…): the mask command must
+# reach the log, not the captured value.
+new_secret() { secret="$(openssl rand -hex 32)"; mask "$secret"; }
 
 # A value written into SQL below must be plain (hex, a URL or a JWT), never something with a quote in it.
 sql_safe() { [[ "$1" =~ ^[A-Za-z0-9._:/-]+$ ]] || { echo "refusing to put an unexpected value into SQL" >&2; exit 1; }; }
@@ -62,24 +64,25 @@ if photos_configured; then
   # If either is missing, both get a new one (tokens live 15 minutes, so rotating is harmless).
   if ! has PHOTO_TOKEN_SECRET "$fn_secrets" || ! has PHOTO_TOKEN_SECRET "$worker_secrets"; then
     echo "new PHOTO_TOKEN_SECRET"
-    v="$(random_secret)"
-    add_secret PHOTO_TOKEN_SECRET "$v"
-    printf %s "$v" | wrangler secret put PHOTO_TOKEN_SECRET --env "$env" >/dev/null
+    new_secret
+    add_secret PHOTO_TOKEN_SECRET "$secret"
+    printf %s "$secret" | wrangler secret put PHOTO_TOKEN_SECRET --env "$env" >/dev/null
   fi
 fi
 # Contact hashes are keyed with this; it is set once (changing it means truncating public.contact_hashes).
 if ! has CONTACT_HASH_SECRET "$fn_secrets"; then
   echo "new CONTACT_HASH_SECRET"
-  add_secret CONTACT_HASH_SECRET "$(random_secret)"
+  new_secret
+  add_secret CONTACT_HASH_SECRET "$secret"
 fi
 # The cron jobs send these headers, so each lives as a function secret and in Vault with the same value.
 for pair in PUSH_CRON_SECRET:push_cron_secret ACCOUNT_JOBS_SECRET:account_jobs_secret; do
   name="${pair%%:*}" vault_name="${pair##*:}"
   if ! has "$name" "$fn_secrets" || ! has "$vault_name" "$vault_names"; then
     echo "new $name"
-    v="$(random_secret)"
-    add_secret "$name" "$v"
-    vault_set "$vault_name" "$v"
+    new_secret
+    add_secret "$name" "$secret"
+    vault_set "$vault_name" "$secret"
   fi
 done
 supabase_cli secrets set --remote="$SUPABASE_PROJECT_REF" --env-file "$secrets_file" >/dev/null
