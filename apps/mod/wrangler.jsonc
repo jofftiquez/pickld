@@ -11,6 +11,10 @@
   "observability": { "enabled": true },
   "env": {
     "staging": { "name": "pickld-mod-staging", "workers_dev": true },
-    "production": { "name": "pickld-mod-production", "workers_dev": true },
+    "production": {
+      "name": "pickld-mod-production",
+      "workers_dev": false,
+      "routes": [{ "pattern": "mod.pickld.me", "custom_domain": true }],
+    },
   },
 }
