@@ -7,7 +7,7 @@
 # until the editor saves or the app restarts):
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/crop.yaml
 #   maestro test -e SLOT=evening apps/mobile/.maestro/crop.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 # Default SLOT here, not in env: (a flow's env: overrides `maestro test -e` in Maestro 2.12).
 - evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'afternoon'}"

@@ -3,7 +3,7 @@
 # Run on the iOS Simulator with a dev build, signed in as seed user dale after `pnpm db:reset`: his jar
 # today is unpublished with 4 moments (one private), and his default visibility is Readers.
 #   maestro test --test-output-dir docs/milestones/M3 apps/mobile/.maestro/publish-review.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

@@ -1,4 +1,4 @@
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 # Eight fast swipes down the Jars feed (scripts/perf/record.sh scroll).
 ---
 - launchApp:

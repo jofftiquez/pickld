@@ -2,7 +2,7 @@
 # the like and comment bar (no Share jar: only the owner shares, D-83); Back returns to the feed.
 # Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
 # maestro test apps/mobile/.maestro/jar-page.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

@@ -9,7 +9,7 @@ import type { SupabaseClient } from './deps.ts';
 
 const APPLE = 'https://appleid.apple.com';
 /** The bundle ids Apple issues codes to: the store app and the local variant (apps/mobile/app.config.ts). */
-export const APPLE_CLIENT_IDS = ['me.pickld.app', 'me.pickld.app.local'] as const;
+export const APPLE_CLIENT_IDS = ['com.teamops.apps.Pickld', 'com.teamops.apps.Pickld.local'] as const;
 
 export interface AppleKey {
   teamId: string;

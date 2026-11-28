@@ -2,7 +2,7 @@
 # and Close goes back to the Jar page.
 # Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
 # maestro test apps/mobile/.maestro/moment-detail.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

@@ -2,7 +2,7 @@
 # Muted, and her jar leaves his Jars feed; unmuting brings it back.
 # Needs the seed data (dale reads mika; mika has a full Everyone jar today) and dale signed in:
 # maestro test apps/mobile/.maestro/mute.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

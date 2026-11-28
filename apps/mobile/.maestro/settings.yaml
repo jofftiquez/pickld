@@ -1,7 +1,7 @@
 # FR-SET-01, FR-SET-02, FR-EXP-03: Settings. The version line at the bottom, Show me in Discover switched off
 # and on again, and Help with its FAQ search.
 # Needs dale signed in: maestro test apps/mobile/.maestro/settings.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

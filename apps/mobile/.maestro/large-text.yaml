@@ -3,7 +3,7 @@
 #   maestro test apps/mobile/.maestro/large-text.yaml
 #   xcrun simctl ui booted content_size large                       (back to the default)
 # Signs dale out at the end (Welcome and Sign up). Each screen must load and keep its main control reachable; the screenshots go in the M5 report.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

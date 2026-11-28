@@ -2,7 +2,7 @@
 # button turns on only after DELETE is typed → back on Welcome, signed out.
 #   maestro test apps/mobile/.maestro/delete-account.yaml
 # Starts signed out; ends signed out. Sign dale back in afterwards (sign-in-email.yaml).
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp:
     permissions:

@@ -3,7 +3,7 @@
 # seed ends as it started. The photo picker is system UI Maestro can't drive, so photos aren't changed here.
 # Needs the seed data (mika exists) and dale signed in:
 # maestro test apps/mobile/.maestro/edit-profile.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

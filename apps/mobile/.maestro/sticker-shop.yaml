@@ -2,7 +2,7 @@
 # every pack costs ₱49 and buying always succeeds; fn:store-sync records it). Opens the shop from Today's sticker
 # button, searches "fish moods", opens Fish Moods, buys it, and the pack then says it's yours; My stickers lists it.
 # Needs dale signed in, not owning Fish Moods (seed data): maestro test apps/mobile/.maestro/sticker-shop.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

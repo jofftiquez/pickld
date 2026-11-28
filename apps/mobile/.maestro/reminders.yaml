@@ -1,7 +1,7 @@
 # M3-18: slot reminders. Allows notifications on the dev screen, lets Today schedule the week's reminders,
 # checks they are listed, then fires one 5 seconds out and captures the banner on the home screen.
 # Needs a dev build signed in: maestro test apps/mobile/.maestro/reminders.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

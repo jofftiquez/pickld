@@ -5,7 +5,7 @@
 #   maestro test -e ANON_KEY=$(npx supabase status -o json | jq -r .ANON_KEY) apps/mobile/.maestro/invite-waiting.yaml
 # Uses one of dale's unused codes (invite-code.js). Starts signed out; ends signed in as the new account. Run it
 # before invite-link.yaml: a code kept on the phone from an unfinished invite link is used at About you.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 env:
   INVITER: dale@pickld.test
 ---

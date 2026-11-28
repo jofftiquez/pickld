@@ -9,7 +9,7 @@
 #   xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf
 # Ends signed in as the new account: sign dale back in afterwards (scripts/dev-sign-in.sh).
 #   maestro test apps/mobile/.maestro/onboarding-full.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp:
     permissions:

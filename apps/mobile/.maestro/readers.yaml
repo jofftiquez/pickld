@@ -2,7 +2,7 @@
 # Authors switch, and Read back → Reading → Read back on Jun, so the seed ends as it started.
 # Needs the seed data (mika, aya and jun read dale; dale reads mika and aya) and dale signed in:
 # maestro test apps/mobile/.maestro/readers.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

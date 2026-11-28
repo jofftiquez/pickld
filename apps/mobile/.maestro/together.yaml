@@ -9,7 +9,7 @@
 #     where mo.jar_id = 'b0000000-0000-4000-8000-000000000102' and mo.slot = 'whereami' and a.username = 'aya';
 #   maestro test -e MOMENT=<that moment's id> apps/mobile/.maestro/together.yaml
 # Ends signed in as Jun; sign Dale back in afterwards (sign-in-email.yaml).
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 env:
   JAR: b0000000-0000-4000-8000-000000000102
 ---

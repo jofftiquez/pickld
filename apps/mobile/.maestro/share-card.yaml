@@ -4,7 +4,7 @@
 # rendered card to Photos. Only the owner shares a jar (D-83).
 # Needs the seed data (dale's full, published jar from yesterday) and dale signed in:
 # maestro test apps/mobile/.maestro/share-card.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp:
     permissions:

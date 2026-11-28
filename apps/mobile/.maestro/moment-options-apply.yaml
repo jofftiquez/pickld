@@ -6,7 +6,7 @@
 # #afternoon; `pnpm db:reset` restores the seed afterwards).
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/moment-options-apply.yaml
 #   maestro test -e FROM=whereami -e TO=ootd apps/mobile/.maestro/moment-options-apply.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - evalScript: "${output.from = (typeof FROM !== 'undefined' && FROM) ? FROM : 'morning'}"
 - evalScript: "${output.to = (typeof TO !== 'undefined' && TO) ? TO : 'afternoon'}"
