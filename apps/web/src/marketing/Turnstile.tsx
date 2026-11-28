@@ -11,7 +11,6 @@ import { useEffect, useRef, useState } from 'react';
 
 type Api = {
   render: (el: HTMLElement, options: Record<string, unknown>) => string;
-  getResponse: (id: string) => string | undefined;
   isExpired: (id: string) => boolean;
   reset: (id: string) => void;
   remove: (id: string) => void;
@@ -48,25 +47,32 @@ export function Turnstile({ siteKey, checking }: { siteKey: string; checking: st
     let id: string | undefined;
     let gone = false;
     let held = false;
-    // The token arrived, or the widget failed (the server then answers with the captcha page): send the held submit.
+    // The script or the widget failed: submits go without a token, and the server answers with the captcha page.
+    let failed = false;
+    // The token arrived, or the widget failed: send the held submit.
     const release = () => {
       if (!held) return;
       held = false;
       setWaiting(false);
       form?.requestSubmit();
     };
+    const fail = () => {
+      failed = true;
+      release();
+    };
     // Capture phase on the form, so it runs before React starts the server action.
     const onSubmit = (event: SubmitEvent) => {
-      const api = window.turnstile;
-      if (!api || id === undefined) return; // no widget: nothing to wait for
-      if (api.getResponse(id) && !api.isExpired(id)) {
+      // The field the widget fills is what React sends; the widget can call back before render() returns an id.
+      const field = form?.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]');
+      if (field?.value && !(id !== undefined && window.turnstile?.isExpired(id))) {
         // React has read the form by now; the next submit needs a token of its own.
-        const sent = id;
         setTimeout(() => {
-          if (!gone) api.reset(sent);
+          if (!gone && id !== undefined) window.turnstile?.reset(id);
         });
         return;
       }
+      if (failed) return;
+      // No token yet, or no widget yet because the script is still loading: wait for it.
       event.preventDefault();
       event.stopPropagation();
       held = true;
@@ -80,13 +86,14 @@ export function Turnstile({ siteKey, checking }: { siteKey: string; checking: st
           sitekey: siteKey,
           appearance: 'interaction-only',
           action: 'waitlist',
-          callback: release,
-          'error-callback': release,
+          callback: () => {
+            failed = false;
+            release();
+          },
+          'error-callback': fail,
         });
       })
-      .catch(() => {
-        /* Without the widget there is no token, and the server answers with the captcha page. */
-      });
+      .catch(fail);
     return () => {
       gone = true;
       form?.removeEventListener('submit', onSubmit, true);

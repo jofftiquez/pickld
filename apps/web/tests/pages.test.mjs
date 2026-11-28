@@ -344,14 +344,20 @@ after(async () => {
   stub?.close();
 });
 
-async function open(route, { captchaDelay = 0 } = {}) {
+// `scriptDelay` holds Cloudflare's script back, and `open` returns once the page asked for it (it has hydrated).
+async function open(route, { captchaDelay = 0, scriptDelay = 0 } = {}) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await page.route('https://challenges.cloudflare.com/**', (r) =>
-    r.fulfill({ contentType: 'text/javascript', body: FAKE_TURNSTILE }),
-  );
+  let requested;
+  const scriptRequested = new Promise((r) => (requested = r));
+  await page.route('https://challenges.cloudflare.com/**', async (r) => {
+    requested();
+    if (scriptDelay) await new Promise((done) => setTimeout(done, scriptDelay));
+    await r.fulfill({ contentType: 'text/javascript', body: FAKE_TURNSTILE }).catch(() => {});
+  });
   if (captchaDelay) await page.addInitScript((ms) => (window.TURNSTILE_DELAY = ms), captchaDelay);
-  const res = await page.goto(base + route);
-  await page.waitForLoadState('networkidle');
+  const res = await page.goto(base + route, { waitUntil: scriptDelay ? 'commit' : 'load' });
+  if (scriptDelay) await scriptRequested;
+  else await page.waitForLoadState('networkidle');
   return { page, status: res.status() };
 }
 
@@ -764,6 +770,21 @@ test('a double click on either waitlist button posts once, with the button busy 
 test('a click before the captcha has its token waits for it, then sends once with the token', async () => {
   resetWaitlist();
   const { page } = await open('/', { captchaDelay: 4000 });
+  await page.getByLabel('Email address').first().fill('mika@example.com');
+  await page.getByRole('button', { name: 'Join the waitlist' }).first().click();
+  assert.ok(await page.getByRole('status').filter({ hasText: 'Checking you’re a person…' }).isVisible());
+  await page.waitForURL(`${base}/waitlist/code`);
+  assert.deepEqual(
+    waitlist.captcha.map((c) => c.response),
+    ['stub-token'],
+  );
+  assert.equal(waitlist.otp.length, 1, 'one code email');
+  await page.close();
+});
+
+test('a click before the captcha script has loaded waits for it too', async () => {
+  resetWaitlist();
+  const { page } = await open('/', { scriptDelay: 3000 });
   await page.getByLabel('Email address').first().fill('mika@example.com');
   await page.getByRole('button', { name: 'Join the waitlist' }).first().click();
   assert.ok(await page.getByRole('status').filter({ hasText: 'Checking you’re a person…' }).isVisible());

@@ -20,6 +20,9 @@ jobs:
     environment: production
     timeout-minutes: 25
     env:
+      # The install step below is the only install: without this, a `pnpm run`/`pnpm exec` in a later step that
+      # thinks node_modules is stale reinstalls, and pnpm 12's hoisted install can fail on a staging folder.
+      pnpm_config_verify_deps_before_run: false
       # Variables (not secret)
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
