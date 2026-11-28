@@ -9,7 +9,7 @@ Use this when the production database must be rolled back, for example after a b
 | Accounts, jars, moments, follows, comments, reports, audit log | Supabase Postgres (Singapore) | Supabase's daily backups, kept for the plan's retention. Point-in-time recovery is a paid add-on and isn't enabled (it would need approval) |
 | Photos, thumbnails, avatars, exports | Cloudflare R2 | **Not backed up.** A restore brings back rows whose photos still exist in R2. Photos deleted after the backup was taken stay deleted |
 | Edge Function code, migrations | GitHub (`supabase/`) | The repository |
-| Secrets (R2 keys, photo token, jobs secret) | Supabase function secrets, Cloudflare Worker secrets, Vercel (console), EAS | The founders' password manager |
+| Secrets (R2 keys, photo token, jobs secret) | Supabase function secrets, Cloudflare Worker secrets (site, console, photos), EAS | The founders' password manager |
 
 ## Before restoring production
 
@@ -25,7 +25,7 @@ Use this when the production database must be rolled back, for example after a b
 2. For a downloaded backup: create a project in the same region, then restore with the database superuser:
    `pg_restore --no-owner --exit-on-error -d "$NEW_DB_URL" backup.dump` (for a plain `.sql` backup: `psql -v ON_ERROR_STOP=1 -d "$NEW_DB_URL" -f backup.sql`).
 3. Bring the migration history up to date: `pnpm exec supabase db push --db-url "$NEW_DB_URL"`. Apply only migrations newer than the backup.
-4. Redeploy the Edge Functions and set their secrets on the new project (`supabase functions deploy`, `supabase secrets set`), then point the app's Supabase URL and anon key at it. The app reads these from EAS env (D-35), so this means a new EAS Update or build. Also update the web apps on Vercel.
+4. Redeploy the Edge Functions and set their secrets on the new project (`supabase functions deploy`, `supabase secrets set`), then point the app's Supabase URL and anon key at it. The app reads these from EAS env (D-35), so this means a new EAS Update or build. Then rerun the deploy so pickld.me and the console pick up the new project.
 
 **Faster but destructive: restore in place.** Dashboard → Database → Backups → Restore. It overwrites the current database and the project is unavailable while it runs. Use it only when the dump from step 3 above exists.
 

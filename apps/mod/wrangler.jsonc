@@ -1,0 +1,16 @@
+// The moderation console as a Cloudflare Worker, built by OpenNext (`pnpm cf:build`) and deployed by
+// scripts/deploy/web.sh. Settings live on the Worker (SUPABASE_URL as a variable, SUPABASE_ANON_KEY as a
+// secret), set at deploy time, never in this file.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "pickld-mod",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true },
+  "env": {
+    "staging": { "name": "pickld-mod-staging", "workers_dev": true },
+    "production": { "name": "pickld-mod-production", "workers_dev": true },
+  },
+}

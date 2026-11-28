@@ -423,6 +423,9 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
+      '@opennextjs/cloudflare':
+        specifier: 1.20.18
+        version: 1.20.18(next@16.4.6(@babel/core@7.29.13(supports-color@8.1.1))(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(supports-color@8.1.1)(wrangler@4.165.0(@types/node@26.6.6))
       '@tailwindcss/postcss':
         specifier: ^4.3.5
         version: 4.3.5
@@ -456,6 +459,9 @@ importers:
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
+      wrangler:
+        specifier: 4.165.0
+        version: 4.165.0(@types/node@26.6.6)
 
   apps/web:
     dependencies:

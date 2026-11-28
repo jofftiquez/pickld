@@ -1,23 +1,17 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-
 import type { ReactNode } from 'react';
 
 import { colors, radius } from '@/theme/tokens';
 
 import { t } from '~/i18n/t';
 
+import guidelines from '../../../../../web/content/legal/guidelines.md' with { type: 'text' };
+import playbook from '../../../../content/playbook.md' with { type: 'text' };
+
 // Console help (M3-28): the moderator playbook (apps/mod/content/playbook.md, moderators only) and the
-// public Community Guidelines, read from the same file pickld.me/guidelines serves
-// (apps/web/content/legal/guidelines.md) so the two can't drift apart. Only the Markdown those files use
+// public Community Guidelines, from the same file pickld.me/guidelines serves
+// (apps/web/content/legal/guidelines.md) so the two can't drift apart. Both are bundled at build time,
+// because the console runs as a Cloudflare Worker with no files to read. Only the Markdown those files use
 // is supported: # headings, - lists and paragraphs.
-async function read(file: string): Promise<string | null> {
-  try {
-    return await readFile(path.join(process.cwd(), file), 'utf8');
-  } catch {
-    return null;
-  }
-}
 
 function render(markdown: string): ReactNode[] {
   return markdown
@@ -55,10 +49,10 @@ function render(markdown: string): ReactNode[] {
     });
 }
 
-export default async function Help() {
+export default function Help() {
   const docs = [
-    { label: t('help.playbook'), text: await read('content/playbook.md') },
-    { label: t('help.guidelines'), text: await read('../web/content/legal/guidelines.md') },
+    { label: t('help.playbook'), text: playbook },
+    { label: t('help.guidelines'), text: guidelines },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 820 }}>
