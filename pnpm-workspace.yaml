@@ -13,4 +13,5 @@ minimumReleaseAgeExclude:
   - expo-media-library@58.0.14
   - expo-sharing@58.0.23
 patchedDependencies:
+  '@opennextjs/aws@4.2.0': patches/@opennextjs__aws@4.2.0.patch
   react-native-screens@4.30.1: patches/react-native-screens@4.30.1.patch

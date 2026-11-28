@@ -106,6 +106,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@opennextjs/aws@4.2.0': f671ff65ebdf253248af98bf17492275c6f64b989437876f55b9e1160741c46b
   react-native-screens@4.30.1: e017cd6d1628d333aa6bdae02b5eac5930b14b3edce814143cccc7d6df5e3835
 
 importers:
@@ -11095,7 +11096,7 @@ snapshots:
   '@noxcturnal/noxcturnal-win32-x64-msvc@0.1.12':
     optional: true
 
-  '@opennextjs/aws@4.2.0(next@16.4.6(@babel/core@7.29.13(supports-color@8.1.1))(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(supports-color@8.1.1)':
+  '@opennextjs/aws@4.2.0(patch_hash=f671ff65ebdf253248af98bf17492275c6f64b989437876f55b9e1160741c46b)(next@16.4.6(@babel/core@7.29.13(supports-color@8.1.1))(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(supports-color@8.1.1)':
     dependencies:
       '@ast-grep/napi': 0.45.3
       '@aws-sdk/client-cloudfront': 3.984.0
@@ -11122,7 +11123,7 @@ snapshots:
     dependencies:
       '@ast-grep/napi': 0.45.3
       '@dotenvx/dotenvx': 2.38.2
-      '@opennextjs/aws': 4.2.0(next@16.4.6(@babel/core@7.29.13(supports-color@8.1.1))(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(supports-color@8.1.1)
+      '@opennextjs/aws': 4.2.0(patch_hash=f671ff65ebdf253248af98bf17492275c6f64b989437876f55b9e1160741c46b)(next@16.4.6(@babel/core@7.29.13(supports-color@8.1.1))(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(supports-color@8.1.1)
       ci-info: 4.5.0
       cloudflare: 4.5.0
       comment-json: 4.6.2
