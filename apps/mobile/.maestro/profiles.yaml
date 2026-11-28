@@ -2,7 +2,7 @@
 # Jars / Moments switch; then My profile from the Today avatar (design: Profile).
 # Needs the seed data (dale reads mika, mika reads dale) and dale signed in:
 # maestro test apps/mobile/.maestro/profiles.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

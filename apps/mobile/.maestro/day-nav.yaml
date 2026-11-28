@@ -2,7 +2,7 @@
 # next day; ‹ or a swipe right opens the day before; on a day page › or a swipe left goes forward, and the day
 # after the last past day is Today. Dates are compared as the header shows them, so the Simulator's zone doesn't
 # matter. Needs dale signed in (seed data): maestro test apps/mobile/.maestro/day-nav.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

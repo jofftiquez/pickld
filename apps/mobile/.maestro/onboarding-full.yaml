@@ -9,7 +9,7 @@
 #   xcrun simctl addmedia booted apps/mobile/.maestro/friends.vcf
 # Ends signed in as the new account: sign dale back in afterwards (scripts/dev-sign-in.sh).
 #   maestro test apps/mobile/.maestro/onboarding-full.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp:
     permissions:
@@ -301,8 +301,8 @@ appId: me.pickld.app
       id: guide-tip-today
     timeout: 20000
 - takeScreenshot: GuideTipToday-ios
-# The upload settles under the tip (it stays up), and the jar's line row then appears above it, moving the
-# tip down: wait for that row before tapping Got it. D-22 auto-approves the moment locally.
+# The tip stays up while the upload settles, with the line row already above it, so it doesn't move.
+# D-22 auto-approves the moment locally.
 - extendedWaitUntil:
     visible:
       id: day-line

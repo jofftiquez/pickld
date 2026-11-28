@@ -2,7 +2,7 @@
 # and Take a break pauses reminders and pushes until a chosen day, then ends early. Leaves both off again.
 # Needs the seed data (dale reads mika; mika has a jar today) and dale signed in:
 # maestro test apps/mobile/.maestro/calm-controls.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

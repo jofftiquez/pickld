@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConflictReplacePrompt } from '@/features/capture/ConflictReplacePrompt';
 import { DayLine } from '@/features/jar/DayLine';
-import { useSaveJarLine } from '@/features/jar/jarLine';
+import { ensureLineJar, useSaveJarLine } from '@/features/jar/jarLine';
 import { SuspensionBanner } from '@/features/jar/SuspensionBanner';
 import { TimeZoneBanner } from '@/features/jar/TimeZoneBanner';
 import { TodayView } from '@/features/jar/TodayView';
@@ -140,6 +140,12 @@ export default function TodayScreen() {
   });
   const openJar = jar?.jar ?? null;
   const saveLine = useSaveJarLine(userId);
+  // The line row is there as soon as the day holds a moment, not only once the first upload has made the jar,
+  // so nothing above the grid (the guide's tip) moves when it lands (Joff). Until then a photo waiting in the
+  // queue says which jar it will go into, and a line saved meanwhile makes that jar first.
+  const shownDate = jar?.jar?.localDate ?? localDate;
+  const queued = openJar ? undefined : queue.find((item) => item.localDate === shownDate && item.draft !== true);
+  const lineTarget = queued?.tz ? { localDate: queued.localDate, tz: queued.tz } : null;
   const published =
     openJar?.publishedAt && openJar.visibility
       ? { visibility: openJar.visibility, publishedAt: openJar.publishedAt, likeCount: openJar.likeCount ?? 0 }
@@ -211,11 +217,16 @@ export default function TodayScreen() {
           onStep: (date) => router.push({ pathname: '/day/[date]', params: { date, via: 'step' } }),
         }}
         dayLine={
-          openJar ? (
+          openJar || lineTarget ? (
             <DayLine
-              key={openJar.id}
-              line={openJar.line ?? null}
-              onSave={(line) => saveLine.mutateAsync({ jarId: openJar.id, line })}
+              // By date, not jar id: the jar arriving mid-edit keeps the field open.
+              key={shownDate}
+              line={openJar?.line ?? null}
+              onSave={async (line) => {
+                const jarId = openJar?.id ?? (lineTarget ? await ensureLineJar(getSupabase(), lineTarget) : null);
+                if (jarId === null) throw new Error('no jar for the line');
+                return saveLine.mutateAsync({ jarId, line });
+              }}
             />
           ) : null
         }

@@ -2,7 +2,7 @@
 # permission, so the dev-only `?mockAccess=denied` param forces the denied state (ignored in release).
 # Run on the iOS Simulator with a dev build, signed in:
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/camera-denied.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

@@ -8,7 +8,7 @@
 # `?devPhoto=portrait` param: an empty tile takes that bundled 3:4 photo instead of opening the gallery, as
 # the camera's `?devPhoto=` does (crop.yaml). The first run fills #mebusywith; reset with `pnpm db:reset` to
 # get the same screenshot again.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 # Three days ago in Manila (the seed's zone), as the calendar's testID: day-YYYY-MM-DD.
 - evalScript: '${output.day = new Date(Date.now() + 8 * 3600000 - 3 * 86400000).toISOString().slice(0, 10)}'

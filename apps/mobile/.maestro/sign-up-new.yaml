@@ -1,7 +1,7 @@
 # Subflow for the invite flows: from Sign up, a fresh email (new-email.js), its code from Mailpit, and About you
 # filled in as an adult born 14 April 1990, then Continue. Leaves output.email and output.username set.
 # Run it through runFlow with Sign up on screen; it isn't meant to run alone.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - extendedWaitUntil:
     visible:

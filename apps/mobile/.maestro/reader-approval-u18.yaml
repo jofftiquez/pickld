@@ -5,7 +5,7 @@
 #   update profiles set birthday = (current_date - interval '16 years')::date where username = 'jun';
 #   maestro test apps/mobile/.maestro/reader-approval-u18.yaml
 # Ends signed in as Lola; sign Dale back in afterwards (sign-in-email.yaml).
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 # ---------------------------------------------------------------- Lola asks
 - runFlow:

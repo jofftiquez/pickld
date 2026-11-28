@@ -5,7 +5,7 @@
 # run (a code works once, for 10 minutes):
 #   maestro test -e MIKA="$(scripts/dev-sign-in.sh mika@pickld.test)" -e AYA="$(scripts/dev-sign-in.sh aya@pickld.test)" \
 #     apps/mobile/.maestro/reader-approval.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - openLink: pickld://dev/sign-out

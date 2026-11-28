@@ -1,7 +1,7 @@
 # M3-19: the bell on Today shows the unread dot, opens Notifications, and a row opens what it is about.
 # Needs dale signed in with unread notifications (the seed's new readers and full jar):
 # maestro test apps/mobile/.maestro/notifications.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

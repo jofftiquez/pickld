@@ -10,7 +10,7 @@
 # Put the Simulator in Tokyo time before launching, then restart the app:
 #   xcrun simctl spawn booted launchctl setenv TZ Asia/Tokyo
 # The banner shows once per jar per install: erase the app's data (or reinstall) to see it again.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 # The zone's city as the banner names it; Tokyo by default (-e ZONE=Bangkok for an Asia/Bangkok jar).
 - evalScript: "${output.zone = (typeof ZONE !== 'undefined' && ZONE) ? ZONE : 'Tokyo'}"

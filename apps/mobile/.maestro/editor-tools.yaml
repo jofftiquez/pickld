@@ -5,7 +5,7 @@
 # SLOT empty (seed user dale: #ootd):
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/editor-tools.yaml
 #   maestro test -e SLOT=afternoon apps/mobile/.maestro/editor-tools.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'ootd'}"
 - launchApp

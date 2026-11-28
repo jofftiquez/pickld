@@ -3,7 +3,7 @@
 # Run on the iOS Simulator: maestro test apps/mobile/.maestro/my-days.yaml
 # Sign in as a user with jars in the current month (seed user dale: today, yesterday and 3 days ago).
 # Previous month is enabled only back to the month of the first jar; the flow covers both cases.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 # Three days ago in Manila (the seed's zone), as the calendar's testID: day-YYYY-MM-DD.
 - evalScript: '${output.day = new Date(Date.now() + 8 * 3600000 - 3 * 86400000).toISOString().slice(0, 10)}'

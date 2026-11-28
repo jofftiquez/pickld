@@ -2,7 +2,7 @@
 # tap takes it back. Likes never reorder anything (rule 15).
 # Needs the seed data (dale reads mika; mika has a full Everyone jar today; dale hasn't liked her #ootd) and dale
 # signed in: maestro test apps/mobile/.maestro/like.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

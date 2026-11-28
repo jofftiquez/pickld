@@ -40,9 +40,20 @@ const fresh = () => ({
 });
 const waitlist = fresh();
 const resetWaitlist = () => Object.assign(waitlist, fresh());
-// Stands in for Cloudflare's script in the browser: the widget adds the token field the server checks.
-const FAKE_TURNSTILE = `window.turnstile = { render(el) { const i = document.createElement('input');
-  i.type = 'hidden'; i.name = 'cf-turnstile-response'; i.value = 'stub-token'; el.appendChild(i); return 'w1'; },
+// Stands in for Cloudflare's script in the browser: the widget adds the token field the server checks, and fills
+// it (then calls back) at once, or after window.TURNSTILE_DELAY ms like the real one.
+const FAKE_TURNSTILE = `const widgets = [];
+window.turnstile = {
+  render(el, o) {
+    const i = document.createElement('input');
+    i.type = 'hidden'; i.name = 'cf-turnstile-response'; el.appendChild(i);
+    const solve = () => { i.value = 'stub-token'; o.callback?.('stub-token'); };
+    window.TURNSTILE_DELAY ? setTimeout(solve, window.TURNSTILE_DELAY) : solve();
+    return String(widgets.push({ i, solve }) - 1);
+  },
+  getResponse: (id) => widgets[id].i.value,
+  isExpired: () => false,
+  reset(id) { widgets[id].i.value = ''; widgets[id].solve(); },
   remove() {} };`;
 const CERT = Array.from({ length: 32 }, (_, i) => i.toString(16).padStart(2, '0').toUpperCase()).join(':');
 const FORWARD_SECRET = 'stub-forward-secret-0123456789abcdef';
@@ -333,11 +344,12 @@ after(async () => {
   stub?.close();
 });
 
-async function open(route) {
+async function open(route, { captchaDelay = 0 } = {}) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await page.route('https://challenges.cloudflare.com/**', (r) =>
     r.fulfill({ contentType: 'text/javascript', body: FAKE_TURNSTILE }),
   );
+  if (captchaDelay) await page.addInitScript((ms) => (window.TURNSTILE_DELAY = ms), captchaDelay);
   const res = await page.goto(base + route);
   await page.waitForLoadState('networkidle');
   return { page, status: res.status() };
@@ -749,6 +761,21 @@ test('a double click on either waitlist button posts once, with the button busy 
   await page.close();
 });
 
+test('a click before the captcha has its token waits for it, then sends once with the token', async () => {
+  resetWaitlist();
+  const { page } = await open('/', { captchaDelay: 4000 });
+  await page.getByLabel('Email address').first().fill('mika@example.com');
+  await page.getByRole('button', { name: 'Join the waitlist' }).first().click();
+  assert.ok(await page.getByRole('status').filter({ hasText: 'Checking you’re a person…' }).isVisible());
+  await page.waitForURL(`${base}/waitlist/code`);
+  assert.deepEqual(
+    waitlist.captcha.map((c) => c.response),
+    ['stub-token'],
+  );
+  assert.equal(waitlist.otp.length, 1, 'one code email');
+  await page.close();
+});
+
 test('with the waitlist closed, its pages 404 and its actions email no one, even when posted by hand', async () => {
   resetWaitlist();
   const port = 3700 + Math.floor(Math.random() * 200);
@@ -1102,7 +1129,7 @@ test('the AASA file lets the app open profile, jar and sign-in links but not leg
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type'), /^application\/json/);
   const [detail] = (await res.json()).applinks.details;
-  assert.deepEqual(detail.appIDs, [`${TEAM}.me.pickld.app`]);
+  assert.deepEqual(detail.appIDs, [`${TEAM}.com.teamops.apps.Pickld`]);
   const excluded = detail.components.filter((c) => c.exclude).map((c) => c['/']);
   assert.deepEqual(excluded, [
     '/terms',

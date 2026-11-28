@@ -581,6 +581,23 @@
       "button": "Search",
       "empty": "No emails match."
     },
+    "picked": {
+      "title": "Send codes to people you tick",
+      "none": "Tick emails to send codes",
+      "button_one": "Send code to {{count}} person",
+      "button_other": "Send codes to {{count}} people",
+      "hint": "Founders only. Only people who can get a code now can be ticked; nobody gets a second code while theirs still works.",
+      "code": {
+        "none": "Not sent",
+        "sent": "Sent {{when}}",
+        "used": "Used (sent {{when}})",
+        "expired": "Ran out (sent {{when}})"
+      },
+      "results": {
+        "none": "Nobody you ticked needs a code.",
+        "invalid_input": "Tick 1 to 100 emails."
+      }
+    },
     "states": {
       "all": "Everyone",
       "email_only": "Email only",
@@ -592,7 +609,8 @@
       "email": "Email",
       "source": "Source",
       "joined": "Joined",
-      "state": "State"
+      "state": "State",
+      "code": "Code"
     },
     "codes": {
       "title": "Codes by email",

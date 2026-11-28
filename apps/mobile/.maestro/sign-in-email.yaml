@@ -3,7 +3,7 @@
 # maestro test apps/mobile/.maestro/sign-in-email.yaml
 # Another account: maestro test -e EMAIL=aya@pickld.test …, or runFlow with env EMAIL. (A flow-level env block
 # would win over the caller's EMAIL, so the default is set here instead.)
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - evalScript: "${output.email = (typeof EMAIL !== 'undefined' && EMAIL) ? EMAIL : 'dale@pickld.test'}"
 - launchApp

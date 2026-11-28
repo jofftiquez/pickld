@@ -25,7 +25,7 @@ jest.mock('../supabase', () => ({
   }),
 }));
 jest.mock('expo-web-browser', () => ({}));
-jest.mock('expo-application', () => ({ applicationId: 'me.pickld.app' }));
+jest.mock('expo-application', () => ({ applicationId: 'com.teamops.apps.Pickld' }));
 const mockAppleSignIn = jest.fn();
 jest.mock('expo-apple-authentication', () => ({
   signInAsync: (args: unknown) => mockAppleSignIn(args),
@@ -143,7 +143,7 @@ describe('signInWithApple', () => {
     expect(sent.nonce).not.toBe(hashed);
     expect(sha256Hex(sent.nonce)).toBe(hashed);
     expect(mockUpdateUser).toHaveBeenCalledWith({ data: { full_name: 'Dale Cruz' } });
-    expect(mockInvoke).toHaveBeenCalledWith('apple-token', { body: { code: 'auth-code', clientId: 'me.pickld.app' } });
+    expect(mockInvoke).toHaveBeenCalledWith('apple-token', { body: { code: 'auth-code', clientId: 'com.teamops.apps.Pickld' } });
   });
 
   it('leaves the name alone when Apple doesn’t share it (every sign-in after the first)', async () => {

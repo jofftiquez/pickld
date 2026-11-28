@@ -1,7 +1,7 @@
 # A line for the day (0175): the owner adds one on Today, edits one on a past day, and sees it on that day's Jar
 # page. Needs the seed data (dale has today's jar and yesterday's published jar) and dale signed in:
 # maestro test apps/mobile/.maestro/day-line.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

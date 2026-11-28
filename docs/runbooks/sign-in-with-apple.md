@@ -15,27 +15,27 @@ FR-ACC-01, FR-PRV-03. Migration 0171, `fn:apple-token`, `supabase/functions/_sha
 ### 1. Apple Developer: the capability
 
 1. developer.apple.com → Account → Certificates, Identifiers & Profiles → Identifiers.
-2. Open the App ID `me.pickld.app`. Tick **Sign In with Apple**, leave it **Enable as a primary App ID**, Save, Confirm.
-3. Do the same for `me.pickld.app.local` (the Pickld Local build). Xcode's automatic signing usually does this one on the next build; tick it by hand if the build says the profile lacks the entitlement.
+2. Open the App ID `com.teamops.apps.Pickld`. Tick **Sign In with Apple**, leave it **Enable as a primary App ID**, Save, Confirm.
+3. Do the same for `com.teamops.apps.Pickld.local` (the Pickld Local build). Xcode's automatic signing usually does this one on the next build; tick it by hand if the build says the profile lacks the entitlement.
 4. Nothing else is needed for EAS: the next `eas build` regenerates the provisioning profile with the new capability.
 
 ### 2. Apple Developer: the key for revoking (needed before App Review)
 
 1. Certificates, Identifiers & Profiles → Keys → **+**.
-2. Name `Pickld Sign in with Apple`, tick **Sign in with Apple** → Configure → Primary App ID `me.pickld.app` → Save → Continue → Register.
+2. Name `Pickld Sign in with Apple`, tick **Sign in with Apple** → Configure → Primary App ID `com.teamops.apps.Pickld` → Save → Continue → Register.
 3. Note the **Key ID**, then **Download** the `AuthKey_<Key ID>.p8` file. Apple lets you download it once. Keep it in the founders' password manager; never paste it in a chat, an issue or the repo.
 
 ### 3. Put the key where the functions read it
 
 The functions read `APPLE_TEAM_ID` (the team that owns the app), `APPLE_SIGN_IN_KEY_ID` and `APPLE_SIGN_IN_KEY` (the whole `.p8` file's text).
 
-- **Staging (GitHub).** Repository → Settings → Environments → `staging`: variable `APPLE_SIGN_IN_KEY_ID` (the Key ID), secret `APPLE_SIGN_IN_KEY` (open the `.p8` in a text editor, copy everything, paste into GitHub's secret box). `APPLE_TEAM_ID` is already a variable there; check it is the team that owns `me.pickld.app`. The next staging deploy passes all three to the Edge Functions.
+- **Staging (GitHub).** Repository → Settings → Environments → `staging`: variable `APPLE_SIGN_IN_KEY_ID` (the Key ID), secret `APPLE_SIGN_IN_KEY` (open the `.p8` in a text editor, copy everything, paste into GitHub's secret box). `APPLE_TEAM_ID` is already a variable there; check it is the team that owns `com.teamops.apps.Pickld`. The next staging deploy passes all three to the Edge Functions.
 - **Production.** From a terminal on your own machine: `supabase secrets set --project-ref <ref> APPLE_TEAM_ID=<team id> APPLE_SIGN_IN_KEY_ID=<key id> APPLE_SIGN_IN_KEY="$(cat ~/Downloads/AuthKey_<key id>.p8)"`, then delete the downloaded file once it is in the password manager.
 - **Local stack (optional).** Add the same three lines to `supabase/functions/.env` in the main checkout (git-ignored) and restart `pickld-functions`.
 
 ### 4. Supabase Auth: turn Apple on
 
-`scripts/deploy/configure.sh` does this on every deploy (Apple on, Client IDs `me.pickld.app`). By hand: Supabase dashboard → Authentication → Sign In / Providers → Apple → Enable, **Client IDs** `me.pickld.app`, leave **Secret Key** empty, Save. The local stack reads `supabase/config.toml` (`auth.external.apple`, both bundle ids) after a stop and start.
+`scripts/deploy/configure.sh` does this on every deploy (Apple on, Client IDs `com.teamops.apps.Pickld`). By hand: Supabase dashboard → Authentication → Sign In / Providers → Apple → Enable, **Client IDs** `com.teamops.apps.Pickld`, leave **Secret Key** empty, Save. The local stack reads `supabase/config.toml` (`auth.external.apple`, both bundle ids) after a stop and start.
 
 ### 5. Apple's email relay (for Hide My Email users)
 

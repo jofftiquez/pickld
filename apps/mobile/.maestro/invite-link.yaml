@@ -4,7 +4,7 @@
 # link gets "You're already on Pickld" and the inviter's profile, and nothing is used.
 #   maestro test -e ANON_KEY=$(npx supabase status -o json | jq -r .ANON_KEY) apps/mobile/.maestro/invite-link.yaml
 # Starts signed out; ends signed in as the new account.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 env:
   INVITER: dale@pickld.test
 ---

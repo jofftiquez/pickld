@@ -25,6 +25,7 @@ function people(n: number): Released[] {
 function setup(opts: { founder?: boolean | null; rows?: Released[]; failBatch?: number; email?: boolean } = {}) {
   const calls = {
     release: [] as { count: number; resendExpired: boolean }[],
+    releaseTo: [] as string[][],
     batches: [] as { emails: OutgoingEmail[]; key: string }[],
     marked: [] as string[][],
   };
@@ -33,6 +34,11 @@ function setup(opts: { founder?: boolean | null; rows?: Released[]; failBatch?: 
     release: (_jwt, count, resendExpired) => {
       calls.release.push({ count, resendExpired });
       return Promise.resolve((opts.rows ?? people(3)).slice(0, count));
+    },
+    // Like waitlist_release_to(): only the picked emails that are among the rows needing a code.
+    releaseTo: (_jwt, emails) => {
+      calls.releaseTo.push(emails);
+      return Promise.resolve((opts.rows ?? people(3)).filter((r) => emails.includes(r.email)));
     },
     markSent: (_jwt, emails) => {
       calls.marked.push(emails);
@@ -72,12 +78,29 @@ Deno.test('only founders send, and nothing is released before the checks pass', 
   assertEquals([r.status, r.json.error.code], [403, 'not_founder']);
   const get = setup();
   assertEquals((await post(get.deps, null, 'jwt', 'GET')).status, 405);
-  for (const body of [{ count: 0 }, { count: 501 }, { count: 2.5 }, { count: 1, extra: true }, null]) {
+  const tooMany = Array.from({ length: 101 }, (_, i) => `p${i}@example.com`);
+  for (
+    const body of [
+      { count: 0 },
+      { count: 501 },
+      { count: 2.5 },
+      { count: 1, extra: true },
+      { emails: [] },
+      { emails: tooMany },
+      { emails: ['a'] },
+      { emails: ['p0@example.com'], count: 1 },
+      { emails: ['p0@example.com'], resendExpired: true },
+      null,
+    ]
+  ) {
     const s = setup();
     assertEquals((await post(s.deps, body)).status, 400, JSON.stringify(body));
-    assertEquals(s.calls.release.length, 0);
+    assertEquals(s.calls.release.length + s.calls.releaseTo.length, 0);
   }
   for (const s of [signedOut, badJwt, moderator, get]) assertEquals(s.calls.release.length, 0);
+  const notFounder = setup({ founder: false });
+  assertEquals((await post(notFounder.deps, { emails: ['p0@example.com'] })).status, 403);
+  assertEquals(notFounder.calls.releaseTo.length, 0);
 });
 
 Deno.test('without an email service nothing is released', async () => {
@@ -98,6 +121,22 @@ Deno.test('sends one email per person in batches of 100 and marks each batch aft
   assertEquals([first.to, first.from], [['p0@example.com'], 'Pickld <hello@mail.pickld.me>']);
   assertStringIncludes(first.html, people(1)[0].code);
   assertEquals(new Set(s.calls.batches.map((b) => b.key)).size, 3, 'each batch has its own idempotency key');
+});
+
+Deno.test('picked emails: only those who still need a code are emailed and marked, the same way as a batch', async () => {
+  const s = setup({ rows: people(5) });
+  const r = await post(s.deps, { emails: [' p3@example.com ', 'p1@example.com', 'gone@example.com'] });
+  assertEquals([r.status, r.json.data], [200, { sent: 2, total: 2 }]);
+  assertEquals(s.calls.releaseTo, [['p3@example.com', 'p1@example.com', 'gone@example.com']], 'trimmed');
+  assertEquals(s.calls.release.length, 0, 'the earliest-first release is not used');
+  assertEquals(s.calls.batches.map((b) => b.emails.map((e) => e.to[0])), [['p1@example.com', 'p3@example.com']]);
+  assertStringIncludes(s.calls.batches[0].emails[1].html, people(5)[3].code);
+  assertEquals(s.calls.marked, [['p1@example.com', 'p3@example.com']]);
+
+  const again = setup({ rows: [] });
+  const r2 = await post(again.deps, { emails: ['p1@example.com'] });
+  assertEquals([r2.status, r2.json.data], [200, { sent: 0, total: 0 }], 'someone already sent a code gets nothing');
+  assertEquals([again.calls.batches.length, again.calls.marked.length], [0, 0]);
 });
 
 Deno.test('a failed batch stops the send; only earlier batches are marked', async () => {

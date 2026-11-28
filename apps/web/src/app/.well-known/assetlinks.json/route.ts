@@ -1,4 +1,4 @@
-import { APP_ID, appIdentity } from '~/lib/env';
+import { ANDROID_PACKAGE, appIdentity } from '~/lib/env';
 
 // Android app links (FR-WEB-03, M4-15): lets the app's autoVerify intent filter claim pickld.me. 404 until
 // ANDROID_CERT_SHA256 (the Play app signing certificate's SHA-256, comma-separated for several) is set.
@@ -10,7 +10,7 @@ export function GET() {
   return Response.json([
     {
       relation: ['delegate_permission/common.handle_all_urls'],
-      target: { namespace: 'android_app', package_name: APP_ID, sha256_cert_fingerprints: androidCerts },
+      target: { namespace: 'android_app', package_name: ANDROID_PACKAGE, sha256_cert_fingerprints: androidCerts },
     },
   ]);
 }
