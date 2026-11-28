@@ -908,6 +908,22 @@ export type Database = {
           },
         ];
       };
+      member_number_counter: {
+        Row: {
+          id: boolean;
+          last_number: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: boolean;
+          last_number: number;
+        };
+        Update: {
+          id?: boolean;
+          last_number?: number;
+        };
+        Relationships: [];
+      };
       milestones: {
         Row: {
           achieved_at: string;
@@ -1627,11 +1643,14 @@ export type Database = {
           discoverable: boolean;
           display_name: string;
           feed_seen_at: string | null;
+          hide_member_number: boolean;
           home_tz: string;
           id: string;
           is_private: boolean;
           jar_count: number;
           lid_color: string;
+          member_number: number | null;
+          public_member_number: number | null;
           reader_count: number;
           status: Database['public']['Enums']['profile_status'];
           suspended_until: string | null;
@@ -1649,11 +1668,14 @@ export type Database = {
           discoverable?: boolean;
           display_name: string;
           feed_seen_at?: string | null;
+          hide_member_number?: boolean;
           home_tz?: string;
           id: string;
           is_private?: boolean;
           jar_count?: number;
           lid_color?: string;
+          member_number?: number | null;
+          public_member_number?: never;
           reader_count?: number;
           status?: Database['public']['Enums']['profile_status'];
           suspended_until?: string | null;
@@ -1670,11 +1692,14 @@ export type Database = {
           discoverable?: boolean;
           display_name?: string;
           feed_seen_at?: string | null;
+          hide_member_number?: boolean;
           home_tz?: string;
           id?: string;
           is_private?: boolean;
           jar_count?: number;
           lid_color?: string;
+          member_number?: number | null;
+          public_member_number?: never;
           reader_count?: number;
           status?: Database['public']['Enums']['profile_status'];
           suspended_until?: string | null;
@@ -2579,6 +2604,7 @@ export type Database = {
           username: string;
         }[];
       };
+      give_member_number_one: { Args: { p_username: string }; Returns: number };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       in_discover: { Args: { p_id: string }; Returns: boolean };
@@ -2997,11 +3023,14 @@ export type Database = {
           discoverable: boolean;
           display_name: string;
           feed_seen_at: string | null;
+          hide_member_number: boolean;
           home_tz: string;
           id: string;
           is_private: boolean;
           jar_count: number;
           lid_color: string;
+          member_number: number | null;
+          public_member_number: number | null;
           reader_count: number;
           status: Database['public']['Enums']['profile_status'];
           suspended_until: string | null;
@@ -3025,6 +3054,7 @@ export type Database = {
       };
       my_waitlist_status: { Args: Record<PropertyKey, never>; Returns: string };
       needs_reader_approval: { Args: { p_id: string }; Returns: boolean };
+      next_member_number: { Args: Record<PropertyKey, never>; Returns: number };
       notify: {
         Args: {
           p_actor?: string;

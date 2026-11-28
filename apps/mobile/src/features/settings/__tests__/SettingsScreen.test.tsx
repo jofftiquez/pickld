@@ -77,6 +77,8 @@ jest.mock('@/lib/supabase', () => ({
             default_visibility: 'readers',
             discoverable: true,
             is_private: false,
+            member_number: 2,
+            hide_member_number: false,
             birthday: '1995-05-05',
           },
           error: null,
@@ -201,6 +203,14 @@ describe('Settings', () => {
     await waitFor(() => expect(props().account?.isPrivate).toBe(false));
     await act(async () => props().onPrivate(true));
     await waitFor(() => expect(mockDb.writes).toContainEqual(['profiles', 'update', { is_private: true }]));
+  });
+
+  it('Show my member number starts on and saves hide_member_number (0182)', async () => {
+    await renderScreen();
+    await waitFor(() => expect(props().account?.memberNumber).toBe(2));
+    expect(props().account?.showMemberNumber).toBe(true);
+    await act(async () => props().onShowMemberNumber(false));
+    await waitFor(() => expect(mockDb.writes).toContainEqual(['profiles', 'update', { hide_member_number: true }]));
   });
 
   it('Take a break saves the midnight after its last day, re-plans reminders, and can end early (0180)', async () => {

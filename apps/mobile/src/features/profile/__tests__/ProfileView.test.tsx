@@ -108,6 +108,15 @@ describe('ProfileView', () => {
     expect(screen.getByRole('header', { name: 'Maria Clara Concepcion de los Santos' })).toBeTruthy();
   });
 
+  it('shows the member number with leading zeros beside the @handle, and nothing while it is hidden (0182)', async () => {
+    const shown = page('dale-id', false);
+    await renderView({ data: { ...shown, profile: { ...shown.profile, public_member_number: 42 } } });
+    expect(screen.getByTestId('profile-member-number')).toHaveTextContent('#000000042');
+    expect(screen.getByLabelText('Member number 42')).toBeTruthy();
+    await renderView({ data: { ...shown, profile: { ...shown.profile, public_member_number: null } } });
+    expect(screen.queryByTestId('profile-member-number')).toBeNull();
+  });
+
   it('never tags the owner with "Reads you" and shows them their full count', async () => {
     await renderView({ data: page('mika-id', true), onEditProfile: jest.fn() });
     expect(screen.queryByTestId('profile-reads-you')).toBeNull();
@@ -151,7 +160,10 @@ describe('ProfileView', () => {
     expect(onOpenList).toHaveBeenCalledWith('authors');
     const reading = page('dale-id', true);
     await renderView({
-      data: { ...reading, relationship: { reading: true, readsYou: true, muted: false, requested: false, approves: false } },
+      data: {
+        ...reading,
+        relationship: { reading: true, readsYou: true, muted: false, requested: false, approves: false },
+      },
       onToggleReading,
     });
     expect(screen.getByTestId('profile-follow')).toHaveTextContent('Reading');

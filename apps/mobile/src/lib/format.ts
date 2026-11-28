@@ -1,5 +1,10 @@
 import { getLocales } from 'expo-localization';
 
+/** A member number as shown: 9 digits with leading zeros (0182), "000000001". */
+export function formatMemberNumber(n: number): string {
+  return String(n).padStart(9, '0');
+}
+
 // Dates and times follow the phone's locale (NFR-I18N-01).
 export function deviceLocale(): string {
   return getLocales()[0]?.languageTag ?? 'en-US';

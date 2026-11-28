@@ -138,6 +138,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
         title,
         date,
         authorName: data.author.display_name,
+        memberNumber: data.author.public_member_number ?? null,
         tz: data.jar.tz,
         accessibilityLabel: moment
           ? t('share.cardMoment', { name: data.author.display_name, slot: t(`slots.${moment.slot}`), date })

@@ -38,6 +38,7 @@ export function SettingsScreen() {
     saveVisibility,
     saveDiscoverable,
     savePrivate,
+    saveShowMemberNumber,
   } = useSettings(userId);
   const hideLikeCounts = useHideLikeCounts();
   const blocked = useBlockedAccounts();
@@ -84,6 +85,7 @@ export function SettingsScreen() {
       onVisibility={(v) => saveVisibility.mutate(v, onSaved)}
       onDiscoverable={(on) => saveDiscoverable.mutate(on, onSaved)}
       onPrivate={(on) => savePrivate.mutate(on, onSaved)}
+      onShowMemberNumber={(on) => saveShowMemberNumber.mutate(on, onSaved)}
       onBlocked={() => router.push('/settings/blocked')}
       onCloseFriends={() => router.push('/settings/close-friends')}
       pendingCount={pending.count}

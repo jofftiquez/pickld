@@ -62,6 +62,8 @@ const accountRow = z.object({
   default_visibility: z.enum(['everyone', 'readers', 'close_friends', 'only_me']),
   discoverable: z.boolean(),
   is_private: z.boolean(),
+  member_number: z.number().nullable().default(null),
+  hide_member_number: z.boolean().default(false),
   birthday: z.string(),
 });
 
@@ -73,6 +75,10 @@ export type SettingsAccount = {
   discoverable: boolean;
   /** Private account (0176): readers need approval and posts reach approved readers only. */
   isPrivate: boolean;
+  /** Member number (0182); null while the account is still waiting to be let in. */
+  memberNumber: number | null;
+  /** Show the member number on the profile, pickld.me and share cards (0182: !hide_member_number). */
+  showMemberNumber: boolean;
   /** Under 18: kept out of Discover whatever `discoverable` says (in_discover, 0150), and approves every new
    * reader whatever `isPrivate` says (needs_reader_approval, 0176). */
   minor: boolean;
@@ -94,7 +100,9 @@ async function fetchAccount(userId: string): Promise<SettingsAccount> {
   // my_profile: the owner's full row; discoverable and birthday aren't readable from profiles by others.
   const { data, error } = await getSupabase()
     .rpc('my_profile')
-    .select('username, display_name, default_visibility, discoverable, is_private, birthday')
+    .select(
+      'username, display_name, default_visibility, discoverable, is_private, member_number, hide_member_number, birthday',
+    )
     .single();
   if (error) throw new Error(error.message);
   const row = accountRow.parse(data);
@@ -105,6 +113,8 @@ async function fetchAccount(userId: string): Promise<SettingsAccount> {
     defaultVisibility: row.default_visibility,
     discoverable: row.discoverable,
     isPrivate: row.is_private,
+    memberNumber: row.member_number,
+    showMemberNumber: !row.hide_member_number,
     minor: isMinor(row.birthday, new Date().toISOString().slice(0, 10)),
     avatar: images.avatar,
   };
@@ -250,6 +260,20 @@ export function useSettings(userId: string) {
     },
   );
 
+  // Profiles and jar pages (the share card) read the shown number again.
+  const saveShowMemberNumber = useOptimistic<SettingsAccount, boolean>(
+    settingsQueryKeys.account(userId),
+    (a, show) => ({ ...a, showMemberNumber: show }),
+    async (show) => {
+      const { error } = await getSupabase().from('profiles').update({ hide_member_number: !show }).eq('id', userId);
+      if (error) throw new Error(error.message);
+    },
+    () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      void queryClient.invalidateQueries({ queryKey: ['jarPage'] });
+    },
+  );
+
   return {
     account,
     reminders,
@@ -260,5 +284,6 @@ export function useSettings(userId: string) {
     saveVisibility,
     saveDiscoverable,
     savePrivate,
+    saveShowMemberNumber,
   };
 }

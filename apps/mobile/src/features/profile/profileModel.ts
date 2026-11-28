@@ -18,6 +18,8 @@ export const profileRow = z.object({
   jar_count: z.number(),
   /** Private account (0176): only readers see their posts. Caches from before 0176 lack it. */
   is_private: z.boolean().default(false),
+  /** Member number (0182), null while they hide it or are still waiting. Caches from before 0182 lack it. */
+  public_member_number: z.number().nullish(),
 });
 export type ProfileRow = z.infer<typeof profileRow>;
 

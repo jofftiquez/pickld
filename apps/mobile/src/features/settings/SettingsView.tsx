@@ -19,7 +19,7 @@ import type { Visibility } from '@/features/publish/publishJar';
 import { VisibilityOptions } from '@/features/publish/VisibilityOptions';
 import type { ReminderSetting } from '@/features/reminders/reminderPlan';
 import { parseLocalTime } from '@/features/reminders/reminderPlan';
-import { formatShortDate, formatTime } from '@/lib/format';
+import { formatMemberNumber, formatShortDate, formatTime } from '@/lib/format';
 import { hitSlopFor } from '@/lib/hitSlop';
 import type { DaySlot } from '@/lib/jars';
 import { textStyle } from '@/theme/text';
@@ -61,6 +61,8 @@ export type SettingsViewProps = {
   onDiscoverable: (on: boolean) => void;
   /** Private account (0176). */
   onPrivate: (on: boolean) => void;
+  /** Show my member number (0182). */
+  onShowMemberNumber: (on: boolean) => void;
   onBlocked: () => void;
   onCloseFriends: () => void;
   onMyStickers: () => void;
@@ -94,6 +96,10 @@ export function SettingsView(props: SettingsViewProps) {
   // Its last day: the end is the midnight after it.
   const breakLastDay = onBreak ? formatShortDate(new Date(breakEnd.getTime() - 60_000)) : null;
   const loading = account === undefined || reminders === undefined || prefs === undefined;
+  const memberNumberBody =
+    account?.memberNumber != null
+      ? t('settings.memberNumberBody', { number: formatMemberNumber(account.memberNumber) })
+      : '';
   const privateBody = account?.minor ? 'settings.privateMinor' : 'settings.privateBody';
   const discoverableBody = account?.minor
     ? 'settings.discoverableMinor'
@@ -344,6 +350,24 @@ export function SettingsView(props: SettingsViewProps) {
                 testID="settings-discoverable"
               />
             </View>
+            {account.memberNumber !== null ? (
+              <View style={styles.switchRow}>
+                <View
+                  style={styles.rowLabel}
+                  importantForAccessibility="no-hide-descendants"
+                  accessibilityElementsHidden
+                >
+                  <Text style={[textStyle('body', '600'), { color: colors.ink }]}>{t('settings.memberNumber')}</Text>
+                  <Text style={[textStyle('bodySmall'), { color: colors.muted }]}>{memberNumberBody}</Text>
+                </View>
+                <Toggle
+                  value={account.showMemberNumber}
+                  onValueChange={props.onShowMemberNumber}
+                  accessibilityLabel={`${t('settings.memberNumber')}. ${memberNumberBody}`}
+                  testID="settings-member-number"
+                />
+              </View>
+            ) : null}
             <ListRow
               label={t('settings.blocked')}
               value={props.blockedCount ? String(props.blockedCount) : undefined}

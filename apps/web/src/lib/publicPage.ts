@@ -17,6 +17,8 @@ const author = z.object({
   lid_color: z.string(),
   reader_count: z.number(),
   author_count: z.number(),
+  /** Public member number (0182): null when the owner hides it; jar pages and older databases leave it out. */
+  member_number: z.number().int().nullable().optional(),
   avatar: z.url().nullable(),
   cover: z.url().nullable(),
 });
