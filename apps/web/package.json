@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "WAITLIST_OPEN=true next build && node --test tests/*.test.mjs",
-    "cf:build": "opennextjs-cloudflare build && mkdir -p .open-next/src/fonts && cp src/fonts/PlusJakartaSans_*.ttf .open-next/src/fonts/"
+    "cf:build": "opennextjs-cloudflare build && mkdir -p .open-next/src/fonts && cp src/fonts/PlusJakartaSans_*.ttf .open-next/src/fonts/ && for f in .next/server/app/opengraph-image*.body; do n=$(basename \"$f\" .body); cp \"$f\" .open-next/assets/$n && printf '/%s\\n  Content-Type: image/png\\n' $n >> .open-next/assets/_headers; done"
   },
   "dependencies": {
     "next": "16.4.6",
