@@ -29,7 +29,7 @@ export function WaitlistForm({ id, source }: { id: string; source: string }) {
         <input type="hidden" name="source" value={source} />
         <SubmitButton label={t('marketing.form.submit')} pendingLabel={t('marketing.form.pending')} />
       </div>
-      <Turnstile siteKey={turnstileSiteKey()} />
+      <Turnstile siteKey={turnstileSiteKey()} checking={t('marketing.form.checking')} />
       <p className="mk-form-note">{t('marketing.form.note')}</p>
     </form>
   );

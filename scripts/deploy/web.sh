@@ -28,6 +28,14 @@ deploy_site() {
   export WAITLIST_OPEN="$open" SITE_URL="${WEB_URL:-}" APP_STORE_URL="${APP_STORE_URL:-}" \
     PLAY_STORE_URL="${PLAY_STORE_URL:-}" APPLE_TEAM_ID="${APPLE_TEAM_ID:-}" \
     ANDROID_CERT_SHA256="${ANDROID_CERT_SHA256:-}" TURNSTILE_SITE_KEY="${TURNSTILE_SITE_KEY:-}"
+  # Server action ids are hashed with this key, which Next.js otherwise makes up per build: a page opened before
+  # a deploy would post an id the new Worker doesn't know and show "This page couldn't load". Derived from a
+  # secret the deploy already has, so the ids stay the same across deploys. Never printed.
+  if [[ -n "${TURNSTILE_SECRET_KEY:-}" ]]; then
+    NEXT_SERVER_ACTIONS_ENCRYPTION_KEY="$(printf 'pickld-web-server-actions:%s' "$TURNSTILE_SECRET_KEY" |
+      openssl dgst -sha256 -binary | base64)"
+    export NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+  fi
   (cd apps/web && pnpm cf:build)
 
   local vars=(--var "WAITLIST_OPEN:$open")

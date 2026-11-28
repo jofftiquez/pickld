@@ -121,6 +121,7 @@
       "placeholder": "you@email.com",
       "submit": "Join the waitlist",
       "pending": "Sending your code…",
+      "checking": "Checking you’re a person…",
       "note": "We’ll email you a 6-digit code to check it’s you, then only about Pickld’s launch."
     },
     "moments": {
