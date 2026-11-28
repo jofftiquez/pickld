@@ -4,13 +4,13 @@ Production uses the same scripts as staging (`scripts/deploy/`, `docs/runbooks/s
 
 ## What a run does
 
-| Set on `production`                       | What ships                                                                                                                             |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Cloudflare only (today)                   | pickld.me as "coming soon": marketing and legal pages, waitlist closed, shared links 404                                               |
-| + Supabase (`SUPABASE_PROJECT_REF` …)     | migrations, every Edge Function, function secrets, cron jobs, Auth (6-digit code, branded emails, Apple), then pickld.me with Supabase |
-| + Resend (`RESEND_API_KEY`, `EMAIL_FROM`) | Auth sends through Resend's SMTP instead of Supabase's built-in sender                                                                 |
-| + Turnstile and `WAITLIST_OPEN=true`      | the pickld.me waitlist opens                                                                                                           |
-| + R2 keys                                 | the `pickld-photos-production` bucket, the photo Worker on `photos.pickld.me`, sticker art, and the storage half of `fn:health`        |
+| Set on `production`                       | What ships                                                                                                                                                                                         |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cloudflare only (today)                   | pickld.me as "coming soon": marketing and legal pages, waitlist closed, shared links 404                                                                                                           |
+| + Supabase (`SUPABASE_PROJECT_REF` …)     | migrations, every Edge Function, function secrets, cron jobs, Auth (6-digit code, branded emails, Apple), then pickld.me with Supabase and the moderation console (Worker `pickld-mod-production`) |
+| + Resend (`RESEND_API_KEY`, `EMAIL_FROM`) | Auth sends through Resend's SMTP instead of Supabase's built-in sender                                                                                                                             |
+| + Turnstile and `WAITLIST_OPEN=true`      | the pickld.me waitlist opens                                                                                                                                                                       |
+| + R2 keys                                 | the `pickld-photos-production` bucket, the photo Worker on `photos.pickld.me`, sticker art, and the storage half of `fn:health`                                                                    |
 
 Every step is safe to re-run. pickld.me's DNS is on Cloudflare, so the Workers serve `pickld.me`, `www.pickld.me` and `photos.pickld.me` as custom domains.
 
@@ -52,7 +52,7 @@ The next run sets Supabase Auth's SMTP (smtp.resend.com:465, user `resend`) and 
 ### Later
 
 - Apple keys for Sign in with Apple revoke: `sign-in-with-apple.md` (variable `APPLE_SIGN_IN_KEY_ID`, variable `APPLE_TEAM_ID`, secret `APPLE_SIGN_IN_KEY` on `production`).
-- `OPENAI_API_KEY`, `SENTRY_DSN`, `EXPO_ACCESS_TOKEN`, RevenueCat (`revenuecat.md`) and the moderation console (Vercel variables, as in `staging.md`).
+- `OPENAI_API_KEY`, `SENTRY_DSN`, `EXPO_ACCESS_TOKEN`, RevenueCat (`revenuecat.md`).
 - A moderator and founder: `staging.md` step 6, plus `"founder": true` (`invite-period.md`).
 
 ## Check

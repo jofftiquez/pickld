@@ -1,6 +1,6 @@
 # Staging runbook (M1-28, #28)
 
-Staging is an online copy of Pickld for the founders and invited testers. It has its own Supabase project, R2 bucket, photo Worker, web site Worker and Vercel console project, and shares nothing with production or with the local stack. Production later reuses the same scripts with its own GitHub environment (`production`) and its own accounts' projects.
+Staging is an online copy of Pickld for the founders and invited testers. It has its own Supabase project, R2 bucket, photo Worker, web site Worker and console Worker, and shares nothing with production or with the local stack. Production later reuses the same scripts with its own GitHub environment (`production`) and its own accounts' projects.
 
 **Staging is testers only.** Moderation auto-approves there until the OpenAI key and an approved child-safety matcher exist (D-22, D-41), so no real users and no public links.
 
@@ -10,7 +10,7 @@ Staging is an online copy of Pickld for the founders and invited testers. It has
 merge to main ──► ci (green) ──► deploy-staging (GitHub environment "staging")
                                    1. scripts/deploy/deploy.sh     R2 bucket, migrations, Edge Functions, photo Worker, sticker art
                                    2. scripts/deploy/configure.sh  function secrets, Worker token secret, cron jobs, auth redirects
-                                   3. scripts/deploy/web.sh        apps/web as a Cloudflare Worker; apps/mod on Vercel (skipped until set up)
+                                   3. scripts/deploy/web.sh        apps/web and apps/mod (the console) as Cloudflare Workers
                                    4. scripts/deploy/smoke.sh      fn:health 200, sticker 200, user photo without token 403, cron calls
 ```
 
@@ -25,7 +25,7 @@ merge to main ──► ci (green) ──► deploy-staging (GitHub environment 
 | API, Auth, Edge Functions | `https://<ref>.supabase.co`                                          |
 | Photo Worker              | `https://pickld-photos-staging.<subdomain>.workers.dev`              |
 | Web site (`apps/web`)     | `https://pickld-web-staging.<subdomain>.workers.dev` (set `WEB_URL`) |
-| Moderation console        | the `apps/mod` Vercel project's `*.vercel.app` (set `MOD_URL`)       |
+| Moderation console        | `https://pickld-mod-staging.<subdomain>.workers.dev`                 |
 
 ## GitHub environment `staging`
 
@@ -39,10 +39,7 @@ Repository → Settings → Environments → New environment → `staging`. Opti
 | `CLOUDFLARE_ACCOUNT_ID`                                                                                   | variable  | Cloudflare dashboard, right sidebar of the account home                                                       | everything               |
 | `CLOUDFLARE_API_TOKEN`                                                                                    | secret    | My Profile → API Tokens → custom token: Account · Workers Scripts · Edit, Account · Workers R2 Storage · Edit | Worker, bucket           |
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`                                                                | secrets   | R2 → Manage API tokens → Object Read & Write, limited to `pickld-photos-staging`                              | uploads, stickers        |
-| `VERCEL_TOKEN`                                                                                            | secret    | vercel.com/account/tokens                                                                                     | web apps                 |
-| `VERCEL_ORG_ID`                                                                                           | variable  | Vercel team settings (`team_…`) or the personal account id                                                    | web apps                 |
-| `VERCEL_PROJECT_ID_MOD`                                                                                   | variables | each project's Settings → General                                                                             | web apps                 |
-| `WEB_URL`, `MOD_URL`                                                                                      | variables | the staging web Worker's workers.dev URL and the console's `*.vercel.app` URL                                 | links                    |
+| `WEB_URL`                                                                                                 | variable  | the staging web Worker's workers.dev URL                                                                      | links                    |
 | `SENTRY_DSN`, `OPENAI_API_KEY`, `EXPO_ACCESS_TOKEN`, `REVENUECAT_WEBHOOK_SECRET`, `REVENUECAT_SECRET_KEY` | secrets   | optional, when those accounts exist                                                                           | passed to Edge Functions |
 | `WAITLIST_SECRET`                                                                                         | secret    | optional: `openssl rand -hex 32`; until it is set, the pickld.me waitlist form shows "try again"              | fn:waitlist-join, web    |
 | `RESEND_API_KEY`                                                                                          | secret    | optional: Resend → API Keys, sending access (`waitlist-codes.md`)                                             | fn:waitlist-send         |
@@ -61,7 +58,7 @@ Each step is a click in a dashboard; the agent does the rest.
    - R2 → Create bucket `pickld-photos-staging`, location Asia-Pacific, no public access.
    - The API token and the R2 token from the table above, set on the environment with `CLOUDFLARE_ACCOUNT_ID`.
 3. **First deploy.** The agent runs deploy-staging and reads the smoke test.
-4. **Vercel (console only).** One project from `jofftiquez/pickld`: Root Directory `apps/mod`, framework Next.js, with Git auto-deploys off (GitHub Actions deploys after `ci`). Set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_MOD`, `WEB_URL` and `MOD_URL`, then rerun deploy-staging.
+4. **Console.** Nothing to set up: `web.sh` deploys `apps/mod` as the Worker `pickld-mod-staging` with the project's URL and anon key. Set `WEB_URL` and rerun deploy-staging.
 5. **App on staging (EAS, D-35).** In the Expo project's `preview` environment, set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` (public values; the agent can read them out of the deploy log's project URL and the dashboard), then `npx eas-cli build --profile preview --platform ios`.
 6. **A moderator.** In the staging SQL editor, after that person signs up: `update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"moderator"}' where email = '<email>';`
 
@@ -90,7 +87,7 @@ Each step is a click in a dashboard; the agent does the rest.
 ## Later (not part of staging yet)
 
 - **Sign-in email (SMTP).** The provider is Resend (the same account sends waitlist codes). Follow `waitlist-codes.md`, steps 1 to 4: once `RESEND_API_KEY` and `EMAIL_FROM` are on the environment, `configure.sh` sets Resend's SMTP and raises the email rate limit, which drops the organization-member restriction above.
-- **Custom hostnames** (`staging.pickld.me`, `mod-staging.pickld.me`, `photos-staging.pickld.me`): move pickld.me's DNS to Cloudflare, or add a CNAME for the Vercel console. The Worker needs the zone on Cloudflare for a custom domain.
+- **Custom hostnames** (`staging.pickld.me`, `mod-staging.pickld.me`, `photos-staging.pickld.me`): the pickld.me zone is on Cloudflare, so each Worker can take a custom domain in its wrangler config.
 - **Sentry, PostHog and alerts** (D-34, docs/runbooks/alerts.md), then the staging drills: alerts (#110), load test (#116), restore (#117), PostHog events (#119), location audit (#120: `deno task exif-check` with a read-only R2 token).
 - **OpenAI key and the child-safety matcher** before anyone outside the team uses staging.
 - **RevenueCat sandbox** (docs/runbooks/revenuecat.md): point its webhook at the staging function.

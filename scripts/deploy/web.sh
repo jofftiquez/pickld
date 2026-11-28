@@ -3,7 +3,7 @@
 #   apps/web  pickld.me as a Cloudflare Worker (OpenNext). Production serves pickld.me and www.pickld.me; staging
 #             serves pickld-web-staging.<subdomain>.workers.dev. Without SUPABASE_PROJECT_REF it deploys the
 #             marketing pages only ("coming soon"): shared links 404 and the waitlist stays closed.
-#   apps/mod  the moderation console on Vercel, skipped until VERCEL_TOKEN and its project id are set.
+#   apps/mod  the moderation console as a Cloudflare Worker (OpenNext), once SUPABASE_PROJECT_REF is set.
 #   scripts/deploy/web.sh production
 # shellcheck source=scripts/deploy/lib.sh
 source "$(dirname "$0")/lib.sh"
@@ -51,31 +51,18 @@ deploy_site() {
 }
 
 deploy_console() {
-  local project="${VERCEL_PROJECT_ID_MOD:-}"
-  if [[ -z "${VERCEL_TOKEN:-}" || -z "$project" ]]; then
-    echo "== apps/mod: no VERCEL_TOKEN or project id set, skipped"
-    return
-  fi
   if [[ -z "$supabase_url" ]]; then
     echo "== apps/mod: no Supabase project, skipped"
     return
   fi
-  require VERCEL_ORG_ID
-  echo "== apps/mod ($env, Vercel)"
-  local team=""
-  if [[ "$VERCEL_ORG_ID" == team_* ]]; then team="&teamId=$VERCEL_ORG_ID"; fi
-  for pair in "SUPABASE_URL=$supabase_url" "SUPABASE_ANON_KEY=$anon"; do
-    jq -n --arg k "${pair%%=*}" --arg v "${pair#*=}" '{key: $k, value: $v, type: "encrypted", target: ["production", "preview"]}' |
-      curl -fsS -X POST "https://api.vercel.com/v10/projects/$project/env?upsert=true$team" \
-        -H "Authorization: Bearer $VERCEL_TOKEN" -H 'content-type: application/json' --data-binary @- >/dev/null
-  done
-  # The project's Root Directory (apps/mod) is set in Vercel, so the CLI runs from the repo root.
-  export VERCEL_ORG_ID
-  rm -rf .vercel
-  VERCEL_PROJECT_ID="$project" npx -y vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN" >/dev/null
-  VERCEL_PROJECT_ID="$project" npx -y vercel@latest build --prod --token "$VERCEL_TOKEN"
-  VERCEL_PROJECT_ID="$project" npx -y vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN"
-  rm -rf .vercel
+  require CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
+  export CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
+  echo "== apps/mod ($env, Cloudflare Worker)"
+  # The console reads its settings on the server at request time; the build gets the same values.
+  (cd apps/mod && SUPABASE_URL="$supabase_url" SUPABASE_ANON_KEY="$anon" pnpm cf:build)
+  (cd apps/mod && pnpm exec wrangler deploy --env "$env" --var "SUPABASE_URL:$supabase_url")
+  # The anon key is public by design, but it stays a Worker secret like pickld.me's; nothing is printed.
+  printf %s "$anon" | (cd apps/mod && pnpm exec wrangler secret put SUPABASE_ANON_KEY --env "$env" >/dev/null)
 }
 
 deploy_site
