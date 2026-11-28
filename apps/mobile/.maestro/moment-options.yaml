@@ -6,7 +6,7 @@
 # open jar has SLOT filled with a live moment (the seeded dale@pickld.test has #whereami):
 #   maestro test --test-output-dir docs/milestones/M2 apps/mobile/.maestro/moment-options.yaml
 #   maestro test -e SLOT=morning apps/mobile/.maestro/moment-options.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - evalScript: "${output.slot = (typeof SLOT !== 'undefined' && SLOT) ? SLOT : 'whereami'}"
 - launchApp

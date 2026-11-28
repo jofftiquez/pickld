@@ -3,7 +3,7 @@
 // that deleting the account can revoke the person's Sign in with Apple link (_shared/apple.ts). The Apple user the
 // code belongs to must be the caller's own Apple identity. Without the Apple key secrets nothing is stored.
 //
-// POST { code, clientId }   clientId: the app's bundle id (me.pickld.app or me.pickld.app.local)
+// POST { code, clientId }   clientId: the app's bundle id (com.teamops.apps.Pickld or com.teamops.apps.Pickld.local)
 //   → { data: { stored: boolean } }
 //   → { error: { code, message } }   400 invalid input, 401 signed out, 403 not_apple, 405 method, 502 apple
 import type { SupabaseClient } from '../_shared/deps.ts';

@@ -4,7 +4,7 @@
 # Needs the seed data after `pnpm db:reset` (dale's jar today is unpublished; mika's is published):
 #   maestro test apps/mobile/.maestro/caught-up.yaml
 # Ends signed in as Jun; sign Dale back in afterwards (sign-in-email.yaml).
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 # ---------------------------------------------------------------- Jun: nothing new, no line
 - runFlow:

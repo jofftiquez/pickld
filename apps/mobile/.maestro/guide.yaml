@@ -4,7 +4,7 @@
 #   insert into owned_packs (user_id, pack_id, source) select p.id, s.id, 'earned' from profiles p, sticker_packs s
 #     where p.username = 'dale' on conflict do nothing;
 #   maestro test apps/mobile/.maestro/guide.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

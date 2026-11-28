@@ -4,7 +4,7 @@
 # Needs the seed data and dale signed in:
 #   maestro test apps/mobile/.maestro/photo-description.yaml
 # Ends signed in as Aya; sign Dale back in afterwards (sign-in-email.yaml).
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 env:
   JAR: b0000000-0000-4000-8000-000000000102
 ---

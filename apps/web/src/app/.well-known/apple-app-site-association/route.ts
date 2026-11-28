@@ -1,4 +1,4 @@
-import { APP_ID, appIdentity } from '~/lib/env';
+import { IOS_BUNDLE_ID, appIdentity } from '~/lib/env';
 
 // Universal links (FR-WEB-03, M4-15). Profile, jar and sign-in links open the app; legal and marketing
 // pages (home, Stickers, Our story, Why Pickld, Our mission, The eight moments, Join the waitlist) stay on the web. Served as JSON with no redirect, as iOS requires. 404 until APPLE_TEAM_ID is set.
@@ -11,7 +11,7 @@ export function GET() {
     applinks: {
       details: [
         {
-          appIDs: [`${appleTeamId}.${APP_ID}`],
+          appIDs: [`${appleTeamId}.${IOS_BUNDLE_ID}`],
           components: [
             { '/': '/terms', exclude: true },
             { '/': '/privacy', exclude: true },

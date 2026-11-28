@@ -2,7 +2,7 @@
 # in the thread, and he deletes it again.
 # Needs the seed data (dale reads mika; mika's jar today has a comment) and dale signed in:
 # maestro test apps/mobile/.maestro/comments.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

@@ -1,7 +1,7 @@
 # Subflow for the invite flows: the setup steps after About you with the fewest taps (Your day: Early bird;
 # Your people: one pick; Pick your jar: Mango; Permissions and Find friends: Continue; the Promise: hold).
 # Run it through runFlow with Your day on screen. Afterwards the app opens Waiting or Today.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - extendedWaitUntil:
     visible:

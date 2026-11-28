@@ -27,7 +27,7 @@ function fakeApple(answer: () => Response) {
 
 Deno.test('the client secret is an ES256 JWT from the team, for the bundle id, that the key verifies', async () => {
   const now = Date.UTC(2026, 10, 20, 12);
-  const jwt = await appleClientSecret(key, 'me.pickld.app.local', now);
+  const jwt = await appleClientSecret(key, 'com.teamops.apps.Pickld.local', now);
   const [h, p, s] = jwt.split('.');
   assertEquals(JSON.parse(new TextDecoder().decode(fromB64url(h))), { alg: 'ES256', kid: 'KEY1234567' });
   assertEquals(claims(jwt), {
@@ -35,7 +35,7 @@ Deno.test('the client secret is an ES256 JWT from the team, for the bundle id, t
     iat: now / 1000,
     exp: now / 1000 + 300,
     aud: 'https://appleid.apple.com',
-    sub: 'me.pickld.app.local',
+    sub: 'com.teamops.apps.Pickld.local',
   });
   const ok = await crypto.subtle.verify(
     { name: 'ECDSA', hash: 'SHA-256' },
@@ -48,18 +48,18 @@ Deno.test('the client secret is an ES256 JWT from the team, for the bundle id, t
 
 Deno.test('a code is traded for the refresh token and the Apple user it belongs to', async () => {
   const apple = fakeApple(() => Response.json({ refresh_token: 'r-1', id_token: idToken('apple-sub-1') }));
-  assertEquals(await exchangeAppleCode(key, 'me.pickld.app', 'code-1', apple.fetcher), {
+  assertEquals(await exchangeAppleCode(key, 'com.teamops.apps.Pickld', 'code-1', apple.fetcher), {
     refreshToken: 'r-1',
     sub: 'apple-sub-1',
   });
   const { url, form } = apple.calls[0];
   assertEquals(url, 'https://appleid.apple.com/auth/token');
   assertEquals([form.get('client_id'), form.get('code'), form.get('grant_type')], [
-    'me.pickld.app',
+    'com.teamops.apps.Pickld',
     'code-1',
     'authorization_code',
   ]);
-  assertEquals(claims(form.get('client_secret')!).sub, 'me.pickld.app');
+  assertEquals(claims(form.get('client_secret')!).sub, 'com.teamops.apps.Pickld');
 });
 
 /** Just enough of a service-role client for revokeAppleToken: apple_tokens rows by user id. */
@@ -75,24 +75,24 @@ function tokenDb(rows: Record<string, { client_id: string; refresh_token: string
 
 Deno.test('deleting revokes the stored token with the bundle id it was issued to', async () => {
   const apple = fakeApple(() => new Response(null, { status: 200 }));
-  const db = tokenDb({ u1: { client_id: 'me.pickld.app.local', refresh_token: 'r-1' } });
+  const db = tokenDb({ u1: { client_id: 'com.teamops.apps.Pickld.local', refresh_token: 'r-1' } });
   await revokeAppleToken(db, 'u1', key, apple.fetcher);
   assertEquals(apple.calls.length, 1);
   const { url, form } = apple.calls[0];
   assertEquals(url, 'https://appleid.apple.com/auth/revoke');
   assertEquals([form.get('client_id'), form.get('token'), form.get('token_type_hint')], [
-    'me.pickld.app.local',
+    'com.teamops.apps.Pickld.local',
     'r-1',
     'refresh_token',
   ]);
-  assertEquals(claims(form.get('client_secret')!).sub, 'me.pickld.app.local');
+  assertEquals(claims(form.get('client_secret')!).sub, 'com.teamops.apps.Pickld.local');
 });
 
 Deno.test('revoking never stops a deletion: no token, no key, or Apple down all return quietly', async () => {
   const down = fakeApple(() => {
     throw new Error('network');
   });
-  const db = tokenDb({ u1: { client_id: 'me.pickld.app', refresh_token: 'r-1' } });
+  const db = tokenDb({ u1: { client_id: 'com.teamops.apps.Pickld', refresh_token: 'r-1' } });
   await revokeAppleToken(db, 'u1', key, down.fetcher);
   await revokeAppleToken(db, 'u1', key, fakeApple(() => new Response(null, { status: 500 })).fetcher);
   const unused = fakeApple(() => new Response(null));
@@ -120,7 +120,7 @@ function deps(identities: { provider: string; id: string }[], opts: { key?: Appl
     },
   };
 }
-const call = async (d: ReturnType<typeof deps>['deps'], body: unknown = { code: 'c', clientId: 'me.pickld.app' }) => {
+const call = async (d: ReturnType<typeof deps>['deps'], body: unknown = { code: 'c', clientId: 'com.teamops.apps.Pickld' }) => {
   const res = await handleAppleToken(request('apple-token', { jwt: 'jwt', body }), d);
   return { status: res.status, json: await res.json() };
 };
@@ -128,7 +128,7 @@ const call = async (d: ReturnType<typeof deps>['deps'], body: unknown = { code: 
 Deno.test('fn:apple-token keeps the token for the caller’s own Apple identity', async () => {
   const d = deps([{ provider: 'email', id: 'e' }, { provider: 'apple', id: 'apple-sub-1' }]);
   assertEquals(await call(d.deps), { status: 200, json: { data: { stored: true } } });
-  assertEquals(d.stored, [['u1', 'me.pickld.app', 'r-1']]);
+  assertEquals(d.stored, [['u1', 'com.teamops.apps.Pickld', 'r-1']]);
 });
 
 Deno.test('fn:apple-token refuses a code from another Apple account, an email-only account and other apps', async () => {

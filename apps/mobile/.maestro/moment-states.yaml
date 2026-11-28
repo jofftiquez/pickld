@@ -2,7 +2,7 @@
 # Run on the iOS Simulator: maestro test apps/mobile/.maestro/moment-states.yaml
 # Sign in as seed user dale first (supabase db reset; /dev/sign-in). Today's jar has a checking
 # #mebusywith moment; the jar from 3 days ago has a removed #afternoon moment with the fixed id below.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

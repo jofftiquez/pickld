@@ -6,7 +6,7 @@
 # Needs the seed data, dale signed in and SLOT empty in his open jar (default afternoon):
 #   maestro test -e ANON_KEY=... apps/mobile/.maestro/mention-tag.yaml
 # Ends signed in as Aya; sign Dale back in afterwards (sign-in-email.yaml).
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 env:
   SLOT: afternoon
   JAR: b0000000-0000-4000-8000-000000000103

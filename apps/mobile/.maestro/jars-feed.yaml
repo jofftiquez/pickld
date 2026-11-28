@@ -1,7 +1,7 @@
 # M3-04: the Jars tab lists followed authors' published jars with avatar rings and photo mosaics.
 # Needs the seed data (dale reads mika and aya) and dale signed in:
 # maestro test apps/mobile/.maestro/jars-feed.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

@@ -100,7 +100,7 @@ echo "== Auth redirects, email code, templates, SMTP and Apple ($env)"
 # needs no secret (config.toml, auth.external.apple).
 redirects="pickld://auth/callback"
 site="${WEB_URL:-https://pickld.me}"
-apple_ids="me.pickld.app"
+apple_ids="com.teamops.apps.Pickld"
 auth="$(jq -n --arg site "$site" --arg list "$redirects" --arg apple "$apple_ids" \
   '{site_url: $site, uri_allow_list: $list, mailer_otp_length: 6, mailer_otp_exp: 600,
     external_apple_enabled: true, external_apple_client_id: $apple}')"

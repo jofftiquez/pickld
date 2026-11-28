@@ -2,7 +2,7 @@
 # tab, above their own jars (lola has one).
 # Needs the seed data (lola reads nobody) and lola signed in:
 # maestro test apps/mobile/.maestro/jars-empty.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

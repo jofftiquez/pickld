@@ -13,7 +13,7 @@
 # - The app shows a celebration once per jar per install. Its first launch with this build records what is
 #   already there and shows nothing, so a jar that is already full never pops up: run with evening empty.
 # - To run again: `supabase db reset` (evening empty again) and erase the app's data or reinstall.
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

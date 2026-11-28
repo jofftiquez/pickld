@@ -1,7 +1,7 @@
 # M1-24: open the dev gallery and screenshot each section.
 # Run on the iOS Simulator with a dev build:
 #   maestro test --test-output-dir docs/milestones/M1 apps/mobile/.maestro/gallery.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - openLink: pickld://dev/gallery
 # iOS asks before opening a custom-scheme link.

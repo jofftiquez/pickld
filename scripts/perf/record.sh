@@ -4,7 +4,7 @@
 #   zsh scripts/perf/record.sh scroll <runs> <outdir>  feed-N.mp4 (Maestro swipes through the Jars feed)
 # Then copy <outdir> to a machine with ffmpeg and run scripts/perf/analyze.py.
 set -u
-MODE=$1; RUNS=$2; OUT=$3; BID=me.pickld.app; HERE=${0:A:h}
+MODE=$1; RUNS=$2; OUT=$3; BID=com.teamops.apps.Pickld; HERE=${0:A:h}
 mkdir -p $OUT
 rec() { xcrun simctl io booted recordVideo --codec h264 --force "$1" >/dev/null 2>&1 & RPID=$!; sleep 1.5; }
 stop() { kill -INT $RPID; wait $RPID 2>/dev/null; }

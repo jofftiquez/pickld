@@ -386,7 +386,7 @@ max_frequency = "5s"
 # bundle ids, the store app and the local variant (PICKLD_IOS_VARIANT=local). The native flow needs no secret.
 [auth.external.apple]
 enabled = true
-client_id = "me.pickld.app,me.pickld.app.local"
+client_id = "com.teamops.apps.Pickld,com.teamops.apps.Pickld.local"
 secret = ""
 # Overrides the default auth callback URL derived from auth.external_url.
 redirect_uri = ""

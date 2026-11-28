@@ -3,7 +3,7 @@
 # account and the phone is signed out (FR-ACC-04); Go back opens How it works page 1 (D-85). Needs local Mailpit on 55424 and fn:account-purge served.
 # Ends signed out: sign dale back in afterwards (scripts/dev-sign-in.sh).
 # maestro test apps/mobile/.maestro/about-under13.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - openLink: pickld://dev/sign-out

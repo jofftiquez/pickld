@@ -2,7 +2,7 @@
 # authors and the Moments | Jars switch, then searches "ju" and finds Jun. pickld://explore opens the same tab.
 # Needs the seed data (dale reads mika and aya, not jun) and dale signed in:
 # maestro test apps/mobile/.maestro/explore.yaml
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 ---
 - launchApp
 - extendedWaitUntil:

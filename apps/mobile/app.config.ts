@@ -24,9 +24,10 @@ const en = JSON.parse(readFileSync(join(__dirname, 'src/i18n/en.json'), 'utf8'))
 
 // `PICKLD_IOS_VARIANT=local npx expo prebuild` makes a second install that sits beside the store app on one
 // phone: every bundle id and the App Group get `.local`, and plain http is allowed for a local backend. The
-// share extension (targets/share) derives its host app and App Group from its own bundle id.
+// share extension (targets/share) derives its host app and App Group from its own bundle id. iOS keeps the
+// existing App Store listing's bundle id; Android is me.pickld.app.
 const localVariant = process.env.PICKLD_IOS_VARIANT === 'local';
-const bundleId = localVariant ? 'me.pickld.app.local' : 'me.pickld.app';
+const bundleId = localVariant ? 'com.teamops.apps.Pickld.local' : 'com.teamops.apps.Pickld';
 const appGroup = `group.${bundleId}`;
 
 // The shown version is `version-releaseTag.N`, e.g. 4.0.0-dev.1423; clear the tag for a store release. iOS

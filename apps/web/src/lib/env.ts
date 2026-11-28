@@ -39,7 +39,9 @@ export function appIdentity() {
   return { appleTeamId: team.success ? team.data : null, androidCerts: certs };
 }
 
-export const APP_ID = 'me.pickld.app';
+/** The iOS bundle id (the existing App Store listing's) and the Android package (apps/mobile/app.config.ts). */
+export const IOS_BUNDLE_ID = 'com.teamops.apps.Pickld';
+export const ANDROID_PACKAGE = 'me.pickld.app';
 
 /**
  * The waitlist switch: open only when WAITLIST_OPEN is "true". Closed, every form shows "coming soon", the

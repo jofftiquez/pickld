@@ -1129,7 +1129,7 @@ test('the AASA file lets the app open profile, jar and sign-in links but not leg
   assert.equal(res.status, 200);
   assert.match(res.headers.get('content-type'), /^application\/json/);
   const [detail] = (await res.json()).applinks.details;
-  assert.deepEqual(detail.appIDs, [`${TEAM}.me.pickld.app`]);
+  assert.deepEqual(detail.appIDs, [`${TEAM}.com.teamops.apps.Pickld`]);
   const excluded = detail.components.filter((c) => c.exclude).map((c) => c['/']);
   assert.deepEqual(excluded, [
     '/terms',

@@ -2,7 +2,7 @@
 # opens the QR sheet, the link card, and the Invited tab lists friends who joined.
 #   maestro test -e ANON_KEY=$(npx supabase status -o json | jq -r .ANON_KEY) apps/mobile/.maestro/invite-page.yaml
 # Needs dale signed in (seed data; his codes unlock with his live moments).
-appId: me.pickld.app
+appId: com.teamops.apps.Pickld
 env:
   INVITER: dale@pickld.test
 ---

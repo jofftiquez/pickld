@@ -2,7 +2,7 @@
 
 Sticker pack purchases (FR-STK-07) go through RevenueCat. The code works against its sandbox; these steps need the founders' accounts. Nothing here is paid until real products go on sale.
 
-1. **Project:** create a RevenueCat project with an iOS app for `me.pickld.app` (and later Android). Connect App Store Connect (in-app purchase key) so RevenueCat can verify receipts.
+1. **Project:** create a RevenueCat project with an iOS app for `com.teamops.apps.Pickld` (and later Android). Connect App Store Connect (in-app purchase key) so RevenueCat can verify receipts.
 2. **Products:** in App Store Connect, create one **non-consumable** in-app purchase per paid pack. Its product id must equal the pack's `sticker_packs.store_product_id` (for example `me.pickld.pack.<slug>`). Add the products to RevenueCat. No entitlements or offerings are needed: Pickld reads purchases by product id.
 3. **Webhook:** Project settings → Integrations → Webhooks:
    - URL: `https://<project>.supabase.co/functions/v1/revenuecat-webhook`
