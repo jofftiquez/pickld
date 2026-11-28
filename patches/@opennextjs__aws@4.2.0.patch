@@ -1,0 +1,23 @@
+diff --git a/dist/overrides/converters/edge.js b/dist/overrides/converters/edge.js
+index a5a9641d1651b45d4c73004dc57b72882d3c14c8..8b7ce904cbdf04b679e07ebdddb1da78992bf065 100644
+--- a/dist/overrides/converters/edge.js
++++ b/dist/overrides/converters/edge.js
+@@ -1,5 +1,6 @@
+ import { Buffer } from "node:buffer";
+-import cookieParser from "cookie";
++// cookie 1.x has no default export (it sets __esModule), so the default import is undefined.
++import * as cookieParser from "cookie";
+ import { parseSetCookieHeader } from "../../http/util.js";
+ import { getQueryFromSearchParams } from "./utils.js";
+ // https://fetch.spec.whatwg.org/#statuses
+diff --git a/dist/overrides/converters/node.js b/dist/overrides/converters/node.js
+index e4b40b735fd8a26f372ad9076d3e2b8f35c61127..a49bf26e582cadcd8e89bc154343111274cee8c8 100644
+--- a/dist/overrides/converters/node.js
++++ b/dist/overrides/converters/node.js
+@@ -1,4 +1,5 @@
+-import cookieParser from "cookie";
++// cookie 1.x has no default export (it sets __esModule), so the default import is undefined.
++import * as cookieParser from "cookie";
+ import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
+ const converter = {
+     convertFrom: async (req) => {
