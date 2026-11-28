@@ -17,7 +17,7 @@ jest.mock('expo-router', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock('expo-constants', () => ({ expoConfig: { version: '2.0.0' } }));
+jest.mock('expo-constants', () => ({ expoConfig: { version: '4.0.0' } }));
 jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn() }));
 
 const props = () => mockView.props!;
@@ -32,7 +32,7 @@ describe('Help & feedback', () => {
     await act(async () => props()[action]());
     const url = open.mock.calls[0]![0];
     expect(url.startsWith(`mailto:support@pickld.me?subject=${encodeURIComponent(subject)}&body=`)).toBe(true);
-    expect(decodeURIComponent(url.split('body=')[1]!)).toContain('Pickld 2.0.0');
+    expect(decodeURIComponent(url.split('body=')[1]!)).toContain('Pickld 4.0.0');
     expect(props().noMail).toBeNull();
     open.mockRestore();
   });

@@ -4,8 +4,8 @@ import { z } from 'zod';
 
 const Extra = z.object({ releaseTag: z.string().optional(), devBuild: z.string().optional() });
 
-/** The version shown in Settings and support emails: `2.0.0-dev.N` while app.config.ts has a release tag,
- * plain `2.0.0` once it's cleared. N is the git commit count on local builds, else the store build number. */
+/** The version shown in Settings and support emails: `4.0.0-dev.N` while app.config.ts has a release tag,
+ * plain `4.0.0` once it's cleared. N is the git commit count on local builds, else the store build number. */
 export function appVersion(): string {
   const version = Constants.expoConfig?.version ?? '';
   const extra = Extra.safeParse(Constants.expoConfig?.extra ?? {});
