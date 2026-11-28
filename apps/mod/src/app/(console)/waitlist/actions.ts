@@ -38,7 +38,22 @@ const Sent = z.object({ sent: z.number(), total: z.number() });
 export async function sendCodes(_prev: SendResult | null, form: FormData): Promise<SendResult> {
   const count = Count.safeParse(form.get('count'));
   if (!count.success) return { result: 'invalid_input' };
-  const body = { count: count.data, resendExpired: form.get('resendExpired') === 'on' };
+  return send({ count: count.data, resendExpired: form.get('resendExpired') === 'on' });
+}
+
+const Picked = z.array(z.string().min(3).max(254)).min(1).max(100);
+
+/**
+ * Emails codes to the people ticked on the list, through the same waitlist-send function: Postgres gives a code
+ * only to those who still need one, so ticking someone who was already sent a working code sends nothing.
+ */
+export async function sendPicked(_prev: SendResult | null, form: FormData): Promise<SendResult> {
+  const emails = Picked.safeParse([...new Set(form.getAll('email'))]);
+  if (!emails.success) return { result: 'invalid_input' };
+  return send({ emails: emails.data });
+}
+
+async function send(body: { count: number; resendExpired: boolean } | { emails: string[] }): Promise<SendResult> {
   const { data, error } = await (await supabase()).functions.invoke('waitlist-send', { body });
   revalidatePath('/waitlist');
   if (!error) {

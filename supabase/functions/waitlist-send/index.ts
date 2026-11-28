@@ -19,6 +19,11 @@ Deno.serve(
         if (error) throw new Error(`waitlist_release: ${error.code} ${error.message}`);
         return (data ?? []) as Released[];
       },
+      releaseTo: async (jwt, emails) => {
+        const { data, error } = await userClient(jwt).rpc('waitlist_release_to', { p_emails: emails });
+        if (error) throw new Error(`waitlist_release_to: ${error.code} ${error.message}`);
+        return (data ?? []) as Released[];
+      },
       markSent: async (jwt, emails) => {
         const { data, error } = await userClient(jwt).rpc('waitlist_mark_sent', { p_emails: emails });
         if (error) throw new Error(`waitlist_mark_sent: ${error.code} ${error.message}`);

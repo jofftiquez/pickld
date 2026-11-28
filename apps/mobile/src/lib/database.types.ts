@@ -2870,6 +2870,15 @@ export type Database = {
           state: string;
         }[];
       };
+      mod_waitlist_invites: {
+        Args: { p_emails: string[] };
+        Returns: {
+          can_send: boolean;
+          code: string;
+          email: string;
+          invited_at: string;
+        }[];
+      };
       mod_waitlist_remove: { Args: { p_email: string; p_note: string }; Returns: Json };
       mod_waitlist_state: { Args: { p_admitted: string; p_user: string }; Returns: string };
       mod_waitlist_summary: { Args: Record<PropertyKey, never>; Returns: Json };
@@ -3240,6 +3249,14 @@ export type Database = {
       waitlist_mark_sent: { Args: { p_emails: string[] }; Returns: number };
       waitlist_release: {
         Args: { p_count: number; p_resend_expired?: boolean };
+        Returns: {
+          code: string;
+          email: string;
+          expires_at: string;
+        }[];
+      };
+      waitlist_release_to: {
+        Args: { p_emails: string[] };
         Returns: {
           code: string;
           email: string;

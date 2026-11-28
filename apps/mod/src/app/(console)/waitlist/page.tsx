@@ -9,6 +9,7 @@ import { PageHeader } from '~/components/PageHeader';
 import { Pagination } from '~/components/Pagination';
 import { RemoveEmailForm } from '~/components/RemoveEmailForm';
 import { SendCodesForm } from '~/components/SendCodesForm';
+import { SendPickedForm } from '~/components/SendPickedForm';
 import { Section } from '~/components/Section';
 import { Table } from '~/components/Table';
 import { Tile } from '~/components/Tile';
@@ -17,12 +18,26 @@ import { t } from '~/i18n/t';
 import { when } from '~/lib/audit';
 import { lastPage, readPaging } from '~/lib/paging';
 import { supabase } from '~/lib/supabase';
-import { loadCodes, loadSummary, loadWaitlist, STATES, type WaitlistState } from '~/lib/waitlist';
+import {
+  loadCodes,
+  loadInvites,
+  loadSummary,
+  loadWaitlist,
+  STATES,
+  type WaitlistInvite,
+  type WaitlistState,
+} from '~/lib/waitlist';
 
 const link = { color: colors.brandLink, fontWeight: 700, fontSize: 14 } as const;
 
+function codeCell(invite: WaitlistInvite | undefined): string {
+  if (!invite?.code || !invite.invited_at) return t('waitlist.picked.code.none');
+  return t(`waitlist.picked.code.${invite.code}`, { when: when(invite.invited_at) });
+}
+
 // The launch waitlist (FR-MOD-08): how many joined, from where, and who. Moderators can search it, download
-// it as CSV and remove an email when someone asks. Founders email codes to the oldest from here (INV-09).
+// it as CSV and remove an email when someone asks. Founders email codes to the oldest from here, or to the people
+// they tick on the list (INV-09).
 export default async function Waitlist({
   searchParams,
 }: {
@@ -43,6 +58,10 @@ export default async function Waitlist({
   if (page !== paging.page) {
     list = await loadWaitlist(client, q, state, { size: paging.size, offset: (page - 1) * paging.size });
   }
+  const invites = await loadInvites(
+    client,
+    list.rows.map((r) => r.email),
+  );
   const query = {
     q: q || undefined,
     state: state === 'all' ? undefined : state,
@@ -157,30 +176,53 @@ export default async function Waitlist({
               </Button>
             </form>
           </Toolbar>
-          <Table
-            columns={[
-              { key: 'email', label: t('waitlist.columns.email') },
-              { key: 'source', label: t('waitlist.columns.source'), width: 130 },
-              { key: 'joined', label: t('waitlist.columns.joined'), width: 160 },
-              { key: 'state', label: t('waitlist.columns.state'), width: 140 },
-            ]}
-            empty={t('waitlist.list.empty')}
-            rows={list.rows.map((r) => ({
-              key: r.email,
-              cells: [
-                <span key="email" style={{ fontWeight: 700, overflowWrap: 'anywhere' }}>
-                  {r.email}
-                </span>,
-                <span key="source" style={{ color: colors.muted }}>
-                  {r.source}
-                </span>,
-                <span key="joined" style={{ color: colors.muted }}>
-                  {when(r.created_at)}
-                </span>,
-                t(`waitlist.states.${r.state}`),
-              ],
-            }))}
-          />
+          <SendPickedForm>
+            <Table
+              columns={[
+                { key: 'email', label: t('waitlist.columns.email') },
+                { key: 'source', label: t('waitlist.columns.source'), width: 120 },
+                { key: 'joined', label: t('waitlist.columns.joined'), width: 150 },
+                { key: 'state', label: t('waitlist.columns.state'), width: 110 },
+                { key: 'code', label: t('waitlist.columns.code'), width: 200 },
+              ]}
+              empty={t('waitlist.list.empty')}
+              rows={list.rows.map((r) => {
+                const invite = invites.get(r.email.toLowerCase());
+                return {
+                  key: r.email,
+                  cells: [
+                    <label
+                      key="email"
+                      className="-my-2 flex min-h-11 items-center gap-3 font-bold [overflow-wrap:anywhere]"
+                    >
+                      <input
+                        type="checkbox"
+                        name="email"
+                        value={r.email}
+                        disabled={!invite?.can_send}
+                        className="size-5 shrink-0 accent-primary disabled:opacity-30"
+                      />
+                      {r.email}
+                    </label>,
+                    <span key="source" style={{ color: colors.muted }}>
+                      {r.source}
+                    </span>,
+                    <span key="joined" style={{ color: colors.muted }}>
+                      {when(r.created_at)}
+                    </span>,
+                    t(`waitlist.states.${r.state}`),
+                    <span
+                      key="code"
+                      className="whitespace-nowrap"
+                      style={{ color: invite?.code ? undefined : colors.muted }}
+                    >
+                      {codeCell(invite)}
+                    </span>,
+                  ],
+                };
+              })}
+            />
+          </SendPickedForm>
           <Pagination total={list.total} page={page} size={paging.size} path="/waitlist" params={query} />
         </Card>
       </section>

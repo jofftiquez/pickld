@@ -1,10 +1,12 @@
 // The Waitlist page (FR-MOD-08), in Chromium against the local Supabase stack. The test adds its own waitlist
 // rows (email only, as from the first form) and deletes them afterwards. Export and removal write audit rows
 // that name their moderator and can't be deleted, so the moderator is one long-lived test account, reused
-// across runs. Other rows may already be on the list, so assertions only rely on this file's own emails.
+// across runs. Other rows may already be on the list, so assertions only rely on this file's own emails. Picked
+// sends run as a second, founder account; no email service is set up locally or in CI, so they stop before any
+// code is given out (the file skips that test when supabase/functions/.env has a Resend key).
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { after, before, test } from 'node:test';
@@ -23,10 +25,23 @@ const status = JSON.parse(out.slice(out.indexOf('{')));
 const admin = createClient(status.API_URL, status.SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
 const MOD_EMAIL = 'mod-e2e-waitlist@pickld.test';
+const FOUNDER_EMAIL = 'founder-e2e-waitlist@pickld.test';
 const tag = randomUUID().slice(0, 6);
 const domain = `wl-${tag}.pickld.test`;
 // The second one starts with "=", which a spreadsheet would run as a formula.
 const emails = [`ana@${domain}`, `=1+1@${domain}`, `remove-me@${domain}`];
+// For picking: never sent, sent a code that still works, used it, and one whose code ran out unused.
+const pickDomain = `wls-${tag}.pickld.test`;
+const pick = {
+  fresh: `fresh@${pickDomain}`,
+  sent: `sent@${pickDomain}`,
+  used: `used@${pickDomain}`,
+  ranOut: `ran-out@${pickDomain}`,
+};
+const codes = [];
+const resendKey = /^RESEND_API_KEY=./m.test(
+  await readFile(path.join(here, '../../../supabase/functions/.env'), 'utf8').catch(() => ''),
+);
 let web, browser, page;
 
 function must({ data, error }) {
@@ -34,21 +49,20 @@ function must({ data, error }) {
   return data;
 }
 
-async function moderator() {
+async function moderator(email = MOD_EMAIL, username = 'mod_e2e_waitlist', founder = false) {
   const { users } = must(await admin.auth.admin.listUsers({ perPage: 1000 }));
-  let user = users.find((u) => u.email === MOD_EMAIL);
+  let user = users.find((u) => u.email === email);
   if (!user) {
-    user = must(
-      await admin.auth.admin.createUser({ email: MOD_EMAIL, email_confirm: true, app_metadata: { role: 'moderator' } }),
-    ).user;
+    const app_metadata = founder ? { role: 'moderator', founder: true } : { role: 'moderator' };
+    user = must(await admin.auth.admin.createUser({ email, email_confirm: true, app_metadata })).user;
   }
   // Export and removal need the moderator to have a profile (0091), for the audit row.
   must(
     await admin.from('profiles').upsert(
       {
         id: user.id,
-        username: 'mod_e2e_waitlist',
-        display_name: 'Waitlist Moderator',
+        username,
+        display_name: founder ? 'Waitlist Founder' : 'Waitlist Moderator',
         birthday: '1990-01-01',
         home_tz: 'Asia/Manila',
       },
@@ -61,6 +75,22 @@ async function moderator() {
 before(async () => {
   await moderator();
   must(await admin.from('waitlist').insert(emails.map((email) => ({ email, source: 'story' }))));
+  // A waitlist code as waitlist-send would leave it: sent a day ago, with its use and end.
+  const sentCode = async (uses, expires) => {
+    const code = Array.from(randomBytes(6), (b) => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 31]).join('');
+    must(await admin.from('invite_codes').insert({ code, kind: 'waitlist', uses, expires_at: expires.toISOString() }));
+    codes.push(code);
+    return { invite_code: code, invited_at: new Date(Date.now() - 86_400_000).toISOString() };
+  };
+  const day = 86_400_000;
+  must(
+    await admin.from('waitlist').insert([
+      { email: pick.fresh, source: 'story' },
+      { email: pick.sent, source: 'story', ...(await sentCode(0, new Date(Date.now() + 13 * day))) },
+      { email: pick.used, source: 'story', ...(await sentCode(1, new Date(Date.now() + 13 * day))) },
+      { email: pick.ranOut, source: 'story', ...(await sentCode(0, new Date(Date.now() - day))) },
+    ]),
+  );
 
   web = spawn('npx', ['next', 'start', '-p', String(PORT)], {
     cwd: path.join(here, '..'),
@@ -83,7 +113,11 @@ before(async () => {
 after(async () => {
   await browser?.close();
   web?.kill();
-  await admin.from('waitlist').delete().in('email', emails);
+  await admin
+    .from('waitlist')
+    .delete()
+    .in('email', [...emails, ...Object.values(pick)]);
+  await admin.from('invite_codes').delete().in('code', codes);
 });
 
 test('the Waitlist page shows totals, today’s joins and sources', async () => {
@@ -119,6 +153,55 @@ test('codes by email: counts show, and a moderator who isn’t a founder can’t
     'nothing was released',
   );
 });
+
+test('the list shows who was sent a code, and only people who can get one can be ticked', async () => {
+  await page.goto(`${base}/waitlist?q=${pickDomain}`);
+  const list = page.getByRole('region', { name: 'Emails' });
+  const row = (email) => list.locator('tbody tr', { hasText: email });
+  await row(pick.fresh).getByText('Not sent', { exact: true }).waitFor();
+  assert.match(await row(pick.sent).textContent(), /Sent [A-Z][a-z]{2} \d+, \d+:\d{2} [AP]M$/);
+  assert.match(await row(pick.used).textContent(), /Used \(sent [A-Z][a-z]{2} \d+/);
+  assert.match(await row(pick.ranOut).textContent(), /Ran out \(sent [A-Z][a-z]{2} \d+/);
+  const box = (email) => list.getByRole('checkbox', { name: email });
+  assert.equal(await box(pick.fresh).isEnabled(), true, 'never sent: can be ticked');
+  assert.equal(await box(pick.ranOut).isEnabled(), true, 'ran out unused: can be sent a new one');
+  assert.equal(await box(pick.sent).isDisabled(), true, 'a code that still works: no second one');
+  assert.equal(await box(pick.used).isDisabled(), true, 'used: no second one');
+});
+
+test('ticking people counts them, and a moderator who isn’t a founder can’t send to them', async () => {
+  await page.goto(`${base}/waitlist?q=${pickDomain}`);
+  const list = page.getByRole('region', { name: 'Emails' });
+  const form = list.getByRole('form', { name: 'Send codes to people you tick' });
+  assert.equal(await form.getByRole('button', { name: 'Tick emails to send codes' }).isDisabled(), true);
+  await list.getByText(pick.fresh, { exact: true }).click(); // the email is the checkbox's label
+  await form.getByRole('button', { name: 'Send code to 1 person' }).waitFor();
+  await list.getByRole('checkbox', { name: pick.ranOut }).check();
+  await form.getByRole('button', { name: 'Send codes to 2 people' }).click();
+  await form.getByRole('alert').getByText('Only founders can send codes.').waitFor();
+  const rows = must(await admin.from('waitlist').select('email, invite_code').in('email', [pick.fresh, pick.ranOut]));
+  assert.equal(rows.find((r) => r.email === pick.fresh).invite_code, null, 'nothing was released');
+  assert.ok(codes.includes(rows.find((r) => r.email === pick.ranOut).invite_code), 'the old code stays');
+});
+
+test(
+  'a founder’s picked send reaches the waitlist function',
+  { skip: resendKey && 'a Resend key is set' },
+  async () => {
+    await moderator(FOUNDER_EMAIL, 'founder_e2e_waitlist', true);
+    const founder = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+    await signInWithCode(founder, { base, admin, email: FOUNDER_EMAIL });
+    await founder.goto(`${base}/waitlist?q=${pickDomain}`);
+    const list = founder.getByRole('region', { name: 'Emails' });
+    await list.getByRole('checkbox', { name: pick.fresh }).check();
+    await list.getByRole('button', { name: 'Send code to 1 person' }).click();
+    // Past the founder check and the input check, the function stops at the missing email service.
+    await list.getByRole('alert').getByText("Email isn't set up yet. See the waitlist codes runbook.").waitFor();
+    const rows = must(await admin.from('waitlist').select('invite_code').eq('email', pick.fresh));
+    assert.equal(rows[0].invite_code, null, 'no code was given out');
+    await founder.context().close();
+  },
+);
 
 test('search finds emails by part of the address and filters by state', async () => {
   await page.goto(`${base}/waitlist`);
