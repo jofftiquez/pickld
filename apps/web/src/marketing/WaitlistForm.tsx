@@ -1,6 +1,7 @@
 import { requestCode } from '~/app/(marketing)/waitlist/actions';
 import { t } from '~/i18n/t';
 import { turnstileSiteKey, waitlistOpen } from '~/lib/env';
+import { SubmitButton } from '~/marketing/SubmitButton';
 import { Turnstile } from '~/marketing/Turnstile';
 
 /**
@@ -26,9 +27,7 @@ export function WaitlistForm({ id, source }: { id: string; source: string }) {
           placeholder={t('marketing.form.placeholder')}
         />
         <input type="hidden" name="source" value={source} />
-        <button className="mk-btn" type="submit">
-          {t('marketing.form.submit')}
-        </button>
+        <SubmitButton label={t('marketing.form.submit')} pendingLabel={t('marketing.form.pending')} />
       </div>
       <Turnstile siteKey={turnstileSiteKey()} />
       <p className="mk-form-note">{t('marketing.form.note')}</p>

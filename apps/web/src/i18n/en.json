@@ -111,6 +111,7 @@
       "label": "Email address",
       "placeholder": "you@email.com",
       "submit": "Join the waitlist",
+      "pending": "Sending your code…",
       "note": "We’ll email you a 6-digit code to check it’s you, then only about Pickld’s launch."
     },
     "moments": {
@@ -376,6 +377,7 @@
       "body": "We sent a 6-digit code to {{email}}. Enter it here to join the waitlist.",
       "label": "6-digit code",
       "submit": "Join the waitlist",
+      "pending": "Checking your code…",
       "wrong": "That code didn’t work. Check the latest email and try again.",
       "note": "Didn’t get it? Look in spam, or wait a minute and use a different email.",
       "different": "Use a different email",

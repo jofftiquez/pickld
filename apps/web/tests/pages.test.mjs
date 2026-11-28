@@ -26,11 +26,20 @@ const USER_TOKEN = 'stub-user-access-token';
 const CODE = '123456';
 /**
  * What the Supabase Auth, waitlist_join and Turnstile stubs received (INV-12). `otpStatus` is the next
- * /auth/v1/otp answer's status and `answer` what waitlist_join returns.
+ * /auth/v1/otp answer's status, `answer` what waitlist_join returns and `slow` how many ms Auth takes to answer.
  */
-const waitlist = { captcha: [], otp: [], verify: [], rpc: [], logout: 0, otpStatus: 200, answer: 'joined' };
-const resetWaitlist = () =>
-  Object.assign(waitlist, { captcha: [], otp: [], verify: [], rpc: [], logout: 0, otpStatus: 200, answer: 'joined' });
+const fresh = () => ({
+  captcha: [],
+  otp: [],
+  verify: [],
+  rpc: [],
+  logout: 0,
+  otpStatus: 200,
+  answer: 'joined',
+  slow: 0,
+});
+const waitlist = fresh();
+const resetWaitlist = () => Object.assign(waitlist, fresh());
 // Stands in for Cloudflare's script in the browser: the widget adds the token field the server checks.
 const FAKE_TURNSTILE = `window.turnstile = { render(el) { const i = document.createElement('input');
   i.type = 'hidden'; i.name = 'cf-turnstile-response'; i.value = 'stub-token'; el.appendChild(i); return 'w1'; },
@@ -248,14 +257,18 @@ before(async () => {
       assert.equal(req.headers.authorization, `Bearer ${ANON}`);
       if (req.url === '/auth/v1/otp') {
         waitlist.otp.push(JSON.parse(body));
-        return json(waitlist.otpStatus, {});
+        return setTimeout(() => json(waitlist.otpStatus, {}), waitlist.slow);
       }
       if (req.url === '/auth/v1/verify') {
         const input = JSON.parse(body);
         waitlist.verify.push(input);
-        return input.token === CODE
-          ? json(200, { access_token: USER_TOKEN, refresh_token: 'r', user: { id: 'u' } })
-          : json(403, { code: 'otp_expired', msg: 'Token has expired or is invalid' });
+        return setTimeout(
+          () =>
+            input.token === CODE
+              ? json(200, { access_token: USER_TOKEN, refresh_token: 'r', user: { id: 'u' } })
+              : json(403, { code: 'otp_expired', msg: 'Token has expired or is invalid' }),
+          waitlist.slow,
+        );
       }
       if (req.url === '/functions/v1/invite') {
         const { token } = JSON.parse(body);
@@ -709,6 +722,30 @@ test('joining the waitlist checks the captcha, emails a code, then joins as the 
     'secrets and the session stay on the server',
   );
   assert.deepEqual(await page.context().cookies(), [], 'nothing is left behind');
+  await page.close();
+});
+
+test('a double click on either waitlist button posts once, with the button busy until the answer', async () => {
+  resetWaitlist();
+  waitlist.slow = 1500;
+  const { page } = await open('/waitlist');
+  await page.locator('input[name="cf-turnstile-response"]').waitFor({ state: 'attached' });
+  await page.getByLabel('Email address').fill('mika@example.com');
+  await page.getByRole('button', { name: 'Join the waitlist' }).dblclick();
+  const sending = page.getByRole('button', { name: 'Sending your code…' });
+  assert.ok(await sending.isDisabled());
+  assert.equal(await page.getByRole('status').filter({ hasText: 'Sending your code…' }).count(), 1);
+  await page.waitForURL(`${base}/waitlist/code`);
+  assert.equal(waitlist.captcha.length, 1);
+  assert.equal(waitlist.otp.length, 1, 'one code email');
+
+  await page.getByLabel('6-digit code').fill(CODE);
+  await page.getByRole('button', { name: 'Join the waitlist' }).dblclick();
+  assert.ok(await page.getByRole('button', { name: 'Checking your code…' }).isDisabled());
+  await page.getByLabel('6-digit code').press('Enter');
+  await page.waitForURL(`${base}/waitlist?status=joined`);
+  assert.equal(waitlist.verify.length, 1, 'one code check');
+  assert.equal(waitlist.rpc.length, 1, 'joined once');
   await page.close();
 });
 
