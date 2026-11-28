@@ -82,6 +82,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
   const layouts = layoutsFor(count, format, {
     framed: paletteFor(background, data.author.lid_color).card !== null,
     caption: cardCaption(card, moment, includeCaption),
+    memberNumber: data.author.public_member_number != null,
   });
   const layout = layouts.find((l) => picked?.count === count && l.id === picked.id) ?? layouts[0]!;
   // The card waits for any sticker art still downloading (D-131) before it is drawn into the image.
@@ -138,6 +139,7 @@ export function ShareCardScreen({ jarId, momentId }: { jarId: string | undefined
         title,
         date,
         authorName: data.author.display_name,
+        memberNumber: data.author.public_member_number ?? null,
         tz: data.jar.tz,
         accessibilityLabel: moment
           ? t('share.cardMoment', { name: data.author.display_name, slot: t(`slots.${moment.slot}`), date })

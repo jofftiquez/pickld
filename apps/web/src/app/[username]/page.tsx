@@ -8,7 +8,7 @@ import { Avatar } from '~/components/Avatar';
 import { MomentPhoto } from '~/components/MomentPhoto';
 import { Page } from '~/components/Page';
 import { t } from '~/i18n/t';
-import { bySlot, longDate } from '~/lib/format';
+import { bySlot, longDate, memberNumber } from '~/lib/format';
 import { getProfile } from '~/lib/publicPage';
 import { cardShadow } from '~/lib/styles';
 
@@ -46,6 +46,14 @@ export default async function ProfileRoute({ params }: Props) {
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>{name}</h1>
           <span style={{ fontSize: 13, color: colors.muted }}>
             {t('profile.username', { username: profile.username })} ·{' '}
+            {profile.member_number != null ? (
+              <>
+                <span aria-label={t('profile.memberNumberLabel', { n: String(profile.member_number) })}>
+                  {t('profile.memberNumber', { number: memberNumber(profile.member_number) })}
+                </span>{' '}
+                ·{' '}
+              </>
+            ) : null}
             {t('profile.readers', { count: profile.reader_count })} ·{' '}
             {t('profile.authors', { count: profile.author_count })}
           </span>

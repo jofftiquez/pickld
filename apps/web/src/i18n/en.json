@@ -21,6 +21,8 @@
   "profile": {
     "title": "{{name}} (@{{username}}) on Pickld",
     "username": "@{{username}}",
+    "memberNumber": "#{{number}}",
+    "memberNumberLabel": "Member number {{n}}",
     "readers_one": "{{count}} reader",
     "readers_other": "{{count}} readers",
     "authors_one": "{{count}} author",

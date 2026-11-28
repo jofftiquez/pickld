@@ -35,6 +35,8 @@ export const authorRow = z.object({
   lid_color: z.string().nullish(),
   /** For the avatar (D-93); missing in caches from before it. */
   avatar_path: z.string().nullish(),
+  /** For the share card (0182): null while hidden; feed rows and older caches don't have it. */
+  public_member_number: z.number().nullish(),
 });
 export type AuthorRow = z.infer<typeof authorRow>;
 

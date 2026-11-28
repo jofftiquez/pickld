@@ -14,6 +14,9 @@ export const longDate = (localDate: string) =>
     asDate(localDate),
   );
 
+/** A member number as shown: 9 digits with leading zeros (0182), "000000001". */
+export const memberNumber = (n: number) => String(n).padStart(9, '0');
+
 export const bySlot = (moments: PublicMoment[]) =>
   [...moments].sort((a, b) => slots.indexOf(a.slot) - slots.indexOf(b.slot));
 

@@ -17,7 +17,7 @@ import { parseEdits } from '@/features/edit/edits';
 import type { StampMoment } from '@/features/edit/stickers/stamps';
 import type { JarMoment } from '@/features/jar/jarPage';
 import { phoneTimeZone } from '@/features/jar/useToday';
-import { deviceLocale, formatDate, formatShortDate } from '@/lib/format';
+import { deviceLocale, formatDate, formatMemberNumber, formatShortDate } from '@/lib/format';
 import { addDays, localDateIn } from '@/lib/jars';
 import { useLargeText } from '@/lib/useLargeText';
 import { textStyle } from '@/theme/text';
@@ -312,6 +312,15 @@ export function ProfileView({
                 <Text style={[textStyle('bodySmall'), styles.handle]} testID="profile-username">
                   {t('profile.username', { username: profile.username })}
                 </Text>
+                {profile.public_member_number != null ? (
+                  <Text
+                    style={[textStyle('bodySmall'), styles.handle]}
+                    accessibilityLabel={t('profile.memberNumberA11y', { n: profile.public_member_number })}
+                    testID="profile-member-number"
+                  >
+                    {t('profile.memberNumber', { number: formatMemberNumber(profile.public_member_number) })}
+                  </Text>
+                ) : null}
                 {!isOwner && relationship.muted ? (
                   <View style={styles.muted} testID="profile-muted">
                     <Text style={[textStyle('caption'), { color: colors.muted }]}>{t('profile.muted')}</Text>

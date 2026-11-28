@@ -99,6 +99,7 @@ describe('Share card layouts (D-62, D-89, D-90, D-91)', () => {
     { framed: true, caption: null },
     { framed: false, caption: 'lunch crew' },
     { framed: true, caption: longCaption },
+    { framed: false, caption: longCaption, memberNumber: true },
   ];
 
   it('offers only the layouts that fill each format well, the default first', () => {
@@ -206,6 +207,11 @@ describe('Share card layouts (D-62, D-89, D-90, D-91)', () => {
     expect(two.text.height).toBe(textHeight(2));
     expect(one.cells[0]!.height).toBeLessThan(none.cells[0]!.height);
     expect(two.cells[0]!.height).toBeLessThan(one.cells[0]!.height);
+    // A member number adds a line under the wordmark (0182): the title row grows and the photos give way.
+    const numbered = layoutsFor(1, 'story', { memberNumber: true })[0]!;
+    expect(numbered.text.height).toBe(textHeight(0, true));
+    expect(textHeight(0, true)).toBeGreaterThan(textHeight(0));
+    expect(numbered.cells[0]!.height).toBeLessThan(none.cells[0]!.height);
     expect(captionLinesFor('', 900)).toBe(0);
     expect(captionLinesFor('x'.repeat(500), 900)).toBe(storyMetrics.captionLines);
   });

@@ -68,10 +68,15 @@ export function safeArea(format: StoryFormat): Rect {
   return { x: safe.side, y: safe.top, width: size.width - 2 * safe.side, height: size.height - safe.top - safe.bottom };
 }
 
-/** Height of the title row: the title over the date line. */
-export function titleRowHeight(): number {
+/**
+ * Height of the title row: the title over the date line on the left, the wordmark over the link on the right.
+ * A member number (0182) adds a line under the wordmark, which makes the right side the taller one.
+ */
+export function titleRowHeight(memberNumber = false): number {
   const m = storyMetrics;
-  return m.titleSize * m.titleLineHeight + m.subSize * m.lineHeight;
+  const left = m.titleSize * m.titleLineHeight + m.subSize * m.lineHeight;
+  const right = m.logoWidth / m.logoAspect + (memberNumber ? 2 : 1) * m.linkSize * m.lineHeight;
+  return Math.max(left, right);
 }
 
 /**
@@ -88,10 +93,10 @@ export function captionLinesFor(caption: string | null | undefined, width: numbe
 }
 
 /** Height of the words under the photos: the caption's lines (if any) over the title row. */
-export function textHeight(captionLines: number): number {
+export function textHeight(captionLines: number, memberNumber = false): number {
   const m = storyMetrics;
   const caption = captionLines > 0 ? captionLines * m.captionSize * m.lineHeight + m.captionGap : 0;
-  return caption + titleRowHeight();
+  return caption + titleRowHeight(memberNumber);
 }
 
 export const storyLayoutIds = [
@@ -238,6 +243,7 @@ function place(
   format: StoryFormat,
   framed: boolean,
   caption: string | null,
+  memberNumber: boolean,
 ): Omit<StoryLayout, 'id' | 'labelKey'> {
   const m = storyMetrics;
   const safe = safeArea(format);
@@ -254,14 +260,14 @@ function place(
   let block = { cells: [] as Rect[], width: 0, height: 0 };
   let textWidth = area.width;
   for (let pass = 0; pass < 2; pass++) {
-    w = cellWidth(grid, { width: area.width, height: area.height - m.textGap - textHeight(lines) });
+    w = cellWidth(grid, { width: area.width, height: area.height - m.textGap - textHeight(lines, memberNumber) });
     block = cellsOf(grid, w);
     textWidth = Math.min(area.width, Math.max(block.width, m.textMinWidth));
     const again = captionLinesFor(caption, textWidth);
     if (again <= lines) break;
     lines = again;
   }
-  const tall = block.height + m.textGap + textHeight(lines);
+  const tall = block.height + m.textGap + textHeight(lines, memberNumber);
   const top = area.y + (area.height - tall) / 2;
   const left = area.x + (area.width - block.width) / 2;
   const cells = block.cells.map((c) => ({ ...c, x: c.x + left, y: c.y + top }));
@@ -269,7 +275,7 @@ function place(
     x: area.x + (area.width - textWidth) / 2,
     y: top + block.height + m.textGap,
     width: textWidth,
-    height: textHeight(lines),
+    height: textHeight(lines, memberNumber),
   };
   const contentX = Math.min(left, text.x);
   const contentWidth = Math.max(block.width, textWidth);
@@ -283,19 +289,19 @@ function place(
  * The layouts a card with `count` photos can use, the default first (D-62). Each gives every photo's
  * rectangle on the card and where the words go; the card draws them there and the exported image is that
  * same view, so the preview and the file match. Every photo stays whole at its own 3:4 shape (D-89), and
- * everything stays inside the safe area (D-90). `caption` is the caption the card prints, so the photos leave
- * room for its lines.
+ * everything stays inside the safe area (D-90). `caption` is the caption the card prints and `memberNumber`
+ * whether it prints the owner's member number (0182), so the photos leave room for their lines.
  */
 export function layoutsFor(
   count: number,
   format: StoryFormat,
-  options: { framed?: boolean; caption?: string | null } = {},
+  options: { framed?: boolean; caption?: string | null; memberNumber?: boolean } = {},
 ): StoryLayout[] {
   const n = Math.min(slots.length, Math.max(1, Math.round(count)));
   return gridsFor(n, format).map(([id, grid]) => ({
     id,
     labelKey: `share.layout.${id}`,
-    ...place(grid, format, options.framed ?? false, options.caption ?? null),
+    ...place(grid, format, options.framed ?? false, options.caption ?? null, options.memberNumber ?? false),
   }));
 }
 

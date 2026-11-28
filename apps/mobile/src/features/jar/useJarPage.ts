@@ -70,7 +70,7 @@ export async function fetchJarPage(id: string, viewerId: string): Promise<JarPag
   const [author, moments] = await Promise.all([
     supabase
       .from('profiles')
-      .select('username, display_name, lid_color, avatar_path')
+      .select('username, display_name, lid_color, avatar_path, public_member_number')
       .eq('id', jar.user_id)
       .maybeSingle(),
     supabase

@@ -5,6 +5,7 @@ import { StyleSheet, Text, View, type TextStyle } from 'react-native';
 import { parseEdits } from '@/features/edit/edits';
 import type { JarMoment } from '@/features/jar/jarPage';
 import { MomentCover } from '@/features/moment/MomentCover';
+import { formatMemberNumber } from '@/lib/format';
 import { fontFamilies } from '@/theme/fontFamilies';
 import { colors, slots } from '@/theme/tokens';
 
@@ -43,6 +44,8 @@ export type StoryCardProps = {
   /** "Nov 8, 2026" */
   date: string;
   authorName: string;
+  /** The owner's member number (0182), beside the wordmark; null when hidden. */
+  memberNumber?: number | null;
   tz: string;
   /** Points per exported pixel; the card is `canvasSize(format).width * unit` points wide. */
   unit: number;
@@ -61,7 +64,7 @@ export type StoryCardProps = {
 export function StoryCard(props: StoryCardProps) {
   const { cardRef, card, moment, includeCaption, format, background, layout, lidColor, title, date, authorName } =
     props;
-  const { tz, unit } = props;
+  const { tz, unit, memberNumber } = props;
   const { t } = useTranslation();
   const m = storyMetrics;
   const px = (n: number) => n * unit;
@@ -173,6 +176,17 @@ export function StoryCard(props: StoryCardProps) {
               tintColor={palette.logoTint ?? undefined}
               accessible={false}
             />
+            {memberNumber != null ? (
+              // a11y-fixed-size: drawn into the shared image at the image's scale
+              <Text
+                allowFontScaling={false}
+                numberOfLines={1}
+                style={font('semibold', m.linkSize)}
+                testID="share-card-member-number"
+              >
+                {t('profile.memberNumber', { number: formatMemberNumber(memberNumber) })}
+              </Text>
+            ) : null}
             {/* a11y-fixed-size: drawn into the shared image at the image's scale */}
             <Text allowFontScaling={false} numberOfLines={1} style={font('semibold', m.linkSize)}>
               {card.link}

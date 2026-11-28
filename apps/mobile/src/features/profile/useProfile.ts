@@ -70,7 +70,9 @@ export async function fetchProfile(name: string, viewerId: string): Promise<Prof
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, display_name, bio, lid_color, reader_count, author_count, jar_count, is_private')
+    .select(
+      'id, username, display_name, bio, lid_color, reader_count, author_count, jar_count, is_private, public_member_number',
+    )
     .eq('username', name)
     .maybeSingle();
   if (error) throw new Error(error.message);
