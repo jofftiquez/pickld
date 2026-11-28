@@ -119,7 +119,8 @@ select ok((select bool_and(invited_at is not null) from public.waitlist
            where email in ('first@tests.pickld.test', 'verified@tests.pickld.test')), 'both rows record invited_at');
 select ok((select expires_at > now() + interval '13 days' from public.invite_codes where code = tests.code_of(1, 'first')),
           'sending starts the code''s 14 days');
-select is((select data from public.audit_log where action = 'waitlist_codes_sent'), '{"count": 2}'::jsonb,
+select is((select data from public.audit_log where action = 'waitlist_codes_sent' and actor_id = tests.id('founder')),
+          '{"count": 2}'::jsonb,
           'one audit row with the count and no emails or codes');
 
 select tests.release(3, 10);

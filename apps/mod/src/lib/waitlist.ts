@@ -82,6 +82,29 @@ export async function loadCodes(client: SupabaseClient): Promise<WaitlistCodes> 
   return Codes.parse(data);
 }
 
+// public.mod_waitlist_invites() (0183): per email, when its code went out, whether it was used or ran out, and
+// whether "Send code to selected" would give it one now.
+const Invite = z.object({
+  email: z.string(),
+  invited_at: z.string().nullable(),
+  code: z.enum(['sent', 'used', 'expired']).nullable(),
+  can_send: z.boolean(),
+});
+export type WaitlistInvite = z.infer<typeof Invite>;
+
+/** Keyed by lowercase email, since the waitlist matches any letter case. */
+export async function loadInvites(client: SupabaseClient, emails: string[]): Promise<Map<string, WaitlistInvite>> {
+  if (emails.length === 0) return new Map();
+  const { data, error } = await client.rpc('mod_waitlist_invites', { p_emails: emails });
+  if (error) throw new Error(error.message);
+  return new Map(
+    z
+      .array(Invite)
+      .parse(data)
+      .map((i) => [i.email.toLowerCase(), i]),
+  );
+}
+
 export const SEND_ERRORS = ['not_founder', 'email_not_configured', 'invalid_input', 'unknown'] as const;
 export type SendResult =
   { result: 'sent' | 'send_failed'; sent: number; total: number } | { result: (typeof SEND_ERRORS)[number] };
