@@ -7,11 +7,11 @@ Sending codes doesn't start the invite period. Codes work whether the period is 
 ## One-time setup (founders)
 
 1. **Resend account.** Sign up at resend.com with the founders' shared address.
-2. **Domain.** Resend → Domains → Add `mail.pickld.me` (a subdomain keeps the main domain's mail reputation separate). Add the records Resend shows (SPF `TXT`, DKIM `TXT`, the `MX` for bounces) at GoDaddy → DNS for pickld.me, then add a DMARC record if pickld.me has none: `TXT _dmarc.mail` with `v=DMARC1; p=none; rua=mailto:<founders' address>`. Wait until Resend shows the domain as Verified.
+2. **Domain.** Resend → Domains → Add `mail.pickld.me` (a subdomain keeps the main domain's mail reputation separate). Add the records Resend shows (SPF `TXT`, DKIM `TXT`, the `MX` for bounces) in Cloudflare → pickld.me → DNS → Records (DNS only, grey cloud), then add a DMARC record if pickld.me has none: `TXT _dmarc.mail` with `v=DMARC1; p=none; rua=mailto:<founders' address>`. Wait until Resend shows the domain as Verified.
 3. **API key.** Resend → API Keys → Create, permission "Sending access", domain `mail.pickld.me`. Copy it once; don't paste it anywhere else.
 4. **Staging.** On the GitHub environment `staging`: secret `RESEND_API_KEY` (the key) and variable `EMAIL_FROM` (`Pickld <hello@mail.pickld.me>`). The next staging deploy passes both to the Edge Functions, with `SITE_URL` from `WEB_URL`.
 5. **Production.** Set the same values on the production project: `supabase secrets set --project-ref <ref> RESEND_API_KEY=… EMAIL_FROM='Pickld <hello@mail.pickld.me>' SITE_URL=https://pickld.me`.
-6. **Sign-in codes (same account).** Supabase → Authentication → SMTP Settings → enable custom SMTP: host `smtp.resend.com`, port `465`, username `resend`, password the API key, sender `hello@mail.pickld.me`, name `Pickld`. Then raise the email rate limit (Authentication → Rate Limits). This replaces Supabase's built-in sender and its organization-members-only limit (see `staging.md`).
+6. **Sign-in codes (same account).** The next deploy does this once `RESEND_API_KEY` and `EMAIL_FROM` are on the GitHub environment (`scripts/deploy/configure.sh`). By hand: Supabase → Authentication → SMTP Settings → enable custom SMTP: host `smtp.resend.com`, port `465`, username `resend`, password the API key, sender `hello@mail.pickld.me`, name `Pickld`. Then raise the email rate limit (Authentication → Rate Limits). This replaces Supabase's built-in sender and its organization-members-only limit (see `staging.md`).
 
 Before a large send, check the Resend account's daily sending limit; it is low on the free plan. A send that hits it stops, and the rest keep their codes for the next send.
 

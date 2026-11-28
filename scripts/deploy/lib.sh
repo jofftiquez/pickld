@@ -55,20 +55,28 @@ anon_key() {
     jq -r '[.[] | select(.name == "anon" or .type == "publishable")] | sort_by(.name != "anon") | .[0].api_key // empty'
 }
 
-# The photo Worker's origin. Staging uses <worker name>.<account subdomain>.workers.dev, because pickld.me's DNS is
-# at GoDaddy, not on Cloudflare, so a custom domain such as photos-staging.pickld.me can't be attached yet.
+# The photo Worker's origin. Production serves the custom domain in wrangler.toml's [env.production] routes
+# (photos.pickld.me); staging uses <worker name>.<account subdomain>.workers.dev.
 worker_name() {
   local env="$1"
   awk -v section="[env.$env]" '$0 == section { found = 1; next } found && /^name *=/ { gsub(/[" ]/, "", $0); sub(/^name=/, "", $0); print; exit }' \
     "$ROOT/workers/photos/wrangler.toml"
 }
 worker_url() {
-  local sub
+  local sub domain
+  domain="$(awk -v section="[env.$1]" '$0 == section { found = 1; next } /^\[/ { found = 0 }
+    found && /custom_domain *= *true/ { match($0, /pattern *= *"[^"]+"/); s = substr($0, RSTART, RLENGTH); sub(/^pattern *= *"/, "", s); sub(/"$/, "", s); print s; exit }' \
+    "$ROOT/workers/photos/wrangler.toml")"
+  if [[ -n "$domain" ]]; then printf 'https://%s' "$domain"; return; fi
   sub="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
     -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq -r '.result.subdomain // empty')"
   [[ -n "$sub" ]] || { echo "Cloudflare account has no workers.dev subdomain yet (Workers & Pages → pick one)" >&2; exit 1; }
   printf 'https://%s.%s.workers.dev' "$(worker_name "$1")" "$sub"
 }
+
+# Photos (the R2 bucket, the photo Worker, sticker art) deploy once the R2 keys are set; until then only the
+# database, Edge Functions and Auth do (production starts that way, for the pickld.me waitlist).
+photos_configured() { [[ -n "${R2_ACCESS_KEY_ID:-}" && -n "${R2_SECRET_ACCESS_KEY:-}" ]]; }
 
 bucket_name() { printf 'pickld-photos-%s' "$1"; }
 r2_endpoint() { printf 'https://%s.r2.cloudflarestorage.com' "$CLOUDFLARE_ACCOUNT_ID"; }

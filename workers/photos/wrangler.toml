@@ -6,8 +6,8 @@ main = "src/index.ts"
 compatibility_date = "2026-11-01"
 workers_dev = false
 
-# Staging answers on pickld-photos-staging.<account>.workers.dev: a custom domain needs the pickld.me zone on
-# Cloudflare, and its DNS is still at GoDaddy (docs/runbooks/staging.md).
+# Staging answers on pickld-photos-staging.<account>.workers.dev; production on photos.pickld.me (the pickld.me
+# zone is on Cloudflare). scripts/deploy/lib.sh reads the custom domain below for PHOTO_BASE_URL.
 [env.staging]
 name = "pickld-photos-staging"
 workers_dev = true
