@@ -85,7 +85,7 @@ for pair in PUSH_CRON_SECRET:push_cron_secret ACCOUNT_JOBS_SECRET:account_jobs_s
     vault_set "$vault_name" "$secret"
   fi
 done
-supabase_cli secrets set --remote="$SUPABASE_PROJECT_REF" --env-file "$secrets_file" >/dev/null
+supabase_cli secrets set --remote="$SUPABASE_PROJECT_REF" --env-file "$secrets_file" --yes >/dev/null
 
 echo "== Cron jobs ($env)"
 vault_set project_url "$url"
