@@ -5,6 +5,10 @@ begin;
 \ir _helpers.psql
 select plan(30);
 
+-- The network is everyone who joined with a code, so people already in the database (a local one after manual
+-- testing) would be counted with this file's own. Set them aside; the rollback at the end puts them back.
+delete from public.invite_redemptions;
+
 select tests.create_user('moderator', 'moderator');
 select tests.create_user('outsider');
 -- The tree: waitlist → root → mid → (kid1 → grand1 → great1, kid2), and admin code → solo.
