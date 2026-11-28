@@ -2604,7 +2604,7 @@ export type Database = {
           username: string;
         }[];
       };
-      give_member_number_one: { Args: { p_username: string }; Returns: number };
+      give_member_number: { Args: { p_number: number; p_username: string }; Returns: number };
       grant_milestones: { Args: { uid: string }; Returns: string[] };
       has_pending_replacement: { Args: { moment_id: string }; Returns: boolean };
       in_discover: { Args: { p_id: string }; Returns: boolean };
