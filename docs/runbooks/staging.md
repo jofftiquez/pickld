@@ -18,7 +18,7 @@ merge to main ──► ci (green) ──► deploy-staging (GitHub environment 
 - **Migrations only, never the seed.** `supabase/seed.sql` is local test data. Migrations stay additive (C-5): no drops or renames without the product owner.
 - **Secrets nobody types.** `configure.sh` generates `PHOTO_TOKEN_SECRET` (same value on the Worker and in Supabase), `CONTACT_HASH_SECRET`, `PUSH_CRON_SECRET` and `ACCOUNT_JOBS_SECRET` with `openssl rand -hex 32` the first time, masks them in the log, and never prints them. They exist only in Supabase, Cloudflare and Supabase Vault. Re-running keeps them.
 - **Cron jobs** (`scripts/deploy/cron.sql`, pg_cron + pg_net): `send-push` every minute, `account-jobs` every 2 minutes. They read the project URL, anon key and job secrets from Vault, so the SQL holds no secret.
-- **Hostnames.** pickld.me's DNS is at GoDaddy, so staging uses provider hostnames (D-47):
+- **Hostnames.** Staging uses provider hostnames (D-47). pickld.me's DNS is now on Cloudflare, so custom names can come later; production already uses `photos.pickld.me` (`production.md`):
 
 | Piece                     | Staging address                                                      |
 | ------------------------- | -------------------------------------------------------------------- |
@@ -69,7 +69,7 @@ Each step is a click in a dashboard; the agent does the rest.
 
 `apps/web` runs as a Cloudflare Worker built by OpenNext (`pnpm --filter @pickld/web cf:build`, config in `apps/web/wrangler.jsonc`). `scripts/deploy/web.sh <env>` builds it, deploys it with `wrangler deploy --env <env>` and sets its settings: public values as Worker variables (`SITE_URL`, `TURNSTILE_SITE_KEY`, store links, `WAITLIST_OPEN`, `SUPABASE_URL`) and server-only values as Worker secrets (`SUPABASE_ANON_KEY`, `TURNSTILE_SECRET_KEY`, `WAITLIST_SECRET`). The same `CLOUDFLARE_API_TOKEN` deploys it; production also needs Zone · Workers Routes · Edit and Zone · DNS · Edit on pickld.me, because the Worker serves `pickld.me` and `www.pickld.me` as custom domains (no other A, AAAA or CNAME record may exist on those names).
 
-- **Production** is deployed by hand: Actions → deploy-production → Run workflow (GitHub environment `production`). It needs only `CLOUDFLARE_ACCOUNT_ID` (variable) and `CLOUDFLARE_API_TOKEN` (secret) to ship the site as "coming soon".
+- **Production** is deployed by hand: Actions → deploy-production → Run workflow (GitHub environment `production`). It needs only `CLOUDFLARE_ACCOUNT_ID` (variable) and `CLOUDFLARE_API_TOKEN` (secret) to ship the site as "coming soon"; `production.md` adds Supabase, the mailer, the waitlist and photos.
 - **Coming soon.** Without `SUPABASE_PROJECT_REF` the site ships the marketing and legal pages only; shared links 404.
 - **The waitlist switch.** The waitlist opens only when the variable `WAITLIST_OPEN` is `true` and Supabase is set up. Closed, the forms and Join links are hidden, the copy says "coming soon", `/waitlist` and `/waitlist/code` 404 and the server actions send nothing. Opening it also needs `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` and Supabase Auth's SMTP sender.
 - **Free plan:** 100,000 Worker requests a day and 10 ms CPU per request; static files are free and don't count. Enough for coming soon; move to Workers Paid when shared links and link previews go live.
@@ -89,7 +89,7 @@ Each step is a click in a dashboard; the agent does the rest.
 
 ## Later (not part of staging yet)
 
-- **Sign-in email (SMTP).** The provider is Resend (the same account sends waitlist codes). Follow `waitlist-codes.md`, steps 1 to 3 and 6: verify `mail.pickld.me`, then set Resend's SMTP in Supabase → Authentication → SMTP. Then raise the email rate limit and drop the organization-member restriction above.
+- **Sign-in email (SMTP).** The provider is Resend (the same account sends waitlist codes). Follow `waitlist-codes.md`, steps 1 to 4: once `RESEND_API_KEY` and `EMAIL_FROM` are on the environment, `configure.sh` sets Resend's SMTP and raises the email rate limit, which drops the organization-member restriction above.
 - **Custom hostnames** (`staging.pickld.me`, `mod-staging.pickld.me`, `photos-staging.pickld.me`): move pickld.me's DNS to Cloudflare, or add a CNAME for the Vercel console. The Worker needs the zone on Cloudflare for a custom domain.
 - **Sentry, PostHog and alerts** (D-34, docs/runbooks/alerts.md), then the staging drills: alerts (#110), load test (#116), restore (#117), PostHog events (#119), location audit (#120: `deno task exif-check` with a read-only R2 token).
 - **OpenAI key and the child-safety matcher** before anyone outside the team uses staging.
