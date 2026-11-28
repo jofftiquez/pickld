@@ -952,6 +952,18 @@ test('jar links carry the tags Messenger, Facebook, X and iMessage read', async 
   await preview(profile);
 });
 
+test('pickld.me and pages without their own preview show the site’s large preview', async () => {
+  for (const route of ['/', '/mission', '/privacy']) {
+    const tags = await meta(route);
+    assert.equal(tags['twitter:card'], 'summary_large_image', route);
+    assert.equal(tags['twitter:image'], tags['og:image'], route);
+    // Prerendered, so its absolute URL carries the build's origin; fetch it by path.
+    const res = await fetch(base + new URL(tags['og:image']).pathname);
+    assert.equal(res.headers.get('content-type'), 'image/png', route);
+    assert.deepEqual(pngSize(Buffer.from(await res.arrayBuffer())), { width: 1200, height: 630 }, route);
+  }
+});
+
 test('a Readers jar preview fetches no moment photos', async () => {
   const tags = await meta(`/j/${READERS}`);
   assert.equal(tags['og:description'], 'A jar for Dale’s readers.');

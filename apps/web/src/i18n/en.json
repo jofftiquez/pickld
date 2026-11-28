@@ -81,7 +81,14 @@
     "profileMeta": "@{{username}} on Pickld",
     "alt": "{{name}}’s jar on Pickld",
     "description": "{{count}} of 8 moments from {{name}}’s {{weekday}}.",
-    "descriptionReaders": "A jar for {{name}}’s readers."
+    "descriptionReaders": "A jar for {{name}}’s readers.",
+    "site": {
+      "alt": "Pickld: something good is pickling. Eight moments, one real day, one jar. Coming soon to iPhone.",
+      "title1": "Something good",
+      "title2": "is pickling.",
+      "body": "Eight moments. One real day. One jar.",
+      "cta": "Join the waitlist at {{host}}"
+    }
   },
   "marketing": {
     "metaTitle": "Pickld: eight moments, one real day",
