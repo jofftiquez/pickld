@@ -8,8 +8,8 @@
 --   fails (username taken, under 13) or an admission that rolls back gives its number back. Concurrent sign-ups
 --   wait on that row for the moment it takes to commit.
 -- * Never reused: the counter only goes up. A deleted account's number stays retired.
--- * #1 is held for the founder: the counter starts after it, and give_member_number_one(username) (SQL only,
---   docs/runbooks/member-numbers.md) hands it out once.
+-- * #1 to #100 are kept for the founders to hand out: the counter starts at #101, and
+--   give_member_number(username, number) (SQL only, docs/runbooks/member-numbers.md) moves an account onto one.
 -- * Visibility: member_number itself is not readable by clients. public_member_number is the same number, or
 --   null while the owner has hide_member_number on; that is what other people and pickld.me see. The owner reads
 --   both through my_profile().
@@ -20,11 +20,12 @@
 -- ---------------------------------------------------------------- the counter
 create table public.member_number_counter (
   id boolean primary key default true check (id),
-  last_number int not null check (last_number >= 1)
+  last_number int not null check (last_number >= 100)
 );
 comment on table public.member_number_counter is
-  'The last member number given out (0182). One row; #1 is held for the founder, so it starts at 1. No client grants.';
-insert into public.member_number_counter (last_number) values (1);
+  'The last member number given out (0182). One row; #1 to #100 are handed out by the founders, so it starts at 100. '
+  'No client grants.';
+insert into public.member_number_counter (last_number) values (100);
 alter table public.member_number_counter enable row level security;
 revoke all on public.member_number_counter from public, anon, authenticated;
 
@@ -44,18 +45,18 @@ comment on column public.profiles.hide_member_number is
   'Owner-editable (0182): keep my member number off my profile, pickld.me and share cards.';
 
 -- ---------------------------------------------------------------- numbering existing accounts
--- Everyone already let in (anything but waiting), in the order they came in, from #2.
+-- Everyone already let in (anything but waiting), in the order they came in, from #101.
 with ranked as (
   select p.id,
          row_number() over (
            order by coalesce((select min(n.created_at) from notifications n
                               where n.user_id = p.id and n.type = 'admitted'), p.created_at), p.created_at, p.id
-         ) + 1 as n
+         ) + 100 as n
   from profiles p
   where p.status <> 'waiting'
 )
 update profiles p set member_number = r.n from ranked r where r.id = p.id;
-update member_number_counter set last_number = greatest(1, (select coalesce(max(member_number), 1) from profiles));
+update member_number_counter set last_number = greatest(100, (select coalesce(max(member_number), 100) from profiles));
 
 alter table public.profiles
   add column public_member_number int
@@ -151,29 +152,36 @@ begin
   ), null, 'period_ended');
 end $$;
 
--- ---------------------------------------------------------------- #1
--- SQL only (the founders, docs/runbooks/member-numbers.md). Gives #1 to that account once. If its old number was
--- the newest one given out, the counter steps back so that number isn't skipped; otherwise it stays retired.
-create function public.give_member_number_one(p_username text) returns int
+-- ---------------------------------------------------------------- #1 to #100
+-- SQL only (the founders, docs/runbooks/member-numbers.md): moves an account onto a free number from 1 to 100.
+-- Its old number: one from 1 to 100 is free to give again; one from 101 up stays retired, unless it was the
+-- newest given out, in which case the counter steps back so it isn't skipped.
+create function public.give_member_number(p_username text, p_number int) returns int
 language plpgsql security definer set search_path = public as $$
 declare
   v_id uuid;
   v_old int;
 begin
-  if exists (select 1 from profiles where member_number = 1) then
-    raise exception '#1 is already taken' using errcode = '23505';
+  if p_number is null or p_number < 1 or p_number > 100 then
+    raise exception 'hand out numbers from 1 to 100' using errcode = '22023';
   end if;
   select id, member_number into v_id, v_old from profiles where username = p_username::citext for update;
   if v_id is null then
     raise exception 'no profile with username %', p_username using errcode = 'P0002';
   end if;
-  update profiles set member_number = 1 where id = v_id;
-  update member_number_counter set last_number = last_number - 1 where id and last_number = v_old and v_old > 1;
-  return 1;
+  if v_old = p_number then
+    return p_number;
+  end if;
+  if exists (select 1 from profiles where member_number = p_number) then
+    raise exception '#% is already taken', p_number using errcode = '23505';
+  end if;
+  update profiles set member_number = p_number where id = v_id;
+  update member_number_counter set last_number = last_number - 1 where id and last_number = v_old and v_old > 100;
+  return p_number;
 end $$;
-comment on function public.give_member_number_one(text) is
-  'Founders, by SQL: gives member #1 to this username once (0182).';
-revoke execute on function public.give_member_number_one(text) from public, anon, authenticated, service_role;
+comment on function public.give_member_number(text, int) is
+  'Founders, by SQL: gives this username a free member number from 1 to 100 (0182).';
+revoke execute on function public.give_member_number(text, int) from public, anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------- pickld.me
 -- 0176's public_profile with the public member number.

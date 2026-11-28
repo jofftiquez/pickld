@@ -1,25 +1,27 @@
 # Member numbers
 
-Every account gets a member number when it is let in (migration 0182), shown as `#000000001`. Numbers are
-never reused, and a failed sign-up doesn't use one up. #1 is held for the founder and is given by hand, once.
+Every account gets a member number when it is let in (migration 0182), shown as `#000000101`. Numbers count up
+from 101, are never reused, and a failed sign-up doesn't use one up. #1 to #100 are kept for the founders to hand
+out by hand.
 
-## Give #1
+## Hand out a number from 1 to 100
 
-Run once per database (local, staging, production) in the SQL editor or `psql` as `postgres`, right after the
-founder's account exists:
+Run in the SQL editor or `psql` as `postgres`, on each database (local, staging, production), once the person has
+an account:
 
 ```sql
-select public.give_member_number_one('<founder username>');
+select public.give_member_number('<username>', 1);
 ```
 
-- It refuses if someone already holds #1, or if no profile has that username.
-- If the founder's account had the newest number, that number goes to the next person. Otherwise the old
-  number stays unused for good, so run it before anyone else signs up.
+- It refuses a number outside 1 to 100, a number someone already holds, or a username nobody has.
+- The person's old number from 101 up stays unused for good, unless it was the newest one given out (then the
+  next sign-up gets it). An old number from 1 to 100 is free to hand out again.
+- Works for a waiting account too: it keeps the number when it is let in.
 
 ## Check
 
 ```sql
-select member_number, username, hide_member_number from public.profiles order by member_number limit 10;
+select member_number, username, hide_member_number from public.profiles where member_number <= 100 order by 1;
 select last_number from public.member_number_counter;
 ```
 

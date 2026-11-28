@@ -1,10 +1,10 @@
 -- 0182: member numbers. An account gets the next number when it is let in (at sign-up with no invite period,
 -- on admission during it), a batch in queue order. Failed sign-ups give their number back, deleted accounts
--- keep theirs retired, clients can't choose or change one, and #1 goes to the founder once. Others and
+-- keep theirs retired, clients can't choose or change one, and #1 to #100 are handed out by SQL. Others and
 -- pickld.me see the number unless the owner hides it; the owner always sees it.
 begin;
 \ir _helpers.psql
-select plan(29);
+select plan(33);
 
 select tests.world();
 
@@ -50,10 +50,10 @@ select ok(not has_table_privilege('authenticated', 'public.member_number_counter
 select ok(not has_function_privilege('authenticated', 'public.next_member_number()', 'execute')
           and not has_function_privilege('service_role', 'public.next_member_number()', 'execute'),
           'nobody draws a number by hand');
-select ok(not has_function_privilege('authenticated', 'public.give_member_number_one(text)', 'execute')
-          and not has_function_privilege('anon', 'public.give_member_number_one(text)', 'execute')
-          and not has_function_privilege('service_role', 'public.give_member_number_one(text)', 'execute'),
-          'only SQL gives out #1');
+select ok(not has_function_privilege('authenticated', 'public.give_member_number(text, int)', 'execute')
+          and not has_function_privilege('anon', 'public.give_member_number(text, int)', 'execute')
+          and not has_function_privilege('service_role', 'public.give_member_number(text, int)', 'execute'),
+          'only SQL hands out #1 to #100');
 select ok(not exists (select 1 from public.profiles where status <> 'waiting' and member_number is null),
           'every account already let in has a number');
 select ok(tests.last_number() >= (select coalesce(max(member_number), 1) from public.profiles),
@@ -69,6 +69,7 @@ insert into t values ('start', tests.last_number());
 select tests.sign_up('first', 1);
 select is(tests.n('first'), (select v from t where k = 'start') + 1,
           'a sign-up gets the next number, whatever number the client sends');
+select ok(tests.n('first') > 100, 'sign-ups never get #1 to #100 on their own');
 
 -- A failed sign-up gives its number back.
 select tests.auth_only('kid');
@@ -153,16 +154,26 @@ update public.app_settings set invite_period_ends_at = null;
 select tests.sign_up('after_delete');
 select is(tests.n('after_delete'), (select v from t where k = 'deleted') + 1, 'a deleted account''s number is never reused');
 
--- ---------------------------------------------------------------- #1
--- Whoever holds #1 in this database gives it up inside this rolled-back test.
-update public.profiles set member_number = null where member_number = 1;
+-- ---------------------------------------------------------------- #1 to #100
+-- Two free numbers from 1 to 100 in this database (any already handed out are skipped).
+insert into t select 'free1', min(n) from generate_series(1, 100) n
+  where not exists (select 1 from public.profiles where member_number = n);
+insert into t select 'free2', min(n) from generate_series(1, 100) n
+  where n > (select v from t where k = 'free1') and not exists (select 1 from public.profiles where member_number = n);
 insert into t values ('newest', tests.n('after_delete'));
-select is(public.give_member_number_one('t_after_delete'), 1, 'the founder gets #1');
-select is(tests.n('after_delete'), 1, 'and holds it');
-select throws_ok($$select public.give_member_number_one('t_second')$$, '23505', null, '#1 is given only once');
+select is(public.give_member_number('t_after_delete', (select v from t where k = 'free1')), (select v from t where k = 'free1'),
+          'a founder hands out a number from 1 to 100');
+select is(tests.n('after_delete'), (select v from t where k = 'free1'), 'the account holds it');
+select throws_ok(format('select public.give_member_number(%L, %s)', 't_second', (select v from t where k = 'free1')),
+                 '23505', null, 'a number already held cannot be handed out again');
+select throws_ok($$select public.give_member_number('t_second', 101)$$, '22023', null, 'only 1 to 100 are handed out');
 select tests.sign_up('next');
 select is(tests.n('next'), (select v from t where k = 'newest'),
-          'the founder''s old number was the newest, so it is not skipped');
+          'the account''s old number was the newest, so it is not skipped');
+select lives_ok(format('select public.give_member_number(%L, %s)', 't_second', (select v from t where k = 'free2')),
+                'an older account moves onto a reserved number');
+select tests.sign_up('later');
+select is(tests.n('later'), tests.n('next') + 1, 'an older account''s old number stays retired');
 
 select * from finish();
 rollback;
