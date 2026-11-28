@@ -31,6 +31,8 @@ const mockBackend = {
   /** While set, reads of moments wait for it (a slow jar re-read). */
   momentsGate: null as Promise<void> | null,
   updates: [] as { table: string; values: Row; eq: [string, unknown][] }[],
+  /** ensure_jar calls (a line written before the first upload made the jar). */
+  ensured: [] as Row[],
 };
 // The jar's visibility menu is a bottom sheet (own tests); here only the props Today gives it matter.
 const mockSheet: { props: import('@/features/publish/JarVisibilitySheet').JarVisibilitySheetProps | null } = {
@@ -90,7 +92,13 @@ jest.mock('@/lib/supabase', () => {
   };
   const client = {
     from: query,
-    rpc: (name: string) => {
+    rpc: (name: string, args?: Row) => {
+      if (name === 'ensure_jar' && args) {
+        mockBackend.ensured.push(args);
+        const jar = { id: 'jar-new', local_date: args.local_date, tz: args.tz, ends_at: null, line: null };
+        mockBackend.jars = [jar];
+        return Promise.resolve({ data: jar, error: null });
+      }
       if (name !== 'my_profile') throw new Error(`unexpected rpc ${name}`);
       const builder = {
         select: () => builder,
@@ -178,6 +186,7 @@ beforeEach(() => {
   mockBackend.queue = [];
   mockBackend.momentsGate = null;
   mockBackend.updates = [];
+  mockBackend.ensured = [];
   mockSheet.props = null;
   reportNetworkResult(null);
   useAuthStore.setState({ status: 'signedIn', session: { user: { id: USER } } as Session, error: null });
@@ -252,6 +261,33 @@ describe('Today screen', () => {
     await act(async () => release());
     await waitFor(() => expect(screen.queryByText('Uploading')).toBeNull());
     expect(screen.getByText('1 of 8 moments')).toBeTruthy();
+  });
+
+  // Joff: the line row is there while the day's first photo is still uploading, so the guide's tip above the
+  // grid doesn't move down when the jar arrives. A line saved meanwhile makes the jar first.
+  it('the line row shows while the first photo uploads, and saving it makes that jar first', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    mockBackend.queue = [{ ...queued(21, 'whereami', 'uploading'), tz: 'Asia/Manila' }];
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByText('Uploading')).toBeTruthy());
+    await fireEvent.press(screen.getByRole('button', { name: 'Add a line for the day' }));
+    await fireEvent.changeText(screen.getByTestId('day-line-input'), 'Rain all day');
+    await fireEvent.press(screen.getByTestId('day-line-save'));
+    await waitFor(() =>
+      expect(mockBackend.updates).toContainEqual({
+        table: 'jars',
+        values: { line: 'Rain all day' },
+        eq: [['id', 'jar-new']],
+      }),
+    );
+    expect(mockBackend.ensured).toEqual([{ local_date: '2026-11-10', tz: 'Asia/Manila' }]);
+  });
+
+  it('an empty day has no line row', async () => {
+    jest.useFakeTimers({ now: new Date('2026-11-10T14:00:00+08:00') });
+    await renderScreen(newClient());
+    await waitFor(() => expect(screen.getByTestId('today-subtitle')).toBeTruthy());
+    expect(screen.queryByTestId('day-line')).toBeNull();
   });
 
   it('the header’s stickers button opens the Stickers page (D-61)', async () => {

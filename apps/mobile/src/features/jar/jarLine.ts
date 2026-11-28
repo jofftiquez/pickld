@@ -27,6 +27,19 @@ export async function saveJarLine(
   return data[0].line;
 }
 
+/**
+ * Today's jar for a line written before the day's first upload has created it: `ensure_jar` with the queued
+ * photo's date and zone, as the uploader calls it, so the photo then lands in the same jar.
+ */
+export async function ensureLineJar(
+  client: Pick<SupabaseClient<Database>, 'rpc'>,
+  target: { localDate: string; tz: string },
+): Promise<string> {
+  const { data, error } = await client.rpc('ensure_jar', { local_date: target.localDate, tz: target.tz });
+  if (error) throw new Error(error.message);
+  return data.id;
+}
+
 /** Saving the line, then re-reading Today, the day page and the jar page that show it. */
 export function useSaveJarLine(userId: string | null) {
   const queryClient = useQueryClient();
